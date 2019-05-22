@@ -3,7 +3,7 @@
     <b-container>
       <b-row>
         <b-col class="mt-4" cols="12" md="6" offset-md="3">
-          <b-form>
+          <b-form @submit.prevent="login">
             <b-card
               header="Login">
                 <b-form-group
@@ -12,7 +12,7 @@
                   label-for="input_email">
                   <b-form-input
                     id="input_email"
-                    v-model="form.email"
+                    v-model="username"
                     type="email"
                     required
                     placeholder="Enter a valid email"></b-form-input>
@@ -23,7 +23,7 @@
                   label-for="input_password">
                   <b-form-input
                     id="input_password"
-                    v-model="form.password"
+                    v-model="password"
                     type="password"
                     required
                     placeholder="Enter your strong password"></b-form-input>
@@ -32,7 +32,7 @@
                   <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
                 </b-card-text>
                 <div slot="footer" class="text-right">
-                  <b-button variant="outline-primary">Login</b-button>
+                  <b-button type="submit" variant="outline-primary">Login</b-button>
                 </div>
             </b-card>
           </b-form>
@@ -46,10 +46,18 @@
 export default {
   data () {
     return {
-      form: {
-        email: null,
-        password: null
-      }
+      username: null,
+      password: null
+    }
+  },
+  methods: {
+    login () {
+      let username = this.username
+      let password = this.password
+      this.$store
+        .dispatch('login', {username, password})
+        .then(() => this.$router.push('/'))
+        .catch((error) => console.log(error))
     }
   }
 }
