@@ -8,6 +8,7 @@
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav class="ml-auto">
           <b-nav-item :to="{name: 'About'}">About</b-nav-item>
+          <b-nav-item :to="{name: 'Organizations'}">Organizations</b-nav-item>
           <b-nav-item>Browse</b-nav-item>
           <b-nav-item :to="{name: 'Login'}">Login</b-nav-item>
         </b-navbar-nav>
