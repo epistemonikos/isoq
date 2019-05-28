@@ -19,26 +19,26 @@
         <h3>Projects</h3>
         <b-row align-h="end">
           <b-col cols="6" sm="4" md="3" lg="2">
-            <b-button variant="outline-primary">Add new project</b-button>
+            <b-button variant="outline-primary">{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <ul class="mt-5">
           <li class="my-3" v-for="project in organization.projects" v-bind:key="project.id">
             {{project.name}}
-            <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
-            <font-awesome-icon icon="plus-square" pull="right" title="Add" />
+            <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
+            <font-awesome-icon icon="plus-square" pull="right" v-bind:title="$t('Add')" />
             <ul v-if="project.lists">
               <li class="my-3" v-for="list in project.lists" v-bind:key="list.id">
                 <b-link :to="{name: 'viewList', params: {id: list.id}}">{{list.name}}</b-link>
-                <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
+                <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
                 <template v-if="list.private">
-                  <font-awesome-icon icon="lock" pull="right" title="Private" class="d-none d-sm-block" />
+                  <font-awesome-icon icon="lock" pull="right" v-bind:title="$t('Private')" class="d-none d-sm-block" />
                 </template>
                 <template v-else>
-                  <font-awesome-icon icon="globe" pull="right" title="Public" class="d-none d-sm-block" />
+                  <font-awesome-icon icon="globe" pull="right" v-bind:title="$t('Public')" class="d-none d-sm-block" />
                 </template>
-                <font-awesome-icon icon="clone" pull="right" title="Clone" class="d-none d-sm-block" />
-                <b-link :to="{name: 'editList', params: {id: list.id}}"><font-awesome-icon icon="edit" pull="right" title="Edit"/></b-link>
+                <font-awesome-icon icon="clone" pull="right" v-bind:title="$t('Clone')" class="d-none d-sm-block" />
+                <b-link :to="{name: 'editList', params: {id: list.id}}"><font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')"/></b-link>
               </li>
             </ul>
           </li>

@@ -1,7 +1,7 @@
 <template>
   <div class="mt-4">
     <b-container>
-      <h2 class="mb-5">Organizations</h2>
+      <h2 class="mb-5">{{ $t("Organizations") }}</h2>
       <b-row>
         <b-card-group columns>
           <b-card
@@ -13,7 +13,7 @@
               {{org.description}}
             </b-card-text>
             <template slot="footer">
-              <b-link :to="{name: 'viewOrganization', params: {id: org.id}}">view our iSoQF</b-link>
+              <b-link :to="{name: 'viewOrganization', params: {id: org.id}}">{{ $t("view our iSoQF" )}}</b-link>
             </template>
           </b-card>
         </b-card-group>

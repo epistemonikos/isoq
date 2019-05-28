@@ -1,30 +1,30 @@
 <template>
   <div class="mt-4">
     <b-container>
-      <h2>Edit {{list.title}}</h2>
+      <h2>{{ $t('Edit') }} {{list.title}}</h2>
       <b-row>
         <b-col cols="12">
           <b-form>
             <b-form-group
               id="label-title"
-              label="Title"
+              v-bind:label="$t('Title')"
               label-for="input-title">
               <b-form-input
                 id="input-title"
                 v-model="list.title"
                 type="text"
                 required
-                placeholder="Enter a title"></b-form-input>
+                v-bind:placeholder="$t('Enter a title')"></b-form-input>
             </b-form-group>
             <b-form-group
               id="label-description"
-              label="Description"
+              v-bind:label="$t('Description')"
               label-for="input-description">
               <b-form-textarea
                 id="input-description"
                 v-model="list.description"
                 type="textarea"
-                placeholder="Enter a description"></b-form-textarea>
+                placeholder="$t('Enter a description')"></b-form-textarea>
             </b-form-group>
 
             <b-tabs>
@@ -32,31 +32,31 @@
                 <b-table :fields="soqf_fields" :items="list.soqf" caption-top>
                   <template slot="table-caption">
                     <div class="text-right">
-                      <b-button v-b-modal.modal-stage-one variant="outline-primary">Add new Finding</b-button>
+                      <b-button v-b-modal.modal-stage-one variant="outline-primary">{{ $t('Add new Finding') }}</b-button>
                     </div>
                   </template>
                   <template slot="actions">
-                    <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
-                    <font-awesome-icon icon="edit" pull="right" title="Edit" />
+                    <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
+                    <font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')" />
                   </template>
                 </b-table>
                 <!-- modal finding -->
                 <b-modal id="modal-stage-one" ref="modal-stage-one">
                   <b-form-group
                     id="label-finding"
-                    label="Finding"
+                    v-bind:label="$t('Finding')"
                     label-for="input-finding">
                     <b-form-input
                       id="input-finding"
                       type="text"
                       v-model="buffer_modal_stage_one.name"
                       required
-                      placeholder="Enter a finding"></b-form-input>
+                      v-bind:placeholder="$t('Enter a finding')"></b-form-input>
                   </b-form-group>
                   <div slot="modal-footer">
                     <b-button
                       variant="outline-primary"
-                      @click="saveStageOne">Save</b-button>
+                      @click="saveStageOne">{{ $t('Save') }}</b-button>
                   </div>
                 </b-modal>
                 <!-- end modal finding -->
@@ -70,7 +70,7 @@
                     </div>
                   </template>
                   <template slot="finding" slot-scope="data">
-                    {{data.item.finding}}
+                    {{data.item.finding_id}}
                   </template>
                   <template slot="methodological-limit" slot-scope="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
@@ -110,20 +110,20 @@
                   </template>
                 </b-table>
 
-                <b-modal id="modal-stage-two" ref="modal-stage-two" scrollable>
+                <b-modal id="modal-stage-two" ref="modal-stage-two" v-bind:title="$t('Evidence profile')" scrollable>
                   <b-form-group
                     id="label-finding"
-                    label="Finding"
+                    v-bind:label="$t('Finding')"
                     label-for="input-finding-textarea">
                     <b-form-textarea
                       id="input-finding-textarea"
                       v-model="buffer_modal_stage_two.finding"
                       required
-                      placeholder="Enter a finding"></b-form-textarea>
+                      v-bind:placeholder="$t('Enter a finding')"></b-form-textarea>
                   </b-form-group>
                   <b-form-group
                     id="label-ml"
-                    label="Methodological Limitations"
+                    v-bind:label="$t('Methodological Limitations')"
                     label-for="select-ml">
                     <b-form-select
                       id="select-ml"
@@ -132,16 +132,16 @@
                       :options="select_options"></b-form-select>
                   </b-form-group>
                   <b-form-group
-                    label="Explanation"
+                    v-bind:label="$t('Explanation')"
                     label-for="input-ml-explanation">
                     <b-form-textarea
                       id="input-ml-explanation"
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
+                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
                   <b-form-group
                     id="label-coherence"
-                    label="Coherence"
+                    v-bind:label="$t('Coherence')"
                     label-for="select-coherence">
                     <b-form-select
                       id="select-coherence"
@@ -150,16 +150,16 @@
                       :options="select_options"></b-form-select>
                   </b-form-group>
                   <b-form-group
-                    label="Explanation"
+                    v-bind:label="$t('Explanation')"
                     label-for="input-coherence-explanation">
                     <b-form-textarea
                       id="input-coherence-explanation"
                       v-model="buffer_modal_stage_two.coherence.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
+                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
                   <b-form-group
                     id="label-adequacy"
-                    label="Adequacy"
+                    v-bind:label="$t('Adequacy')"
                     label-for="select-adequacy">
                     <b-form-select
                       id="select-adequacy"
@@ -168,7 +168,7 @@
                       :options="select_options"></b-form-select>
                   </b-form-group>
                   <b-form-group
-                    label="Explanation"
+                    v-bind:label="$t('Explanation')"
                     label-for="input-adequacy-explanation">
                     <b-form-textarea
                       id="input-adequacy-explanation"
@@ -177,7 +177,7 @@
                   </b-form-group>
                   <b-form-group
                     id="label-relevance"
-                    label="Relevance"
+                    v-bind:label="$t('Relevance')"
                     label-for="select-relevance">
                     <b-form-select
                       id="select-relevance"
@@ -186,7 +186,7 @@
                       :options="select_options"></b-form-select>
                   </b-form-group>
                   <b-form-group
-                    label="Explanation"
+                    v-bind:label="$t('Explanation')"
                     label-for="input-relevance-explanation">
                     <b-form-textarea
                       id="input-relevance-explanation"
@@ -196,14 +196,14 @@
                   <div slot="modal-footer">
                     <b-button
                       variant="outline-primary"
-                      @click="saveStageTwo">Save</b-button>
+                      @click="saveStageTwo">{{ $t('Save') }}</b-button>
                   </div>
                 </b-modal>
                 <!-- end of Evidence Profile-->
               </b-tab>
-              <b-tab title="Characteristics of Studies"></b-tab>
-              <b-tab title="Methodological Assessments"></b-tab>
-              <b-tab title="Extracted Data"></b-tab>
+              <b-tab v-bind:title="$t('Characteristics of Studies')"></b-tab>
+              <b-tab v-bind:title="$t('Methodological Assessments')"></b-tab>
+              <b-tab v-bind:title="$t('Extracted Data')"></b-tab>
             </b-tabs>
             <!-- SoQF -->
             <!-- Characteristics of Studies -->
@@ -211,7 +211,7 @@
             <!-- Extracted data -->
             <b-row align-h="end">
               <b-col cols="12" md="2" class="text-right">
-                <b-button type="submit" variant="outline-primary">Save</b-button>
+                <b-button type="submit" variant="outline-primary">{{ $t('Save') }}</b-button>
               </b-col>
             </b-row>
           </b-form>
@@ -238,6 +238,7 @@ export default {
         {value: 3, text: 'Very low confidence'}
       ],
       soqf_fields: [
+        {key: 'id', label: 'ID'},
         {key: 'finding', label: 'Finding'},
         {key: 'actions', label: 'Actions'}
       ],
@@ -286,8 +287,8 @@ export default {
           {id: 2, finding: 'some finding 02', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''}
         ],
         evidence_profile: [
-          {id: 1, finding: 1, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}},
-          {id: 2, finding: 2, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}}
+          {id: 1, finding_id: 1, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}},
+          {id: 2, finding_id: 2, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}}
         ],
         characteristics_studies: [
           {id: 1, study_id: '1'}
