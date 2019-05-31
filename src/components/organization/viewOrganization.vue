@@ -19,14 +19,14 @@
         <h3>Projects</h3>
         <b-row align-h="end">
           <b-col cols="6" sm="4" md="3" lg="2">
-            <b-button variant="outline-primary">{{ $t("Add new project") }}</b-button>
+            <b-button variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <ul class="mt-5">
           <li class="my-3" v-for="project in organization.projects" v-bind:key="project.id">
             {{project.name}}
             <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
-            <font-awesome-icon icon="plus-square" pull="right" v-bind:title="$t('Add')" />
+            <font-awesome-icon @click="ModalAddList(project.id)" icon="plus-square" pull="right" v-bind:title="$t('Add')" />
             <ul v-if="project.lists">
               <li class="my-3" v-for="list in project.lists" v-bind:key="list.id">
                 <b-link :to="{name: 'viewList', params: {id: list.id}}">{{list.name}}</b-link>
@@ -44,6 +44,69 @@
           </li>
         </ul>
       </div>
+      <!-- modals -->
+      <b-modal
+        id="new-project"
+        ref="new-project"
+        @ok="AddProject">
+        <b-form-group
+          :label="$t('Project name')"
+          label-for="input-project-name">
+          <b-form-input
+            id="input-project-name"
+            type="text"
+            required
+            :placeholder="$t('Project name')"
+            v-model="buffer_project.name"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Description')"
+          label-for="input-project-description">
+          <b-form-textarea
+            id="input-project-description"
+            :placeholder="$t('Enter a description')"
+            v-model="buffer_project.description"></b-form-textarea>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Visible')"
+          label-for="select-project-status">
+          <b-select
+            id="select-project-status"
+            v-model="buffer_project.private"
+            :options="global_status"></b-select>
+        </b-form-group>
+      </b-modal>
+      <b-modal
+        id="new-project-list"
+        ref="new-project-list"
+        @ok="AddProjectList">
+        <b-form-group
+          :label="$t('Project name')"
+          label-for="input-project-list-name">
+          <b-form-input
+            id="input-project-list-name"
+            type="text"
+            required
+            :placeholder="$t('Project name')"
+            v-model="buffer_project_list.name"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Description')"
+          label-for="input-project-list-description">
+          <b-form-textarea
+            id="input-project-list-description"
+            :placeholder="$t('Enter a description')"
+            v-model="buffer_project_list.description"></b-form-textarea>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Visible')"
+          label-for="select-project-list-status">
+          <b-select
+            id="select-project-list-status"
+            v-model="buffer_project_list.private"
+            :options="global_status"></b-select>
+        </b-form-group>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -52,6 +115,34 @@
 export default {
   data () {
     return {
+      global_status: [
+        { value: false, text: 'public' },
+        { value: true, text: 'private' }
+      ],
+      tmp_buffer_project: {
+        id: null,
+        name: '',
+        description: '',
+        private: true
+      },
+      tmp_buffer_project_list: {
+        id: null,
+        name: '',
+        description: '',
+        private: true
+      },
+      buffer_project: {
+        id: null,
+        name: '',
+        description: '',
+        private: true
+      },
+      buffer_project_list: {
+        id: null,
+        name: '',
+        description: '',
+        private: true
+      },
       organization: {
         id: 1,
         name: 'Epistemonikos',
@@ -61,6 +152,7 @@ export default {
           {
             id: 1,
             name: 'Project 01',
+            description: '',
             lists:
               [
                 { id: 1, name: 'Lista 01', description: '', private: true },
@@ -87,6 +179,21 @@ export default {
           }
         ]
       }
+    }
+  },
+  methods: {
+    AddProject: function () {
+      this.organization.projects.push(this.buffer_project)
+      this.buffer_project = this.tmp_buffer_project
+      this.$refs['new-project'].hide()
+    },
+    ModalAddList: function (idProject) {
+      this.$refs['new-project-list'].show()
+    },
+    AddProjectList: function () {
+      this.organization.projects[0].lists.push(this.buffer_project_list)
+      this.buffer_project_list = this.tmp_buffer_project_list
+      this.$refs['new-project-list'].hide()
     }
   }
 }

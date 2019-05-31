@@ -61,9 +61,12 @@
                 </b-modal>
                 <!-- end modal finding -->
               </b-tab>
+              <!-- Evidence Profile-->
               <b-tab title="Evidence Profile">
-                <!-- Evidence Profile-->
-                <b-table responsive striped :fields="evidence_profile_fields" :items="list.evidence_profile" caption-top>
+                <b-table
+                  responsive striped caption-top
+                  :fields="evidence_profile_fields"
+                  :items="list.evidence_profile">
                   <template slot="table-caption">
                     <div class="text-right">
                       <b-button v-b-modal.modal-stage-two variant="outline-primary">Add new element</b-button>
@@ -201,14 +204,234 @@
                 </b-modal>
                 <!-- end of Evidence Profile-->
               </b-tab>
-              <b-tab v-bind:title="$t('Characteristics of Studies')"></b-tab>
-              <b-tab v-bind:title="$t('Methodological Assessments')"></b-tab>
-              <b-tab v-bind:title="$t('Extracted Data')"></b-tab>
+              <!-- Characteristics of Studies -->
+              <b-tab v-bind:title="$t('Characteristics of Studies')">
+                <!-- create study tables -->
+                <b-modal
+                  id="modal-stage-three-table"
+                  ref="modal-stage-three-table">
+                  <b-form-group
+                    :label="$t('Nro of cols')"
+                    label-for="input-nro-cols">
+                    <b-form-input
+                      id="input-nro-cols"
+                      type="number"
+                      min="1"
+                      max="10"
+                      v-model="nroOfRows"
+                      :placeholder="$t('A number between')"></b-form-input>
+                  </b-form-group>
+
+                  <!-- -->
+                  <b-form-group
+                    v-for="item in parseInt(nroOfRows)"
+                    :key="item"
+                    :label="$t('Title of column', [item])"
+                    :label-for="`input-column-nro-${item}`">
+                    <b-form-input
+                      :id="`input-column-nro-${item}`"
+                      type="text"
+                      :placeholder="$t('Title of column', [item])"
+                      v-model="list.characteristics_studies.fields[item - 1]"></b-form-input>
+                  </b-form-group>
+                  <!-- -->
+                </b-modal>
+                <!-- end of create study tables -->
+                <template v-if="list.characteristics_studies.fields.length">
+                <b-table
+                  responsive striped caption-top
+                  :fields="list.characteristics_studies.fields"
+                  :items="list.characteristics_studies.items">
+                  <template slot="table-caption">
+                    <div class="text-right">
+                      <b-button v-b-modal.modal-stage-three-table variant="outline-primary">Edit table</b-button>
+                      <b-button
+                        v-if="list.characteristics_studies.fields.length"
+                        v-b-modal.modal-stage-three-data
+                        variant="outline-success">{{$t('Add data')}}</b-button>
+                    </div>
+                  </template>
+                  <template slot="actions">
+                    <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
+                    <font-awesome-icon icon="edit" pull="right" title="Edit" />
+                  </template>
+                </b-table>
+                </template>
+                <template v-else>
+                  <div class="text-center mt-5">
+                    <p>{{ $t('No studies') }} <b-link v-b-modal.modal-stage-three-table>{{ $t('add studies') }}</b-link></p>
+                  </div>
+                </template>
+                <!-- create study data -->
+                <b-modal
+                  id="modal-stage-three-data"
+                  ref="modal-stage-three-data"
+                  @ok="copyStudies">
+                  <b-form-group
+                    v-for="(field, index) in list.characteristics_studies.fields"
+                    :key="index"
+                    :id="`label-field-${index}`"
+                    :label="`${field}`"
+                    :label-for="`input-field-${index}`">
+                    <b-form-input
+                      :id="`input-field-${index}`"
+                      type="text"
+                      v-model="buffer_characteristics_studies[field]"></b-form-input>
+                  </b-form-group>
+                </b-modal>
+                <!-- end of create study data -->
+              </b-tab>
+              <!-- Methodological Assessments -->
+              <b-tab v-bind:title="$t('Methodological Assessments')">
+                <b-modal
+                  id="modal-stage-four-table"
+                  ref="modal-stage-four-table">
+                  <b-form-group
+                    :label="$t('Nro of cols')"
+                    label-for="input-nro-cols">
+                    <b-form-input
+                      id="input-nro-cols"
+                      type="number"
+                      min="1"
+                      max="10"
+                      v-model="nroOfRows"
+                      :placeholder="$t('A number between')"></b-form-input>
+                  </b-form-group>
+
+                  <!-- -->
+                  <b-form-group
+                    v-for="item in parseInt(nroOfRows)"
+                    :key="item"
+                    :label="$t('Title of column', [item])"
+                    :label-for="`input-column-nro-${item}`">
+                    <b-form-input
+                      :id="`input-column-nro-${item}`"
+                      type="text"
+                      :placeholder="$t('Title of column', [item])"
+                      v-model="list.methodological_assessments.fields[item - 1]"></b-form-input>
+                  </b-form-group>
+                  <!-- -->
+                </b-modal>
+                <template v-if="list.methodological_assessments.fields.length">
+                  <b-table
+                    responsive striped caption-top
+                    :fields="list.methodological_assessments.fields"
+                    :items="list.methodological_assessments.items">
+                    <template slot="table-caption">
+                      <div class="text-right">
+                        <b-button v-b-modal.modal-stage-four-table variant="outline-primary">{{$t('Edit table')}}</b-button>
+                        <b-button
+                          v-if="list.methodological_assessments.fields.length"
+                          v-b-modal.modal-stage-four-data
+                          variant="outline-success">{{$t('Add data')}}</b-button>
+                      </div>
+                    </template>
+                    <template slot="actions">
+                      <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
+                      <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
+                    </template>
+                  </b-table>
+                  <!-- create study data -->
+                  <b-modal
+                    id="modal-stage-four-data"
+                    ref="modal-stage-four-data"
+                    @ok="copyMethAssessments">
+                    <b-form-group
+                      v-for="(field, index) in list.methodological_assessments.fields"
+                      :key="index"
+                      :id="`label-field-${index}`"
+                      :label="`${field}`"
+                      :label-for="`input-field-${index}`">
+                      <b-form-input
+                        :id="`input-field-${index}`"
+                        type="text"
+                        v-model="buffer_methodological_assessments[field]"></b-form-input>
+                    </b-form-group>
+                  </b-modal>
+                  <!-- end of create study data -->
+                </template>
+                <template v-else>
+                  <div class="text-center mt-5">
+                    <p>{{ $t('No methodological') }} <b-link v-b-modal.modal-stage-four-table>{{ $t('add methodological assessments') }}</b-link></p>
+                  </div>
+                </template>
+              </b-tab>
+              <!-- Extracted data -->
+              <b-tab v-bind:title="$t('Extracted Data')">
+                <b-modal
+                  id="modal-stage-five-table"
+                  ref="modal-stage-five-table">
+                  <b-form-group
+                    :label="$t('Nro of cols')"
+                    label-for="input-nro-cols">
+                    <b-form-input
+                      id="input-nro-cols"
+                      type="number"
+                      min="1"
+                      max="10"
+                      v-model="nroOfRows"
+                      :placeholder="$t('A number between')"></b-form-input>
+                  </b-form-group>
+
+                  <!-- -->
+                  <b-form-group
+                    v-for="item in parseInt(nroOfRows)"
+                    :key="item"
+                    :label="$t('Title of column', [item])"
+                    :label-for="`input-column-nro-${item}`">
+                    <b-form-input
+                      :id="`input-column-nro-${item}`"
+                      type="text"
+                      :placeholder="$t('Title of column', [item])"
+                      v-model="list.extracted_data.fields[item - 1]"></b-form-input>
+                  </b-form-group>
+                  <!-- -->
+                </b-modal>
+                <template>
+                  <b-table
+                    responsive striped caption-top
+                    :fields="list.extracted_data.fields"
+                    :items="list.extracted_data.items">
+                    <template slot="table-caption">
+                      <div class="text-right">
+                        <b-button v-b-modal.modal-stage-five-table variant="outline-primary">{{$t('Edit table')}}</b-button>
+                        <b-button
+                          v-if="list.extracted_data.fields.length"
+                          v-b-modal.modal-stage-five-data
+                          variant="outline-success">{{$t('Add data')}}</b-button>
+                      </div>
+                    </template>
+                    <template slot="actions">
+                      <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
+                      <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
+                    </template>
+                  </b-table>
+                  <!-- create extracted data -->
+                  <b-modal
+                    id="modal-stage-five-data"
+                    ref="modal-stage-five-data"
+                    @ok="copyMethAssessments">
+                    <b-form-group
+                      v-for="(field, index) in list.extracted_data.fields"
+                      :key="index"
+                      :id="`label-field-${index}`"
+                      :label="`${field}`"
+                      :label-for="`input-field-${index}`">
+                      <b-form-input
+                        :id="`input-field-${index}`"
+                        type="text"
+                        v-model="buffer_extracted_data[field]"></b-form-input>
+                    </b-form-group>
+                  </b-modal>
+                  <!-- end of create extracted data -->
+                </template>
+                <template>
+                  <div class="text-center mt-5">
+                    <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link></p>
+                  </div>
+                </template>
+              </b-tab>
             </b-tabs>
-            <!-- SoQF -->
-            <!-- Characteristics of Studies -->
-            <!-- Methodological Assessments -->
-            <!-- Extracted data -->
             <b-row align-h="end">
               <b-col cols="12" md="2" class="text-right">
                 <b-button type="submit" variant="outline-primary">{{ $t('Save') }}</b-button>
@@ -225,6 +448,7 @@
 export default {
   data () {
     return {
+      nroOfRows: 1,
       select_options: [
         {value: 0, text: 'No/Minor concerns'},
         {value: 1, text: 'Minor concerns'},
@@ -274,6 +498,9 @@ export default {
         adequacy: {option: null, explanation: ''},
         relevance: {option: null, explanation: ''}
       },
+      buffer_characteristics_studies: {},
+      buffer_methodological_assessments: {},
+      buffer_extracted_data: {},
       list: {
         id: 1,
         title: 'title',
@@ -290,15 +517,18 @@ export default {
           {id: 1, finding_id: 1, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}},
           {id: 2, finding_id: 2, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}}
         ],
-        characteristics_studies: [
-          {id: 1, study_id: '1'}
-        ],
-        methodological_assessments: [
-          {id: 1, study_id: '1'}
-        ],
-        extracted_data: [
-          {id: 1, study_id: '1', extracted_data: ''}
-        ]
+        characteristics_studies: {
+          fields: [],
+          items: []
+        },
+        methodological_assessments: {
+          fields: [],
+          items: []
+        },
+        extracted_data: {
+          fields: [],
+          items: []
+        }
       }
     }
   },
@@ -322,6 +552,21 @@ export default {
       this.buffer_modal_stage_two = {...this.initial_modal_stage_two}
       // close
       this.$refs['modal-stage-two'].hide()
+    },
+    copyStudies: function () {
+      // todo: the study id needs to be copied to methods assessments and extracted data
+      this.list.characteristics_studies.items.push(this.buffer_characteristics_studies)
+      // clean
+      this.buffer_characteristics_studies = {}
+      // close
+      this.$refs['modal-stage-three-data'].hide()
+    },
+    copyMethAssessments: function () {
+      this.list.methodological_assessments.items.push(this.buffer_methodological_assessments)
+      // clean
+      this.buffer_methodological_assessments = {}
+      // close
+      this.$refs['modal-stage-four-data'].hide()
     }
   }
 }
