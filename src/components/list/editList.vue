@@ -26,13 +26,50 @@
                 type="textarea"
                 placeholder="$t('Enter a description')"></b-form-textarea>
             </b-form-group>
+            <b-form-group
+              :label="$t('Authors')"
+              label-for="input-project-authors">
+              <b-form-input
+                id="input-project-authors"
+                :placeholder="$t('Insert authors separated by commas')"
+                v-model="list.authors"></b-form-input>
+            </b-form-group>
+            <b-form-group
+              :label="$t('Visible')"
+              label-for="select-project-list-status">
+              <b-select
+                id="select-project-list-status"
+                v-model="list.private"
+                :options="global_status"></b-select>
+            </b-form-group>
 
-            <b-tabs>
-              <b-tab title="SoQF">
-                <b-table :fields="soqf_fields" :items="list.soqf" caption-top>
+            <!-- <b-tabs> -->
+              <!-- <b-tab title="SoQF"> -->
+                <h3>SoQF</h3>
+                <b-table
+                  striped
+                  :fields="soqf_fields"
+                  :items="list.soqf"
+                  caption-top
+                  :current-page="setting_tables.soqf_list.current_page"
+                  :per-page="setting_tables.soqf_list.perPage"
+                  :filter="setting_tables.soqf_list.filter"
+                  @filtered="onFilterediSoQF">
                   <template slot="table-caption">
                     <div class="text-right">
                       <b-button v-b-modal.modal-stage-one variant="outline-primary">{{ $t('Add new Finding') }}</b-button>
+                    </div>
+                    <div>
+                      <b-form-group
+                        label="Search"
+                        label-for="filter-input-isoqf-list">
+                        <b-form-input
+                          id="filter-input-isoqf-list"
+                          v-model="setting_tables.soqf_list.filter"></b-form-input>
+                      </b-form-group>
+                      <b-form-group label-cols-sm="6" label="Per page" class="mb-0">
+                        <b-form-select v-model="setting_tables.soqf_list.perPage" :options="setting_tables.soqf_list.pageOptions"></b-form-select>
+                      </b-form-group>
                     </div>
                   </template>
                   <template slot="actions">
@@ -40,6 +77,15 @@
                     <font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')" />
                   </template>
                 </b-table>
+                <!-- pagination -->
+                <b-row>
+                  <b-col>
+                    <b-pagination
+                      v-model="setting_tables.soqf_list.current_page"
+                      :per-page="setting_tables.soqf_list.perPage"
+                      :total-rows="setting_tables.soqf_list.totalRows"></b-pagination>
+                  </b-col>
+                </b-row>
                 <!-- modal finding -->
                 <b-modal id="modal-stage-one" ref="modal-stage-one">
                   <b-form-group
@@ -60,9 +106,10 @@
                   </div>
                 </b-modal>
                 <!-- end modal finding -->
-              </b-tab>
+              <!-- </b-tab> -->
               <!-- Evidence Profile-->
-              <b-tab title="Evidence Profile">
+              <!-- <b-tab :title="$t('Evidence Profile')"> -->
+                <h3>{{$t('Evidence Profile')}}</h3>
                 <b-table
                   responsive striped caption-top
                   :fields="evidence_profile_fields"
@@ -114,26 +161,12 @@
                 </b-table>
 
                 <b-modal id="modal-stage-two" ref="modal-stage-two" v-bind:title="$t('Evidence profile')" scrollable>
-                  <b-form-group
-                    id="label-finding"
-                    v-bind:label="$t('Finding')"
-                    label-for="input-finding-textarea">
-                    <b-form-textarea
-                      id="input-finding-textarea"
-                      v-model="buffer_modal_stage_two.finding"
-                      required
-                      v-bind:placeholder="$t('Enter a finding')"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    id="label-ml"
-                    v-bind:label="$t('Methodological Limitations')"
-                    label-for="select-ml">
-                    <b-form-select
-                      id="select-ml"
-                      required
-                      v-model="buffer_modal_stage_two.methodological_limitations.option"
-                      :options="select_options"></b-form-select>
-                  </b-form-group>
+                  <h6>{{$t('Methodological Limitations')}}</h6>
+                  <b-form-checkbox-group
+                    v-model="buffer_modal_stage_two.methodological_limitations.option"
+                    :options="select_options"
+                    name="methodological-limitations"
+                    stacked></b-form-checkbox-group>
                   <b-form-group
                     v-bind:label="$t('Explanation')"
                     label-for="input-ml-explanation">
@@ -142,16 +175,13 @@
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
-                  <b-form-group
-                    id="label-coherence"
-                    v-bind:label="$t('Coherence')"
-                    label-for="select-coherence">
-                    <b-form-select
-                      id="select-coherence"
-                      required
-                      v-model="buffer_modal_stage_two.coherence.option"
-                      :options="select_options"></b-form-select>
-                  </b-form-group>
+                  <!-- coherence -->
+                  <h6>{{$t('Coherence')}}</h6>
+                  <b-form-checkbox-group
+                    v-model="buffer_modal_stage_two.coherence.option"
+                    :options="select_options"
+                    name="coherence"
+                    stacked></b-form-checkbox-group>
                   <b-form-group
                     v-bind:label="$t('Explanation')"
                     label-for="input-coherence-explanation">
@@ -160,16 +190,13 @@
                       v-model="buffer_modal_stage_two.coherence.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
-                  <b-form-group
-                    id="label-adequacy"
-                    v-bind:label="$t('Adequacy')"
-                    label-for="select-adequacy">
-                    <b-form-select
-                      id="select-adequacy"
-                      required
-                      v-model="buffer_modal_stage_two.adequacy.option"
-                      :options="select_options"></b-form-select>
-                  </b-form-group>
+                  <!-- adequacy -->
+                  <h6>{{$t('Adequacy')}}</h6>
+                  <b-form-checkbox-group
+                    v-model="buffer_modal_stage_two.adequacy.option"
+                    :options="select_options"
+                    name="adequacy"
+                    stacked></b-form-checkbox-group>
                   <b-form-group
                     v-bind:label="$t('Explanation')"
                     label-for="input-adequacy-explanation">
@@ -178,16 +205,13 @@
                       v-model="buffer_modal_stage_two.adequacy.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
                   </b-form-group>
-                  <b-form-group
-                    id="label-relevance"
-                    v-bind:label="$t('Relevance')"
-                    label-for="select-relevance">
-                    <b-form-select
-                      id="select-relevance"
-                      required
-                      v-model="buffer_modal_stage_two.relevance.option"
-                      :options="select_options"></b-form-select>
-                  </b-form-group>
+                  <!-- relevance -->
+                  <h6>{{$t('Relevance')}}</h6>
+                  <b-form-checkbox-group
+                    v-model="buffer_modal_stage_two.relevance.option"
+                    :options="select_options"
+                    name="relevance"
+                    stacked></b-form-checkbox-group>
                   <b-form-group
                     v-bind:label="$t('Explanation')"
                     label-for="input-relevance-explanation">
@@ -203,9 +227,10 @@
                   </div>
                 </b-modal>
                 <!-- end of Evidence Profile-->
-              </b-tab>
+              <!-- </b-tab> -->
               <!-- Characteristics of Studies -->
-              <b-tab v-bind:title="$t('Characteristics of Studies')">
+              <!-- <b-tab v-bind:title="$t('Characteristics of Studies')"> -->
+                <h3>{{$t('Characteristics of Studies')}}</h3>
                 <!-- create study tables -->
                 <b-modal
                   id="modal-stage-three-table"
@@ -238,24 +263,24 @@
                 </b-modal>
                 <!-- end of create study tables -->
                 <template v-if="list.characteristics_studies.fields.length">
-                <b-table
-                  responsive striped caption-top
-                  :fields="list.characteristics_studies.fields"
-                  :items="list.characteristics_studies.items">
-                  <template slot="table-caption">
-                    <div class="text-right">
-                      <b-button v-b-modal.modal-stage-three-table variant="outline-primary">Edit table</b-button>
-                      <b-button
-                        v-if="list.characteristics_studies.fields.length"
-                        v-b-modal.modal-stage-three-data
-                        variant="outline-success">{{$t('Add data')}}</b-button>
-                    </div>
-                  </template>
-                  <template slot="actions">
-                    <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
-                    <font-awesome-icon icon="edit" pull="right" title="Edit" />
-                  </template>
-                </b-table>
+                  <b-table
+                    responsive striped caption-top
+                    :fields="list.characteristics_studies.fields"
+                    :items="list.characteristics_studies.items">
+                    <template slot="table-caption">
+                      <div class="text-right">
+                        <b-button v-b-modal.modal-stage-three-table variant="outline-primary">Edit table</b-button>
+                        <b-button
+                          v-if="list.characteristics_studies.fields.length"
+                          v-b-modal.modal-stage-three-data
+                          variant="outline-success">{{$t('Add data')}}</b-button>
+                      </div>
+                    </template>
+                    <template slot="actions">
+                      <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
+                      <font-awesome-icon icon="edit" pull="right" title="Edit" />
+                    </template>
+                  </b-table>
                 </template>
                 <template v-else>
                   <div class="text-center mt-5">
@@ -280,9 +305,10 @@
                   </b-form-group>
                 </b-modal>
                 <!-- end of create study data -->
-              </b-tab>
+              <!-- </b-tab> -->
               <!-- Methodological Assessments -->
-              <b-tab v-bind:title="$t('Methodological Assessments')">
+              <!-- <b-tab v-bind:title="$t('Methodological Assessments')"> -->
+                <h3>{{$t('Methodological Assessments')}}</h3>
                 <b-modal
                   id="modal-stage-four-table"
                   ref="modal-stage-four-table">
@@ -355,9 +381,10 @@
                     <p>{{ $t('No methodological') }} <b-link v-b-modal.modal-stage-four-table>{{ $t('add methodological assessments') }}</b-link></p>
                   </div>
                 </template>
-              </b-tab>
+              <!-- </b-tab> -->
               <!-- Extracted data -->
-              <b-tab v-bind:title="$t('Extracted Data')">
+              <!-- <b-tab v-bind:title="$t('Extracted Data')"> -->
+                <h3>{{$t('Extracted Data')}}</h3>
                 <b-modal
                   id="modal-stage-five-table"
                   ref="modal-stage-five-table">
@@ -387,7 +414,7 @@
                   </b-form-group>
                   <!-- -->
                 </b-modal>
-                <template>
+                <template v-if="list.extracted_data.fields.length">
                   <b-table
                     responsive striped caption-top
                     :fields="list.extracted_data.fields"
@@ -425,18 +452,20 @@
                   </b-modal>
                   <!-- end of create extracted data -->
                 </template>
-                <template>
+                <template v-else>
                   <div class="text-center mt-5">
                     <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link></p>
                   </div>
                 </template>
-              </b-tab>
-            </b-tabs>
+              <!-- </b-tab> -->
+            <!-- </b-tabs> -->
+            <!--
             <b-row align-h="end">
               <b-col cols="12" md="2" class="text-right">
                 <b-button type="submit" variant="outline-primary">{{ $t('Save') }}</b-button>
               </b-col>
             </b-row>
+            -->
           </b-form>
         </b-col>
       </b-row>
@@ -448,7 +477,48 @@
 export default {
   data () {
     return {
+      global_status: [
+        { value: false, text: 'public' },
+        { value: true, text: 'private' }
+      ],
       nroOfRows: 1,
+      setting_tables: {
+        soqf_list: {
+          filter: '',
+          totalRows: 1,
+          currentPage: 1,
+          perPage: 10,
+          pageOptions: [10, 50, 100]
+        },
+        evidence_profile_list: {
+          filter: '',
+          totalRows: 1,
+          currentPage: 1,
+          perPage: 10,
+          pageOptions: [10, 50, 100]
+        },
+        characteristics_studies_list: {
+          filter: '',
+          totalRows: 1,
+          currentPage: 1,
+          perPage: 10,
+          pageOptions: [10, 50, 100]
+        },
+        methodological_assessments_list: {
+          filter: '',
+          totalRows: 1,
+          currentPage: 1,
+          perPage: 10,
+          pageOptions: [10, 50, 100]
+        },
+        extracted_data_list: {
+          filter: '',
+          totalRows: 1,
+          currentPage: 1,
+          perPage: 10,
+          pageOptions: [10, 50, 100]
+        }
+      },
       select_options: [
         {value: 0, text: 'No/Minor concerns'},
         {value: 1, text: 'Minor concerns'},
@@ -464,6 +534,8 @@ export default {
       soqf_fields: [
         {key: 'id', label: 'ID'},
         {key: 'finding', label: 'Finding'},
+        {key: 'cerqual', label: 'CERQual Assessment of Confidence'},
+        {key: 'cerqual_explanation', label: 'Explanation of CERQual Assessment'},
         {key: 'actions', label: 'Actions'}
       ],
       evidence_profile_fields: [
@@ -505,13 +577,21 @@ export default {
         id: 1,
         title: 'title',
         description: 'description',
+        authors: 'some,authors',
+        private: false,
         sources: [
           {id: 1, title: 'title source 1', authors: [{id: 1, name: 'name author'}], year: 2019, objective: 'lorem ipsum'},
           {id: 2, title: 'title source 2', authors: [{id: 1, name: 'name author'}], year: 2018, objective: 'lorem ipsum'}
         ],
         soqf: [
-          {id: 1, finding: 'some finding 01', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
-          {id: 2, finding: 'some finding 02', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''}
+          {id: 1, finding: 'The benef its of labour companionship may not be recognised by providers, women, or their partners', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 2, finding: 'Labour companionship was sometimes viewed as non-essential or less important compared to other aspects of care, and therefore deprioritised due to lim ited resources to spend on ’expendables’', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 3, finding: 'Formal changes to existing policies regarding allowing companions on the labour ward may be necessary prior to implementing labour companionship models at a facility level', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 4, finding: 'In settings where companions are allowed, there can be gaps between a policy or law allowing companionship, and the actual practice of allowing all women who want companionship to have a companion present', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 5, finding: 'Providers, women and male partners highlighted physical space constraints of the labour wards as a key barrier to labour companionship as it was perceived that privacy could not be maintained and wards would become overcrowded', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 6, finding: 'Some providers, women and male partners were concerned that the presence of a labour companion may increase the risk of transm itting infection in the labour room', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 7, finding: 'Some providers were resistant to integrate companions or doulas into maternity services, and provided several explanations for their reluctance. Providers felt that lay companions lacked purpose and boundaries, increased provider workloads, arrived unprepared, and could be in the way', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''},
+          {id: 8, finding: 'In most cases, male partners were not integrated into antenatal care or training sessions before birth. Where they were included in antenatal preparation, they felt that they learned comfort and support measures to assist their partners, but that these measures were often challenging to implement throughout the duration of labour and birth', overall_cerqual: '', explanation_cerqual: '', contribution_studies: ''}
         ],
         evidence_profile: [
           {id: 1, finding_id: 1, methodological_limitations: {option: 2, explanation: 'some explanation lorem ipsum'}, coherence: {option: null, explanation: ''}, adequacy: {option: null, explanation: ''}, relevance: {option: null, explanation: ''}},
@@ -531,6 +611,9 @@ export default {
         }
       }
     }
+  },
+  mounted() {
+    this.setting_tables.soqf_list.totalRows = this.list.soqf.length
   },
   methods: {
     editStageOne: function () {},
@@ -567,6 +650,11 @@ export default {
       this.buffer_methodological_assessments = {}
       // close
       this.$refs['modal-stage-four-data'].hide()
+    },
+    onFilterediSoQF (filteredItems) {
+      // Trigger pagination to update the number of buttons/pages due to filtering
+      this.setting_tables.soqf_list.totalRows = filteredItems.length
+      this.setting_tables.soqf_list.currentPage = 1
     }
   }
 }

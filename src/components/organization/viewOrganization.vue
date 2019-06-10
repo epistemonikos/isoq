@@ -16,9 +16,9 @@
         </b-col>
       </b-row>
       <div class="my-4">
-        <h3>Projects</h3>
+        <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
-          <b-col cols="6" sm="4" md="3" lg="2">
+          <b-col cols="12" class="text-right">
             <b-button variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
@@ -97,6 +97,14 @@
             id="input-project-list-description"
             :placeholder="$t('Enter a description')"
             v-model="buffer_project_list.description"></b-form-textarea>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Authors')"
+          label-for="input-project-authors">
+          <b-form-input
+            id="input-project-authors"
+            :placeholder="$t('Insert authors separated by commas')"
+            v-model="buffer_project.authors"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Visible')"
