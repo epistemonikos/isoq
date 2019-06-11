@@ -8,16 +8,28 @@ import App from './App'
 import { store } from './store'
 import routes from './router/index'
 import VueBootstrap from 'bootstrap-vue'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { i18n } from './plugins/i18n'
+import { Trans } from './plugins/Translation'
+
+library.add(faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock)
+
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.prototype.$http = axios
 
+/*
 const token = localStorage.getItem('user-token')
 if (token) {
   Vue.prototype.$http.defaults.headers.common['Authorization'] = token
 }
+*/
 
 Vue.use(Router)
 Vue.use(VueBootstrap)
+Vue.prototype.$i18nRoute = Trans.i18nRoute.bind(Trans)
 Vue.config.productionTip = false
 
 const router = new Router({
@@ -26,8 +38,13 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  store.dispatch('getLogginInfo', {})
+  // store.dispatch('getLogginInfo', {})
   if (to.matched.some(record => record.meta.requiresAuth)) {
+    console.log(store.getters.isLoggedIn)
+    if (store.getters.isLoggedIn) {
+      next()
+      return
+    }
     next({name: 'Login'})
   } else {
     next()
@@ -39,6 +56,7 @@ new Vue({
   el: '#app',
   router,
   store,
+  i18n,
   components: { App },
   template: '<App/>'
 })

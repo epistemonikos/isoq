@@ -15,11 +15,16 @@ module.exports = {
         target: 'http://localhost:8080',
         changeOrigin: true,
         logLevel: 'debug'
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        logLevel: 'debug'
       }
     },
 
     // Various Dev Server settings
-    host: 'localhost', // can be overwritten by process.env.HOST
+    host: 'episte.lo', // can be overwritten by process.env.HOST
     port: 8090, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: false,
     errorOverlay: true,
