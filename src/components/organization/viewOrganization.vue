@@ -3,16 +3,16 @@
     <b-container>
       <b-row>
         <b-col cols="12" sm="3" class="text-center">
-          <template v-if="organization.image">
-            <b-img rounded="circle" width="150" height="150" v-bind:src="organization.image"></b-img>
+          <template v-if="org.logo_url">
+            <b-img rounded="circle" width="150" height="150" v-bind:src="org.logo_url"></b-img>
           </template>
           <template v-else>
             <b-img rounded="circle" width="150" height="150" src="https://picsum.photos/125/125/?image=48"></b-img>
           </template>
         </b-col>
         <b-col cols="12" sm="9">
-          <h2>{{organization.name}}</h2>
-          <p>{{organization.description}}</p>
+          <h2>{{org.name}}</h2>
+          <p>{{org.description}}</p>
         </b-col>
       </b-row>
       <div class="my-4">
@@ -23,7 +23,7 @@
           </b-col>
         </b-row>
         <ul class="mt-5">
-          <li class="my-3" v-for="project in organization.projects" v-bind:key="project.id">
+          <li class="my-3" v-for="project in org.projects" v-bind:key="project.id">
             {{project.name}}
             <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
             <font-awesome-icon @click="ModalAddList(project.id)" icon="plus-square" pull="right" v-bind:title="$t('Add')" />
@@ -120,6 +120,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data () {
     return {
@@ -143,7 +145,8 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: true
+        private: true,
+        organization: '7b9c88ec182ca383'
       },
       buffer_project_list: {
         id: null,
@@ -151,55 +154,66 @@ export default {
         description: '',
         private: true
       },
-      organization: {
-        id: 1,
-        name: 'Epistemonikos',
-        description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus quod dolores maxime necessitatibus quos excepturi praesentium, explicabo repudiandae earum? Saepe dolorem dicta, nostrum quasi vitae a voluptas non quisquam odio.',
-        image: 'https://www.epistemonikos.cl/wp-content/uploads/2018/06/web-banner-produc-03.png',
-        projects: [
-          {
-            id: 1,
-            name: 'Project 01',
-            description: '',
-            lists:
-              [
-                { id: 1, name: 'Lista 01', description: '', private: true },
-                { id: 2, name: 'Lista 02', description: '', private: false }
-              ]
-          },
-          {
-            id: 2,
-            name: 'Lorem ipsum dolor sit amet consectetur adipisicing elit.',
-            lists:
-              [
-                { id: 3, name: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo reiciendis sed libero soluta quasi, veritatis id quas porro commodi labore doloribus non esse repellendus similique nisi ipsum. Rem, nesciunt eum.', description: '', private: true },
-                { id: 4, name: 'Lista 02', description: '', private: false }
-              ]
-          },
-          {
-            id: 3,
-            name: 'Project 03',
-            lists:
-              [
-                { id: 5, name: 'Lista 01', description: '', private: true },
-                { id: 6, name: 'Lista 02', description: '', private: false }
-              ]
-          }
-        ]
+      org: {
+        _id: '',
+        groups: [],
+        hidden_base_templates: [],
+        id: '',
+        logo_url: '',
+        name: '',
+        organization: '',
+        personal_organization: '',
+        project_order: [],
+        warning_message: '',
+        plan: '',
+        projects: []
       }
     }
   },
+  mounted () {
+    this.getOrganization()
+    this.getProjects()
+  },
   methods: {
+    getOrganization: function () {
+      axios.get(`/api/organizations/${this.$route.params.id}`)
+        .then((response) => {
+          this.org = {...response.data}
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    getProjects: function () {
+      axios.get('/api/isoqf_projects', {
+        params: {
+          organization: this.$route.params.id
+        }
+      })
+        .then((response) => {
+          console.log('projects', response)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     AddProject: function () {
-      this.organization.projects.push(this.buffer_project)
-      this.buffer_project = this.tmp_buffer_project
-      this.$refs['new-project'].hide()
+      // this.org.projects.push(this.buffer_project)
+      axios.post('/api/isoqf_projects', this.buffer_project)
+        .then((response) => {
+          this.buffer_project = this.tmp_buffer_project
+          this.$refs['new-project'].hide()
+          this.getProjects()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     ModalAddList: function (idProject) {
       this.$refs['new-project-list'].show()
     },
     AddProjectList: function () {
-      this.organization.projects[0].lists.push(this.buffer_project_list)
+      this.org.projects[0].lists.push(this.buffer_project_list)
       this.buffer_project_list = this.tmp_buffer_project_list
       this.$refs['new-project-list'].hide()
     }
