@@ -612,7 +612,7 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     this.setting_tables.soqf_list.totalRows = this.list.soqf.length
   },
   methods: {
