@@ -45,5 +45,12 @@
   "Enter a finding": "Enter a finding",
   "Browser": "Navegar",
   "Login": "Acceso",
-  "Lang": "Idioma"
+  "Lang": "Idioma",
+  "Evidence Profile": "Evidence Profile",
+  "No evidence profile has been created": "No evidence profile has been created",
+  "add a evidence profile": "add a evidence profile",
+  "Add data": "Add data",
+  "back": "back",
+  "no isoqf has been created": "no isoqf has been created",
+  "add a finding": "add a finding"
 }
