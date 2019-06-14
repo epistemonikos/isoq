@@ -9,12 +9,12 @@ import { store } from './store'
 import routes from './router/index'
 import VueBootstrap from 'bootstrap-vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 
-library.add(faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock)
+library.add(faEdit, faClone, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
@@ -40,7 +40,6 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
   // store.dispatch('getLogginInfo', {})
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    console.log(store.getters.isLoggedIn)
     if (store.getters.isLoggedIn) {
       next()
       return
