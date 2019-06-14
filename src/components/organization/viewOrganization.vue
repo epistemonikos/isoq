@@ -49,6 +49,14 @@
         id="new-project"
         ref="new-project"
         @ok="AddProject">
+        <b-alert
+          :show="ui.dismissCounters.dismissCountDown"
+          @dismiss-count-down="countDownChanged"
+          variant="danger"
+          v-if="ui.error.status">
+            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
+            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
+          </b-alert>
         <b-form-group
           :label="$t('Project name')"
           label-for="input-project-name">
@@ -80,6 +88,14 @@
         id="new-project-list"
         ref="new-project-list"
         @ok="AddProjectList">
+        <b-alert
+          :show="ui.dismissCounters.dismissCountDown"
+          @dismiss-count-down="countDownChanged"
+          variant="danger"
+          v-if="ui.error.status">
+            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
+            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
+          </b-alert>
         <b-form-group
           :label="$t('Project name')"
           label-for="input-project-list-name">
@@ -125,6 +141,18 @@ import axios from 'axios'
 export default {
   data () {
     return {
+      project_id: '',
+      organization: '',
+      ui: {
+        error: {
+          status: '',
+          statusText: ''
+        },
+        dismissCounters: {
+          dismisSec: 10,
+          dismissCountDown: 0
+        }
+      },
       global_status: [
         { value: false, text: 'public' },
         { value: true, text: 'private' }
@@ -139,7 +167,9 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: true
+        private: true,
+        project_id: '',
+        organization: ''
       },
       buffer_project: {
         id: null,
@@ -152,7 +182,9 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: true
+        private: true,
+        project_id: '',
+        organization: ''
       },
       org: {
         _id: '',
@@ -172,7 +204,8 @@ export default {
   },
   mounted () {
     this.getOrganization()
-    this.getProjects()
+    // this.getProjects()
+    this.getProjectsAndLists()
   },
   methods: {
     getOrganization: function () {
@@ -184,38 +217,88 @@ export default {
           console.log(error)
         })
     },
-    getProjects: function () {
-      axios.get('/api/isoqf_projects', {
-        params: {
-          organization: this.$route.params.id
-        }
-      })
-        .then((response) => {
-          console.log('projects', response)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
     AddProject: function () {
       // this.org.projects.push(this.buffer_project)
-      axios.post('/api/isoqf_projects', this.buffer_project)
+      axios.defaults.withCredentials = true
+      axios.defaults.headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': document.location.origin
+      }
+      axios.post('/api/isoqf_projects', this.buffer_project, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': document.location.origin
+        }
+      })
         .then((response) => {
           this.buffer_project = this.tmp_buffer_project
           this.$refs['new-project'].hide()
           this.getProjects()
         })
         .catch((error) => {
-          console.log(error)
+          this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
+          this.ui.error.status = error.response.status
+          this.ui.error.statusText = error.response.statusText
+          console.log('error', error.response)
+          this.$refs['new-project'].show()
         })
     },
+    countDownChanged (dismissCountDown) {
+      this.ui.dismissCounters.dismissCountDown = dismissCountDown
+    },
     ModalAddList: function (idProject) {
+      this.buffer_project_list.project_id = idProject
+      this.buffer_project_list.organization = this.$route.params.id
       this.$refs['new-project-list'].show()
     },
     AddProjectList: function () {
-      this.org.projects[0].lists.push(this.buffer_project_list)
-      this.buffer_project_list = this.tmp_buffer_project_list
-      this.$refs['new-project-list'].hide()
+      axios.post('/api/isoqf_lists', this.buffer_project_list, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': document.location.origin
+        }
+      })
+        .then((response) => {
+          this.buffer_project = this.tmp_buffer_project
+          this.$refs['new-project-list'].hide()
+          // get project lists
+          this.buffer_project_list = this.tmp_buffer_project_list
+        })
+        .catch((error) => {
+          this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
+          this.ui.error.status = error.response.status
+          this.ui.error.statusText = error.response.statusText
+          this.$refs['new-project-list'].show()
+        })
+    },
+    getProjectsAndLists: function () {
+      axios.all([
+        axios.get('/api/isoqf_projects', {
+          params: {
+            organization: this.$route.params.id
+          }
+        }),
+        axios.get('/api/isoqf_lists', {
+          params: {
+            organization: this.$route.params.id
+          }
+        })
+      ]).then(axios.spread((projects, lists) => {
+        this.$set(this.org, 'projects', projects.data)
+        var projectlist = lists.data
+
+        projects.data.forEach(function (v, k) {
+          projects.data[k].lists = []
+          // this.$set(projects.data[k], 'list', [])
+          for (const pos in projectlist) {
+            if (projects.data[k].id === projectlist[pos].project_id) {
+              projects.data[k].lists.push(projectlist[pos])
+            }
+          }
+        })
+      }))
     }
   }
 }
