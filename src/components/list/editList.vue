@@ -793,7 +793,7 @@ export default {
             this.characteristics_studies = response.data[0]
             this.characteristics_studies.last_column = 0
             if (response.data[0].fields.length) {
-              let fields = response.data[0].fields
+              let fields = JSON.parse(JSON.stringify(response.data[0].fields))
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
               this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
