@@ -50,10 +50,10 @@
                 v-model="list.private"
                 :options="global_status"></b-select>
             </b-form-group>
-
-            <!-- <b-tabs> -->
-              <!-- <b-tab title="SoQF"> -->
-                <h3>SoQF</h3>
+          </b-form>
+            <b-tabs>
+              <b-tab title="SoQF">
+                <!-- <h3>SoQF</h3> -->
                 <!-- modal finding -->
                 <b-modal id="modal-stage-one" ref="modal-stage-one">
                   <b-form-group
@@ -124,10 +124,10 @@
                   </div>
                 </template>
                 <!-- end modal finding -->
-              <!-- </b-tab> -->
+              </b-tab>
               <!-- Evidence Profile-->
-              <!-- <b-tab :title="$t('Evidence Profile')"> -->
-                <h3>{{$t('Evidence Profile')}}</h3>
+              <b-tab :title="$t('Evidence Profile')">
+                <!-- <h3>{{$t('Evidence Profile')}}</h3> -->
                 <b-modal
                   id="modal-stage-two"
                   ref="modal-stage-two"
@@ -267,92 +267,135 @@
                   </div>
                 </template>
                 <!-- end of Evidence Profile-->
-              <!-- </b-tab> -->
+              </b-tab>
               <!-- Characteristics of Studies -->
-              <!-- <b-tab v-bind:title="$t('Characteristics of Studies')"> -->
-                <h3>{{$t('Characteristics of Studies')}}</h3>
+              <b-tab v-bind:title="$t('Characteristics of Studies')">
+                <!-- <h3>{{$t('Characteristics of Studies')}}</h3> -->
                 <!-- create study tables -->
                 <b-modal
-                  id="modal-stage-three-table"
-                  ref="modal-stage-three-table"
-                  @ok="saveStageThree">
+                  ref="modal-stage-three-create-fields"
+                  @ok="saveStageThreeCreateFields">
                   <b-form-group
-                    :label="$t('Nro of cols')"
-                    label-for="input-nro-cols">
+                    id="nro-of-fields"
+                    label="Nro of fields"
+                    label-for="number-of-fields">
                     <b-form-input
-                      id="input-nro-cols"
+                      id="number-of-fields"
                       type="number"
-                      min="1"
-                      max="10"
-                      v-model="nroOfRows"
-                      :placeholder="$t('A number between')"></b-form-input>
-                  </b-form-group>
-                  <!-- -->
+                      v-model="modal_stage_three_create_fields.nro_of_fields"></b-form-input>
+                    </b-form-group>
                   <b-form-group
-                    v-for="item in parseInt(nroOfRows)"
+                    v-for="item in parseInt(modal_stage_three_create_fields.nro_of_fields)"
                     :key="item"
-                    :label="$t('Title of column', [item])"
-                    :label-for="`input-column-nro-${item}`">
+                    :label="`Column name #${item}`"
+                    :label-for="`field-${item}`">
                     <b-form-input
-                      :id="`input-column-nro-${item}`"
-                      type="text"
-                      :placeholder="$t('Title of column', [item])"
-                      v-model="buffer_characteristics_studies.fields[item - 1]"></b-form-input>
-                  </b-form-group>
-                  <!-- -->
+                    :id="`field-${item}`"
+                    type="text"
+                    v-model="modal_stage_three_create_fields.fields[item - 1]"></b-form-input>
+                    </b-form-group>
                 </b-modal>
                 <!-- end of create study tables -->
+                <!-- modal edit fields -->
+                <b-modal
+                  ref="modal-stage-three-edit-fields"
+                  @ok="saveStageThreeUpdateFields">
+                  <b-form-group
+                    v-for="(item, index) in modal_stage_three_edit_fields"
+                    :key="index"
+                    :label="`Column #${index}`"
+                    :label-for="`field-${index}`">
+                    <b-form-input
+                      :id="`field-${index}`"
+                      type="text"
+                      v-model="item.label"></b-form-input>
+                  </b-form-group>
+                </b-modal>
+                <!-- end of modal edit fields -->
                 <template v-if="characteristics_studies.fields.length">
                   <b-table
                     responsive striped caption-top
                     :fields="characteristics_studies.fields"
-                    :items="characteristics_studies.items"
+                    :items="characteristics_studies.data"
                     class="mb-5">
                     <template slot="table-caption">
                       <div class="text-right">
-                        <b-button @click="openModalStageThreeTable" variant="outline-primary">
-                          <font-awesome-icon icon="table" />
-                          Edit table
+                        <b-button
+                          @click="openModalStageThreeEditFields"
+                          variant="outline-primary">
+                            <font-awesome-icon icon="table" />
+                            Edit table
                         </b-button>
                         <b-button
                           v-if="characteristics_studies.fields.length"
-                          v-b-modal.modal-stage-three-data
+                          @click="openModalStageThreeAddData"
                           variant="outline-success">{{$t('Add data')}}</b-button>
                       </div>
                     </template>
-                    <template slot="actions">
-                      <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
-                      <font-awesome-icon icon="edit" pull="right" title="Edit" />
+                    <template slot="actions" slot-scope="row">
+                      <font-awesome-icon
+                        @click="modalDeleteStageThreeItemData(row)"
+                        icon="trash"
+                        title="Remove"/>
+                      <font-awesome-icon
+                        @click="openModalStageThreEditData(row)"
+                        icon="edit"
+                        title="Edit" />
                     </template>
                   </b-table>
                 </template>
                 <template v-else>
                   <div class="text-center my-5">
-                    <p>{{ $t('No studies') }} <b-link v-b-modal.modal-stage-three-table>{{ $t('add studies') }}</b-link></p>
+                    <p>{{ $t('No studies') }} <b-link @click="openModalStageThreeCreateFields">{{ $t('add studies') }}</b-link></p>
                   </div>
                 </template>
                 <!-- create study data -->
                 <b-modal
-                  id="modal-stage-three-data"
-                  ref="modal-stage-three-data"
-                  @ok="saveStageThree">
+                  ref="modal-stage-three-add-data"
+                  @ok="saveStageThreeCreateData">
                   <b-form-group
-                    v-for="(field, index) in characteristics_studies.fields"
+                    v-for="(item, index) in buffer_characteristics_studies.fields"
                     :key="index"
-                    :id="`label-field-${index}`"
-                    :label="`${field}`"
-                    :label-for="`input-field-${index}`">
-                    <b-form-input
-                      :id="`input-field-${index}`"
-                      type="text"
-                      v-model="buffer_characteristics_studies[field]"></b-form-input>
+                    :label="`${item.label}`"
+                    :label-for="`data-${index}`">
+                    <b-form-textarea
+                      :id="`data-${index}`"
+                      row="3"
+                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <!-- end of create study data -->
-              <!-- </b-tab> -->
+                <b-modal
+                  ref="modal-stage-three-edit-data"
+                  @ok="saveStageThreeEditedData">
+                  <b-form-group
+                    v-for="(item, index) in buffer_characteristics_studies.fields"
+                    :key="index"
+                    :label="`${item.label}`"
+                    :label-for="`data-${index}`">
+                    <b-form-textarea
+                      :id="`data-${index}`"
+                      row="3"
+                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                  </b-form-group>
+                </b-modal>
+                <b-modal
+                  @ok="removeStageThreeItemData"
+                  ref="modal-stage-three-remove-data"
+                  scrollable
+                  size="lg">
+                  <p>Are you sure you wanna remove this row?</p>
+                  <b-table
+                    responsive
+                    :fields="buffer_modal_stage_three.fields"
+                    :items="buffer_modal_stage_three.data"
+                    class="mb-5">
+                  </b-table>
+                </b-modal>
+              </b-tab>
               <!-- Methodological Assessments -->
-              <!-- <b-tab v-bind:title="$t('Methodological Assessments')"> -->
-                <h3>{{$t('Methodological Assessments')}}</h3>
+              <b-tab v-bind:title="$t('Methodological Assessments')">
+                <!-- <h3>{{$t('Methodological Assessments')}}</h3> -->
                 <b-modal
                   id="modal-stage-four-table"
                   ref="modal-stage-four-table">
@@ -425,10 +468,10 @@
                     <p>{{ $t('No methodological') }} <b-link v-b-modal.modal-stage-four-table>{{ $t('add methodological assessments') }}</b-link></p>
                   </div>
                 </template>
-              <!-- </b-tab> -->
+              </b-tab>
               <!-- Extracted data -->
-              <!-- <b-tab v-bind:title="$t('Extracted Data')"> -->
-                <h3>{{$t('Extracted Data')}}</h3>
+              <b-tab v-bind:title="$t('Extracted Data')">
+                <!-- <h3>{{$t('Extracted Data')}}</h3> -->
                 <b-modal
                   id="modal-stage-five-table"
                   ref="modal-stage-five-table">
@@ -501,16 +544,8 @@
                     <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link></p>
                   </div>
                 </template>
-              <!-- </b-tab> -->
-            <!-- </b-tabs> -->
-            <!--
-            <b-row align-h="end">
-              <b-col cols="12" md="2" class="text-right">
-                <b-button type="submit" variant="outline-primary">{{ $t('Save') }}</b-button>
-              </b-col>
-            </b-row>
-            -->
-          </b-form>
+              </b-tab>
+            </b-tabs>
         </b-col>
       </b-row>
     </b-container>
@@ -519,6 +554,7 @@
 
 <script>
 import axios from 'axios'
+// import _pick from 'lodash/pick'
 
 export default {
   data () {
@@ -625,10 +661,15 @@ export default {
         adequacy: {option: null, explanation: ''},
         relevance: {option: null, explanation: ''}
       },
-      buffer_characteristics_studies: {
+      buffer_modal_stage_three: {
         fields: [],
-        items: []
+        data: []
       },
+      modal_stage_three_create_fields: {
+        nro_of_fields: 1,
+        fields: []
+      },
+      modal_stage_three_edit_fields: [],
       buffer_methodological_assessments: {},
       buffer_extracted_data: {},
       list: {
@@ -637,12 +678,7 @@ export default {
         description: '',
         authors: '',
         private: false,
-        sources: [
-          /*
-          {id: 1, title: 'title source 1', authors: [{id: 1, name: 'name author'}], year: 2019, objective: 'lorem ipsum'},
-          {id: 2, title: 'title source 2', authors: [{id: 1, name: 'name author'}], year: 2018, objective: 'lorem ipsum'}
-          */
-        ],
+        sources: [],
         methodological_assessments: {
           fields: [],
           items: []
@@ -657,13 +693,15 @@ export default {
       characteristics_studies: {
         fields: [],
         items: []
-      }
+      },
+      buffer_characteristics_studies: {},
+      modal_stage_three_data: {}
     }
   },
   mounted () {
     this.setting_tables.soqf_list.totalRows = this.soqf.length
     this.getList()
-    this.getStageThreeData()
+    this.getStageThree()
   },
   methods: {
     getList: function () {
@@ -745,51 +783,153 @@ export default {
       // close
       this.$refs['modal-stage-two'].hide()
     },
-    getStageThreeData: function () {
-      axios.get('/api/isoqf_characteristics', this.buffer_characteristics_studies)
+    getStageThree: function () {
+      let params = {}
+      params.organization = this.list.organization
+      params.list_id = this.$route.params.id
+      axios.get('/api/isoqf_characteristics', params)
         .then((response) => {
           if (response.data.length) {
             this.characteristics_studies = response.data[0]
+            this.characteristics_studies.last_column = 0
+            if (response.data[0].fields.length) {
+              let fields = response.data[0].fields
+              let lastItem = fields.splice(fields.length - 1, 1)
+              this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
+              this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
+            }
+            this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
+            this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
           }
-        }).catch((error) => {
+        })
+        .catch((error) => {
           console.log(error)
         })
     },
-    openModalStageThreeTable: function () {
-      this.nroOfRows = this.characteristics_studies.fields.length
-      this.buffer_characteristics_studies = this.characteristics_studies
-      this.$refs['modal-stage-three-table'].show()
+    openModalStageThreeCreateFields: function () {
+      this.$refs['modal-stage-three-create-fields'].show()
     },
-    saveStageThree: function () {
-      // todo: the study id needs to be copied to methods assessments and extracted data
-      // this.characteristics_studies.items.push(this.buffer_characteristics_studies)
-      if (this.buffer_characteristics_studies.id) {
-        axios.patch(`/api/isoqf_characteristics/${this.buffer_characteristics_studies.id}`, this.buffer_characteristics_studies)
-          .then((response) => {
-            this.nroOfRows = 1
-            this.getStageThreeData()
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      } else {
-        this.buffer_characteristics_studies.list_id = this.$route.params.id
-        this.buffer_characteristics_studies.organization = this.list.organization
-        axios.post('/api/isoqf_characteristics', this.buffer_characteristics_studies)
-          .then((response) => {
-            this.getStageThreeData()
-          })
-          .catch((error) => {
-            console.log(error)
-          })
+    openModalStageThreeEditFields: function () {
+      this.modal_stage_three_edit_fields = JSON.parse(JSON.stringify(this.characteristics_studies.fields))
+      this.modal_stage_three_edit_fields.splice(this.modal_stage_three_edit_fields.length - 1, 1)
+      this.$refs['modal-stage-three-edit-fields'].show()
+    },
+    saveStageThreeCreateFields: function () {
+      let fields = JSON.parse(JSON.stringify(this.modal_stage_three_create_fields.fields))
+      let stageThreeFields = JSON.parse(JSON.stringify(this.modal_stage_three_create_fields))
+      stageThreeFields.fields = []
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        stageThreeFields.fields.push(objField)
       }
-      // clean
-      this.buffer_characteristics_studies = {
-        fields: [],
-        items: []
-      }
-      // close
-      this.$refs['modal-stage-three-data'].hide()
+
+      stageThreeFields.organization = this.list.organization
+      stageThreeFields.list_id = this.$route.params.id
+
+      axios.post('/api/isoqf_characteristics', stageThreeFields)
+        .then((response) => {
+          this.modal_stage_three_create_fields = {nro_of_fields: 1, fields: []}
+          this.getStageThree()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    saveStageThreeUpdateFields: function () {
+      let stageThreeFields = {}
+
+      stageThreeFields.fields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
+      stageThreeFields.organization = this.characteristics_studies.organization
+      stageThreeFields.list_id = this.characteristics_studies.list_id
+      stageThreeFields.id = this.characteristics_studies.id
+
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeFields)
+        .then((response) => {
+          this.getStageThree()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalStageThreeAddData: function () {
+      this.$refs['modal-stage-three-add-data'].show()
+    },
+    saveStageThreeCreateData: function () {
+      let stageThreeData = {}
+
+      stageThreeData.data = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+      stageThreeData.data.push(JSON.parse(JSON.stringify(this.modal_stage_three_data)))
+      stageThreeData.organization = this.characteristics_studies.organization
+      stageThreeData.list_id = this.characteristics_studies.list_id
+
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeData)
+        .then((response) => {
+          this.modal_stage_three_data = {}
+          this.getStageThree()
+        })
+    },
+    openModalStageThreEditData: function (row) {
+      let item = JSON.parse(JSON.stringify(row))
+      let index = item.index
+      let data = item.item
+
+      this.modal_stage_three_data = data
+      this.characteristics_studies.data_index = index
+      this.$refs['modal-stage-three-edit-data'].show()
+    },
+    saveStageThreeEditedData: function () {
+      let stageThreeData = {}
+      let index = this.characteristics_studies.data_index
+
+      stageThreeData.data = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+      delete stageThreeData.data[index]
+      stageThreeData.data[index] = this.modal_stage_three_data
+      stageThreeData.organization = this.characteristics_studies.organization
+      stageThreeData.list_id = this.characteristics_studies.list_id
+
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeData)
+        .then((response) => {
+          this.modal_stage_three_data = {}
+          delete this.characteristics_studies.data_index
+          this.getStageThree()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    modalDeleteStageThreeItemData: function (row) {
+      let item = JSON.parse(JSON.stringify(row))
+      let index = item.index
+      let fields = JSON.parse(JSON.stringify(this.characteristics_studies.fields))
+
+      fields.splice(fields.length - 1, 1)
+      this.buffer_modal_stage_three = {fields: [], data: []}
+      this.buffer_modal_stage_three.fields = fields
+      this.buffer_modal_stage_three.data.push(row.item)
+      this.characteristics_studies.data_index = index
+      this.$refs['modal-stage-three-remove-data'].show()
+    },
+    removeStageThreeItemData: function () {
+      let data = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+      let stageThreeData = {}
+
+      data.splice(this.characteristics_studies.data_index, 1)
+      stageThreeData.data = data
+      stageThreeData.organization = this.characteristics_studies.organization
+      stageThreeData.list_id = this.characteristics_studies.list_id
+
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeData)
+        .then((response) => {
+          this.modal_stage_three_data = {}
+          delete this.characteristics_studies.data_index
+          this.getStageThree()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     copyMethAssessments: function () {
       this.list.methodological_assessments.items.push(this.buffer_methodological_assessments)
