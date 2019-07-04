@@ -305,10 +305,19 @@
                     :key="index"
                     :label="`Column #${index}`"
                     :label-for="`field-${index}`">
-                    <b-form-input
-                      :id="`field-${index}`"
-                      type="text"
-                      v-model="item.label"></b-form-input>
+                    <b-input-group>
+                      <b-input-group-text
+                        v-if="characteristics_studies.fields.length > 2"
+                        slot="append">
+                        <font-awesome-icon
+                          icon="trash"
+                          @click="removeFieldStageThree(item, index)"></font-awesome-icon>
+                      </b-input-group-text>
+                      <b-form-input
+                        :id="`field-${index}`"
+                        type="text"
+                        v-model="item.label"></b-form-input>
+                    </b-input-group>
                   </b-form-group>
                 </b-modal>
                 <!-- end of modal edit fields -->
@@ -554,7 +563,6 @@
 
 <script>
 import axios from 'axios'
-// import _pick from 'lodash/pick'
 
 export default {
   data () {
@@ -841,18 +849,37 @@ export default {
     saveStageThreeUpdateFields: function () {
       let stageThreeFields = {}
 
-      stageThreeFields.fields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
+      if (this.buffer_modal_stage_three.data.length && this.buffer_modal_stage_three.fields.length) {
+        stageThreeFields.fields = JSON.parse(JSON.stringify(this.buffer_modal_stage_three.fields))
+        stageThreeFields.data = JSON.parse(JSON.stringify(this.buffer_modal_stage_three.data))
+      } else {
+        stageThreeFields.fields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
+      }
+
       stageThreeFields.organization = this.characteristics_studies.organization
       stageThreeFields.list_id = this.characteristics_studies.list_id
-      stageThreeFields.id = this.characteristics_studies.id
 
       axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeFields)
         .then((response) => {
+          this.buffer_modal_stage_three = {data: [], fields: []}
           this.getStageThree()
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+    removeFieldStageThree: function (field, index) {
+      let removedField = JSON.parse(JSON.stringify(field))
+      let stageThreeEditFields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
+      let stageThreeData = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+
+      stageThreeEditFields.splice(index, 1)
+      this.buffer_modal_stage_three.fields = stageThreeEditFields
+
+      for (let item of stageThreeData) {
+        delete item[removedField.key]
+      }
+      this.buffer_modal_stage_three.data = stageThreeData
     },
     openModalStageThreeAddData: function () {
       this.$refs['modal-stage-three-add-data'].show()
