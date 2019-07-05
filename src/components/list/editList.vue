@@ -306,19 +306,23 @@
                     :label="`Column #${index}`"
                     :label-for="`field-${index}`">
                     <b-input-group>
-                      <b-input-group-text
-                        v-if="characteristics_studies.fields.length > 2"
-                        slot="append">
-                        <font-awesome-icon
-                          icon="trash"
-                          @click="removeFieldStageThree(item, index)"></font-awesome-icon>
-                      </b-input-group-text>
                       <b-form-input
                         :id="`field-${index}`"
                         type="text"
                         v-model="item.label"></b-form-input>
+                      <b-input-group-append
+                        v-if="characteristics_studies.fields.length > 2">
+                        <b-button
+                          @click="removeFieldStageThree(item, index)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
+                  <b-button
+                    variant="outline-success"
+                    @click="addNewColumnStageThree">Add column</b-button>
                 </b-modal>
                 <!-- end of modal edit fields -->
                 <template v-if="characteristics_studies.fields.length">
@@ -589,7 +593,8 @@ export default {
           totalRows: 1,
           currentPage: 1,
           perPage: 10,
-          pageOptions: [10, 50, 100]
+          pageOptions: [10, 50, 100],
+          last_column: 0
         },
         methodological_assessments_list: {
           filter: '',
@@ -799,7 +804,6 @@ export default {
         .then((response) => {
           if (response.data.length) {
             this.characteristics_studies = response.data[0]
-            this.characteristics_studies.last_column = 0
             if (response.data[0].fields.length) {
               let fields = JSON.parse(JSON.stringify(response.data[0].fields))
               let lastItem = fields.splice(fields.length - 1, 1)
@@ -856,6 +860,12 @@ export default {
         stageThreeFields.fields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
       }
 
+      for (let cnt in stageThreeFields.fields) {
+        if (stageThreeFields.fields[cnt].label === '') {
+          stageThreeFields.fields.splice(cnt, 1)
+        }
+      }
+
       stageThreeFields.organization = this.characteristics_studies.organization
       stageThreeFields.list_id = this.characteristics_studies.list_id
 
@@ -875,6 +885,7 @@ export default {
 
       stageThreeEditFields.splice(index, 1)
       this.buffer_modal_stage_three.fields = stageThreeEditFields
+      this.modal_stage_three_edit_fields = stageThreeEditFields
 
       for (let item of stageThreeData) {
         delete item[removedField.key]
@@ -957,6 +968,11 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    addNewColumnStageThree: function () {
+      let columnId = parseInt(this.characteristics_studies.last_column) + 1
+      this.modal_stage_three_edit_fields.push({key: 'column_' + columnId, label: ''})
+      this.characteristics_studies.last_column = columnId
     },
     copyMethAssessments: function () {
       this.list.methodological_assessments.items.push(this.buffer_methodological_assessments)
