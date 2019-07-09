@@ -410,8 +410,9 @@
               <b-tab v-bind:title="$t('Methodological Assessments')">
                 <!-- <h3>{{$t('Methodological Assessments')}}</h3> -->
                 <b-modal
-                  id="modal-stage-four-table"
-                  ref="modal-stage-four-table">
+                  title="Add Fields"
+                  ref="modal-stage-four-table"
+                  @ok="saveStageFourModalField">
                   <b-form-group
                     :label="$t('Nro of cols')"
                     label-for="input-nro-cols">
@@ -419,14 +420,13 @@
                       id="input-nro-cols"
                       type="number"
                       min="1"
-                      max="10"
-                      v-model="nroOfRows"
+                      max="30"
+                      v-model="buffer_stage_four.nroOfColumns"
                       :placeholder="$t('A number between')"></b-form-input>
                   </b-form-group>
-
                   <!-- -->
                   <b-form-group
-                    v-for="item in parseInt(nroOfRows)"
+                    v-for="item in parseInt(buffer_stage_four.nroOfColumns)"
                     :key="item"
                     :label="$t('Title of column', [item])"
                     :label-for="`input-column-nro-${item}`">
@@ -434,51 +434,104 @@
                       :id="`input-column-nro-${item}`"
                       type="text"
                       :placeholder="$t('Title of column', [item])"
-                      v-model="list.methodological_assessments.fields[item - 1]"></b-form-input>
+                      v-model="buffer_stage_four.fields[item - 1]"></b-form-input>
                   </b-form-group>
                   <!-- -->
                 </b-modal>
-                <template v-if="list.methodological_assessments.fields.length">
+                <b-modal
+                  ref="modal-edit-fields-stage-four"
+                  title="Edit Fields"
+                  @ok="updateFieldsStageFour">
+                  <b-form-group
+                    v-for="(item, key) in buffer_modal_stage_four_fields.length"
+                    :key="key"
+                    :label="`Column #${key}`"
+                    :label-for="`column-${key}`">
+                    <b-input-group>
+                      <b-form-input
+                        :id="`column-${key}`"
+                        v-model="buffer_modal_stage_four_fields[key].label"></b-form-input>
+                        <b-input-group-append>
+                          <b-button
+                            @click="removeFieldStageFour(key)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                  <b-button
+                    @click="addColumnStageFour">
+                    Add column
+                  </b-button>
+                </b-modal>
+                <template v-if="stage_four.fields.length">
                   <b-table
                     responsive striped caption-top
-                    :fields="list.methodological_assessments.fields"
-                    :items="list.methodological_assessments.items">
+                    :fields="stage_four.fields"
+                    :items="stage_four.data">
                     <template slot="table-caption">
                       <div class="text-right">
-                        <b-button v-b-modal.modal-stage-four-table variant="outline-primary">{{$t('Edit table')}}</b-button>
+                        <b-button @click="editFieldsModalStageFour" variant="outline-primary">{{$t('Edit table')}}</b-button>
                         <b-button
-                          v-if="list.methodological_assessments.fields.length"
-                          v-b-modal.modal-stage-four-data
+                          v-if="stage_four.fields.length"
+                          @click="stageFourAddData"
                           variant="outline-success">{{$t('Add data')}}</b-button>
                       </div>
                     </template>
-                    <template slot="actions">
-                      <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
-                      <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
+                    <template slot="actions" slot-scope="row">
+                      <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
+                      <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
                     </template>
                   </b-table>
-                  <!-- create study data -->
+                  <!-- create -->
                   <b-modal
+                    title="Add data"
                     id="modal-stage-four-data"
                     ref="modal-stage-four-data"
-                    @ok="copyMethAssessments">
+                    @ok="saveDataStageFour">
                     <b-form-group
-                      v-for="(field, index) in list.methodological_assessments.fields"
+                      v-for="(field, index) in buffer_stage_four_data.fields"
                       :key="index"
                       :id="`label-field-${index}`"
-                      :label="`${field}`"
+                      :label="`${field.label}`"
                       :label-for="`input-field-${index}`">
                       <b-form-input
                         :id="`input-field-${index}`"
                         type="text"
-                        v-model="buffer_methodological_assessments[field]"></b-form-input>
+                        v-model="modal_stage_four_data[field.key]"></b-form-input>
                     </b-form-group>
                   </b-modal>
-                  <!-- end of create study data -->
+                  <b-modal
+                    ref="modal-edit-data-stage-four"
+                    title="Edit data"
+                    @ok="saveUpdateDataStageFour">
+                    <b-form-group
+                      v-for="(field, index) in buffer_modal_stage_four_fields"
+                      :key="index"
+                      :label="`${field.label}`"
+                      :label-for="`column-${index}`">
+                      <b-form-textarea
+                        :id="`column-${index}`"
+                        v-model="modal_stage_four_data[field.key]"></b-form-textarea>
+                    </b-form-group>
+                  </b-modal>
+                  <b-modal
+                    @ok="removeDataStageFour"
+                    ref="modal-remove-data-stage-four"
+                    title="Remove item"
+                    scrollable
+                    size="lg">
+                    <p>Are you sure you wanna remove this row?</p>
+                    <b-table
+                      :fields="buffer_stage_four_remove_item.fields"
+                      :items="buffer_stage_four_remove_item.items"></b-table>
+                  </b-modal>
+                  <!-- end of -->
                 </template>
                 <template v-else>
                   <div class="text-center my-5">
-                    <p>{{ $t('No methodological') }} <b-link v-b-modal.modal-stage-four-table>{{ $t('add methodological assessments') }}</b-link></p>
+                    <p>{{ $t('No methodological') }} <b-link @click="stageFourOpenModalFields">{{ $t('add methodological assessments') }}</b-link></p>
                   </div>
                 </template>
               </b-tab>
@@ -536,8 +589,7 @@
                   <!-- create extracted data -->
                   <b-modal
                     id="modal-stage-five-data"
-                    ref="modal-stage-five-data"
-                    @ok="copyMethAssessments">
+                    ref="modal-stage-five-data">
                     <b-form-group
                       v-for="(field, index) in list.extracted_data.fields"
                       :key="index"
@@ -683,7 +735,6 @@ export default {
         fields: []
       },
       modal_stage_three_edit_fields: [],
-      buffer_methodological_assessments: {},
       buffer_extracted_data: {},
       list: {
         id: '',
@@ -692,14 +743,27 @@ export default {
         authors: '',
         private: false,
         sources: [],
-        methodological_assessments: {
-          fields: [],
-          items: []
-        },
         extracted_data: {
           fields: [],
           items: []
         }
+      },
+      buffer_stage_four: {
+        nroOfColumns: 1,
+        fields: [],
+        items: []
+      },
+      buffer_stage_four_remove_item: {
+        fields: [],
+        items: []
+      },
+      buffer_stage_four_data: {
+        fields: []
+      },
+      stage_four: {
+        nroOfColumns: 1,
+        fields: [],
+        items: []
       },
       soqf: [],
       evidence_profile: [],
@@ -708,13 +772,16 @@ export default {
         items: []
       },
       buffer_characteristics_studies: {},
-      modal_stage_three_data: {}
+      modal_stage_three_data: {},
+      modal_stage_four_data: {},
+      buffer_modal_stage_four_fields: {}
     }
   },
   mounted () {
     this.setting_tables.soqf_list.totalRows = this.soqf.length
     this.getList()
     this.getStageThree()
+    this.getStageFour()
   },
   methods: {
     getList: function () {
@@ -724,10 +791,6 @@ export default {
           this.list.sources = []
           this.soqf = []
           this.evidence_profile = []
-          this.list.methodological_assessments = {
-            fields: [],
-            items: []
-          }
           this.list.extracted_data = {
             fields: [],
             items: []
@@ -974,12 +1037,170 @@ export default {
       this.modal_stage_three_edit_fields.push({key: 'column_' + columnId, label: ''})
       this.characteristics_studies.last_column = columnId
     },
-    copyMethAssessments: function () {
-      this.list.methodological_assessments.items.push(this.buffer_methodological_assessments)
-      // clean
-      this.buffer_methodological_assessments = {}
-      // close
-      this.$refs['modal-stage-four-data'].hide()
+    getStageFour: function () {
+      let params = {}
+      params.organization = this.list.organization
+      params.list_id = this.$route.params.id
+      axios.get('/api/isoqf_assessments', params)
+        .then((response) => {
+          if (response.data.length) {
+            this.stage_four = JSON.parse(JSON.stringify(response.data[0]))
+            if (this.stage_four.fields.length) {
+              this.stage_four.fields.push({key: 'actions', label: 'Actions'})
+            }
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    stageFourOpenModalFields: function () {
+      this.$refs['modal-stage-four-table'].show()
+    },
+    saveStageFourModalField: function () {
+      let bufferStageFourFields = JSON.parse(JSON.stringify(this.buffer_stage_four.fields))
+      let params = {}
+
+      params.organization = this.list.organization
+      params.list_id = this.$route.params.id
+      params.fields = []
+
+      for (let cnt in bufferStageFourFields) {
+        params.fields.push({key: 'column_' + cnt, label: bufferStageFourFields[cnt]})
+      }
+      params.nroOfColumns = params.fields.length
+      axios.post('/api/isoqf_assessments', params)
+        .then((response) => {
+          this.buffer_stage_four = {fields: [], items: [], nroOfColumns: 1}
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    stageFourAddData: function () {
+      let tmpStageFourFields = JSON.parse(JSON.stringify(this.stage_four.fields))
+      tmpStageFourFields.splice(tmpStageFourFields.length - 1, 1)
+      this.buffer_stage_four_data.fields = tmpStageFourFields
+
+      this.$refs['modal-stage-four-data'].show()
+    },
+    saveDataStageFour: function () {
+      let params = {}
+      params = JSON.parse(JSON.stringify(this.stage_four))
+      params.fields.splice(params.fields.length - 1, 1)
+      if (params.hasOwnProperty('data')) {
+        params.data.push(this.modal_stage_four_data)
+      } else {
+        params.data = []
+        params.data.push(this.modal_stage_four_data)
+      }
+
+      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, params)
+        .then((response) => {
+          this.modal_stage_four_data = {}
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    editFieldsModalStageFour: function () {
+      let tmpStageFourFields = JSON.parse(JSON.stringify(this.stage_four.fields))
+      tmpStageFourFields.splice(tmpStageFourFields.length - 1, 1)
+      this.buffer_modal_stage_four_fields = tmpStageFourFields
+      this.$refs['modal-edit-fields-stage-four'].show()
+    },
+    updateFieldsStageFour: function () {
+      let tmpFields = JSON.parse(JSON.stringify(this.buffer_modal_stage_four_fields))
+      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
+
+      if (tmpStageFour.data.length) {
+        let oldFields = []
+        let newFields = []
+        for (let item of tmpStageFour.fields) {
+          oldFields.push(item.key)
+        }
+        for (let item of tmpFields) {
+          newFields.push(item.key)
+        }
+        for (let i in oldFields) {
+          if (!newFields.includes(oldFields[i])) {
+            for (let item of tmpStageFour.data) {
+              delete item[oldFields[i]]
+            }
+          }
+        }
+      }
+      tmpStageFour.fields = tmpFields
+      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, tmpStageFour)
+        .then((response) => {
+          this.buffer_modal_stage_four_fields = {}
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalEditDataStageFour: function (row) {
+      let tmpFields = JSON.parse(JSON.stringify(this.stage_four.fields))
+      let tmpData = JSON.parse(JSON.stringify(this.stage_four.data))
+
+      tmpFields.splice(tmpFields.length - 1, 1)
+      this.buffer_modal_stage_four_fields = tmpFields
+      this.modal_stage_four_data = tmpData.splice(row.index, 1)[0]
+      this.buffer_stage_four.key_item = row.index
+      this.$refs['modal-edit-data-stage-four'].show()
+    },
+    saveUpdateDataStageFour: function () {
+      let tmpData = JSON.parse(JSON.stringify(this.modal_stage_four_data))
+      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+
+      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
+      tmpStageFour.data[this.buffer_stage_four.key_item] = tmpData
+      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, tmpStageFour)
+        .then((response) => {
+          delete this.buffer_stage_four.key_item
+          this.$refs['modal-edit-data-stage-four'].hide()
+          this.modal_stage_four_data = {}
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalRemoveDataStageFour: function (row) {
+      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
+      this.buffer_stage_four_remove_item.fields = tmpStageFour.fields
+      this.buffer_stage_four_remove_item.items = []
+      this.buffer_stage_four_remove_item.items.push(tmpStageFour.data[row.index])
+      this.buffer_stage_four_remove_item.key_item = row.index
+      this.$refs['modal-remove-data-stage-four'].show()
+    },
+    removeDataStageFour: function () {
+      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+
+      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
+      tmpStageFour.data.splice(this.buffer_stage_four_remove_item.key_item, 1)
+      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, tmpStageFour)
+        .then((response) => {
+          this.buffer_stage_four_remove_item = {fields: [], items: []}
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    removeFieldStageFour: function (key) {
+      this.buffer_modal_stage_four_fields.splice(key, 1)
+    },
+    addColumnStageFour: function () {
+      let tmpFields = JSON.parse(JSON.stringify(this.buffer_modal_stage_four_fields))
+      let lastItem = tmpFields.splice(tmpFields.length - 1, 1)[0]
+      let lastId = parseInt(lastItem.key.split('_')[1]) + 1
+      this.buffer_modal_stage_four_fields.push({key: 'column_' + lastId, label: ''})
     },
     onFilterediSoQF (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
