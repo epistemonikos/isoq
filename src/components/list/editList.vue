@@ -539,6 +539,22 @@
               <b-tab v-bind:title="$t('Extracted Data')">
                 <!-- <h3>{{$t('Extracted Data')}}</h3> -->
                 <b-modal
+                  title="Import TSV"
+                  id="modal-stage-five-import"
+                  scrollable
+                  size="lg">
+                  <b-form-group
+                    label="Paste your TSV file">
+                    <b-form-textarea
+                      placeholder="Paste your TSV file"
+                      rows="3"
+                      v-model="csvImport"></b-form-textarea>
+                  </b-form-group>
+                  <b-table
+                    :fields="stage_five_imported_data.fields"
+                    :items="stage_five_imported_data.items"></b-table>
+                </b-modal>
+                <b-modal
                   id="modal-stage-five-table"
                   ref="modal-stage-five-table">
                   <b-form-group
@@ -606,7 +622,7 @@
                 </template>
                 <template v-else>
                   <div class="text-center my-5">
-                    <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link></p>
+                    <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or <b-link v-b-modal.modal-stage-five-import>import</b-link></p>
                   </div>
                 </template>
               </b-tab>
@@ -774,7 +790,34 @@ export default {
       buffer_characteristics_studies: {},
       modal_stage_three_data: {},
       modal_stage_four_data: {},
-      buffer_modal_stage_four_fields: {}
+      buffer_modal_stage_four_fields: {},
+      csvImport: '',
+      stage_five_imported_data: {
+        fields: [],
+        items: []
+      }
+    }
+  },
+  watch: {
+    csvImport: function () {
+      this.stage_five_imported_data.fields = []
+      this.stage_five_imported_data.items = []
+      let lines = this.csvImport.split('\n')
+      for (let cnt in lines) {
+        if (cnt<1) {
+          let header = lines[cnt].split('\t')
+          for (let h in header) {
+            this.stage_five_imported_data.fields.push({key: 'column_' + h, label: header[h]})
+          }
+        } else {
+          let item = lines[cnt].split('\t')
+          let e = {}
+          for (let i in item) {
+            e['column_' + i] = item[i]
+          }
+          this.stage_five_imported_data.items.push(e)
+        }
+      }
     }
   },
   mounted () {
@@ -1201,6 +1244,9 @@ export default {
       let lastItem = tmpFields.splice(tmpFields.length - 1, 1)[0]
       let lastId = parseInt(lastItem.key.split('_')[1]) + 1
       this.buffer_modal_stage_four_fields.push({key: 'column_' + lastId, label: ''})
+    },
+    saveImportedDataStageFive: function () {
+
     },
     onFilterediSoQF (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
