@@ -542,7 +542,8 @@
                   title="Import TSV"
                   id="modal-stage-five-import"
                   scrollable
-                  size="lg">
+                  size="lg"
+                  @ok="saveImportedDataStageFive">
                   <b-form-group
                     label="Paste your TSV file">
                     <b-form-textarea
@@ -1246,7 +1247,19 @@ export default {
       this.buffer_modal_stage_four_fields.push({key: 'column_' + lastId, label: ''})
     },
     saveImportedDataStageFive: function () {
-
+      let params = {}
+      params.organization = this.list.organization
+      params.list_id = this.$route.params.id
+      params.fields = this.stage_five_imported_data.fields
+      params.items = this.stage_five_imported_data.items
+      axios.post('/api/isoqf_extracted_data', params)
+        .then((response) => {
+          this.stage_five_imported_data = {fields: [], items: []}
+          console.log(response)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     onFilterediSoQF (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
