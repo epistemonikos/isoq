@@ -805,7 +805,7 @@ export default {
       this.stage_five_imported_data.items = []
       let lines = this.csvImport.split('\n')
       for (let cnt in lines) {
-        if (cnt<1) {
+        if (cnt < 1) {
           let header = lines[cnt].split('\t')
           for (let h in header) {
             this.stage_five_imported_data.fields.push({key: 'column_' + h, label: header[h]})
