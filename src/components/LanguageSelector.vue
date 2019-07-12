@@ -13,11 +13,6 @@ import { Trans } from '@/plugins/Translation'
 
 export default {
   name: 'LanguageSwitcher',
-  data () {
-    return {
-      languages: ['en', 'es']
-    }
-  },
   computed: {
     supportedLanguages () {
       return Trans.supportedLanguages
