@@ -7,16 +7,14 @@ Vue.use(Vuex)
 export const store = new Vuex.Store({
   state: {
     status: '',
-    // token: localStorage.getItem('token') || '',
     user: {}
   },
   mutations: {
     auth_request (state) {
       state.status = 'loading'
     },
-    auth_success (state, /* token, */ user) {
+    auth_success (state, user) {
       state.status = 'success'
-      // state.token = token
       state.user = user
     },
     auth_error (state) {
@@ -24,7 +22,6 @@ export const store = new Vuex.Store({
     },
     logout (state) {
       state.status = ''
-      // state.token = ''
       state.user = {}
     }
   },
@@ -37,12 +34,14 @@ export const store = new Vuex.Store({
         formData.append('password', user.password)
         axios({url: '/auth/login', data: formData, method: 'POST'})
           .then(response => {
-            // const token = response.data.token
             const user = response.data
-            // localStorage.setItem('token', token)
-            // axios.defaults.headers.common['Authorization'] = token
-            commit('auth_success', /* token, */ user)
-            resolve(response)
+            if (user.status !== 'false') {
+              commit('auth_success', user)
+              resolve(response)
+            } else {
+              commit('auth_error')
+              localStorage.removeItem('token')
+            }
           })
           .catch(error => {
             commit('auth_error')
