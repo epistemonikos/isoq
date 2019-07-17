@@ -4,12 +4,6 @@
 
 ## Build Setup
 
-```
-sudo apt-get install libpcre3 libpcre3-dev
-
-pip install uwsgi -I --no-cache-dir
-```
-
 ``` bash
 # install dependencies
 npm install
