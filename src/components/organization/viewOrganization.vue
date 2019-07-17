@@ -204,7 +204,6 @@ export default {
   },
   mounted () {
     this.getOrganization()
-    // this.getProjects()
     this.getProjectsAndLists()
   },
   methods: {
@@ -218,7 +217,6 @@ export default {
         })
     },
     AddProject: function () {
-      // this.org.projects.push(this.buffer_project)
       axios.defaults.withCredentials = true
       axios.defaults.headers = {
         'Content-Type': 'application/json',
@@ -234,13 +232,11 @@ export default {
         .then((response) => {
           this.buffer_project = this.tmp_buffer_project
           this.$refs['new-project'].hide()
-          this.getProjects()
+          this.getProjectsAndLists()
         })
         .catch((error) => {
           this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-          this.ui.error.status = error.response.status
-          this.ui.error.statusText = error.response.statusText
-          console.log('error', error.response)
+          console.log('error', error)
           this.$refs['new-project'].show()
         })
     },
@@ -265,11 +261,11 @@ export default {
           this.$refs['new-project-list'].hide()
           // get project lists
           this.buffer_project_list = this.tmp_buffer_project_list
+          this.getProjectsAndLists()
         })
         .catch((error) => {
           this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-          this.ui.error.status = error.response.status
-          this.ui.error.statusText = error.response.statusText
+          console.log('error list', error)
           this.$refs['new-project-list'].show()
         })
     },
