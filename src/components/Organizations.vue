@@ -23,17 +23,23 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data () {
     return {
       default_logo_org: '//placehold.it/800x600',
-      organizations: [
-        {id: '7b9c88ec182ca383', name: 'Epistemonikos', description: 'We bring scientific evidence closer to everyone making health decisions.', image: 'https://www.epistemonikos.cl/wp-content/uploads/2018/06/web-banner-produc-03.png'},
-        {id: 2, name: 'Organization Test', description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit.', image: 'https://picsum.photos/200/200/?image=39'},
-        {id: 3, name: 'org 03', description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel quia omnis eligendi asperiores dignissimos aspernatur praesentium rerum labore aut eaque odio similique ipsa excepturi voluptate, a tempore aperiam quis autem?', image: 'https://picsum.photos/200/200/?image=41'},
-        {id: 4, name: 'org 04', description: '', image: 'https://picsum.photos/200/200/?image=40'},
-        {id: 5, name: 'org 05', description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit.', image: ''}
-      ]
+      organizations: []
+    }
+  },
+  mounted () {
+    this.getOrganizations()
+  },
+  methods: {
+    getOrganizations: function () {
+      for (let org of this.$store.state.user.orgs) {
+        this.organizations.push(org)
+      }
     }
   }
 }
