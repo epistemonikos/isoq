@@ -64,7 +64,8 @@ var routes = [
         name: 'Organizations',
         component: Organizations,
         meta: {
-          title: 'iSoF Qualy - Organizations'
+          title: 'iSoF Qualy - Organizations',
+          requiresAuth: true
         }
       },
       {
@@ -80,7 +81,8 @@ var routes = [
         name: 'viewList',
         component: ViewList,
         meta: {
-          title: 'iSoF Qualy - List'
+          title: 'iSoF Qualy - List',
+          requiresAuth: true
         }
       },
       {
@@ -88,7 +90,8 @@ var routes = [
         name: 'editList',
         component: EditList,
         meta: {
-          title: 'iSoF Qualy - Edit List'
+          title: 'iSoF Qualy - Edit List',
+          requiresAuth: true
         }
       }
     ]
