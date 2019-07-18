@@ -87,6 +87,7 @@
       <b-modal
         id="new-project-list"
         ref="new-project-list"
+        title="New iSoQF table"
         @ok="AddProjectList">
         <b-alert
           :show="ui.dismissCounters.dismissCountDown"
@@ -97,13 +98,14 @@
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
         <b-form-group
-          :label="$t('Project name')"
-          label-for="input-project-list-name">
+          :label="$t('Title of review')"
+          label-for="input-project-list-name"
+          description="Insert the title that you plan to use for this report or paper.">
           <b-form-input
             id="input-project-list-name"
             type="text"
             required
-            :placeholder="$t('Project name')"
+            :placeholder="$t('Title of review')"
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
         <b-form-group
@@ -116,11 +118,36 @@
         </b-form-group>
         <b-form-group
           :label="$t('Authors')"
-          label-for="input-project-authors">
+          label-for="input-project-authors"
+          description="Authors separated by commas.">
           <b-form-input
             id="input-project-authors"
-            :placeholder="$t('Insert authors separated by commas')"
+            :placeholder="$t('Authors of review')"
             v-model="buffer_project.authors"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Review question')"
+          label-for="input-project-review-question">
+          <b-form-input
+            id="input-project-review-question"
+            :placeholder="$t('Insert main question that the review addresses')"
+            v-model="buffer_project.review_question"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Has this review been published?')"
+          label-for="select-project-list-published-status">
+          <b-select
+            id="select-project-list-published-status"
+            v-model="buffer_project_list.published_status"
+            :options="yes_or_no"></b-select>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Is the iSoQF being completed by the review authors?')"
+          label-for="select-project-list-completed-by-author-status">
+          <b-select
+            id="select-project-list-completed-by-author-status"
+            v-model="buffer_project_list.complete_by_author"
+            :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
           :label="$t('Visible')"
@@ -157,6 +184,10 @@ export default {
         { value: false, text: 'public' },
         { value: true, text: 'private' }
       ],
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ],
       tmp_buffer_project: {
         id: null,
         name: '',
@@ -169,14 +200,17 @@ export default {
         description: '',
         private: true,
         project_id: '',
-        organization: ''
+        organization: '',
+        review_question: '',
+        published_status: false,
+        complete_by_author: false
       },
       buffer_project: {
         id: null,
         name: '',
         description: '',
         private: true,
-        organization: '7b9c88ec182ca383'
+        organization: ''
       },
       buffer_project_list: {
         id: null,
@@ -184,7 +218,10 @@ export default {
         description: '',
         private: true,
         project_id: '',
-        organization: ''
+        organization: '',
+        review_question: '',
+        published_status: false,
+        complete_by_author: false
       },
       org: {
         _id: '',
