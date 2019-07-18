@@ -8,9 +8,8 @@
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav class="ml-auto">
           <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("About") }}</b-nav-item>
-          <b-nav-item :to="$i18nRoute({ name: 'Organizations'})">{{ $t("Organizations") }}</b-nav-item>
-          <b-nav-item>{{ $t("Browser") }}</b-nav-item>
           <template v-if="$store.getters.isLoggedIn">
+            <b-nav-item :to="$i18nRoute({ name: 'Organizations'})">{{ $t("Organizations") }}</b-nav-item>
             <b-nav-item @click="logout">{{ $t('Logout') }}</b-nav-item>
           </template>
           <template v-else>
