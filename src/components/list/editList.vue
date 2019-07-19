@@ -744,7 +744,22 @@ export default {
           console.log(error)
         })
     },
+    saveListName: function () {
+      let params = {
+        organization: this.list.organization,
+        name: this.buffer_modal_stage_one.name
+      }
+      axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+        .then((response) => {
+          this.list.name = this.buffer_modal_stage_one.name
+          this.buffer_modal_stage_one = this.initial_modal_stage_one
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     saveStageOneAndTwo: function () {
+      this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
@@ -755,6 +770,7 @@ export default {
         axios.patch(`/api/isoqf_findings/${this.soqf.id}`, params)
           .then((response) => {
             this.getStageOneData()
+            this.saveListName()
           })
           .catch((error) => {
             console.log(error)
