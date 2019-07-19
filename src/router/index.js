@@ -7,6 +7,7 @@ import Organizations from '@/components/Organizations'
 import ViewOrganization from '@/components/organization/viewOrganization'
 import ViewList from '@/components/list/viewList'
 import EditList from '@/components/list/editList'
+import ViewProject from '@/components/project/viewProject'
 
 import { Trans } from '@/plugins/Translation'
 
@@ -74,6 +75,14 @@ var routes = [
         component: ViewOrganization,
         meta: {
           title: 'iSoF Qualy - Organization'
+        }
+      },
+      {
+        path: '/organization/:org_id/project/:id',
+        name: 'viewProject',
+        component: ViewProject,
+        meta: {
+          requiresAuth: true
         }
       },
       {
