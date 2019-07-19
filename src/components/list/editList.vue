@@ -12,622 +12,498 @@
       <h2>{{ $t('Edit') }} {{list.name}}</h2>
       <b-row>
         <b-col cols="12">
-          <b-form>
-            <b-form-group
-              id="label-title"
-              v-bind:label="$t('Title')"
-              label-for="input-title">
-              <b-form-input
-                id="input-title"
-                v-model="list.name"
-                type="text"
-                required
-                v-bind:placeholder="$t('Enter a title')"></b-form-input>
-            </b-form-group>
-            <b-form-group
-              id="label-description"
-              v-bind:label="$t('Description')"
-              label-for="input-description">
-              <b-form-textarea
-                id="input-description"
-                v-model="list.description"
-                type="textarea"
-                :placeholder="$t('Enter a description')"></b-form-textarea>
-            </b-form-group>
-            <b-form-group
-              :label="$t('Authors')"
-              label-for="input-project-authors">
-              <b-form-input
-                id="input-project-authors"
-                :placeholder="$t('Insert authors separated by commas')"
-                v-model="list.authors"></b-form-input>
-            </b-form-group>
-            <b-form-group
-              :label="$t('Visible')"
-              label-for="select-project-list-status">
-              <b-select
-                id="select-project-list-status"
-                v-model="list.private"
-                :options="global_status"></b-select>
-            </b-form-group>
-          </b-form>
-            <b-tabs>
-              <b-tab title="SoQF">
-                <!-- <h3>SoQF</h3> -->
-                <!-- modal finding -->
-                <b-modal id="modal-stage-one" ref="modal-stage-one">
-                  <b-form-group
-                    id="label-finding"
-                    v-bind:label="$t('Finding')"
-                    label-for="input-finding">
-                    <b-form-input
-                      id="input-finding"
-                      type="text"
-                      v-model="buffer_modal_stage_one.name"
-                      required
-                      v-bind:placeholder="$t('Enter a finding')"></b-form-input>
-                  </b-form-group>
-                  <div slot="modal-footer">
-                    <b-button
-                      variant="outline-primary"
-                      @click="saveStageOne">{{ $t('Save') }}</b-button>
-                  </div>
-                </b-modal>
-                <template v-if="soqf.length">
-                  <b-table
-                    striped
-                    :fields="soqf_fields"
-                    :items="soqf"
-                    caption-top
-                    :current-page="setting_tables.soqf_list.current_page"
-                    :per-page="setting_tables.soqf_list.perPage"
-                    :filter="setting_tables.soqf_list.filter"
-                    @filtered="onFilterediSoQF">
-                    <template slot="table-caption">
-                      <div class="text-right">
-                        <b-button v-b-modal.modal-stage-one variant="outline-primary">{{ $t('Add new Finding') }}</b-button>
-                      </div>
-                      <div>
-                        <b-form-group
-                          label="Search"
-                          label-for="filter-input-isoqf-list">
-                          <b-form-input
-                            id="filter-input-isoqf-list"
-                            v-model="setting_tables.soqf_list.filter"></b-form-input>
-                        </b-form-group>
-                        <b-form-group label-cols-sm="6" label="Per page" class="mb-0">
-                          <b-form-select v-model="setting_tables.soqf_list.perPage" :options="setting_tables.soqf_list.pageOptions"></b-form-select>
-                        </b-form-group>
-                      </div>
-                    </template>
-                    <template slot="actions">
-                      <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
-                      <font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')" />
-                    </template>
-                  </b-table>
-                  <!-- pagination -->
-                  <b-row>
-                    <b-col>
-                      <b-pagination
-                        v-model="setting_tables.soqf_list.current_page"
-                        :per-page="setting_tables.soqf_list.perPage"
-                        :total-rows="setting_tables.soqf_list.totalRows"></b-pagination>
-                    </b-col>
-                  </b-row>
-
-                </template>
-                <template v-else>
-                  <div class="text-center my-5">
-                    <p>
-                      {{ $t('no isoqf has been created') }} <b-link v-b-modal.modal-stage-one>{{ $t('add a finding') }}</b-link>
-                    </p>
-                  </div>
-                </template>
-                <!-- end modal finding -->
-              </b-tab>
-              <!-- Evidence Profile-->
-              <b-tab :title="$t('Evidence Profile')">
-                <!-- <h3>{{$t('Evidence Profile')}}</h3> -->
-                <b-modal
-                  id="modal-stage-two"
-                  ref="modal-stage-two"
-                  v-bind:title="$t('Evidence profile')"
-                  scrollable>
-                  <b-form-group
-                    :label="$t('Finding')"
-                    label-for="input-select-finding">
-                    <b-form-select
-                      id="input-select-finding"
-                      :options="soqf"
-                      value-field="id"
-                      text-field="name"
-                      v-model="buffer_modal_stage_two.finding_id"></b-form-select>
-                  </b-form-group>
-                  <h6>{{$t('Methodological Limitations')}}</h6>
-                  <b-form-checkbox-group
-                    v-model="buffer_modal_stage_two.methodological_limitations.option"
-                    :options="select_options"
-                    name="methodological-limitations"
-                    stacked></b-form-checkbox-group>
-                  <b-form-group
-                    v-bind:label="$t('Explanation')"
-                    label-for="input-ml-explanation">
-                    <b-form-textarea
-                      id="input-ml-explanation"
-                      v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
-                  </b-form-group>
-                  <!-- coherence -->
-                  <h6>{{$t('Coherence')}}</h6>
-                  <b-form-checkbox-group
-                    v-model="buffer_modal_stage_two.coherence.option"
-                    :options="select_options"
-                    name="coherence"
-                    stacked></b-form-checkbox-group>
-                  <b-form-group
-                    v-bind:label="$t('Explanation')"
-                    label-for="input-coherence-explanation">
-                    <b-form-textarea
-                      id="input-coherence-explanation"
-                      v-model="buffer_modal_stage_two.coherence.explanation"
-                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
-                  </b-form-group>
-                  <!-- adequacy -->
-                  <h6>{{$t('Adequacy')}}</h6>
-                  <b-form-checkbox-group
-                    v-model="buffer_modal_stage_two.adequacy.option"
-                    :options="select_options"
-                    name="adequacy"
-                    stacked></b-form-checkbox-group>
-                  <b-form-group
-                    v-bind:label="$t('Explanation')"
-                    label-for="input-adequacy-explanation">
-                    <b-form-textarea
-                      id="input-adequacy-explanation"
-                      v-model="buffer_modal_stage_two.adequacy.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <!-- relevance -->
-                  <h6>{{$t('Relevance')}}</h6>
-                  <b-form-checkbox-group
-                    v-model="buffer_modal_stage_two.relevance.option"
-                    :options="select_options"
-                    name="relevance"
-                    stacked></b-form-checkbox-group>
-                  <b-form-group
-                    v-bind:label="$t('Explanation')"
-                    label-for="input-relevance-explanation">
-                    <b-form-textarea
-                      id="input-relevance-explanation"
-                      v-model="buffer_modal_stage_two.relevance.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <div slot="modal-footer">
-                    <b-button
-                      variant="outline-primary"
-                      @click="saveStageTwo">{{ $t('Save') }}</b-button>
-                  </div>
-                </b-modal>
-                <template v-if="evidence_profile.length">
-                  <b-table
-                    responsive striped caption-top
-                    :fields="evidence_profile_fields"
-                    :items="evidence_profile">
-                    <template slot="table-caption">
-                      <div class="text-right">
-                        <b-button v-b-modal.modal-stage-two variant="outline-primary">Add new element</b-button>
-                      </div>
-                    </template>
-                    <template slot="finding" slot-scope="data">
-                      {{data.item.name}}
-                    </template>
-                    <template slot="methodological-limit" slot-scope="data">
-                      <div v-if="data.item.methodological_limitations.option !== null">
-                        <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
-                        <p>Explanation: {{data.item.methodological_limitations.explanation}}</p>
-                      </div>
-                      <div v-else><i>No data</i></div>
-                    </template>
-
-                    <template slot="coherence" slot-scope="data">
-                      <div v-if="data.item.coherence.option !== null">
-                        <p>{{select_options[data.item.coherence.option].text}}</p>
-                        <p>Explanation: {{data.item.coherence.explanation}}</p>
-                      </div>
-                      <div v-else><i>No data</i></div>
-                    </template>
-
-                    <template slot="adequacy" slot-scope="data">
-                      <div v-if="data.item.adequacy.option !== null">
-                        <p>{{select_options[data.item.adequacy.option].text}}</p>
-                        <p>Explanation: {{data.item.adequacy.explanation}}</p>
-                      </div>
-                      <div v-else><i>No data</i></div>
-                    </template>
-
-                    <template slot="relevance" slot-scope="data">
-                      <div v-if="data.item.relevance.option !== null">
-                        <p>{{select_options[data.item.relevance.option].text}}</p>
-                        <p>Explanation: {{data.item.relevance.explanation}}</p>
-                      </div>
-                      <div v-else><i>No data</i></div>
-                    </template>
-
-                    <template slot="actions" slot-scope="data">
-                      <font-awesome-icon icon="trash" pull="right" title="Remove" style="color: #dc3545" />
-                      <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
-                    </template>
-                  </b-table>
-                </template>
-                <template v-else>
-                  <div class="text-center my-5">
-                    <p>
-                      {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-stage-two>{{ $t('add a evidence profile') }}</b-link>
-                    </p>
-                  </div>
-                </template>
-                <!-- end of Evidence Profile-->
-              </b-tab>
-              <!-- Characteristics of Studies -->
-              <b-tab v-bind:title="$t('Characteristics of Studies')">
-                <!-- <h3>{{$t('Characteristics of Studies')}}</h3> -->
-                <!-- create study tables -->
-                <b-modal
-                  ref="modal-stage-three-create-fields"
-                  @ok="saveStageThreeCreateFields">
-                  <b-form-group
-                    id="nro-of-fields"
-                    label="Nro of fields"
-                    label-for="number-of-fields">
-                    <b-form-input
-                      id="number-of-fields"
-                      type="number"
-                      v-model="modal_stage_three_create_fields.nro_of_fields"></b-form-input>
-                    </b-form-group>
-                  <b-form-group
-                    v-for="item in parseInt(modal_stage_three_create_fields.nro_of_fields)"
-                    :key="item"
-                    :label="`Column name #${item}`"
-                    :label-for="`field-${item}`">
-                    <b-form-input
-                    :id="`field-${item}`"
+          <b-tabs>
+            <!-- Evidence Profile-->
+            <b-tab :title="$t('Evidence Profile')">
+              <!-- <h3>{{$t('Evidence Profile')}}</h3> -->
+              <b-modal
+                id="modal-stage-two"
+                ref="modal-stage-two"
+                v-bind:title="$t('Evidence profile')"
+                scrollable
+                @ok="saveStageOneAndTwo">
+                <b-form-group
+                  id="label-finding"
+                  v-bind:label="$t('Finding')"
+                  label-for="input-finding">
+                  <b-form-input
+                    id="input-finding"
                     type="text"
-                    v-model="modal_stage_three_create_fields.fields[item - 1]"></b-form-input>
-                    </b-form-group>
-                </b-modal>
-                <!-- end of create study tables -->
-                <!-- modal edit fields -->
-                <b-modal
-                  ref="modal-stage-three-edit-fields"
-                  @ok="saveStageThreeUpdateFields">
-                  <b-form-group
-                    v-for="(item, index) in modal_stage_three_edit_fields"
-                    :key="index"
-                    :label="`Column #${index}`"
-                    :label-for="`field-${index}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`field-${index}`"
-                        type="text"
-                        v-model="item.label"></b-form-input>
-                      <b-input-group-append
-                        v-if="characteristics_studies.fields.length > 2">
+                    v-model="buffer_modal_stage_one.name"
+                    required
+                    v-bind:placeholder="$t('Enter a finding')"></b-form-input>
+                </b-form-group>
+                <h6>{{$t('Methodological Limitations')}}</h6>
+                <b-form-checkbox-group
+                  v-model="buffer_modal_stage_two.methodological_limitations.option"
+                  :options="select_options"
+                  name="methodological-limitations"
+                  stacked></b-form-checkbox-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-ml-explanation">
+                  <b-form-textarea
+                    id="input-ml-explanation"
+                    v-model="buffer_modal_stage_two.methodological_limitations.explanation"
+                    v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                </b-form-group>
+                <!-- coherence -->
+                <h6>{{$t('Coherence')}}</h6>
+                <b-form-checkbox-group
+                  v-model="buffer_modal_stage_two.coherence.option"
+                  :options="select_options"
+                  name="coherence"
+                  stacked></b-form-checkbox-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-coherence-explanation">
+                  <b-form-textarea
+                    id="input-coherence-explanation"
+                    v-model="buffer_modal_stage_two.coherence.explanation"
+                    v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                </b-form-group>
+                <!-- adequacy -->
+                <h6>{{$t('Adequacy')}}</h6>
+                <b-form-checkbox-group
+                  v-model="buffer_modal_stage_two.adequacy.option"
+                  :options="select_options"
+                  name="adequacy"
+                  stacked></b-form-checkbox-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-adequacy-explanation">
+                  <b-form-textarea
+                    id="input-adequacy-explanation"
+                    v-model="buffer_modal_stage_two.adequacy.explanation"
+                    placeholder="Enter an explanation"></b-form-textarea>
+                </b-form-group>
+                <!-- relevance -->
+                <h6>{{$t('Relevance')}}</h6>
+                <b-form-checkbox-group
+                  v-model="buffer_modal_stage_two.relevance.option"
+                  :options="select_options"
+                  name="relevance"
+                  stacked></b-form-checkbox-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-relevance-explanation">
+                  <b-form-textarea
+                    id="input-relevance-explanation"
+                    v-model="buffer_modal_stage_two.relevance.explanation"
+                    placeholder="Enter an explanation"></b-form-textarea>
+                </b-form-group>
+              </b-modal>
+              <template v-if="evidence_profile.length">
+                <b-table
+                  responsive striped caption-top
+                  :fields="evidence_profile_fields"
+                  :items="evidence_profile">
+                  <template slot="finding" slot-scope="data">
+                    {{data.item.name}}
+                  </template>
+                  <template slot="methodological-limit" slot-scope="data">
+                    <div v-if="data.item.methodological_limitations.option !== null">
+                      <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
+                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+                    </div>
+                    <div v-else><i>No data</i></div>
+                  </template>
+                  <template slot="coherence" slot-scope="data">
+                    <div v-if="data.item.coherence.option !== null">
+                      <p>{{select_options[data.item.coherence.option].text}}</p>
+                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+                    </div>
+                    <div v-else><i>No data</i></div>
+                  </template>
+                  <template slot="adequacy" slot-scope="data">
+                    <div v-if="data.item.adequacy.option !== null">
+                      <p>{{select_options[data.item.adequacy.option].text}}</p>
+                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+                    </div>
+                    <div v-else><i>No data</i></div>
+                  </template>
+                  <template slot="relevance" slot-scope="data">
+                    <div v-if="data.item.relevance.option !== null">
+                      <p>{{select_options[data.item.relevance.option].text}}</p>
+                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+                    </div>
+                    <div v-else><i>No data</i></div>
+                  </template>
+                  <template slot="actions" slot-scope="data">
+                    <font-awesome-icon icon="trash" pull="right" title="Remove" />
+                    <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
+                  </template>
+                </b-table>
+              </template>
+              <template v-else>
+                <div class="text-center my-5">
+                  <p>
+                    {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-stage-two>{{ $t('add a evidence profile') }}</b-link>
+                  </p>
+                </div>
+              </template>
+              <!-- end of Evidence Profile-->
+            </b-tab>
+            <!-- Characteristics of Studies -->
+            <b-tab v-bind:title="$t('Characteristics of Studies')">
+              <!-- <h3>{{$t('Characteristics of Studies')}}</h3> -->
+              <!-- create study tables -->
+              <b-modal
+                ref="modal-stage-three-create-fields"
+                @ok="saveStageThreeCreateFields">
+                <b-form-group
+                  id="nro-of-fields"
+                  label="Nro of fields"
+                  label-for="number-of-fields">
+                  <b-form-input
+                    id="number-of-fields"
+                    type="number"
+                    v-model="modal_stage_three_create_fields.nro_of_fields"></b-form-input>
+                  </b-form-group>
+                <b-form-group
+                  v-for="item in parseInt(modal_stage_three_create_fields.nro_of_fields)"
+                  :key="item"
+                  :label="`Column name #${item}`"
+                  :label-for="`field-${item}`">
+                  <b-form-input
+                  :id="`field-${item}`"
+                  type="text"
+                  v-model="modal_stage_three_create_fields.fields[item - 1]"></b-form-input>
+                  </b-form-group>
+              </b-modal>
+              <!-- end of create study tables -->
+              <!-- modal edit fields -->
+              <b-modal
+                ref="modal-stage-three-edit-fields"
+                @ok="saveStageThreeUpdateFields">
+                <b-form-group
+                  v-for="(item, index) in modal_stage_three_edit_fields"
+                  :key="index"
+                  :label="`Column #${index}`"
+                  :label-for="`field-${index}`">
+                  <b-input-group>
+                    <b-form-input
+                      :id="`field-${index}`"
+                      type="text"
+                      v-model="item.label"></b-form-input>
+                    <b-input-group-append
+                      v-if="characteristics_studies.fields.length > 2">
+                      <b-button
+                        @click="removeFieldStageThree(item, index)">
+                        <font-awesome-icon
+                          icon="trash"></font-awesome-icon>
+                      </b-button>
+                    </b-input-group-append>
+                  </b-input-group>
+                </b-form-group>
+                <b-button
+                  variant="outline-success"
+                  @click="addNewColumnStageThree">Add column</b-button>
+              </b-modal>
+              <!-- end of modal edit fields -->
+              <template v-if="characteristics_studies.fields.length">
+                <b-table
+                  responsive striped caption-top
+                  :fields="characteristics_studies.fields"
+                  :items="characteristics_studies.data"
+                  class="mb-5">
+                  <template slot="table-caption">
+                    <div class="text-right">
+                      <b-button
+                        @click="openModalStageThreeEditFields"
+                        variant="outline-primary">
+                          <font-awesome-icon icon="table" />
+                          Edit table
+                      </b-button>
+                      <b-button
+                        v-if="characteristics_studies.fields.length"
+                        @click="openModalStageThreeAddData"
+                        variant="outline-success">{{$t('Add data')}}</b-button>
+                    </div>
+                  </template>
+                  <template slot="actions" slot-scope="row">
+                    <font-awesome-icon
+                      @click="modalDeleteStageThreeItemData(row)"
+                      icon="trash"
+                      title="Remove"/>
+                    <font-awesome-icon
+                      @click="openModalStageThreEditData(row)"
+                      icon="edit"
+                      title="Edit" />
+                  </template>
+                </b-table>
+              </template>
+              <template v-else>
+                <div class="text-center my-5">
+                  <p>{{ $t('No studies') }} <b-link @click="openModalStageThreeCreateFields">{{ $t('add studies') }}</b-link></p>
+                </div>
+              </template>
+              <!-- create study data -->
+              <b-modal
+                ref="modal-stage-three-add-data"
+                @ok="saveStageThreeCreateData">
+                <b-form-group
+                  v-for="(item, index) in buffer_characteristics_studies.fields"
+                  :key="index"
+                  :label="`${item.label}`"
+                  :label-for="`data-${index}`">
+                  <b-form-textarea
+                    :id="`data-${index}`"
+                    row="3"
+                    v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                </b-form-group>
+              </b-modal>
+              <!-- end of create study data -->
+              <b-modal
+                ref="modal-stage-three-edit-data"
+                @ok="saveStageThreeEditedData">
+                <b-form-group
+                  v-for="(item, index) in buffer_characteristics_studies.fields"
+                  :key="index"
+                  :label="`${item.label}`"
+                  :label-for="`data-${index}`">
+                  <b-form-textarea
+                    :id="`data-${index}`"
+                    row="3"
+                    v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                </b-form-group>
+              </b-modal>
+              <b-modal
+                @ok="removeStageThreeItemData"
+                ref="modal-stage-three-remove-data"
+                scrollable
+                size="lg">
+                <p>Are you sure you wanna remove this row?</p>
+                <b-table
+                  responsive
+                  :fields="buffer_modal_stage_three.fields"
+                  :items="buffer_modal_stage_three.data"
+                  class="mb-5">
+                </b-table>
+              </b-modal>
+            </b-tab>
+            <!-- Methodological Assessments -->
+            <b-tab v-bind:title="$t('Methodological Assessments')">
+              <!-- <h3>{{$t('Methodological Assessments')}}</h3> -->
+              <b-modal
+                title="Add Fields"
+                ref="modal-stage-four-table"
+                @ok="saveStageFourModalField">
+                <b-form-group
+                  :label="$t('Nro of cols')"
+                  label-for="input-nro-cols">
+                  <b-form-input
+                    id="input-nro-cols"
+                    type="number"
+                    min="1"
+                    max="30"
+                    v-model="buffer_stage_four.nroOfColumns"
+                    :placeholder="$t('A number between')"></b-form-input>
+                </b-form-group>
+                <!-- -->
+                <b-form-group
+                  v-for="item in parseInt(buffer_stage_four.nroOfColumns)"
+                  :key="item"
+                  :label="$t('Title of column', [item])"
+                  :label-for="`input-column-nro-${item}`">
+                  <b-form-input
+                    :id="`input-column-nro-${item}`"
+                    type="text"
+                    :placeholder="$t('Title of column', [item])"
+                    v-model="buffer_stage_four.fields[item - 1]"></b-form-input>
+                </b-form-group>
+                <!-- -->
+              </b-modal>
+              <b-modal
+                ref="modal-edit-fields-stage-four"
+                title="Edit Fields"
+                @ok="updateFieldsStageFour">
+                <b-form-group
+                  v-for="(item, key) in buffer_modal_stage_four_fields.length"
+                  :key="key"
+                  :label="`Column #${key}`"
+                  :label-for="`column-${key}`">
+                  <b-input-group>
+                    <b-form-input
+                      :id="`column-${key}`"
+                      v-model="buffer_modal_stage_four_fields[key].label"></b-form-input>
+                      <b-input-group-append>
                         <b-button
-                          @click="removeFieldStageThree(item, index)">
+                          @click="removeFieldStageFour(key)">
                           <font-awesome-icon
                             icon="trash"></font-awesome-icon>
                         </b-button>
                       </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-                  <b-button
-                    variant="outline-success"
-                    @click="addNewColumnStageThree">Add column</b-button>
-                </b-modal>
-                <!-- end of modal edit fields -->
-                <template v-if="characteristics_studies.fields.length">
-                  <b-table
-                    responsive striped caption-top
-                    :fields="characteristics_studies.fields"
-                    :items="characteristics_studies.data"
-                    class="mb-5">
-                    <template slot="table-caption">
-                      <div class="text-right">
-                        <b-button
-                          @click="openModalStageThreeEditFields"
-                          variant="outline-primary">
-                            <font-awesome-icon icon="table" />
-                            Edit table
-                        </b-button>
-                        <b-button
-                          v-if="characteristics_studies.fields.length"
-                          @click="openModalStageThreeAddData"
-                          variant="outline-success">{{$t('Add data')}}</b-button>
-                      </div>
-                    </template>
-                    <template slot="actions" slot-scope="row">
-                      <font-awesome-icon
-                        @click="modalDeleteStageThreeItemData(row)"
-                        icon="trash"
-                        title="Remove"/>
-                      <font-awesome-icon
-                        @click="openModalStageThreEditData(row)"
-                        icon="edit"
-                        title="Edit" />
-                    </template>
-                  </b-table>
-                </template>
-                <template v-else>
-                  <div class="text-center my-5">
-                    <p>{{ $t('No studies') }} <b-link @click="openModalStageThreeCreateFields">{{ $t('add studies') }}</b-link></p>
-                  </div>
-                </template>
-                <!-- create study data -->
+                  </b-input-group>
+                </b-form-group>
+                <b-button
+                  @click="addColumnStageFour">
+                  Add column
+                </b-button>
+              </b-modal>
+              <template v-if="stage_four.fields.length">
+                <b-table
+                  responsive striped caption-top
+                  :fields="stage_four.fields"
+                  :items="stage_four.data">
+                  <template slot="table-caption">
+                    <div class="text-right">
+                      <b-button @click="editFieldsModalStageFour" variant="outline-primary">{{$t('Edit table')}}</b-button>
+                      <b-button
+                        v-if="stage_four.fields.length"
+                        @click="stageFourAddData"
+                        variant="outline-success">{{$t('Add data')}}</b-button>
+                    </div>
+                  </template>
+                  <template slot="actions" slot-scope="row">
+                    <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
+                    <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
+                  </template>
+                </b-table>
+                <!-- create -->
                 <b-modal
-                  ref="modal-stage-three-add-data"
-                  @ok="saveStageThreeCreateData">
+                  title="Add data"
+                  id="modal-stage-four-data"
+                  ref="modal-stage-four-data"
+                  @ok="saveDataStageFour">
                   <b-form-group
-                    v-for="(item, index) in buffer_characteristics_studies.fields"
+                    v-for="(field, index) in buffer_stage_four_data.fields"
                     :key="index"
-                    :label="`${item.label}`"
-                    :label-for="`data-${index}`">
-                    <b-form-textarea
-                      :id="`data-${index}`"
-                      row="3"
-                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                    :id="`label-field-${index}`"
+                    :label="`${field.label}`"
+                    :label-for="`input-field-${index}`">
+                    <b-form-input
+                      :id="`input-field-${index}`"
+                      type="text"
+                      v-model="modal_stage_four_data[field.key]"></b-form-input>
                   </b-form-group>
                 </b-modal>
-                <!-- end of create study data -->
                 <b-modal
-                  ref="modal-stage-three-edit-data"
-                  @ok="saveStageThreeEditedData">
+                  ref="modal-edit-data-stage-four"
+                  title="Edit data"
+                  @ok="saveUpdateDataStageFour">
                   <b-form-group
-                    v-for="(item, index) in buffer_characteristics_studies.fields"
+                    v-for="(field, index) in buffer_modal_stage_four_fields"
                     :key="index"
-                    :label="`${item.label}`"
-                    :label-for="`data-${index}`">
+                    :label="`${field.label}`"
+                    :label-for="`column-${index}`">
                     <b-form-textarea
-                      :id="`data-${index}`"
-                      row="3"
-                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                      :id="`column-${index}`"
+                      v-model="modal_stage_four_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <b-modal
-                  @ok="removeStageThreeItemData"
-                  ref="modal-stage-three-remove-data"
+                  @ok="removeDataStageFour"
+                  ref="modal-remove-data-stage-four"
+                  title="Remove item"
                   scrollable
                   size="lg">
                   <p>Are you sure you wanna remove this row?</p>
                   <b-table
-                    responsive
-                    :fields="buffer_modal_stage_three.fields"
-                    :items="buffer_modal_stage_three.data"
-                    class="mb-5">
-                  </b-table>
+                    :fields="buffer_stage_four_remove_item.fields"
+                    :items="buffer_stage_four_remove_item.items"></b-table>
                 </b-modal>
-              </b-tab>
-              <!-- Methodological Assessments -->
-              <b-tab v-bind:title="$t('Methodological Assessments')">
-                <!-- <h3>{{$t('Methodological Assessments')}}</h3> -->
-                <b-modal
-                  title="Add Fields"
-                  ref="modal-stage-four-table"
-                  @ok="saveStageFourModalField">
-                  <b-form-group
-                    :label="$t('Nro of cols')"
-                    label-for="input-nro-cols">
-                    <b-form-input
-                      id="input-nro-cols"
-                      type="number"
-                      min="1"
-                      max="30"
-                      v-model="buffer_stage_four.nroOfColumns"
-                      :placeholder="$t('A number between')"></b-form-input>
-                  </b-form-group>
-                  <!-- -->
-                  <b-form-group
-                    v-for="item in parseInt(buffer_stage_four.nroOfColumns)"
-                    :key="item"
-                    :label="$t('Title of column', [item])"
-                    :label-for="`input-column-nro-${item}`">
-                    <b-form-input
-                      :id="`input-column-nro-${item}`"
-                      type="text"
-                      :placeholder="$t('Title of column', [item])"
-                      v-model="buffer_stage_four.fields[item - 1]"></b-form-input>
-                  </b-form-group>
-                  <!-- -->
-                </b-modal>
-                <b-modal
-                  ref="modal-edit-fields-stage-four"
-                  title="Edit Fields"
-                  @ok="updateFieldsStageFour">
-                  <b-form-group
-                    v-for="(item, key) in buffer_modal_stage_four_fields.length"
-                    :key="key"
-                    :label="`Column #${key}`"
-                    :label-for="`column-${key}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`column-${key}`"
-                        v-model="buffer_modal_stage_four_fields[key].label"></b-form-input>
-                        <b-input-group-append>
-                          <b-button
-                            @click="removeFieldStageFour(key)">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                          </b-button>
-                        </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-                  <b-button
-                    @click="addColumnStageFour">
-                    Add column
-                  </b-button>
-                </b-modal>
-                <template v-if="stage_four.fields.length">
-                  <b-table
-                    responsive striped caption-top
-                    :fields="stage_four.fields"
-                    :items="stage_four.data">
-                    <template slot="table-caption">
-                      <div class="text-right">
-                        <b-button @click="editFieldsModalStageFour" variant="outline-primary">{{$t('Edit table')}}</b-button>
-                        <b-button
-                          v-if="stage_four.fields.length"
-                          @click="stageFourAddData"
-                          variant="outline-success">{{$t('Add data')}}</b-button>
-                      </div>
-                    </template>
-                    <template slot="actions" slot-scope="row">
-                      <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
-                      <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
-                    </template>
-                  </b-table>
-                  <!-- create -->
-                  <b-modal
-                    title="Add data"
-                    id="modal-stage-four-data"
-                    ref="modal-stage-four-data"
-                    @ok="saveDataStageFour">
-                    <b-form-group
-                      v-for="(field, index) in buffer_stage_four_data.fields"
-                      :key="index"
-                      :id="`label-field-${index}`"
-                      :label="`${field.label}`"
-                      :label-for="`input-field-${index}`">
-                      <b-form-input
-                        :id="`input-field-${index}`"
-                        type="text"
-                        v-model="modal_stage_four_data[field.key]"></b-form-input>
-                    </b-form-group>
-                  </b-modal>
-                  <b-modal
-                    ref="modal-edit-data-stage-four"
-                    title="Edit data"
-                    @ok="saveUpdateDataStageFour">
-                    <b-form-group
-                      v-for="(field, index) in buffer_modal_stage_four_fields"
-                      :key="index"
-                      :label="`${field.label}`"
-                      :label-for="`column-${index}`">
-                      <b-form-textarea
-                        :id="`column-${index}`"
-                        v-model="modal_stage_four_data[field.key]"></b-form-textarea>
-                    </b-form-group>
-                  </b-modal>
-                  <b-modal
-                    @ok="removeDataStageFour"
-                    ref="modal-remove-data-stage-four"
-                    title="Remove item"
-                    scrollable
-                    size="lg">
-                    <p>Are you sure you wanna remove this row?</p>
-                    <b-table
-                      :fields="buffer_stage_four_remove_item.fields"
-                      :items="buffer_stage_four_remove_item.items"></b-table>
-                  </b-modal>
-                  <!-- end of -->
-                </template>
-                <template v-else>
-                  <div class="text-center my-5">
-                    <p>{{ $t('No methodological') }} <b-link @click="stageFourOpenModalFields">{{ $t('add methodological assessments') }}</b-link></p>
-                  </div>
-                </template>
-              </b-tab>
-              <!-- Extracted data -->
-              <b-tab v-bind:title="$t('Extracted Data')">
-                <!-- <h3>{{$t('Extracted Data')}}</h3> -->
-                <b-modal
-                  title="Import TSV"
-                  id="modal-stage-five-import"
-                  scrollable
-                  size="lg"
-                  @ok="saveImportedDataStageFive">
-                  <b-form-group
-                    label="Paste your TSV file">
-                    <b-form-textarea
-                      placeholder="Paste your TSV file"
-                      rows="3"
-                      v-model="csvImport"></b-form-textarea>
-                  </b-form-group>
-                  <b-table
-                    :fields="stage_five_imported_data.fields"
-                    :items="stage_five_imported_data.items"></b-table>
-                </b-modal>
-                <b-modal
-                  id="modal-stage-five-table"
-                  ref="modal-stage-five-table">
-                  <b-form-group
-                    :label="$t('Nro of cols')"
-                    label-for="input-nro-cols">
-                    <b-form-input
-                      id="input-nro-cols"
-                      type="number"
-                      min="1"
-                      max="10"
-                      v-model="nroOfRows"
-                      :placeholder="$t('A number between')"></b-form-input>
-                  </b-form-group>
+                <!-- end of -->
+              </template>
+              <template v-else>
+                <div class="text-center my-5">
+                  <p>{{ $t('No methodological') }} <b-link @click="stageFourOpenModalFields">{{ $t('add methodological assessments') }}</b-link></p>
+                </div>
+              </template>
+            </b-tab>
+            <!-- Extracted data -->
+            <b-tab v-bind:title="$t('Extracted Data')">
+              <!-- <h3>{{$t('Extracted Data')}}</h3> -->
+              <b-modal
+                title="Import TSV"
+                id="modal-stage-five-import"
+                scrollable
+                size="lg"
+                @ok="saveImportedDataStageFive">
+                <b-form-group
+                  label="Paste your TSV file">
+                  <b-form-textarea
+                    placeholder="Paste your TSV file"
+                    rows="3"
+                    v-model="csvImport"></b-form-textarea>
+                </b-form-group>
+                <b-table
+                  :fields="stage_five_imported_data.fields"
+                  :items="stage_five_imported_data.items"></b-table>
+              </b-modal>
+              <b-modal
+                id="modal-stage-five-table"
+                ref="modal-stage-five-table">
+                <b-form-group
+                  :label="$t('Nro of cols')"
+                  label-for="input-nro-cols">
+                  <b-form-input
+                    id="input-nro-cols"
+                    type="number"
+                    min="1"
+                    max="10"
+                    v-model="nroOfRows"
+                    :placeholder="$t('A number between')"></b-form-input>
+                </b-form-group>
 
-                  <!-- -->
+                <!-- -->
+                <b-form-group
+                  v-for="item in parseInt(nroOfRows)"
+                  :key="item"
+                  :label="$t('Title of column', [item])"
+                  :label-for="`input-column-nro-${item}`">
+                  <b-form-input
+                    :id="`input-column-nro-${item}`"
+                    type="text"
+                    :placeholder="$t('Title of column', [item])"
+                    v-model="list.extracted_data.fields[item - 1]"></b-form-input>
+                </b-form-group>
+                <!-- -->
+              </b-modal>
+              <template v-if="list.extracted_data.fields.length">
+                <b-table
+                  responsive striped caption-top
+                  :fields="list.extracted_data.fields"
+                  :items="list.extracted_data.items">
+                  <template slot="table-caption">
+                    <div class="text-right">
+                      <b-button v-b-modal.modal-stage-five-table variant="outline-primary">{{$t('Edit table')}}</b-button>
+                      <b-button
+                        v-if="list.extracted_data.fields.length"
+                        v-b-modal.modal-stage-five-data
+                        variant="outline-success">{{$t('Add data')}}</b-button>
+                    </div>
+                  </template>
+                  <template slot="actions">
+                    <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
+                    <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
+                  </template>
+                </b-table>
+                <!-- create extracted data -->
+                <b-modal
+                  id="modal-stage-five-data"
+                  ref="modal-stage-five-data">
                   <b-form-group
-                    v-for="item in parseInt(nroOfRows)"
-                    :key="item"
-                    :label="$t('Title of column', [item])"
-                    :label-for="`input-column-nro-${item}`">
+                    v-for="(field, index) in list.extracted_data.fields"
+                    :key="index"
+                    :id="`label-field-${index}`"
+                    :label="`${field}`"
+                    :label-for="`input-field-${index}`">
                     <b-form-input
-                      :id="`input-column-nro-${item}`"
+                      :id="`input-field-${index}`"
                       type="text"
-                      :placeholder="$t('Title of column', [item])"
-                      v-model="list.extracted_data.fields[item - 1]"></b-form-input>
+                      v-model="buffer_extracted_data[field]"></b-form-input>
                   </b-form-group>
-                  <!-- -->
                 </b-modal>
-                <template v-if="list.extracted_data.fields.length">
-                  <b-table
-                    responsive striped caption-top
-                    :fields="list.extracted_data.fields"
-                    :items="list.extracted_data.items">
-                    <template slot="table-caption">
-                      <div class="text-right">
-                        <b-button v-b-modal.modal-stage-five-table variant="outline-primary">{{$t('Edit table')}}</b-button>
-                        <b-button
-                          v-if="list.extracted_data.fields.length"
-                          v-b-modal.modal-stage-five-data
-                          variant="outline-success">{{$t('Add data')}}</b-button>
-                      </div>
-                    </template>
-                    <template slot="actions">
-                      <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
-                      <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
-                    </template>
-                  </b-table>
-                  <!-- create extracted data -->
-                  <b-modal
-                    id="modal-stage-five-data"
-                    ref="modal-stage-five-data">
-                    <b-form-group
-                      v-for="(field, index) in list.extracted_data.fields"
-                      :key="index"
-                      :id="`label-field-${index}`"
-                      :label="`${field}`"
-                      :label-for="`input-field-${index}`">
-                      <b-form-input
-                        :id="`input-field-${index}`"
-                        type="text"
-                        v-model="buffer_extracted_data[field]"></b-form-input>
-                    </b-form-group>
-                  </b-modal>
-                  <!-- end of create extracted data -->
-                </template>
-                <template v-else>
-                  <div class="text-center my-5">
-                    <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or <b-link v-b-modal.modal-stage-five-import>import</b-link></p>
-                  </div>
-                </template>
-              </b-tab>
-            </b-tabs>
+                <!-- end of create extracted data -->
+              </template>
+              <template v-else>
+                <div class="text-center my-5">
+                  <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or <b-link v-b-modal.modal-stage-five-import>import</b-link></p>
+                </div>
+              </template>
+            </b-tab>
+          </b-tabs>
         </b-col>
       </b-row>
     </b-container>
@@ -708,7 +584,6 @@ export default {
         {key: 'actions', label: 'Actions'}
       ],
       evidence_profile_fields: [
-        {key: 'finding_id', label: 'ID'},
         {key: 'name', label: 'Finding'},
         {key: 'methodological-limit', label: 'Methodological limitations'},
         {key: 'coherence', label: 'Coherence'},
@@ -730,14 +605,12 @@ export default {
         organization: ''
       },
       initial_modal_stage_two: {
-        finding_id: '',
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
         relevance: {option: null, explanation: ''}
       },
       buffer_modal_stage_two: {
-        finding_id: '',
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
@@ -852,56 +725,46 @@ export default {
           list_id: this.list.id
         }
       }).then((response) => {
-        this.soqf = response.data
+        this.soqf = response.data[0]
         this.evidence_profile = []
-        for (let i in this.soqf) {
-          if (this.soqf[i].hasOwnProperty('evidence_profile')) {
-            let evidenceProfile = this.soqf[i].evidence_profile
-            evidenceProfile.name = this.soqf[i].name
-            this.evidence_profile.push(evidenceProfile)
-          }
+        if (this.soqf.hasOwnProperty('evidence_profile')) {
+          let evidenceProfile = this.soqf.evidence_profile
+          evidenceProfile.name = this.soqf.name
+          this.evidence_profile.push(evidenceProfile)
         }
       }).catch((error) => {
         console.log(error)
       })
     },
-    editStageOne: function () {
-      // todo
-    },
-    saveStageOne: function () {
-      this.buffer_modal_stage_one.list_id = this.list.id
-      this.buffer_modal_stage_one.organization = this.list.organization
-      axios.post('/api/isoqf_findings', this.buffer_modal_stage_one)
-        .then((response) => {
-          this.getStageOneData()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      // clean
-      this.buffer_modal_stage_one = {...this.initial_modal_stage_one}
-      // close
-      this.$refs['modal-stage-one'].hide()
+    saveStageOneAndTwo: function () {
+      let params = {
+        organization: this.list.organization,
+        list_id: this.list.id,
+        name: this.buffer_modal_stage_one.name,
+        evidence_profile: this.buffer_modal_stage_two
+      }
+      if (this.soqf.id) {
+        axios.patch(`/api/isoqf_findings/${this.soqf.id}`, params)
+          .then((response) => {
+            this.getStageOneData()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios.post(`/api/isoqf_findings`, params)
+          .then((response) => {
+            this.getStageOneData()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     editStageTwo: function (data) {
+      this.buffer_modal_stage_one.name = data.name
       this.buffer_modal_stage_two = {...data}
       this.$refs['modal-stage-two'].show()
-    },
-    saveStageTwo: function () {
-      // this.evidence_profile.push(this.buffer_modal_stage_two)
-      let data = { evidence_profile: this.buffer_modal_stage_two }
-      axios.patch(`/api/isoqf_findings/${this.buffer_modal_stage_two.finding_id}`, data)
-        .then((response) => {
-          // console.log(response.data)
-          this.getStageOneData()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      // clean
-      this.buffer_modal_stage_two = {...this.initial_modal_stage_two}
-      // close
-      this.$refs['modal-stage-two'].hide()
     },
     getStageThree: function () {
       let params = {}
