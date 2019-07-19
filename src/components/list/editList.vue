@@ -860,7 +860,7 @@ export default {
     removeFieldStageThree: function (field, index) {
       let removedField = JSON.parse(JSON.stringify(field))
       let stageThreeEditFields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
-      let stageThreeData = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+      let stageThreeData = (this.characteristics_studies.hasOwnProperty('data')) ? JSON.parse(JSON.stringify(this.characteristics_studies.data)) : []
 
       stageThreeEditFields.splice(index, 1)
       this.buffer_modal_stage_three.fields = stageThreeEditFields
@@ -1033,19 +1033,21 @@ export default {
       let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
       tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
 
-      if (tmpStageFour.data.length) {
-        let oldFields = []
-        let newFields = []
-        for (let item of tmpStageFour.fields) {
-          oldFields.push(item.key)
-        }
-        for (let item of tmpFields) {
-          newFields.push(item.key)
-        }
-        for (let i in oldFields) {
-          if (!newFields.includes(oldFields[i])) {
-            for (let item of tmpStageFour.data) {
-              delete item[oldFields[i]]
+      if (tmpStageFour.hasOwnProperty('data')) {
+        if (tmpStageFour.data.length) {
+          let oldFields = []
+          let newFields = []
+          for (let item of tmpStageFour.fields) {
+            oldFields.push(item.key)
+          }
+          for (let item of tmpFields) {
+            newFields.push(item.key)
+          }
+          for (let i in oldFields) {
+            if (!newFields.includes(oldFields[i])) {
+              for (let item of tmpStageFour.data) {
+                delete item[oldFields[i]]
+              }
             }
           }
         }
