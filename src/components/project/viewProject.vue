@@ -24,19 +24,40 @@
           <h5>Is the iSoQF being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
+        <b-col cols="12" class="text-right my-2">
+          <b-button
+            variant="outline-primary"
+            @click="modalAddSummarized">
+            Add summarized
+          </b-button>
+        </b-col>
         <b-col cols="12">
           <template v-if="lists.length">
             <b-table
               :fields="table_settings.fields"
               :items="lists">
+              <template slot="index" slot-scope="data">{{data.index + 1}}</template>
               <template slot="name" slot-scope="data">
                 <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
               </template>
             </b-table>
           </template>
           <template v-else>
-            <p>No data found. try to add summarized review finding.</p>
+            <p>No data found. try to <b-link v-b-modal.add-summarized>add summarized</b-link> review finding.</p>
           </template>
+          <b-modal
+            id="add-summarized"
+            ref="add-summarized"
+            title="Summarized review finding"
+            @ok="saveSummarized">
+            <b-form-group
+              label="Summarized review"
+              label-for="summarized-review">
+              <b-form-input
+                id="summarized-review"
+                v-model="summarized_review"></b-form-input>
+            </b-form-group>
+            </b-modal>
         </b-col>
       </b-row>
     </b-container>
@@ -57,6 +78,10 @@ export default {
       table_settings: {
         fields: [
           {
+            key: 'index',
+            label: '#'
+          },
+          {
             key: 'name',
             label: 'Summarized review finding'
           },
@@ -73,7 +98,8 @@ export default {
             label: 'References'
           }
         ]
-      }
+      },
+      summarized_review: ''
     }
   },
   mounted () {
@@ -84,7 +110,7 @@ export default {
       let params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, params)
+      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, {params})
         .then((response) => {
           this.project = response.data
           this.getLists() // summary review
@@ -98,9 +124,63 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get(`/api/isoqf_lists`, params)
+      axios.get(`/api/isoqf_lists`, {params})
         .then((response) => {
           this.lists = response.data
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    modalAddSummarized: function () {
+      this.$refs['add-summarized'].show()
+    },
+    saveSummarized: function () {
+      let params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        name: this.summarized_review
+      }
+      axios.post('/api/isoqf_lists/', params)
+        .then((response) => {
+          let listId = response.data.id
+          let listName = response.data.name
+
+          this.getLists()
+          this.createFinding(listId, listName)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    createFinding: function (listId, listName) {
+      let params = {
+        organization: this.$route.params.org_id,
+        list_id: listId,
+        name: listName,
+        evidence_profile: {
+          name: listName,
+          relevance: {
+            explanation: '',
+            option: null
+          },
+          adequacy: {
+            explanation: '',
+            option: null
+          },
+          coherence: {
+            explanation: '',
+            option: null
+          },
+          methodological_limitations: {
+            explanation: '',
+            option: null
+          }
+        }
+      }
+      axios.post(`/api/isoqf_findings`, params)
+        .then((response) => {
+          console.log(response)
         })
         .catch((error) => {
           console.log(error)
