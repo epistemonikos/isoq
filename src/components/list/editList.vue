@@ -868,7 +868,7 @@ export default {
     saveStageThreeCreateData: function () {
       let stageThreeData = {}
 
-      stageThreeData.data = JSON.parse(JSON.stringify(this.characteristics_studies.data))
+      stageThreeData.data = (this.characteristics_studies.hasOwnProperty('data')) ? JSON.parse(JSON.stringify(this.characteristics_studies.data)) : []
       stageThreeData.data.push(JSON.parse(JSON.stringify(this.modal_stage_three_data)))
       stageThreeData.organization = this.characteristics_studies.organization
       stageThreeData.list_id = this.characteristics_studies.list_id
