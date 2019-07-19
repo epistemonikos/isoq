@@ -442,34 +442,34 @@
                     type="number"
                     min="1"
                     max="10"
-                    v-model="nroOfRows"
+                    v-model="extracted_data.fields.length"
                     :placeholder="$t('A number between')"></b-form-input>
                 </b-form-group>
 
                 <!-- -->
                 <b-form-group
-                  v-for="item in parseInt(nroOfRows)"
-                  :key="item"
-                  :label="$t('Title of column', [item])"
-                  :label-for="`input-column-nro-${item}`">
+                  v-for="(item, index) in extracted_data.fields.length"
+                  :key="index"
+                  :label="$t('Title of column', [index])"
+                  :label-for="`input-column-nro-${index}`">
                   <b-form-input
-                    :id="`input-column-nro-${item}`"
+                    :id="`input-column-nro-${index}`"
                     type="text"
-                    :placeholder="$t('Title of column', [item])"
-                    v-model="list.extracted_data.fields[item - 1]"></b-form-input>
+                    :placeholder="$t('Title of column', [index])"
+                    v-model="extracted_data.fields[index].label"></b-form-input>
                 </b-form-group>
                 <!-- -->
               </b-modal>
-              <template v-if="list.extracted_data.fields.length">
+              <template v-if="extracted_data.fields.length">
                 <b-table
                   responsive striped caption-top
-                  :fields="list.extracted_data.fields"
-                  :items="list.extracted_data.items">
+                  :fields="extracted_data.fields"
+                  :items="extracted_data.items">
                   <template slot="table-caption">
                     <div class="text-right">
                       <b-button v-b-modal.modal-stage-five-table variant="outline-primary">{{$t('Edit table')}}</b-button>
                       <b-button
-                        v-if="list.extracted_data.fields.length"
+                        v-if="extracted_data.fields.length"
                         v-b-modal.modal-stage-five-data
                         variant="outline-success">{{$t('Add data')}}</b-button>
                     </div>
@@ -482,17 +482,18 @@
                 <!-- create extracted data -->
                 <b-modal
                   id="modal-stage-five-data"
-                  ref="modal-stage-five-data">
+                  ref="modal-stage-five-data"
+                  @ok="saveDataStageFive">
                   <b-form-group
-                    v-for="(field, index) in list.extracted_data.fields"
+                    v-for="(field, index) in extracted_data.fields"
                     :key="index"
                     :id="`label-field-${index}`"
-                    :label="`${field}`"
+                    :label="`${field.label}`"
                     :label-for="`input-field-${index}`">
                     <b-form-input
                       :id="`input-field-${index}`"
                       type="text"
-                      v-model="buffer_extracted_data[field]"></b-form-input>
+                      v-model="buffer_extracted_data[field.key]"></b-form-input>
                   </b-form-group>
                 </b-modal>
                 <!-- end of create extracted data -->
@@ -669,6 +670,11 @@ export default {
       stage_five_imported_data: {
         fields: [],
         items: []
+      },
+      extracted_data: {
+        id: null,
+        fields: [],
+        items: []
       }
     }
   },
@@ -699,6 +705,7 @@ export default {
     this.getList()
     this.getStageThree()
     this.getStageFour()
+    this.getStageFive()
   },
   methods: {
     getList: function () {
@@ -708,7 +715,7 @@ export default {
           this.list.sources = []
           this.soqf = []
           this.evidence_profile = []
-          this.list.extracted_data = {
+          this.extracted_data = {
             fields: [],
             items: []
           }
@@ -1109,12 +1116,31 @@ export default {
       let lastId = parseInt(lastItem.key.split('_')[1]) + 1
       this.buffer_modal_stage_four_fields.push({key: 'column_' + lastId, label: ''})
     },
+    getStageFive: function () {
+      let params = {
+        organization: this.list.organization,
+        list_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_extracted_data', params)
+        .then((response) => {
+          if (response.data.length) {
+            this.extracted_data = response.data[0]
+            delete this.extracted_data.organization
+            delete this.extracted_data.list_id
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     saveImportedDataStageFive: function () {
-      let params = {}
-      params.organization = this.list.organization
-      params.list_id = this.$route.params.id
-      params.fields = this.stage_five_imported_data.fields
-      params.items = this.stage_five_imported_data.items
+      let params = {
+        organization: this.list.organization,
+        list_id: this.$route.params.id,
+        fields: this.stage_five_imported_data.fields,
+        items: this.stage_five_imported_data.items
+      }
+
       axios.post('/api/isoqf_extracted_data', params)
         .then((response) => {
           this.stage_five_imported_data = {fields: [], items: []}
@@ -1124,10 +1150,23 @@ export default {
           console.log(error)
         })
     },
-    onFilterediSoQF (filteredItems) {
-      // Trigger pagination to update the number of buttons/pages due to filtering
-      this.setting_tables.soqf_list.totalRows = filteredItems.length
-      this.setting_tables.soqf_list.currentPage = 1
+    saveDataStageFive: function () {
+      let items = JSON.parse(JSON.stringify(this.extracted_data.items))
+      items.push(this.buffer_extracted_data)
+      let params = {
+        organization: this.list.organization,
+        list_id: this.$route.params.id,
+        items: items
+      }
+      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
+        .then((response) => {
+          console.log(response)
+          this.getStageFive()
+          this.buffer_extracted_data = {}
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
