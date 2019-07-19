@@ -500,7 +500,7 @@
               </template>
               <template v-else>
                 <div class="text-center my-5">
-                  <p>{{ $t('No extracted data') }} <b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or <b-link v-b-modal.modal-stage-five-import>import</b-link></p>
+                  <p>{{ $t('No extracted data,') }} <!--<b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or --><b-link v-b-modal.modal-stage-five-import>import a TSV</b-link></p>
                 </div>
               </template>
             </b-tab>
