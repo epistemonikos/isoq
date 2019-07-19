@@ -23,26 +23,10 @@
           </b-col>
         </b-row>
         <ul class="mt-5">
-          <li class="my-3" v-for="(project, pp) in org.projects" v-bind:key="project.id">
-            {{project.name}}
-            <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
+          <li class="my-3" v-for="(project, index) in org.projects" v-bind:key="index">
+            <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: project.id}}">{{project.name}}</b-link>
+            <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" />
             <font-awesome-icon @click="ModalAddList(project.id)" icon="plus-square" pull="right" v-bind:title="$t('Add')" />
-            <ul v-if="project.lists">
-              <li class="my-3" v-for="(list, lp) in project.lists" v-bind:key="list.id">
-                <b-link :to="{name: 'viewList', params: {id: list.id}}">{{list.name}}</b-link>
-                <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
-                <template v-if="list.private">
-                  <font-awesome-icon icon="lock" pull="right" v-bind:title="$t('Private')" class="d-none d-sm-block" />
-                </template>
-                <template v-else>
-                  <font-awesome-icon icon="globe" pull="right" v-bind:title="$t('Public')" class="d-none d-sm-block" />
-                </template>
-                <font-awesome-icon icon="clone" pull="right" v-bind:title="$t('Clone')" class="d-none d-sm-block" />
-                <font-awesome-icon icon="plus-square" pull="right" v-bind:title="$t('Add finding')" class="d-none d-sm-block" />
-                <!-- <b-link :to="{name: 'editList', params: {id: list.id}}"><font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')"/></b-link> -->
-                <font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')" @click="editProjectList(pp, lp)" />
-              </li>
-            </ul>
           </li>
         </ul>
       </div>
@@ -50,48 +34,8 @@
       <b-modal
         id="new-project"
         ref="new-project"
+        :title="(buffer_project.id) ? 'Edit iSoQF table' : 'New iSoQF table'"
         @ok="AddProject">
-        <b-alert
-          :show="ui.dismissCounters.dismissCountDown"
-          @dismiss-count-down="countDownChanged"
-          variant="danger"
-          v-if="ui.error.status">
-            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
-            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
-          </b-alert>
-        <b-form-group
-          :label="$t('Project name')"
-          label-for="input-project-name">
-          <b-form-input
-            id="input-project-name"
-            type="text"
-            required
-            :placeholder="$t('Project name')"
-            v-model="buffer_project.name"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Description')"
-          label-for="input-project-description">
-          <b-form-textarea
-            id="input-project-description"
-            :placeholder="$t('Enter a description')"
-            v-model="buffer_project.description"></b-form-textarea>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Visible')"
-          label-for="select-project-status">
-          <b-select
-            id="select-project-status"
-            v-model="buffer_project.private"
-            :options="global_status"></b-select>
-        </b-form-group>
-      </b-modal>
-      <b-modal
-        id="new-project-list"
-        ref="new-project-list"
-        :title="(buffer_project_list.id) ? 'Edit iSoQF table' : 'New iSoQF table'"
-        @ok="AddOrUpdateProjectList"
-        @hidden="cleanProjectList">
         <b-alert
           :show="ui.dismissCounters.dismissCountDown"
           @dismiss-count-down="countDownChanged"
@@ -109,7 +53,7 @@
             type="text"
             required
             :placeholder="$t('Title of review')"
-            v-model="buffer_project_list.name"></b-form-input>
+            v-model="buffer_project.name"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Description')"
@@ -117,7 +61,7 @@
           <b-form-textarea
             id="input-project-list-description"
             :placeholder="$t('Enter a description')"
-            v-model="buffer_project_list.description"></b-form-textarea>
+            v-model="buffer_project.description"></b-form-textarea>
         </b-form-group>
         <b-form-group
           :label="$t('Authors')"
@@ -126,7 +70,7 @@
           <b-form-input
             id="input-project-authors"
             :placeholder="$t('Authors of review')"
-            v-model="buffer_project_list.authors"></b-form-input>
+            v-model="buffer_project.authors"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Review question')"
@@ -134,14 +78,14 @@
           <b-form-input
             id="input-project-review-question"
             :placeholder="$t('Insert main question that the review addresses')"
-            v-model="buffer_project_list.review_question"></b-form-input>
+            v-model="buffer_project.review_question"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Has this review been published?')"
           label-for="select-project-list-published-status">
           <b-select
             id="select-project-list-published-status"
-            v-model="buffer_project_list.published_status"
+            v-model="buffer_project.published_status"
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
@@ -149,7 +93,7 @@
           label-for="select-project-list-completed-by-author-status">
           <b-select
             id="select-project-list-completed-by-author-status"
-            v-model="buffer_project_list.complete_by_author"
+            v-model="buffer_project.complete_by_author"
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
@@ -157,8 +101,23 @@
           label-for="select-project-list-status">
           <b-select
             id="select-project-list-status"
-            v-model="buffer_project_list.private"
+            v-model="buffer_project.private"
             :options="global_status"></b-select>
+        </b-form-group>
+      </b-modal>
+      <b-modal
+        id="new-project-list"
+        ref="new-project-list"
+        :title="(buffer_project_list.id) ? 'Edit summarized review finding' : 'New summarized review finding'"
+        @ok="AddOrUpdateProjectList"
+        @hidden="cleanProjectList">
+        <b-form-group
+          label="Summarized review"
+          label-for="summarized-review">
+          <b-form-input
+            id="summarized-review"
+            placeholder="Enter a summarized review finding"
+            v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
     </b-container>
@@ -195,36 +154,33 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: true
+        private: true,
+        organization: this.$route.params.id,
+        review_question: '',
+        published_status: false,
+        complete_by_author: false
       },
       tmp_buffer_project_list: {
         id: null,
         name: '',
-        description: '',
-        private: true,
-        project_id: '',
-        organization: '',
-        review_question: '',
-        published_status: false,
-        complete_by_author: false
+        organization: this.$route.params.id,
+        project_id: ''
       },
       buffer_project: {
         id: null,
         name: '',
         description: '',
         private: true,
-        organization: ''
+        organization: this.$route.params.id,
+        review_question: '',
+        published_status: false,
+        complete_by_author: false
       },
       buffer_project_list: {
         id: null,
         name: '',
-        description: '',
-        private: true,
-        project_id: '',
-        organization: '',
-        review_question: '',
-        published_status: false,
-        complete_by_author: false
+        organization: this.$route.params.id,
+        project_id: ''
       },
       org: {
         _id: '',
@@ -257,18 +213,7 @@ export default {
         })
     },
     AddProject: function () {
-      axios.defaults.withCredentials = true
-      axios.defaults.headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': document.location.origin
-      }
-      axios.post('/api/isoqf_projects', this.buffer_project, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': document.location.origin
-        }
-      })
+      axios.post('/api/isoqf_projects', this.buffer_project)
         .then((response) => {
           this.buffer_project = this.tmp_buffer_project
           this.$refs['new-project'].hide()
@@ -285,7 +230,6 @@ export default {
     },
     ModalAddList: function (idProject) {
       this.buffer_project_list.project_id = idProject
-      this.buffer_project_list.organization = this.$route.params.id
       this.$refs['new-project-list'].show()
     },
     AddOrUpdateProjectList: function () {
