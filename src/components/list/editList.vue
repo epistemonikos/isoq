@@ -34,11 +34,11 @@
                     v-bind:placeholder="$t('Enter a finding')"></b-form-input>
                 </b-form-group>
                 <h6>{{$t('Methodological Limitations')}}</h6>
-                <b-form-checkbox-group
+                <b-form-radio-group
                   v-model="buffer_modal_stage_two.methodological_limitations.option"
                   :options="select_options"
                   name="methodological-limitations"
-                  stacked></b-form-checkbox-group>
+                  stacked></b-form-radio-group>
                 <b-form-group
                   v-bind:label="$t('Explanation')"
                   label-for="input-ml-explanation">
@@ -49,11 +49,11 @@
                 </b-form-group>
                 <!-- coherence -->
                 <h6>{{$t('Coherence')}}</h6>
-                <b-form-checkbox-group
+                <b-form-radio-group
                   v-model="buffer_modal_stage_two.coherence.option"
                   :options="select_options"
                   name="coherence"
-                  stacked></b-form-checkbox-group>
+                  stacked></b-form-radio-group>
                 <b-form-group
                   v-bind:label="$t('Explanation')"
                   label-for="input-coherence-explanation">
@@ -64,11 +64,11 @@
                 </b-form-group>
                 <!-- adequacy -->
                 <h6>{{$t('Adequacy')}}</h6>
-                <b-form-checkbox-group
+                <b-form-radio-group
                   v-model="buffer_modal_stage_two.adequacy.option"
                   :options="select_options"
                   name="adequacy"
-                  stacked></b-form-checkbox-group>
+                  stacked></b-form-radio-group>
                 <b-form-group
                   v-bind:label="$t('Explanation')"
                   label-for="input-adequacy-explanation">
@@ -79,11 +79,11 @@
                 </b-form-group>
                 <!-- relevance -->
                 <h6>{{$t('Relevance')}}</h6>
-                <b-form-checkbox-group
+                <b-form-radio-group
                   v-model="buffer_modal_stage_two.relevance.option"
                   :options="select_options"
                   name="relevance"
-                  stacked></b-form-checkbox-group>
+                  stacked></b-form-radio-group>
                 <b-form-group
                   v-bind:label="$t('Explanation')"
                   label-for="input-relevance-explanation">
