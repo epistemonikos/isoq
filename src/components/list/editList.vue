@@ -656,7 +656,7 @@ export default {
         fields: [],
         items: []
       },
-      soqf: [],
+      soqf: {},
       evidence_profile: [],
       characteristics_studies: {
         fields: [],
@@ -713,7 +713,6 @@ export default {
         .then((response) => {
           this.list = {...response.data}
           this.list.sources = []
-          this.soqf = []
           this.evidence_profile = []
           this.extracted_data = {
             fields: [],
@@ -732,7 +731,9 @@ export default {
           list_id: this.list.id
         }
       }).then((response) => {
-        this.soqf = response.data[0]
+        if (response.data.length) {
+          this.soqf = response.data[0]
+        }
         this.evidence_profile = []
         if (this.soqf.hasOwnProperty('evidence_profile')) {
           let evidenceProfile = this.soqf.evidence_profile
@@ -750,7 +751,7 @@ export default {
         name: this.buffer_modal_stage_one.name,
         evidence_profile: this.buffer_modal_stage_two
       }
-      if (this.soqf.id) {
+      if (this.soqf.hasOwnProperty('id')) {
         axios.patch(`/api/isoqf_findings/${this.soqf.id}`, params)
           .then((response) => {
             this.getStageOneData()
