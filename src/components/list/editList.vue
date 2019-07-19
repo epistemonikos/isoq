@@ -703,9 +703,6 @@ export default {
   mounted () {
     this.setting_tables.soqf_list.totalRows = this.soqf.length
     this.getList()
-    this.getStageThree()
-    this.getStageFour()
-    this.getStageFive()
   },
   methods: {
     getList: function () {
@@ -719,30 +716,33 @@ export default {
             items: []
           }
           this.getStageOneData()
+          this.getStageThree()
+          this.getStageFour()
+          this.getStageFive()
         })
         .catch((error) => {
           console.log(error)
         })
     },
     getStageOneData: function () {
-      axios.get('/api/isoqf_findings', {
-        params: {
-          organization: this.list.organization,
-          list_id: this.list.id
-        }
-      }).then((response) => {
-        if (response.data.length) {
-          this.soqf = response.data[0]
-        }
-        this.evidence_profile = []
-        if (this.soqf.hasOwnProperty('evidence_profile')) {
-          let evidenceProfile = this.soqf.evidence_profile
-          evidenceProfile.name = this.soqf.name
-          this.evidence_profile.push(evidenceProfile)
-        }
-      }).catch((error) => {
-        console.log(error)
-      })
+      let params = {
+        organization: this.list.organization,
+        list_id: this.list.id
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((response) => {
+          if (response.data.length) {
+            this.soqf = response.data[0]
+          }
+          this.evidence_profile = []
+          if (this.soqf.hasOwnProperty('evidence_profile')) {
+            let evidenceProfile = this.soqf.evidence_profile
+            evidenceProfile.name = this.soqf.name
+            this.evidence_profile.push(evidenceProfile)
+          }
+        }).catch((error) => {
+          console.log(error)
+        })
     },
     saveStageOneAndTwo: function () {
       let params = {
@@ -775,10 +775,11 @@ export default {
       this.$refs['modal-stage-two'].show()
     },
     getStageThree: function () {
-      let params = {}
-      params.organization = this.list.organization
-      params.list_id = this.$route.params.id
-      axios.get('/api/isoqf_characteristics', params)
+      let params = {
+        organization: this.list.organization,
+        list_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_characteristics', {params})
         .then((response) => {
           if (response.data.length) {
             this.characteristics_studies = response.data[0]
@@ -953,10 +954,11 @@ export default {
       this.characteristics_studies.last_column = columnId
     },
     getStageFour: function () {
-      let params = {}
-      params.organization = this.list.organization
-      params.list_id = this.$route.params.id
-      axios.get('/api/isoqf_assessments', params)
+      let params = {
+        organization: this.list.organization,
+        list_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_assessments', {params})
         .then((response) => {
           if (response.data.length) {
             this.stage_four = JSON.parse(JSON.stringify(response.data[0]))
@@ -1122,7 +1124,7 @@ export default {
         organization: this.list.organization,
         list_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_extracted_data', params)
+      axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
           if (response.data.length) {
             this.extracted_data = response.data[0]
@@ -1145,7 +1147,7 @@ export default {
       axios.post('/api/isoqf_extracted_data', params)
         .then((response) => {
           this.stage_five_imported_data = {fields: [], items: []}
-          console.log(response)
+          this.getStageFive()
         })
         .catch((error) => {
           console.log(error)
