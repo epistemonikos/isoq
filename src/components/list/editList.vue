@@ -92,6 +92,36 @@
                     v-model="buffer_modal_stage_two.relevance.explanation"
                     placeholder="Enter an explanation"></b-form-textarea>
                 </b-form-group>
+                <!-- CERQual assessment -->
+                <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
+                <b-form-radio-group
+                  v-model="cerqual.cerqual_assessment.option"
+                  :options="select_options"
+                  name="cerqual_assessment"
+                  stacked></b-form-radio-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-cerqual-assessment">
+                  <b-form-textarea
+                    id="input-cerqual-assessment"
+                    v-model="cerqual.cerqual_assessment.explanation"
+                    placeholder="Enter an explanation"></b-form-textarea>
+                </b-form-group>
+                <!-- Explanation of CERQual assessment -->
+                <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
+                <b-form-radio-group
+                  v-model="cerqual.cerqual_explanation.option"
+                  :options="select_options"
+                  name="cerqual_explanation"
+                  stacked></b-form-radio-group>
+                <b-form-group
+                  v-bind:label="$t('Explanation')"
+                  label-for="input-explanation-cerqual-assessment">
+                  <b-form-textarea
+                    id="input-explanation-cerqual-assessment"
+                    v-model="cerqual.cerqual_explanation.explanation"
+                    placeholder="Enter an explanation"></b-form-textarea>
+                </b-form-group>
               </b-modal>
               <template v-if="evidence_profile.length">
                 <b-table
@@ -609,13 +639,21 @@ export default {
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
-        relevance: {option: null, explanation: ''}
+        relevance: {option: null, explanation: ''},
+        cerqual_assessment: {option: null, explanation: ''},
+        cerqual_explanation: {option: null, explanation: ''}
       },
       buffer_modal_stage_two: {
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
-        relevance: {option: null, explanation: ''}
+        relevance: {option: null, explanation: ''},
+        cerqual_assessment: {option: null, explanation: ''},
+        cerqual_explanation: {option: null, explanation: ''}
+      },
+      cerqual: {
+        cerqual_assessment: {option: null, explanation: ''},
+        cerqual_explanation: {option: null, explanation: ''}
       },
       buffer_modal_stage_three: {
         fields: [],
@@ -740,6 +778,9 @@ export default {
             evidenceProfile.name = this.soqf.name
             this.evidence_profile.push(evidenceProfile)
           }
+          if (this.soqf.hasOwnProperty('cerqual')) {
+            this.cerqual = this.soqf.cerqual
+          }
         }).catch((error) => {
           console.log(error)
         })
@@ -764,7 +805,8 @@ export default {
         organization: this.list.organization,
         list_id: this.list.id,
         name: this.buffer_modal_stage_one.name,
-        evidence_profile: this.buffer_modal_stage_two
+        evidence_profile: this.buffer_modal_stage_two,
+        cerqual: this.cerqual
       }
       if (this.soqf.hasOwnProperty('id')) {
         axios.patch(`/api/isoqf_findings/${this.soqf.id}`, params)
