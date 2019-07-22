@@ -234,6 +234,14 @@
                   @click="addNewColumnStageThree">Add column</b-button>
               </b-modal>
               <!-- end of modal edit fields -->
+              <!-- drop table -->
+              <b-modal
+                title="Drop table"
+                ref="modal-stage-three-drop-table"
+                @ok="stageThreeDropTable">
+                <p>This action will remove all the data. Are you sure?</p>
+              </b-modal>
+              <!-- drop table -->
               <template v-if="characteristics_studies.fields.length">
                 <b-table
                   responsive striped caption-top
@@ -242,6 +250,12 @@
                   class="mb-5">
                   <template slot="table-caption">
                     <div class="text-right">
+                      <b-button
+                        @click="openModalStageThreeDropTable"
+                        variant="outline-danger">
+                          <font-awesome-icon icon="table" />
+                          Drop table
+                      </b-button>
                       <b-button
                         @click="openModalStageThreeEditFields"
                         variant="outline-primary">
@@ -1024,6 +1038,19 @@ export default {
 
       this.modal_stage_three_edit_fields.push({key: 'column_' + columnId, label: ''})
       this.characteristics_studies.last_column = columnId
+    },
+    openModalStageThreeDropTable: function () {
+      this.$refs['modal-stage-three-drop-table'].show()
+    },
+    stageThreeDropTable: function () {
+      axios.delete(`/api/isoqf_characteristics/${this.characteristics_studies.id}`)
+        .then((response) => {
+          this.characteristics_studies = {fields: [], items: []}
+          this.getStageThree()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     getStageFour: function () {
       let params = {
