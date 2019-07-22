@@ -179,6 +179,7 @@
               <!-- <h3>{{$t('Characteristics of Studies')}}</h3> -->
               <!-- create study tables -->
               <b-modal
+                title="Add fields"
                 ref="modal-stage-three-create-fields"
                 @ok="saveStageThreeCreateFields">
                 <b-form-group
@@ -204,8 +205,10 @@
               <!-- end of create study tables -->
               <!-- modal edit fields -->
               <b-modal
+                title="Edit fields"
                 ref="modal-stage-three-edit-fields"
-                @ok="saveStageThreeUpdateFields">
+                @ok="saveStageThreeUpdateFields"
+                @cancel="cancelModalStageThreeFields">
                 <b-form-group
                   v-for="(item, index) in modal_stage_three_edit_fields"
                   :key="index"
@@ -217,7 +220,7 @@
                       type="text"
                       v-model="item.label"></b-form-input>
                     <b-input-group-append
-                      v-if="characteristics_studies.fields.length > 2">
+                      v-if="modal_stage_three_edit_fields.length > 1">
                       <b-button
                         @click="removeFieldStageThree(item, index)">
                         <font-awesome-icon
@@ -264,8 +267,11 @@
                 </b-table>
               </template>
               <template v-else>
-                <div class="text-center my-5">
+                <div class="text-center my-5" v-if="!characteristics_studies.id">
                   <p>{{ $t('No studies') }} <b-link @click="openModalStageThreeCreateFields">{{ $t('add studies') }}</b-link></p>
+                </div>
+                <div class="text-center my-5" v-else>
+                  <p>{{ $t('No studies') }} <b-link @click="openModalStageThreeEditFields">{{ $t('add studies') }}</b-link></p>
                 </div>
               </template>
               <!-- create study data -->
@@ -916,6 +922,9 @@ export default {
           console.log(error)
         })
     },
+    cancelModalStageThreeFields: function () {
+      this.buffer_modal_stage_three = {fields: [], data: []}
+    },
     removeFieldStageThree: function (field, index) {
       let removedField = JSON.parse(JSON.stringify(field))
       let stageThreeEditFields = JSON.parse(JSON.stringify(this.modal_stage_three_edit_fields))
@@ -1008,7 +1017,11 @@ export default {
         })
     },
     addNewColumnStageThree: function () {
-      let columnId = parseInt(this.characteristics_studies.last_column) + 1
+      let columnId = 0
+      if (this.characteristics_studies.hasOwnProperty('last_column')) {
+        columnId = parseInt(this.characteristics_studies.last_column) + 1
+      }
+
       this.modal_stage_three_edit_fields.push({key: 'column_' + columnId, label: ''})
       this.characteristics_studies.last_column = columnId
     },
