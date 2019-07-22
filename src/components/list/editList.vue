@@ -493,9 +493,12 @@
                     rows="3"
                     v-model="csvImport"></b-form-textarea>
                 </b-form-group>
-                <b-table
-                  :fields="stage_five_imported_data.fields"
-                  :items="stage_five_imported_data.items"></b-table>
+                <div v-if="stage_five_imported_data.fields.length">
+                  <h5>Preview</h5>
+                  <b-table
+                    :fields="stage_five_imported_data.fields"
+                    :items="stage_five_imported_data.items"></b-table>
+                </div>
               </b-modal>
               <b-modal
                 id="modal-stage-five-table"
@@ -526,6 +529,12 @@
                 </b-form-group>
                 <!-- -->
               </b-modal>
+              <b-modal
+                title="Drop table"
+                id="modal-stage-five-drop-table"
+                @ok="stageFiveDropTable">
+                <p>This action will remove all the data. Are you sure?</p>
+              </b-modal>
               <template v-if="extracted_data.fields.length">
                 <b-table
                   responsive striped caption-top
@@ -533,7 +542,14 @@
                   :items="extracted_data.items">
                   <template slot="table-caption">
                     <div class="text-right">
-                      <b-button v-b-modal.modal-stage-five-table variant="outline-primary">{{$t('Edit table')}}</b-button>
+                      <b-button
+                        v-b-modal.modal-stage-five-drop-table
+                        variant="outline-danger">
+                        <font-awesome-icon icon="table" /> {{$t('Drop table')}}
+                      </b-button>
+                      <b-button v-b-modal.modal-stage-five-table variant="outline-primary">
+                        <font-awesome-icon icon="table" /> {{$t('Edit table')}}
+                      </b-button>
                       <b-button
                         v-if="extracted_data.fields.length"
                         v-b-modal.modal-stage-five-data
@@ -1253,6 +1269,7 @@ export default {
       }
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
+          this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
             this.extracted_data = response.data[0]
             delete this.extracted_data.organization
@@ -1293,6 +1310,15 @@ export default {
           console.log(response)
           this.getStageFive()
           this.buffer_extracted_data = {}
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    stageFiveDropTable: function () {
+      axios.delete(`/api/isoqf_extracted_data/${this.extracted_data.id}`)
+        .then((response) => {
+          this.getStageFive()
         })
         .catch((error) => {
           console.log(error)
