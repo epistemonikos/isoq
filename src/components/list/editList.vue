@@ -377,7 +377,8 @@
                     <b-form-input
                       :id="`column-${key}`"
                       v-model="buffer_modal_stage_four_fields[key].label"></b-form-input>
-                      <b-input-group-append>
+                      <b-input-group-append
+                        v-if="buffer_modal_stage_four_fields.length > 1">
                         <b-button
                           @click="removeFieldStageFour(key)">
                           <font-awesome-icon
@@ -387,9 +388,16 @@
                   </b-input-group>
                 </b-form-group>
                 <b-button
+                  variant="outline-success"
                   @click="addColumnStageFour">
                   Add column
                 </b-button>
+              </b-modal>
+              <b-modal
+                id="open-modal-stage-four-drop-table"
+                title="Drop table"
+                @ok="stageFourDropTable">
+                <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="stage_four.fields.length">
                 <b-table
@@ -398,7 +406,16 @@
                   :items="stage_four.data">
                   <template slot="table-caption">
                     <div class="text-right">
-                      <b-button @click="editFieldsModalStageFour" variant="outline-primary">{{$t('Edit table')}}</b-button>
+                      <b-button
+                        v-b-modal.open-modal-stage-four-drop-table
+                        variant="outline-danger">
+                        <font-awesome-icon icon="table" />
+                        {{$t('Drop table')}}
+                      </b-button>
+                      <b-button @click="editFieldsModalStageFour" variant="outline-primary">
+                        <font-awesome-icon icon="table" />
+                        {{$t('Edit table')}}
+                      </b-button>
                       <b-button
                         v-if="stage_four.fields.length"
                         @click="stageFourAddData"
@@ -422,10 +439,9 @@
                     :id="`label-field-${index}`"
                     :label="`${field.label}`"
                     :label-for="`input-field-${index}`">
-                    <b-form-input
+                    <b-form-textarea
                       :id="`input-field-${index}`"
-                      type="text"
-                      v-model="modal_stage_four_data[field.key]"></b-form-input>
+                      v-model="modal_stage_four_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <b-modal
@@ -1059,6 +1075,7 @@ export default {
       }
       axios.get('/api/isoqf_assessments', {params})
         .then((response) => {
+          this.stage_four = {nroOfColumns: 1, fields: [], items: []}
           if (response.data.length) {
             this.stage_four = JSON.parse(JSON.stringify(response.data[0]))
             if (this.stage_four.fields.length) {
@@ -1219,6 +1236,15 @@ export default {
       let lastItem = tmpFields.splice(tmpFields.length - 1, 1)[0]
       let lastId = parseInt(lastItem.key.split('_')[1]) + 1
       this.buffer_modal_stage_four_fields.push({key: 'column_' + lastId, label: ''})
+    },
+    stageFourDropTable: function () {
+      axios.delete(`/api/isoqf_assessments/${this.stage_four.id}`)
+        .then((response) => {
+          this.getStageFour()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     getStageFive: function () {
       let params = {
