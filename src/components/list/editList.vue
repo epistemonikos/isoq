@@ -563,6 +563,7 @@
                 </b-table>
                 <!-- create extracted data -->
                 <b-modal
+                  title="Add data"
                   id="modal-stage-five-data"
                   ref="modal-stage-five-data"
                   @ok="saveDataStageFive">
@@ -572,10 +573,10 @@
                     :id="`label-field-${index}`"
                     :label="`${field.label}`"
                     :label-for="`input-field-${index}`">
-                    <b-form-input
+                    <b-form-textarea
                       :id="`input-field-${index}`"
                       type="text"
-                      v-model="buffer_extracted_data[field.key]"></b-form-input>
+                      v-model="buffer_extracted_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <!-- end of create extracted data -->
