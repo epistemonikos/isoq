@@ -788,7 +788,8 @@ export default {
     saveListName: function () {
       let params = {
         organization: this.list.organization,
-        name: this.buffer_modal_stage_one.name
+        name: this.buffer_modal_stage_one.name,
+        cerqual: this.cerqual
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {

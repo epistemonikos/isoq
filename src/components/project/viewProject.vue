@@ -40,6 +40,12 @@
               <template slot="name" slot-scope="data">
                 <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
               </template>
+              <template slot="confidence" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
+                {{cerqual_confidence[data.item.cerqual.cerqual_assessment.option].text}}
+              </template>
+              <template slot="explanation" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
+                {{select_options[data.item.cerqual.cerqual_explanation.option].text}}
+              </template>
             </b-table>
           </template>
           <template v-else>
@@ -86,11 +92,11 @@ export default {
             label: 'Summarized review finding'
           },
           {
-            key: 'm',
+            key: 'confidence',
             label: 'CERQual Assessment of confidence'
           },
           {
-            key: 'mm',
+            key: 'explanation',
             label: 'Explanation of CERQual Assessment'
           },
           {
@@ -99,7 +105,19 @@ export default {
           }
         ]
       },
-      summarized_review: ''
+      summarized_review: '',
+      select_options: [
+        {value: 0, text: 'No/Minor concerns'},
+        {value: 1, text: 'Minor concerns'},
+        {value: 2, text: 'Moderated concerns'},
+        {value: 3, text: 'Serious concerns'}
+      ],
+      cerqual_confidence: [
+        {value: 0, text: 'High confidence'},
+        {value: 1, text: 'Moderate confidence'},
+        {value: 2, text: 'Low confidence'},
+        {value: 3, text: 'Very low confidence'}
+      ]
     }
   },
   mounted () {
