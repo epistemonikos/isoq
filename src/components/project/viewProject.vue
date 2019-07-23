@@ -12,9 +12,13 @@
       <b-row>
         <b-col cols="12">
           <h1>{{project.name}}</h1>
-          <p>{{project.description}}</p>
+        </b-col>
+        <b-col cols="12" sm="6">
+          <p v-if="project.description">{{project.description}}</p>
           <h5>Review question</h5>
           <p>{{project.review_question}}</p>
+        </b-col>
+        <b-col cols="12" sm="6">
           <h5>Authors of the review</h5>
           <ul>
             <li v-for="(author, index) in project.authors.split(',')" :key="index">{{author.trim()}}</li>
