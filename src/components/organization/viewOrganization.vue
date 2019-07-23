@@ -25,8 +25,23 @@
         <ul class="mt-5">
           <li class="my-3" v-for="(project, index) in org.projects" v-bind:key="index">
             <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: project.id}}">{{project.name}}</b-link>
-            <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" />
-            <font-awesome-icon @click="ModalAddList(project.id)" icon="plus-square" pull="right" v-bind:title="$t('Add')" />
+            <font-awesome-icon
+              icon="trash"
+              pull="right"
+              v-bind:title="$t('Remove')"
+              @click="modalRemoveProject(project)" />
+            <!--
+            <font-awesome-icon
+              icon="plus-square"
+              pull="right"
+              v-bind:title="$t('Add')"
+              @click="ModalAddList(project.id)" />
+            -->
+            <font-awesome-icon
+              icon="edit"
+              pull="right"
+              title="Edit"
+              @click="openModalEditProject(project)" />
           </li>
         </ul>
       </div>
@@ -35,7 +50,8 @@
         id="new-project"
         ref="new-project"
         :title="(buffer_project.id) ? 'Edit iSoQF table' : 'New iSoQF table'"
-        @ok="AddProject">
+        @ok="AddProject"
+        @cancel="closeModalProject">
         <b-alert
           :show="ui.dismissCounters.dismissCountDown"
           @dismiss-count-down="countDownChanged"
@@ -119,6 +135,14 @@
             placeholder="Enter a summarized review finding"
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
+      </b-modal>
+      <b-modal
+        id="modal-remove-project"
+        ref="modal-remove-project"
+        title="Delete project"
+        @ok="removeProject"
+        @cancel="cleanProject">
+        <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
       </b-modal>
     </b-container>
   </div>
@@ -213,17 +237,29 @@ export default {
         })
     },
     AddProject: function () {
-      axios.post('/api/isoqf_projects', this.buffer_project)
-        .then((response) => {
-          this.buffer_project = this.tmp_buffer_project
-          this.$refs['new-project'].hide()
-          this.getProjectsAndLists()
-        })
-        .catch((error) => {
-          this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-          console.log('error', error)
-          this.$refs['new-project'].show()
-        })
+      if (this.buffer_project.id) {
+        delete this.buffer_project.lists
+        axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
+          .then((response) => {
+            this.buffer_project = this.tmp_buffer_project
+            this.getProjectsAndLists()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios.post('/api/isoqf_projects', this.buffer_project)
+          .then((response) => {
+            this.buffer_project = this.tmp_buffer_project
+            this.$refs['new-project'].hide()
+            this.getProjectsAndLists()
+          })
+          .catch((error) => {
+            this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
+            console.log('error', error)
+            this.$refs['new-project'].show()
+          })
+      }
     },
     countDownChanged (dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
@@ -291,6 +327,9 @@ export default {
     cleanProjectList: function () {
       this.buffer_project_list = this.tmp_buffer_project_list
     },
+    cleanProject: function () {
+      this.buffer_project = this.tmp_buffer_project
+    },
     updateProjectList: function () {
       axios.patch(`/api/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
         .then((response) => {
@@ -298,6 +337,30 @@ export default {
           this.buffer_project_list = this.tmp_buffer_project_list
           this.getProjectsAndLists()
           this.$refs['new-project-list'].hide()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    closeModalProject: function () {
+      this.buffer_project = this.tmp_buffer_project
+    },
+    openModalEditProject: function (project) {
+      this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.$refs['new-project'].show()
+    },
+    modalRemoveProject: function (project) {
+      this.org.remove_project_id = project.id
+      this.buffer_project = project
+      this.$refs['modal-remove-project'].show()
+    },
+    removeProject: function () {
+      axios.delete(`/api/isoqf_projects/${this.org.remove_project_id}`)
+        .then((response) => {
+          this.buffer_project = this.tmp_buffer_project
+          delete this.org.remove_project_id
+          this.getOrganization()
+          this.getProjectsAndLists()
         })
         .catch((error) => {
           console.log(error)
