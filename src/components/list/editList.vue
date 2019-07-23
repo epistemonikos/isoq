@@ -541,11 +541,21 @@
                   :key="index"
                   :label="$t('Title of column', [index])"
                   :label-for="`input-column-nro-${index}`">
-                  <b-form-input
-                    :id="`input-column-nro-${index}`"
-                    type="text"
-                    :placeholder="$t('Title of column', [index])"
-                    v-model="buffer_extracted_data.fields[index].label"></b-form-input>
+                  <b-input-group>
+                    <b-form-input
+                      :id="`input-column-nro-${index}`"
+                      type="text"
+                      :placeholder="$t('Title of column', [index])"
+                      v-model="buffer_extracted_data.fields[index].label"></b-form-input>
+                    <b-input-group-append
+                      v-if="buffer_extracted_data.fields.length > 1">
+                      <b-button
+                        @click="removeFieldStageFive(index)">
+                        <font-awesome-icon
+                          icon="trash"></font-awesome-icon>
+                      </b-button>
+                    </b-input-group-append>
+                  </b-input-group>
                 </b-form-group>
                 <b-button
                   variant="outline-success"
@@ -600,7 +610,7 @@
                     <b-form-textarea
                       :id="`input-field-${index}`"
                       type="text"
-                      v-model="buffer_extracted_data[field.key]"></b-form-textarea>
+                      v-model="buffer_extracted_data_items[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <!-- end of create extracted data -->
@@ -746,6 +756,7 @@ export default {
         items: [],
         id: null
       },
+      buffer_extracted_data_items: {},
       list: {
         id: '',
         title: '',
@@ -1328,7 +1339,7 @@ export default {
     },
     saveDataStageFive: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      items.push(this.buffer_extracted_data)
+      items.push(this.buffer_extracted_data_items)
       let params = {
         organization: this.list.organization,
         list_id: this.$route.params.id,
@@ -1336,9 +1347,9 @@ export default {
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
         .then((response) => {
-          console.log(response)
           this.getStageFive()
-          this.buffer_extracted_data = {}
+          this.buffer_extracted_data = {fields: [], items: [], id: null}
+          this.buffer_extracted_data_items = {}
         })
         .catch((error) => {
           console.log(error)
@@ -1371,7 +1382,8 @@ export default {
     },
     updateStageFiveEditColumns: function () {
       let params = {
-        fields: this.buffer_extracted_data.fields
+        fields: this.buffer_extracted_data.fields,
+        items: this.buffer_extracted_data.items || []
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
         .then((response) => {
@@ -1381,6 +1393,15 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    removeFieldStageFive: function (index) {
+      let tmpKey = this.buffer_extracted_data.fields[index].key
+      this.buffer_extracted_data.fields.splice(index, 1)
+      if (this.buffer_extracted_data.items.length) {
+        for (let item of this.buffer_extracted_data.items) {
+          delete item[tmpKey]
+        }
+      }
     }
   }
 }
