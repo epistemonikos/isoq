@@ -586,15 +586,28 @@
                       </b-button>
                       <b-button
                         v-if="extracted_data.fields.length"
-                        v-b-modal.modal-stage-five-data
+                        @click="openModalStageFiveAddDataItem"
                         variant="outline-success">{{$t('Add data')}}</b-button>
                     </div>
                   </template>
-                  <template slot="actions">
-                    <font-awesome-icon icon="trash" pull="right" :title="$t('Remove')" style="color: #dc3545" />
-                    <font-awesome-icon icon="edit" pull="right" :title="$t('Edit')" />
+                  <template slot="actions" slot-scope="data">
+                    <font-awesome-icon
+                      icon="trash"
+                      @click="openModalStageFiveRemoveDataItem(data)"
+                      :title="$t('Remove')" />
+                    <font-awesome-icon
+                      icon="edit"
+                      @click="openModalStageFiveEditDataItem(data)"
+                      :title="$t('Edit')" />
                   </template>
                 </b-table>
+                <b-modal
+                  id="modal-stage-five-remove-data-item"
+                  ref="modal-stage-five-remove-data-item"
+                  title="Remove data item"
+                  @ok="stageFiveRemoveDataItem">
+                  <p>Are you sure you wanna remove this row?</p>
+                </b-modal>
                 <!-- create extracted data -->
                 <b-modal
                   title="Add data"
@@ -602,7 +615,7 @@
                   ref="modal-stage-five-data"
                   @ok="saveDataStageFive">
                   <b-form-group
-                    v-for="(field, index) in extracted_data.fields"
+                    v-for="(field, index) in buffer_extracted_data.fields"
                     :key="index"
                     :id="`label-field-${index}`"
                     :label="`${field.label}`"
@@ -1314,6 +1327,7 @@ export default {
             this.extracted_data = response.data[0]
             delete this.extracted_data.organization
             delete this.extracted_data.list_id
+            this.extracted_data.fields.push({key: 'actions', label: 'Actions'})
           }
         })
         .catch((error) => {
@@ -1339,7 +1353,12 @@ export default {
     },
     saveDataStageFive: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      items.push(this.buffer_extracted_data_items)
+      if (this.extracted_data.hasOwnProperty('edit_index_item')) {
+        items[this.extracted_data.edit_index_item] = this.buffer_extracted_data_items
+      } else {
+        items.push(this.buffer_extracted_data_items)
+      }
+
       let params = {
         organization: this.list.organization,
         list_id: this.$route.params.id,
@@ -1378,6 +1397,7 @@ export default {
     },
     openModalStageFiveEditColumns: function () {
       this.buffer_extracted_data = JSON.parse(JSON.stringify(this.extracted_data))
+      this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.$refs['modal-stage-five-edit-columns'].show()
     },
     updateStageFiveEditColumns: function () {
@@ -1402,6 +1422,35 @@ export default {
           delete item[tmpKey]
         }
       }
+    },
+    openModalStageFiveRemoveDataItem: function (data) {
+      this.buffer_extracted_data.remove_index_item = data.index
+      this.$refs['modal-stage-five-remove-data-item'].show()
+    },
+    stageFiveRemoveDataItem: function () {
+      let items = JSON.parse(JSON.stringify(this.extracted_data.items))
+      items.splice(items.length - 1, 1)
+      items.splice(this.buffer_extracted_data.remove_index_item, 1)
+      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
+        .then((response) => {
+          this.getStageFive()
+          delete this.buffer_extracted_data.remove_index_item
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalStageFiveAddDataItem: function () {
+      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
+      this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
+      this.$refs['modal-stage-five-data'].show()
+    },
+    openModalStageFiveEditDataItem: function (data) {
+      this.extracted_data.edit_index_item = data.index
+      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
+      this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
+      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
+      this.$refs['modal-stage-five-data'].show()
     }
   }
 }
