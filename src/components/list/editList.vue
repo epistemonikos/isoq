@@ -501,6 +501,7 @@
                 </div>
               </b-modal>
               <b-modal
+                title="Add columns"
                 id="modal-stage-five-table"
                 ref="modal-stage-five-table">
                 <b-form-group
@@ -530,6 +531,27 @@
                 <!-- -->
               </b-modal>
               <b-modal
+                id="modal-stage-five-edit-columns"
+                ref="modal-stage-five-edit-columns"
+                title="Edit columns"
+                @ok="updateStageFiveEditColumns"
+                @cancel="cancelModalStageFiveEditColumns">
+                <b-form-group
+                  v-for="(item, index) in buffer_extracted_data.fields.length"
+                  :key="index"
+                  :label="$t('Title of column', [index])"
+                  :label-for="`input-column-nro-${index}`">
+                  <b-form-input
+                    :id="`input-column-nro-${index}`"
+                    type="text"
+                    :placeholder="$t('Title of column', [index])"
+                    v-model="buffer_extracted_data.fields[index].label"></b-form-input>
+                </b-form-group>
+                <b-button
+                  variant="outline-success"
+                  @click="addColumnStageFive">Add column</b-button>
+              </b-modal>
+              <b-modal
                 title="Drop table"
                 id="modal-stage-five-drop-table"
                 @ok="stageFiveDropTable">
@@ -547,7 +569,9 @@
                         variant="outline-danger">
                         <font-awesome-icon icon="table" /> {{$t('Drop table')}}
                       </b-button>
-                      <b-button v-b-modal.modal-stage-five-table variant="outline-primary">
+                      <b-button
+                        @click="openModalStageFiveEditColumns"
+                        variant="outline-primary">
                         <font-awesome-icon icon="table" /> {{$t('Edit table')}}
                       </b-button>
                       <b-button
@@ -717,7 +741,11 @@ export default {
         fields: []
       },
       modal_stage_three_edit_fields: [],
-      buffer_extracted_data: {},
+      buffer_extracted_data: {
+        fields: [],
+        items: [],
+        id: null
+      },
       list: {
         id: '',
         title: '',
@@ -1320,6 +1348,35 @@ export default {
       axios.delete(`/api/isoqf_extracted_data/${this.extracted_data.id}`)
         .then((response) => {
           this.getStageFive()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    addColumnStageFive: function () {
+      let id = 0
+      if (this.buffer_extracted_data.fields.length) {
+        let tmpBufferExtractedData = JSON.parse(JSON.stringify(this.buffer_extracted_data))
+        let tempItem = tmpBufferExtractedData.fields.splice(tmpBufferExtractedData.fields.length - 1, 1)
+        id = parseInt(tempItem[0].key.split('_')[1]) + 1
+      }
+      this.buffer_extracted_data.fields.push({key: 'column_' + id, label: ''})
+    },
+    cancelModalStageFiveEditColumns: function () {
+      this.buffer_extracted_data = {fields: [], items: [], id: null}
+    },
+    openModalStageFiveEditColumns: function () {
+      this.buffer_extracted_data = JSON.parse(JSON.stringify(this.extracted_data))
+      this.$refs['modal-stage-five-edit-columns'].show()
+    },
+    updateStageFiveEditColumns: function () {
+      let params = {
+        fields: this.buffer_extracted_data.fields
+      }
+      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
+        .then((response) => {
+          this.getStageFive()
+          this.buffer_extracted_data = {fields: [], items: [], id: null}
         })
         .catch((error) => {
           console.log(error)
