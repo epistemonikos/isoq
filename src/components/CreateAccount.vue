@@ -5,6 +5,7 @@
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-form>
             <b-card
+              v-if="ui.display_create_account"
               header="Create an account">
               <b-form-group
                 id="input_group_name"
@@ -91,13 +92,37 @@
           </b-form>
         </b-col>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
-          <b-card header="Join to an a organisation">
+          <b-card
+            v-if="ui.display_join_org_or_create_org"
+            header="Your account has been created.">
             <p>
               As an individual, you will be able to create iSoQF tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
             </p>
             <p>
-              In order share iSoQF tables with others you need to join an existing organisation
+              In order to share iSoQF tables with others you need to join an existing organisation or create a new one.
             </p>
+            <b-row>
+              <b-col cols="12" sm="6" class="text-center">
+                <b-button
+                  variant="outline-success"
+                  block
+                  size="lg"
+                  @click="showJoinOrgCard">Join</b-button>
+              </b-col>
+              <b-col cols="12" sm="6" class="text-center">
+                <b-button
+                  variant="outline-success"
+                  block
+                  size="lg"
+                  @click="showCreateOrgCard">Create</b-button>
+              </b-col>
+            </b-row>
+          </b-card>
+        </b-col>
+        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
+          <b-card
+            v-if="ui.display_join_org"
+            header="Join to an a organisation">
             <b-form-group
               label="Organization"
               label-for="input-select-organization">
@@ -111,11 +136,18 @@
               slot="footer"
               class="text-right">
               <b-button
+                variant="outline-danger"
+                @click="cancelCardShowOptions">Cancel</b-button>
+              <b-button
                 variant="outline-primary"
                 @click="createAccount">Join</b-button>
             </div>
           </b-card>
-          <b-card header="Create an organisation">
+        </b-col>
+        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
+          <b-card
+            v-if="ui.display_create_org"
+            header="Create an organisation">
             <b-form-group
               label="Name"
               label-for="organization-name">
@@ -164,6 +196,9 @@
               slot="footer"
               class="text-right">
               <b-button
+                variant="outline-danger"
+                @click="cancelCardShowOptions">Cancel</b-button>
+              <b-button
                 variant="outline-primary">Create an Join</b-button>
             </div>
           </b-card>
@@ -182,7 +217,11 @@ export default {
     return {
       ui: {
         username_validation: null,
-        password_validation: false
+        password_validation: false,
+        display_create_account: true,
+        display_join_org_or_create_org: false,
+        display_join_org: false,
+        display_create_org: false
       },
       organizations: [
         {id: 'examples', name: 'Examples'},
@@ -235,6 +274,9 @@ export default {
       axios.post('/create_user', params)
         .then((response) => {
           console.log(response)
+          this.user = response.data
+          this.ui.display_create_account = false
+          this.ui.display_join_org_or_create_org = true
         })
         .catch((error) => {
           console.log(error)
@@ -283,6 +325,19 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    showJoinOrgCard: function () {
+      this.ui.display_join_org_or_create_org = false
+      this.ui.display_join_org = true
+    },
+    showCreateOrgCard: function () {
+      this.ui.display_join_org_or_create_org = false
+      this.ui.display_create_org = true
+    },
+    cancelCardShowOptions: function () {
+      this.ui.display_join_org_or_create_org = true
+      this.ui.display_create_org = false
+      this.ui.display_join_org = false
     }
   }
 }
