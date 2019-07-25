@@ -153,7 +153,8 @@
               label-for="organization-name">
               <b-form-input
                 id="organization-name"
-                type="text">
+                type="text"
+                v-model="organization.name">
               </b-form-input>
             </b-form-group>
             <b-form-group
@@ -162,19 +163,20 @@
               <b-form-input
                 id="organization-website"
                 type="url"
-                placeholder="https://myorganization.org">
+                placeholder="https://myorganization.org"
+                v-model="organization.website">
               </b-form-input>
             </b-form-group>
             <b-form-group>
               <b-form-checkbox
-                v-model="nonprofit"
+                v-model="organization.nonprofit"
                 value="false"
                 unchecked-value="true">confirm this is a non-profit organisation</b-form-checkbox>
             </b-form-group>
             <b-form-group label="Plan">
               <b-form-radio-group
                 id="option-plans"
-                v-model="selected_plan"
+                v-model="organization.selected_plan"
                 :options="plans"></b-form-radio-group>
             </b-form-group>
             <b-row>
@@ -199,7 +201,8 @@
                 variant="outline-danger"
                 @click="cancelCardShowOptions">Cancel</b-button>
               <b-button
-                variant="outline-primary">Create an Join</b-button>
+                variant="outline-primary"
+                @click="organizationRequest">Create an Join</b-button>
             </div>
           </b-card>
         </b-col>
@@ -208,9 +211,21 @@
             v-if="ui.display_end_affiliation"
             header="You are done!">
             <p>Now, you can create and share iSoQF tables with your organisation.</p>
-            <b-button
-              variant="outline-success"
-              :to="{name: 'Organizations'}">Go to organisations</b-button>
+            <div class="text-right">
+              <b-button
+                variant="outline-success"
+                :to="{name: 'Organizations'}">Go to organisations</b-button>
+            </div>
+          </b-card>
+          <b-card
+            v-if="ui.display_end_org_creation"
+            header="Many thanks for registering your organisation">
+            <p>You can star using iSoQF right now and move your work to the organisation when created.</p>
+            <div class="text-right">
+              <b-button
+                variant="outline-success"
+                :to="{name: 'Organizations'}">Go to organisations</b-button>
+            </div>
           </b-card>
         </b-col>
       </b-row>
@@ -232,7 +247,8 @@ export default {
         display_join_org_or_create_org: false,
         display_join_org: false,
         display_create_org: false,
-        display_end_affiliation: false
+        display_end_affiliation: false,
+        display_end_org_creation: false
       },
       organizations: [
         {id: 'examples', name: 'Examples'},
@@ -248,8 +264,12 @@ export default {
       },
       org_selected: '',
       all_organizations: [],
-      nonprofit: true,
-      selected_plan: false,
+      organization: {
+        name: '',
+        website: '',
+        nonprofit: true,
+        selected_plan: false
+      },
       plans: [
         {text: 'Small', value: 'small', specs: {users: 10, tables: 20, price: 'free'}},
         {text: 'Medium', value: 'medium', specs: {users: 50, tables: 200, price: '1000 USD a year'}},
@@ -294,10 +314,7 @@ export default {
     login (username, password) {
       this.$store
         .dispatch('login', {username, password})
-        .then((response) => {
-          console.log(response)
-          // this.$router.push('/')
-        })
+        .then((response) => {})
         .catch((error) => console.log(error))
     },
     jointToOrg: function () {
@@ -306,9 +323,26 @@ export default {
       }
       axios.patch('/users/update_my_profile', params)
         .then((response) => {
-          console.log(response)
           this.ui.display_join_org = false
           this.ui.display_end_affiliation = true
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    organizationRequest: function () {
+      let params = {
+        billing: {
+          plan: this.organization.selected_plan
+        },
+        for_profit: this.organization.nonprofit,
+        name: this.organization.name,
+        website: this.organization.website
+      }
+      axios.post('/organizations/request_new', params)
+        .then((response) => {
+          this.ui.display_create_org = false
+          this.ui.display_end_org_creation = true
         })
         .catch((error) => {
           console.log(error)
