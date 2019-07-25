@@ -38,7 +38,7 @@
                   required
                   aria-describedby="input-live-help input-live-feedback"
                   placeholder="Enter a valid email"
-                  v-model="username"></b-form-input>
+                  v-model="user.username"></b-form-input>
                 <b-form-text
                   id="input-live-feedback"
                   v-if="!ui.username_validation">This username exist!</b-form-text>
@@ -64,7 +64,7 @@
                   type="password"
                   required
                   placeholder="Write an strong password with at least 8 alpha-numeric characters"
-                  v-model="password"></b-form-input>
+                  v-model="user.password"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_repeat_password"
@@ -75,7 +75,7 @@
                   type="password"
                   required
                   placeholder="Write the same password above"
-                  v-model="password_2"></b-form-input>
+                  v-model="user.password_2"></b-form-input>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
@@ -124,7 +124,7 @@
             v-if="ui.display_join_org"
             header="Join to an a organisation">
             <b-form-group
-              label="Organization"
+              label="Organisation"
               label-for="input-select-organization">
               <b-form-select
                 v-model="org_selected"
@@ -140,7 +140,7 @@
                 @click="cancelCardShowOptions">Cancel</b-button>
               <b-button
                 variant="outline-primary"
-                @click="createAccount">Join</b-button>
+                @click="jointToOrg">Join</b-button>
             </div>
           </b-card>
         </b-col>
@@ -203,6 +203,16 @@
             </div>
           </b-card>
         </b-col>
+        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
+          <b-card
+            v-if="ui.display_end_affiliation"
+            header="You are done!">
+            <p>Now, you can create and share iSoQF tables with your organisation.</p>
+            <b-button
+              variant="outline-success"
+              :to="{name: 'Organizations'}">Go to organisations</b-button>
+          </b-card>
+        </b-col>
       </b-row>
     </b-container>
   </div>
@@ -221,20 +231,21 @@ export default {
         display_create_account: true,
         display_join_org_or_create_org: false,
         display_join_org: false,
-        display_create_org: false
+        display_create_org: false,
+        display_end_affiliation: false
       },
       organizations: [
         {id: 'examples', name: 'Examples'},
-        {id: 'episte', name: 'Test organization'}
+        {id: 'episte', name: 'Test organisation'}
       ],
       user: {
         first_name: '',
         last_name: '',
-        affiliation: ''
+        affiliation: '',
+        username: '',
+        password: '',
+        password_2: ''
       },
-      username: '',
-      password: '',
-      password_2: '',
       org_selected: '',
       all_organizations: [],
       nonprofit: true,
@@ -247,13 +258,13 @@ export default {
     }
   },
   watch: {
-    username: function (email) {
+    'user.username': function (email) {
       this.checkEmail()
     },
-    password: function () {
+    'user.password': function () {
       this.comparePassword()
     },
-    password_2: function () {
+    'user.password_2': function () {
       this.comparePassword()
     }
   },
@@ -265,30 +276,46 @@ export default {
   },
   methods: {
     createAccount: function () {
-      this.user.password = this.password
-      this.user.username = this.user
       let params = {
         user: this.user,
         organizations: this.organizations
       }
       axios.post('/create_user', params)
         .then((response) => {
-          console.log(response)
-          this.user = response.data
+          this.login(this.user.username, this.user.password)
           this.ui.display_create_account = false
           this.ui.display_join_org_or_create_org = true
+          this.user = response.data
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    login (username, password) {
+      this.$store
+        .dispatch('login', {username, password})
+        .then((response) => {
+          console.log(response)
+          // this.$router.push('/')
+        })
+        .catch((error) => console.log(error))
+    },
+    jointToOrg: function () {
+      let params = {
+        org_to_join: this.org_selected
+      }
+      axios.patch('/users/update_my_profile', params)
+        .then((response) => {
+          console.log(response)
+          this.ui.display_join_org = false
+          this.ui.display_end_affiliation = true
         })
         .catch((error) => {
           console.log(error)
         })
     },
     checkEmailExist: function () {
-      let params = {
-        params: {
-          email: this.username
-        }
-      }
-      axios.get('/users/check_email', params)
+      axios.get(`/users/check_email?email=${this.user.username}`)
         .then((response) => {
           if (response.data.error === false) {
             this.ui.username_validation = true
@@ -301,25 +328,23 @@ export default {
         })
     },
     comparePassword: function () {
-      let password = this.password.trim()
-      let password2 = this.password_2.trim()
-      this.ui.password_validation = false
+      if (this.ui.display_create_account === true) {
+        let password = this.user.password.trim()
+        let password2 = this.user.password_2.trim()
+        this.ui.password_validation = false
 
-      if (password !== '' && password2 !== '') {
-        if (password === password2) {
-          this.ui.password_validation = true
+        if (password !== '' && password2 !== '') {
+          if (password === password2) {
+            this.ui.password_validation = true
+          }
         }
+      } else {
+        this.ui.password_validation = false
       }
     },
     getOrganizations: function () {
-      let params = {
-        params: {
-          personal_organization: false
-        }
-      }
-      axios.get('/api/organizations', params)
+      axios.get('/api/organizations?personal_organization=false')
         .then((response) => {
-          console.log(response.data)
           this.all_organizations = response.data
         })
         .catch((error) => {
