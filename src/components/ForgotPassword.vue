@@ -86,6 +86,9 @@ export default {
             this.tmpUsername = this.username
           }
         })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
