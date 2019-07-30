@@ -42,6 +42,12 @@
               pull="right"
               title="Edit"
               @click="openModalEditProject(project)" />
+            <font-awesome-icon
+              v-if="!project.private"
+              icon="globe"
+              pull="right"
+              title="Public"
+              />
           </li>
         </ul>
       </div>

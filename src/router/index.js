@@ -8,6 +8,7 @@ import ViewOrganization from '@/components/organization/viewOrganization'
 import ViewList from '@/components/list/viewList'
 import EditList from '@/components/list/editList'
 import ViewProject from '@/components/project/viewProject'
+import Browse from '@/components/Browse'
 
 import { Trans } from '@/plugins/Translation'
 
@@ -101,6 +102,14 @@ var routes = [
         meta: {
           title: 'iSoF Qualy - Edit List',
           requiresAuth: true
+        }
+      },
+      {
+        path: '/browse',
+        name: 'Browse',
+        component: Browse,
+        meta: {
+          title: 'iSoF Qualy - Browse'
         }
       }
     ]
