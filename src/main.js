@@ -44,7 +44,10 @@ router.beforeEach((to, from, next) => {
       next()
       return
     }
-    next({name: 'Login'})
+    next({
+      name: 'Login',
+      query: {redirect: to.fullPath}
+    })
   } else {
     next()
   }
