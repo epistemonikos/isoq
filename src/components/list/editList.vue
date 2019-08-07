@@ -568,10 +568,42 @@
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="extracted_data.fields.length">
+                <b-card
+                  class="my-3"
+                  bg-variant="light">
+                  <b-row>
+                    <b-col
+                      cols="12"
+                      sm="6">
+                      <b-form-group
+                        label="Search">
+                        <b-input-group>
+                          <b-form-input
+                            v-model="extracted_data_table_settings.filter"></b-form-input>
+                          <b-input-group-append>
+                            <b-button
+                              :disabled="!extracted_data_table_settings.filter"
+                              @click="extracted_data_table_settings.filter = ''">Clear</b-button>
+                          </b-input-group-append>
+                        </b-input-group>
+                      </b-form-group>
+                    </b-col>
+                    <b-col
+                      cols="12"
+                      sm="6">
+                      <b-form-group label="Per page" >
+                        <b-form-select v-model="extracted_data_table_settings.perPage" :options="extracted_data_table_settings.pageOptions"></b-form-select>
+                      </b-form-group>
+                    </b-col>
+                  </b-row>
+                </b-card>
                 <b-table
                   responsive striped caption-top
+                  :filter="extracted_data_table_settings.filter"
                   :fields="extracted_data.fields"
-                  :items="extracted_data.items">
+                  :items="extracted_data.items"
+                  :per-page="extracted_data_table_settings.perPage"
+                  :current-page="extracted_data_table_settings.currentPage">
                   <template slot="table-caption">
                     <div class="text-right">
                       <b-button
@@ -601,6 +633,13 @@
                       :title="$t('Edit')" />
                   </template>
                 </b-table>
+                <b-pagination
+                  class="mt-5"
+                  align="center"
+                  v-model="extracted_data_table_settings.currentPage"
+                  :per-page="extracted_data_table_settings.perPage"
+                  :total-rows="extracted_data.items.length"
+                  limit="11"></b-pagination>
                 <b-modal
                   id="modal-stage-five-remove-data-item"
                   ref="modal-stage-five-remove-data-item"
@@ -678,14 +717,14 @@ export default {
           currentPage: 1,
           perPage: 10,
           pageOptions: [10, 50, 100]
-        },
-        extracted_data_list: {
-          filter: '',
-          totalRows: 1,
-          currentPage: 1,
-          perPage: 10,
-          pageOptions: [10, 50, 100]
         }
+      },
+      extracted_data_table_settings: {
+        filter: '',
+        totalRows: 1,
+        currentPage: 1,
+        perPage: 10,
+        pageOptions: [10, 50, 100]
       },
       /** filters **/
       /** selectors **/
