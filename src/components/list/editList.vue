@@ -124,10 +124,13 @@
                 </b-form-group>
               </b-modal>
               <template v-if="evidence_profile.length">
+                <bc-filters :tableSettings="evidence_profile_table_settings"></bc-filters>
                 <b-table
                   responsive striped caption-top
                   :fields="evidence_profile_fields"
-                  :items="evidence_profile">
+                  :items="evidence_profile"
+                  :filter="evidence_profile_table_settings.filter"
+                  :per-page="evidence_profile_table_settings.perPage">
                   <template slot="finding" slot-scope="data">
                     {{data.item.name}}
                   </template>
@@ -164,6 +167,13 @@
                     <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
                   </template>
                 </b-table>
+                <b-pagination
+                  class="mt-5"
+                  align="center"
+                  v-model="evidence_profile_table_settings.currentPage"
+                  :per-page="evidence_profile_table_settings.perPage"
+                  :total-rows="evidence_profile.length"
+                  limit="11"></b-pagination>
               </template>
               <template v-else>
                 <div class="text-center my-5">
@@ -243,10 +253,13 @@
               </b-modal>
               <!-- drop table -->
               <template v-if="characteristics_studies.fields.length">
+                <bc-filters :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <b-table
                   responsive striped caption-top
                   :fields="characteristics_studies.fields"
                   :items="characteristics_studies.data"
+                  :filter="characteristics_studies_table_settings.filter"
+                  :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5">
                   <template slot="table-caption">
                     <div class="text-right">
@@ -279,6 +292,13 @@
                       title="Edit" />
                   </template>
                 </b-table>
+                <b-pagination
+                  class="mt-5"
+                  align="center"
+                  v-model="characteristics_studies_table_settings.currentPage"
+                  :per-page="characteristics_studies_table_settings.perPage"
+                  :total-rows="characteristics_studies.data.length"
+                  limit="11"></b-pagination>
               </template>
               <template v-else>
                 <div class="text-center my-5" v-if="!characteristics_studies.id">
@@ -400,10 +420,13 @@
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="stage_four.fields.length">
+                <bc-filters :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
                   responsive striped caption-top
                   :fields="stage_four.fields"
-                  :items="stage_four.data">
+                  :items="stage_four.data"
+                  :per-page="methodological_assessments_table_settings.perPage"
+                  :filter="methodological_assessments_table_settings.filter">
                   <template slot="table-caption">
                     <div class="text-right">
                       <b-button
@@ -427,6 +450,13 @@
                     <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
                   </template>
                 </b-table>
+                <b-pagination
+                  class="mt-5"
+                  align="center"
+                  v-model="methodological_assessments_table_settings.currentPage"
+                  :per-page="methodological_assessments_table_settings.perPage"
+                  :total-rows="stage_four.data.length"
+                  limit="11"></b-pagination>
                 <!-- create -->
                 <b-modal
                   title="Add data"
@@ -568,35 +598,7 @@
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="extracted_data.fields.length">
-                <b-card
-                  class="my-3"
-                  bg-variant="light">
-                  <b-row>
-                    <b-col
-                      cols="12"
-                      sm="6">
-                      <b-form-group
-                        label="Search">
-                        <b-input-group>
-                          <b-form-input
-                            v-model="extracted_data_table_settings.filter"></b-form-input>
-                          <b-input-group-append>
-                            <b-button
-                              :disabled="!extracted_data_table_settings.filter"
-                              @click="extracted_data_table_settings.filter = ''">Clear</b-button>
-                          </b-input-group-append>
-                        </b-input-group>
-                      </b-form-group>
-                    </b-col>
-                    <b-col
-                      cols="12"
-                      sm="6">
-                      <b-form-group label="Per page" >
-                        <b-form-select v-model="extracted_data_table_settings.perPage" :options="extracted_data_table_settings.pageOptions"></b-form-select>
-                      </b-form-group>
-                    </b-col>
-                  </b-row>
-                </b-card>
+                <bc-filters :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
@@ -682,42 +684,37 @@
 
 <script>
 import axios from 'axios'
+import bCardFilters from '../tableFilters/Filters'
 
 export default {
+  components: {
+    'bc-filters': bCardFilters
+  },
   data () {
     return {
       /** filters **/
       nroOfRows: 1,
-      setting_tables: {
-        soqf_list: {
-          filter: '',
-          totalRows: 1,
-          currentPage: 1,
-          perPage: 10,
-          pageOptions: [10, 50, 100]
-        },
-        evidence_profile_list: {
-          filter: '',
-          totalRows: 1,
-          currentPage: 1,
-          perPage: 10,
-          pageOptions: [10, 50, 100]
-        },
-        characteristics_studies_list: {
-          filter: '',
-          totalRows: 1,
-          currentPage: 1,
-          perPage: 10,
-          pageOptions: [10, 50, 100],
-          last_column: 0
-        },
-        methodological_assessments_list: {
-          filter: '',
-          totalRows: 1,
-          currentPage: 1,
-          perPage: 10,
-          pageOptions: [10, 50, 100]
-        }
+      evidence_profile_table_settings: {
+        filter: '',
+        totalRows: 1,
+        currentPage: 1,
+        perPage: 10,
+        pageOptions: [10, 50, 100]
+      },
+      characteristics_studies_table_settings: {
+        filter: '',
+        totalRows: 1,
+        currentPage: 1,
+        perPage: 10,
+        pageOptions: [10, 50, 100],
+        last_column: 0
+      },
+      methodological_assessments_table_settings: {
+        filter: '',
+        totalRows: 1,
+        currentPage: 1,
+        perPage: 10,
+        pageOptions: [10, 50, 100]
       },
       extracted_data_table_settings: {
         filter: '',
@@ -883,7 +880,6 @@ export default {
     }
   },
   mounted () {
-    this.setting_tables.soqf_list.totalRows = this.soqf.length
     this.getList()
   },
   methods: {
