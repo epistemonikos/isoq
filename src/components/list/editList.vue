@@ -105,7 +105,7 @@
                 <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
                 <b-form-radio-group
                   v-model="cerqual.cerqual_assessment.option"
-                  :options="select_options"
+                  :options="level_confidence"
                   name="cerqual_assessment"
                   stacked></b-form-radio-group>
                 <b-form-group
@@ -120,7 +120,7 @@
                 <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
                 <b-form-radio-group
                   v-model="cerqual.cerqual_explanation.option"
-                  :options="select_options"
+                  :options="level_confidence"
                   name="cerqual_explanation"
                   stacked></b-form-radio-group>
                 <b-form-group
@@ -707,9 +707,9 @@ export default {
         { value: true, text: 'private' }
       ],
       select_options: [
-        {value: 0, text: 'No/Minor concerns'},
+        {value: 0, text: 'No/Very minor concerns'},
         {value: 1, text: 'Minor concerns'},
-        {value: 2, text: 'Moderated concerns'},
+        {value: 2, text: 'Moderate concerns'},
         {value: 3, text: 'Serious concerns'}
       ],
       level_confidence: [
