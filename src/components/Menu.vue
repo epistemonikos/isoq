@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-navbar toggleable="lg" type="dark" variant="info">
-      <b-navbar-brand :to="{name: 'MainPage'}">iSoF Qualy</b-navbar-brand>
+      <b-navbar-brand :to="{name: 'MainPage'}">iSoQf</b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
