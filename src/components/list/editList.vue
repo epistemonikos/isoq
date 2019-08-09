@@ -254,6 +254,10 @@
               <!-- drop table -->
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters :tableSettings="characteristics_studies_table_settings"></bc-filters>
+                <bc-action-table
+                  :dropAction="openModalStageThreeDropTable"
+                  :editAction="openModalStageThreeEditFields"
+                  :addAction="openModalStageThreeAddData"></bc-action-table>
                 <b-table
                   responsive striped caption-top
                   :fields="characteristics_studies.fields"
@@ -261,26 +265,6 @@
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5">
-                  <template slot="table-caption">
-                    <div class="text-right">
-                      <b-button
-                        @click="openModalStageThreeDropTable"
-                        variant="outline-danger">
-                          <font-awesome-icon icon="table" />
-                          Drop table
-                      </b-button>
-                      <b-button
-                        @click="openModalStageThreeEditFields"
-                        variant="outline-primary">
-                          <font-awesome-icon icon="table" />
-                          Edit table
-                      </b-button>
-                      <b-button
-                        v-if="characteristics_studies.fields.length"
-                        @click="openModalStageThreeAddData"
-                        variant="outline-success">{{$t('Add data')}}</b-button>
-                    </div>
-                  </template>
                   <template slot="actions" slot-scope="row">
                     <font-awesome-icon
                       @click="modalDeleteStageThreeItemData(row)"
@@ -310,6 +294,7 @@
               </template>
               <!-- create study data -->
               <b-modal
+                title="Add data"
                 ref="modal-stage-three-add-data"
                 @ok="saveStageThreeCreateData">
                 <b-form-group
@@ -339,6 +324,7 @@
                 </b-form-group>
               </b-modal>
               <b-modal
+                title="Remove a row"
                 @ok="removeStageThreeItemData"
                 ref="modal-stage-three-remove-data"
                 scrollable
@@ -415,36 +401,23 @@
               </b-modal>
               <b-modal
                 id="open-modal-stage-four-drop-table"
+                ref="open-modal-stage-four-drop-table"
                 title="Drop table"
                 @ok="stageFourDropTable">
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="stage_four.fields.length">
                 <bc-filters :tableSettings="methodological_assessments_table_settings"></bc-filters>
+                <bc-action-table
+                  :dropAction="dropDatabaseStageFour"
+                  :editAction="editFieldsModalStageFour"
+                  :addAction="stageFourAddData"></bc-action-table>
                 <b-table
                   responsive striped caption-top
                   :fields="stage_four.fields"
                   :items="stage_four.data"
                   :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
-                  <template slot="table-caption">
-                    <div class="text-right">
-                      <b-button
-                        v-b-modal.open-modal-stage-four-drop-table
-                        variant="outline-danger">
-                        <font-awesome-icon icon="table" />
-                        {{$t('Drop table')}}
-                      </b-button>
-                      <b-button @click="editFieldsModalStageFour" variant="outline-primary">
-                        <font-awesome-icon icon="table" />
-                        {{$t('Edit table')}}
-                      </b-button>
-                      <b-button
-                        v-if="stage_four.fields.length"
-                        @click="stageFourAddData"
-                        variant="outline-success">{{$t('Add data')}}</b-button>
-                    </div>
-                  </template>
                   <template slot="actions" slot-scope="row">
                     <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
                     <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
@@ -593,12 +566,17 @@
               </b-modal>
               <b-modal
                 title="Drop table"
+                ref="modal-stage-five-drop-table"
                 id="modal-stage-five-drop-table"
                 @ok="stageFiveDropTable">
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <template v-if="extracted_data.fields.length">
                 <bc-filters :tableSettings="extracted_data_table_settings"></bc-filters>
+                <bc-action-table
+                  :dropAction="dropDatabaseStageFive"
+                  :editAction="openModalStageFiveEditColumns"
+                  :addAction="openModalStageFiveAddDataItem"></bc-action-table>
                 <b-table
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
@@ -606,24 +584,6 @@
                   :items="extracted_data.items"
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
-                  <template slot="table-caption">
-                    <div class="text-right">
-                      <b-button
-                        v-b-modal.modal-stage-five-drop-table
-                        variant="outline-danger">
-                        <font-awesome-icon icon="table" /> {{$t('Drop table')}}
-                      </b-button>
-                      <b-button
-                        @click="openModalStageFiveEditColumns"
-                        variant="outline-primary">
-                        <font-awesome-icon icon="table" /> {{$t('Edit table')}}
-                      </b-button>
-                      <b-button
-                        v-if="extracted_data.fields.length"
-                        @click="openModalStageFiveAddDataItem"
-                        variant="outline-success">{{$t('Add data')}}</b-button>
-                    </div>
-                  </template>
                   <template slot="actions" slot-scope="data">
                     <font-awesome-icon
                       icon="trash"
@@ -684,11 +644,13 @@
 
 <script>
 import axios from 'axios'
-import bCardFilters from '../tableFilters/Filters'
+import bCardFilters from '../tableActions/Filters'
+import bCardActionTable from '../tableActions/ActionTable'
 
 export default {
   components: {
-    'bc-filters': bCardFilters
+    'bc-filters': bCardFilters,
+    'bc-action-table': bCardActionTable
   },
   data () {
     return {
@@ -1242,6 +1204,9 @@ export default {
           console.log(error)
         })
     },
+    dropDatabaseStageFour: function () {
+      this.$refs['open-modal-stage-four-drop-table'].show()
+    },
     editFieldsModalStageFour: function () {
       let tmpStageFourFields = JSON.parse(JSON.stringify(this.stage_four.fields))
       tmpStageFourFields.splice(tmpStageFourFields.length - 1, 1)
@@ -1429,6 +1394,9 @@ export default {
     },
     cancelModalStageFiveEditColumns: function () {
       this.buffer_extracted_data = {fields: [], items: [], id: null}
+    },
+    dropDatabaseStageFive: function () {
+      this.$refs['modal-stage-five-drop-table'].show()
     },
     openModalStageFiveEditColumns: function () {
       this.buffer_extracted_data = JSON.parse(JSON.stringify(this.extracted_data))
