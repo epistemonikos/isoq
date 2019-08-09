@@ -32,7 +32,7 @@
           <b-button
             variant="outline-primary"
             @click="modalAddSummarized">
-            Add summarized
+            Add finding
           </b-button>
         </b-col>
         <b-col cols="12">

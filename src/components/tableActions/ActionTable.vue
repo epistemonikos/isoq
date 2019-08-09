@@ -12,7 +12,7 @@
           @click="dropAction"
           variant="outline-danger">
             <font-awesome-icon icon="table" />
-            Drop table
+            Delete table
         </b-button>
       </b-col>
       <b-col

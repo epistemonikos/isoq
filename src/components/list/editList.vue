@@ -9,8 +9,9 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>{{ $t('Edit') }} {{list.name}}</h2>
-      <b-row>
+      <h2>Evidence Profile Worksheet</h2>
+      <h3>{{list.name}}</h3>
+      <b-row class="mt-5">
         <b-col cols="12">
           <b-tabs>
             <!-- Evidence Profile-->
@@ -139,28 +140,28 @@
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
                     </div>
-                    <div v-else><i>No data</i></div>
+                    <div v-else><i>Assessment not completed</i></div>
                   </template>
                   <template slot="coherence" slot-scope="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
                     </div>
-                    <div v-else><i>No data</i></div>
+                    <div v-else><i>Assessment not completed</i></div>
                   </template>
                   <template slot="adequacy" slot-scope="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
                     </div>
-                    <div v-else><i>No data</i></div>
+                    <div v-else><i>Assessment not completed</i></div>
                   </template>
                   <template slot="relevance" slot-scope="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
                     </div>
-                    <div v-else><i>No data</i></div>
+                    <div v-else><i>Assessment not completed</i></div>
                   </template>
                   <template slot="actions" slot-scope="data">
                     <font-awesome-icon icon="trash" pull="right" title="Remove" />
