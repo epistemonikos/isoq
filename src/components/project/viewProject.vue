@@ -25,7 +25,7 @@
           </ul>
           <h5>Has the review been published</h5>
           <p>{{(project.published_status) ? 'Yes': 'No'}}</p>
-          <h5>Is the iSoQF being completed by the review authors?</h5>
+          <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
         <b-col cols="12" class="text-right my-2">

@@ -1,7 +1,7 @@
 <template>
   <div class="mt-4">
     <div class="container">
-      <h1>Browse public iSoQF tables</h1>
+      <h1>Browse public iSoQf tables</h1>
       <b-row
         class="my-4">
         <b-col
