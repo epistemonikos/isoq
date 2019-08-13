@@ -55,7 +55,7 @@
       <b-modal
         id="new-project"
         ref="new-project"
-        :title="(buffer_project.id) ? 'Edit iSoQF table' : 'New iSoQF table'"
+        :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
         @ok="AddProject"
         @cancel="closeModalProject">
         <b-alert
@@ -111,7 +111,7 @@
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
-          :label="$t('Is the iSoQF being completed by the review authors?')"
+          :label="$t('Is the iSoQf being completed by the review authors?')"
           label-for="select-project-list-completed-by-author-status">
           <b-select
             id="select-project-list-completed-by-author-status"

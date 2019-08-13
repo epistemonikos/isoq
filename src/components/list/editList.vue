@@ -11,12 +11,20 @@
       </b-row>
       <h2>Evidence Profile Worksheet</h2>
       <h3>{{list.name}}</h3>
+      <b-row>
+        <b-col
+          cols="12">
+          <b-form-checkbox-group
+            v-model="show.selected"
+            :options="show.options"
+            switches></b-form-checkbox-group>
+        </b-col>
+      </b-row>
       <b-row class="mt-5">
         <b-col cols="12">
-          <b-tabs>
+          <!--<b-tabs>-->
             <!-- Evidence Profile-->
-            <b-tab :title="$t('Evidence Profile')">
-              <!-- <h3>{{$t('Evidence Profile')}}</h3> -->
+            <!--<b-tab :title="$t('Evidence Profile')">-->
               <b-modal
                 id="modal-stage-two"
                 ref="modal-stage-two"
@@ -97,7 +105,7 @@
                 <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
                 <b-form-radio-group
                   v-model="cerqual.cerqual_assessment.option"
-                  :options="select_options"
+                  :options="level_confidence"
                   name="cerqual_assessment"
                   stacked></b-form-radio-group>
                 <b-form-group
@@ -112,7 +120,7 @@
                 <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
                 <b-form-radio-group
                   v-model="cerqual.cerqual_explanation.option"
-                  :options="select_options"
+                  :options="level_confidence"
                   name="cerqual_explanation"
                   stacked></b-form-radio-group>
                 <b-form-group
@@ -125,7 +133,6 @@
                 </b-form-group>
               </b-modal>
               <template v-if="evidence_profile.length">
-                <bc-filters :tableSettings="evidence_profile_table_settings"></bc-filters>
                 <b-table
                   responsive striped caption-top
                   :fields="evidence_profile_fields"
@@ -168,13 +175,6 @@
                     <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
                   </template>
                 </b-table>
-                <b-pagination
-                  class="mt-5"
-                  align="center"
-                  v-model="evidence_profile_table_settings.currentPage"
-                  :per-page="evidence_profile_table_settings.perPage"
-                  :total-rows="evidence_profile.length"
-                  limit="11"></b-pagination>
               </template>
               <template v-else>
                 <div class="text-center my-5">
@@ -184,10 +184,11 @@
                 </div>
               </template>
               <!-- end of Evidence Profile-->
-            </b-tab>
+            <!--</b-tab>-->
             <!-- Characteristics of Studies -->
-            <b-tab v-bind:title="$t('Characteristics of Studies')">
-              <!-- <h3>{{$t('Characteristics of Studies')}}</h3> -->
+            <!--<b-tab v-bind:title="$t('Characteristics of Studies')">-->
+            <div v-if="show.selected.includes('cs')">
+              <h3>{{$t('Characteristics of Studies')}}</h3>
               <!-- create study tables -->
               <b-modal
                 title="Add fields"
@@ -338,10 +339,12 @@
                   class="mb-5">
                 </b-table>
               </b-modal>
-            </b-tab>
+            </div>
+            <!--</b-tab>-->
             <!-- Methodological Assessments -->
-            <b-tab v-bind:title="$t('Methodological Assessments')">
-              <!-- <h3>{{$t('Methodological Assessments')}}</h3> -->
+            <!--<b-tab v-bind:title="$t('Methodological Assessments')">-->
+            <div v-if="show.selected.includes('ma')">
+              <h3>{{$t('Methodological Assessments')}}</h3>
               <b-modal
                 title="Add Fields"
                 ref="modal-stage-four-table"
@@ -480,10 +483,12 @@
                   <p>{{ $t('No methodological') }} <b-link @click="stageFourOpenModalFields">{{ $t('add methodological assessments') }}</b-link></p>
                 </div>
               </template>
-            </b-tab>
+            </div>
+            <!--</b-tab>-->
             <!-- Extracted data -->
-            <b-tab v-bind:title="$t('Extracted Data')">
-              <!-- <h3>{{$t('Extracted Data')}}</h3> -->
+            <!--<b-tab v-bind:title="$t('Extracted Data')">-->
+            <div v-if="show.selected.includes('ed')">
+              <h3>{{$t('Extracted Data')}}</h3>
               <b-modal
                 title="Import TSV"
                 id="modal-stage-five-import"
@@ -635,8 +640,9 @@
                   <p>{{ $t('No extracted data,') }} <!--<b-link v-b-modal.modal-stage-five-table>{{ $t('add extracted data') }}</b-link> or --><b-link v-b-modal.modal-stage-five-import>import a TSV</b-link></p>
                 </div>
               </template>
-            </b-tab>
-          </b-tabs>
+            </div>
+            <!--</b-tab>-->
+          <!--</b-tabs>-->
         </b-col>
       </b-row>
     </b-container>
@@ -686,6 +692,14 @@ export default {
         perPage: 10,
         pageOptions: [10, 50, 100]
       },
+      show: {
+        selected: [],
+        options: [
+          {text: 'Characteristics Studies', value: 'cs'},
+          {text: 'Methodological Assessments', value: 'ma'},
+          {text: 'Extracted Data', value: 'ed'}
+        ]
+      },
       /** filters **/
       /** selectors **/
       global_status: [
@@ -693,9 +707,9 @@ export default {
         { value: true, text: 'private' }
       ],
       select_options: [
-        {value: 0, text: 'No/Minor concerns'},
+        {value: 0, text: 'No/Very minor concerns'},
         {value: 1, text: 'Minor concerns'},
-        {value: 2, text: 'Moderated concerns'},
+        {value: 2, text: 'Moderate concerns'},
         {value: 3, text: 'Serious concerns'}
       ],
       level_confidence: [

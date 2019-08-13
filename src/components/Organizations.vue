@@ -13,7 +13,7 @@
               {{org.description}}
             </b-card-text>
             <template slot="footer">
-              <b-link :to="{name: 'viewOrganization', params: {id: org.id}}">{{ $t("view our iSoQF" )}}</b-link>
+              <b-link :to="{name: 'viewOrganization', params: {id: org.id}}">{{ $t("view our iSoQf" )}}</b-link>
             </template>
           </b-card>
         </b-card-group>
