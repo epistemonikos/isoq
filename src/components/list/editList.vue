@@ -170,11 +170,18 @@
                     </div>
                     <div v-else><i>Assessment not completed</i></div>
                   </template>
+                  <template slot="cerqual_assessment" slot-scope="data">
+                    <div v-if="data.item.cerqual_assessment.option !== null">
+                      <p>{{level_confidence[data.item.cerqual_assessment.option].text}}</p>
+                    </div>
+                  </template>
                   <template slot="actions" slot-scope="data">
                     <font-awesome-icon icon="trash" pull="right" title="Remove" />
                     <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
                   </template>
                 </b-table>
+                <h5>Progress status</h5>
+                <b-progress :value="status_evidence_profile.value" :max="status_evidence_profile.max" :variant="status_evidence_profile.variant" show-progress class="mb-3"></b-progress>
               </template>
               <template v-else>
                 <div class="text-center my-5">
@@ -733,6 +740,7 @@ export default {
         {key: 'coherence', label: 'Coherence'},
         {key: 'adequacy', label: 'Adequacy'},
         {key: 'relevance', label: 'Relevance'},
+        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'},
         {key: 'actions', label: 'Actions'}
       ],
       /** tables fields **/
@@ -814,6 +822,11 @@ export default {
       },
       soqf: {},
       evidence_profile: [],
+      status_evidence_profile: {
+        value: 0,
+        max: 100,
+        variant: 'primary'
+      },
       characteristics_studies: {
         fields: [],
         items: []
@@ -893,14 +906,47 @@ export default {
           if (this.soqf.hasOwnProperty('evidence_profile')) {
             let evidenceProfile = this.soqf.evidence_profile
             evidenceProfile.name = this.soqf.name
+            evidenceProfile.cerqual_assessment = {option: null, explanation: ''}
+            evidenceProfile.cerqual_explanation = {option: null, explanation: ''}
             this.evidence_profile.push(evidenceProfile)
           }
           if (this.soqf.hasOwnProperty('cerqual')) {
+            // this.evidence_profile[0].cerqual = []
+            this.evidence_profile[0].cerqual_assessment = this.soqf.cerqual.cerqual_assessment
+            this.evidence_profile[0].cerqual_explanation = this.soqf.cerqual.cerqual_explanation
             this.cerqual = this.soqf.cerqual
           }
+          this.getStatus()
         }).catch((error) => {
           console.log(error)
         })
+    },
+    getStatus: function () {
+      this.status_evidence_profile.value = 0
+      if (this.evidence_profile[0].methodological_limitations.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
+      }
+      if (this.evidence_profile[0].coherence.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
+      }
+      if (this.evidence_profile[0].adequacy.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
+      }
+      if (this.evidence_profile[0].relevance.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
+      }
+      if (this.evidence_profile[0].cerqual_assessment.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
+      }
+      if (this.status_evidence_profile.value <= 40) {
+        this.status_evidence_profile.variant = 'danger'
+      }
+      if (this.status_evidence_profile.value > 40 && this.status_evidence_profile.value <= 80) {
+        this.status_evidence_profile.variant = 'warning'
+      }
+      if (this.status_evidence_profile.value === 100) {
+        this.status_evidence_profile.variant = 'success'
+      }
     },
     saveListName: function () {
       let params = {
