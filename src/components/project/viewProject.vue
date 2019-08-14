@@ -47,7 +47,7 @@
               <template slot="confidence" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
                 {{cerqual_confidence[data.item.cerqual.cerqual_assessment.option].text}}
               </template>
-              <template slot="explanation" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
+              <template slot="explanation" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_explanation.option !== null">
                 {{select_options[data.item.cerqual.cerqual_explanation.option].text}}
               </template>
             </b-table>
