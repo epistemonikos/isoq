@@ -31,6 +31,7 @@
                 v-bind:title="$t('Evidence profile')"
                 scrollable
                 @ok="saveStageOneAndTwo">
+                <!--
                 <b-form-group
                   id="label-finding"
                   v-bind:label="$t('Finding')"
@@ -42,95 +43,119 @@
                     required
                     v-bind:placeholder="$t('Enter a finding')"></b-form-input>
                 </b-form-group>
-                <h6>{{$t('Methodological Limitations')}}</h6>
-                <b-form-radio-group
-                  v-model="buffer_modal_stage_two.methodological_limitations.option"
-                  :options="select_options"
-                  name="methodological-limitations"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-ml-explanation">
-                  <b-form-textarea
-                    id="input-ml-explanation"
-                    v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                    v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
-                </b-form-group>
-                <!-- coherence -->
-                <h6>{{$t('Coherence')}}</h6>
-                <b-form-radio-group
-                  v-model="buffer_modal_stage_two.coherence.option"
-                  :options="select_options"
-                  name="coherence"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-coherence-explanation">
-                  <b-form-textarea
-                    id="input-coherence-explanation"
-                    v-model="buffer_modal_stage_two.coherence.explanation"
-                    v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
-                </b-form-group>
-                <!-- adequacy -->
-                <h6>{{$t('Adequacy')}}</h6>
-                <b-form-radio-group
-                  v-model="buffer_modal_stage_two.adequacy.option"
-                  :options="select_options"
-                  name="adequacy"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-adequacy-explanation">
-                  <b-form-textarea
-                    id="input-adequacy-explanation"
-                    v-model="buffer_modal_stage_two.adequacy.explanation"
-                    placeholder="Enter an explanation"></b-form-textarea>
-                </b-form-group>
-                <!-- relevance -->
-                <h6>{{$t('Relevance')}}</h6>
-                <b-form-radio-group
-                  v-model="buffer_modal_stage_two.relevance.option"
-                  :options="select_options"
-                  name="relevance"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-relevance-explanation">
-                  <b-form-textarea
-                    id="input-relevance-explanation"
-                    v-model="buffer_modal_stage_two.relevance.explanation"
-                    placeholder="Enter an explanation"></b-form-textarea>
-                </b-form-group>
-                <!-- CERQual assessment -->
-                <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
-                <b-form-radio-group
-                  v-model="cerqual.cerqual_assessment.option"
-                  :options="level_confidence"
-                  name="cerqual_assessment"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-cerqual-assessment">
-                  <b-form-textarea
-                    id="input-cerqual-assessment"
-                    v-model="cerqual.cerqual_assessment.explanation"
-                    placeholder="Enter an explanation"></b-form-textarea>
-                </b-form-group>
-                <!-- Explanation of CERQual assessment -->
-                <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
-                <b-form-radio-group
-                  v-model="cerqual.cerqual_explanation.option"
-                  :options="level_confidence"
-                  name="cerqual_explanation"
-                  stacked></b-form-radio-group>
-                <b-form-group
-                  v-bind:label="$t('Explanation')"
-                  label-for="input-explanation-cerqual-assessment">
-                  <b-form-textarea
-                    id="input-explanation-cerqual-assessment"
-                    v-model="cerqual.cerqual_explanation.explanation"
-                    placeholder="Enter an explanation"></b-form-textarea>
-                </b-form-group>
+                -->
+                <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
+                  <h6>{{$t('Methodological Limitations')}}</h6>
+                  <b-form-radio-group
+                    v-model="buffer_modal_stage_two.methodological_limitations.option"
+                    :options="select_options"
+                    name="methodological-limitations"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-ml-explanation"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-ml-explanation"
+                      v-model="buffer_modal_stage_two.methodological_limitations.explanation"
+                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                  </b-form-group>
+                  
+                </div>
+                <div v-if="buffer_modal_stage_two.type === 'coherence'">
+                  <!-- coherence -->
+                  <h6>{{$t('Coherence')}}</h6>
+                  <b-form-radio-group
+                    v-model="buffer_modal_stage_two.coherence.option"
+                    :options="select_options"
+                    name="coherence"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-coherence-explanation"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-coherence-explanation"
+                      v-model="buffer_modal_stage_two.coherence.explanation"
+                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                  </b-form-group>
+                  <!-- adequacy -->
+                </div>
+                <div v-if="buffer_modal_stage_two.type === 'adequacy'">
+                  <h6>{{$t('Adequacy')}}</h6>
+                  <b-form-radio-group
+                    v-model="buffer_modal_stage_two.adequacy.option"
+                    :options="select_options"
+                    name="adequacy"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-adequacy-explanation"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-adequacy-explanation"
+                      v-model="buffer_modal_stage_two.adequacy.explanation"
+                      placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                  <!-- relevance -->
+                </div>
+                <div v-if="buffer_modal_stage_two.type === 'relevance'">
+                  <h6>{{$t('Relevance')}}</h6>
+                  <b-form-radio-group
+                    v-model="buffer_modal_stage_two.relevance.option"
+                    :options="select_options"
+                    name="relevance"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-relevance-explanation"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-relevance-explanation"
+                      v-model="buffer_modal_stage_two.relevance.explanation"
+                      placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                  <!-- CERQual assessment -->
+                </div>
+                <div v-if="buffer_modal_stage_two.type === 'cerqual-assessment'">
+                  <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
+                  <b-form-radio-group
+                    v-model="cerqual.cerqual_assessment.option"
+                    :options="level_confidence"
+                    name="cerqual_assessment"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-cerqual-assessment"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-cerqual-assessment"
+                      v-model="cerqual.cerqual_assessment.explanation"
+                      placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                  <!-- Explanation of CERQual assessment -->
+                  <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
+                  <b-form-radio-group
+                    v-model="cerqual.cerqual_explanation.option"
+                    :options="level_confidence"
+                    name="cerqual_explanation"
+                    stacked></b-form-radio-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="$t('Explanation')"
+                    label-for="input-explanation-cerqual-assessment"
+                    description="We encourage to add an explanation.">
+                    <b-form-textarea
+                      id="input-explanation-cerqual-assessment"
+                      v-model="cerqual.cerqual_explanation.explanation"
+                      placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                </div>
               </b-modal>
               <template v-if="evidence_profile.length">
                 <b-table
@@ -146,42 +171,125 @@
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'methodological-limitations')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
                     </div>
-                    <div v-else><i>Assessment not completed</i></div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'methodological-limitations')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
                   </template>
                   <template slot="coherence" slot-scope="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'coherence')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
                     </div>
-                    <div v-else><i>Assessment not completed</i></div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'coherence')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
                   </template>
                   <template slot="adequacy" slot-scope="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'adequacy')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
                     </div>
-                    <div v-else><i>Assessment not completed</i></div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'adequacy')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
                   </template>
                   <template slot="relevance" slot-scope="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'relevance')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
                     </div>
-                    <div v-else><i>Assessment not completed</i></div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'relevance')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
                   </template>
                   <template slot="cerqual_assessment" slot-scope="data">
                     <div v-if="data.item.cerqual_assessment.option !== null">
                       <p>{{level_confidence[data.item.cerqual_assessment.option].text}}</p>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'cerqual-assessment')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'cerqual-assessment')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
                     </div>
                   </template>
-                  <template slot="actions" slot-scope="data">
+                  <!--
+                  <template slot="actions">
                     <font-awesome-icon icon="trash" pull="right" title="Remove" />
-                    <font-awesome-icon icon="edit" pull="right" title="Edit" @click="editStageTwo(data.item)" />
                   </template>
+                  -->
                 </b-table>
                 <h5>Progress status</h5>
-                <b-progress :value="status_evidence_profile.value" :max="status_evidence_profile.max" :variant="status_evidence_profile.variant" show-progress class="mb-3"></b-progress>
+                <b-progress 
+                  :max="status_evidence_profile.max" 
+                  :variant="status_evidence_profile.variant" 
+                  show-progress 
+                  class="mb-3">
+                  <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
+                </b-progress>
               </template>
               <template v-else>
                 <div class="text-center my-5">
@@ -740,8 +848,10 @@ export default {
         {key: 'coherence', label: 'Coherence'},
         {key: 'adequacy', label: 'Adequacy'},
         {key: 'relevance', label: 'Relevance'},
-        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'},
+        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'}
+        /*
         {key: 'actions', label: 'Actions'}
+        */
       ],
       /** tables fields **/
       initial_modal_stage_one: {
@@ -991,9 +1101,10 @@ export default {
           })
       }
     },
-    editStageTwo: function (data) {
+    editStageTwo: function (data, type) {
       this.buffer_modal_stage_one.name = data.name
       this.buffer_modal_stage_two = {...data}
+      this.buffer_modal_stage_two.type = type
       this.$refs['modal-stage-two'].show()
     },
     getStageThree: function () {
@@ -1520,6 +1631,16 @@ export default {
 }
 </script>
 
-<style>
-
+<style scoped>
+div[data-v-ac81e08e] >>>
+  .table thead th {
+    width: 16.666%;
+  }
+/*
+div[data-v-ac81e08e] >>>
+  .table thead th:last-child {
+    width: 10%;
+    text-align: right;
+  }
+*/
 </style>
