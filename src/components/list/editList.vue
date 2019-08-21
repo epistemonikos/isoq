@@ -61,7 +61,7 @@
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
-                  
+
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'coherence'">
                   <!-- coherence -->
@@ -283,10 +283,10 @@
                   -->
                 </b-table>
                 <h5>Progress status</h5>
-                <b-progress 
-                  :max="status_evidence_profile.max" 
-                  :variant="status_evidence_profile.variant" 
-                  show-progress 
+                <b-progress
+                  :max="status_evidence_profile.max"
+                  :variant="status_evidence_profile.variant"
+                  show-progress
                   class="mb-3">
                   <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
                 </b-progress>
