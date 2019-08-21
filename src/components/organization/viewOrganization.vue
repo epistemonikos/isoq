@@ -53,6 +53,7 @@
       </div>
       <!-- modals -->
       <b-modal
+        scrollable
         id="new-project"
         ref="new-project"
         :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
