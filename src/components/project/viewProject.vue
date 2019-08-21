@@ -40,15 +40,19 @@
             <b-table
               :fields="table_settings.fields"
               :items="lists">
-              <template slot="index" slot-scope="data">{{data.index + 1}}</template>
-              <template slot="name" slot-scope="data">
+              <template slot="[index]" slot-scope="data">{{data.index + 1}}</template>
+              <template slot="[name]" slot-scope="data">
                 <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
               </template>
-              <template slot="confidence" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
+              <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
                 {{cerqual_confidence[data.item.cerqual.cerqual_assessment.option].text}}
               </template>
-              <template slot="explanation" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_explanation.option !== null">
+              <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_explanation.option !== null">
                 {{select_options[data.item.cerqual.cerqual_explanation.option].text}}
+              </template>
+              <template slot="[references]" slot-scope="data">
+                <b-button
+                  @click="openModalReferences(data.item.id)">Add references</b-button>
               </template>
             </b-table>
           </template>
@@ -68,6 +72,34 @@
                 v-model="summarized_review"></b-form-input>
             </b-form-group>
             </b-modal>
+          <b-modal
+            id="modal-references"
+            ref="modal-references"
+            title="Add references"
+            @ok="saveReferences">
+            <div
+              class="mt-2"
+              v-if="references.length">
+              <p>In this space we will show your references loaded before or the new one.</p>
+              <b-table
+                head-variant="light"
+                hover
+                bordered
+                borderless
+                :fields="fields_references_table"
+                :items="references">
+              </b-table>
+            </div>
+
+            <b-form-group
+              label="Load references"
+              label-for="input-ris-file">
+              <b-form-file
+                id="input-ris-file"
+                plain
+                @change="loadRefs($event)"></b-form-file>
+            </b-form-group>
+          </b-modal>
         </b-col>
       </b-row>
     </b-container>
@@ -104,7 +136,7 @@ export default {
             label: 'Explanation of CERQual Assessment'
           },
           {
-            key: 'mmm',
+            key: 'references',
             label: 'References'
           }
         ]
@@ -121,13 +153,121 @@ export default {
         {value: 1, text: 'Moderate confidence'},
         {value: 2, text: 'Low confidence'},
         {value: 3, text: 'Very low confidence'}
-      ]
+      ],
+      pre_references: '',
+      references: [],
+      fields_references_table: ['title'],
+      selected_list_id: ''
     }
   },
   mounted () {
     this.getProject()
   },
+  watch: {
+    pre_references: function (data) {
+      this.references = []
+      const file = data
+      const allLines = file.split(/\r\n|\n/)
+      // Reading line by line
+      let titleTags = ['TI', 'T1', 'T2', 'T3']
+      let authorTags = ['AU', 'A1', 'A2', 'A3', 'A4']
+      let userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
+      let content = ''
+      let key = ''
+      let base = {authors: [], user_definable: []}
+
+      allLines.forEach((line) => {
+        key = line.split('  - ')[0]
+        content = line.split('  - ')[1]
+
+        if (key === 'TY') {
+          base['type'] = content
+        }
+        if (titleTags.includes(key)) {
+          base['title'] = content
+        }
+        if (authorTags.includes(key)) {
+          base['authors'].push(content)
+        }
+        if (key === 'AB') {
+          base['abstract'] = content
+        }
+        if (key === 'VL') {
+          base['volume_number'] = content
+        }
+        if (key === 'SP') {
+          base['start_page'] = content
+        }
+        if (key === 'EP') {
+          base['end_page'] = content
+        }
+        if (key === 'IN') {
+          base['issue_number'] = content
+        }
+        if (key === 'SN') {
+          base['isbn_issn'] = content
+        }
+        if (key === 'PY') {
+          base['publication_year'] = content
+        }
+        if (key === 'DA') {
+          base['date'] = content
+        }
+        if (key === 'DA') {
+          base['date'] = content
+        }
+        if (key === 'DB') {
+          base['database'] = content
+        }
+        if (key === 'UR') {
+          base['url'] = content
+        }
+        if (key === 'DO') {
+          base['doi'] = content
+        }
+        if (userDefinable.includes(key)) {
+          base['user_definable'].push(content)
+        }
+        if (key === 'ER') {
+          this.references.push(base)
+          base = {authors: [], user_definable: []}
+        }
+      })
+    }
+  },
   methods: {
+    loadRefs: function (event) {
+      let file = event.target.files[0]
+      let reader = new FileReader()
+      reader.onload = (e) => {
+        this.pre_references = e.target.result
+      }
+      reader.readAsText(file)
+    },
+    saveReferences: function () {
+      let references = this.references
+      let axiosArray = []
+      for (let ref of references) {
+        ref.organization = this.$route.params.org_id
+        ref.list_id = this.selected_list_id
+        let newPromise = axios({
+          method: 'POST',
+          url: `/api/isoqf_references?organization=${this.$route.params.org_id}`,
+          data: ref
+        })
+        axiosArray.push(newPromise)
+      }
+      axios.all(axiosArray)
+        .then(axios.spread((...responses) => {
+          responses.forEach(res => console.log('Success'))
+          console.log('submitted all axios calls')
+          this.pre_references = ''
+          this.references = []
+        }))
+        .catch((error) => {
+          console.log('error', error)
+        })
+    },
     getProject: function () {
       let params = {
         organization: this.$route.params.org_id
@@ -203,6 +343,18 @@ export default {
       axios.post(`/api/isoqf_findings`, params)
         .then((response) => {
           console.log(response)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalReferences: function (listId) {
+      this.selected_list_id = listId
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&list_id=${listId}`)
+        .then((response) => {
+          console.log(response.data)
+          this.references = response.data
+          this.$refs['modal-references'].show()
         })
         .catch((error) => {
           console.log(error)
