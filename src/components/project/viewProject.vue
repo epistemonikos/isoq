@@ -90,7 +90,6 @@
                 :items="references">
               </b-table>
             </div>
-
             <b-form-group
               label="Load references"
               label-for="input-ris-file">
@@ -156,7 +155,23 @@ export default {
       ],
       pre_references: '',
       references: [],
-      fields_references_table: ['title'],
+      fields_references_table:
+        [
+          {
+            key: 'authors',
+            label: 'Authors',
+            formatter: value => {
+              if (value.length === 1) {
+                return value[0]
+              } else if (value.length < 2) {
+                return value[0] + ',' + value[1]
+              } else {
+                return value[0] + ' et al.'
+              }
+            }
+          },
+          {key: 'publication_year', label: 'Year'}
+        ],
       selected_list_id: ''
     }
   },
