@@ -164,10 +164,10 @@
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
-                  <template slot="finding" slot-scope="data">
+                  <template slot="[finding]" slot-scope="data">
                     {{data.item.name}}
                   </template>
-                  <template slot="methodological-limit" slot-scope="data">
+                  <template slot="[methodological-limit]" slot-scope="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
@@ -189,7 +189,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="coherence" slot-scope="data">
+                  <template slot="[coherence]" slot-scope="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
@@ -211,7 +211,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="adequacy" slot-scope="data">
+                  <template slot="[adequacy]" slot-scope="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
@@ -233,7 +233,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="relevance" slot-scope="data">
+                  <template slot="[relevance]" slot-scope="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
@@ -255,7 +255,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="cerqual_assessment" slot-scope="data">
+                  <template slot="[cerqual_assessment]" slot-scope="data">
                     <div v-if="data.item.cerqual_assessment.option !== null">
                       <p>{{level_confidence[data.item.cerqual_assessment.option].text}}</p>
                       <b-button
@@ -276,8 +276,9 @@
                       </b-button>
                     </div>
                   </template>
+                  <span slot="[references]" slot-scope="data" v-html="data.value"></span>
                   <!--
-                  <template slot="actions">
+                  <template slot="[actions]">
                     <font-awesome-icon icon="trash" pull="right" title="Remove" />
                   </template>
                   -->
@@ -382,7 +383,7 @@
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5">
-                  <template slot="actions" slot-scope="row">
+                  <template slot="[actions]" slot-scope="row">
                     <font-awesome-icon
                       @click="modalDeleteStageThreeItemData(row)"
                       icon="trash"
@@ -537,7 +538,7 @@
                   :items="stage_four.data"
                   :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
-                  <template slot="actions" slot-scope="row">
+                  <template slot="[actions]" slot-scope="row">
                     <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
                     <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
                   </template>
@@ -705,7 +706,7 @@
                   :items="extracted_data.items"
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
-                  <template slot="actions" slot-scope="data">
+                  <template slot="[actions]" slot-scope="data">
                     <font-awesome-icon
                       icon="trash"
                       @click="openModalStageFiveRemoveDataItem(data)"
@@ -848,7 +849,8 @@ export default {
         {key: 'coherence', label: 'Coherence'},
         {key: 'adequacy', label: 'Adequacy'},
         {key: 'relevance', label: 'Relevance'},
-        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'}
+        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'},
+        {key: 'references', label: 'References'}
         /*
         {key: 'actions', label: 'Actions'}
         */
@@ -1002,6 +1004,28 @@ export default {
           console.log(error)
         })
     },
+    getReferences: function () {
+      axios.get(`/api/isoqf_references?organization=${this.list.organization}&list_id=${this.list.id}`)
+        .then((response) => {
+          if (response.data.length) {
+            let resources = response.data
+            let authors = ''
+            for (let resource of resources) {
+              if (resource.authors.length === 1) {
+                authors += '<li>' + resource.authors[0] + ', ' + resource.publication_year + '</li>'
+              } else if (resource.authors.length < 3) {
+                authors += '<li>' + resource.authors[0] + ', ' + resource.authors[1] + resource.publication_year + '</li>'
+              } else {
+                authors += '<li>' + resource.authors[0] + ' et al., ' + resource.publication_year + '</li>'
+              }
+            }
+            this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     getStageOneData: function () {
       let params = {
         organization: this.list.organization,
@@ -1018,6 +1042,7 @@ export default {
             evidenceProfile.name = this.soqf.name
             evidenceProfile.cerqual_assessment = {option: null, explanation: ''}
             evidenceProfile.cerqual_explanation = {option: null, explanation: ''}
+            evidenceProfile.references = ''
             this.evidence_profile.push(evidenceProfile)
           }
           if (this.soqf.hasOwnProperty('cerqual')) {
@@ -1027,6 +1052,7 @@ export default {
             this.cerqual = this.soqf.cerqual
           }
           this.getStatus()
+          this.getReferences()
         }).catch((error) => {
           console.log(error)
         })
