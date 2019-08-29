@@ -44,11 +44,11 @@
               <template slot="[name]" slot-scope="data">
                 <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
               </template>
-              <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_assessment.option !== null">
-                {{cerqual_confidence[data.item.cerqual.cerqual_assessment.option].text}}
+              <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.option !== null">
+                {{cerqual_confidence[data.item.cerqual.option].text}}
               </template>
-              <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.cerqual_explanation.option !== null">
-                {{select_options[data.item.cerqual.cerqual_explanation.option].text}}
+              <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.explanation !== null">
+                {{data.item.cerqual.explanation}}
               </template>
               <template slot="[references]" slot-scope="data">
                 <b-button

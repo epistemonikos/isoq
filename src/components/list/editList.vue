@@ -121,38 +121,21 @@
                   </b-form-group>
                   <!-- CERQual assessment -->
                 </div>
-                <div v-if="buffer_modal_stage_two.type === 'cerqual-assessment'">
+                <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                   <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
                   <b-form-radio-group
-                    v-model="cerqual.cerqual_assessment.option"
+                    v-model="cerqual.option"
                     :options="level_confidence"
-                    name="cerqual_assessment"
+                    name="cerqual"
                     stacked></b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
-                    label-for="input-cerqual-assessment"
+                    label-for="input-cerqual"
                     description="We encourage to add an explanation.">
                     <b-form-textarea
-                      id="input-cerqual-assessment"
-                      v-model="cerqual.cerqual_assessment.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <!-- Explanation of CERQual assessment -->
-                  <h6>{{$t('Explanation of CERQual Assessment')}}</h6>
-                  <b-form-radio-group
-                    v-model="cerqual.cerqual_explanation.option"
-                    :options="level_confidence"
-                    name="cerqual_explanation"
-                    stacked></b-form-radio-group>
-                  <b-form-group
-                    class="mt-2"
-                    v-bind:label="$t('Explanation')"
-                    label-for="input-explanation-cerqual-assessment"
-                    description="We encourage to add an explanation.">
-                    <b-form-textarea
-                      id="input-explanation-cerqual-assessment"
-                      v-model="cerqual.cerqual_explanation.explanation"
+                      id="input-cerqual"
+                      v-model="cerqual.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
                   </b-form-group>
                 </div>
@@ -170,7 +153,7 @@
                   <template slot="[methodological-limit]" slot-scope="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
-                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+                      <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
                       <b-button
                         block
                         variant="outline-info"
@@ -192,7 +175,7 @@
                   <template slot="[coherence]" slot-scope="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
-                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+                      <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
                       <b-button
                         block
                         variant="outline-info"
@@ -214,7 +197,7 @@
                   <template slot="[adequacy]" slot-scope="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
-                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+                      <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
                       <b-button
                         block
                         variant="outline-info"
@@ -236,7 +219,7 @@
                   <template slot="[relevance]" slot-scope="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
-                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+                      <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
                       <b-button
                         block
                         variant="outline-info"
@@ -255,13 +238,14 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="[cerqual_assessment]" slot-scope="data">
-                    <div v-if="data.item.cerqual_assessment.option !== null">
-                      <p>{{level_confidence[data.item.cerqual_assessment.option].text}}</p>
+                  <template slot="[cerqual]" slot-scope="data">
+                    <div v-if="data.item.cerqual.option !== null">
+                      <p>{{level_confidence[data.item.cerqual.option].text}}</p>
+                      <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
                       <b-button
                         block
                         variant="outline-info"
-                        @click="editStageTwo(data.item, 'cerqual-assessment')">
+                        @click="editStageTwo(data.item, 'cerqual')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
@@ -270,7 +254,7 @@
                       <b-button
                         block
                         variant="outline-info"
-                        @click="editStageTwo(data.item, 'cerqual-assessment')">
+                        @click="editStageTwo(data.item, 'cerqual')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
@@ -370,9 +354,42 @@
                 <p>This action will remove all the data. Are you sure?</p>
               </b-modal>
               <!-- drop table -->
+              <!--
+              <b-modal
+                id="modal-stage-import-tsv"
+                ref="modal-stage-import-tsv"
+                scrollable
+                size="lg"
+                @ok="importTSV"
+                @cancel="cleanTSV"
+                title="Import data">
+                <b-form-group
+                  label="Paste your TSV file">
+                  <b-form-textarea
+                    placeholder="Paste your TSV file"
+                    rows="3"
+                    v-model="csvImport"></b-form-textarea>
+                </b-form-group>
+                <b-form-group
+                  label="OR load a TSV file"
+                  label-for="input-tsv-file">
+                  <b-form-file
+                    id="input-tsv-file"
+                    plain
+                    @change="loadTSV($event)"></b-form-file>
+                </b-form-group>
+                <div v-if="tsv.fields.length">
+                  <h5>Preview</h5>
+                  <b-table
+                    :fields="tsv.fields"
+                    :items="tsv.items"></b-table>
+                </div>
+              </b-modal>
+              -->
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <bc-action-table
+                  :importUrl="`/api/isoqf_characteristics?id=${characteristics_studies.id}&organization=${characteristics_studies.organization}&list_id=${characteristics_studies.list_id}`"
                   :dropAction="openModalStageThreeDropTable"
                   :editAction="openModalStageThreeEditFields"
                   :addAction="openModalStageThreeAddData"></bc-action-table>
@@ -840,7 +857,6 @@ export default {
         {key: 'id', label: 'ID'},
         {key: 'name', label: 'Finding'},
         {key: 'cerqual', label: 'CERQual Assessment of Confidence'},
-        {key: 'cerqual_explanation', label: 'Explanation of CERQual Assessment'},
         {key: 'actions', label: 'Actions'}
       ],
       evidence_profile_fields: [
@@ -849,7 +865,7 @@ export default {
         {key: 'coherence', label: 'Coherence'},
         {key: 'adequacy', label: 'Adequacy'},
         {key: 'relevance', label: 'Relevance'},
-        {key: 'cerqual_assessment', label: 'CERQual Assessment of confidence'},
+        {key: 'cerqual', label: 'CERQual Assessment of confidence'},
         {key: 'references', label: 'References'}
         /*
         {key: 'actions', label: 'Actions'}
@@ -873,20 +889,18 @@ export default {
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
         relevance: {option: null, explanation: ''},
-        cerqual_assessment: {option: null, explanation: ''},
-        cerqual_explanation: {option: null, explanation: ''}
+        cerqual: {option: null, explanation: ''}
       },
       buffer_modal_stage_two: {
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
         adequacy: {option: null, explanation: ''},
         relevance: {option: null, explanation: ''},
-        cerqual_assessment: {option: null, explanation: ''},
-        cerqual_explanation: {option: null, explanation: ''}
+        cerqual: {option: null, explanation: ''}
       },
       cerqual: {
-        cerqual_assessment: {option: null, explanation: ''},
-        cerqual_explanation: {option: null, explanation: ''}
+        option: null,
+        explanation: ''
       },
       buffer_modal_stage_three: {
         fields: [],
@@ -956,7 +970,8 @@ export default {
         id: null,
         fields: [],
         items: []
-      }
+      },
+      importUrl: ''
     }
   },
   watch: {
@@ -985,6 +1000,37 @@ export default {
     this.getList()
   },
   methods: {
+    /*
+    loadTSV: function (event) {
+      let file = event.target.files[0]
+      let reader = new FileReader()
+      reader.onload = (e) => {
+        let lines = e.target.result.split('\n')
+        for (let cnt in lines) {
+          if (cnt < 1) {
+            let header = lines[cnt].split('\t')
+            for (let h in header) {
+              this.tsv.fields.push({key: 'column_' + h, label: header[h]})
+            }
+          } else {
+            let item = lines[cnt].split('\t')
+            let e = {}
+            for (let i in item) {
+              e['column_' + i] = item[i]
+            }
+            this.tsv.items.push(e)
+          }
+        }
+        this.pre_tsv = e.target.result
+      }
+      reader.readAsText(file)
+    },
+    cleanTSV: function () {
+      this.pre_tsv = ''
+      this.tsv = {fields: [], items: []}
+      this.$refs['modal-stage-import-tsv'].hide()
+    },
+    */
     getList: function () {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
@@ -1040,16 +1086,13 @@ export default {
           if (this.soqf.hasOwnProperty('evidence_profile')) {
             let evidenceProfile = this.soqf.evidence_profile
             evidenceProfile.name = this.soqf.name
-            evidenceProfile.cerqual_assessment = {option: null, explanation: ''}
-            evidenceProfile.cerqual_explanation = {option: null, explanation: ''}
+            evidenceProfile.cerqual = {option: null, explanation: ''}
             evidenceProfile.references = ''
             this.evidence_profile.push(evidenceProfile)
           }
           if (this.soqf.hasOwnProperty('cerqual')) {
             // this.evidence_profile[0].cerqual = []
-            this.evidence_profile[0].cerqual_assessment = this.soqf.cerqual.cerqual_assessment
-            this.evidence_profile[0].cerqual_explanation = this.soqf.cerqual.cerqual_explanation
-            this.cerqual = this.soqf.cerqual
+            this.evidence_profile[0].cerqual = this.soqf.cerqual
           }
           this.getStatus()
           this.getReferences()
@@ -1071,7 +1114,7 @@ export default {
       if (this.evidence_profile[0].relevance.option !== null) {
         this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-      if (this.evidence_profile[0].cerqual_assessment.option !== null) {
+      if (this.evidence_profile[0].cerqual.option !== null) {
         this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
       if (this.status_evidence_profile.value <= 40) {
@@ -1322,6 +1365,10 @@ export default {
     openModalStageThreeDropTable: function () {
       this.$refs['modal-stage-three-drop-table'].show()
     },
+    openModalImportTSV: function () {
+      this.$refs['modal-stage-import-tsv'].show()
+    },
+    importTSV: function () {},
     stageThreeDropTable: function () {
       axios.delete(`/api/isoqf_characteristics/${this.characteristics_studies.id}`)
         .then((response) => {
