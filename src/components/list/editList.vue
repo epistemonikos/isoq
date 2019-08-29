@@ -1705,15 +1705,17 @@ export default {
 </script>
 
 <style scoped>
-div[data-v-ac81e08e] >>>
-  .table thead th {
-    width: 16.666%;
-  }
-/*
-div[data-v-ac81e08e] >>>
-  .table thead th:last-child {
-    width: 10%;
-    text-align: right;
-  }
-*/
+  div >>>
+    .table thead th {
+      width: 14%;
+    }
+  div >>>
+    .table tbody span {
+      font-size: 0.8rem;
+    }
+  div >>>
+    .table tbody span li {
+      padding-top: 0.4rem;
+      list-style-type: decimal
+    }
 </style>

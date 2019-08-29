@@ -52,7 +52,11 @@
               </template>
               <template slot="[references]" slot-scope="data">
                 <b-button
-                  @click="openModalReferences(data.item.id)">Add references</b-button>
+                  variant="outline-info"
+                  @click="openModalReferences(data.item.id)">
+                    <font-awesome-icon icon="highlighter"></font-awesome-icon>
+                    Add references
+                </b-button>
               </template>
             </b-table>
           </template>
@@ -379,6 +383,14 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
+  div >>>
+    .table thead th {
+      width: 24%;
+    }
+  div >>>
+    .table thead th:first-child {
+      width: 4%;
+    }
 
 </style>
