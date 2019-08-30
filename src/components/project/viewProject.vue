@@ -9,9 +9,14 @@
           </b-link>
         </b-col>
       </b-row>
+      <b-row class="mb-3">
+        <b-col cols="12">
+          <h1>Interactive Summary of Qualitative Findings Table</h1>
+        </b-col>
+      </b-row>
       <b-row>
         <b-col cols="12">
-          <h1>{{project.name}}</h1>
+          <h2>{{project.name}}</h2>
         </b-col>
         <b-col cols="12" sm="6">
           <p v-if="project.description">{{project.description}}</p>
@@ -36,33 +41,30 @@
           </b-button>
         </b-col>
         <b-col cols="12">
-          <template v-if="lists.length">
-            <b-table
-              :fields="table_settings.fields"
-              :items="lists">
-              <template slot="[index]" slot-scope="data">{{data.index + 1}}</template>
-              <template slot="[name]" slot-scope="data">
-                <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
-              </template>
-              <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.option !== null">
-                {{cerqual_confidence[data.item.cerqual.option].text}}
-              </template>
-              <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.explanation !== null">
-                {{data.item.cerqual.explanation}}
-              </template>
-              <template slot="[references]" slot-scope="data">
-                <b-button
-                  variant="outline-info"
-                  @click="openModalReferences(data.item.id)">
-                    <font-awesome-icon icon="highlighter"></font-awesome-icon>
-                    Add references
-                </b-button>
-              </template>
-            </b-table>
-          </template>
-          <template v-else>
-            <p>No data found. try to <b-link v-b-modal.add-summarized>add summarized</b-link> review finding.</p>
-          </template>
+          <b-table
+            :fields="table_settings.fields"
+            :items="lists"
+            empty-text="There are no findings to show"
+            show-empty>
+            <template slot="[index]" slot-scope="data">{{data.index + 1}}</template>
+            <template slot="[name]" slot-scope="data">
+              <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
+            </template>
+            <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.option !== null">
+              {{cerqual_confidence[data.item.cerqual.option].text}}
+            </template>
+            <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.explanation !== null">
+              {{data.item.cerqual.explanation}}
+            </template>
+            <template slot="[references]" slot-scope="data">
+              <b-button
+                variant="outline-info"
+                @click="openModalReferences(data.item.id)">
+                  <font-awesome-icon icon="highlighter"></font-awesome-icon>
+                  Add references
+              </b-button>
+            </template>
+          </b-table>
           <b-modal
             id="add-summarized"
             ref="add-summarized"
@@ -329,6 +331,7 @@ export default {
 
           this.getLists()
           this.createFinding(listId, listName)
+          this.summarized_review = ''
         })
         .catch((error) => {
           console.log(error)
@@ -371,7 +374,6 @@ export default {
       this.selected_list_id = listId
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&list_id=${listId}`)
         .then((response) => {
-          console.log(response.data)
           this.references = response.data
           this.$refs['modal-references'].show()
         })
