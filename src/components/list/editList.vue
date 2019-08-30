@@ -1066,11 +1066,11 @@ export default {
             let authors = ''
             for (let resource of resources) {
               if (resource.authors.length === 1) {
-                authors += '<li>' + resource.authors[0] + ', ' + resource.publication_year + '</li>'
+                authors += '<li>' + resource.authors[0] + '. ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
               } else if (resource.authors.length < 3) {
-                authors += '<li>' + resource.authors[0] + ', ' + resource.authors[1] + resource.publication_year + '</li>'
+                authors += '<li>' + resource.authors[0] + ', ' + resource.authors[1] + '. ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
               } else {
-                authors += '<li>' + resource.authors[0] + ' et al., ' + resource.publication_year + '</li>'
+                authors += '<li>' + resource.authors[0] + ' et al., ' +  resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
               }
             }
             this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
