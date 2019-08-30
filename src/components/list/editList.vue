@@ -115,7 +115,7 @@
                 <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                   <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
                   <b-form-radio-group
-                    v-model="cerqual.option"
+                    v-model="buffer_modal_stage_two.cerqual.option"
                     :options="level_confidence"
                     name="cerqual"
                     stacked></b-form-radio-group>
@@ -126,7 +126,7 @@
                     description="We encourage to add an explanation.">
                     <b-form-textarea
                       id="input-cerqual"
-                      v-model="cerqual.explanation"
+                      v-model="buffer_modal_stage_two.cerqual.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
                   </b-form-group>
                 </div>
@@ -910,10 +910,6 @@ export default {
         relevance: {option: null, explanation: ''},
         cerqual: {option: null, explanation: ''}
       },
-      cerqual: {
-        option: null,
-        explanation: ''
-      },
       buffer_modal_stage_three: {
         fields: [],
         data: []
@@ -1092,19 +1088,14 @@ export default {
       axios.get('/api/isoqf_findings', {params})
         .then((response) => {
           if (response.data.length) {
-            this.soqf = response.data[0]
+            this.findings = response.data[0]
           }
           this.evidence_profile = []
-          if (this.soqf.hasOwnProperty('evidence_profile')) {
-            let evidenceProfile = this.soqf.evidence_profile
-            evidenceProfile.name = this.soqf.name
-            evidenceProfile.cerqual = {option: null, explanation: ''}
-            evidenceProfile.references = ''
+          if (this.findings.hasOwnProperty('evidence_profile')) {
+            let evidenceProfile = this.findings.evidence_profile
+            // evidenceProfile.name = this.findings.name
+            // evidenceProfile.references = ''
             this.evidence_profile.push(evidenceProfile)
-          }
-          if (this.soqf.hasOwnProperty('cerqual')) {
-            // this.evidence_profile[0].cerqual = []
-            this.evidence_profile[0].cerqual = this.soqf.cerqual
           }
           this.getStatus()
           this.getReferences()
@@ -1143,7 +1134,7 @@ export default {
       let params = {
         organization: this.list.organization,
         name: this.buffer_modal_stage_one.name,
-        cerqual: this.cerqual
+        cerqual: this.buffer_modal_stage_two.cerqual
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
@@ -1155,16 +1146,16 @@ export default {
         })
     },
     saveStageOneAndTwo: function () {
+      delete this.buffer_modal_stage_two.type
       this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
         name: this.buffer_modal_stage_one.name,
-        evidence_profile: this.buffer_modal_stage_two,
-        cerqual: this.cerqual
+        evidence_profile: this.buffer_modal_stage_two
       }
-      if (this.soqf.hasOwnProperty('id')) {
-        axios.patch(`/api/isoqf_findings/${this.soqf.id}`, params)
+      if (this.findings.hasOwnProperty('id')) {
+        axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
           .then((response) => {
             this.getStageOneData()
             this.saveListName()
