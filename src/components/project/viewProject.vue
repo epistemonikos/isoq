@@ -35,6 +35,7 @@
         </b-col>
         <b-col cols="12" class="text-right my-2">
           <b-button
+            v-b-tooltip.hover title="Tip from title attribute"
             variant="outline-primary"
             @click="modalAddSummarized">
             Add finding
@@ -46,6 +47,21 @@
             :items="lists"
             empty-text="There are no findings to show"
             show-empty>
+            <template slot="HEAD[index]">
+              <span v-b-tooltip.hover title="Tip from title attribute">#</span>
+            </template>
+            <template slot="HEAD[name]" slot-scope="data">
+              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            </template>
+            <template slot="HEAD[confidence]" slot-scope="data">
+              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            </template>
+            <template slot="HEAD[explanation]" slot-scope="data">
+              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            </template>
+            <template slot="HEAD[references]" slot-scope="data">
+              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            </template>
             <template slot="[index]" slot-scope="data">{{data.index + 1}}</template>
             <template slot="[name]" slot-scope="data">
               <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
@@ -58,6 +74,7 @@
             </template>
             <template slot="[references]" slot-scope="data">
               <b-button
+                v-b-tooltip.hover title="Tip from title attribute"
                 variant="outline-info"
                 @click="openModalReferences(data.item.id)">
                   <font-awesome-icon icon="highlighter"></font-awesome-icon>

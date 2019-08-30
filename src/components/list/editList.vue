@@ -9,15 +9,19 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>Evidence Profile Worksheet</h2>
+      <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="Tip from title attribute">#</small></h2>
+      <p>some explanation</p>
       <h3>{{list.name}}</h3>
       <b-row>
         <b-col
           cols="12">
-          <b-form-checkbox-group
-            v-model="show.selected"
-            :options="show.options"
-            switches></b-form-checkbox-group>
+          <b-form-group>
+            <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
+              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Tip from title attribute">Characteristics Studies</span></b-form-checkbox>
+              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Tip from title attribute">Methodological Assessments</span></b-form-checkbox>
+              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Tip from title attribute">Extracted Data</span></b-form-checkbox>
+            </b-form-checkbox-group>
+          </b-form-group>
         </b-col>
       </b-row>
       <b-row class="mt-5">
@@ -31,19 +35,6 @@
                 v-bind:title="$t('Evidence profile')"
                 scrollable
                 @ok="saveStageOneAndTwo">
-                <!--
-                <b-form-group
-                  id="label-finding"
-                  v-bind:label="$t('Finding')"
-                  label-for="input-finding">
-                  <b-form-input
-                    id="input-finding"
-                    type="text"
-                    v-model="buffer_modal_stage_one.name"
-                    required
-                    v-bind:placeholder="$t('Enter a finding')"></b-form-input>
-                </b-form-group>
-                -->
                 <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                   <h6>{{$t('Methodological Limitations')}}</h6>
                   <b-form-radio-group
@@ -147,6 +138,27 @@
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
+                  <template slot="HEAD[name]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[methodological-limit]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[coherence]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[adequacy]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[relevance]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[cerqual]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="HEAD[references]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
                   <template slot="[finding]" slot-scope="data">
                     {{data.item.name}}
                   </template>
