@@ -1070,7 +1070,7 @@ export default {
               } else if (resource.authors.length < 3) {
                 authors += '<li>' + resource.authors[0] + ', ' + resource.authors[1] + '. ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
               } else {
-                authors += '<li>' + resource.authors[0] + ' et al., ' +  resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
+                authors += '<li>' + resource.authors[0] + ' et al., ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
               }
             }
             this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
