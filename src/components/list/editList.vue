@@ -52,7 +52,6 @@
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
-
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'coherence'">
                   <!-- coherence -->
@@ -279,11 +278,6 @@
                     </div>
                   </template>
                   <span slot="[references]" slot-scope="data" v-html="data.value"></span>
-                  <!--
-                  <template slot="[actions]">
-                    <font-awesome-icon icon="trash" pull="right" title="Remove" />
-                  </template>
-                  -->
                 </b-table>
                 <h5>Progress status</h5>
                 <b-progress
@@ -390,12 +384,6 @@
               <h3>{{$t('Methodological Assessments')}}</h3>
               <template v-if="stage_four.fields.length">
                 <bc-filters :tableSettings="methodological_assessments_table_settings"></bc-filters>
-                <!--
-                <bc-action-table
-                  :dropAction="dropDatabaseStageFour"
-                  :editAction="editFieldsModalStageFour"
-                  :addAction="stageFourAddData"></bc-action-table>
-                -->
                 <bc-action-table
                   :importUrl="`/api/isoqf_assessments/${stage_four.id}?organization=${stage_four.organization}&list_id=${stage_four.list_id}`"
                   @response-ok-api="getStageFour"
@@ -859,8 +847,9 @@ export default {
       }
     },
     editStageTwo: function (data, type) {
-      this.buffer_modal_stage_one.name = data.name
-      this.buffer_modal_stage_two = {...data}
+      let theData = JSON.parse(JSON.stringify(data))
+      this.buffer_modal_stage_one.name = theData.name
+      this.buffer_modal_stage_two = {...theData}
       this.buffer_modal_stage_two.type = type
       this.$refs['modal-stage-two'].show()
     },
