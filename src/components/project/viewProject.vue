@@ -376,6 +376,10 @@ export default {
           methodological_limitations: {
             explanation: '',
             option: null
+          },
+          cerqual: {
+            explanation: '',
+            option: null
           }
         }
       }
