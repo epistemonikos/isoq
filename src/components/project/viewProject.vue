@@ -195,7 +195,8 @@ export default {
           },
           {key: 'publication_year', label: 'Year'}
         ],
-      selected_list_id: ''
+      selected_list_id: '',
+      lastId: 1
     }
   },
   mounted () {
@@ -327,6 +328,10 @@ export default {
       axios.get(`/api/isoqf_lists`, {params})
         .then((response) => {
           this.lists = response.data
+          if (this.lists.length) {
+            let lists = JSON.parse(JSON.stringify(this.lists))
+            this.lastId = parseInt(lists.splice(lists.length - 1, 1)[0].isoqf_id) + 1
+          }
         })
         .catch((error) => {
           console.log(error)
@@ -339,7 +344,8 @@ export default {
       let params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
-        name: this.summarized_review
+        name: this.summarized_review,
+        isoqf_id: this.lastId
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
@@ -359,8 +365,10 @@ export default {
         organization: this.$route.params.org_id,
         list_id: listId,
         name: listName,
+        isoqf_id: this.lastId,
         evidence_profile: {
           name: listName,
+          isoqf_id: this.lastId,
           relevance: {
             explanation: '',
             option: null
@@ -385,7 +393,8 @@ export default {
       }
       axios.post(`/api/isoqf_findings`, params)
         .then((response) => {
-          console.log(response)
+          this.lastId = this.lastId + 1
+          // console.log(response)
         })
         .catch((error) => {
           console.log(error)

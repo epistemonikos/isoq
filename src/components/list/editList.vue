@@ -138,6 +138,9 @@
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
+                  <template slot="HEAD[isoqf_id]" slot-scope="data">
+                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
                   <template slot="HEAD[name]" slot-scope="data">
                     <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
                   </template>
@@ -158,6 +161,9 @@
                   </template>
                   <template slot="HEAD[references]" slot-scope="data">
                     <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  </template>
+                  <template slot="[isoqf_id]" slot-scope="data">
+                    {{data.item.isoqf_id}}
                   </template>
                   <template slot="[finding]" slot-scope="data">
                     {{data.item.name}}
@@ -609,13 +615,8 @@ export default {
       ],
       /** selectors **/
       /** tables fields **/
-      soqf_fields: [
-        {key: 'id', label: 'ID'},
-        {key: 'name', label: 'Finding'},
-        {key: 'cerqual', label: 'CERQual Assessment of Confidence'},
-        {key: 'actions', label: 'Actions'}
-      ],
       evidence_profile_fields: [
+        {key: 'isoqf_id', label: '#'},
         {key: 'name', label: 'Finding'},
         {key: 'methodological-limit', label: 'Methodological limitations'},
         {key: 'coherence', label: 'Coherence'},
@@ -779,8 +780,6 @@ export default {
           this.evidence_profile = []
           if (this.findings.hasOwnProperty('evidence_profile')) {
             let evidenceProfile = this.findings.evidence_profile
-            // evidenceProfile.name = this.findings.name
-            // evidenceProfile.references = ''
             this.evidence_profile.push(evidenceProfile)
           }
           this.getStatus()
