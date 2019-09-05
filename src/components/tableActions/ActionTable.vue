@@ -340,6 +340,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.modalCreateFields.fields))
       let params = JSON.parse(JSON.stringify(this.modalCreateFields))
       params.fields = []
+      params.items = []
 
       for (let cnt in fields) {
         let objField = {}
