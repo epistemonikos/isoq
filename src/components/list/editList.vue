@@ -132,6 +132,7 @@
               </b-modal>
               <template v-if="evidence_profile.length">
                 <b-table
+                  id="assessments"
                   responsive striped caption-top
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"
@@ -312,6 +313,7 @@
                   :displayCreateContent="true"
                   :theContent="characteristics_studies"></bc-action-table>
                 <b-table
+                  id="characteristics"
                   responsive striped caption-top
                   :fields="characteristics_studies.fields"
                   :items="characteristics_studies.items"
@@ -393,6 +395,7 @@
                   :displayCreateContent="true"
                   :theContent="stage_four"></bc-action-table>
                 <b-table
+                  id="methodological"
                   responsive
                   striped
                   caption-top
@@ -465,6 +468,7 @@
                   :displayCreateContent="true"
                   :theContent="extracted_data"></bc-action-table>
                 <b-table
+                  id="extracted"
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
                   :fields="extracted_data.fields"
@@ -585,10 +589,6 @@ export default {
       },
       /** filters **/
       /** selectors **/
-      global_status: [
-        { value: false, text: 'public' },
-        { value: true, text: 'private' }
-      ],
       select_options: [
         {value: 0, text: 'No/Very minor concerns'},
         {value: 1, text: 'Minor concerns'},
@@ -629,13 +629,6 @@ export default {
         list_id: '',
         organization: ''
       },
-      initial_modal_stage_two: {
-        methodological_limitations: {option: null, explanation: ''},
-        coherence: {option: null, explanation: ''},
-        adequacy: {option: null, explanation: ''},
-        relevance: {option: null, explanation: ''},
-        cerqual: {option: null, explanation: ''}
-      },
       buffer_modal_stage_two: {
         methodological_limitations: {option: null, explanation: ''},
         coherence: {option: null, explanation: ''},
@@ -647,7 +640,6 @@ export default {
         fields: [],
         data: []
       },
-      modal_stage_three_edit_fields: [],
       buffer_extracted_data: {
         fields: [],
         items: [],
@@ -698,10 +690,6 @@ export default {
       modal_stage_three_data: {},
       modal_stage_four_data: {},
       buffer_modal_stage_four_fields: {},
-      stage_five_imported_data: {
-        fields: [],
-        items: []
-      },
       extracted_data: {
         id: null,
         fields: [],
@@ -1083,7 +1071,11 @@ export default {
 
 <style scoped>
   div >>>
-    .table thead th {
+    #assessments.table thead th:first-child {
+      width: 2%;
+    }
+  div >>>
+    #assessment.table thead th {
       width: 14%;
     }
   div >>>
@@ -1094,5 +1086,17 @@ export default {
     .table tbody span li {
       padding-top: 0.4rem;
       list-style-type: decimal
+    }
+  div >>>
+    #characteristics.table thead th:last-child {
+      width: 2%;
+    }
+  div >>>
+    #methodological.table thead th:last-child {
+      width: 2%;
+    }
+  div >>>
+    #extracted.table thead th:last-child {
+      width: 2%;
     }
 </style>
