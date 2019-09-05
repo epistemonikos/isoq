@@ -231,13 +231,13 @@ export default {
   },
   mounted () {
     this.getOrganization()
-    this.getProjectsAndLists()
   },
   methods: {
     getOrganization: function () {
       axios.get(`/api/organizations/${this.$route.params.id}`)
         .then((response) => {
           this.org = {...response.data}
+          this.getProjectsAndLists()
         })
         .catch((error) => {
           console.log(error)
