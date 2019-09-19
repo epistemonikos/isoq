@@ -33,55 +33,100 @@
           <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
-        <b-col cols="12" class="text-right my-2">
-          <b-button
-            v-b-tooltip.hover title="Tip from title attribute"
-            variant="outline-primary"
-            @click="modalAddSummarized">
-            Add finding
-          </b-button>
+        <b-col cols="12" class="my-2">
+          <b-row>
+            <b-col
+              cols="12"
+              sm="6">
+              <b-form-group>
+                <b-input-group>
+                  <b-form-input
+                    v-model="table_settings.filter"
+                    type="search"
+                    id="filterInput"
+                    placeholder="Type to Search"></b-form-input>
+                  <b-input-group-append>
+                    <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col
+              cols="12"
+              sm="3">
+            </b-col>
+            <b-col
+              cols="12"
+              sm="3">
+              <b-button
+                v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
+                variant="outline-primary"
+                @click="modalAddSummarized"
+                block>
+                Add finding
+              </b-button>
+            </b-col>
+          </b-row>
+
         </b-col>
         <b-col cols="12">
           <b-table
+            id="findings"
             :fields="table_settings.fields"
             :items="lists"
             empty-text="There are no findings to show"
-            show-empty>
-            <template slot="HEAD[index]">
-              <span v-b-tooltip.hover title="Tip from title attribute">#</span>
+            show-empty
+            :busy="table_settings.isBusy"
+            :current-page="table_settings.currentPage"
+            :per-page="table_settings.perPage"
+            :filter="table_settings.filter">
+            <template v-slot:head(isoqf_id)="data">
+              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">#</span>
             </template>
-            <template slot="HEAD[name]" slot-scope="data">
-              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            <template v-slot:head(name)="data">
+              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{data.label}}</span>
             </template>
-            <template slot="HEAD[confidence]" slot-scope="data">
-              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            <template v-slot:head(confidence)="data">
+              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
             </template>
-            <template slot="HEAD[explanation]" slot-scope="data">
-              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            <template v-slot:head(explanation)="data">
+              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{data.label}}</span>
             </template>
-            <template slot="HEAD[references]" slot-scope="data">
-              <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+            <template v-slot:head(references)="data">
+              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{data.label}}</span>
             </template>
-            <template slot="[index]" slot-scope="data">{{data.index + 1}}</template>
-            <template slot="[name]" slot-scope="data">
-              <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{data.item.name}}</b-link>
+            <template v-slot:cell(isoqf_id)="data">
+              {{ data.item.isoqf_id }}
             </template>
-            <template slot="[confidence]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.option !== null">
-              {{cerqual_confidence[data.item.cerqual.option].text}}
+            <template v-slot:cell(name)="data">
+              <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
             </template>
-            <template slot="[explanation]" slot-scope="data" v-if="data.item.hasOwnProperty('cerqual') && data.item.cerqual.explanation !== null">
-              {{data.item.cerqual.explanation}}
+            <template v-slot:cell(explanation)="data">
+              {{ data.item.cerqual.explanation }}
             </template>
-            <template slot="[references]" slot-scope="data">
+            <template v-slot:cell(references)="data">
               <b-button
-                v-b-tooltip.hover title="Tip from title attribute"
+                v-b-tooltip.hover title="Add the references that contribute to this review finding"
                 variant="outline-info"
                 @click="openModalReferences(data.item.id)">
                   <font-awesome-icon icon="highlighter"></font-awesome-icon>
                   Add references
               </b-button>
             </template>
+            <template v-slot:table-busy>
+              <div class="text-center text-danger my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </template>
           </b-table>
+          <b-pagination
+            v-model="table_settings.currentPage"
+            :total-rows="lists.length"
+            :per-page="table_settings.perPage"
+            aria-controls="findings"
+            align="center"
+          ></b-pagination>
           <b-modal
             id="add-summarized"
             ref="add-summarized"
@@ -142,7 +187,7 @@ export default {
       table_settings: {
         fields: [
           {
-            key: 'index',
+            key: 'isoqf_id',
             label: '#'
           },
           {
@@ -151,7 +196,8 @@ export default {
           },
           {
             key: 'confidence',
-            label: 'CERQual Assessment of confidence'
+            label: 'CERQual Assessment of confidence',
+            formatter: 'getConfidence'
           },
           {
             key: 'explanation',
@@ -161,20 +207,24 @@ export default {
             key: 'references',
             label: 'References'
           }
-        ]
+        ],
+        isBusy: true,
+        currentPage: 1,
+        perPage: 5,
+        filter: null
       },
       summarized_review: '',
       select_options: [
-        {value: 0, text: 'No/Minor concerns'},
-        {value: 1, text: 'Minor concerns'},
-        {value: 2, text: 'Moderated concerns'},
-        {value: 3, text: 'Serious concerns'}
+        { value: 0, text: 'No/Minor concerns' },
+        { value: 1, text: 'Minor concerns' },
+        { value: 2, text: 'Moderated concerns' },
+        { value: 3, text: 'Serious concerns' }
       ],
       cerqual_confidence: [
-        {value: 0, text: 'High confidence'},
-        {value: 1, text: 'Moderate confidence'},
-        {value: 2, text: 'Low confidence'},
-        {value: 3, text: 'Very low confidence'}
+        { value: 0, text: 'High confidence' },
+        { value: 1, text: 'Moderate confidence' },
+        { value: 2, text: 'Low confidence' },
+        { value: 3, text: 'Very low confidence' }
       ],
       pre_references: '',
       references: [],
@@ -193,7 +243,7 @@ export default {
               }
             }
           },
-          {key: 'publication_year', label: 'Year'}
+          { key: 'publication_year', label: 'Year' }
         ],
       selected_list_id: '',
       lastId: 1
@@ -208,16 +258,14 @@ export default {
       const file = data
       const allLines = file.split(/\r\n|\n/)
       // Reading line by line
-      let titleTags = ['TI', 'T1', 'T2', 'T3']
-      let authorTags = ['AU', 'A1', 'A2', 'A3', 'A4']
-      let userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
-      let content = ''
-      let key = ''
-      let base = {authors: [], user_definable: []}
+      const titleTags = ['TI', 'T1', 'T2', 'T3']
+      const authorTags = ['AU', 'A1', 'A2', 'A3', 'A4']
+      const userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
+      let base = { authors: [], user_definable: [] }
 
       allLines.forEach((line) => {
-        key = line.split('  - ')[0]
-        content = line.split('  - ')[1]
+        const key = line.split('  - ')[0]
+        const content = line.split('  - ')[1]
 
         if (key === 'TY') {
           base['type'] = content
@@ -269,22 +317,28 @@ export default {
         }
         if (key === 'ER') {
           this.references.push(base)
-          base = {authors: [], user_definable: []}
+          base = { authors: [], user_definable: [] }
         }
       })
     }
   },
   methods: {
+    getConfidence: function (value, key, item) {
+      if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
+        return this.cerqual_confidence[item.cerqual.option].text
+      }
+      return ''
+    },
     loadRefs: function (event) {
-      let file = event.target.files[0]
-      let reader = new FileReader()
+      const file = event.target.files[0]
+      const reader = new FileReader()
       reader.onload = (e) => {
         this.pre_references = e.target.result
       }
       reader.readAsText(file)
     },
     saveReferences: function () {
-      let references = this.references
+      const references = this.references
       let axiosArray = []
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
@@ -311,7 +365,7 @@ export default {
       let params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, {params})
+      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
         .then((response) => {
           this.project = response.data
           this.getLists() // summary review
@@ -325,13 +379,14 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get(`/api/isoqf_lists`, {params})
+      axios.get('/api/isoqf_lists', { params })
         .then((response) => {
-          this.lists = response.data
+          this.lists = JSON.parse(JSON.stringify(response.data))
           if (this.lists.length) {
             let lists = JSON.parse(JSON.stringify(this.lists))
             this.lastId = parseInt(lists.splice(lists.length - 1, 1)[0].isoqf_id) + 1
           }
+          this.table_settings.isBusy = false
         })
         .catch((error) => {
           console.log(error)
