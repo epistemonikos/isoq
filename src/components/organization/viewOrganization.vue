@@ -89,7 +89,7 @@
         <b-form-group
           :label="$t('Authors')"
           label-for="input-project-authors"
-          description="Authors separated by commas.">
+          description="First then last name of all authors separated by commas">
           <b-form-input
             id="input-project-authors"
             :placeholder="$t('Authors of review')"
