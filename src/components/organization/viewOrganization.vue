@@ -19,7 +19,7 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
           <b-col cols="12" class="text-right">
-            <b-button v-b-tooltip.hover title="Tip from title attribute" variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
+            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <ul class="mt-5">
