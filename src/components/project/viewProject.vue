@@ -322,8 +322,10 @@ export default {
   },
   methods: {
     getConfidence: function (value, key, item) {
-      if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
-        return this.cerqual_confidence[item.cerqual.option].text
+      if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
+        if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
+          return this.cerqual_confidence[item.cerqual.option].text
+        }
       }
       return ''
     },
