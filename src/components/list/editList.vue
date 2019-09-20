@@ -141,17 +141,19 @@
                     components of CERQual
                   </p>
                   <b-form-radio-group
+                    v-model="buffer_modal_stage_two.cerqual.option"
+                    name="cerqual"
                     stacked>
-                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="0">
+                    <b-form-radio value="0">
                       High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                     </b-form-radio>
-                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="1">
+                    <b-form-radio value="1">
                       Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                     </b-form-radio>
-                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="2">
+                    <b-form-radio value="2">
                       Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                     </b-form-radio>
-                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="3">
+                    <b-form-radio value="3">
                       Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
                     </b-form-radio>
                   </b-form-radio-group>

@@ -70,14 +70,16 @@
         <b-col cols="12">
           <b-table
             id="findings"
-            :fields="table_settings.fields"
+            :fields="fields"
             :items="lists"
             empty-text="There are no findings to show"
             show-empty
             :busy="table_settings.isBusy"
             :current-page="table_settings.currentPage"
             :per-page="table_settings.perPage"
-            :filter="table_settings.filter">
+            :filter="table_settings.filter"
+            @filtered="onFiltered"
+          >
             <template v-slot:head(isoqf_id)="data">
               <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">#</span>
             </template>
@@ -123,8 +125,7 @@
             :total-rows="lists.length"
             :per-page="table_settings.perPage"
             aria-controls="findings"
-            align="center"
-          ></b-pagination>
+            align="center"></b-pagination>
           <b-modal
             id="add-summarized"
             ref="add-summarized"
@@ -182,34 +183,35 @@ export default {
         authors: ''
       },
       lists: [],
+      fields: [
+        {
+          key: 'isoqf_id',
+          label: '##'
+        },
+        {
+          key: 'name',
+          label: 'Summarized review finding'
+        },
+        {
+          key: 'confidence',
+          label: 'CERQual Assessment of confidence',
+          formatter: 'getConfidence'
+        },
+        {
+          key: 'explanation',
+          label: 'Explanation of CERQual Assessment'
+        },
+        {
+          key: 'references',
+          label: 'References'
+        }
+      ],
       table_settings: {
-        fields: [
-          {
-            key: 'isoqf_id',
-            label: '#'
-          },
-          {
-            key: 'name',
-            label: 'Summarized review finding'
-          },
-          {
-            key: 'confidence',
-            label: 'CERQual Assessment of confidence',
-            formatter: 'getConfidence'
-          },
-          {
-            key: 'explanation',
-            label: 'Explanation of CERQual Assessment'
-          },
-          {
-            key: 'references',
-            label: 'References'
-          }
-        ],
         isBusy: true,
         currentPage: 1,
         perPage: 5,
-        filter: null
+        filter: null,
+        totalRows: 1
       },
       summarized_review: '',
       select_options: [
@@ -362,7 +364,7 @@ export default {
         })
     },
     getProject: function () {
-      let params = {
+      const params = {
         organization: this.$route.params.org_id
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
@@ -375,7 +377,7 @@ export default {
         })
     },
     getLists: function () { // related to summary review of a finding
-      let params = {
+      const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
@@ -387,6 +389,7 @@ export default {
             this.lastId = parseInt(lists.splice(lists.length - 1, 1)[0].isoqf_id) + 1
           }
           this.table_settings.isBusy = false
+          this.table_settings.totalRows = this.lists.length
         })
         .catch((error) => {
           console.log(error)
@@ -396,7 +399,7 @@ export default {
       this.$refs['add-summarized'].show()
     },
     saveSummarized: function () {
-      let params = {
+      const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         name: this.summarized_review,
@@ -417,7 +420,7 @@ export default {
         })
     },
     createFinding: function (listId, listName) {
-      let params = {
+      const params = {
         organization: this.$route.params.org_id,
         list_id: listId,
         name: listName,
@@ -466,6 +469,11 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    onFiltered (filteredItems) {
+      // Trigger pagination to update the number of buttons/pages due to filtering
+      this.table_settings.totalRows = filteredItems.length
+      this.table_settings.currentPage = 1
     }
   }
 }
