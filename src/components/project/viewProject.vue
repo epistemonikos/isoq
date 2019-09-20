@@ -400,12 +400,13 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         name: this.summarized_review,
-        isoqf_id: this.lastId
+        isoqf_id: this.lastId,
+        cerqual: { option: null, explanation: '' }
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
-          let listId = response.data.id
-          let listName = response.data.name
+          const listId = response.data.id
+          const listName = response.data.name
 
           this.getLists()
           this.createFinding(listId, listName)
@@ -446,7 +447,7 @@ export default {
           }
         }
       }
-      axios.post(`/api/isoqf_findings`, params)
+      axios.post('/api/isoqf_findings', params)
         .then((response) => {
           this.lastId = this.lastId + 1
           // console.log(response)
