@@ -793,7 +793,7 @@ export default {
             this.findings = response.data[0]
           }
           this.evidence_profile = []
-          if (this.findings.hasOwnProperty('evidence_profile')) {
+          if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
             let evidenceProfile = this.findings.evidence_profile
             this.evidence_profile.push(evidenceProfile)
           }
@@ -854,7 +854,7 @@ export default {
         name: this.buffer_modal_stage_one.name,
         evidence_profile: this.buffer_modal_stage_two
       }
-      if (this.findings.hasOwnProperty('id')) {
+      if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
           .then((response) => {
             this.getStageOneData()
@@ -895,7 +895,7 @@ export default {
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
               this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
-              if (!this.characteristics_studies.hasOwnProperty('items')) {
+              if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
                 this.characteristics_studies.items = []
               }
             }
@@ -1060,7 +1060,7 @@ export default {
     },
     saveDataStageFive: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      if (this.extracted_data.hasOwnProperty('edit_index_item')) {
+      if (Object.prototype.hasOwnProperty.call(this.extracted_data, 'edit_index_item')) {
         items[this.extracted_data.edit_index_item] = this.buffer_extracted_data_items
       } else {
         items.push(this.buffer_extracted_data_items)
