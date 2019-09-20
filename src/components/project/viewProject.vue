@@ -34,40 +34,38 @@
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
         <b-col cols="12" class="my-2">
-          <b-row>
-            <b-col
-              cols="12"
-              sm="6">
-              <b-form-group>
-                <b-input-group>
-                  <b-form-input
-                    v-model="table_settings.filter"
-                    type="search"
-                    id="filterInput"
-                    placeholder="Type to Search"></b-form-input>
-                  <b-input-group-append>
-                    <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
-                  </b-input-group-append>
-                </b-input-group>
-              </b-form-group>
-            </b-col>
-            <b-col
-              cols="12"
-              sm="3">
-            </b-col>
-            <b-col
-              cols="12"
-              sm="3">
-              <b-button
-                v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
-                variant="outline-primary"
-                @click="modalAddSummarized"
-                block>
-                Add finding
-              </b-button>
-            </b-col>
-          </b-row>
-
+          <b-card
+            bg-variant="light">
+            <b-row>
+              <b-col
+                cols="12"
+                sm="9">
+                <b-form-group>
+                  <b-input-group>
+                    <b-form-input
+                      v-model="table_settings.filter"
+                      type="search"
+                      id="filterInput"
+                      placeholder="Type to Search"></b-form-input>
+                    <b-input-group-append>
+                      <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                    </b-input-group-append>
+                  </b-input-group>
+                </b-form-group>
+              </b-col>
+              <b-col
+                cols="12"
+                sm="3">
+                <b-button
+                  v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
+                  variant="outline-primary"
+                  @click="modalAddSummarized"
+                  block>
+                  Add finding
+                </b-button>
+              </b-col>
+            </b-row>
+          </b-card>
         </b-col>
         <b-col cols="12">
           <b-table
@@ -472,12 +470,11 @@ export default {
 
 <style scoped>
   div >>>
-    .table thead th {
+    #findings.table thead th {
       width: 24%;
     }
   div >>>
-    .table thead th:first-child {
+    #findings.table thead th:first-child {
       width: 4%;
     }
-
 </style>

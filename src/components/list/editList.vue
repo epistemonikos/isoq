@@ -9,17 +9,16 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="Tip from title attribute">#</small></h2>
-      <p>some explanation</p>
+      <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <h3>{{list.name}}</h3>
       <b-row>
         <b-col
           cols="12">
           <b-form-group>
             <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
-              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Tip from title attribute">Characteristics Studies</span></b-form-checkbox>
-              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Tip from title attribute">Methodological Assessments</span></b-form-checkbox>
-              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Tip from title attribute">Extracted Data</span></b-form-checkbox>
+              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn on to create or add a table with descriptive information about each study contributing to this finding">Characteristics Studies</span></b-form-checkbox>
+              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn on to create or add a table with your methodological assessments (quality/critical appraisal) for each study contributing to this finding">Methodological Assessments</span></b-form-checkbox>
+              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn on to create or add a table with all the extracted data coming from the studies contributing to this finding">Extracted Data</span></b-form-checkbox>
             </b-form-checkbox-group>
           </b-form-group>
         </b-col>
@@ -37,6 +36,11 @@
                 @ok="saveStageOneAndTwo">
                 <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                   <h6>{{$t('Methodological Limitations')}}</h6>
+                  <p class="font-weight-light">
+                    Do you have any concerns about the methodological quality of the contributing studies
+                    that could lower your confidence in the review finding? Explain any concern in your own
+                    words. (tip: Refer to your Methodological Assessments table)
+                  </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.methodological_limitations.option"
                     :options="select_options"
@@ -56,6 +60,12 @@
                 <div v-if="buffer_modal_stage_two.type === 'coherence'">
                   <!-- coherence -->
                   <h6>{{$t('Coherence')}}</h6>
+                  <p class="font-weight-light">
+                    Do you have any concerns about the coherence between the review finding and the
+                    underlying data that could lower your confidence in the review finding? Explain any
+                    concerns in your own words. (tip: refer to your Extracted Data in relation to your review
+                    finding)
+                  </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.coherence.option"
                     :options="select_options"
@@ -75,6 +85,12 @@
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                   <h6>{{$t('Adequacy')}}</h6>
+                  <p class="font-weight-light">
+                    Do you have any concerns about the adequacy of the data supporting the review finding
+                    that could lower your confidnece in the review finding? Explain any concerns in your own
+                    words. (tip: refer to your Characeristics of Studies table and your Extracted Data for this
+                    finding)
+                  </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.adequacy.option"
                     :options="select_options"
@@ -94,6 +110,12 @@
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'relevance'">
                   <h6>{{$t('Relevance')}}</h6>
+                  <p class="font-weight-light">
+                    Do you have any concerns about the relevance of the underlying studies to your review
+                    question that could lower your confidence in the review finding? Explain any concerns in
+                    your won words. (tip: refer to your Characteristics of Studies table and your review
+                    question)
+                  </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.relevance.option"
                     :options="select_options"
@@ -113,11 +135,26 @@
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                   <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
+                  <p class="font-weight-ligth">
+                    To what extent is the review finding a reasonable representation of the phenomenon of
+                    interest? Explain your assessment by making reference to any identified concerns for all 4
+                    components of CERQual
+                  </p>
                   <b-form-radio-group
-                    v-model="buffer_modal_stage_two.cerqual.option"
-                    :options="level_confidence"
-                    name="cerqual"
-                    stacked></b-form-radio-group>
+                    stacked>
+                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="0">
+                      High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                    </b-form-radio>
+                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="1">
+                      Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                    </b-form-radio>
+                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="2">
+                      Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                    </b-form-radio>
+                    <b-form-radio v-model="buffer_modal_stage_two.cerqual.option" name="cerqual" value="3">
+                      Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                    </b-form-radio>
+                  </b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -138,37 +175,37 @@
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
-                  <template slot="HEAD[isoqf_id]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(isoqf_id)="data">
+                    <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[name]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(name)="data">
+                    <span v-b-tooltip.hover title="Synthesised review finding you are applying the CERQual approach to">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[methodological-limit]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(methodological-limit)="data">
+                    <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[coherence]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(coherence)="data">
+                    <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[adequacy]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(adequacy)="data">
+                    <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[relevance]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(relevance)="data">
+                    <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[cerqual]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(cerqual)="data">
+                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
                   </template>
-                  <template slot="HEAD[references]" slot-scope="data">
-                    <span v-b-tooltip.hover title="Tip from title attribute">{{data.label}}</span>
+                  <template v-slot:head(references)="data">
+                    <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
                   </template>
-                  <template slot="[isoqf_id]" slot-scope="data">
+                  <template v-slot:cell(isoqf_id)="data">
                     {{data.item.isoqf_id}}
                   </template>
-                  <template slot="[finding]" slot-scope="data">
+                  <template v-slot:cell(finding)="data">
                     {{data.item.name}}
                   </template>
-                  <template slot="[methodological-limit]" slot-scope="data">
+                  <template v-slot:cell(methodological-limit)="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
@@ -190,7 +227,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="[coherence]" slot-scope="data">
+                  <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
@@ -212,7 +249,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="[adequacy]" slot-scope="data">
+                  <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
@@ -234,7 +271,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="[relevance]" slot-scope="data">
+                  <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
@@ -256,7 +293,7 @@
                       </b-button>
                     </div>
                   </template>
-                  <template slot="[cerqual]" slot-scope="data">
+                  <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.cerqual.option !== null">
                       <p>{{level_confidence[data.item.cerqual.option].text}}</p>
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
@@ -278,7 +315,9 @@
                       </b-button>
                     </div>
                   </template>
-                  <span slot="[references]" slot-scope="data" v-html="data.value"></span>
+                  <template v-slot:cell(references)="data">
+                    <div v-html="data.value"></div>
+                  </template>
                 </b-table>
                 <h5>Progress status</h5>
                 <b-progress
@@ -301,7 +340,7 @@
             <!-- Characteristics of Studies -->
             <!--<b-tab v-bind:title="$t('Characteristics of Studies')">-->
             <div v-if="show.selected.includes('cs')">
-              <h3>{{$t('Characteristics of Studies')}}</h3>
+              <h3>{{$t('Characteristics of Studies')}} <small v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <bc-action-table
@@ -320,7 +359,7 @@
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5">
-                  <template slot="[actions]" slot-scope="row">
+                  <template v-slot:cell(actions)="row">
                     <font-awesome-icon
                       @click="modalDeleteStageThreeItemData(row)"
                       icon="trash"
@@ -383,7 +422,7 @@
             <!-- Methodological Assessments -->
             <!--<b-tab v-bind:title="$t('Methodological Assessments')">-->
             <div v-if="show.selected.includes('ma')">
-              <h3>{{$t('Methodological Assessments')}}</h3>
+              <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <template v-if="stage_four.fields.length">
                 <bc-filters :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <bc-action-table
@@ -403,7 +442,7 @@
                   :items="stage_four.items"
                   :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
-                  <template slot="[actions]" slot-scope="row">
+                  <template v-slot:cell(actions)="row">
                     <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
                     <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
                   </template>
@@ -456,7 +495,7 @@
             <!-- Extracted data -->
             <!--<b-tab v-bind:title="$t('Extracted Data')">-->
             <div v-if="show.selected.includes('ed')">
-              <h3>{{$t('Extracted Data')}}</h3>
+              <h3>{{$t('Extracted Data')}} <small v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
                 <bc-filters :tableSettings="extracted_data_table_settings"></bc-filters>
                 <bc-action-table
@@ -475,7 +514,7 @@
                   :items="extracted_data.items"
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
-                  <template slot="[actions]" slot-scope="data">
+                  <template v-slot:cell(actions)="data">
                     <font-awesome-icon
                       icon="trash"
                       @click="openModalStageFiveRemoveDataItem(data)"
@@ -582,36 +621,36 @@ export default {
       show: {
         selected: [],
         options: [
-          {text: 'Characteristics Studies', value: 'cs'},
-          {text: 'Methodological Assessments', value: 'ma'},
-          {text: 'Extracted Data', value: 'ed'}
+          { text: 'Characteristics Studies', value: 'cs' },
+          { text: 'Methodological Assessments', value: 'ma' },
+          { text: 'Extracted Data', value: 'ed' }
         ]
       },
       /** filters **/
       /** selectors **/
       select_options: [
-        {value: 0, text: 'No/Very minor concerns'},
-        {value: 1, text: 'Minor concerns'},
-        {value: 2, text: 'Moderate concerns'},
-        {value: 3, text: 'Serious concerns'}
+        { value: 0, text: 'No/Very minor concerns' },
+        { value: 1, text: 'Minor concerns' },
+        { value: 2, text: 'Moderate concerns' },
+        { value: 3, text: 'Serious concerns' }
       ],
       level_confidence: [
-        {value: 0, text: 'High confidence'},
-        {value: 1, text: 'Moderate confidence'},
-        {value: 2, text: 'Low confidence'},
-        {value: 3, text: 'Very low confidence'}
+        { value: 0, text: 'High confidence' },
+        { value: 1, text: 'Moderate confidence' },
+        { value: 2, text: 'Low confidence' },
+        { value: 3, text: 'Very low confidence' }
       ],
       /** selectors **/
       /** tables fields **/
       evidence_profile_fields: [
-        {key: 'isoqf_id', label: '#'},
-        {key: 'name', label: 'Finding'},
-        {key: 'methodological-limit', label: 'Methodological limitations'},
-        {key: 'coherence', label: 'Coherence'},
-        {key: 'adequacy', label: 'Adequacy'},
-        {key: 'relevance', label: 'Relevance'},
-        {key: 'cerqual', label: 'CERQual Assessment of confidence'},
-        {key: 'references', label: 'References'}
+        { key: 'isoqf_id', label: '#' },
+        { key: 'name', label: 'Finding' },
+        { key: 'methodological-limit', label: 'Methodological limitations' },
+        { key: 'coherence', label: 'Coherence' },
+        { key: 'adequacy', label: 'Adequacy' },
+        { key: 'relevance', label: 'Relevance' },
+        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'references', label: 'References' }
         /*
         {key: 'actions', label: 'Actions'}
         */
@@ -1075,15 +1114,12 @@ export default {
       width: 2%;
     }
   div >>>
-    #assessment.table thead th {
+    #assessments.table thead th {
       width: 14%;
     }
   div >>>
-    .table tbody span {
+    .table tbody td div li {
       font-size: 0.8rem;
-    }
-  div >>>
-    .table tbody span li {
       padding-top: 0.4rem;
       list-style-type: decimal
     }
