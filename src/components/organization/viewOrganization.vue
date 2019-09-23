@@ -112,6 +112,16 @@
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
+          v-if="buffer_project.published_status"
+          :label="$t('URL or DOI')"
+          label-for="select-project-list-url-doi">
+          <b-input
+            placeholder="https://doi.org/10.1109/5.771073"
+            type="url"
+            id="select-project-list-url-doi"
+            v-model="buffer_project.url_doi"></b-input>
+        </b-form-group>
+        <b-form-group
           :label="$t('Is the iSoQf being completed by the review authors?')"
           label-for="select-project-list-completed-by-author-status">
           <b-select
@@ -189,7 +199,8 @@ export default {
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
-        complete_by_author: false
+        complete_by_author: false,
+        doi_url: null
       },
       tmp_buffer_project_list: {
         id: null,
@@ -205,7 +216,8 @@ export default {
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
-        complete_by_author: false
+        complete_by_author: false,
+        doi_url: null
       },
       buffer_project_list: {
         id: null,

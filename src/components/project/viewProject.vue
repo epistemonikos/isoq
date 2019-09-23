@@ -29,7 +29,8 @@
             <li v-for="(author, index) in project.authors.split(',')" :key="index">{{author.trim()}}</li>
           </ul>
           <h5>Has the review been published</h5>
-          <p>{{(project.published_status) ? 'Yes': 'No'}}</p>
+          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status"><b-link :href="project.url_doi" target="_blank"><font-awesome-icon icon="globe"></font-awesome-icon></b-link></span></p>
+
           <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
