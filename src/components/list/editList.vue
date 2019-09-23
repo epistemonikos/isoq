@@ -2,7 +2,7 @@
   <div class="mt-4">
     <b-container>
       <b-row>
-        <b-col cols="12" class="text-right">
+        <b-col cols="12" class="text-right d-print-none">
           <b-link @click="$router.go(-1)">
             <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
             {{ $t('back') }}
@@ -11,7 +11,8 @@
       </b-row>
       <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <h3>{{list.name}}</h3>
-      <b-row>
+      <b-row
+        class="d-print-none">
         <b-col
           cols="12">
           <b-form-group>
@@ -21,6 +22,20 @@
               <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn on to create or add a table with all the extracted data coming from the studies contributing to this finding">Extracted Data</span></b-form-checkbox>
             </b-form-checkbox-group>
           </b-form-group>
+        </b-col>
+      </b-row>
+      <b-row
+        class="d-print-none justify-content-end">
+        <b-col
+          cols="12"
+          sm="3">
+            <b-button
+              @click="print"
+              variant="outline-info"
+              block>
+              <font-awesome-icon icon="print"></font-awesome-icon>
+              Print
+            </b-button>
         </b-col>
       </b-row>
       <b-row class="mt-5">
@@ -213,7 +228,7 @@
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
@@ -222,7 +237,7 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
@@ -235,7 +250,7 @@
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
@@ -244,7 +259,7 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
@@ -257,7 +272,7 @@
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
@@ -266,7 +281,7 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
@@ -279,7 +294,7 @@
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
@@ -288,7 +303,7 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
@@ -301,7 +316,7 @@
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Edit
@@ -310,7 +325,7 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info"
+                        variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
                         <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
@@ -321,12 +336,12 @@
                     <div v-html="data.value"></div>
                   </template>
                 </b-table>
-                <h5>Progress status</h5>
+                <h5 class="d-print-none">Progress status</h5>
                 <b-progress
                   :max="status_evidence_profile.max"
                   :variant="status_evidence_profile.variant"
                   show-progress
-                  class="mb-3">
+                  class="mb-3 d-print-none">
                   <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
                 </b-progress>
               </template>
@@ -344,8 +359,9 @@
             <div v-if="show.selected.includes('cs')">
               <h3>{{$t('Characteristics of Studies')}} <small v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <template v-if="characteristics_studies.fields.length">
-                <bc-filters :tableSettings="characteristics_studies_table_settings"></bc-filters>
+                <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <bc-action-table
+                  class="d-print-none"
                   :importUrl="`/api/isoqf_characteristics/${characteristics_studies.id}?organization=${characteristics_studies.organization}&list_id=${characteristics_studies.list_id}`"
                   @response-ok-api="getStageThree"
                   :displayDeleteTable="true"
@@ -373,7 +389,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  class="mt-5"
+                  class="mt-5 d-print-none"
                   align="center"
                   v-model="characteristics_studies_table_settings.currentPage"
                   :per-page="characteristics_studies_table_settings.perPage"
@@ -426,8 +442,9 @@
             <div v-if="show.selected.includes('ma')">
               <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <template v-if="stage_four.fields.length">
-                <bc-filters :tableSettings="methodological_assessments_table_settings"></bc-filters>
+                <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <bc-action-table
+                  class="d-print-none"
                   :importUrl="`/api/isoqf_assessments/${stage_four.id}?organization=${stage_four.organization}&list_id=${stage_four.list_id}`"
                   @response-ok-api="getStageFour"
                   :displayDeleteTable="true"
@@ -450,7 +467,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  class="mt-5"
+                  class="mt-5 d-print-none"
                   align="center"
                   v-model="methodological_assessments_table_settings.currentPage"
                   :per-page="methodological_assessments_table_settings.perPage"
@@ -484,7 +501,7 @@
                 <!-- end of -->
               </template>
               <template v-else>
-                <div class="text-center my-5">
+                <div class="text-center my-5 d-print-none">
                   <bc-action-table
                     :displayImport="true"
                     :displayCreateTable="true"
@@ -499,8 +516,9 @@
             <div v-if="show.selected.includes('ed')">
               <h3>{{$t('Extracted Data')}} <small v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
-                <bc-filters :tableSettings="extracted_data_table_settings"></bc-filters>
+                <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <bc-action-table
+                  class="d-print-none"
                   :importUrl="`/api/isoqf_extracted_data/${extracted_data.id}?organization=${extracted_data.organization}&list_id=${extracted_data.list_id}`"
                   @response-ok-api="getStageFive"
                   :displayDeleteTable="true"
@@ -528,7 +546,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  class="mt-5"
+                  class="mt-5 d-print-none"
                   align="center"
                   v-model="extracted_data_table_settings.currentPage"
                   :per-page="extracted_data_table_settings.perPage"
@@ -560,7 +578,7 @@
                 </b-modal>
               </template>
               <template v-else>
-                <div class="text-center my-5">
+                <div class="text-center my-5 d-print-none">
                   <bc-action-table
                     :displayImport="true"
                     :displayCreateTable="true"
@@ -743,6 +761,9 @@ export default {
     this.getList()
   },
   methods: {
+    print: function () {
+      window.print()
+    },
     getList: function () {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
