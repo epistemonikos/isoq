@@ -20,6 +20,21 @@ module.exports = {
         target: 'http://localhost:8080',
         changeOrigin: true,
         logLevel: 'debug'
+      },
+      '/users': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        logLevel: 'debug'
+      },
+      '/create_user': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        logLevel: 'debug'
+      },
+      '/organizations': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        logLevel: 'debug'
       }
     },
 

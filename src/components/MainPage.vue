@@ -3,14 +3,14 @@
     <b-container>
       <b-row>
         <b-col cols="12" md="6">
-          <h2>iSoF Qualy</h2>
+          <h2>iSoQf</h2>
           <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. A fuga tenetur accusantium blanditiis nostrum dicta officia harum repudiandae saepe consectetur id illum, perspiciatis iure nobis qui pariatur eius cupiditate magnam.</p>
         </b-col>
       </b-row>
       <b-row>
         <b-col cols="12" md="4">
           <ul class="unstyled-list">
-            <li>Learn more about iSoF Qualy</li>
+            <li>Learn more about iSoQf</li>
             <li>Browse</li>
           </ul>
         </b-col>

@@ -7,6 +7,8 @@ import Organizations from '@/components/Organizations'
 import ViewOrganization from '@/components/organization/viewOrganization'
 import ViewList from '@/components/list/viewList'
 import EditList from '@/components/list/editList'
+import ViewProject from '@/components/project/viewProject'
+import Browse from '@/components/Browse'
 
 import { Trans } from '@/plugins/Translation'
 
@@ -64,7 +66,8 @@ var routes = [
         name: 'Organizations',
         component: Organizations,
         meta: {
-          title: 'iSoF Qualy - Organizations'
+          title: 'iSoF Qualy - Organizations',
+          requiresAuth: true
         }
       },
       {
@@ -76,11 +79,20 @@ var routes = [
         }
       },
       {
+        path: '/organization/:org_id/project/:id',
+        name: 'viewProject',
+        component: ViewProject,
+        meta: {
+          requiresAuth: true
+        }
+      },
+      {
         path: '/list/:id',
         name: 'viewList',
         component: ViewList,
         meta: {
-          title: 'iSoF Qualy - List'
+          title: 'iSoF Qualy - List',
+          requiresAuth: true
         }
       },
       {
@@ -88,7 +100,16 @@ var routes = [
         name: 'editList',
         component: EditList,
         meta: {
-          title: 'iSoF Qualy - Edit List'
+          title: 'iSoF Qualy - Edit List',
+          requiresAuth: true
+        }
+      },
+      {
+        path: '/browse',
+        name: 'Browse',
+        component: Browse,
+        meta: {
+          title: 'iSoF Qualy - Browse'
         }
       }
     ]

@@ -19,36 +19,46 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
           <b-col cols="12" class="text-right">
-            <b-button variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
+            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <ul class="mt-5">
-          <li class="my-3" v-for="project in org.projects" v-bind:key="project.id">
-            {{project.name}}
-            <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
-            <font-awesome-icon @click="ModalAddList(project.id)" icon="plus-square" pull="right" v-bind:title="$t('Add')" />
-            <ul v-if="project.lists">
-              <li class="my-3" v-for="list in project.lists" v-bind:key="list.id">
-                <b-link :to="{name: 'viewList', params: {id: list.id}}">{{list.name}}</b-link>
-                <font-awesome-icon icon="trash" pull="right" v-bind:title="$t('Remove')" style="color: #dc3545" />
-                <template v-if="list.private">
-                  <font-awesome-icon icon="lock" pull="right" v-bind:title="$t('Private')" class="d-none d-sm-block" />
-                </template>
-                <template v-else>
-                  <font-awesome-icon icon="globe" pull="right" v-bind:title="$t('Public')" class="d-none d-sm-block" />
-                </template>
-                <font-awesome-icon icon="clone" pull="right" v-bind:title="$t('Clone')" class="d-none d-sm-block" />
-                <b-link :to="{name: 'editList', params: {id: list.id}}"><font-awesome-icon icon="edit" pull="right" v-bind:title="$t('Edit')"/></b-link>
-              </li>
-            </ul>
+          <li class="my-3" v-for="(project, index) in org.projects" v-bind:key="index">
+            <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: project.id}}">{{project.name}}</b-link>
+            <font-awesome-icon
+              icon="trash"
+              pull="right"
+              v-bind:title="$t('Remove')"
+              @click="modalRemoveProject(project)" />
+            <!--
+            <font-awesome-icon
+              icon="plus-square"
+              pull="right"
+              v-bind:title="$t('Add')"
+              @click="ModalAddList(project.id)" />
+            -->
+            <font-awesome-icon
+              icon="edit"
+              pull="right"
+              title="Edit"
+              @click="openModalEditProject(project)" />
+            <font-awesome-icon
+              v-if="!project.private"
+              icon="globe"
+              pull="right"
+              title="Public"
+              />
           </li>
         </ul>
       </div>
       <!-- modals -->
       <b-modal
+        scrollable
         id="new-project"
         ref="new-project"
-        @ok="AddProject">
+        :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
+        @ok="AddProject"
+        @cancel="closeModalProject">
         <b-alert
           :show="ui.dismissCounters.dismissCountDown"
           @dismiss-count-down="countDownChanged"
@@ -58,53 +68,15 @@
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
         <b-form-group
-          :label="$t('Project name')"
-          label-for="input-project-name">
-          <b-form-input
-            id="input-project-name"
-            type="text"
-            required
-            :placeholder="$t('Project name')"
-            v-model="buffer_project.name"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Description')"
-          label-for="input-project-description">
-          <b-form-textarea
-            id="input-project-description"
-            :placeholder="$t('Enter a description')"
-            v-model="buffer_project.description"></b-form-textarea>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Visible')"
-          label-for="select-project-status">
-          <b-select
-            id="select-project-status"
-            v-model="buffer_project.private"
-            :options="global_status"></b-select>
-        </b-form-group>
-      </b-modal>
-      <b-modal
-        id="new-project-list"
-        ref="new-project-list"
-        @ok="AddProjectList">
-        <b-alert
-          :show="ui.dismissCounters.dismissCountDown"
-          @dismiss-count-down="countDownChanged"
-          variant="danger"
-          v-if="ui.error.status">
-            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
-            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
-          </b-alert>
-        <b-form-group
-          :label="$t('Project name')"
-          label-for="input-project-list-name">
+          :label="$t('Title of review')"
+          label-for="input-project-list-name"
+          description="Insert the title that you plan to use for this report or paper.">
           <b-form-input
             id="input-project-list-name"
             type="text"
             required
-            :placeholder="$t('Project name')"
-            v-model="buffer_project_list.name"></b-form-input>
+            :placeholder="$t('Title of review')"
+            v-model="buffer_project.name"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Description')"
@@ -112,24 +84,82 @@
           <b-form-textarea
             id="input-project-list-description"
             :placeholder="$t('Enter a description')"
-            v-model="buffer_project_list.description"></b-form-textarea>
+            v-model="buffer_project.description"></b-form-textarea>
         </b-form-group>
         <b-form-group
           :label="$t('Authors')"
-          label-for="input-project-authors">
+          label-for="input-project-authors"
+          description="First then last name of all authors separated by commas">
           <b-form-input
             id="input-project-authors"
-            :placeholder="$t('Insert authors separated by commas')"
+            :placeholder="$t('Authors of review')"
             v-model="buffer_project.authors"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Review question')"
+          label-for="input-project-review-question">
+          <b-form-input
+            id="input-project-review-question"
+            :placeholder="$t('Insert main question that the review addresses')"
+            v-model="buffer_project.review_question"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Has this review been published?')"
+          label-for="select-project-list-published-status">
+          <b-select
+            id="select-project-list-published-status"
+            v-model="buffer_project.published_status"
+            :options="yes_or_no"></b-select>
+        </b-form-group>
+        <b-form-group
+          v-if="buffer_project.published_status"
+          :label="$t('URL or DOI')"
+          label-for="select-project-list-url-doi">
+          <b-input
+            placeholder="https://doi.org/10.1109/5.771073"
+            type="url"
+            id="select-project-list-url-doi"
+            v-model="buffer_project.url_doi"></b-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Is the iSoQf being completed by the review authors?')"
+          label-for="select-project-list-completed-by-author-status">
+          <b-select
+            id="select-project-list-completed-by-author-status"
+            v-model="buffer_project.complete_by_author"
+            :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
           :label="$t('Visible')"
           label-for="select-project-list-status">
           <b-select
             id="select-project-list-status"
-            v-model="buffer_project_list.private"
+            v-model="buffer_project.private"
             :options="global_status"></b-select>
         </b-form-group>
+      </b-modal>
+      <b-modal
+        id="new-project-list"
+        ref="new-project-list"
+        :title="(buffer_project_list.id) ? 'Edit summarized review finding' : 'New summarized review finding'"
+        @ok="AddOrUpdateProjectList"
+        @hidden="cleanProjectList">
+        <b-form-group
+          label="Summarized review"
+          label-for="summarized-review">
+          <b-form-input
+            id="summarized-review"
+            placeholder="Enter a summarized review finding"
+            v-model="buffer_project_list.name"></b-form-input>
+        </b-form-group>
+      </b-modal>
+      <b-modal
+        id="modal-remove-project"
+        ref="modal-remove-project"
+        title="Delete project"
+        @ok="removeProject"
+        @cancel="cleanProject">
+        <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
       </b-modal>
     </b-container>
   </div>
@@ -157,34 +187,43 @@ export default {
         { value: false, text: 'public' },
         { value: true, text: 'private' }
       ],
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ],
       tmp_buffer_project: {
         id: null,
         name: '',
         description: '',
-        private: true
+        private: true,
+        organization: this.$route.params.id,
+        review_question: '',
+        published_status: false,
+        complete_by_author: false,
+        doi_url: null
       },
       tmp_buffer_project_list: {
         id: null,
         name: '',
-        description: '',
-        private: true,
-        project_id: '',
-        organization: ''
+        organization: this.$route.params.id,
+        project_id: ''
       },
       buffer_project: {
         id: null,
         name: '',
         description: '',
         private: true,
-        organization: '7b9c88ec182ca383'
+        organization: this.$route.params.id,
+        review_question: '',
+        published_status: false,
+        complete_by_author: false,
+        doi_url: null
       },
       buffer_project_list: {
         id: null,
         name: '',
-        description: '',
-        private: true,
-        project_id: '',
-        organization: ''
+        organization: this.$route.params.id,
+        project_id: ''
       },
       org: {
         _id: '',
@@ -204,70 +243,74 @@ export default {
   },
   mounted () {
     this.getOrganization()
-    this.getProjectsAndLists()
   },
   methods: {
     getOrganization: function () {
       axios.get(`/api/organizations/${this.$route.params.id}`)
         .then((response) => {
           this.org = {...response.data}
+          this.getProjectsAndLists()
         })
         .catch((error) => {
           console.log(error)
         })
     },
     AddProject: function () {
-      axios.defaults.withCredentials = true
-      axios.defaults.headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': document.location.origin
+      if (this.buffer_project.id) {
+        delete this.buffer_project.lists
+        axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
+          .then((response) => {
+            this.buffer_project = this.tmp_buffer_project
+            this.getProjectsAndLists()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios.post('/api/isoqf_projects', this.buffer_project)
+          .then((response) => {
+            this.buffer_project = this.tmp_buffer_project
+            this.$refs['new-project'].hide()
+            this.getProjectsAndLists()
+          })
+          .catch((error) => {
+            this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
+            console.log('error', error)
+            this.$refs['new-project'].show()
+          })
       }
-      axios.post('/api/isoqf_projects', this.buffer_project, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': document.location.origin
-        }
-      })
-        .then((response) => {
-          this.buffer_project = this.tmp_buffer_project
-          this.$refs['new-project'].hide()
-          this.getProjectsAndLists()
-        })
-        .catch((error) => {
-          this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-          console.log('error', error)
-          this.$refs['new-project'].show()
-        })
     },
     countDownChanged (dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
     },
     ModalAddList: function (idProject) {
       this.buffer_project_list.project_id = idProject
-      this.buffer_project_list.organization = this.$route.params.id
       this.$refs['new-project-list'].show()
     },
-    AddProjectList: function () {
-      axios.post('/api/isoqf_lists', this.buffer_project_list, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': document.location.origin
-        }
-      })
-        .then((response) => {
-          this.buffer_project = this.tmp_buffer_project
-          this.$refs['new-project-list'].hide()
-          // get project lists
-          this.buffer_project_list = this.tmp_buffer_project_list
-          this.getProjectsAndLists()
+    AddOrUpdateProjectList: function () {
+      if (this.buffer_project_list.id) {
+        this.updateProjectList()
+      } else {
+        axios.post('/api/isoqf_lists', this.buffer_project_list, {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': document.location.origin
+          }
         })
-        .catch((error) => {
-          this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-          console.log('error list', error)
-          this.$refs['new-project-list'].show()
-        })
+          .then((response) => {
+            this.buffer_project = this.tmp_buffer_project
+            this.$refs['new-project-list'].hide()
+            // get project lists
+            this.buffer_project_list = this.tmp_buffer_project_list
+            this.getProjectsAndLists()
+          })
+          .catch((error) => {
+            this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
+            console.log('error list', error)
+            this.$refs['new-project-list'].show()
+          })
+      }
     },
     getProjectsAndLists: function () {
       axios.all([
@@ -295,6 +338,52 @@ export default {
           }
         })
       }))
+    },
+    editProjectList: function (projectPosition, listPosition) {
+      this.buffer_project_list = JSON.parse(JSON.stringify(this.org.projects[projectPosition].lists[listPosition]))
+      this.$refs['new-project-list'].show()
+    },
+    cleanProjectList: function () {
+      this.buffer_project_list = this.tmp_buffer_project_list
+    },
+    cleanProject: function () {
+      this.buffer_project = this.tmp_buffer_project
+    },
+    updateProjectList: function () {
+      axios.patch(`/api/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
+        .then((response) => {
+          this.buffer_project = this.tmp_buffer_project
+          this.buffer_project_list = this.tmp_buffer_project_list
+          this.getProjectsAndLists()
+          this.$refs['new-project-list'].hide()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    closeModalProject: function () {
+      this.buffer_project = this.tmp_buffer_project
+    },
+    openModalEditProject: function (project) {
+      this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.$refs['new-project'].show()
+    },
+    modalRemoveProject: function (project) {
+      this.org.remove_project_id = project.id
+      this.buffer_project = project
+      this.$refs['modal-remove-project'].show()
+    },
+    removeProject: function () {
+      axios.delete(`/api/isoqf_projects/${this.org.remove_project_id}`)
+        .then((response) => {
+          this.buffer_project = this.tmp_buffer_project
+          delete this.org.remove_project_id
+          this.getOrganization()
+          this.getProjectsAndLists()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
