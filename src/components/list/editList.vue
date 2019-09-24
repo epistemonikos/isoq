@@ -784,23 +784,28 @@ export default {
         })
     },
     getReferences: function () {
-      axios.get(`/api/isoqf_references?organization=${this.list.organization}&list_id=${this.list.id}`)
-        .then((response) => {
-          if (response.data.length) {
-            let resources = response.data
-            let authors = ''
-            for (let resource of resources) {
-              if (resource.authors.length === 1) {
-                authors += '<li>' + resource.authors[0] + '. ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
-              } else if (resource.authors.length < 3) {
-                authors += '<li>' + resource.authors[0] + ', ' + resource.authors[1] + '. ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
+      let promises = []
+      for (let ref of this.list.references) {
+        promises.push(axios.get(`/api/isoqf_references/${ref}`))
+      }
+      axios.all(promises)
+        .then(axios.spread((...responses) => {
+          let authors = ''
+          for (let response of responses) {
+            const reference = response.data
+
+            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+              if (reference.authors.length === 1) {
+                authors += '<li>' + reference.authors[0] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
+              } else if (reference.authors.length < 3) {
+                authors += '<li>' + reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
               } else {
-                authors += '<li>' + resource.authors[0] + ' et al., ' + resource.title + '. ' + resource.publication_year + '; ' + resource.volume_number + ' ' + resource.start_page + ' p.' + '</li>'
+                authors += '<li>' + reference.authors[0] + ' et al., ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
               }
             }
-            this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
           }
-        })
+          this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
+        }))
         .catch((error) => {
           console.log(error)
         })

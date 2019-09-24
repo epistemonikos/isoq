@@ -40,7 +40,7 @@
             <b-row>
               <b-col
                 cols="12"
-                sm="9">
+                sm="6">
                 <b-form-group>
                   <b-input-group>
                     <b-form-input
@@ -53,6 +53,16 @@
                     </b-input-group-append>
                   </b-input-group>
                 </b-form-group>
+              </b-col>
+              <b-col
+                cols="12"
+                sm="3">
+                <b-button
+                  variant="outline-primary"
+                  block
+                  @click="openModalReferencesSingle">
+                  Import references
+                </b-button>
               </b-col>
               <b-col
                 cols="12"
@@ -109,7 +119,7 @@
               <b-button
                 v-b-tooltip.hover title="Add the references that contribute to this review finding"
                 variant="outline-info"
-                @click="openModalReferences(data.item.id)">
+                @click="openModalReferences(data.index)">
                   <font-awesome-icon icon="highlighter"></font-awesome-icon>
                   Add references
               </b-button>
@@ -166,6 +176,26 @@
                 plain
                 @change="loadRefs($event)"></b-form-file>
             </b-form-group>
+          </b-modal>
+          <b-modal
+            id="modal-references-list"
+            ref="modal-references-list"
+            title="Select references"
+            @ok="saveReferencesList">
+            <div
+              class="mt-2"
+              v-if="references.length">
+              <b-form-group>
+                <b-form-checkbox
+                  v-for="ref in references"
+                  v-model="selected_references"
+                  :key="ref.id"
+                  :value="ref.id"
+                  name="references">
+                  {{ ref.title }}
+                </b-form-checkbox>
+              </b-form-group>
+            </div>
           </b-modal>
         </b-col>
       </b-row>
@@ -246,7 +276,8 @@ export default {
           },
           { key: 'publication_year', label: 'Year' }
         ],
-      selected_list_id: '',
+      selected_list_index: null,
+      selected_references: [],
       lastId: 1
     }
   },
@@ -345,10 +376,10 @@ export default {
       let axiosArray = []
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
-        ref.list_id = this.selected_list_id
+        ref.project_id = this.$route.params.id
         let newPromise = axios({
           method: 'POST',
-          url: `/api/isoqf_references?organization=${this.$route.params.org_id}`,
+          url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
           data: ref
         })
         axiosArray.push(newPromise)
@@ -356,7 +387,7 @@ export default {
       axios.all(axiosArray)
         .then(axios.spread((...responses) => {
           responses.forEach(res => console.log('Success'))
-          console.log('submitted all axios calls')
+          // console.log('submitted all axios calls')
           this.pre_references = ''
           this.references = []
         }))
@@ -388,6 +419,11 @@ export default {
           if (this.lists.length) {
             let lists = JSON.parse(JSON.stringify(this.lists))
             this.lastId = parseInt(lists.splice(lists.length - 1, 1)[0].isoqf_id) + 1
+            for (let list of this.lists) {
+              if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
+                list.references = []
+              }
+            }
           }
           this.table_settings.isBusy = false
           this.table_settings.totalRows = this.lists.length
@@ -405,7 +441,8 @@ export default {
         project_id: this.$route.params.id,
         name: this.summarized_review,
         isoqf_id: this.lastId,
-        cerqual: { option: null, explanation: '' }
+        cerqual: { option: null, explanation: '' },
+        references: []
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
@@ -449,7 +486,8 @@ export default {
             explanation: '',
             option: null
           }
-        }
+        },
+        references: []
       }
       axios.post('/api/isoqf_findings', params)
         .then((response) => {
@@ -460,15 +498,38 @@ export default {
           console.log(error)
         })
     },
-    openModalReferences: function (listId) {
-      this.selected_list_id = listId
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&list_id=${listId}`)
+    openModalReferencesSingle: function () {
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
           this.$refs['modal-references'].show()
         })
         .catch((error) => {
           console.log(error)
+        })
+    },
+    openModalReferences: function (index) {
+      this.selected_list_index = index
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          this.references = response.data
+          this.selected_references = this.lists[this.selected_list_index].references
+          this.$refs['modal-references-list'].show()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    saveReferencesList: function () {
+      this.table_settings.isBusy = true
+      const params = {
+        references: this.selected_references
+      }
+      axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
+        .then((response) => {
+          this.selected_references = []
+          this.selected_list_index = null
+          this.getLists()
         })
     },
     onFiltered (filteredItems) {
