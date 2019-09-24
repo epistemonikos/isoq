@@ -154,7 +154,8 @@
             id="modal-references"
             ref="modal-references"
             title="Add references"
-            @ok="saveReferences">
+            @ok="saveReferences"
+            scrollable>
             <div
               class="mt-2"
               v-if="references.length">
