@@ -499,7 +499,7 @@ export default {
         })
     },
     openModalReferencesSingle: function () {
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project=${this.$route.params.id}`)
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
           this.$refs['modal-references'].show()
