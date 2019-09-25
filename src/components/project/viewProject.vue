@@ -184,7 +184,8 @@
             id="modal-references-list"
             ref="modal-references-list"
             title="Select references"
-            @ok="saveReferencesList">
+            @ok="saveReferencesList"
+            size="lg">
             <div
               class="mt-2"
               v-if="references.length">
@@ -195,9 +196,14 @@
                   :key="ref.id"
                   :value="ref.id"
                   name="references">
-                  {{ ref.title }}
+                  {{ getDataDisplayRef(ref) }}
                 </b-form-checkbox>
               </b-form-group>
+            </div>
+            <div
+              class="mt-2"
+              v-if="references.length === 0">
+              <p>To select references, first upload your full reference list by clicking “Import References” next to the search bar.</p>
             </div>
           </b-modal>
         </b-col>
@@ -270,8 +276,8 @@ export default {
             formatter: value => {
               if (value.length === 1) {
                 return value[0]
-              } else if (value.length < 2) {
-                return value[0] + ',' + value[1]
+              } else if (value.length < 3) {
+                return value[0] + ', ' + value[1]
               } else {
                 return value[0] + ' et al.'
               }
@@ -358,6 +364,21 @@ export default {
     }
   },
   methods: {
+    getDataDisplayRef: function (reference) {
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length) {
+          if (reference.authors.length === 1) {
+            return reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+          } else if (reference.authors.length < 3) {
+            return reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+          } else {
+            return reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+          }
+        }
+      } else {
+        return ''
+      }
+    },
     getConfidence: function (value, key, item) {
       if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
         if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
