@@ -68,6 +68,7 @@
                 cols="12"
                 sm="3">
                 <b-button
+                  class="mt-2 mt-sm-0"
                   v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
                   variant="outline-primary"
                   @click="modalAddSummarized"
@@ -80,6 +81,7 @@
         </b-col>
         <b-col cols="12">
           <b-table
+            responsive
             id="findings"
             :fields="fields"
             :items="lists"
@@ -121,7 +123,7 @@
                 variant="outline-info"
                 @click="openModalReferences(data.index)">
                   <font-awesome-icon icon="highlighter"></font-awesome-icon>
-                  Add references
+                  Select references
               </b-button>
             </template>
             <template v-slot:table-busy>
