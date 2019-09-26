@@ -117,7 +117,9 @@
             <template v-slot:cell(explanation)="data">
               {{ data.item.cerqual.explanation }}
             </template>
+            <!--
             <template v-slot:cell(references)="data">
+              {{ displayReferences(data.item.references) }}
               <b-button
                 v-b-tooltip.hover title="Add the references that contribute to this review finding"
                 variant="outline-info"
@@ -126,6 +128,7 @@
                   Select references
               </b-button>
             </template>
+            -->
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
                 <b-spinner class="align-middle"></b-spinner>
@@ -243,7 +246,8 @@ export default {
         },
         {
           key: 'references',
-          label: 'References'
+          label: 'References',
+          formatter: 'displayReferences'
         }
       ],
       table_settings: {
@@ -364,6 +368,36 @@ export default {
     }
   },
   methods: {
+    displayReferences: function (references) {
+      let promises = []
+      for (let ref of references) {
+        promises.push(axios.get(`/api/isoqf_references/${ref}`))
+      }
+      console.log(promises)
+      axios.all(promises)
+        .then( (responses) => {
+          for (let response of responses) {
+            const reference = response.data
+            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+              if (reference.authors.length === 1) {
+                console.log('a', reference.authors[0])
+                return reference.authors[0] + '. ' + reference.publication_year + '; '
+              } else if (reference.authors.length < 3) {
+                console.log('b')
+                return reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.publication_year + '; '
+              } else {
+                console.log('c')
+                return reference.authors[0] + ' et al., ' + reference.publication_year + '; '
+              }
+            } else {
+              return ''
+            }
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     getDataDisplayRef: function (reference) {
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length) {
