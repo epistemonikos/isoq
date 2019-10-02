@@ -39,8 +39,7 @@
             bg-variant="light">
             <b-row>
               <b-col
-                cols="12"
-                sm="6">
+                cols="12">
                 <b-form-group>
                   <b-input-group>
                     <b-form-input
@@ -54,9 +53,26 @@
                   </b-input-group>
                 </b-form-group>
               </b-col>
+            </b-row>
+            <b-row>
               <b-col
                 cols="12"
-                sm="3">
+                sm="4">
+                <b-dropdown
+                  id="export-button"
+                  class="btn-block"
+                  variant="outline-primary"
+                  split
+                  text="Export to">
+                  <b-dropdown-item>MS Word</b-dropdown-item>
+                  <b-dropdown-item>Cochrane</b-dropdown-item>
+                  <b-dropdown-item>GRADE</b-dropdown-item>
+                </b-dropdown>
+              </b-col>
+              <b-col
+                class="mt-2 mt-sm-0"
+                cols="12"
+                sm="4">
                 <b-button
                   variant="outline-primary"
                   block
@@ -65,10 +81,10 @@
                 </b-button>
               </b-col>
               <b-col
+                class="mt-2 mt-sm-0"
                 cols="12"
-                sm="3">
+                sm="4">
                 <b-button
-                  class="mt-2 mt-sm-0"
                   v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
                   variant="outline-primary"
                   @click="modalAddSummarized"
@@ -573,5 +589,13 @@ export default {
   div >>>
     #findings.table thead th:first-child {
       width: 4%;
+    }
+  div >>>
+    #export-button button:first-child {
+      width: 100%
+    }
+  div >>>
+    #export-button ul {
+      width: 100%
     }
 </style>
