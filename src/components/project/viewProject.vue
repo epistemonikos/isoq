@@ -233,9 +233,16 @@ export default {
           label: 'Summarized review finding'
         },
         {
-          key: 'confidence',
+          key: 'cerqual_option',
           label: 'CERQual Assessment of confidence',
-          formatter: 'getConfidence'
+          formatter: (value, key, item) => {
+            if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
+              if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && value != null) {
+                return this.cerqual_confidence[value].text
+              }
+            }
+          },
+          filterByFormatted: true
         },
         {
           key: 'explanation',
@@ -379,14 +386,6 @@ export default {
         return ''
       }
     },
-    getConfidence: function (value, key, item) {
-      if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
-        if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
-          return this.cerqual_confidence[item.cerqual.option].text
-        }
-      }
-      return ''
-    },
     loadRefs: function (event) {
       const file = event.target.files[0]
       const reader = new FileReader()
@@ -447,6 +446,7 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
+              list.cerqual_option = list.cerqual.option
             }
           }
           this.table_settings.isBusy = false
