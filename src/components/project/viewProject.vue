@@ -92,7 +92,7 @@
             :per-page="table_settings.perPage"
             :filter="table_settings.filter"
             @filtered="onFiltered"
-            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'explanation']"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation']"
           >
             <template v-slot:head(isoqf_id)="data">
               <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
@@ -103,7 +103,7 @@
             <template v-slot:head(confidence)="data">
               <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
             </template>
-            <template v-slot:head(explanation)="data">
+            <template v-slot:head(cerqual_explanation)="data">
               <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
             </template>
             <template v-slot:head(references)="data">
@@ -115,8 +115,8 @@
             <template v-slot:cell(name)="data">
               <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
             </template>
-            <template v-slot:cell(explanation)="data">
-              {{ data.item.cerqual.explanation }}
+            <template v-slot:cell(cerqual_explanation)="data">
+              {{ data.item.cerqual_explanation }}
             </template>
             <template v-slot:cell(references)="data">
               <b-button
@@ -246,7 +246,7 @@ export default {
           filterByFormatted: true
         },
         {
-          key: 'explanation',
+          key: 'cerqual_explanation',
           label: 'Explanation of CERQual Assessment'
         },
         {
@@ -448,6 +448,7 @@ export default {
                 list.references = []
               }
               list.cerqual_option = list.cerqual.option
+              list.cerqual_explanation = list.cerqual.explanation
             }
           }
           this.table_settings.isBusy = false
