@@ -92,21 +92,22 @@
             :per-page="table_settings.perPage"
             :filter="table_settings.filter"
             @filtered="onFiltered"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'explanation']"
           >
             <template v-slot:head(isoqf_id)="data">
-              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">#</span>
+              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
             </template>
             <template v-slot:head(name)="data">
-              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
             </template>
             <template v-slot:head(confidence)="data">
-              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
             </template>
             <template v-slot:head(explanation)="data">
-              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
             </template>
             <template v-slot:head(references)="data">
-              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
             </template>
             <template v-slot:cell(isoqf_id)="data">
               {{ data.item.isoqf_id }}
@@ -226,7 +227,7 @@ export default {
       fields: [
         {
           key: 'isoqf_id',
-          label: '##'
+          label: '#'
         },
         {
           key: 'name',
