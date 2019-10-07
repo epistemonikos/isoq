@@ -379,8 +379,8 @@ export default {
   },
   methods: {
     parseReference: (reference) => {
+      let result = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        let result = ''
         if (reference.authors.length === 1) {
           result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
         } else if (reference.authors.length < 3) {
@@ -403,7 +403,7 @@ export default {
       if (_references.length) {
         let result = ''
         for (let ref of _references) {
-          result = result  + ref + '\r\n'
+          result = result + ref + '\r\n'
         }
         return result
       }
