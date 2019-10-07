@@ -193,7 +193,8 @@
             ref="modal-references-list"
             title="Select references"
             @ok="saveReferencesList"
-            size="lg">
+            size="lg"
+            scrollable>
             <div
               class="mt-2"
               v-if="references.length">
