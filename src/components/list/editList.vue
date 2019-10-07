@@ -1149,7 +1149,7 @@ export default {
     .table tbody td div li {
       font-size: 0.8rem;
       padding-top: 0.4rem;
-      list-style-type: decimal
+      list-style-type: none;
     }
   div >>>
     #characteristics.table thead th:last-child {

@@ -130,8 +130,8 @@
                 @click="openModalReferences(data.index)"
                 v-b-tooltip.hover
                 title="Add the references that contribute to this review finding"></font-awesome-icon>
-              <font-awesome-icon
-                icon="edit"></font-awesome-icon>
+              <!--<font-awesome-icon
+                icon="edit"></font-awesome-icon>-->
             </template>
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
@@ -623,5 +623,11 @@ export default {
   div >>>
     #findings.table thead th:first-child {
       width: 4%;
+    }
+  div >>>
+    #findings.table tbody td li {
+      font-size: 0.8rem;
+      padding-top: 0.4rem;
+      list-style-type: none;
     }
 </style>
