@@ -119,6 +119,12 @@
             <template v-slot:cell(cerqual_explanation)="data">
               {{ data.item.cerqual_explanation }}
             </template>
+            <template v-slot:cell(ref_list)="data">
+              <li
+                v-for="(key, index) in data.item.ref_list">
+                {{ data.item.ref_list[index] }}
+              </li>
+            </template>
             <template v-slot:cell(actions)="data">
               <font-awesome-icon icon="highlighter"
                 @click="openModalReferences(data.index)"
@@ -250,9 +256,8 @@ export default {
           label: 'Explanation of CERQual Assessment'
         },
         {
-          key: 'references',
-          label: 'References',
-          formatter: 'displayReferences'
+          key: 'ref_list',
+          label: 'References'
         },
         {
           key: 'actions',
@@ -482,6 +487,14 @@ export default {
               }
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
+              list.ref_list = []
+              for (let r of this.references) {
+                for (let ref of list.references) {
+                  if (ref === r.id) {
+                    list.ref_list.push(this.parseReference(r))
+                  }
+                }
+              }
             }
           }
           this.table_settings.isBusy = false
