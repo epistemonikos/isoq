@@ -83,6 +83,7 @@
           <b-table
             responsive
             id="findings"
+            ref="findings"
             :fields="fields"
             :items="lists"
             empty-text="There are no findings to show"
@@ -199,7 +200,7 @@
                   :key="ref.id"
                   :value="ref.id"
                   name="references">
-                  {{ getDataDisplayRef(ref) }}
+                  {{ getDataDisplayRef(ref) }} ****
                 </b-form-checkbox>
               </b-form-group>
             </div>
@@ -295,6 +296,7 @@ export default {
     }
   },
   mounted () {
+    this.openModalReferencesSingle(false)
     this.getProject()
   },
   watch: {
@@ -368,50 +370,27 @@ export default {
     }
   },
   methods: {
-    displayReferences: function (references) {
-      let promises = []
-      for (let ref of references) {
-        promises.push(axios.get(`/api/isoqf_references/${ref}`))
-      }
-      console.log(promises)
-      axios.all(promises)
-        .then( (responses) => {
-          for (let response of responses) {
-            const reference = response.data
-            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              if (reference.authors.length === 1) {
-                console.log('a', reference.authors[0])
-                return reference.authors[0] + '. ' + reference.publication_year + '; '
-              } else if (reference.authors.length < 3) {
-                console.log('b')
-                return reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.publication_year + '; '
-              } else {
-                console.log('c')
-                return reference.authors[0] + ' et al., ' + reference.publication_year + '; '
-              }
-            } else {
-              return ''
-            }
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    getDataDisplayRef: function (reference) {
+    parseReference: (reference) => {
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            return reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
-          } else if (reference.authors.length < 3) {
-            return reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
-          } else {
-            return reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
-          }
+        if (reference.authors.length === 1) {
+          return reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+        } else if (reference.authors.length < 3) {
+          return reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+        } else {
+          return reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
         }
       } else {
         return ''
       }
+    },
+    displayReferences: function (value, key, references) {
+      for (let reference of value) {
+        let obj = this.references.find(o => o.id === reference)
+        return this.parseReference(obj)
+      }
+    },
+    getDataDisplayRef: function (reference) {
+      this.parseReference(reference)
     },
     getConfidence: function (value, key, item) {
       if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
@@ -556,11 +535,13 @@ export default {
           console.log(error)
         })
     },
-    openModalReferencesSingle: function () {
+    openModalReferencesSingle: function (showModal) {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
-          this.$refs['modal-references'].show()
+          if (showModal) {
+            this.$refs['modal-references'].show()
+          }
         })
         .catch((error) => {
           console.log(error)
