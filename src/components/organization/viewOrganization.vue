@@ -218,7 +218,7 @@ export default {
         published_status: false,
         complete_by_author: false,
         doi_url: null,
-        authors: ""
+        authors: ''
       },
       buffer_project_list: {
         id: null,
