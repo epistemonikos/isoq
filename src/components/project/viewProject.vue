@@ -121,7 +121,8 @@
             </template>
             <template v-slot:cell(ref_list)="data">
               <li
-                v-for="(key, index) in data.item.ref_list">
+                v-for="(key, index) in data.item.ref_list"
+                :key="key">
                 {{ data.item.ref_list[index] }}
               </li>
             </template>
