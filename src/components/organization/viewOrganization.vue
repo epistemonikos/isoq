@@ -217,7 +217,8 @@ export default {
         review_question: '',
         published_status: false,
         complete_by_author: false,
-        doi_url: null
+        doi_url: null,
+        authors: ""
       },
       buffer_project_list: {
         id: null,

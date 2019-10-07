@@ -25,8 +25,8 @@
         </b-col>
         <b-col cols="12" sm="6">
           <h5>Authors of the review</h5>
-          <ul>
-            <li v-for="(author, index) in project.authors.split(',')" :key="index">{{author.trim()}}</li>
+          <ul v-if="Object.prototype.hasOwnProperty(project, 'authors')">
+            <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
           </ul>
           <h5>Has the review been published</h5>
           <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status"><b-link :href="project.url_doi" target="_blank"><font-awesome-icon icon="globe"></font-awesome-icon></b-link></span></p>
