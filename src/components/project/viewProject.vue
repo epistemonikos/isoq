@@ -93,21 +93,22 @@
             :per-page="table_settings.perPage"
             :filter="table_settings.filter"
             @filtered="onFiltered"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation']"
           >
             <template v-slot:head(isoqf_id)="data">
-              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">#</span>
+              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
             </template>
             <template v-slot:head(name)="data">
-              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
             </template>
             <template v-slot:head(confidence)="data">
-              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
             </template>
-            <template v-slot:head(explanation)="data">
-              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{data.label}}</span>
+            <template v-slot:head(cerqual_explanation)="data">
+              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
             </template>
             <template v-slot:head(references)="data">
-              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{data.label}}</span>
+              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
             </template>
             <template v-slot:cell(isoqf_id)="data">
               {{ data.item.isoqf_id }}
@@ -115,21 +116,17 @@
             <template v-slot:cell(name)="data">
               <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
             </template>
-            <template v-slot:cell(explanation)="data">
-              {{ data.item.cerqual.explanation }}
+            <template v-slot:cell(cerqual_explanation)="data">
+              {{ data.item.cerqual_explanation }}
             </template>
-            <!--
-            <template v-slot:cell(references)="data">
-              {{ displayReferences(data.item.references) }}
-              <b-button
-                v-b-tooltip.hover title="Add the references that contribute to this review finding"
-                variant="outline-info"
-                @click="openModalReferences(data.index)">
-                  <font-awesome-icon icon="highlighter"></font-awesome-icon>
-                  Select references
-              </b-button>
+            <template v-slot:cell(actions)="data">
+              <font-awesome-icon icon="highlighter"
+                @click="openModalReferences(data.index)"
+                v-b-tooltip.hover
+                title="Add the references that contribute to this review finding"></font-awesome-icon>
+              <font-awesome-icon
+                icon="edit"></font-awesome-icon>
             </template>
-            -->
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
                 <b-spinner class="align-middle"></b-spinner>
@@ -200,7 +197,7 @@
                   :key="ref.id"
                   :value="ref.id"
                   name="references">
-                  {{ getDataDisplayRef(ref) }} ****
+                  {{ getDataDisplayRef(ref) }}
                 </b-form-checkbox>
               </b-form-group>
             </div>
@@ -230,25 +227,36 @@ export default {
       fields: [
         {
           key: 'isoqf_id',
-          label: '##'
+          label: '#'
         },
         {
           key: 'name',
           label: 'Summarized review finding'
         },
         {
-          key: 'confidence',
+          key: 'cerqual_option',
           label: 'CERQual Assessment of confidence',
-          formatter: 'getConfidence'
+          formatter: (value, key, item) => {
+            if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
+              if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && value != null) {
+                return this.cerqual_confidence[value].text
+              }
+            }
+          },
+          filterByFormatted: true
         },
         {
-          key: 'explanation',
+          key: 'cerqual_explanation',
           label: 'Explanation of CERQual Assessment'
         },
         {
           key: 'references',
           label: 'References',
           formatter: 'displayReferences'
+        },
+        {
+          key: 'actions',
+          label: ''
         }
       ],
       table_settings: {
@@ -372,25 +380,37 @@ export default {
   methods: {
     parseReference: (reference) => {
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        let result = ''
         if (reference.authors.length === 1) {
-          return reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
         } else if (reference.authors.length < 3) {
-          return reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
         } else {
-          return reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
         }
+        return result
       } else {
-        return ''
+        return result
       }
     },
     displayReferences: function (value, key, references) {
+      let _references = []
       for (let reference of value) {
         let obj = this.references.find(o => o.id === reference)
-        return this.parseReference(obj)
+        let ref = this.parseReference(obj)
+        _references.push(ref)
       }
+      if (_references.length) {
+        let result = ''
+        for (let ref of _references) {
+          result = result  + ref + '\r\n'
+        }
+        return result
+      }
+      // return _references
     },
     getDataDisplayRef: function (reference) {
-      this.parseReference(reference)
+      return this.parseReference(reference)
     },
     getConfidence: function (value, key, item) {
       if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
@@ -460,6 +480,8 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
+              list.cerqual_option = list.cerqual.option
+              list.cerqual_explanation = list.cerqual.explanation
             }
           }
           this.table_settings.isBusy = false
