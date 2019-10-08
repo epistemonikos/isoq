@@ -93,7 +93,7 @@
             :per-page="table_settings.perPage"
             :filter="table_settings.filter"
             @filtered="onFiltered"
-            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation']"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
           >
             <template v-slot:head(isoqf_id)="data">
               <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
