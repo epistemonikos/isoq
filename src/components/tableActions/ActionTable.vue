@@ -27,7 +27,7 @@
             @click="modalEditTable"
             variant="outline-primary">
               <font-awesome-icon icon="table" />
-              Edit table
+              Edit columns
           </b-button>
         </b-col>
         <b-col
@@ -108,12 +108,12 @@
     <!-- end modal drop table-->
     <!-- create study tables -->
     <b-modal
-      title="Add fields"
+      title="Add Columns"
       ref="modal-create-fields"
       @ok="saveCreateFields">
       <b-form-group
         id="nro-of-fields"
-        label="Nro of fields"
+        label="Nro of columns"
         label-for="number-of-fields">
         <b-form-input
           id="number-of-fields"
