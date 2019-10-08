@@ -25,8 +25,8 @@
         </b-col>
         <b-col cols="12" sm="6">
           <h5>Authors of the review</h5>
-          <ul>
-            <li v-for="(author, index) in project.authors.split(',')" :key="index">{{author.trim()}}</li>
+          <ul v-if="Object.prototype.hasOwnProperty(project, 'authors')">
+            <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
           </ul>
           <h5>Has the review been published</h5>
           <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status"><b-link :href="project.url_doi" target="_blank"><font-awesome-icon icon="globe"></font-awesome-icon></b-link></span></p>
@@ -83,6 +83,7 @@
           <b-table
             responsive
             id="findings"
+            ref="findings"
             :fields="fields"
             :items="lists"
             empty-text="There are no findings to show"
@@ -92,7 +93,7 @@
             :per-page="table_settings.perPage"
             :filter="table_settings.filter"
             @filtered="onFiltered"
-            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation']"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
           >
             <template v-slot:head(isoqf_id)="data">
               <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
@@ -118,14 +119,20 @@
             <template v-slot:cell(cerqual_explanation)="data">
               {{ data.item.cerqual_explanation }}
             </template>
-            <template v-slot:cell(references)="data">
-              <b-button
-                v-b-tooltip.hover title="Add the references that contribute to this review finding"
-                variant="outline-info"
-                @click="openModalReferences(data.index)">
-                  <font-awesome-icon icon="highlighter"></font-awesome-icon>
-                  Select references
-              </b-button>
+            <template v-slot:cell(ref_list)="data">
+              <li
+                v-for="(key, index) in data.item.ref_list"
+                :key="key">
+                {{ data.item.ref_list[index] }}
+              </li>
+            </template>
+            <template v-slot:cell(actions)="data">
+              <font-awesome-icon icon="highlighter"
+                @click="openModalReferences(data.index)"
+                v-b-tooltip.hover
+                title="Add the references that contribute to this review finding"></font-awesome-icon>
+              <!--<font-awesome-icon
+                icon="edit"></font-awesome-icon>-->
             </template>
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
@@ -186,7 +193,8 @@
             ref="modal-references-list"
             title="Select references"
             @ok="saveReferencesList"
-            size="lg">
+            size="lg"
+            scrollable>
             <div
               class="mt-2"
               v-if="references.length">
@@ -250,8 +258,12 @@ export default {
           label: 'Explanation of CERQual Assessment'
         },
         {
-          key: 'references',
+          key: 'ref_list',
           label: 'References'
+        },
+        {
+          key: 'actions',
+          label: ''
         }
       ],
       table_settings: {
@@ -299,6 +311,7 @@ export default {
     }
   },
   mounted () {
+    this.openModalReferencesSingle(false)
     this.getProject()
   },
   watch: {
@@ -372,20 +385,47 @@ export default {
     }
   },
   methods: {
-    getDataDisplayRef: function (reference) {
+    parseReference: (reference) => {
+      let result = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            return reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
-          } else if (reference.authors.length < 3) {
-            return reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
-          } else {
-            return reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
-          }
+        if (reference.authors.length === 1) {
+          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+        } else if (reference.authors.length < 3) {
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+        } else {
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
         }
+        return result
       } else {
-        return ''
+        return result
       }
+    },
+    displayReferences: function (value, key, references) {
+      let _references = []
+      for (let reference of value) {
+        let obj = this.references.find(o => o.id === reference)
+        let ref = this.parseReference(obj)
+        _references.push(ref)
+      }
+      if (_references.length) {
+        let result = ''
+        for (let ref of _references) {
+          result = result + ref + '\r\n'
+        }
+        return result
+      }
+      // return _references
+    },
+    getDataDisplayRef: function (reference) {
+      return this.parseReference(reference)
+    },
+    getConfidence: function (value, key, item) {
+      if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
+        if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
+          return this.cerqual_confidence[item.cerqual.option].text
+        }
+      }
+      return ''
     },
     loadRefs: function (event) {
       const file = event.target.files[0]
@@ -449,6 +489,14 @@ export default {
               }
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
+              list.ref_list = []
+              for (let r of this.references) {
+                for (let ref of list.references) {
+                  if (ref === r.id) {
+                    list.ref_list.push(this.parseReference(r))
+                  }
+                }
+              }
             }
           }
           this.table_settings.isBusy = false
@@ -524,11 +572,13 @@ export default {
           console.log(error)
         })
     },
-    openModalReferencesSingle: function () {
+    openModalReferencesSingle: function (showModal) {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
-          this.$refs['modal-references'].show()
+          if (showModal) {
+            this.$refs['modal-references'].show()
+          }
         })
         .catch((error) => {
           console.log(error)
@@ -575,5 +625,11 @@ export default {
   div >>>
     #findings.table thead th:first-child {
       width: 4%;
+    }
+  div >>>
+    #findings.table tbody td li {
+      font-size: 0.8rem;
+      padding-top: 0.4rem;
+      list-style-type: none;
     }
 </style>
