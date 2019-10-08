@@ -138,26 +138,28 @@
       ref="modal-edit-fields"
       @ok="saveUpdateFields"
       @cancel="cancelModalFields">
-      <b-form-group
-        v-for="(item, index) in modalEditFields"
-        :key="index"
-        :label="`Column #${index}`"
-        :label-for="`field-${index}`">
-        <b-input-group>
-          <b-form-input
-            :id="`field-${index}`"
-            type="text"
-            v-model="item.label"></b-form-input>
-          <b-input-group-append
-            v-if="modalEditFields.length > 1">
-            <b-button
-              @click="removeField(item, index)">
-              <font-awesome-icon
-                icon="trash"></font-awesome-icon>
-            </b-button>
-          </b-input-group-append>
-        </b-input-group>
-      </b-form-group>
+      <draggable v-model="modalEditFields" group="columns" @start="drag=true" @end="drag=false">
+        <b-form-group
+          v-for="(item, index) in modalEditFields"
+          :key="index"
+          :label="`Column #${index}`"
+          :label-for="`field-${index}`">
+          <b-input-group>
+            <b-form-input
+              :id="`field-${index}`"
+              type="text"
+              v-model="item.label"></b-form-input>
+            <b-input-group-append
+              v-if="modalEditFields.length > 1">
+              <b-button
+                @click="removeField(item, index)">
+                <font-awesome-icon
+                  icon="trash"></font-awesome-icon>
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+        </b-form-group>
+      </draggable>
       <b-button
         variant="outline-success"
         @click="addNewColumn">Add column</b-button>
@@ -185,9 +187,13 @@
 
 <script>
 import axios from 'axios'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'ActionTable',
+  components: {
+    draggable
+  },
   props: {
     importUrl: '',
     displayDeleteTable: false,
