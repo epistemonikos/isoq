@@ -18,6 +18,18 @@
           cols="12"
           sm="3">
             <b-button
+              @click="print"
+              variant="outline-info"
+              block>
+              <font-awesome-icon icon="print"></font-awesome-icon>
+              Print
+            </b-button>
+        </b-col>
+        <b-col
+          v-if="mode==='view'"
+          cols="12"
+          sm="3">
+            <b-button
               @click="changeMode"
               variant="outline-primary"
               block>
@@ -35,17 +47,6 @@
               block>
               <font-awesome-icon icon="eye"></font-awesome-icon>
               View
-            </b-button>
-        </b-col>
-        <b-col
-          cols="12"
-          sm="3">
-            <b-button
-              @click="print"
-              variant="outline-info"
-              block>
-              <font-awesome-icon icon="print"></font-awesome-icon>
-              Print
             </b-button>
         </b-col>
       </b-row>
