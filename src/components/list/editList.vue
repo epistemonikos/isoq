@@ -12,20 +12,31 @@
       <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <h3>{{list.name}}</h3>
       <b-row
-        class="d-print-none">
+        class="d-print-none justify-content-end mb-5">
         <b-col
-          cols="12">
-          <b-form-group>
-            <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
-              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn on to create or add a table with descriptive information about each study contributing to this finding">Characteristics Studies</span></b-form-checkbox>
-              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn on to create or add a table with your methodological assessments (quality/critical appraisal) for each study contributing to this finding">Methodological Assessments</span></b-form-checkbox>
-              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn on to create or add a table with all the extracted data coming from the studies contributing to this finding">Extracted Data</span></b-form-checkbox>
-            </b-form-checkbox-group>
-          </b-form-group>
+          v-if="mode==='view'"
+          cols="12"
+          sm="3">
+            <b-button
+              @click="changeMode"
+              variant="outline-primary"
+              block>
+              <font-awesome-icon icon="edit"></font-awesome-icon>
+              Edit
+            </b-button>
         </b-col>
-      </b-row>
-      <b-row
-        class="d-print-none justify-content-end">
+        <b-col
+          v-if="mode==='edit'"
+          cols="12"
+          sm="3">
+            <b-button
+              @click="changeMode"
+              variant="outline-success"
+              block>
+              <font-awesome-icon icon="eye"></font-awesome-icon>
+              View
+            </b-button>
+        </b-col>
         <b-col
           cols="12"
           sm="3">
@@ -38,7 +49,21 @@
             </b-button>
         </b-col>
       </b-row>
-      <b-row class="mt-5">
+      <b-row
+        v-if="mode==='edit'"
+        class="d-print-none">
+        <b-col
+          cols="12">
+          <b-form-group>
+            <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
+              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn on to create or add a table with descriptive information about each study contributing to this finding">Characteristics Studies</span></b-form-checkbox>
+              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn on to create or add a table with your methodological assessments (quality/critical appraisal) for each study contributing to this finding">Methodological Assessments</span></b-form-checkbox>
+              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn on to create or add a table with all the extracted data coming from the studies contributing to this finding">Extracted Data</span></b-form-checkbox>
+            </b-form-checkbox-group>
+          </b-form-group>
+        </b-col>
+      </b-row>
+      <b-row class="mt-2">
         <b-col cols="12">
           <!--<b-tabs>-->
             <!-- Evidence Profile-->
@@ -227,6 +252,7 @@
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
@@ -236,6 +262,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
@@ -249,6 +276,7 @@
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
@@ -258,6 +286,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
@@ -271,6 +300,7 @@
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
@@ -280,6 +310,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
@@ -293,6 +324,7 @@
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
@@ -302,6 +334,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
@@ -315,6 +348,7 @@
                       <p>{{level_confidence[data.item.cerqual.option].text}}</p>
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
@@ -324,6 +358,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="mode==='edit'"
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
@@ -333,7 +368,15 @@
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
-                    <div v-html="data.value"></div>
+                    <div v-if="Object.prototype.hasOwnProperty.call(data.item, 'references')">
+                      <li
+                        :key="index"
+                        v-for="(ref, index) in data.item.references">{{ ref }}</li>
+                    </div>
+                    <font-awesome-icon
+                      v-if="mode==='edit'"
+                      icon="highlighter"
+                      @click="openModalReferences"></font-awesome-icon>
                   </template>
                 </b-table>
                 <h5 class="d-print-none">Progress status</h5>
@@ -344,6 +387,27 @@
                   class="mb-3 d-print-none">
                   <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
                 </b-progress>
+                <b-modal
+                  id="modalReferences"
+                  ref="modalReferences"
+                  title="References"
+                  scrollable
+                  @ok="saveReferencesList">
+                  <div
+                    class="mt-2"
+                    v-if="references.length">
+                    <b-form-group>
+                      <b-form-checkbox
+                        v-for="ref in references"
+                        v-model="list.references"
+                        :key="ref.id"
+                        :value="ref.id"
+                        name="references">
+                        {{ parseReference(ref) }}
+                      </b-form-checkbox>
+                    </b-form-group>
+                  </div>
+                </b-modal>
               </template>
               <template v-else>
                 <div class="text-center my-5">
@@ -614,7 +678,8 @@ export default {
         totalRows: 1,
         currentPage: 1,
         perPage: 10,
-        pageOptions: [10, 50, 100]
+        pageOptions: [10, 50, 100],
+        isBusy: false
       },
       characteristics_studies_table_settings: {
         filter: '',
@@ -754,15 +819,57 @@ export default {
         fields: [],
         items: []
       },
-      importUrl: ''
+      importUrl: '',
+      references: [],
+      mode: 'edit'
     }
   },
   mounted () {
     this.getList()
   },
   methods: {
+    changeMode: function () {
+      this.mode = (this.mode === 'edit') ? 'view' : 'edit'
+    },
     print: function () {
       window.print()
+    },
+    parseReference: (reference) => {
+      let result = ''
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length === 1) {
+          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+        } else if (reference.authors.length < 3) {
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+        } else {
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+        }
+        return result
+      } else {
+        return result
+      }
+    },
+    openModalReferences: function () {
+      this.$refs['modalReferences'].show()
+    },
+    getAllReferences: function () {
+      axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+        .then((response) => {
+          this.references = response.data
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    saveReferencesList: function () {
+      this.evidence_profile_table_settings.isBusy = true
+      const params = {
+        references: this.list.references
+      }
+      axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
+        .then((response) => {
+          this.getList()
+        })
     },
     getList: function () {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
@@ -774,14 +881,29 @@ export default {
             fields: [],
             items: []
           }
+          this.getAllReferences()
           this.getStageOneData()
           this.getStageThree()
           this.getStageFour()
           this.getStageFive()
+          this.evidence_profile_table_settings.isBusy = false
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+    renderReference: function (reference) {
+      let authors = ''
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length === 1) {
+          authors = reference.authors[0] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+        } else if (reference.authors.length < 3) {
+          authors = reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+        } else {
+          authors = reference.authors[0] + ' et al., ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+        }
+      }
+      return authors
     },
     getReferences: function () {
       let promises = []
@@ -790,19 +912,11 @@ export default {
       }
       axios.all(promises)
         .then(axios.spread((...responses) => {
-          let authors = ''
+          let authors = []
           for (let response of responses) {
             const reference = response.data
 
-            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              if (reference.authors.length === 1) {
-                authors += '<li>' + reference.authors[0] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
-              } else if (reference.authors.length < 3) {
-                authors += '<li>' + reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
-              } else {
-                authors += '<li>' + reference.authors[0] + ' et al., ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.' + '</li>'
-              }
-            }
+            authors.push(this.renderReference(reference))
           }
           this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
         }))
