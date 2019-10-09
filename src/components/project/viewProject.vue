@@ -63,10 +63,12 @@
                   class="btn-block"
                   variant="outline-primary"
                   split
-                  text="Export to">
-                  <b-dropdown-item @click="generateAndDownload">MS Word</b-dropdown-item>
-                  <b-dropdown-item>Cochrane</b-dropdown-item>
-                  <b-dropdown-item>GRADE</b-dropdown-item>
+                  text="Export">
+                  <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                  <b-dropdown-item>to Cochrane</b-dropdown-item>
+                  <b-dropdown-item>to GRADE</b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                 </b-dropdown>
               </b-col>
               <b-col
@@ -507,10 +509,12 @@ export default {
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = []
+              list.raw_ref = []
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
                     list.ref_list.push(this.parseReference(r))
+                    list.raw_ref.push(r)
                   }
                 }
               }
@@ -685,6 +689,70 @@ export default {
         element[0].children[cnt].children[5].innerHTML = icon
         cnt++
       }
+    },
+    processRIS: function (reference = {}) {
+      let txt = ''
+
+      if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
+        txt += 'TY  - ' + reference.type + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'abstract')) {
+        txt += 'AB  - ' + reference.abstract + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'title')) {
+        txt += 'TI  - ' + reference.title + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        var cnt = 1
+        for (let a of reference.authors) {
+          txt += `A${cnt} - ` + a + '\r'
+          cnt++
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'publication_year')) {
+        txt += 'PY  - ' + reference.publication_year + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'database')) {
+        txt += 'DB  - ' + reference.database + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'volume_number')) {
+        txt += 'VL  - ' + reference.volume_number + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'url')) {
+        txt += 'UR  - ' + reference.url + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'start_page')) {
+        txt += 'SP  - ' + reference.start_page + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'isbn_issn')) {
+        txt += 'SN  - ' + reference.isbn_issn + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'date')) {
+        txt += 'DA  - ' + reference.date + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'user_definable')) {
+        var count = 1
+        for (let c of reference.user_definable) {
+          txt += `C${count} - ` + c + '\r'
+          count++
+        }
+      }
+      txt += 'ER  - \n\r'
+      return txt
+    },
+    exportToRIS: function () {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+      var content = ''
+      for (let l of lists) {
+        for (let r of l.raw_ref) {
+          content += this.processRIS(r)
+        }
+      }
+
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/text;charset=utf-8,' + encodeURI(content))
+      element.setAttribute('download', 'references.ris')
+      element.click()
     }
   }
 }
