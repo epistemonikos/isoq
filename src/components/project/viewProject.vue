@@ -10,20 +10,20 @@
         </b-col>
       </b-row>
       <b-row class="mb-3">
-        <b-col cols="12">
+        <b-col cols="12" class="toDoc">
           <h1>Interactive Summary of Qualitative Findings Table</h1>
         </b-col>
       </b-row>
       <b-row>
-        <b-col cols="12">
+        <b-col cols="12" class="toDoc">
           <h2>{{project.name}}</h2>
         </b-col>
-        <b-col cols="12" sm="6">
+        <b-col cols="12" sm="6" class="toDoc">
           <p v-if="project.description">{{project.description}}</p>
           <h5>Review question</h5>
           <p>{{project.review_question}}</p>
         </b-col>
-        <b-col cols="12" sm="6">
+        <b-col cols="12" sm="6" class="toDoc">
           <h5>Authors of the review</h5>
           <ul v-if="Object.prototype.hasOwnProperty(project, 'authors')">
             <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
@@ -39,8 +39,7 @@
             bg-variant="light">
             <b-row>
               <b-col
-                cols="12"
-                sm="6">
+                cols="12">
                 <b-form-group>
                   <b-input-group>
                     <b-form-input
@@ -54,9 +53,28 @@
                   </b-input-group>
                 </b-form-group>
               </b-col>
+            </b-row>
+            <b-row>
               <b-col
                 cols="12"
-                sm="3">
+                sm="4">
+                <b-dropdown
+                  id="export-button"
+                  class="btn-block"
+                  variant="outline-primary"
+                  split
+                  text="Export">
+                  <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                  <b-dropdown-item>to Cochrane</b-dropdown-item>
+                  <b-dropdown-item>to GRADE</b-dropdown-item>
+                  <b-dropdown-divider></b-dropdown-divider>
+                  <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+                </b-dropdown>
+              </b-col>
+              <b-col
+                class="mt-2 mt-sm-0"
+                cols="12"
+                sm="4">
                 <b-button
                   variant="outline-primary"
                   block
@@ -65,10 +83,10 @@
                 </b-button>
               </b-col>
               <b-col
+                class="mt-2 mt-sm-0"
                 cols="12"
-                sm="3">
+                sm="4">
                 <b-button
-                  class="mt-2 mt-sm-0"
                   v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
                   variant="outline-primary"
                   @click="modalAddSummarized"
@@ -81,6 +99,7 @@
         </b-col>
         <b-col cols="12">
           <b-table
+            class="toDoc"
             responsive
             id="findings"
             ref="findings"
@@ -490,10 +509,12 @@ export default {
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = []
+              list.raw_ref = []
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
                     list.ref_list.push(this.parseReference(r))
+                    list.raw_ref.push(r)
                   }
                 }
               }
@@ -612,6 +633,126 @@ export default {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
+    },
+    Export2Doc (element, filename = '') {
+      const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>"
+      const postHtml = '</body></html>'
+
+      let objs = document.getElementsByClassName(element)
+      let content = ''
+      for (let o of objs) {
+        content = content + o.innerHTML + ' '
+      }
+
+      var html = preHtml + content + postHtml
+
+      const blob = new Blob(['\ufeff', html], {
+        type: 'application/msword'
+      })
+
+      // Specify link url
+      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html)
+
+      // Specify file name
+      filename = filename ? filename + '.doc' : 'document.doc'
+
+      // Create download link element
+      var downloadLink = document.createElement('a')
+
+      document.body.appendChild(downloadLink)
+
+      if (navigator.msSaveOrOpenBlob) {
+        navigator.msSaveOrOpenBlob(blob, filename)
+      } else {
+        downloadLink.href = url
+        downloadLink.download = filename
+        downloadLink.click()
+      }
+
+      document.body.removeChild(downloadLink)
+    },
+    generateAndDownload: function () {
+      let element = document.getElementsByTagName('tbody')
+      var nroElements = element[0].children.length
+      var icon = JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML))
+
+      var cnt = 0
+      while (cnt < nroElements) {
+        element[0].children[cnt].children[5].innerHTML = ''
+        cnt++
+      }
+
+      this.Export2Doc('toDoc')
+
+      cnt = 0
+      while (cnt < nroElements) {
+        element[0].children[cnt].children[5].innerHTML = icon
+        cnt++
+      }
+    },
+    processRIS: function (reference = {}) {
+      let txt = ''
+
+      if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
+        txt += 'TY  - ' + reference.type + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'abstract')) {
+        txt += 'AB  - ' + reference.abstract + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'title')) {
+        txt += 'TI  - ' + reference.title + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        var cnt = 1
+        for (let a of reference.authors) {
+          txt += `A${cnt} - ` + a + '\r'
+          cnt++
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'publication_year')) {
+        txt += 'PY  - ' + reference.publication_year + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'database')) {
+        txt += 'DB  - ' + reference.database + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'volume_number')) {
+        txt += 'VL  - ' + reference.volume_number + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'url')) {
+        txt += 'UR  - ' + reference.url + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'start_page')) {
+        txt += 'SP  - ' + reference.start_page + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'isbn_issn')) {
+        txt += 'SN  - ' + reference.isbn_issn + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'date')) {
+        txt += 'DA  - ' + reference.date + '\r'
+      }
+      if (Object.prototype.hasOwnProperty.call(reference, 'user_definable')) {
+        var count = 1
+        for (let c of reference.user_definable) {
+          txt += `C${count} - ` + c + '\r'
+          count++
+        }
+      }
+      txt += 'ER  - \n\r'
+      return txt
+    },
+    exportToRIS: function () {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+      var content = ''
+      for (let l of lists) {
+        for (let r of l.raw_ref) {
+          content += this.processRIS(r)
+        }
+      }
+
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/text;charset=utf-8,' + encodeURI(content))
+      element.setAttribute('download', 'references.ris')
+      element.click()
     }
   }
 }
@@ -625,6 +766,14 @@ export default {
   div >>>
     #findings.table thead th:first-child {
       width: 4%;
+    }
+  div >>>
+    #export-button button:first-child {
+      width: 100%
+    }
+  div >>>
+    #export-button ul {
+      width: 100%
     }
   div >>>
     #findings.table tbody td li {
