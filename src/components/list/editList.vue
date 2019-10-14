@@ -16,7 +16,7 @@
         <b-col
           v-if="mode==='view'"
           cols="12"
-          sm="3">
+          sm="2">
             <b-button
               @click="print"
               variant="outline-info"
@@ -28,7 +28,7 @@
         <b-col
           v-if="mode==='view'"
           cols="12"
-          sm="3">
+          sm="2">
             <b-button
               @click="changeMode"
               variant="outline-primary"
@@ -40,7 +40,7 @@
         <b-col
           v-if="mode==='edit'"
           cols="12"
-          sm="3">
+          sm="2">
             <b-button
               @click="changeMode"
               variant="outline-success"

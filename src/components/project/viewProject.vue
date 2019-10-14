@@ -14,6 +14,63 @@
           <h1>Interactive Summary of Qualitative Findings Table</h1>
         </b-col>
       </b-row>
+      <b-row
+        class="d-print-none justify-content-end mb-5">
+        <b-col
+          cols="12"
+          sm="2">
+          <b-dropdown
+            id="export-button"
+            class="btn-block"
+            variant="outline-secondary"
+            right
+            text="Export">
+            <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+            <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
+            <b-dropdown-item disabled>to GRADE</b-dropdown-item>
+            <b-dropdown-divider></b-dropdown-divider>
+            <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+          </b-dropdown>
+        </b-col>
+        <b-col
+          class="mt-1 mt-sm-0"
+          v-if="mode==='view'"
+          cols="12"
+          sm="2">
+            <b-button
+              variant="outline-info"
+              block>
+              <font-awesome-icon icon="print"></font-awesome-icon>
+              Print
+            </b-button>
+        </b-col>
+        <b-col
+          class="mt-1 mt-sm-0"
+          v-if="mode==='view'"
+          cols="12"
+          sm="2">
+            <b-button
+              @click="changeMode"
+              variant="outline-primary"
+              block>
+              <font-awesome-icon icon="edit"></font-awesome-icon>
+              Edit
+            </b-button>
+        </b-col>
+        <b-col
+          class="mt-1 mt-sm-0"
+          v-if="mode==='edit'"
+          cols="12"
+          sm="2">
+            <b-button
+              @click="changeMode"
+              variant="outline-success"
+              block>
+              <font-awesome-icon icon="eye"></font-awesome-icon>
+              View
+            </b-button>
+        </b-col>
+      </b-row>
       <b-row>
         <b-col cols="12" class="toDoc">
           <h2>{{project.name}}</h2>
@@ -34,7 +91,10 @@
           <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
         </b-col>
-        <b-col cols="12" class="my-2">
+        <b-col
+          v-if="mode==='edit'"
+          cols="12"
+          class="my-2">
           <b-card
             bg-variant="light">
             <b-row>
@@ -54,23 +114,8 @@
                 </b-form-group>
               </b-col>
             </b-row>
-            <b-row>
-              <b-col
-                cols="12"
-                sm="4">
-                <b-dropdown
-                  id="export-button"
-                  class="btn-block"
-                  variant="outline-primary"
-                  split
-                  text="Export">
-                  <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-                  <b-dropdown-item>to Cochrane</b-dropdown-item>
-                  <b-dropdown-item>to GRADE</b-dropdown-item>
-                  <b-dropdown-divider></b-dropdown-divider>
-                  <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
-                </b-dropdown>
-              </b-col>
+            <b-row
+              align-h="end">
               <b-col
                 class="mt-2 mt-sm-0"
                 cols="12"
@@ -183,8 +228,30 @@
             id="modal-references"
             ref="modal-references"
             title="Add references"
-            @ok="saveReferences"
             scrollable>
+            <div class="mt-2">
+              <b-form-group
+                label="Load references"
+                label-for="input-ris-file">
+                <b-form-file
+                  id="input-ris-file"
+                  plain
+                  @change="loadRefs($event)"></b-form-file>
+                <b-button
+                  class="mt-2"
+                  @click="saveReferences">
+                    Upload
+                </b-button>
+              </b-form-group>
+            </div>
+            <div>
+              <b-alert
+                v-if="msgUploadReferences"
+                show
+                variant="info"
+                dismissible
+                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
+            </div>
             <div
               class="mt-2"
               v-if="references.length">
@@ -198,14 +265,6 @@
                 :items="references">
               </b-table>
             </div>
-            <b-form-group
-              label="Load references"
-              label-for="input-ris-file">
-              <b-form-file
-                id="input-ris-file"
-                plain
-                @change="loadRefs($event)"></b-form-file>
-            </b-form-group>
           </b-modal>
           <b-modal
             id="modal-references-list"
@@ -307,6 +366,7 @@ export default {
       ],
       pre_references: '',
       references: [],
+      fileReferences: [],
       fields_references_table:
         [
           {
@@ -326,7 +386,9 @@ export default {
         ],
       selected_list_index: null,
       selected_references: [],
-      lastId: 1
+      lastId: 1,
+      mode: 'edit',
+      msgUploadReferences: ''
     }
   },
   mounted () {
@@ -335,7 +397,7 @@ export default {
   },
   watch: {
     pre_references: function (data) {
-      this.references = []
+      this.fileReferences = []
       const file = data
       const allLines = file.split(/\r\n|\n/)
       // Reading line by line
@@ -397,13 +459,16 @@ export default {
           base['user_definable'].push(content)
         }
         if (key === 'ER') {
-          this.references.push(base)
+          this.fileReferences.push(base)
           base = { authors: [], user_definable: [] }
         }
       })
     }
   },
   methods: {
+    changeMode: function () {
+      this.mode = (this.mode === 'edit') ? 'view' : 'edit'
+    },
     parseReference: (reference) => {
       let result = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
@@ -455,7 +520,7 @@ export default {
       reader.readAsText(file)
     },
     saveReferences: function () {
-      const references = this.references
+      const references = this.fileReferences
       let axiosArray = []
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
@@ -469,10 +534,16 @@ export default {
       }
       axios.all(axiosArray)
         .then(axios.spread((...responses) => {
-          responses.forEach(res => console.log('Success'))
+          var cnt = 0
+          responses.forEach(res => {
+            if (this.references.push(res.data)) {
+              cnt++
+            }
+          })
+          this.msgUploadReferences = `${cnt} has ben added!`
           // console.log('submitted all axios calls')
           this.pre_references = ''
-          this.references = []
+          this.fileReferences = []
         }))
         .catch((error) => {
           console.log('error', error)
