@@ -5,7 +5,7 @@
         <b-col cols="12" class="text-right d-print-none">
           <b-link @click="$router.go(-1)">
             <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
-            {{ $t('back') }}
+            return to ISoQf table
           </b-link>
         </b-col>
       </b-row>

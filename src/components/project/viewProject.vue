@@ -186,17 +186,15 @@
             <template v-slot:cell(ref_list)="data">
               <li
                 v-for="(key, index) in data.item.ref_list"
-                :key="key">
-                {{ data.item.ref_list[index] }}
+                :key="index">
+                {{ data.item.ref_list[index].ref_txt }}
               </li>
             </template>
             <template v-slot:cell(actions)="data">
               <font-awesome-icon icon="highlighter"
-                @click="openModalReferences(data.index)"
+                @click="openModalReferences(data.item.isoqf_id)"
                 v-b-tooltip.hover
-                title="Add the references that contribute to this review finding"></font-awesome-icon>
-              <!--<font-awesome-icon
-                icon="edit"></font-awesome-icon>-->
+                title="Select the references that contribute to this review finding"></font-awesome-icon>
             </template>
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
@@ -255,7 +253,7 @@
             <div
               class="mt-2"
               v-if="references.length">
-              <p>In this space we will show your references loaded before or the new one.</p>
+              <p>Below are the references you have uploaded.</p>
               <b-table
                 head-variant="light"
                 hover
@@ -469,15 +467,18 @@ export default {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-    parseReference: (reference) => {
+    parseReference: (reference, onlyAuthors = false) => {
       let result = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.publication_year + '; '
         } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+            result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; '
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
+        }
+        if (!onlyAuthors) {
+          result = result + reference.title
         }
         return result
       } else {
@@ -540,8 +541,7 @@ export default {
               cnt++
             }
           })
-          this.msgUploadReferences = `${cnt} has ben added!`
-          // console.log('submitted all axios calls')
+          this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
         }))
@@ -584,7 +584,7 @@ export default {
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list.push(this.parseReference(r))
+                    list.ref_list.push({'id': ref + list.id, 'ref_txt': this.parseReference(r, true)})
                     list.raw_ref.push(r)
                   }
                 }
@@ -676,8 +676,14 @@ export default {
           console.log(error)
         })
     },
-    openModalReferences: function (index) {
-      this.selected_list_index = index
+    openModalReferences: function (isoqf_id) {
+      let cnt = 0
+      for (let list of this.lists) {
+        if (list.isoqf_id === isoqf_id) {
+          this.selected_list_index = cnt
+        }
+        cnt++
+      }
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
@@ -832,11 +838,19 @@ export default {
 <style scoped>
   div >>>
     #findings.table thead th {
-      width: 24%;
+      width: 15%;
+    }
+  div >>>
+    #findings.table thead th:nth-child(2) {
+      width: 45%;
     }
   div >>>
     #findings.table thead th:first-child {
-      width: 4%;
+      width: 5%;
+    }
+  div >>>
+    #findings.table thead th:last-child {
+      width: 5%;
     }
   div >>>
     #export-button button:first-child {
