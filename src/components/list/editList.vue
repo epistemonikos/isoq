@@ -10,7 +10,7 @@
         </b-col>
       </b-row>
       <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
-      <h3>{{list.name}}</h3>
+      <h3>Review finding: <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-5">
         <b-col
@@ -381,6 +381,9 @@
                   </template>
                 </b-table>
                 <h5 class="d-print-none">Progress status</h5>
+                <p v-if="list.cerqual.option !== null">
+                  Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
+                </p>
                 <b-progress
                   :max="status_evidence_profile.max"
                   :variant="status_evidence_profile.variant"
@@ -981,6 +984,7 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
+          this.list.cerqual = response.data['$set'].cerqual
           this.list.name = this.buffer_modal_stage_one.name
           this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
@@ -1253,12 +1257,24 @@ export default {
 
 <style scoped>
   div >>>
+    h3 span {
+      font-size: 1.55rem
+    }
+  div >>>
     #assessments.table thead th:first-child {
       width: 2%;
     }
   div >>>
+    #assessments.table thead th:last-child {
+      width: 8%;
+    }
+  div >>>
+    #assessments.table thead th:nth-child(2) {
+      width: 40%;
+    }
+  div >>>
     #assessments.table thead th {
-      width: 14%;
+      width: 10%;
     }
   div >>>
     .table tbody td div li {
