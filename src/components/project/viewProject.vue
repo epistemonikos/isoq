@@ -261,6 +261,11 @@
                 borderless
                 :fields="fields_references_table"
                 :items="references">
+                <template v-slot:cell(action)="data">
+                  <font-awesome-icon
+                    icon="trash"
+                    @click="removeReferenceById(data.item.id)"></font-awesome-icon>
+                </template>
               </b-table>
             </div>
           </b-modal>
@@ -380,7 +385,23 @@ export default {
               }
             }
           },
-          { key: 'publication_year', label: 'Year' }
+          { key: 'publication_year', label: 'Year' },
+          {
+            key: 'id',
+            label: 'Related to finding(s)',
+            formatter: value => {
+              let findings = []
+              for (let list of this.lists) {
+                for (let ref of list.raw_ref) {
+                  if (ref.id === value) {
+                    findings.push(`#${list.isoqf_id}`)
+                  }
+                }
+              }
+              return findings.join(', ')
+            }
+          },
+          { key: 'action', label: '' }
         ],
       selected_list_index: null,
       selected_references: [],
@@ -584,7 +605,7 @@ export default {
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list.push({'id': ref + list.id, 'ref_txt': this.parseReference(r, true)})
+                    list.ref_list.push({'id': ref + '-' + list.id, 'ref_txt': this.parseReference(r, true)})
                     list.raw_ref.push(r)
                   }
                 }
@@ -830,6 +851,35 @@ export default {
       element.setAttribute('href', 'data:text/text;charset=utf-8,' + encodeURI(content))
       element.setAttribute('download', 'references.ris')
       element.click()
+    },
+    removeReferenceById: function (refId) {
+      let cnt = 0
+      let lists = JSON.parse(JSON.stringify(this.lists))
+      let objs = []
+
+      for (let list of lists) {
+        let x = 0
+        let obj = {id: null, references: []}
+        for (let rr of list.raw_ref) {
+          let references = []
+          if (rr.id !== refId) {
+            obj.references.push(rr.id)
+          }
+          if (rr.id === refId) {
+            obj.id = list.id
+            objs.push(obj)
+          }
+        }
+        cnt++
+      }
+      let requests = []
+      for (let o of objs) {
+        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
+      }
+      axios.all(requests)
+        .then( axios.spread( response => {
+          console.log(response)
+        }))
     }
   }
 }
