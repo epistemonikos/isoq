@@ -10,7 +10,7 @@
         </b-col>
       </b-row>
       <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
-      <h3>Review finding: <span>{{list.name}}</span></h3>
+      <h3 v-if="mode==='edit'">Review finding: <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-5">
         <b-col
@@ -212,9 +212,164 @@
               </b-modal>
               <template v-if="evidence_profile.length">
                 <b-table
+                  v-if="mode==='edit'"
                   id="assessments"
                   responsive striped caption-top
                   :fields="evidence_profile_fields"
+                  :items="evidence_profile"
+                  :filter="evidence_profile_table_settings.filter"
+                  :per-page="evidence_profile_table_settings.perPage">
+                  <template v-slot:head(isoqf_id)="data">
+                    <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(methodological-limit)="data">
+                    <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(coherence)="data">
+                    <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(adequacy)="data">
+                    <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(relevance)="data">
+                    <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(cerqual)="data">
+                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+                  </template>
+                  <template v-slot:head(references)="data">
+                    <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
+                  </template>
+                  <template v-slot:cell(isoqf_id)="data">
+                    {{data.item.isoqf_id}}
+                  </template>
+                  <template v-slot:cell(methodological-limit)="data">
+                    <div v-if="data.item.methodological_limitations.option !== null">
+                      <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
+                      <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'methodological-limitations')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'methodological-limitations')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-slot:cell(coherence)="data">
+                    <div v-if="data.item.coherence.option !== null">
+                      <p>{{select_options[data.item.coherence.option].text}}</p>
+                      <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'coherence')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'coherence')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-slot:cell(adequacy)="data">
+                    <div v-if="data.item.adequacy.option !== null">
+                      <p>{{select_options[data.item.adequacy.option].text}}</p>
+                      <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'adequacy')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'adequacy')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-slot:cell(relevance)="data">
+                    <div v-if="data.item.relevance.option !== null">
+                      <p>{{select_options[data.item.relevance.option].text}}</p>
+                      <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'relevance')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'relevance')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-slot:cell(cerqual)="data">
+                    <div v-if="data.item.cerqual.option !== null">
+                      <p>{{level_confidence[data.item.cerqual.option].text}}</p>
+                      <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'cerqual')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Edit
+                      </b-button>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        block
+                        variant="outline-info d-print-none"
+                        @click="editStageTwo(data.item, 'cerqual')">
+                        <font-awesome-icon icon="edit" title="Edit" />
+                        Assessment not completed
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-slot:cell(references)="data">
+                    <div v-if="Object.prototype.hasOwnProperty.call(data.item, 'references')">
+                      <li
+                        :key="index"
+                        v-for="(ref, index) in data.item.references">{{ ref }}</li>
+                    </div>
+                    <font-awesome-icon
+                      icon="highlighter"
+                      @click="openModalReferences"></font-awesome-icon>
+                  </template>
+                </b-table>
+
+                <b-table
+                  v-if="mode==='view'"
+                  id="assessments-print"
+                  responsive striped caption-top
+                  :fields="evidence_profile_fields_print_version"
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
@@ -252,120 +407,30 @@
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'methodological-limitations')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Edit
-                      </b-button>
-                    </div>
-                    <div v-else>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'methodological-limitations')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Assessment not completed
-                      </b-button>
                     </div>
                   </template>
                   <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'coherence')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Edit
-                      </b-button>
-                    </div>
-                    <div v-else>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'coherence')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Assessment not completed
-                      </b-button>
                     </div>
                   </template>
                   <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'adequacy')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Edit
-                      </b-button>
-                    </div>
-                    <div v-else>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'adequacy')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Assessment not completed
-                      </b-button>
                     </div>
                   </template>
                   <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'relevance')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Edit
-                      </b-button>
-                    </div>
-                    <div v-else>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'relevance')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Assessment not completed
-                      </b-button>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.cerqual.option !== null">
                       <p>{{level_confidence[data.item.cerqual.option].text}}</p>
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'cerqual')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Edit
-                      </b-button>
-                    </div>
-                    <div v-else>
-                      <b-button
-                        v-if="mode==='edit'"
-                        block
-                        variant="outline-info d-print-none"
-                        @click="editStageTwo(data.item, 'cerqual')">
-                        <font-awesome-icon icon="edit" title="Edit" />
-                        Assessment not completed
-                      </b-button>
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
@@ -374,23 +439,26 @@
                         :key="index"
                         v-for="(ref, index) in data.item.references">{{ ref }}</li>
                     </div>
-                    <font-awesome-icon
-                      v-if="mode==='edit'"
-                      icon="highlighter"
-                      @click="openModalReferences"></font-awesome-icon>
                   </template>
                 </b-table>
-                <h5 class="d-print-none">Progress status</h5>
-                <p v-if="list.cerqual.option !== null">
-                  Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
-                </p>
-                <b-progress
-                  :max="status_evidence_profile.max"
-                  :variant="status_evidence_profile.variant"
-                  show-progress
-                  class="mb-3 d-print-none">
-                  <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
-                </b-progress>
+
+                <div
+                  v-if="mode==='edit'"
+                  class="d-print-none">
+                  <b-card>
+                    <h5>Progress status</h5>
+                    <p v-if="list.cerqual.option !== null">
+                      Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
+                    </p>
+                    <b-progress
+                      :max="status_evidence_profile.max"
+                      :variant="status_evidence_profile.variant"
+                      show-progress
+                      class="mb-3">
+                      <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
+                    </b-progress>
+                  </b-card>
+                </div>
                 <b-modal
                   id="modalReferences"
                   ref="modalReferences"
@@ -732,6 +800,18 @@ export default {
       /** selectors **/
       /** tables fields **/
       evidence_profile_fields: [
+        { key: 'isoqf_id', label: '#' },
+        { key: 'methodological-limit', label: 'Methodological limitations' },
+        { key: 'coherence', label: 'Coherence' },
+        { key: 'adequacy', label: 'Adequacy' },
+        { key: 'relevance', label: 'Relevance' },
+        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'references', label: 'References' }
+        /*
+        {key: 'actions', label: 'Actions'}
+        */
+      ],
+      evidence_profile_fields_print_version: [
         { key: 'isoqf_id', label: '#' },
         { key: 'name', label: 'Finding' },
         { key: 'methodological-limit', label: 'Methodological limitations' },
@@ -1266,14 +1346,26 @@ export default {
     }
   div >>>
     #assessments.table thead th:last-child {
-      width: 8%;
-    }
-  div >>>
-    #assessments.table thead th:nth-child(2) {
-      width: 40%;
+      width: 3%;
     }
   div >>>
     #assessments.table thead th {
+      width: 19%;
+    }
+  div >>>
+    #assessments-print.table thead th:first-child {
+      width: 2%;
+    }
+  div >>>
+    #assessments-print.table thead th:nth-child(2) {
+      width: 45%;
+    }
+  div >>>
+    #assessments-print.table thead th:last-child {
+      width: 3%;
+    }
+  div >>>
+    #assessments-print.table thead th {
       width: 10%;
     }
   div >>>
