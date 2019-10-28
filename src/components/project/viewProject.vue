@@ -704,6 +704,7 @@ export default {
         .then((response) => {
           this.references = response.data
           if (showModal) {
+            this.msgUploadReferences = ''
             this.$refs['modal-references'].show()
           }
         })
