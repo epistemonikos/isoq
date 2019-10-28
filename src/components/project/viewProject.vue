@@ -186,17 +186,15 @@
             <template v-slot:cell(ref_list)="data">
               <li
                 v-for="(key, index) in data.item.ref_list"
-                :key="key">
-                {{ data.item.ref_list[index] }}
+                :key="index">
+                {{ data.item.ref_list[index].ref_txt }}
               </li>
             </template>
             <template v-slot:cell(actions)="data">
               <font-awesome-icon icon="highlighter"
-                @click="openModalReferences(data.index)"
+                @click="openModalReferences(data.item.isoqf_id)"
                 v-b-tooltip.hover
-                title="Add the references that contribute to this review finding"></font-awesome-icon>
-              <!--<font-awesome-icon
-                icon="edit"></font-awesome-icon>-->
+                title="Select the references that contribute to this review finding"></font-awesome-icon>
             </template>
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
@@ -228,6 +226,7 @@
             id="modal-references"
             ref="modal-references"
             title="Add references"
+            @ok="getProject"
             scrollable>
             <div class="mt-2">
               <b-form-group
@@ -255,7 +254,7 @@
             <div
               class="mt-2"
               v-if="references.length">
-              <p>In this space we will show your references loaded before or the new one.</p>
+              <p>Below are the references you have uploaded.</p>
               <b-table
                 head-variant="light"
                 hover
@@ -263,6 +262,24 @@
                 borderless
                 :fields="fields_references_table"
                 :items="references">
+                <template v-slot:cell(action)="data">
+                  <font-awesome-icon
+                    icon="trash"
+                    @click="data.toggleDetails"></font-awesome-icon>
+                </template>
+                <template v-slot:row-details="data">
+                  <b-card>
+                    <p>Are you sure you want to delete this reference?</p>
+                    <b-button
+                      block
+                      variant="outline-success"
+                      @click="data.toggleDetails">No</b-button>
+                    <b-button
+                      block
+                      variant="outline-danger"
+                      @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                  </b-card>
+                </template>
               </b-table>
             </div>
           </b-modal>
@@ -382,7 +399,23 @@ export default {
               }
             }
           },
-          { key: 'publication_year', label: 'Year' }
+          { key: 'publication_year', label: 'Year' },
+          {
+            key: 'id',
+            label: 'Related to finding(s)',
+            formatter: value => {
+              let findings = []
+              for (let list of this.lists) {
+                for (let ref of list.raw_ref) {
+                  if (ref.id === value) {
+                    findings.push(`#${list.isoqf_id}`)
+                  }
+                }
+              }
+              return findings.join(', ')
+            }
+          },
+          { key: 'action', label: '' }
         ],
       selected_list_index: null,
       selected_references: [],
@@ -469,15 +502,18 @@ export default {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-    parseReference: (reference) => {
+    parseReference: (reference, onlyAuthors = false) => {
       let result = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.publication_year + '; '
         } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; '
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
+        }
+        if (!onlyAuthors) {
+          result = result + reference.title
         }
         return result
       } else {
@@ -540,8 +576,7 @@ export default {
               cnt++
             }
           })
-          this.msgUploadReferences = `${cnt} has ben added!`
-          // console.log('submitted all axios calls')
+          this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
         }))
@@ -584,7 +619,7 @@ export default {
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list.push(this.parseReference(r))
+                    list.ref_list.push({'id': ref + '-' + list.id, 'ref_txt': this.parseReference(r, true)})
                     list.raw_ref.push(r)
                   }
                 }
@@ -669,6 +704,7 @@ export default {
         .then((response) => {
           this.references = response.data
           if (showModal) {
+            this.msgUploadReferences = ''
             this.$refs['modal-references'].show()
           }
         })
@@ -676,8 +712,14 @@ export default {
           console.log(error)
         })
     },
-    openModalReferences: function (index) {
-      this.selected_list_index = index
+    openModalReferences: function (isoqfId) {
+      let cnt = 0
+      for (let list of this.lists) {
+        if (list.isoqf_id === isoqfId) {
+          this.selected_list_index = cnt
+        }
+        cnt++
+      }
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
@@ -824,6 +866,38 @@ export default {
       element.setAttribute('href', 'data:text/text;charset=utf-8,' + encodeURI(content))
       element.setAttribute('download', 'references.ris')
       element.click()
+    },
+    confirmRemoveReferenceById: function (refId) {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+      let objs = []
+
+      for (let list of lists) {
+        let obj = {id: null, references: []}
+        for (let rr of list.raw_ref) {
+          if (rr.id !== refId) {
+            obj.references.push(rr.id)
+          }
+          if (rr.id === refId) {
+            obj.id = list.id
+            objs.push(obj)
+          }
+        }
+      }
+      let requests = []
+      for (let o of objs) {
+        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
+      }
+      if (requests.length) {
+        axios.all(requests)
+          .then(axios.spread((response) => {
+            //
+          }))
+      }
+
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then((response) => {
+          this.openModalReferencesSingle(false)
+        })
     }
   }
 }
@@ -832,11 +906,19 @@ export default {
 <style scoped>
   div >>>
     #findings.table thead th {
-      width: 24%;
+      width: 15%;
+    }
+  div >>>
+    #findings.table thead th:nth-child(2) {
+      width: 45%;
     }
   div >>>
     #findings.table thead th:first-child {
-      width: 4%;
+      width: 5%;
+    }
+  div >>>
+    #findings.table thead th:last-child {
+      width: 5%;
     }
   div >>>
     #export-button button:first-child {
