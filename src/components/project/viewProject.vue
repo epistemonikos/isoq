@@ -226,6 +226,7 @@
             id="modal-references"
             ref="modal-references"
             title="Add references"
+            @ok="getProject"
             scrollable>
             <div class="mt-2">
               <b-form-group
@@ -264,7 +265,20 @@
                 <template v-slot:cell(action)="data">
                   <font-awesome-icon
                     icon="trash"
-                    @click="removeReferenceById(data.item.id)"></font-awesome-icon>
+                    @click="data.toggleDetails"></font-awesome-icon>
+                </template>
+                <template v-slot:row-details="data">
+                  <b-card>
+                    <p>Are you sure you want to delete this reference?</p>
+                    <b-button
+                      block
+                      variant="outline-success"
+                      @click="data.toggleDetails">No</b-button>
+                    <b-button
+                      block
+                      variant="outline-danger"
+                      @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                  </b-card>
                 </template>
               </b-table>
             </div>
@@ -494,7 +508,7 @@ export default {
         if (reference.authors.length === 1) {
           result = reference.authors[0] + ', ' + reference.publication_year + '; '
         } else if (reference.authors.length < 3) {
-            result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; '
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; '
         } else {
           result = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
         }
@@ -697,10 +711,10 @@ export default {
           console.log(error)
         })
     },
-    openModalReferences: function (isoqf_id) {
+    openModalReferences: function (isoqfId) {
       let cnt = 0
       for (let list of this.lists) {
-        if (list.isoqf_id === isoqf_id) {
+        if (list.isoqf_id === isoqfId) {
           this.selected_list_index = cnt
         }
         cnt++
@@ -852,16 +866,13 @@ export default {
       element.setAttribute('download', 'references.ris')
       element.click()
     },
-    removeReferenceById: function (refId) {
-      let cnt = 0
+    confirmRemoveReferenceById: function (refId) {
       let lists = JSON.parse(JSON.stringify(this.lists))
       let objs = []
 
       for (let list of lists) {
-        let x = 0
         let obj = {id: null, references: []}
         for (let rr of list.raw_ref) {
-          let references = []
           if (rr.id !== refId) {
             obj.references.push(rr.id)
           }
@@ -870,16 +881,22 @@ export default {
             objs.push(obj)
           }
         }
-        cnt++
       }
       let requests = []
       for (let o of objs) {
         requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
       }
-      axios.all(requests)
-        .then( axios.spread( response => {
-          console.log(response)
-        }))
+      if (requests.length) {
+        axios.all(requests)
+          .then(axios.spread((response) => {
+            //
+          }))
+      }
+
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then((response) => {
+          this.openModalReferencesSingle(false)
+        })
     }
   }
 }
