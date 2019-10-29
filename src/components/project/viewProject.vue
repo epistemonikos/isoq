@@ -81,12 +81,13 @@
           <p>{{project.review_question}}</p>
         </b-col>
         <b-col cols="12" sm="6" class="toDoc">
-          <h5>Authors of the review</h5>
-          <ul v-if="Object.prototype.hasOwnProperty(project, 'authors')">
+          <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+          <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
             <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
           </ul>
+
           <h5>Has the review been published</h5>
-          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status"><b-link :href="project.url_doi" target="_blank"><font-awesome-icon icon="globe"></font-awesome-icon></b-link></span></p>
+          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
           <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
@@ -184,11 +185,7 @@
               {{ data.item.cerqual_explanation }}
             </template>
             <template v-slot:cell(ref_list)="data">
-              <li
-                v-for="(key, index) in data.item.ref_list"
-                :key="index">
-                {{ data.item.ref_list[index].ref_txt }}
-              </li>
+              {{ data.item.ref_list }}
             </template>
             <template v-slot:cell(actions)="data">
               <font-awesome-icon icon="highlighter"
@@ -501,6 +498,9 @@ export default {
   methods: {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
+      if (this.mode === 'view') {
+        this.table_settings.perPage = this.lists.length
+      }
     },
     parseReference: (reference, onlyAuthors = false) => {
       let result = ''
@@ -614,12 +614,12 @@ export default {
               }
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
-              list.ref_list = []
+              list.ref_list = ''
               list.raw_ref = []
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list.push({'id': ref + '-' + list.id, 'ref_txt': this.parseReference(r, true)})
+                    list.ref_list = list.ref_list + this.parseReference(r, true)
                     list.raw_ref.push(r)
                   }
                 }
@@ -787,11 +787,13 @@ export default {
     generateAndDownload: function () {
       let element = document.getElementsByTagName('tbody')
       var nroElements = element[0].children.length
-      var icon = JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML))
+      var icon = (element[0].children[0].children.length > 1) ? JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML)) : ''
 
       var cnt = 0
       while (cnt < nroElements) {
-        element[0].children[cnt].children[5].innerHTML = ''
+        if (element[0].children.length > 1) {
+          element[0].children[cnt].children[5].innerHTML = ''
+        }
         cnt++
       }
 
@@ -799,7 +801,9 @@ export default {
 
       cnt = 0
       while (cnt < nroElements) {
-        element[0].children[cnt].children[5].innerHTML = icon
+        if (element[0].children.length > 1) {
+          element[0].children[cnt].children[5].innerHTML = icon
+        }
         cnt++
       }
     },
