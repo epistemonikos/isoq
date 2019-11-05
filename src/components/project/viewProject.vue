@@ -11,7 +11,7 @@
       </b-row>
       <b-row class="mb-3">
         <b-col cols="12" class="toDoc">
-          <h1><span class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h1>
+          <h1><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h1>
         </b-col>
       </b-row>
       <b-row
@@ -222,7 +222,7 @@
               {{ data.item.isoqf_id }}
             </template>
             <template v-slot:cell(name)="data">
-              {{ data.item.name }}
+              {{ data.item.name.replace(/’/g, "'") }}
             </template>
             <template v-slot:cell(cerqual_explanation)="data">
               {{ data.item.cerqual_explanation }}
@@ -540,6 +540,9 @@ export default {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
       if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
+        this.table_settings.currentPage = 1
+      } else {
+        this.table_settings.perPage = 5
       }
     },
     parseReference: (reference, onlyAuthors = false) => {
