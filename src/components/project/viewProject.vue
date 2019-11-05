@@ -20,6 +20,7 @@
           cols="12"
           sm="2">
           <b-dropdown
+            v-if="mode==='view'"
             id="export-button"
             class="btn-block"
             variant="outline-secondary"
@@ -144,7 +145,7 @@
         </b-col>
         <b-col cols="12">
           <b-table
-            class="toDoc"
+            v-if="mode==='edit'"
             responsive
             id="findings"
             ref="findings"
@@ -203,7 +204,65 @@
               </div>
             </template>
           </b-table>
+          <b-table
+            v-if="mode==='view'"
+            class="toDoc"
+            responsive
+            id="findings"
+            ref="findings"
+            :fields="fields"
+            :items="lists"
+            empty-text="There are no findings to show"
+            show-empty
+            :busy="table_settings.isBusy"
+            :current-page="table_settings.currentPage"
+            :per-page="table_settings.perPage"
+            :filter="table_settings.filter"
+            @filtered="onFiltered"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
+          >
+            <template v-slot:head(isoqf_id)="data">
+              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
+            </template>
+            <template v-slot:head(name)="data">
+              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
+            </template>
+            <template v-slot:head(confidence)="data">
+              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+            </template>
+            <template v-slot:head(cerqual_explanation)="data">
+              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+            </template>
+            <template v-slot:head(references)="data">
+              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
+            </template>
+            <template v-slot:cell(isoqf_id)="data">
+              {{ data.item.isoqf_id }}
+            </template>
+            <template v-slot:cell(name)="data">
+              {{ data.item.name }}
+            </template>
+            <template v-slot:cell(cerqual_explanation)="data">
+              {{ data.item.cerqual_explanation }}
+            </template>
+            <template v-slot:cell(ref_list)="data">
+              <li
+                v-for="(key, index) in data.item.ref_list"
+                :key="index">
+                {{ data.item.ref_list[index].ref_txt }}
+              </li>
+            </template>
+            <template v-slot:cell(actions)="data">
+            </template>
+            <template v-slot:table-busy>
+              <div class="text-center text-danger my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </template>
+          </b-table>
           <b-pagination
+            v-if="mode==='edit'"
             v-model="table_settings.currentPage"
             :total-rows="lists.length"
             :per-page="table_settings.perPage"
@@ -501,6 +560,8 @@ export default {
   methods: {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
+      if (this.mode === 'view')
+        this.table_settings.perPage = this.lists.length
     },
     parseReference: (reference, onlyAuthors = false) => {
       let result = ''
