@@ -2,7 +2,7 @@
   <div class="mt-4">
     <b-container>
       <b-row align-h="end">
-        <b-col cols="12" class="text-right">
+        <b-col cols="12" class="text-right d-print-none">
           <b-link @click="$router.go(-1)">
             <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
             {{ $t('back') }}
@@ -11,7 +11,7 @@
       </b-row>
       <b-row class="mb-3">
         <b-col cols="12" class="toDoc">
-          <h1>Interactive Summary of Qualitative Findings Table</h1>
+          <h1><span class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h1>
         </b-col>
       </b-row>
       <b-row
@@ -40,7 +40,8 @@
           sm="2">
             <b-button
               variant="outline-info"
-              block>
+              block
+              @click="printiSoQf">
               <font-awesome-icon icon="print"></font-awesome-icon>
               Print
             </b-button>
@@ -74,7 +75,7 @@
       </b-row>
       <b-row>
         <b-col cols="12" class="toDoc">
-          <h2>{{project.name}}</h2>
+          <h2 id="project-title">{{project.name}}</h2>
         </b-col>
         <b-col cols="12" sm="6" class="toDoc">
           <p v-if="project.description">{{project.description}}</p>
@@ -87,7 +88,7 @@
             <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
           </ul>
           <h5>Has the review been published</h5>
-          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status"><b-link :href="project.url_doi" target="_blank"><font-awesome-icon icon="globe"></font-awesome-icon></b-link></span></p>
+          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
           <h5>Is the iSoQf being completed by the review authors?</h5>
           <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
@@ -185,11 +186,7 @@
               {{ data.item.cerqual_explanation }}
             </template>
             <template v-slot:cell(ref_list)="data">
-              <li
-                v-for="(key, index) in data.item.ref_list"
-                :key="index">
-                {{ data.item.ref_list[index].ref_txt }}
-              </li>
+              {{ data.item.ref_list }}
             </template>
             <template v-slot:cell(actions)="data">
               <font-awesome-icon icon="highlighter"
@@ -221,21 +218,6 @@
             @filtered="onFiltered"
             :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
           >
-            <template v-slot:head(isoqf_id)="data">
-              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(name)="data">
-              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(confidence)="data">
-              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(cerqual_explanation)="data">
-              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(references)="data">
-              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
-            </template>
             <template v-slot:cell(isoqf_id)="data">
               {{ data.item.isoqf_id }}
             </template>
@@ -246,11 +228,7 @@
               {{ data.item.cerqual_explanation }}
             </template>
             <template v-slot:cell(ref_list)="data">
-              <li
-                v-for="(key, index) in data.item.ref_list"
-                :key="index">
-                {{ data.item.ref_list[index].ref_txt }}
-              </li>
+              {{ data.item.ref_list }}
             </template>
             <template v-slot:cell(actions)="data">
             </template>
@@ -560,8 +538,9 @@ export default {
   methods: {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
-      if (this.mode === 'view')
+      if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
+      }
     },
     parseReference: (reference, onlyAuthors = false) => {
       let result = ''
@@ -675,12 +654,13 @@ export default {
               }
               list.cerqual_option = list.cerqual.option
               list.cerqual_explanation = list.cerqual.explanation
-              list.ref_list = []
+              list.ref_list = ''
               list.raw_ref = []
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list.push({'id': ref + '-' + list.id, 'ref_txt': this.parseReference(r, true)})
+                    // list.ref_list.push({'id': ref + '-' + list.id, 'ref_txt': this.parseReference(r, true)})
+                    list.ref_list = list.ref_list + this.parseReference(r, true)
                     list.raw_ref.push(r)
                   }
                 }
@@ -809,7 +789,7 @@ export default {
       this.table_settings.currentPage = 1
     },
     Export2Doc (element, filename = '') {
-      const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>"
+      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
       const postHtml = '</body></html>'
 
       let objs = document.getElementsByClassName(element)
@@ -849,6 +829,7 @@ export default {
       let element = document.getElementsByTagName('tbody')
       var nroElements = element[0].children.length
       var icon = JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML))
+      let title = document.getElementById('project-title').innerHTML
 
       var cnt = 0
       while (cnt < nroElements) {
@@ -856,7 +837,7 @@ export default {
         cnt++
       }
 
-      this.Export2Doc('toDoc')
+      this.Export2Doc('toDoc', title)
 
       cnt = 0
       while (cnt < nroElements) {
@@ -959,6 +940,9 @@ export default {
         .then((response) => {
           this.openModalReferencesSingle(false)
         })
+    },
+    printiSoQf: function () {
+      window.print()
     }
   }
 }
