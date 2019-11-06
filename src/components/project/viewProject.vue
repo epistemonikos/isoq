@@ -2,7 +2,7 @@
   <div class="mt-4">
     <b-container>
       <b-row align-h="end">
-        <b-col cols="12" class="text-right">
+        <b-col cols="12" class="text-right d-print-none">
           <b-link @click="$router.go(-1)">
             <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
             {{ $t('back') }}
@@ -11,7 +11,7 @@
       </b-row>
       <b-row class="mb-3">
         <b-col cols="12" class="toDoc">
-          <h1>Interactive Summary of Qualitative Findings Table</h1>
+          <h1><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h1>
         </b-col>
       </b-row>
       <b-row
@@ -20,6 +20,7 @@
           cols="12"
           sm="2">
           <b-dropdown
+            v-if="mode==='view'"
             id="export-button"
             class="btn-block"
             variant="outline-secondary"
@@ -39,7 +40,8 @@
           sm="2">
             <b-button
               variant="outline-info"
-              block>
+              block
+              @click="printiSoQf">
               <font-awesome-icon icon="print"></font-awesome-icon>
               Print
             </b-button>
@@ -73,7 +75,7 @@
       </b-row>
       <b-row>
         <b-col cols="12" class="toDoc">
-          <h2>{{project.name}}</h2>
+          <h2 id="project-title">{{project.name}}</h2>
         </b-col>
         <b-col cols="12" sm="6" class="toDoc">
           <p v-if="project.description">{{project.description}}</p>
@@ -145,7 +147,7 @@
         </b-col>
         <b-col cols="12">
           <b-table
-            class="toDoc"
+            v-if="mode==='edit'"
             responsive
             id="findings"
             ref="findings"
@@ -181,8 +183,27 @@
             <template v-slot:cell(name)="data">
               <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
             </template>
+            <template v-slot:cell(cerqual_option)="data">
+              {{ data.item.cerqual_option }}
+              <b-button
+                block
+                variant="outline-info"
+                :to="{name: 'editList', params: {id: data.item.id}}">
+                  <span v-if="data.item.cerqual_option===''">Complete</span>
+                  <span v-if="data.item.cerqual_option!=''">Edit</span>
+                  CERQual Assessment
+                </b-button>
+            </template>
             <template v-slot:cell(cerqual_explanation)="data">
               {{ data.item.cerqual_explanation }}
+              <b-button
+                block
+                variant="outline-info"
+                :to="{name: 'editList', params: {id: data.item.id}}">
+                  <span v-if="data.item.cerqual_explanation===''">Complete</span>
+                  <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+                  CERQual Assessment
+              </b-button>
             </template>
             <template v-slot:cell(ref_list)="data">
               {{ data.item.ref_list }}
@@ -200,7 +221,35 @@
               </div>
             </template>
           </b-table>
+          <b-table
+            v-if="mode==='view'"
+            class="toDoc"
+            responsive
+            id="findings"
+            ref="findings"
+            :fields="fields"
+            :items="lists"
+            empty-text="There are no findings to show"
+            show-empty
+            :busy="table_settings.isBusy"
+            :current-page="table_settings.currentPage"
+            :per-page="table_settings.perPage"
+            :filter="table_settings.filter"
+            @filtered="onFiltered"
+            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
+          >
+            <template v-slot:cell(name)="data">
+              {{ data.item.name.replace(/’/g, "'") }}
+            </template>
+            <template v-slot:table-busy>
+              <div class="text-center text-danger my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </template>
+          </b-table>
           <b-pagination
+            v-if="mode==='edit'"
             v-model="table_settings.currentPage"
             :total-rows="lists.length"
             :per-page="table_settings.perPage"
@@ -335,15 +384,7 @@ export default {
         },
         {
           key: 'cerqual_option',
-          label: 'CERQual Assessment of confidence',
-          formatter: (value, key, item) => {
-            if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
-              if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && value != null) {
-                return this.cerqual_confidence[value].text
-              }
-            }
-          },
-          filterByFormatted: true
+          label: 'CERQual Assessment of confidence'
         },
         {
           key: 'cerqual_explanation',
@@ -500,6 +541,9 @@ export default {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
       if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
+        this.table_settings.currentPage = 1
+      } else {
+        this.table_settings.perPage = 5
       }
     },
     parseReference: (reference, onlyAuthors = false) => {
@@ -612,7 +656,10 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
-              list.cerqual_option = list.cerqual.option
+              list.cerqual_option = ''
+              if (list.cerqual.option != null) {
+                list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+              }
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
               list.raw_ref = []
@@ -748,7 +795,7 @@ export default {
       this.table_settings.currentPage = 1
     },
     Export2Doc (element, filename = '') {
-      const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>"
+      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
       const postHtml = '</body></html>'
 
       let objs = document.getElementsByClassName(element)
@@ -788,6 +835,7 @@ export default {
       let element = document.getElementsByTagName('tbody')
       var nroElements = element[0].children.length
       var icon = (element[0].children[0].children.length > 1) ? JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML)) : ''
+      let title = document.getElementById('project-title').innerHTML
 
       var cnt = 0
       while (cnt < nroElements) {
@@ -797,7 +845,7 @@ export default {
         cnt++
       }
 
-      this.Export2Doc('toDoc')
+      this.Export2Doc('toDoc', title)
 
       cnt = 0
       while (cnt < nroElements) {
@@ -902,6 +950,9 @@ export default {
         .then((response) => {
           this.openModalReferencesSingle(false)
         })
+    },
+    printiSoQf: function () {
+      window.print()
     }
   }
 }
