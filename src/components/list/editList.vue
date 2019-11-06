@@ -10,7 +10,7 @@
         </b-col>
       </b-row>
       <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
-      <h3 v-if="mode==='edit'">Review finding: <span>{{list.name}}</span></h3>
+      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding</span> <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-5">
         <b-col
@@ -980,11 +980,11 @@ export default {
       let authors = ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length === 1) {
-          authors = reference.authors[0] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+          authors = reference.authors[0] + '. ' + reference.publication_year + '; '
         } else if (reference.authors.length < 3) {
-          authors = reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+          authors = reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.publication_year + '; '
         } else {
-          authors = reference.authors[0] + ' et al., ' + reference.title + '. ' + reference.publication_year + '; ' + reference.volume_number + ' ' + reference.start_page + ' p.'
+          authors = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
         }
       }
       return authors
