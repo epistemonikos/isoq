@@ -182,8 +182,27 @@
             <template v-slot:cell(name)="data">
               <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
             </template>
+            <template v-slot:cell(cerqual_option)="data">
+              {{ data.item.cerqual_option }}
+              <b-button
+                block
+                variant="outline-info"
+                :to="{name: 'editList', params: {id: data.item.id}}">
+                  <span v-if="data.item.cerqual_option===''">Complete</span>
+                  <span v-if="data.item.cerqual_option!=''">Edit</span>
+                  CERQual Assessment
+                </b-button>
+            </template>
             <template v-slot:cell(cerqual_explanation)="data">
               {{ data.item.cerqual_explanation }}
+              <b-button
+                block
+                variant="outline-info"
+                :to="{name: 'editList', params: {id: data.item.id}}">
+                  <span v-if="data.item.cerqual_explanation===''">Complete</span>
+                  <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+                  CERQual Assessment
+              </b-button>
             </template>
             <template v-slot:cell(ref_list)="data">
               {{ data.item.ref_list }}
@@ -218,19 +237,8 @@
             @filtered="onFiltered"
             :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
           >
-            <template v-slot:cell(isoqf_id)="data">
-              {{ data.item.isoqf_id }}
-            </template>
             <template v-slot:cell(name)="data">
               {{ data.item.name.replace(/’/g, "'") }}
-            </template>
-            <template v-slot:cell(cerqual_explanation)="data">
-              {{ data.item.cerqual_explanation }}
-            </template>
-            <template v-slot:cell(ref_list)="data">
-              {{ data.item.ref_list }}
-            </template>
-            <template v-slot:cell(actions)="data">
             </template>
             <template v-slot:table-busy>
               <div class="text-center text-danger my-2">
@@ -375,15 +383,7 @@ export default {
         },
         {
           key: 'cerqual_option',
-          label: 'CERQual Assessment of confidence',
-          formatter: (value, key, item) => {
-            if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
-              if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && value != null) {
-                return this.cerqual_confidence[value].text
-              }
-            }
-          },
-          filterByFormatted: true
+          label: 'CERQual Assessment of confidence'
         },
         {
           key: 'cerqual_explanation',
@@ -655,7 +655,10 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
-              list.cerqual_option = list.cerqual.option
+              list.cerqual_option = ''
+              if (list.cerqual.option != null) {
+                list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+              }
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
               list.raw_ref = []
