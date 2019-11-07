@@ -9,355 +9,403 @@
           </b-link>
         </b-col>
       </b-row>
-      <b-row class="mb-3">
-        <b-col cols="12" class="toDoc">
-          <h1><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h1>
-        </b-col>
-      </b-row>
-      <b-row
-        class="d-print-none justify-content-end mb-5">
-        <b-col
-          cols="12"
-          sm="2">
-          <b-dropdown
-            v-if="mode==='view'"
-            id="export-button"
-            class="btn-block"
-            variant="outline-secondary"
-            right
-            text="Export">
-            <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-            <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
-            <b-dropdown-item disabled>to GRADE</b-dropdown-item>
-            <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
-          </b-dropdown>
-        </b-col>
-        <b-col
-          class="mt-1 mt-sm-0"
-          v-if="mode==='view'"
-          cols="12"
-          sm="2">
-            <b-button
-              variant="outline-info"
-              block
-              @click="printiSoQf">
-              <font-awesome-icon icon="print"></font-awesome-icon>
-              Print
-            </b-button>
-        </b-col>
-        <b-col
-          class="mt-1 mt-sm-0"
-          v-if="mode==='view'"
-          cols="12"
-          sm="2">
-            <b-button
-              @click="changeMode"
-              variant="outline-primary"
-              block>
-              <font-awesome-icon icon="edit"></font-awesome-icon>
-              Edit
-            </b-button>
-        </b-col>
-        <b-col
-          class="mt-1 mt-sm-0"
-          v-if="mode==='edit'"
-          cols="12"
-          sm="2">
-            <b-button
-              @click="changeMode"
-              variant="outline-success"
-              block>
-              <font-awesome-icon icon="eye"></font-awesome-icon>
-              View
-            </b-button>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col cols="12" class="toDoc">
-          <h2 id="project-title">{{project.name}}</h2>
-        </b-col>
-        <b-col cols="12" sm="6" class="toDoc">
-          <p v-if="project.description">{{project.description}}</p>
-          <h5>Review question</h5>
-          <p>{{project.review_question}}</p>
-        </b-col>
-        <b-col cols="12" sm="6" class="toDoc">
-          <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-          <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-            <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-          </ul>
-
-          <h5>Has the review been published</h5>
-          <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
-
-          <h5>Is the iSoQf being completed by the review authors?</h5>
-          <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
-        </b-col>
-        <b-col
-          v-if="mode==='edit'"
-          cols="12"
-          class="my-2">
-          <b-card
-            bg-variant="light">
-            <b-row>
-              <b-col
-                cols="12">
-                <b-form-group>
-                  <b-input-group>
-                    <b-form-input
-                      v-model="table_settings.filter"
-                      type="search"
-                      id="filterInput"
-                      placeholder="Type to Search"></b-form-input>
-                    <b-input-group-append>
-                      <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
-                    </b-input-group-append>
-                  </b-input-group>
-                </b-form-group>
-              </b-col>
-            </b-row>
-            <b-row
-              align-h="end">
-              <b-col
-                class="mt-2 mt-sm-0"
-                cols="12"
-                sm="4">
+      <b-tabs content-class="mt-3" fill>
+        <b-tab title="Project properties">
+          <b-row>
+            <b-col
+              cols="12">
+              <h2>Project properties</h2>
+            </b-col>
+          </b-row>
+          [info]
+        </b-tab>
+        <b-tab title="iSoQf" active>
+          <b-row class="mb-3">
+            <b-col cols="12" class="toDoc">
+              <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
+            </b-col>
+          </b-row>
+          <b-row
+            class="d-print-none justify-content-end mb-5">
+            <b-col
+              cols="12"
+              sm="2">
+              <b-dropdown
+                v-if="mode==='view'"
+                id="export-button"
+                class="btn-block"
+                variant="outline-secondary"
+                right
+                text="Export">
+                <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
+                <b-dropdown-item disabled>to GRADE</b-dropdown-item>
+                <b-dropdown-divider></b-dropdown-divider>
+                <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+              </b-dropdown>
+            </b-col>
+            <b-col
+              class="mt-1 mt-sm-0"
+              v-if="mode==='view'"
+              cols="12"
+              sm="2">
                 <b-button
-                  variant="outline-primary"
+                  variant="outline-info"
                   block
-                  @click="openModalReferencesSingle">
-                  Import references
+                  @click="printiSoQf">
+                  <font-awesome-icon icon="print"></font-awesome-icon>
+                  Print
                 </b-button>
-              </b-col>
-              <b-col
-                class="mt-2 mt-sm-0"
-                cols="12"
-                sm="4">
+            </b-col>
+            <b-col
+              class="mt-1 mt-sm-0"
+              v-if="mode==='view'"
+              cols="12"
+              sm="2">
                 <b-button
-                  v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
+                  @click="changeMode"
                   variant="outline-primary"
-                  @click="modalAddSummarized"
                   block>
-                  Add finding
+                  <font-awesome-icon icon="edit"></font-awesome-icon>
+                  Edit
                 </b-button>
-              </b-col>
-            </b-row>
-          </b-card>
-        </b-col>
-        <b-col cols="12">
-          <b-table
-            v-if="mode==='edit'"
-            responsive
-            id="findings"
-            ref="findings"
-            :fields="fields"
-            :items="lists"
-            empty-text="There are no findings to show"
-            show-empty
-            :busy="table_settings.isBusy"
-            :current-page="table_settings.currentPage"
-            :per-page="table_settings.perPage"
-            :filter="table_settings.filter"
-            @filtered="onFiltered"
-            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
-          >
-            <template v-slot:head(isoqf_id)="data">
-              <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(name)="data">
-              <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(confidence)="data">
-              <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(cerqual_explanation)="data">
-              <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
-            </template>
-            <template v-slot:head(references)="data">
-              <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
-            </template>
-            <template v-slot:cell(isoqf_id)="data">
-              {{ data.item.isoqf_id }}
-            </template>
-            <template v-slot:cell(name)="data">
-              <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-            </template>
-            <template v-slot:cell(cerqual_option)="data">
-              {{ data.item.cerqual_option }}
-              <b-button
-                block
-                variant="outline-info"
-                :to="{name: 'editList', params: {id: data.item.id}}">
-                  <span v-if="data.item.cerqual_option===''">Complete</span>
-                  <span v-if="data.item.cerqual_option!=''">Edit</span>
-                  CERQual Assessment
-                </b-button>
-            </template>
-            <template v-slot:cell(cerqual_explanation)="data">
-              {{ data.item.cerqual_explanation }}
-              <b-button
-                block
-                variant="outline-info"
-                :to="{name: 'editList', params: {id: data.item.id}}">
-                  <span v-if="data.item.cerqual_explanation===''">Complete</span>
-                  <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                  CERQual Assessment
-              </b-button>
-            </template>
-            <template v-slot:cell(ref_list)="data">
-              {{ data.item.ref_list }}
-            </template>
-            <template v-slot:cell(actions)="data">
-              <font-awesome-icon icon="highlighter"
-                @click="openModalReferences(data.item.isoqf_id)"
-                v-b-tooltip.hover
-                title="Select the references that contribute to this review finding"></font-awesome-icon>
-            </template>
-            <template v-slot:table-busy>
-              <div class="text-center text-danger my-2">
-                <b-spinner class="align-middle"></b-spinner>
-                <strong>Loading...</strong>
-              </div>
-            </template>
-          </b-table>
-          <b-table
-            v-if="mode==='view'"
-            class="toDoc"
-            responsive
-            id="findings"
-            ref="findings"
-            :fields="fields"
-            :items="lists"
-            empty-text="There are no findings to show"
-            show-empty
-            :busy="table_settings.isBusy"
-            :current-page="table_settings.currentPage"
-            :per-page="table_settings.perPage"
-            :filter="table_settings.filter"
-            @filtered="onFiltered"
-            :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
-          >
-            <template v-slot:cell(name)="data">
-              {{ data.item.name.replace(/’/g, "'") }}
-            </template>
-            <template v-slot:table-busy>
-              <div class="text-center text-danger my-2">
-                <b-spinner class="align-middle"></b-spinner>
-                <strong>Loading...</strong>
-              </div>
-            </template>
-          </b-table>
-          <b-pagination
-            v-if="mode==='edit'"
-            v-model="table_settings.currentPage"
-            :total-rows="lists.length"
-            :per-page="table_settings.perPage"
-            aria-controls="findings"
-            align="center"></b-pagination>
-          <b-modal
-            id="add-summarized"
-            ref="add-summarized"
-            title="Summarized review finding"
-            @ok="saveSummarized">
-            <b-form-group
-              label="Summarized review"
-              label-for="summarized-review">
-              <b-form-input
-                id="summarized-review"
-                v-model="summarized_review"></b-form-input>
-            </b-form-group>
-            </b-modal>
-          <b-modal
-            id="modal-references"
-            ref="modal-references"
-            title="Add references"
-            @ok="getProject"
-            scrollable>
-            <div class="mt-2">
-              <b-form-group
-                label="Load references"
-                label-for="input-ris-file">
-                <b-form-file
-                  id="input-ris-file"
-                  plain
-                  @change="loadRefs($event)"></b-form-file>
+            </b-col>
+            <b-col
+              class="mt-1 mt-sm-0"
+              v-if="mode==='edit'"
+              cols="12"
+              sm="2">
                 <b-button
-                  class="mt-2"
-                  @click="saveReferences">
-                    Upload
+                  @click="changeMode"
+                  variant="outline-success"
+                  block>
+                  <font-awesome-icon icon="eye"></font-awesome-icon>
+                  View
                 </b-button>
-              </b-form-group>
-            </div>
-            <div>
-              <b-alert
-                v-if="msgUploadReferences"
-                show
-                variant="info"
-                dismissible
-                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
-            </div>
-            <div
-              class="mt-2"
-              v-if="references.length">
-              <p>Below are the references you have uploaded.</p>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col cols="12" class="toDoc">
+              <h3 id="project-title">{{project.name}}</h3>
+            </b-col>
+            <b-col cols="12" sm="6" class="toDoc">
+              <p v-if="project.description">{{project.description}}</p>
+              <h5>Review question</h5>
+              <p>{{project.review_question}}</p>
+            </b-col>
+            <b-col cols="12" sm="6" class="toDoc">
+              <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+              <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+              </ul>
+
+              <h5>Has the review been published</h5>
+              <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+              <h5>Is the iSoQf being completed by the review authors?</h5>
+              <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col
+              v-if="mode==='edit'"
+              cols="12"
+              class="my-2">
+              <b-card
+                bg-variant="light">
+                <b-row>
+                  <b-col
+                    cols="12">
+                    <b-form-group>
+                      <b-input-group>
+                        <b-form-input
+                          v-model="table_settings.filter"
+                          type="search"
+                          id="filterInput"
+                          placeholder="Type to Search"></b-form-input>
+                        <b-input-group-append>
+                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </b-col>
+                </b-row>
+                <b-row
+                  align-h="end">
+                  <b-col
+                    class="mt-2 mt-sm-0"
+                    cols="12"
+                    sm="4">
+                    <b-button
+                      variant="outline-primary"
+                      block
+                      @click="openModalReferencesSingle">
+                      Import references
+                    </b-button>
+                  </b-col>
+                  <b-col
+                    class="mt-2 mt-sm-0"
+                    cols="12"
+                    sm="4">
+                    <b-button
+                      v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
+                      variant="outline-primary"
+                      @click="modalAddSummarized"
+                      block>
+                      Add finding
+                    </b-button>
+                  </b-col>
+                </b-row>
+              </b-card>
+            </b-col>
+            <b-col cols="12">
               <b-table
-                head-variant="light"
-                hover
-                bordered
-                borderless
-                :fields="fields_references_table"
-                :items="references">
-                <template v-slot:cell(action)="data">
-                  <font-awesome-icon
-                    icon="trash"
-                    @click="data.toggleDetails"></font-awesome-icon>
+                v-if="mode==='edit'"
+                responsive
+                id="findings"
+                ref="findings"
+                :fields="fields"
+                :items="lists"
+                empty-text="There are no findings to show"
+                show-empty
+                :busy="table_settings.isBusy"
+                :current-page="table_settings.currentPage"
+                :per-page="table_settings.perPage"
+                :filter="table_settings.filter"
+                @filtered="onFiltered"
+                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
+              >
+                <template v-slot:head(isoqf_id)="data">
+                  <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
                 </template>
-                <template v-slot:row-details="data">
-                  <b-card>
-                    <p>Are you sure you want to delete this reference?</p>
-                    <b-button
-                      block
-                      variant="outline-success"
-                      @click="data.toggleDetails">No</b-button>
-                    <b-button
-                      block
-                      variant="outline-danger"
-                      @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
-                  </b-card>
+                <template v-slot:head(name)="data">
+                  <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
+                </template>
+                <template v-slot:head(confidence)="data">
+                  <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+                </template>
+                <template v-slot:head(cerqual_explanation)="data">
+                  <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                </template>
+                <template v-slot:head(references)="data">
+                  <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
+                </template>
+                <template v-slot:cell(isoqf_id)="data">
+                  {{ data.item.isoqf_id }}
+                </template>
+                <template v-slot:cell(name)="data">
+                  <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                </template>
+                <template v-slot:cell(cerqual_option)="data">
+                  {{ data.item.cerqual_option }}
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :to="{name: 'editList', params: {id: data.item.id}}">
+                      <span v-if="data.item.cerqual_option===''">Complete</span>
+                      <span v-if="data.item.cerqual_option!=''">Edit</span>
+                      CERQual Assessment
+                    </b-button>
+                </template>
+                <template v-slot:cell(cerqual_explanation)="data">
+                  {{ data.item.cerqual_explanation }}
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :to="{name: 'editList', params: {id: data.item.id}}">
+                      <span v-if="data.item.cerqual_explanation===''">Complete</span>
+                      <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+                      CERQual Assessment
+                  </b-button>
+                </template>
+                <template v-slot:cell(ref_list)="data">
+                  {{ data.item.ref_list }}
+                </template>
+                <template v-slot:cell(actions)="data">
+                  <font-awesome-icon icon="highlighter"
+                    @click="openModalReferences(data.item.isoqf_id)"
+                    v-b-tooltip.hover
+                    title="Select the references that contribute to this review finding"></font-awesome-icon>
+                </template>
+                <template v-slot:table-busy>
+                  <div class="text-center text-danger my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </div>
                 </template>
               </b-table>
-            </div>
-          </b-modal>
-          <b-modal
-            id="modal-references-list"
-            ref="modal-references-list"
-            title="Select references"
-            @ok="saveReferencesList"
-            size="lg"
-            scrollable>
-            <div
-              class="mt-2"
-              v-if="references.length">
-              <b-form-group>
-                <b-form-checkbox
-                  v-for="ref in references"
-                  v-model="selected_references"
-                  :key="ref.id"
-                  :value="ref.id"
-                  name="references">
-                  {{ getDataDisplayRef(ref) }}
-                </b-form-checkbox>
-              </b-form-group>
-            </div>
-            <div
-              class="mt-2"
-              v-if="references.length === 0">
-              <p>To select references, first upload your full reference list by clicking “Import References” next to the search bar.</p>
-            </div>
-          </b-modal>
-        </b-col>
-      </b-row>
+              <b-table
+                v-if="mode==='view'"
+                class="toDoc"
+                responsive
+                id="findings"
+                ref="findings"
+                :fields="fields"
+                :items="lists"
+                empty-text="There are no findings to show"
+                show-empty
+                :busy="table_settings.isBusy"
+                :current-page="table_settings.currentPage"
+                :per-page="table_settings.perPage"
+                :filter="table_settings.filter"
+                @filtered="onFiltered"
+                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
+              >
+                <template v-slot:cell(name)="data">
+                  {{ data.item.name.replace(/’/g, "'") }}
+                </template>
+                <template v-slot:table-busy>
+                  <div class="text-center text-danger my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </div>
+                </template>
+              </b-table>
+              <b-pagination
+                v-if="mode==='edit'"
+                v-model="table_settings.currentPage"
+                :total-rows="lists.length"
+                :per-page="table_settings.perPage"
+                aria-controls="findings"
+                align="center"></b-pagination>
+              <b-modal
+                id="add-summarized"
+                ref="add-summarized"
+                title="Summarized review finding"
+                @ok="saveSummarized">
+                <b-form-group
+                  label="Summarized review"
+                  label-for="summarized-review">
+                  <b-form-input
+                    id="summarized-review"
+                    v-model="summarized_review"></b-form-input>
+                </b-form-group>
+                </b-modal>
+              <b-modal
+                id="modal-references"
+                ref="modal-references"
+                title="Add references"
+                @ok="getProject"
+                scrollable>
+                <div class="mt-2">
+                  <b-form-group
+                    label="Load references"
+                    label-for="input-ris-file">
+                    <b-form-file
+                      id="input-ris-file"
+                      plain
+                      @change="loadRefs($event)"></b-form-file>
+                    <b-button
+                      class="mt-2"
+                      @click="saveReferences">
+                        Upload
+                    </b-button>
+                  </b-form-group>
+                </div>
+                <div>
+                  <b-alert
+                    v-if="msgUploadReferences"
+                    show
+                    variant="info"
+                    dismissible
+                    @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
+                </div>
+                <div
+                  class="mt-2"
+                  v-if="references.length">
+                  <p>Below are the references you have uploaded.</p>
+                  <b-table
+                    head-variant="light"
+                    hover
+                    bordered
+                    borderless
+                    :fields="fields_references_table"
+                    :items="references">
+                    <template v-slot:cell(action)="data">
+                      <font-awesome-icon
+                        icon="trash"
+                        @click="data.toggleDetails"></font-awesome-icon>
+                    </template>
+                    <template v-slot:row-details="data">
+                      <b-card>
+                        <p>Are you sure you want to delete this reference?</p>
+                        <b-button
+                          block
+                          variant="outline-success"
+                          @click="data.toggleDetails">No</b-button>
+                        <b-button
+                          block
+                          variant="outline-danger"
+                          @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                      </b-card>
+                    </template>
+                  </b-table>
+                </div>
+              </b-modal>
+              <b-modal
+                id="modal-references-list"
+                ref="modal-references-list"
+                title="Select references"
+                @ok="saveReferencesList"
+                size="lg"
+                scrollable>
+                <div
+                  class="mt-2"
+                  v-if="references.length">
+                  <b-form-group>
+                    <b-form-checkbox
+                      v-for="ref in references"
+                      v-model="selected_references"
+                      :key="ref.id"
+                      :value="ref.id"
+                      name="references">
+                      {{ getDataDisplayRef(ref) }}
+                    </b-form-checkbox>
+                  </b-form-group>
+                </div>
+                <div
+                  class="mt-2"
+                  v-if="references.length === 0">
+                  <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
+                </div>
+              </b-modal>
+            </b-col>
+          </b-row>
+        </b-tab>
+        <b-tab title="Key information">
+          <b-row>
+            <b-col
+              cols="12">
+              <h3>Key information on Included Studies</h3>
+              <p>To optimize the functionality of iSoQf and save you time please add the following information. You first need to upload your reference list of included studies before moving on to characteristics of studies and methodological assessment tables. All of these files are needed in order to apply the CERQual approach and by including them here the relevant information will be automatically extracted where needed in the evidence profiles saving you time and reducing potential errors.</p>
+            </b-col>
+            <b-col
+              cols="12">
+              <h6>References for included Studies</h6>
+              <p>You must import only the references for your final list of included studies </p>
+              <b-form-file
+                id="input-ris-file"
+                plain
+                @change="loadRefs($event)"></b-form-file>
+              <b-button
+                class="mt-2"
+                @click="saveReferences">
+                  Upload
+              </b-button>
+            </b-col>
+            <b-col
+              cols="12"
+              class="mt-3">
+              <h6>Characteristics of Studies table</h6>
+            </b-col>
+            <b-col
+              cols="12"
+              class="mt-3">
+              <h6>Methodological Assessments table</h6>
+            </b-col>
+          </b-row>
+        </b-tab>
+      </b-tabs>
     </b-container>
   </div>
 </template>
@@ -753,6 +801,10 @@ export default {
           if (showModal) {
             this.msgUploadReferences = ''
             this.$refs['modal-references'].show()
+          }
+          if (!this.references.length) {
+            // change for a tab
+            // this.$bvModal.show('pre-load-refs')
           }
         })
         .catch((error) => {
