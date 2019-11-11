@@ -19,7 +19,7 @@
           </b-row>
           [info]
         </b-tab>
-        <b-tab title="iSoQf" active>
+        <b-tab title="iSoQf">
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
               <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
@@ -372,7 +372,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Key information">
+        <b-tab title="Key information" active>
           <b-row>
             <b-col
               cols="12">
@@ -383,8 +383,15 @@
               cols="12">
               <h6>References for included Studies</h6>
               <p>You must import only the references for your final list of included studies </p>
+              <b-alert
+                v-if="msgUploadReferences"
+                show
+                variant="info"
+                dismissible
+                class="my-2"
+                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
               <b-form-file
-                id="input-ris-file"
+                id="input-ris-file-key"
                 plain
                 @change="loadRefs($event)"></b-form-file>
               <b-button
@@ -397,11 +404,58 @@
               cols="12"
               class="mt-3">
               <h6>Characteristics of Studies table</h6>
+              <b-button
+                v-b-modal.open-char-of-studies-table-modal
+                :disabled="(this.references.length) ? false : true">
+                Create table
+              </b-button>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Edit table
+              </b-button>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Import table
+              </b-button>
+
+              <b-table
+                :fields="charsOfStudies.fields"
+                :items="charsOfStudies.items"></b-table>
+
+              <b-modal
+                id="open-char-of-studies-table-modal"
+                scrollable
+                @ok="saveCharacteristicsStudiesFields">
+                  <b-form-group
+                    label="Nro of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="charsOfStudiesFieldsModal.nroColumns"
+                      type="number" min="1" max="10"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-form-input
+                      :id="`column_${cnt}`"
+                      v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
+                      type="text"></b-form-input>
+                  </b-form-group>
+              </b-modal>
             </b-col>
             <b-col
               cols="12"
               class="mt-3">
               <h6>Methodological Assessments table</h6>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Create table
+              </b-button>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Import table
+              </b-button>
             </b-col>
           </b-row>
         </b-tab>
@@ -507,7 +561,17 @@ export default {
       selected_references: [],
       lastId: 1,
       mode: 'edit',
-      msgUploadReferences: ''
+      msgUploadReferences: '',
+      charsOfStudiesFieldsModal: {
+        nroColumns: 1,
+        fields: [],
+        items: []
+      },
+      charsOfStudies: {
+        fields: [],
+        items: [],
+        authors: ''
+      }
     }
   },
   mounted () {
@@ -684,6 +748,7 @@ export default {
         .then((response) => {
           this.project = response.data
           this.getLists() // summary review
+          this.getCharacteristics()
         })
         .catch((error) => {
           console.log(error)
@@ -1005,6 +1070,57 @@ export default {
     },
     printiSoQf: function () {
       window.print()
+    },
+    getAuthorsFormat: function (authors = [], pubYear = '') {
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0] + ', ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0] + ', ' + authors[1] + ', ' + pubYear
+        } else {
+          return authors[0] + ' et al., ' + ' ' + pubYear
+        }
+      } else {
+        return ''
+      }
+    },
+    saveCharacteristicsStudiesFields: function () {
+      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
+      let references = JSON.parse(JSON.stringify(this.references))
+      let params = {}
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.items = []
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        params.fields.push(objField)
+      }
+      params.organization = this.$route.params.org_id
+      params.project_id = this.$route.params.id
+      params.nro_of_fields = fields.length
+
+      for (let r of references) {
+        params.items.push({ 'ref_id': r.id, 'authors': this.getAuthorsFormat(r.authors, r.publication_year) })
+      }
+
+      axios.post('/api/isoqf_characteristics', params)
+        .then((response) => {
+          this.charsOfStudies = response.data
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    getCharacteristics: function () {
+      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length) {
+            this.charsOfStudies = response.data[0]
+          }
+        })
     }
   }
 }
