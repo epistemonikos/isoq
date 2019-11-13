@@ -405,13 +405,9 @@
               class="mt-3">
               <h6>Characteristics of Studies table</h6>
               <b-button
-                v-b-modal.open-char-of-studies-table-modal
+                @click="openModalCharsOfStudies"
                 :disabled="(this.references.length) ? false : true">
                 Create table
-              </b-button>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Edit table
               </b-button>
               <b-button
                 :disabled="(this.references.length) ? false : true">
@@ -420,11 +416,21 @@
 
               <b-table
                 :fields="charsOfStudies.fields"
-                :items="charsOfStudies.items"></b-table>
+                :items="charsOfStudies.items"
+                class="mt-3">
+                <template
+                  v-slot:cell(actions)="data">
+                  <font-awesome-icon
+                    @click="addDataCharsOfStudies(data.index)"
+                    icon="edit"></font-awesome-icon>
+                </template>
+              </b-table>
 
               <b-modal
                 id="open-char-of-studies-table-modal"
+                ref="open-char-of-studies-table-modal"
                 scrollable
+                title="Columns header"
                 @ok="saveCharacteristicsStudiesFields">
                   <b-form-group
                     label="Nro of columnns">
@@ -437,11 +443,35 @@
                     v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
                     :key="cnt"
                     :label="`Columnn #${cnt}`">
-                    <b-form-input
-                      :id="`column_${cnt}`"
-                      v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
-                      type="text"></b-form-input>
+                    <b-input-group>
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="charsOfStudies.id">
+                        <b-button
+                          @click="deleteFieldFromCharsSudies(cnt - 1)">
+                          Del {{ cnt - 1 }}
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
                   </b-form-group>
+              </b-modal>
+              <b-modal
+                ref="edit-chars-of-studies-data"
+                title="Edit data"
+                scrollable
+                @ok="saveDataCharsOfStudies">
+                <b-form-group
+                  v-for="field of charsOfStudies.fields"
+                  :key="field.id"
+                  :label="field.label">
+                  <b-form-input
+                    v-if="field.key !== 'actions'"
+                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-input>
+                </b-form-group>
               </b-modal>
             </b-col>
             <b-col
@@ -565,7 +595,8 @@ export default {
       charsOfStudiesFieldsModal: {
         nroColumns: 1,
         fields: [],
-        items: []
+        items: [],
+        selected_item_index: 0
       },
       charsOfStudies: {
         fields: [],
@@ -1085,6 +1116,38 @@ export default {
         return ''
       }
     },
+    deleteFieldFromCharsSudies: function (index) {
+      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
+      let params = {}
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+
+      fields.splice(index, 1)
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        params.fields.push(objField)
+      }
+
+      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        .then((response) => {
+          this.getProject()
+        }).catch((error) => {
+          console.log('error: ', error)
+        })
+    },
+    openModalCharsOfStudies: function () {
+      let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let editFields = []
+      for (let field of fields) {
+        if (field.key !== 'ref_id' && field.key !== 'authors') {
+          editFields.push(field.label)
+        }
+      }
+      this.charsOfStudiesFieldsModal.fields = editFields
+      this.$refs['open-char-of-studies-table-modal'].show()
+    },
     saveCharacteristicsStudiesFields: function () {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
@@ -1103,23 +1166,77 @@ export default {
       params.nro_of_fields = fields.length
 
       for (let r of references) {
-        params.items.push({ 'ref_id': r.id, 'authors': this.getAuthorsFormat(r.authors, r.publication_year) })
+        let objItem = {}
+        for (let cnt in fields) {
+          objItem['column_' + cnt] = ''
+        }
+        objItem.ref_id = r.id
+        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        params.items.push(objItem)
       }
 
-      axios.post('/api/isoqf_characteristics', params)
-        .then((response) => {
-          this.charsOfStudies = response.data
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
+        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+          .then((response) => {
+            console.log(response.data)
+            this.getProject()
+          }).catch((error) => {
+            console.log('error: ', error)
+          })
+      } else {
+        axios.post('/api/isoqf_characteristics', params)
+          .then((response) => {
+            // this.charsOfStudies = response.data
+            this.getProject()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     getCharacteristics: function () {
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
+            this.charsOfStudies.fields.push({'key': 'actions', 'label': ''})
+            if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
+              const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+              const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+              this.charsOfStudiesFieldsModal.nroColumns = fields.length - 2
+              this.charsOfStudiesFieldsModal.fields = []
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors') {
+                  this.charsOfStudiesFieldsModal.fields.push(f.label)
+                }
+              }
+
+              for (let item of items) {
+                this.charsOfStudiesFieldsModal.items.push(item)
+              }
+            }
           }
+        })
+    },
+    addDataCharsOfStudies: function (index = 0) {
+      let items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      this.charsOfStudiesFieldsModal.items = items
+      this.charsOfStudiesFieldsModal.selected_item_index = index
+      this.$refs['edit-chars-of-studies-data'].show()
+    },
+    saveDataCharsOfStudies: function () {
+      let params = {}
+      let characteristicId = this.charsOfStudies.id
+      params.items = this.charsOfStudiesFieldsModal.items
+
+      axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
         })
     }
   }
