@@ -405,9 +405,15 @@
               class="mt-3">
               <h6>Characteristics of Studies table</h6>
               <b-button
+                v-if="this.charsOfStudies.fields.length <= 3"
                 @click="openModalCharsOfStudies"
                 :disabled="(this.references.length) ? false : true">
                 Create table
+              </b-button>
+              <b-button
+                v-if="this.charsOfStudies.fields.length > 3"
+                @click="openModalCharsOfStudiesEdit">
+                Edit table
               </b-button>
               <b-button
                 :disabled="(this.references.length) ? false : true">
@@ -457,6 +463,37 @@
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
+              </b-modal>
+              <b-modal
+                id="open-char-of-studies-table-modal-edit"
+                ref="open-char-of-studies-table-modal-edit"
+                scrollable
+                title="Edit Columns header"
+                @ok="updateCharacteristicsStudiesFields">
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group
+                      v-if="charsOfStudiesFieldsModalEdit.fields.length">
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModalEdit.fields[cnt - 1].label"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="charsOfStudies.id">
+                        <b-button>
+                          Del {{ cnt - 1 }}
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                  <b-button
+                    class="mb-2"
+                    @click="charsOfStudiesNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
               </b-modal>
               <b-modal
                 ref="edit-chars-of-studies-data"
@@ -597,6 +634,10 @@ export default {
         fields: [],
         items: [],
         selected_item_index: 0
+      },
+      charsOfStudiesFieldsModalEdit: {
+        nroColumns: 1,
+        fields: []
       },
       charsOfStudies: {
         fields: [],
@@ -1148,6 +1189,35 @@ export default {
       this.charsOfStudiesFieldsModal.fields = editFields
       this.$refs['open-char-of-studies-table-modal'].show()
     },
+    openModalCharsOfStudiesEdit: function () {
+      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let fields = []
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      this.charsOfStudiesFieldsModalEdit.fields = fields
+      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
+      this.$refs['open-char-of-studies-table-modal-edit'].show()
+    },
+    charsOfStudiesNewColumn: function () {
+      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let fields = []
+      let column = '0'
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
+      column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
+      this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
+    },
     saveCharacteristicsStudiesFields: function () {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
@@ -1194,6 +1264,34 @@ export default {
           })
       }
     },
+    updateCharacteristicsStudiesFields: function () {
+      let params = {}
+      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
+
+      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      params.fields = fields
+
+      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+      let items = []
+
+      for (let item of _items) {
+        for (let field of fields) {
+          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
+            delete item[field.key]
+          }
+        }
+      }
+
+      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     getCharacteristics: function () {
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
@@ -1204,7 +1302,7 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              this.charsOfStudiesFieldsModal.nroColumns = fields.length - 2
+              this.charsOfStudiesFieldsModal.nroColumns = fields.length - 3
               this.charsOfStudiesFieldsModal.fields = []
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors') {
