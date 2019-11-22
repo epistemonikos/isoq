@@ -496,15 +496,6 @@
               <h3>{{$t('Characteristics of Studies')}} <small v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
-                <bc-action-table
-                  class="d-print-none"
-                  :importUrl="`/api/isoqf_characteristics/${characteristics_studies.id}?organization=${characteristics_studies.organization}&list_id=${characteristics_studies.list_id}`"
-                  @response-ok-api="getStageThree"
-                  :displayDeleteTable="true"
-                  :displayEditTable="true"
-                  :displayImport="true"
-                  :displayCreateContent="true"
-                  :theContent="characteristics_studies"></bc-action-table>
                 <b-table
                   id="characteristics"
                   responsive striped caption-top
@@ -1110,18 +1101,29 @@ export default {
     getStageThree: function () {
       let params = {
         organization: this.list.organization,
-        list_id: this.$route.params.id
+        // list_id: this.$route.params.id
+        project_id: this.list.project_id
       }
       axios.get('/api/isoqf_characteristics', {params})
         .then((response) => {
           if (response.data.length) {
             let data = response.data[0]
+            let items = []
+
+            for (let characteristic of data.items) {
+              for (let reference of this.list.references) {
+                if (reference === characteristic.ref_id) {
+                  items.push(characteristic)
+                }
+              }
+            }
+            data.items = items
             this.characteristics_studies = data
             if (data.fields.length) {
               let fields = JSON.parse(JSON.stringify(data.fields))
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-              this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
+              // this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
               if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
                 this.characteristics_studies.items = []
               }
