@@ -481,10 +481,12 @@
                         v-model="charsOfStudiesFieldsModalEdit.fields[cnt - 1].label"
                         type="text"></b-form-input>
                       <b-input-group-append
-                        v-if="charsOfStudies.id">
+                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
                         <b-button
+                          variant="outline-danger"
                           @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
-                          Del {{ cnt - 1 }}
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
                         </b-button>
                       </b-input-group-append>
                     </b-input-group>
