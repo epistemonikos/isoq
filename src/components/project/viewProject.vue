@@ -482,7 +482,8 @@
                         type="text"></b-form-input>
                       <b-input-group-append
                         v-if="charsOfStudies.id">
-                        <b-button>
+                        <b-button
+                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
                           Del {{ cnt - 1 }}
                         </b-button>
                       </b-input-group-append>
@@ -1178,11 +1179,50 @@ export default {
           console.log('error: ', error)
         })
     },
+    deleteFieldFromCharsSudiesEdit: function (index) {
+      let params = {}
+      const _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
+      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      let removedField = _fields.splice(index, 1)[0]
+
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      params.fields = _fields
+      params.items = _items
+
+      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        .then((response) => {
+          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          const excluded = ['ref_id', 'authors', 'actions']
+          let editFields = []
+          for (let field of _fields) {
+            if (!excluded.includes(field.key)) {
+              editFields.push(field)
+            }
+          }
+
+          this.charsOfStudiesFieldsModalEdit.fields = editFields
+          this.charsOfStudiesFieldsModalEdit.nroColumns = editFields.length
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     openModalCharsOfStudies: function () {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
       let editFields = []
+      const excluded = ['ref_id', 'authors', 'actions']
       for (let field of fields) {
-        if (field.key !== 'ref_id' && field.key !== 'authors') {
+        if (!excluded.includes(field.key)) {
           editFields.push(field.label)
         }
       }
@@ -1204,7 +1244,7 @@ export default {
       this.$refs['open-char-of-studies-table-modal-edit'].show()
     },
     charsOfStudiesNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
       let fields = []
       let column = '0'
       const excluded = ['ref_id', 'authors', 'actions']
@@ -1274,7 +1314,6 @@ export default {
       params.fields = fields
 
       let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-      let items = []
 
       for (let item of _items) {
         for (let field of fields) {
