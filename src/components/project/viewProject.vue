@@ -468,7 +468,7 @@
             </b-col>
             <b-col
               cols="12">
-              <h6>References for included Studies</h6>
+              <h4>References for included Studies</h4>
               <p>You must import only the references for your final list of included studies </p>
               <b-alert
                 v-if="msgUploadReferences"
@@ -477,15 +477,28 @@
                 dismissible
                 class="my-2"
                 @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
-              <b-form-file
-                id="input-ris-file-key"
-                plain
-                @change="loadRefs($event)"></b-form-file>
-              <b-button
-                class="mt-2"
-                @click="saveReferences">
-                  Upload
-              </b-button>
+              <b-row>
+                <b-col
+                  cols="6">
+                  <b-form-file
+                    id="input-ris-file-key"
+                    plain
+                    @change="loadRefs($event)"></b-form-file>
+                </b-col>
+                <b-col
+                  cols="6">
+                  <b-button
+                    block
+                    :disabled="(fileReferences.length >= 1) ? false : true"
+                    class="mt-2"
+                    variant="success"
+                    @click="saveReferences">
+                      Upload
+                  </b-button>
+                </b-col>
+              </b-row>
+
+
             </b-col>
             <b-col
               cols="12"
@@ -1496,6 +1509,11 @@ export default {
 </script>
 
 <style scoped>
+  div >>>
+    .nav-fill .nav-item {
+      text-transform: uppercase;
+      font-weight: bold;
+    }
   div >>>
     #findings.table thead th {
       width: 15%;
