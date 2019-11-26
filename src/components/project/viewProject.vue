@@ -9,7 +9,7 @@
           </b-link>
         </b-col>
       </b-row>
-      <b-tabs content-class="mt-3" fill>
+      <b-tabs content-class="mt-3" fill v-model="tabOpened">
         <b-tab title="Project properties">
           <b-row>
             <b-col
@@ -17,7 +17,83 @@
               <h2>Project properties</h2>
             </b-col>
           </b-row>
-          [info]
+          <b-row>
+            <b-col
+              cols="12">
+              <b-form-group
+                label="Title of review"
+                label-for="projectName">
+                <b-form-input
+                  id="projectName"
+                  v-model="project.name"></b-form-input>
+              </b-form-group>
+              <b-form-group
+                label="Description">
+                <b-form-textarea
+                  v-model="project.description"></b-form-textarea>
+              </b-form-group>
+              <b-form-group
+                label="Authors"
+                label-for="authors">
+                <b-form-input
+                  id="authors"
+                  v-model="project.authors">
+                </b-form-input>
+              </b-form-group>
+              <b-form-group
+                label="Review question"
+                label-for="review_question">
+                <b-form-textarea
+                  id="review_question"
+                  v-model="project.review_question"></b-form-textarea>
+              </b-form-group>
+              <b-form-group
+                label-for="has-been-published"
+                label="Has this review been published?">
+                <b-select
+                  id="has-been-published"
+                  v-model="project.published_status"
+                  :options="yes_or_no"></b-select>
+              </b-form-group>
+              <b-form-group
+                v-if="project.published_status"
+                :label="$t('URL or DOI')"
+                label-for="project-list-url-doi">
+                <b-input
+                  placeholder="https://doi.org/10.1109/5.771073"
+                  type="url"
+                  id="project-list-url-doi"
+                  v-model="project.url_doi"></b-input>
+              </b-form-group>
+              <b-form-group
+                label="Is the iSoQf being completed by the review authors?"
+                label-for="completed-by-author-status">
+                <b-select
+                  id="completed-by-author-status"
+                  v-model="project.complete_by_author"
+                  :options="yes_or_no"></b-select>
+              </b-form-group>
+              <b-form-group
+                label="Visible?"
+                label-for="project-list-status">
+                <b-select
+                  id="project-list-status"
+                  v-model="project.private"
+                  :options="global_status"></b-select>
+              </b-form-group>
+            </b-col>
+          </b-row>
+          <b-row align-h="end">
+            <b-col
+              cols="6">
+              <b-button
+                block
+                variant="outline-success"
+                @click="updateProjectInfo">
+                Save
+              </b-button>
+            </b-col>
+          </b-row>
         </b-tab>
         <b-tab title="iSoQf">
           <b-row class="mb-3">
@@ -646,7 +722,16 @@ export default {
         fields: [],
         items: [],
         authors: ''
-      }
+      },
+      tabOpened: 2,
+      global_status: [
+        { value: false, text: 'public' },
+        { value: true, text: 'private' }
+      ],
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ]
     }
   },
   mounted () {
@@ -1355,6 +1440,9 @@ export default {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
+            if (this.charsOfStudies.fields.length) {
+              this.tabOpened = 1
+            }
           }
         })
     },
@@ -1371,6 +1459,16 @@ export default {
       params.items = this.charsOfStudiesFieldsModal.items
 
       axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    updateProjectInfo: function () {
+      let project = JSON.parse(JSON.stringify(this.project))
+      axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then((response) => {
           this.getProject()
         })
