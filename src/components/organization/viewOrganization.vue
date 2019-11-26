@@ -200,7 +200,7 @@ export default {
         review_question: '',
         published_status: false,
         complete_by_author: false,
-        doi_url: null
+        url_doi: null
       },
       tmp_buffer_project_list: {
         id: null,
@@ -217,7 +217,7 @@ export default {
         review_question: '',
         published_status: false,
         complete_by_author: false,
-        doi_url: null,
+        url_doi: null,
         authors: ''
       },
       buffer_project_list: {
