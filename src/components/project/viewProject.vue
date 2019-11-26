@@ -14,6 +14,17 @@
           <b-row>
             <b-col
               cols="12">
+              <b-alert
+                :show="msgUpdateProject !==null && msgUpdateProject.length"
+                dismissible
+                variant="info"
+                @dismissed="dismissAlertProject">
+                {{ msgUpdateProject }}
+              </b-alert>
+            </b-col>
+            <b-col
+              cols="12"
+              class="mb-2">
               <h2>Project properties</h2>
             </b-col>
           </b-row>
@@ -731,7 +742,8 @@ export default {
       yes_or_no: [
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
-      ]
+      ],
+      msgUpdateProject: null
     }
   },
   mounted () {
@@ -1470,11 +1482,14 @@ export default {
       let project = JSON.parse(JSON.stringify(this.project))
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then((response) => {
-          this.getProject()
+          this.msgUpdateProject = 'The project has been updated'
         })
         .catch((error) => {
-          console.log(error)
+          this.msgUpdateProject = error
         })
+    },
+    dismissAlertProject: function () {
+      this.msgUpdateProject = null
     }
   }
 }
