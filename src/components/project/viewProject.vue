@@ -497,29 +497,39 @@
                   </b-button>
                 </b-col>
               </b-row>
-
-
             </b-col>
             <b-col
               cols="12"
               class="mt-3">
-              <h6>Characteristics of Studies table</h6>
-              <b-button
-                v-if="this.charsOfStudies.fields.length <= 3"
-                @click="openModalCharsOfStudies"
-                :disabled="(this.references.length) ? false : true">
-                Create table
-              </b-button>
-              <b-button
-                v-if="this.charsOfStudies.fields.length > 3"
-                @click="openModalCharsOfStudiesEdit">
-                Edit table
-              </b-button>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Import table
-              </b-button>
-
+              <h5>Characteristics of Studies table</h5>
+              <b-row>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="this.charsOfStudies.fields.length <= 3"
+                    @click="openModalCharsOfStudies"
+                    :disabled="(this.references.length) ? false : true">
+                    Create table
+                  </b-button>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="this.charsOfStudies.fields.length > 3"
+                    @click="openModalCharsOfStudiesEdit">
+                    Edit table
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :disabled="(this.references.length) ? false : true"
+                    v-b-modal.import-characteristics-table>
+                    Import table
+                  </b-button>
+                </b-col>
+              </b-row>
               <b-table
                 :fields="charsOfStudies.fields"
                 :items="charsOfStudies.items"
@@ -613,8 +623,51 @@
                     v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-input>
                 </b-form-group>
               </b-modal>
+              <b-modal
+                :no-close-on-backdrop="true"
+                :no-close-on-esc="true"
+                ok-title="Save"
+                cancel-title="Close"
+                size="lg"
+                id="import-characteristics-table"
+                ref="import-characteristics-table"
+                title="Import table"
+                @ok="saveCharsImportedData">
+                <p>
+                  In order to import a table you must first prepare the table using this template.
+                </p>
+                <b-button
+                  block
+                  variant="outline-info"
+                  @click="generateTemplateChars">
+                  Download template
+                </b-button>
+                <p
+                  class="mt-3">
+                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                </p>
+                <b-row>
+                  <b-col
+                    class="mb-2"
+                    cols="12">
+                    <b-form-file
+                      id="input-template-chars-file"
+                      plain
+                      @change="loadCharsTableData($event)"></b-form-file>
+                  </b-col>
+                  <b-col
+                    cols="12">
+                    <b-table
+                      responsive
+                      :fields="charsTableImport.fields"
+                      :items="charsTableImport.items"
+                    ></b-table>
+                  </b-col>
+                </b-row>
+              </b-modal>
             </b-col>
             <b-col
+              v-if="references.length"
               cols="12"
               class="mt-3">
               <h6>Methodological Assessments table</h6>
@@ -756,7 +809,12 @@ export default {
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
       ],
-      msgUpdateProject: null
+      msgUpdateProject: null,
+      pre_charsTableImport: '',
+      charsTableImport: {
+        fields: [],
+        items: []
+      }
     }
   },
   mounted () {
@@ -764,6 +822,52 @@ export default {
     this.getProject()
   },
   watch: {
+    pre_charsTableImport: function (data) {
+      const allLines = data.split(/\r\n|\n/)
+      let fields = []
+      let items = []
+
+      allLines.forEach((line, index) => {
+        const contents = this.CSVtoArray(line)
+        let columnFieldNro = 0
+        let columnItemNro = 0
+        if (index === 0) {
+          for (let cnt in contents) {
+            let obj = {}
+            if (parseInt(cnt) === 0) {
+              obj.key = 'ref_id'
+            }
+            if (parseInt(cnt) === 1) {
+              obj.key = 'authors'
+            }
+            if (parseInt(cnt) > 1) {
+              obj.key = 'column_' + columnFieldNro
+              columnFieldNro++
+            }
+            obj.label = contents[cnt]
+            fields.push(obj)
+          }
+        } else {
+          let obj = {}
+          for (let cnt in contents) {
+            if (parseInt(cnt) === 0) {
+              obj.ref_id = contents[cnt]
+            }
+            if (parseInt(cnt) === 1) {
+              obj.authors = contents[cnt]
+            }
+            if (parseInt(cnt) > 1) {
+              obj[`column_${columnItemNro}`] = contents[cnt]
+              columnItemNro++
+            }
+          }
+          items.push(obj)
+        }
+      })
+
+      this.charsTableImport.fields = fields
+      this.charsTableImport.items = items
+    },
     pre_references: function (data) {
       this.fileReferences = []
       const file = data
@@ -834,6 +938,25 @@ export default {
     }
   },
   methods: {
+    CSVtoArray: function (text) {
+      // https://stackoverflow.com/a/8497474
+      const reValid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/
+      const reValue = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g
+
+      if (!reValid.test(text)) return null
+      let a = []
+      text.replace(reValue,
+        function (m0, m1, m2, m3) {
+          if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"))
+          else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"'))
+          else if (m3 !== undefined) a.push(m3)
+          return ''
+        }
+      )
+
+      if (/,\s*$/.test(text)) a.push('')
+      return a
+    },
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
       if (this.mode === 'view') {
@@ -843,15 +966,16 @@ export default {
         this.table_settings.perPage = 5
       }
     },
-    parseReference: (reference, onlyAuthors = false) => {
+    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + '; '
+          result = reference.authors[0] + ', ' + reference.publication_year + semicolon
         } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; '
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -1503,6 +1627,45 @@ export default {
     },
     dismissAlertProject: function () {
       this.msgUpdateProject = null
+    },
+    generateTemplateChars: function () {
+      const _references = JSON.parse(JSON.stringify(this.references))
+      let csvContent = 'data:text/csv;charset=utf-8,'
+      csvContent += '"Reference ID", "Authors"' + '\r\n'
+
+      for (let ref of _references) {
+        csvContent += ref.id + ', ' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
+      }
+
+      let encodedUri = encodeURI(csvContent)
+      let link = document.createElement('a')
+      link.setAttribute('href', encodedUri)
+      link.setAttribute('download', 'my_data.csv')
+      document.body.appendChild(link)
+
+      link.click()
+    },
+    loadCharsTableData: function (event) {
+      const file = event.target.files[0]
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        this.pre_charsTableImport = e.target.result
+      }
+      reader.readAsText(file)
+    },
+    saveCharsImportedData: function () {
+      let params = {}
+      params.organization = this.$route.params.org_id
+      params.project_id = this.$route.params.id
+      params.fields = this.charsTableImport.fields
+      params.items = this.charsTableImport.items
+      axios.post('/api/isoqf_characteristics/', params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
