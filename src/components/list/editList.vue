@@ -447,6 +447,9 @@
                   class="d-print-none">
                   <b-card>
                     <h5>Progress status</h5>
+                    <p>
+                      This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment. Each assessment accounts for 20% of the total.
+                    </p>
                     <p v-if="list.cerqual.option !== null">
                       Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
                     </p>
@@ -492,7 +495,9 @@
             <!--</b-tab>-->
             <!-- Characteristics of Studies -->
             <!--<b-tab v-bind:title="$t('Characteristics of Studies')">-->
-            <div v-if="show.selected.includes('cs')">
+            <div
+              class="mt-3"
+              v-if="show.selected.includes('cs')">
               <h3>{{$t('Characteristics of Studies')}} <small v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
@@ -566,7 +571,9 @@
             <!--</b-tab>-->
             <!-- Methodological Assessments -->
             <!--<b-tab v-bind:title="$t('Methodological Assessments')">-->
-            <div v-if="show.selected.includes('ma')">
+            <div
+              class="mt-3"
+              v-if="show.selected.includes('ma')">
               <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
@@ -640,7 +647,9 @@
             <!--</b-tab>-->
             <!-- Extracted data -->
             <!--<b-tab v-bind:title="$t('Extracted Data')">-->
-            <div v-if="show.selected.includes('ed')">
+            <div
+              class="mt-3"
+              v-if="show.selected.includes('ed')">
               <h3>{{$t('Extracted Data')}} <small v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
