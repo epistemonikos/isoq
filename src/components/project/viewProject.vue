@@ -371,7 +371,7 @@
               <b-modal
                 id="modal-references"
                 ref="modal-references"
-                title="Add references"
+                title="References"
                 @ok="getProject"
                 scrollable>
                 <div
