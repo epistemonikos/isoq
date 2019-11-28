@@ -106,7 +106,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Key information" active>
+        <b-tab title="Key information">
           <b-row>
             <b-col
               cols="12">
@@ -780,7 +780,7 @@ export default {
           { key: 'authors', label: 'Authors' }
         ]
       },
-      tabOpened: 1,
+      tabOpened: 2,
       global_status: [
         { value: false, text: 'public' },
         { value: true, text: 'private' }
@@ -1571,9 +1571,6 @@ export default {
               for (let item of items) {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
-            }
-            if (this.charsOfStudies.fields.length) {
-              this.tabOpened = 2
             }
           }
         })
