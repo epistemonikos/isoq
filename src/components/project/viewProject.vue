@@ -178,7 +178,7 @@
                 </b-col>
               </b-row>
               <b-table
-                :fields="charsOfStudies.fields"
+                :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
                 class="mt-3">
                 <template
@@ -306,7 +306,7 @@
                     cols="12">
                     <b-table
                       responsive
-                      :fields="charsTableImport.fields"
+                      :fields="charsTableImport.fieldsObj"
                       :items="charsTableImport.items"
                     ></b-table>
                   </b-col>
@@ -775,7 +775,10 @@ export default {
       charsOfStudies: {
         fields: [],
         items: [],
-        authors: ''
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: 'Authors' }
+        ]
       },
       tabOpened: 1,
       global_status: [
@@ -790,7 +793,10 @@ export default {
       pre_charsTableImport: '',
       charsTableImport: {
         fields: [],
-        items: []
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Authors' }
+        ]
       }
     }
   },
@@ -818,6 +824,7 @@ export default {
               obj.key = 'authors'
             }
             if (parseInt(cnt) > 1) {
+              this.charsTableImport.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
               obj.key = 'column_' + columnFieldNro
               columnFieldNro++
             }
@@ -1545,16 +1552,19 @@ export default {
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
-            this.charsOfStudies.fields.push({'key': 'actions', 'label': ''})
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
+              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+              this.charsOfStudies.fields.push({'key': 'actions', 'label': ''})
+
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
               this.charsOfStudiesFieldsModal.nroColumns = fields.length - 3
               this.charsOfStudiesFieldsModal.fields = []
               for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors') {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
                   this.charsOfStudiesFieldsModal.fields.push(f.label)
+                  this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
 
