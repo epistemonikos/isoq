@@ -780,13 +780,15 @@ export default {
         { value: 0, text: 'No/Very minor concerns' },
         { value: 1, text: 'Minor concerns' },
         { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' }
+        { value: 3, text: 'Serious concerns' },
+        { value: null, text: 'Undefined' }
       ],
       level_confidence: [
         { value: 0, text: 'High confidence' },
         { value: 1, text: 'Moderate confidence' },
         { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' }
+        { value: 3, text: 'Very low confidence' },
+        { value: null, text: 'Undefined' }
       ],
       /** selectors **/
       /** tables fields **/
