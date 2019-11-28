@@ -9,7 +9,7 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>Evidence Profile Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+      <h2>CERQual Assessment Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <h3 v-if="mode==='edit'"><span class="pre-title">Review finding</span> <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-5">
@@ -776,7 +776,7 @@ export default {
         pageOptions: [10, 50, 100]
       },
       show: {
-        selected: [],
+        selected: ['cs', 'ma', 'ed'],
         options: [
           { text: 'Characteristics Studies', value: 'cs' },
           { text: 'Methodological Assessments', value: 'ma' },
