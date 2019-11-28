@@ -106,6 +106,229 @@
             </b-col>
           </b-row>
         </b-tab>
+        <b-tab title="Key information" active>
+          <b-row>
+            <b-col
+              cols="12">
+              <h3>Key information on Included Studies</h3>
+              <p>To optimize the functionality of iSoQf and save you time please add the following information. You first need to upload your reference list of included studies before moving on to characteristics of studies and methodological assessment tables. All of these files are needed in order to apply the CERQual approach and by including them here the relevant information will be automatically extracted where needed in the evidence profiles saving you time and reducing potential errors.</p>
+            </b-col>
+            <b-col
+              cols="12">
+              <h4>References for included Studies</h4>
+              <p>You must import only the references for your final list of included studies </p>
+              <b-alert
+                v-if="msgUploadReferences"
+                show
+                variant="info"
+                dismissible
+                class="my-2"
+                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
+              <b-row>
+                <b-col
+                  cols="6">
+                  <b-form-file
+                    id="input-ris-file-key"
+                    plain
+                    @change="loadRefs($event)"></b-form-file>
+                </b-col>
+                <b-col
+                  cols="6">
+                  <b-button
+                    block
+                    :disabled="(fileReferences.length >= 1) ? false : true"
+                    class="mt-2"
+                    variant="success"
+                    @click="saveReferences">
+                      Upload
+                  </b-button>
+                </b-col>
+              </b-row>
+            </b-col>
+            <b-col
+              cols="12"
+              class="mt-3">
+              <h5>Characteristics of Studies table</h5>
+              <b-row>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="this.charsOfStudies.fields.length <= 3"
+                    @click="openModalCharsOfStudies"
+                    :disabled="(this.references.length) ? false : true">
+                    Create table
+                  </b-button>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="this.charsOfStudies.fields.length > 3"
+                    @click="openModalCharsOfStudiesEdit">
+                    Edit table
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :disabled="(this.references.length) ? false : true"
+                    v-b-modal.import-characteristics-table>
+                    Import table
+                  </b-button>
+                </b-col>
+              </b-row>
+              <b-table
+                :fields="charsOfStudies.fields"
+                :items="charsOfStudies.items"
+                class="mt-3">
+                <template
+                  v-slot:cell(actions)="data">
+                  <font-awesome-icon
+                    @click="addDataCharsOfStudies(data.index)"
+                    icon="edit"></font-awesome-icon>
+                </template>
+              </b-table>
+
+              <b-modal
+                id="open-char-of-studies-table-modal"
+                ref="open-char-of-studies-table-modal"
+                scrollable
+                title="Columns header"
+                @ok="saveCharacteristicsStudiesFields">
+                  <b-form-group
+                    label="Nro of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="charsOfStudiesFieldsModal.nroColumns"
+                      type="number" min="1" max="10"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group>
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="charsOfStudies.id">
+                        <b-button
+                          @click="deleteFieldFromCharsSudies(cnt - 1)">
+                          Del {{ cnt - 1 }}
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+              </b-modal>
+              <b-modal
+                id="open-char-of-studies-table-modal-edit"
+                ref="open-char-of-studies-table-modal-edit"
+                scrollable
+                title="Edit Columns header"
+                @ok="updateCharacteristicsStudiesFields">
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group
+                      v-if="charsOfStudiesFieldsModalEdit.fields.length">
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModalEdit.fields[cnt - 1].label"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
+                        <b-button
+                          variant="outline-danger"
+                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                  <b-button
+                    class="mb-2"
+                    @click="charsOfStudiesNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
+              </b-modal>
+              <b-modal
+                ref="edit-chars-of-studies-data"
+                title="Edit data"
+                scrollable
+                @ok="saveDataCharsOfStudies">
+                <b-form-group
+                  v-for="field of charsOfStudies.fields"
+                  :key="field.id"
+                  :label="field.label">
+                  <b-form-input
+                    v-if="field.key !== 'actions'"
+                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-input>
+                </b-form-group>
+              </b-modal>
+              <b-modal
+                :no-close-on-backdrop="true"
+                :no-close-on-esc="true"
+                ok-title="Save"
+                cancel-title="Close"
+                size="lg"
+                id="import-characteristics-table"
+                ref="import-characteristics-table"
+                title="Import table"
+                @ok="saveCharsImportedData">
+                <p>
+                  In order to import a table you must first prepare the table using this template.
+                </p>
+                <b-button
+                  block
+                  variant="outline-info"
+                  @click="generateTemplateChars">
+                  Download template
+                </b-button>
+                <p
+                  class="mt-3">
+                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                </p>
+                <b-row>
+                  <b-col
+                    class="mb-2"
+                    cols="12">
+                    <b-form-file
+                      id="input-template-chars-file"
+                      plain
+                      @change="loadCharsTableData($event)"></b-form-file>
+                  </b-col>
+                  <b-col
+                    cols="12">
+                    <b-table
+                      responsive
+                      :fields="charsTableImport.fields"
+                      :items="charsTableImport.items"
+                    ></b-table>
+                  </b-col>
+                </b-row>
+              </b-modal>
+            </b-col>
+            <b-col
+              v-if="references.length"
+              cols="12"
+              class="mt-3">
+              <h6>Methodological Assessments table</h6>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Create table
+              </b-button>
+              <b-button
+                :disabled="(this.references.length) ? false : true">
+                Import table
+              </b-button>
+            </b-col>
+          </b-row>
+        </b-tab>
         <b-tab title="iSoQf">
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
@@ -436,229 +659,6 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Key information" active>
-          <b-row>
-            <b-col
-              cols="12">
-              <h3>Key information on Included Studies</h3>
-              <p>To optimize the functionality of iSoQf and save you time please add the following information. You first need to upload your reference list of included studies before moving on to characteristics of studies and methodological assessment tables. All of these files are needed in order to apply the CERQual approach and by including them here the relevant information will be automatically extracted where needed in the evidence profiles saving you time and reducing potential errors.</p>
-            </b-col>
-            <b-col
-              cols="12">
-              <h4>References for included Studies</h4>
-              <p>You must import only the references for your final list of included studies </p>
-              <b-alert
-                v-if="msgUploadReferences"
-                show
-                variant="info"
-                dismissible
-                class="my-2"
-                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
-              <b-row>
-                <b-col
-                  cols="6">
-                  <b-form-file
-                    id="input-ris-file-key"
-                    plain
-                    @change="loadRefs($event)"></b-form-file>
-                </b-col>
-                <b-col
-                  cols="6">
-                  <b-button
-                    block
-                    :disabled="(fileReferences.length >= 1) ? false : true"
-                    class="mt-2"
-                    variant="success"
-                    @click="saveReferences">
-                      Upload
-                  </b-button>
-                </b-col>
-              </b-row>
-            </b-col>
-            <b-col
-              cols="12"
-              class="mt-3">
-              <h5>Characteristics of Studies table</h5>
-              <b-row>
-                <b-col>
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="this.charsOfStudies.fields.length <= 3"
-                    @click="openModalCharsOfStudies"
-                    :disabled="(this.references.length) ? false : true">
-                    Create table
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="this.charsOfStudies.fields.length > 3"
-                    @click="openModalCharsOfStudiesEdit">
-                    Edit table
-                  </b-button>
-                </b-col>
-                <b-col>
-                  <b-button
-                    block
-                    variant="outline-info"
-                    :disabled="(this.references.length) ? false : true"
-                    v-b-modal.import-characteristics-table>
-                    Import table
-                  </b-button>
-                </b-col>
-              </b-row>
-              <b-table
-                :fields="charsOfStudies.fields"
-                :items="charsOfStudies.items"
-                class="mt-3">
-                <template
-                  v-slot:cell(actions)="data">
-                  <font-awesome-icon
-                    @click="addDataCharsOfStudies(data.index)"
-                    icon="edit"></font-awesome-icon>
-                </template>
-              </b-table>
-
-              <b-modal
-                id="open-char-of-studies-table-modal"
-                ref="open-char-of-studies-table-modal"
-                scrollable
-                title="Columns header"
-                @ok="saveCharacteristicsStudiesFields">
-                  <b-form-group
-                    label="Nro of columnns">
-                    <b-form-input
-                      id="nro-columns"
-                      v-model="charsOfStudiesFieldsModal.nroColumns"
-                      type="number" min="1" max="10"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
-                    :key="cnt"
-                    :label="`Columnn #${cnt}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="charsOfStudies.id">
-                        <b-button
-                          @click="deleteFieldFromCharsSudies(cnt - 1)">
-                          Del {{ cnt - 1 }}
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-              </b-modal>
-              <b-modal
-                id="open-char-of-studies-table-modal-edit"
-                ref="open-char-of-studies-table-modal-edit"
-                scrollable
-                title="Edit Columns header"
-                @ok="updateCharacteristicsStudiesFields">
-                  <b-form-group
-                    v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
-                    :key="cnt"
-                    :label="`Columnn #${cnt}`">
-                    <b-input-group
-                      v-if="charsOfStudiesFieldsModalEdit.fields.length">
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="charsOfStudiesFieldsModalEdit.fields[cnt - 1].label"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-                  <b-button
-                    class="mb-2"
-                    @click="charsOfStudiesNewColumn"
-                    variant="outline-success">
-                    Add new column
-                  </b-button>
-              </b-modal>
-              <b-modal
-                ref="edit-chars-of-studies-data"
-                title="Edit data"
-                scrollable
-                @ok="saveDataCharsOfStudies">
-                <b-form-group
-                  v-for="field of charsOfStudies.fields"
-                  :key="field.id"
-                  :label="field.label">
-                  <b-form-input
-                    v-if="field.key !== 'actions'"
-                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-input>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                :no-close-on-backdrop="true"
-                :no-close-on-esc="true"
-                ok-title="Save"
-                cancel-title="Close"
-                size="lg"
-                id="import-characteristics-table"
-                ref="import-characteristics-table"
-                title="Import table"
-                @ok="saveCharsImportedData">
-                <p>
-                  In order to import a table you must first prepare the table using this template.
-                </p>
-                <b-button
-                  block
-                  variant="outline-info"
-                  @click="generateTemplateChars">
-                  Download template
-                </b-button>
-                <p
-                  class="mt-3">
-                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
-                </p>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-chars-file"
-                      plain
-                      @change="loadCharsTableData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-table
-                      responsive
-                      :fields="charsTableImport.fields"
-                      :items="charsTableImport.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
-              </b-modal>
-            </b-col>
-            <b-col
-              v-if="references.length"
-              cols="12"
-              class="mt-3">
-              <h6>Methodological Assessments table</h6>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Create table
-              </b-button>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Import table
-              </b-button>
-            </b-col>
-          </b-row>
-        </b-tab>
       </b-tabs>
     </b-container>
   </div>
@@ -777,7 +777,7 @@ export default {
         items: [],
         authors: ''
       },
-      tabOpened: 2,
+      tabOpened: 1,
       global_status: [
         { value: false, text: 'public' },
         { value: true, text: 'private' }
@@ -1563,7 +1563,7 @@ export default {
               }
             }
             if (this.charsOfStudies.fields.length) {
-              this.tabOpened = 1
+              this.tabOpened = 2
             }
           }
         })
