@@ -227,7 +227,7 @@
                       variant="outline-primary"
                       block
                       @click="openModalReferencesSingle">
-                      Import references
+                      View references
                     </b-button>
                   </b-col>
                   <b-col
@@ -374,29 +374,6 @@
                 title="Add references"
                 @ok="getProject"
                 scrollable>
-                <div class="mt-2">
-                  <b-form-group
-                    label="Load references"
-                    label-for="input-ris-file">
-                    <b-form-file
-                      id="input-ris-file"
-                      plain
-                      @change="loadRefs($event)"></b-form-file>
-                    <b-button
-                      class="mt-2"
-                      @click="saveReferences">
-                        Upload
-                    </b-button>
-                  </b-form-group>
-                </div>
-                <div>
-                  <b-alert
-                    v-if="msgUploadReferences"
-                    show
-                    variant="info"
-                    dismissible
-                    @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
-                </div>
                 <div
                   class="mt-2"
                   v-if="references.length">
@@ -1175,10 +1152,6 @@ export default {
           if (showModal) {
             this.msgUploadReferences = ''
             this.$refs['modal-references'].show()
-          }
-          if (!this.references.length) {
-            // change for a tab
-            // this.$bvModal.show('pre-load-refs')
           }
         })
         .catch((error) => {
