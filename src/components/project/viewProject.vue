@@ -198,7 +198,7 @@
                 scrollable
                 title="Columns header"
                 @ok="saveCharacteristicsStudiesFields">
-                  <p>
+                  <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
                   <b-form-group
@@ -233,7 +233,7 @@
                 scrollable
                 title="Edit Columns header"
                 @ok="updateCharacteristicsStudiesFields">
-                  <p>
+                  <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
                   <b-form-group
