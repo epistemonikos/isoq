@@ -198,6 +198,9 @@
                 scrollable
                 title="Columns header"
                 @ok="saveCharacteristicsStudiesFields">
+                  <p>
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
                   <b-form-group
                     label="Nro of columnns">
                     <b-form-input
@@ -230,6 +233,9 @@
                 scrollable
                 title="Edit Columns header"
                 @ok="updateCharacteristicsStudiesFields">
+                  <p>
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
                   <b-form-group
                     v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
                     :key="cnt"
