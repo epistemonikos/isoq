@@ -503,7 +503,7 @@
                   class="d-print-none">
                   <b-card>
                     <h5>Progress status</h5>
-                    <p>
+                    <p class="font-weight-light">
                       This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment. Each assessment accounts for 20% of the total.
                     </p>
                     <p v-if="list.cerqual.option !== null">
