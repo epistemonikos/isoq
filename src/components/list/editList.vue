@@ -78,15 +78,29 @@
                 <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                   <h6>{{$t('Methodological Limitations')}}</h6>
                   <p class="font-weight-light">
-                    Do you have any concerns about the methodological quality of the contributing studies
-                    that could lower your confidence in the review finding? Explain any concern in your own
-                    words. (tip: Refer to your Methodological Assessments table)
+                    Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
+                    Explain any concern in your own words. (tip: Refer to your Methodological Assessments table). Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
+                  </p>
+                  <p class="font-weight-light">
+                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
                   </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.methodological_limitations.option"
-                    :options="select_options"
                     name="methodological-limitations"
-                    stacked></b-form-radio-group>
+                    stacked>
+                    <b-form-radio value="0">
+                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="1">
+                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="2">
+                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="3">
+                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                  </b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -102,16 +116,30 @@
                   <!-- coherence -->
                   <h6>{{$t('Coherence')}}</h6>
                   <p class="font-weight-light">
-                    Do you have any concerns about the coherence between the review finding and the
-                    underlying data that could lower your confidence in the review finding? Explain any
-                    concerns in your own words. (tip: refer to your Extracted Data in relation to your review
-                    finding)
+                    Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
+                    You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
+                    Explain any concerns in your own words. (tip: refer to your Extracted Data in relation to your review finding)
+                  </p>
+                  <p class="font-weight-light">
+                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
                   </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.coherence.option"
-                    :options="select_options"
                     name="coherence"
-                    stacked></b-form-radio-group>
+                    stacked>
+                    <b-form-radio value="0">
+                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="1">
+                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="2">
+                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="3">
+                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                  </b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -127,16 +155,29 @@
                 <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                   <h6>{{$t('Adequacy')}}</h6>
                   <p class="font-weight-light">
-                    Do you have any concerns about the adequacy of the data supporting the review finding
-                    that could lower your confidnece in the review finding? Explain any concerns in your own
-                    words. (tip: refer to your Characeristics of Studies table and your Extracted Data for this
-                    finding)
+                    Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
+                    Explain any concerns in your own words. (tip: refer to your Characteristics of Studies table and your Extracted Data for this finding)
+                  </p>
+                  <p class="font-weight-light">
+                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
                   </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.adequacy.option"
-                    :options="select_options"
                     name="adequacy"
-                    stacked></b-form-radio-group>
+                    stacked>
+                    <b-form-radio value="0">
+                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="1">
+                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="2">
+                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="3">
+                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                  </b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -152,16 +193,29 @@
                 <div v-if="buffer_modal_stage_two.type === 'relevance'">
                   <h6>{{$t('Relevance')}}</h6>
                   <p class="font-weight-light">
-                    Do you have any concerns about the relevance of the underlying studies to your review
-                    question that could lower your confidence in the review finding? Explain any concerns in
-                    your won words. (tip: refer to your Characteristics of Studies table and your review
-                    question)
+                    Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
+                    You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate. (tip: refer to your Characteristics of Studies table and your review question)
+                  </p>
+                  <p class="font-weight-light">
+                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
                   </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.relevance.option"
-                    :options="select_options"
                     name="relevance"
-                    stacked></b-form-radio-group>
+                    stacked>
+                    <b-form-radio value="0">
+                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="1">
+                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="2">
+                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                    <b-form-radio value="3">
+                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
+                    </b-form-radio>
+                  </b-form-radio-group>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -177,9 +231,11 @@
                 <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                   <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
                   <p class="font-weight-ligth">
-                    To what extent is the review finding a reasonable representation of the phenomenon of
-                    interest? Explain your assessment by making reference to any identified concerns for all 4
-                    components of CERQual
+                    To what extent is the review finding a reasonable representation of the phenomenon of interest?
+                    Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance).
+                  </p>
+                  <p class="font-weight-ligth">
+                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
                   </p>
                   <b-form-radio-group
                     v-model="buffer_modal_stage_two.cerqual.option"
