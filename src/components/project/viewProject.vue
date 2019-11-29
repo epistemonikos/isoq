@@ -9,7 +9,10 @@
           </b-link>
         </b-col>
       </b-row>
-      <b-tabs content-class="mt-3" fill v-model="tabOpened">
+      <b-tabs
+        content-class="mt-3"
+        fill
+        v-model="tabOpened">
         <b-tab title="Project properties">
           <b-row>
             <b-col
@@ -329,7 +332,9 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="iSoQf">
+        <b-tab
+          :disabled="(references.length) ? false : true"
+          title="iSoQf">
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
               <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
@@ -504,11 +509,13 @@
                   {{ data.item.isoqf_id }}
                 </template>
                 <template v-slot:cell(name)="data">
-                  <b-link :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                  <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                  <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
                 </template>
                 <template v-slot:cell(cerqual_option)="data">
                   {{ data.item.cerqual_option }}
                   <b-button
+                    :disabled="(data.item.references.length) ? false : true"
                     block
                     variant="outline-info"
                     :to="{name: 'editList', params: {id: data.item.id}}">
@@ -520,6 +527,7 @@
                 <template v-slot:cell(cerqual_explanation)="data">
                   {{ data.item.cerqual_explanation }}
                   <b-button
+                    :disabled="(data.item.references.length) ? false : true"
                     block
                     variant="outline-info"
                     :to="{name: 'editList', params: {id: data.item.id}}">
@@ -530,12 +538,15 @@
                 </template>
                 <template v-slot:cell(ref_list)="data">
                   {{ data.item.ref_list }}
-                </template>
-                <template v-slot:cell(actions)="data">
-                  <font-awesome-icon icon="highlighter"
-                    @click="openModalReferences(data.item.isoqf_id)"
-                    v-b-tooltip.hover
-                    title="Select the references that contribute to this review finding"></font-awesome-icon>
+                  <b-button
+                    block
+                    class="mt-2"
+                    :variant="(data.item.references.length) ? 'outline-info' : 'info'"
+                    @click="openModalReferences(data.item.isoqf_id)">
+                    <span v-if="data.item.references.length === 0">Add </span>
+                    <span v-if="data.item.references.length">Edit </span>
+                    references
+                  </b-button>
                 </template>
                 <template v-slot:table-busy>
                   <div class="text-center text-danger my-2">
@@ -695,10 +706,6 @@ export default {
         {
           key: 'ref_list',
           label: 'References'
-        },
-        {
-          key: 'actions',
-          label: ''
         }
       ],
       table_settings: {
@@ -780,7 +787,7 @@ export default {
           { key: 'authors', label: 'Authors' }
         ]
       },
-      tabOpened: 2,
+      tabOpened: 1,
       global_status: [
         { value: false, text: 'public' },
         { value: true, text: 'private' }
@@ -801,6 +808,7 @@ export default {
     }
   },
   mounted () {
+    this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
   },
@@ -1028,6 +1036,7 @@ export default {
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
+          this.getReferences()
         }))
         .catch((error) => {
           console.log('error', error)
@@ -1152,18 +1161,27 @@ export default {
           console.log(error)
         })
     },
-    openModalReferencesSingle: function (showModal) {
+    getReferences: function () {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
-          if (showModal) {
-            this.msgUploadReferences = ''
-            this.$refs['modal-references'].show()
+          if (this.references.length) {
+            this.$nextTick(() => {
+              this.tabOpened = 2
+            })
+            console.log('tabopened', this.tabOpened)
           }
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+    openModalReferencesSingle: function (showModal) {
+      if (showModal) {
+        this.getReferences()
+        this.msgUploadReferences = ''
+        this.$refs['modal-references'].show()
+      }
     },
     openModalReferences: function (isoqfId) {
       let cnt = 0
@@ -1173,15 +1191,9 @@ export default {
         }
         cnt++
       }
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          this.references = response.data
-          this.selected_references = this.lists[this.selected_list_index].references
-          this.$refs['modal-references-list'].show()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      this.getReferences()
+      this.selected_references = this.lists[this.selected_list_index].references
+      this.$refs['modal-references-list'].show()
     },
     saveReferencesList: function () {
       this.table_settings.isBusy = true
@@ -1192,6 +1204,7 @@ export default {
         .then((response) => {
           this.selected_references = []
           this.selected_list_index = null
+          this.getReferences()
           this.getLists()
         })
     },
