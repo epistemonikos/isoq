@@ -74,7 +74,10 @@
                 ref="modal-stage-two"
                 v-bind:title="$t('Evidence profile')"
                 scrollable
-                @ok="saveStageOneAndTwo">
+                @ok="saveStageOneAndTwo"
+                ok-title="Save"
+                ok-variant="outline-primary"
+                cancel-variant="outline-secondary">
                 <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                   <h6>{{$t('Methodological Limitations')}}</h6>
                   <p class="font-weight-light">
