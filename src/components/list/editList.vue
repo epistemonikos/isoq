@@ -104,6 +104,14 @@
                       Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
                     </b-form-radio>
                   </b-form-radio-group>
+                  <a
+                    @click="buffer_modal_stage_two.methodological_limitations.option = null"
+                    v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
+                    class="mt-2 font-weight-light text-danger">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                    clean my selection
+                  </a>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -143,6 +151,14 @@
                       Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
                     </b-form-radio>
                   </b-form-radio-group>
+                  <a
+                    @click="buffer_modal_stage_two.coherence.option = null"
+                    v-if="buffer_modal_stage_two.coherence.option !== null"
+                    class="mt-2 font-weight-light text-danger">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                    clean my selection
+                  </a>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -181,6 +197,14 @@
                       Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
                     </b-form-radio>
                   </b-form-radio-group>
+                  <a
+                    @click="buffer_modal_stage_two.adequacy.option = null"
+                    v-if="buffer_modal_stage_two.adequacy.option !== null"
+                    class="mt-2 font-weight-light text-danger">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                    clean my selection
+                  </a>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -219,6 +243,14 @@
                       Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
                     </b-form-radio>
                   </b-form-radio-group>
+                  <a
+                    @click="buffer_modal_stage_two.relevance.option = null"
+                    v-if="buffer_modal_stage_two.relevance.option !== null"
+                    class="mt-2 font-weight-light text-danger">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                    clean my selection
+                  </a>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
@@ -257,6 +289,14 @@
                       Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
                     </b-form-radio>
                   </b-form-radio-group>
+                  <a
+                    @click="buffer_modal_stage_two.cerqual.option = null"
+                    v-if="buffer_modal_stage_two.cerqual.option !== null"
+                    class="mt-2 font-weight-light text-danger">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                    clean my selection
+                  </a>
                   <b-form-group
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
