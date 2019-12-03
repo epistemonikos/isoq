@@ -207,7 +207,10 @@
                 ref="open-char-of-studies-table-modal"
                 scrollable
                 title="Columns header"
-                @ok="saveCharacteristicsStudiesFields">
+                @ok="saveCharacteristicsStudiesFields"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
@@ -278,7 +281,10 @@
                 ref="edit-chars-of-studies-data"
                 title="Edit data"
                 scrollable
-                @ok="saveDataCharsOfStudies">
+                @ok="saveDataCharsOfStudies"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
                 <b-form-group
                   v-for="field of charsOfStudies.fields"
                   :key="field.id"
@@ -298,7 +304,9 @@
                 id="import-characteristics-table"
                 ref="import-characteristics-table"
                 title="Import table"
-                @ok="saveCharsImportedData">
+                @ok="saveCharsImportedData"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
                 <p>
                   In order to import a table you must first prepare the table using this template.
                 </p>
@@ -324,6 +332,7 @@
                   <b-col
                     cols="12">
                     <b-table
+                      v-if="charsTableImport.items.length"
                       responsive
                       :fields="charsTableImport.fieldsObj"
                       :items="charsTableImport.items"
@@ -435,7 +444,6 @@
                   @click="changeMode"
                   variant="outline-success"
                   block>
-                  <font-awesome-icon icon="eye"></font-awesome-icon>
                   View
                 </b-button>
             </b-col>
@@ -634,7 +642,10 @@
                 id="add-summarized"
                 ref="add-summarized"
                 title="Summarized review finding"
-                @ok="saveSummarized">
+                @ok="saveSummarized"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
                 <b-form-group
                   label="Summarized review"
                   label-for="summarized-review">
@@ -648,7 +659,9 @@
                 ref="modal-references"
                 title="References"
                 @ok="getProject"
-                scrollable>
+                scrollable
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
                 <div
                   class="mt-2"
                   v-if="references.length">
