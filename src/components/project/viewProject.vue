@@ -167,7 +167,7 @@
                     variant="outline-primary"
                     v-if="this.charsOfStudies.fields.length > 3"
                     @click="openModalCharsOfStudiesEdit">
-                    Edit table
+                    Edit table headers
                   </b-button>
                 </b-col>
                 <b-col>
@@ -181,14 +181,24 @@
                 </b-col>
               </b-row>
               <b-table
+                id="charsOfStudiesTable"
                 :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
                 class="mt-3">
                 <template
                   v-slot:cell(actions)="data">
-                  <font-awesome-icon
-                    @click="addDataCharsOfStudies(data.index)"
-                    icon="edit"></font-awesome-icon>
+                  <b-button
+                    variant="outline-success"
+                    @click="addDataCharsOfStudies(data.index)">
+                    <font-awesome-icon
+                      icon="edit"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    variant="outline-danger"
+                    @click="removeItemCharOfStudies(data.item.ref_id)">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                  </b-button>
                 </template>
               </b-table>
 
@@ -320,6 +330,31 @@
                     ></b-table>
                   </b-col>
                 </b-row>
+              </b-modal>
+              <b-modal
+                id="removeReferenceModalCharsOfStudies"
+                ref="removeReferenceModalCharsOfStudies"
+                title="Remove reference"
+                ok-title="Confirm"
+                ok-variant="outline-danger"
+                cancel-variant="outline-success"
+                @cancel="cleanRemoveReferenceCharsOfStudies"
+                @ok="removeRefsFromLists">
+                {{ removeReferenceCharsOfStudies.id }}
+                <p>This action will remove the reference and all relation with others findings associated to this.</p>
+                <p
+                  v-if="removeReferenceCharsOfStudies.findings.length === 0">
+                  <b>No findings will be affected</b>
+                </p>
+                <p
+                  v-if="removeReferenceCharsOfStudies.findings.length">
+                  <b>Findings that will be affected</b>
+                  <ul>
+                    <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
+                      {{ `finding # ${finding}`}}
+                    </li>
+                  </ul>
+                </p>
               </b-modal>
             </b-col>
             <b-col
@@ -810,6 +845,10 @@ export default {
         fieldsObj: [
           { key: 'authors', label: 'Authors' }
         ]
+      },
+      removeReferenceCharsOfStudies: {
+        id: null,
+        findings: []
       }
     }
   },
@@ -1573,7 +1612,6 @@ export default {
             this.charsOfStudies = response.data[0]
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
               this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
-              this.charsOfStudies.fields.push({'key': 'actions', 'label': ''})
 
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
@@ -1586,6 +1624,8 @@ export default {
                   this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
+
+              this.charsOfStudies.fieldsObj.push({'key': 'actions', 'label': ''})
 
               for (let item of items) {
                 this.charsOfStudiesFieldsModal.items.push(item)
@@ -1665,6 +1705,71 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    removeItemCharOfStudies: function (id) {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+
+      this.removeReferenceCharsOfStudies.id = id
+
+      for (let list of lists) {
+        for (let ref of list.references) {
+          if (id === ref) {
+            this.removeReferenceCharsOfStudies.findings.push(list.isoqf_id)
+          }
+        }
+      }
+      this.$refs['removeReferenceModalCharsOfStudies'].show()
+    },
+    removeRefsFromLists: function () {
+      const refId = JSON.parse(JSON.stringify(this.removeReferenceCharsOfStudies.id))
+      const findings = JSON.parse(JSON.stringify(this.removeReferenceCharsOfStudies.findings))
+      const lists = JSON.parse(JSON.stringify(this.lists))
+      const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+
+      for (let list of lists) {
+        for (let finding of findings) {
+          console.log('===', finding, list.isoqf_id)
+          if (finding === list.isoqf_id) {
+            let index = list.references.indexOf(refId)
+            console.log(index)
+            if (index > -1) {
+              let params = {}
+              list.references.splice(index, 1)
+              params.references = list.references
+              axios.patch(`/api/isoqf_lists/${list.id}`, params)
+                .then((response) => {
+                  // console.log(resposne)
+                })
+                .catch((error) => {
+                  console.log(error)
+                })
+            }
+          }
+        }
+      }
+      let params = {}
+      let index = 0
+      for (let item of charsOfStudies.items) {
+        if (item.ref_id === refId) {
+          charsOfStudies.items.splice(index, 1)
+        }
+        index++
+      }
+      params.items = charsOfStudies.items
+      axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, params)
+        .then((response) => {
+          this.charsOfStudies.items = response.data['$set'].items
+        })
+        .catch((error) => {})
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then((response) => {})
+        .catch((error) => {})
+    },
+    cleanRemoveReferenceCharsOfStudies: function () {
+      this.removeReferenceCharsOfStudies = {
+        id: null,
+        findings: []
+      }
     }
   }
 }
@@ -1694,16 +1799,28 @@ export default {
     }
   div >>>
     #export-button button:first-child {
-      width: 100%
+      width: 100%;
     }
   div >>>
     #export-button ul {
-      width: 100%
+      width: 100%;
     }
   div >>>
     #findings.table tbody td li {
       font-size: 0.8rem;
       padding-top: 0.4rem;
       list-style-type: none;
+    }
+  div >>>
+    #charsOfStudiesTable.table thead th:first-child {
+      width: 35%;
+    }
+  div >>>
+    #charsOfStudiesTable.table thead th:last-child {
+      width: 15%;
+    }
+  div >>>
+    #charsOfStudiesTable.table tbody td:last-child {
+      text-align: right;
     }
 </style>
