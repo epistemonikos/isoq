@@ -157,15 +157,15 @@
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="this.charsOfStudies.fields.length <= 3"
+                    v-if="charsOfStudies.fields.length <= 2"
                     @click="openModalCharsOfStudies"
-                    :disabled="(this.references.length) ? false : true">
-                    Create table
+                    :disabled="(references.length) ? false : true">
+                    Create table headers
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="this.charsOfStudies.fields.length > 3"
+                    v-if="charsOfStudies.fields.length > 2"
                     @click="openModalCharsOfStudiesEdit">
                     Edit table headers
                   </b-button>
@@ -174,17 +174,17 @@
                   <b-button
                     block
                     variant="outline-info"
-                    :disabled="(this.references.length) ? false : true"
+                    :disabled="(references.length) ? false : true"
                     v-b-modal.import-characteristics-table>
                     Import table
                   </b-button>
                 </b-col>
               </b-row>
               <b-table
-                id="charsOfStudiesTable"
+                v-if="charsOfStudies.fieldsObj.length > 2"
                 :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
-                class="mt-3">
+                class="table-content-refs mt-3">
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
@@ -224,7 +224,7 @@
                   <b-form-group
                     v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
                     :key="cnt"
-                    :label="`Columnn #${cnt}`">
+                    :label="`Column #${cnt}`">
                     <b-input-group>
                       <b-form-input
                         :id="`column_${cnt}`"
@@ -252,7 +252,7 @@
                   <b-form-group
                     v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
                     :key="cnt"
-                    :label="`Columnn #${cnt}`">
+                    :label="`Column #${cnt}`">
                     <b-input-group
                       v-if="charsOfStudiesFieldsModalEdit.fields.length">
                       <b-form-input
@@ -367,18 +367,181 @@
               </b-modal>
             </b-col>
             <b-col
-              v-if="references.length"
               cols="12"
               class="mt-3">
-              <h6>Methodological Assessments table</h6>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Create table
-              </b-button>
-              <b-button
-                :disabled="(this.references.length) ? false : true">
-                Import table
-              </b-button>
+              <h5>Methodological Assessments table</h5>
+              <b-row>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="methodologicalTableRefs.fields.length <= 2"
+                    @click="openModalMethodological()"
+                    :disabled="(references.length) ? false : true">
+                    Create table headers
+                  </b-button>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="methodologicalTableRefs.fields.length > 2"
+                    @click="openModalMethodological(true)">
+                    Edit table headers
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :disabled="(references.length) ? false : true"
+                    v-b-modal.import-methodological-table>
+                    Import table
+                  </b-button>
+                </b-col>
+              </b-row>
+
+              <b-table
+                v-if="methodologicalTableRefs.fieldsObj.length > 2"
+                class="table-content-refs mt-3"
+                :fields="methodologicalTableRefs.fieldsObj"
+                :items="methodologicalTableRefs.items">
+                <template
+                  v-slot:cell(actions)="data">
+                  <b-button
+                    variant="outline-success"
+                    @click="addDataMethodological(data.index)">
+                    <font-awesome-icon
+                      icon="edit"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    variant="outline-danger"
+                    @click="removeItemMethodological(data.item.ref_id)">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                  </b-button>
+                </template>
+              </b-table>
+
+              <b-modal
+                id="open-methodological-table-modal"
+                ref="open-methodological-table-modal"
+                scrollable
+                title="Columns header"
+                @ok="saveMethodologicalFields"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <b-form-group
+                    label="Nro of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="methodologicalFieldsModal.nroColumns"
+                      type="number" min="1" max="10"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(methodologicalFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group>
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="methodologicalFieldsModal.fields[cnt - 1]"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="methodologicalTableRefs.id">
+                        <b-button
+                          variant="outline-danger"
+                          @click="deleteFieldFromCharsSudies(cnt - 1)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+              </b-modal>
+              <b-modal
+                id="open-methodological-table-modal-edit"
+                ref="open-methodological-table-modal-edit"
+                scrollable
+                title="Edit Columns header"
+                @ok="updateMethodologicalFields"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <b-form-group
+                    v-for="cnt in parseInt(methodologicalFieldsModalEdit.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group
+                      v-if="methodologicalFieldsModalEdit.fields.length">
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="methodologicalFieldsModalEdit.fields[cnt - 1].label"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="methodologicalFieldsModalEdit.fields.length > 1">
+                        <b-button
+                          variant="outline-danger"
+                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                  <b-button
+                    class="mb-2"
+                    @click="methodologicalNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
+              </b-modal>
+              <b-modal
+                ref="edit-methodological-data"
+                title="Edit data"
+                scrollable
+                @ok="saveDataMethodological"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                <b-form-group
+                  v-for="field of methodologicalTableRefs.fields"
+                  :key="field.id"
+                  :label="field.label">
+                  <b-form-input
+                    v-if="field.key !== 'actions'"
+                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-input>
+                </b-form-group>
+              </b-modal>
+              <b-modal
+                ref="removeReferenceModalMethodological"
+                title="Remove reference"
+                ok-title="Confirm"
+                ok-variant="outline-danger"
+                cancel-variant="outline-success"
+                @cancel="cleanRemoveReferenceMethodological"
+                @ok="removeRefsFromListsMethodological">
+                <p>This action will remove the reference and all relation with others findings associated to this.</p>
+                <p
+                  v-if="removeReferenceMethodological.findings.length === 0">
+                  <b>No findings will be affected</b>
+                </p>
+                <p
+                  v-if="removeReferenceMethodological.findings.length">
+                  <b>Findings that will be affected</b>
+                  <ul>
+                    <li v-for="(finding, index) in removeReferenceMethodological.findings" :key="index">
+                      {{ `finding # ${finding}`}}
+                    </li>
+                  </ul>
+                </p>
+              </b-modal>
             </b-col>
           </b-row>
         </b-tab>
@@ -862,6 +1025,28 @@ export default {
       removeReferenceCharsOfStudies: {
         id: null,
         findings: []
+      },
+      methodologicalTableRefs: {
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: 'Authors' }
+        ]
+      },
+      methodologicalFieldsModal: {
+        nroColumns: 1,
+        fields: [],
+        items: [],
+        selected_item_index: 0
+      },
+      methodologicalFieldsModalEdit: {
+        nroColumns: 1,
+        fields: []
+      },
+      removeReferenceMethodological: {
+        id: null,
+        findings: []
       }
     }
   },
@@ -1109,6 +1294,7 @@ export default {
           this.project = response.data
           this.getLists() // summary review
           this.getCharacteristics()
+          this.getMethodological()
         })
         .catch((error) => {
           console.log(error)
@@ -1629,7 +1815,6 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              this.charsOfStudiesFieldsModal.nroColumns = fields.length - 3
               this.charsOfStudiesFieldsModal.fields = []
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
@@ -1640,8 +1825,40 @@ export default {
 
               this.charsOfStudies.fieldsObj.push({'key': 'actions', 'label': ''})
 
+              this.charsOfStudiesFieldsModal.nroColumns = (this.charsOfStudies.fieldsObj.length === 2) ? 1 : this.charsOfStudies.fieldsObj.length - 2
+
               for (let item of items) {
                 this.charsOfStudiesFieldsModal.items.push(item)
+              }
+            }
+          }
+        })
+    },
+    getMethodological: function () {
+      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length) {
+            this.methodologicalTableRefs = response.data[0]
+            if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+
+              const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+              const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+              this.methodologicalFieldsModal.fields = []
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  this.methodologicalFieldsModal.fields.push(f.label)
+                  this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+
+              this.methodologicalTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
+
+              this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
+
+              for (let item of items) {
+                this.methodologicalFieldsModal.items.push(item)
               }
             }
           }
@@ -1773,16 +1990,212 @@ export default {
         .then((response) => {
           this.charsOfStudies.items = response.data['$set'].items
         })
-        .catch((error) => {})
+        .catch((error) => {
+          console.log(error)
+        })
       axios.delete(`/api/isoqf_references/${refId}`)
         .then((response) => {})
-        .catch((error) => {})
+        .catch((error) => {
+          console.log(error)
+        })
     },
     cleanRemoveReferenceCharsOfStudies: function () {
       this.removeReferenceCharsOfStudies = {
         id: null,
         findings: []
       }
+    },
+    openModalMethodological: function (edit = false) {
+      let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+      let fields = []
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      if (edit) {
+        this.methodologicalFieldsModalEdit.fields = fields
+        this.methodologicalFieldsModalEdit.nroColumns = fields.length
+        this.$refs['open-methodological-table-modal-edit'].show()
+      } else {
+        this.methodologicalFieldsModal.fields = fields
+        this.$refs['open-methodological-table-modal'].show()
+      }
+    },
+    saveMethodologicalFields: function () {
+      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModal.fields))
+      let references = JSON.parse(JSON.stringify(this.references))
+      let params = {}
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.items = []
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        params.fields.push(objField)
+      }
+      params.organization = this.$route.params.org_id
+      params.project_id = this.$route.params.id
+      params.nro_of_fields = fields.length
+
+      for (let r of references) {
+        let objItem = {}
+        for (let cnt in fields) {
+          objItem['column_' + cnt] = ''
+        }
+        objItem.ref_id = r.id
+        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        params.items.push(objItem)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
+        axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
+          .then((response) => {
+            console.log(response.data)
+            this.getProject()
+          }).catch((error) => {
+            console.log('error: ', error)
+          })
+      } else {
+        axios.post('/api/isoqf_assessments', params)
+          .then((response) => {
+            // this.charsOfStudies = response.data
+            this.getProject()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    methodologicalNewColumn: function () {
+      let _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
+      let fields = []
+      let column = '0'
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      this.methodologicalFieldsModalEdit.nroColumns = fields.length + 1
+      column = parseInt(this.methodologicalFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
+      this.methodologicalFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
+    },
+    updateMethodologicalFields: function () {
+      let params = {}
+      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
+
+      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      params.fields = fields
+
+      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+      for (let item of _items) {
+        for (let field of fields) {
+          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
+            delete item[field.key]
+          }
+        }
+      }
+
+      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    addDataMethodological: function (index = 0) {
+      let items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+      this.methodologicalFieldsModal.items = items
+      this.methodologicalFieldsModal.selected_item_index = index
+      this.$refs['edit-methodological-data'].show()
+    },
+    saveDataMethodological: function () {
+      let params = {}
+      const id = this.methodologicalTableRefs.id
+      params.items = this.methodologicalFieldsModal.items
+
+      axios.patch(`/api/isoqf_assessments/${id}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    removeItemMethodological: function (id) {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+
+      this.removeReferenceMethodological.id = id
+
+      for (let list of lists) {
+        for (let ref of list.references) {
+          if (id === ref) {
+            this.removeReferenceMethodological.findings.push(list.isoqf_id)
+          }
+        }
+      }
+      this.$refs['removeReferenceModalMethodological'].show()
+    },
+    cleanRemoveReferenceMethodological: function () {
+      this.removeReferenceMethodological = {
+        id: null,
+        findings: []
+      }
+    },
+    removeRefsFromListsMethodological: function () {
+      const refId = JSON.parse(JSON.stringify(this.removeReferenceMethodological.id))
+      const findings = JSON.parse(JSON.stringify(this.removeReferenceMethodological.findings))
+      const lists = JSON.parse(JSON.stringify(this.lists))
+      const assessment = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+
+      for (let list of lists) {
+        for (let finding of findings) {
+          if (finding === list.isoqf_id) {
+            let index = list.references.indexOf(refId)
+            if (index > -1) {
+              let params = {}
+              list.references.splice(index, 1)
+              params.references = list.references
+              axios.patch(`/api/isoqf_lists/${list.id}`, params)
+                .then((response) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            }
+          }
+        }
+      }
+      let params = {}
+      let index = 0
+      for (let item of assessment.items) {
+        if (item.ref_id === refId) {
+          assessment.items.splice(index, 1)
+        }
+        index++
+      }
+      params.items = assessment.items
+      axios.patch(`/api/isoqf_assessments/${assessment.id}`, params)
+        .then((response) => {
+          this.methodologicalTableRefs.items = response.data['$set'].items
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
@@ -1825,15 +2238,15 @@ export default {
       list-style-type: none;
     }
   div >>>
-    #charsOfStudiesTable.table thead th:first-child {
+    .table-content-refs.table thead th:first-child {
       width: 35%;
     }
   div >>>
-    #charsOfStudiesTable.table thead th:last-child {
+    .table-content-refs.table thead th:last-child {
       width: 15%;
     }
   div >>>
-    #charsOfStudiesTable.table tbody td:last-child {
+    .table-content-refs.table tbody td:last-child {
       text-align: right;
     }
 </style>
