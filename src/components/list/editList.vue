@@ -676,6 +676,7 @@
               <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
+                <!--
                 <bc-action-table
                   class="d-print-none"
                   :importUrl="`/api/isoqf_assessments/${stage_four.id}?organization=${stage_four.organization}&list_id=${stage_four.list_id}`"
@@ -685,6 +686,7 @@
                   :displayImport="true"
                   :displayCreateContent="true"
                   :theContent="stage_four"></bc-action-table>
+                -->
                 <b-table
                   id="methodological"
                   responsive
@@ -1314,16 +1316,27 @@ export default {
     getStageFour: function () {
       let params = {
         organization: this.list.organization,
-        list_id: this.$route.params.id
+        project_id: this.list.project_id
       }
       axios.get('/api/isoqf_assessments', {params})
         .then((response) => {
-          this.stage_four = {nroOfColumns: 1, fields: [], items: []}
           if (response.data.length) {
-            this.stage_four = JSON.parse(JSON.stringify(response.data[0]))
-            if (this.stage_four.fields.length) {
-              this.stage_four.fields.push({key: 'actions', label: 'Actions'})
+            const _references = JSON.parse(JSON.stringify(this.list.references))
+            let data = response.data[0]
+            let items = []
+
+            for (let item of data.items) {
+              for (let reference of _references) {
+                if (reference === item.ref_id) {
+                  items.push(item)
+                }
+              }
             }
+
+            data.items = items
+            this.stage_four = data
+          } else {
+            this.stage_four = { nroOfColumns: 1, fields: [], items: [] }
           }
         })
         .catch((error) => {
