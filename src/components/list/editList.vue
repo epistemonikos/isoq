@@ -10,7 +10,7 @@
         </b-col>
       </b-row>
       <h2>CERQual Assessment Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
-      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding</span> <span>{{list.name}}</span></h3>
+      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-5">
         <b-col
@@ -40,13 +40,12 @@
         <b-col
           v-if="mode==='edit'"
           cols="12"
-          sm="2">
+          sm="3">
             <b-button
               @click="changeMode"
               variant="outline-success"
               block>
-              <font-awesome-icon icon="eye"></font-awesome-icon>
-              View
+              View CERQual Evidence Profile
             </b-button>
         </b-col>
       </b-row>

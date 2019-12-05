@@ -215,7 +215,7 @@
                 id="open-char-of-studies-table-modal"
                 ref="open-char-of-studies-table-modal"
                 scrollable
-                title="Columns header"
+                title="Column Headers"
                 @ok="saveCharacteristicsStudiesFields"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -253,7 +253,7 @@
                 id="open-char-of-studies-table-modal-edit"
                 ref="open-char-of-studies-table-modal-edit"
                 scrollable
-                title="Edit Columns header"
+                title="Edit Column Headers"
                 @ok="updateCharacteristicsStudiesFields">
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
@@ -434,13 +434,13 @@
                 id="open-methodological-table-modal"
                 ref="open-methodological-table-modal"
                 scrollable
-                title="Columns header"
+                title="Column Headers"
                 @ok="saveMethodologicalFields"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                   <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                    Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
                   <b-form-group
                     label="Nro of columnns">
@@ -480,7 +480,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                   <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                    Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
                   <b-form-group
                     v-for="cnt in parseInt(methodologicalFieldsModalEdit.nroColumns)"
@@ -611,13 +611,13 @@
                 id="open-extracted-data-table-modal"
                 ref="open-extracted-data-table-modal"
                 scrollable
-                title="Columns header"
+                title="Column Headers"
                 @ok="saveExtractedDataFields"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                   <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                    Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
                   <b-form-group
                     label="Nro of columnns">
@@ -651,13 +651,13 @@
                 id="open-extracted-data-table-modal-edit"
                 ref="open-extracted-data-table-modal-edit"
                 scrollable
-                title="Edit Columns header"
+                title="Edit Column Headers"
                 @ok="updateExtractedDataFields"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                   <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                    Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
                   <b-form-group
                     v-for="cnt in parseInt(extractedDataFieldsModalEdit.nroColumns)"
