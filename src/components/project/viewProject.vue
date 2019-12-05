@@ -543,6 +543,183 @@
                 </p>
               </b-modal>
             </b-col>
+            <b-col
+              cols="12"
+              class="mt-3">
+              <h5>Extracted data table</h5>
+              <b-row>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="extractedDataTableRefs.fields.length <= 2"
+                    @click="openModalExtractedData()"
+                    :disabled="(references.length) ? false : true">
+                    Create table headers
+                  </b-button>
+                  <b-button
+                    block
+                    variant="outline-primary"
+                    v-if="extractedDataTableRefs.fields.length > 2"
+                    @click="openModalExtractedData(true)">
+                    Edit table headers
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button
+                    block
+                    variant="outline-info"
+                    :disabled="(references.length) ? false : true"
+                    v-b-modal.import-methodological-table>
+                    Import table
+                  </b-button>
+                </b-col>
+              </b-row>
+
+              <b-table
+                v-if="extractedDataTableRefs.fieldsObj.length > 2"
+                class="table-content-refs mt-3"
+                :fields="extractedDataTableRefs.fieldsObj"
+                :items="extractedDataTableRefs.items">
+                <template
+                  v-slot:cell(actions)="data">
+                  <b-button
+                    variant="outline-success"
+                    @click="addDataExtractedData(data.index)">
+                    <font-awesome-icon
+                      icon="edit"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    variant="outline-danger"
+                    @click="removeItemExtractedData(data.item.ref_id)">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                  </b-button>
+                </template>
+              </b-table>
+
+              <b-modal
+                id="open-extracted-data-table-modal"
+                ref="open-extracted-data-table-modal"
+                scrollable
+                title="Columns header"
+                @ok="saveExtractedDataFields"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <b-form-group
+                    label="Nro of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="extractedDataFieldsModal.nroColumns"
+                      type="number" min="1" max="10"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(extractedDataFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group>
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="extractedDataFieldsModal.fields[cnt - 1]"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="extractedDataTableRefs.id">
+                        <b-button
+                          variant="outline-danger"
+                          @click="deleteFieldFromExtractedData(cnt - 1)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+              </b-modal>
+              <b-modal
+                id="open-extracted-data-table-modal-edit"
+                ref="open-extracted-data-table-modal-edit"
+                scrollable
+                title="Edit Columns header"
+                @ok="updateExtractedDataFields"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <b-form-group
+                    v-for="cnt in parseInt(extractedDataFieldsModalEdit.nroColumns)"
+                    :key="cnt"
+                    :label="`Columnn #${cnt}`">
+                    <b-input-group
+                      v-if="extractedDataFieldsModalEdit.fields.length">
+                      <b-form-input
+                        :id="`column_${cnt}`"
+                        v-model="extractedDataFieldsModalEdit.fields[cnt - 1].label"
+                        type="text"></b-form-input>
+                      <b-input-group-append
+                        v-if="extractedDataFieldsModalEdit.fields.length > 1">
+                        <b-button
+                          variant="outline-danger"
+                          @click="deleteFieldFromExtractedDataEdit(cnt - 1)">
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                  <b-button
+                    class="mb-2"
+                    @click="extractedDataNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
+              </b-modal>
+              <b-modal
+                ref="edit-extracted-data-data"
+                title="Edit data"
+                scrollable
+                @ok="saveDataExtractedData"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                <b-form-group
+                  v-for="field of extractedDataTableRefs.fields"
+                  :key="field.id"
+                  :label="field.label">
+                  <b-form-input
+                    v-if="field.key !== 'actions'"
+                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                    v-model="extractedDataFieldsModal.items[extractedDataFieldsModal.selected_item_index][field.key]"></b-form-input>
+                </b-form-group>
+              </b-modal>
+              <b-modal
+                ref="removeReferenceModalExtractedData"
+                title="Remove reference"
+                ok-title="Confirm"
+                ok-variant="outline-danger"
+                cancel-variant="outline-success"
+                @cancel="cleanRemoveReferenceExtractedData"
+                @ok="removeRefsFromListsExtractedData">
+                <p>This action will remove the reference and all relation with others findings associated to this.</p>
+                <p
+                  v-if="removeReferenceExtractedData.findings.length === 0">
+                  <b>No findings will be affected</b>
+                </p>
+                <p
+                  v-if="removeReferenceExtractedData.findings.length">
+                  <b>Findings that will be affected</b>
+                  <ul>
+                    <li v-for="(finding, index) in removeReferenceExtractedData.findings" :key="index">
+                      {{ `finding # ${finding}`}}
+                    </li>
+                  </ul>
+                </p>
+              </b-modal>
+            </b-col>
           </b-row>
         </b-tab>
         <b-tab
@@ -1047,6 +1224,28 @@ export default {
       removeReferenceMethodological: {
         id: null,
         findings: []
+      },
+      extractedDataTableRefs: {
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: 'Authors' }
+        ]
+      },
+      extractedDataFieldsModal: {
+        nroColumns: 1,
+        fields: [],
+        items: [],
+        selected_item_index: 0
+      },
+      extractedDataFieldsModalEdit: {
+        nroColumns: 1,
+        fields: []
+      },
+      removeReferenceExtractedData: {
+        id: null,
+        findings: []
       }
     }
   },
@@ -1295,6 +1494,7 @@ export default {
           this.getLists() // summary review
           this.getCharacteristics()
           this.getMethodological()
+          this.getExtractedData()
         })
         .catch((error) => {
           console.log(error)
@@ -1864,6 +2064,36 @@ export default {
           }
         })
     },
+    getExtractedData: function () {
+      axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length) {
+            this.extractedDataTableRefs = response.data[0]
+            if (Object.prototype.hasOwnProperty.call(this.extractedDataTableRefs, 'fields')) {
+              this.extractedDataTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+
+              const fields = JSON.parse(JSON.stringify(this.extractedDataTableRefs.fields))
+              const items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
+
+              this.extractedDataFieldsModal.fields = []
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  this.extractedDataFieldsModal.fields.push(f.label)
+                  this.extractedDataTableRefs.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+
+              this.extractedDataTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
+
+              this.extractedDataFieldsModal.nroColumns = (this.extractedDataTableRefs.fieldsObj.length === 2) ? 1 : this.extractedDataTableRefs.fieldsObj.length - 2
+
+              for (let item of items) {
+                this.extractedDataFieldsModal.items.push(item)
+              }
+            }
+          }
+        })
+    },
     addDataCharsOfStudies: function (index = 0) {
       let items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
@@ -2187,6 +2417,256 @@ export default {
       axios.patch(`/api/isoqf_assessments/${assessment.id}`, params)
         .then((response) => {
           this.methodologicalTableRefs.items = response.data['$set'].items
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    openModalExtractedData: function (edit = false) {
+      let _fields = JSON.parse(JSON.stringify(this.extractedDataTableRefs.fields))
+      let fields = []
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      if (edit) {
+        this.extractedDataFieldsModalEdit.fields = fields
+        this.extractedDataFieldsModalEdit.nroColumns = fields.length
+        this.$refs['open-extracted-data-table-modal-edit'].show()
+      } else {
+        this.extractedDataFieldsModal.fields = fields
+        this.$refs['open-extracted-data-table-modal'].show()
+      }
+    },
+    saveExtractedDataFields: function () {
+      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
+      let references = JSON.parse(JSON.stringify(this.references))
+      let params = {}
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.items = []
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        params.fields.push(objField)
+      }
+      params.organization = this.$route.params.org_id
+      params.project_id = this.$route.params.id
+      params.nro_of_fields = fields.length
+
+      for (let r of references) {
+        let objItem = {}
+        for (let cnt in fields) {
+          objItem['column_' + cnt] = ''
+        }
+        objItem.ref_id = r.id
+        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        params.items.push(objItem)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(this.extractedDataTableRefs, 'id')) {
+        axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
+          .then((response) => {
+            this.getProject()
+          }).catch((error) => {
+            console.log('error: ', error)
+          })
+      } else {
+        axios.post('/api/isoqf_extracted_data', params)
+          .then((response) => {
+            // this.charsOfStudies = response.data
+            this.getProject()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    deleteFieldFromExtractedData: function (index) {
+      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
+      let params = {}
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+
+      fields.splice(index, 1)
+
+      for (let cnt in fields) {
+        let objField = {}
+        objField.key = 'column_' + cnt
+        objField.label = fields[cnt]
+        params.fields.push(objField)
+      }
+
+      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
+        .then((response) => {
+          this.getProject()
+        }).catch((error) => {
+          console.log('error: ', error)
+        })
+    },
+    updateExtractedDataFields: function () {
+      let params = {}
+      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
+
+      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      params.fields = fields
+
+      let _items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
+
+      for (let item of _items) {
+        for (let field of fields) {
+          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
+            delete item[field.key]
+          }
+        }
+      }
+
+      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    deleteFieldFromExtractedDataEdit: function (index) {
+      let params = {}
+      const _fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
+      const _items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
+
+      let removedField = _fields.splice(index, 1)[0]
+
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      params.fields = _fields
+      params.items = _items
+
+      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
+        .then((response) => {
+          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          const excluded = ['ref_id', 'authors', 'actions']
+          let editFields = []
+          for (let field of _fields) {
+            if (!excluded.includes(field.key)) {
+              editFields.push(field)
+            }
+          }
+
+          this.extractedDataFieldsModalEdit.fields = editFields
+          this.extractedDataFieldsModalEdit.nroColumns = editFields.length
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    extractedDataNewColumn: function () {
+      let _fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
+      let fields = []
+      let column = '0'
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      this.extractedDataFieldsModalEdit.nroColumns = fields.length + 1
+      column = parseInt(this.extractedDataFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
+      this.extractedDataFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
+    },
+    addDataExtractedData: function (index = 0) {
+      let items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
+
+      this.extractedDataFieldsModal.items = items
+      this.extractedDataFieldsModal.selected_item_index = index
+      this.$refs['edit-extracted-data-data'].show()
+    },
+    saveDataExtractedData: function () {
+      let params = {}
+      const id = this.extractedDataTableRefs.id
+      params.items = this.extractedDataFieldsModal.items
+
+      axios.patch(`/api/isoqf_extracted_data/${id}`, params)
+        .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    removeItemExtractedData: function (id) {
+      let lists = JSON.parse(JSON.stringify(this.lists))
+
+      this.removeReferenceExtractedData.id = id
+
+      for (let list of lists) {
+        for (let ref of list.references) {
+          if (id === ref) {
+            this.removeReferenceExtractedData.findings.push(list.isoqf_id)
+          }
+        }
+      }
+      this.$refs['removeReferenceModalExtractedData'].show()
+    },
+    cleanRemoveReferenceExtractedData: function () {
+      this.removeReferenceExtractedData = {
+        id: null,
+        findings: []
+      }
+    },
+    removeRefsFromListsExtractedData: function () {
+      const refId = JSON.parse(JSON.stringify(this.removeReferenceExtractedData.id))
+      const findings = JSON.parse(JSON.stringify(this.removeReferenceExtractedData.findings))
+      const lists = JSON.parse(JSON.stringify(this.lists))
+      const extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
+
+      for (let list of lists) {
+        for (let finding of findings) {
+          if (finding === list.isoqf_id) {
+            let index = list.references.indexOf(refId)
+            if (index > -1) {
+              let params = {}
+              list.references.splice(index, 1)
+              params.references = list.references
+              axios.patch(`/api/isoqf_lists/${list.id}`, params)
+                .then((response) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            }
+          }
+        }
+      }
+      let params = {}
+      let index = 0
+      for (let item of extractedData.items) {
+        if (item.ref_id === refId) {
+          extractedData.items.splice(index, 1)
+        }
+        index++
+      }
+      params.items = extractedData.items
+      axios.patch(`/api/isoqf_extracted_data/${extractedData.id}`, params)
+        .then((response) => {
+          this.extractedDataTableRefs.items = response.data['$set'].items
         })
         .catch((error) => {
           console.log(error)
