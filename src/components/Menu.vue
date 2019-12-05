@@ -1,7 +1,10 @@
 <template>
   <div>
     <b-navbar toggleable="lg" type="dark" variant="info">
-      <b-navbar-brand :to="{name: 'MainPage'}">iSoQf</b-navbar-brand>
+      <b-navbar-brand :to="{name: 'MainPage'}">
+        iSoQf
+        <img :src="iconUrl" alt="GRADE CERQual">
+      </b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
@@ -27,6 +30,11 @@
 import SwitchLanguage from './LanguageSelector'
 
 export default {
+  data () {
+    return {
+      iconUrl: require('../assets/cerqual-web.png')
+    }
+  },
   components: { SwitchLanguage },
   methods: {
     logout: function () {
