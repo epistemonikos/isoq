@@ -42,11 +42,6 @@
                   v-model="project.name"></b-form-input>
               </b-form-group>
               <b-form-group
-                label="Description">
-                <b-form-textarea
-                  v-model="project.description"></b-form-textarea>
-              </b-form-group>
-              <b-form-group
                 label="Authors"
                 label-for="authors">
                 <b-form-input
@@ -88,12 +83,26 @@
                   :options="yes_or_no"></b-select>
               </b-form-group>
               <b-form-group
+                v-if="!project.complete_by_author"
+                label="Please list the authors of this iSoQf"
+                label-for="list-authors">
+                <b-form-input
+                  id="list-authors"
+                  v-model="project.lists_authors">
+                </b-form-input>
+              </b-form-group>
+              <b-form-group
                 label="Visible?"
                 label-for="project-list-status">
                 <b-select
                   id="project-list-status"
                   v-model="project.private"
                   :options="global_status"></b-select>
+              </b-form-group>
+              <b-form-group
+                label="Aditional information">
+                <b-form-textarea
+                  v-model="project.description"></b-form-textarea>
               </b-form-group>
             </b-col>
           </b-row>

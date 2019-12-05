@@ -58,7 +58,10 @@
         ref="new-project"
         :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
         @ok="AddProject"
-        @cancel="closeModalProject">
+        @cancel="closeModalProject"
+        ok-title="Save"
+        ok-variant="outline-success"
+        cancel-variant="outline-secondary">
         <b-alert
           :show="ui.dismissCounters.dismissCountDown"
           @dismiss-count-down="countDownChanged"
@@ -77,14 +80,6 @@
             required
             :placeholder="$t('Title of review')"
             v-model="buffer_project.name"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Description')"
-          label-for="input-project-list-description">
-          <b-form-textarea
-            id="input-project-list-description"
-            :placeholder="$t('Enter a description')"
-            v-model="buffer_project.description"></b-form-textarea>
         </b-form-group>
         <b-form-group
           :label="$t('Authors')"
@@ -130,12 +125,29 @@
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
+          v-if="!buffer_project.complete_by_author"
+          label="Please list the authors of this iSoQf"
+          label-for="input-project-list-authors">
+          <b-form-input
+            id="input-project-list-authors"
+            v-model="buffer_project.lists_authors"></b-form-input>
+        </b-form-group>
+        <b-form-group
           :label="$t('Visible')"
           label-for="select-project-list-status">
           <b-select
             id="select-project-list-status"
             v-model="buffer_project.private"
             :options="global_status"></b-select>
+        </b-form-group>
+        <b-form-group
+          label="Aditional information"
+          label-for="input-project-list-description">
+          <b-form-textarea
+            id="input-project-list-description"
+            placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organization or government"
+            v-model="buffer_project.description"
+            rows="3"></b-form-textarea>
         </b-form-group>
       </b-modal>
       <b-modal
@@ -200,7 +212,9 @@ export default {
         review_question: '',
         published_status: false,
         complete_by_author: false,
-        url_doi: null
+        url_doi: null,
+        authors: '',
+        lists_authors: ''
       },
       tmp_buffer_project_list: {
         id: null,
@@ -218,7 +232,8 @@ export default {
         published_status: false,
         complete_by_author: false,
         url_doi: null,
-        authors: ''
+        authors: '',
+        lists_authors: ''
       },
       buffer_project_list: {
         id: null,
