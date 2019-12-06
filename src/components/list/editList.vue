@@ -122,7 +122,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="Notes"
+                    label="Notes"
                     label-for="input-ml-notes"
                     description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
                     <b-form-textarea
@@ -179,7 +179,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="Notes"
+                    label="Notes"
                     label-for="input-ml-notes"
                     description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
                     <b-form-textarea
@@ -235,7 +235,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="Notes"
+                    label="Notes"
                     label-for="input-ml-notes"
                     description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
                     <b-form-textarea
@@ -291,7 +291,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="Notes"
+                    label="Notes"
                     label-for="input-ml-notes"
                     description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
                     <b-form-textarea
@@ -347,7 +347,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="Notes"
+                    label="Notes"
                     label-for="input-ml-notes"
                     description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
                     <b-form-textarea
@@ -642,7 +642,7 @@
                 <b-table
                   id="characteristics"
                   responsive striped caption-top
-                  :fields="characteristics_studies.fields"
+                  :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
@@ -715,23 +715,12 @@
               <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
-                <!--
-                <bc-action-table
-                  class="d-print-none"
-                  :importUrl="`/api/isoqf_assessments/${stage_four.id}?organization=${stage_four.organization}&list_id=${stage_four.list_id}`"
-                  @response-ok-api="getStageFour"
-                  :displayDeleteTable="true"
-                  :displayEditTable="true"
-                  :displayImport="true"
-                  :displayCreateContent="true"
-                  :theContent="stage_four"></bc-action-table>
-                -->
                 <b-table
                   id="methodological"
                   responsive
                   striped
                   caption-top
-                  :fields="stage_four.fields"
+                  :fields="stage_four.fieldsObj"
                   :items="stage_four.items"
                   :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
@@ -806,7 +795,7 @@
                   id="extracted"
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
-                  :fields="extracted_data.fields"
+                  :fields="extracted_data.fieldsObj"
                   :items="extracted_data.items"
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
@@ -980,11 +969,11 @@ export default {
         organization: ''
       },
       buffer_modal_stage_two: {
-        methodological_limitations: {option: null, explanation: ''},
-        coherence: {option: null, explanation: ''},
-        adequacy: {option: null, explanation: ''},
-        relevance: {option: null, explanation: ''},
-        cerqual: {option: null, explanation: ''}
+        methodological_limitations: {option: null, explanation: '', notes: ''},
+        coherence: {option: null, explanation: '', notes: ''},
+        adequacy: {option: null, explanation: '', notes: ''},
+        relevance: {option: null, explanation: '', notes: ''},
+        cerqual: {option: null, explanation: '', notes: ''}
       },
       buffer_modal_stage_three: {
         fields: [],
@@ -1275,6 +1264,13 @@ export default {
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
               // this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
+              this.characteristics_studies.fieldsObj = []
+              let _fields = data.fields
+              for (let field of _fields) {
+                if (field.key !== 'ref_id') {
+                  this.characteristics_studies.fieldsObj.push(field)
+                }
+              }
               if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
                 this.characteristics_studies.items = []
               }
@@ -1373,6 +1369,15 @@ export default {
             }
 
             data.items = items
+
+            let _fields = data.fields
+            data.fieldsObj = []
+            for (let field of _fields) {
+              if (field.key !== 'ref_id') {
+                data.fieldsObj.push(field)
+              }
+            }
+
             this.stage_four = data
           } else {
             this.stage_four = { nroOfColumns: 1, fields: [], items: [] }
@@ -1443,6 +1448,13 @@ export default {
           if (response.data.length) {
             this.extracted_data = response.data[0]
             this.extracted_data.fields.push({key: 'actions', label: 'Actions'})
+            let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
+            this.extracted_data.fieldsObj = []
+            for (let field of _fields) {
+              if (fields.key !== 'ref_id') {
+                this.extracted_data.fieldsObj.push(field)
+              }
+            }
           }
         })
         .catch((error) => {
