@@ -1482,7 +1482,7 @@ export default {
             let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
             this.extracted_data.fieldsObj = []
             for (let field of _fields) {
-              if (fields.key !== 'ref_id') {
+              if (field.key !== 'ref_id') {
                 this.extracted_data.fieldsObj.push(field)
               }
             }
