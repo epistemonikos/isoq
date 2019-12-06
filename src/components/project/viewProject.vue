@@ -161,6 +161,9 @@
               cols="12"
               class="mt-3">
               <h5>Characteristics of Studies table</h5>
+              <p class="font-weight-light">
+                Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)
+              </p>
               <b-row>
                 <b-col>
                   <b-button
@@ -169,14 +172,14 @@
                     v-if="charsOfStudies.fields.length <= 2"
                     @click="openModalCharsOfStudies"
                     :disabled="(references.length) ? false : true">
-                    Create table headers
+                    Create column headings
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
                     v-if="charsOfStudies.fields.length > 2"
                     @click="openModalCharsOfStudiesEdit">
-                    Edit table headers
+                    Edit column headings
                   </b-button>
                 </b-col>
                 <b-col>
@@ -379,6 +382,9 @@
               cols="12"
               class="mt-3">
               <h5>Methodological Assessments table</h5>
+              <p class="font-weight-light">
+                Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)
+              </p>
               <b-row>
                 <b-col>
                   <b-button
@@ -387,14 +393,14 @@
                     v-if="methodologicalTableRefs.fields.length <= 2"
                     @click="openModalMethodological()"
                     :disabled="(references.length) ? false : true">
-                    Create table headers
+                    Create column headings
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
                     v-if="methodologicalTableRefs.fields.length > 2"
                     @click="openModalMethodological(true)">
-                    Edit table headers
+                    Edit column headings
                   </b-button>
                 </b-col>
                 <b-col>
@@ -556,6 +562,9 @@
               cols="12"
               class="mt-3">
               <h5>Extracted data table</h5>
+              <p class="font-weight-light">
+                Data extracted from each of the contributing studies.
+              </p>
               <b-row>
                 <b-col>
                   <b-button
@@ -564,14 +573,14 @@
                     v-if="extractedDataTableRefs.fields.length <= 2"
                     @click="openModalExtractedData()"
                     :disabled="(references.length) ? false : true">
-                    Create table headers
+                    Create column headings
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
                     v-if="extractedDataTableRefs.fields.length > 2"
                     @click="openModalExtractedData(true)">
-                    Edit table headers
+                    Edit column headings
                   </b-button>
                 </b-col>
                 <b-col>
