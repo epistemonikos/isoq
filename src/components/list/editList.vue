@@ -114,7 +114,7 @@
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
                     label-for="input-ml-explanation"
-                    description="We encourage to add an explanation.">
+                    description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-ml-explanation"
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
@@ -171,7 +171,7 @@
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
                     label-for="input-coherence-explanation"
-                    description="We encourage to add an explanation.">
+                    description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-coherence-explanation"
                       v-model="buffer_modal_stage_two.coherence.explanation"
@@ -227,7 +227,7 @@
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
                     label-for="input-adequacy-explanation"
-                    description="We encourage to add an explanation.">
+                    description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-adequacy-explanation"
                       v-model="buffer_modal_stage_two.adequacy.explanation"
@@ -283,7 +283,7 @@
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
                     label-for="input-relevance-explanation"
-                    description="We encourage to add an explanation.">
+                    description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-relevance-explanation"
                       v-model="buffer_modal_stage_two.relevance.explanation"
@@ -339,7 +339,7 @@
                     class="mt-2"
                     v-bind:label="$t('Explanation')"
                     label-for="input-cerqual"
-                    description="We encourage to add an explanation.">
+                    description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-cerqual"
                       v-model="buffer_modal_stage_two.cerqual.explanation"
