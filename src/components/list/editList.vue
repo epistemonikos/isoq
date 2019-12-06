@@ -12,7 +12,7 @@
       <h2>CERQual Assessment Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row
-        class="d-print-none justify-content-end mb-5">
+        class="d-print-none justify-content-end mb-2">
         <b-col
           v-if="mode==='view'"
           cols="12"
@@ -33,7 +33,6 @@
               @click="changeMode"
               variant="outline-primary"
               block>
-              <font-awesome-icon icon="edit"></font-awesome-icon>
               Edit
             </b-button>
         </b-col>
@@ -75,7 +74,7 @@
                 scrollable
                 @ok="saveStageOneAndTwo"
                 ok-title="Save"
-                ok-variant="outline-primary"
+                ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                   <h6>{{$t('Methodological Limitations')}}</h6>
@@ -109,7 +108,7 @@
                     class="mt-2 font-weight-light text-danger">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
-                    clean my selection
+                    clear my selection
                   </a>
                   <b-form-group
                     class="mt-2"
@@ -120,6 +119,16 @@
                       id="input-ml-explanation"
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="Notes"
+                    label-for="input-ml-notes"
+                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                    <b-form-textarea
+                      id="input-ml-notes"
+                      v-model="buffer_modal_stage_two.methodological_limitations.notes"
+                      :placeholder="$t('Enter a note')"></b-form-textarea>
                   </b-form-group>
                 </div>
                 <div v-if="buffer_modal_stage_two.type === 'coherence'">
@@ -156,7 +165,7 @@
                     class="mt-2 font-weight-light text-danger">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
-                    clean my selection
+                    clear my selection
                   </a>
                   <b-form-group
                     class="mt-2"
@@ -167,6 +176,16 @@
                       id="input-coherence-explanation"
                       v-model="buffer_modal_stage_two.coherence.explanation"
                       v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="Notes"
+                    label-for="input-ml-notes"
+                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                    <b-form-textarea
+                      id="input-ml-notes"
+                      v-model="buffer_modal_stage_two.coherence.notes"
+                      :placeholder="$t('Enter a note')"></b-form-textarea>
                   </b-form-group>
                   <!-- adequacy -->
                 </div>
@@ -202,7 +221,7 @@
                     class="mt-2 font-weight-light text-danger">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
-                    clean my selection
+                    clear my selection
                   </a>
                   <b-form-group
                     class="mt-2"
@@ -213,6 +232,16 @@
                       id="input-adequacy-explanation"
                       v-model="buffer_modal_stage_two.adequacy.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="Notes"
+                    label-for="input-ml-notes"
+                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                    <b-form-textarea
+                      id="input-ml-notes"
+                      v-model="buffer_modal_stage_two.adequacy.notes"
+                      :placeholder="$t('Enter a note')"></b-form-textarea>
                   </b-form-group>
                   <!-- relevance -->
                 </div>
@@ -248,7 +277,7 @@
                     class="mt-2 font-weight-light text-danger">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
-                    clean my selection
+                    clear my selection
                   </a>
                   <b-form-group
                     class="mt-2"
@@ -259,6 +288,16 @@
                       id="input-relevance-explanation"
                       v-model="buffer_modal_stage_two.relevance.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="Notes"
+                    label-for="input-ml-notes"
+                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                    <b-form-textarea
+                      id="input-ml-notes"
+                      v-model="buffer_modal_stage_two.relevance.notes"
+                      :placeholder="$t('Enter a note')"></b-form-textarea>
                   </b-form-group>
                   <!-- CERQual assessment -->
                 </div>
@@ -294,7 +333,7 @@
                     class="mt-2 font-weight-light text-danger">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
-                    clean my selection
+                    clear my selection
                   </a>
                   <b-form-group
                     class="mt-2"
@@ -306,9 +345,20 @@
                       v-model="buffer_modal_stage_two.cerqual.explanation"
                       placeholder="Enter an explanation"></b-form-textarea>
                   </b-form-group>
+                  <b-form-group
+                    class="mt-2"
+                    v-bind:label="Notes"
+                    label-for="input-ml-notes"
+                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                    <b-form-textarea
+                      id="input-ml-notes"
+                      v-model="buffer_modal_stage_two.cerqual.notes"
+                      :placeholder="$t('Enter a note')"></b-form-textarea>
+                  </b-form-group>
                 </div>
               </b-modal>
               <template v-if="evidence_profile.length">
+                <h3>Evidence Profile</h3>
                 <b-table
                   v-if="mode==='edit'"
                   id="assessments"
@@ -349,7 +399,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
                     </div>
@@ -358,7 +407,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
                     </div>
@@ -371,7 +419,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
                     </div>
@@ -380,7 +427,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'coherence')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
                     </div>
@@ -393,7 +439,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
                     </div>
@@ -402,7 +447,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'adequacy')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
                     </div>
@@ -415,7 +459,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
                     </div>
@@ -424,7 +467,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'relevance')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
                     </div>
@@ -437,7 +479,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Edit
                       </b-button>
                     </div>
@@ -446,7 +487,6 @@
                         block
                         variant="outline-info d-print-none"
                         @click="editStageTwo(data.item, 'cerqual')">
-                        <font-awesome-icon icon="edit" title="Edit" />
                         Assessment not completed
                       </b-button>
                     </div>
