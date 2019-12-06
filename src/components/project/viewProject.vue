@@ -792,7 +792,8 @@
                 <b-button
                   @click="changeMode"
                   variant="outline-success"
-                  block>
+                  block
+                  v-b-tooltip.hover title="Click to enter view mode where you can export or print">
                   View
                 </b-button>
             </b-col>
@@ -892,7 +893,7 @@
                   <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
                 </template>
                 <template v-slot:head(name)="data">
-                  <span v-b-tooltip.hover title="Synthesised review findings produced by the review team">{{ data.label }}</span>
+                  <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
                 </template>
                 <template v-slot:head(confidence)="data">
                   <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
@@ -1029,7 +1030,7 @@
                     </template>
                     <template v-slot:row-details="data">
                       <b-card>
-                        <p>Are you sure you want to delete this reference?</p>
+                        <p>You are about to exclude a study from your review. This will delete it an all associated information from all tables in iSoQf. Are you sure you want to delete this reference?</p>
                         <b-button
                           block
                           variant="outline-success"

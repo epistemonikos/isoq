@@ -10,7 +10,6 @@
         </b-col>
       </b-row>
       <h2>CERQual Assessment Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
-      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row
         class="d-print-none justify-content-end mb-2">
         <b-col
@@ -20,8 +19,8 @@
             <b-button
               @click="print"
               variant="outline-info"
-              block>
-              <font-awesome-icon icon="print"></font-awesome-icon>
+              block
+              v-b-tooltip.hover title="If you want to exclude or include the Characteristics of Studies, Methodological Assessments and Extracted Data tables in the file you are about to export or print, click the edit button and adjust your on/off settings for each table. Whatever is on in edit mode will be included in the exported or printed file.">
               Print
             </b-button>
         </b-col>
@@ -43,11 +42,13 @@
             <b-button
               @click="changeMode"
               variant="outline-success"
-              block>
+              block
+              v-b-tooltip.hover title="Click to enter view mode where you can export or print">
               View CERQual Evidence Profile
             </b-button>
         </b-col>
       </b-row>
+      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row
         v-if="mode==='edit'"
         class="d-print-none">
@@ -362,7 +363,7 @@
                 <b-table
                   v-if="mode==='edit'"
                   id="assessments"
-                  responsive striped caption-top
+                  responsive
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
@@ -395,6 +396,12 @@
                     <div v-if="data.item.methodological_limitations.option !== null">
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover
+                          title="Provide an explanation for your assessment"
+                          variant="info">Explanation not yet added</span>
+                      </p>
                       <b-button
                         block
                         variant="outline-info d-print-none"
@@ -415,6 +422,12 @@
                     <div v-if="data.item.coherence.option !== null">
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover
+                          title="Provide an explanation for your assessment"
+                          variant="info">Explanation not yet added</span>
+                      </p>
                       <b-button
                         block
                         variant="outline-info d-print-none"
@@ -435,6 +448,12 @@
                     <div v-if="data.item.adequacy.option !== null">
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover
+                          title="Provide an explanation for your assessment"
+                          variant="info">Explanation not yet added</span>
+                      </p>
                       <b-button
                         block
                         variant="outline-info d-print-none"
@@ -455,6 +474,12 @@
                     <div v-if="data.item.relevance.option !== null">
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover
+                          title="Provide an explanation for your assessment"
+                          variant="info">Explanation not yet added</span>
+                      </p>
                       <b-button
                         block
                         variant="outline-info d-print-none"
@@ -475,6 +500,12 @@
                     <div v-if="data.item.cerqual.option !== null">
                       <p>{{level_confidence[data.item.cerqual.option].text}}</p>
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover
+                          title="Provide an explanation for your assessment"
+                          variant="info">Explanation not yet added</span>
+                      </p>
                       <b-button
                         block
                         variant="outline-info d-print-none"
