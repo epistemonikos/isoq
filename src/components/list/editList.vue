@@ -886,7 +886,10 @@
                   title="Edit data"
                   id="modal-stage-five-data"
                   ref="modal-stage-five-data"
-                  @ok="saveDataStageFive">
+                  @ok="saveDataStageFive"
+                  cancel-variant="outline-secondary"
+                  ok-variant="outline-success"
+                  ok-title="Save">
                   <b-form-group
                     v-for="(field, index) in buffer_extracted_data.fields"
                     :key="index"
@@ -896,6 +899,7 @@
                     <b-form-textarea
                       :id="`input-field-${index}`"
                       type="text"
+                      :disabled="field.key === 'ref_id' || field.key === 'authors'"
                       v-model="buffer_extracted_data_items[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
@@ -1504,6 +1508,7 @@ export default {
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
+
             this.extracted_data = response.data[0]
             this.extracted_data.fields.push({key: 'actions', label: ''})
             let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
@@ -1513,6 +1518,17 @@ export default {
                 this.extracted_data.fieldsObj.push(field)
               }
             }
+
+            const _references = this.list.references
+            let _items = []
+            for (let reference of _references) {
+              for (let item of this.extracted_data.items) {
+                if (item.ref_id === reference) {
+                  _items.push(item)
+                }
+              }
+            }
+            this.extracted_data.items = _items
           }
         })
         .catch((error) => {
