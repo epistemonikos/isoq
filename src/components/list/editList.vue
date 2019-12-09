@@ -843,15 +843,6 @@
               <h3>{{$t('Extracted Data')}} <small v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
-                <bc-action-table
-                  class="d-print-none"
-                  :importUrl="`/api/isoqf_extracted_data/${extracted_data.id}?organization=${extracted_data.organization}&list_id=${extracted_data.list_id}`"
-                  @response-ok-api="getStageFive"
-                  :displayDeleteTable="true"
-                  :displayEditTable="true"
-                  :displayImport="true"
-                  :displayCreateContent="true"
-                  :theContent="extracted_data"></bc-action-table>
                 <b-table
                   id="extracted"
                   responsive striped caption-top
@@ -861,14 +852,20 @@
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
                   <template v-slot:cell(actions)="data">
-                    <font-awesome-icon
-                      icon="trash"
-                      @click="openModalStageFiveRemoveDataItem(data)"
-                      :title="$t('Remove')" />
-                    <font-awesome-icon
-                      icon="edit"
+                    <b-button
                       @click="openModalStageFiveEditDataItem(data)"
-                      :title="$t('Edit')" />
+                      variant="outline-success">
+                      <font-awesome-icon
+                        icon="edit"
+                        :title="$t('Edit')" />
+                    </b-button>
+                    <b-button
+                      @click="openModalStageFiveRemoveDataItem(data)"
+                      variant="outline-danger">
+                      <font-awesome-icon
+                        icon="trash"
+                        :title="$t('Remove')" />
+                    </b-button>
                   </template>
                 </b-table>
                 <b-pagination
@@ -1501,14 +1498,14 @@ export default {
     getStageFive: function () {
       let params = {
         organization: this.list.organization,
-        list_id: this.$route.params.id
+        project_id: this.list.project_id
       }
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
             this.extracted_data = response.data[0]
-            this.extracted_data.fields.push({key: 'actions', label: 'Actions'})
+            this.extracted_data.fields.push({key: 'actions', label: ''})
             let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
             this.extracted_data.fieldsObj = []
             for (let field of _fields) {
@@ -1621,6 +1618,7 @@ export default {
     }
   div >>>
     #extracted.table thead th:last-child {
-      width: 2%;
+      text-align: right;
+      width: 13%;
     }
 </style>
