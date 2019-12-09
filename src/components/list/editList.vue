@@ -1508,7 +1508,6 @@ export default {
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
-
             this.extracted_data = response.data[0]
             this.extracted_data.fields.push({key: 'actions', label: ''})
             let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
