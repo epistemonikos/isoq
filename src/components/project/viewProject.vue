@@ -863,7 +863,7 @@
             <b-col
               v-if="mode==='edit'"
               cols="12"
-              class="my-2">
+              class="my-2 d-print-none">
               <b-card
                 bg-variant="light">
                 <b-row>
@@ -912,8 +912,20 @@
               </b-card>
             </b-col>
             <b-col cols="12">
+              <b-alert class="d-print-none" v-model="dismissAlertPrint" variant="danger" dismissible>
+                You must select at least one item of the table
+              </b-alert>
+              <b-button
+                v-if="mode==='view'"
+                class="mb-2"
+                variant="outline-primary"
+                @click="$refs.findings.selectAllRows()">
+                Select all items
+              </b-button>
               <b-table
-                v-if="mode==='edit'"
+                selectable
+                select-mode="multi"
+                selected-variant="warning"
                 responsive
                 id="findings"
                 ref="findings"
@@ -926,8 +938,7 @@
                 :per-page="table_settings.perPage"
                 :filter="table_settings.filter"
                 @filtered="onFiltered"
-                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
-              >
+                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']">
                 <template v-slot:head(isoqf_id)="data">
                   <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
                 </template>
@@ -947,12 +958,18 @@
                   {{ data.item.isoqf_id }}
                 </template>
                 <template v-slot:cell(name)="data">
-                  <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                  <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                  <span v-if="mode === 'edit'">
+                    <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                  </span>
+                  <span v-else>
+                    {{ data.item.name }}
+                  </span>
                 </template>
                 <template v-slot:cell(cerqual_option)="data">
                   {{ data.item.cerqual_option }}
                   <b-button
+                    class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
                     variant="outline-info"
@@ -965,6 +982,7 @@
                 <template v-slot:cell(cerqual_explanation)="data">
                   {{ data.item.cerqual_explanation }}
                   <b-button
+                    class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
                     variant="outline-info"
@@ -978,7 +996,7 @@
                   {{ data.item.ref_list }}
                   <b-button
                     block
-                    class="mt-2"
+                    class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
                     @click="openModalReferences(data.item.isoqf_id)">
                     <span v-if="data.item.references.length === 0">Add </span>
@@ -993,12 +1011,13 @@
                   </div>
                 </template>
               </b-table>
+              <!--
               <b-table
                 v-if="mode==='view'"
                 class="toDoc"
                 responsive
-                id="findings"
-                ref="findings"
+                id="findingsPrint"
+                ref="findingsPrint"
                 :fields="fields"
                 :items="lists"
                 empty-text="There are no findings to show"
@@ -1008,8 +1027,7 @@
                 :per-page="table_settings.perPage"
                 :filter="table_settings.filter"
                 @filtered="onFiltered"
-                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']"
-              >
+                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']">
                 <template v-slot:cell(name)="data">
                   {{ data.item.name.replace(/’/g, "'") }}
                 </template>
@@ -1020,8 +1038,10 @@
                   </div>
                 </template>
               </b-table>
+              -->
               <b-pagination
-                v-if="mode==='edit'"
+                v-if="mode === 'edit'"
+                class="d-print-none"
                 v-model="table_settings.currentPage"
                 :total-rows="lists.length"
                 :per-page="table_settings.perPage"
@@ -1334,7 +1354,8 @@ export default {
       removeReferenceExtractedData: {
         id: null,
         findings: []
-      }
+      },
+      dismissAlertPrint: false
     }
   },
   mounted () {
@@ -1484,8 +1505,18 @@ export default {
       if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
         this.table_settings.currentPage = 1
+        this.$refs.findings.selectAllRows()
       } else {
         this.table_settings.perPage = 5
+        this.$refs.findings.clearSelected()
+      }
+    },
+    printiSoQf: function () {
+      if (!document.getElementsByClassName('b-table-row-selected').length) {
+        console.log('must select')
+        this.dismissAlertPrint = true
+      } else {
+        window.print()
       }
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
@@ -1901,9 +1932,6 @@ export default {
         .then((response) => {
           this.openModalReferencesSingle(false)
         })
-    },
-    printiSoQf: function () {
-      window.print()
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       if (authors.length) {
@@ -2817,4 +2845,10 @@ export default {
     .table-content-refs.table tbody td:last-child {
       text-align: right;
     }
+  @media print {
+    div >>>
+      #findings tbody tr:not(.b-table-row-selected) {
+        display: none !important
+      }
+  }
 </style>
