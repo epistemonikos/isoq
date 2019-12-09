@@ -193,9 +193,12 @@
                 </b-col>
               </b-row>
               <b-table
+                id="chars-of-studies-table"
                 v-if="charsOfStudies.fieldsObj.length > 2"
                 :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
+                :current-page="charsOfStudiesConfigTable.currentPage"
+                :per-page="charsOfStudiesConfigTable.perPage"
                 class="table-content-refs mt-3">
                 <template
                   v-slot:cell(actions)="data">
@@ -213,6 +216,12 @@
                   </b-button>
                 </template>
               </b-table>
+              <b-pagination
+                align="center"
+                v-model="charsOfStudiesConfigTable.currentPage"
+                :total-rows="charsOfStudies.items.length"
+                :per-page="charsOfStudiesConfigTable.perPage"
+                aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
                 id="open-char-of-studies-table-modal"
@@ -417,6 +426,8 @@
               <b-table
                 v-if="methodologicalTableRefs.fieldsObj.length > 2"
                 class="table-content-refs mt-3"
+                :per-page="methodologicalTableRefsTableSettings.perPage"
+                :current-page="methodologicalTableRefsTableSettings.currentPage"
                 :fields="methodologicalTableRefs.fieldsObj"
                 :items="methodologicalTableRefs.items">
                 <template
@@ -435,6 +446,12 @@
                   </b-button>
                 </template>
               </b-table>
+              <b-pagination
+                align="center"
+                v-model="methodologicalTableRefsTableSettings.currentPage"
+                :total-rows="methodologicalTableRefs.items.length"
+                :per-page="methodologicalTableRefsTableSettings.perPage"
+                aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
                 id="open-methodological-table-modal"
@@ -565,6 +582,9 @@
               <p class="font-weight-light">
                 Data extracted from each of the contributing studies.
               </p>
+              <p class="font-weight-light">
+                You will add the extracted data to this table only when you complete the CERQual Assessment Worksheet for each finding. At this stage, just add the column headings
+              </p>
               <b-row>
                 <b-col>
                   <b-button
@@ -596,17 +616,21 @@
 
               <b-table
                 v-if="extractedDataTableRefs.fieldsObj.length > 2"
+                :per-page="extractedDataTableRefsTableSettings.perPage"
+                :current-page="extractedDataTableRefsTableSettings.currentPage"
                 class="table-content-refs mt-3"
                 :fields="extractedDataTableRefs.fieldsObj"
                 :items="extractedDataTableRefs.items">
                 <template
                   v-slot:cell(actions)="data">
+                  <!--
                   <b-button
                     variant="outline-success"
                     @click="addDataExtractedData(data.index)">
                     <font-awesome-icon
                       icon="edit"></font-awesome-icon>
                   </b-button>
+                  -->
                   <b-button
                     variant="outline-danger"
                     @click="removeItemExtractedData(data.item.ref_id)">
@@ -615,6 +639,12 @@
                   </b-button>
                 </template>
               </b-table>
+              <b-pagination
+                align="center"
+                v-model="extractedDataTableRefsTableSettings.currentPage"
+                :total-rows="extractedDataTableRefs.items.length"
+                :per-page="extractedDataTableRefsTableSettings.perPage"
+                aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
                 id="open-extracted-data-table-modal"
@@ -1227,6 +1257,10 @@ export default {
           { key: 'authors', label: 'Authors' }
         ]
       },
+      charsOfStudiesConfigTable: {
+        currentPage: 1,
+        perPage: 10
+      },
       tabOpened: 1,
       global_status: [
         { value: false, text: 'public' },
@@ -1257,6 +1291,10 @@ export default {
           { key: 'authors', label: 'Authors' }
         ]
       },
+      methodologicalTableRefsTableSettings: {
+        currentPage: 1,
+        perPage: 10
+      },
       methodologicalFieldsModal: {
         nroColumns: 1,
         fields: [],
@@ -1278,6 +1316,10 @@ export default {
         fieldsObj: [
           { key: 'authors', label: 'Authors' }
         ]
+      },
+      extractedDataTableRefsTableSettings: {
+        currentPage: 1,
+        perPage: 10
       },
       extractedDataFieldsModal: {
         nroColumns: 1,
