@@ -856,6 +856,11 @@
                 <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
               </ul>
 
+              <h5 v-if="!project.complete_by_author">Authors of the list</h5>
+              <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
+                <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
+              </ul>
+
               <h5>Has the review been published</h5>
               <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
