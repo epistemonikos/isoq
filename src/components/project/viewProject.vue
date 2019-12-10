@@ -2842,7 +2842,11 @@ export default {
   @media print {
     div >>>
       #findings tbody tr:not(.b-table-row-selected) {
-        display: none !important
+        display: none !important;
+      }
+    div >>>
+      ul.nav.nav-tabs.nav-fill {
+        display: none !important;
       }
   }
 </style>
