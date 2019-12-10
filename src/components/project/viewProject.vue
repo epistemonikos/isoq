@@ -1513,7 +1513,6 @@ export default {
     },
     printiSoQf: function () {
       if (!document.getElementsByClassName('b-table-row-selected').length) {
-        console.log('must select')
         this.dismissAlertPrint = true
       } else {
         window.print()
