@@ -917,7 +917,7 @@
               </b-alert>
               <b-button
                 v-if="mode==='view'"
-                class="mb-2"
+                class="mb-2 d-print-none"
                 variant="outline-primary"
                 @click="$refs.findings.selectAllRows()">
                 Select all items
