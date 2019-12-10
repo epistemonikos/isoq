@@ -905,7 +905,7 @@
                     cols="12"
                     sm="4">
                     <b-button
-                      v-b-tooltip.hover title="Copy and paste one synthesised review finding at a time into the iSoQf"
+                      v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
                       variant="outline-primary"
                       @click="modalAddSummarized"
                       block>
