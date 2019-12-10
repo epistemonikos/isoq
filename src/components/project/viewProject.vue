@@ -978,6 +978,7 @@
                 <template v-slot:cell(cerqual_option)="data">
                   {{ data.item.cerqual_option }}
                   <b-button
+                    v-if="mode==='edit'"
                     class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -991,6 +992,7 @@
                 <template v-slot:cell(cerqual_explanation)="data">
                   {{ data.item.cerqual_explanation }}
                   <b-button
+                    v-if="mode==='edit'"
                     class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -1004,6 +1006,7 @@
                 <template v-slot:cell(ref_list)="data">
                   {{ data.item.ref_list }}
                   <b-button
+                    v-if="mode==='edit'"
                     block
                     class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
