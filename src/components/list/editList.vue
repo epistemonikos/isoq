@@ -9,7 +9,7 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>CERQual Assessment Worksheet <small v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+      <h2>CERQual Assessment Worksheet <small class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <b-row
         class="d-print-none justify-content-end mb-2">
         <b-col
