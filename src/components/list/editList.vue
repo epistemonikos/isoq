@@ -697,7 +697,8 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('cs')">
-              <h3>{{$t('Characteristics of Studies')}} <small v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
+              <h3>{{$t('Characteristics of Studies')}} <small class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the Key Information section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <b-table
@@ -773,7 +774,8 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ma')">
-              <h3>{{$t('Methodological Assessments')}} <small v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
+              <h3>{{$t('Methodological Assessments')}} <small class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the Key Information section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
@@ -840,7 +842,7 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
-              <h3>{{$t('Extracted Data')}} <small v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
+              <h3>{{$t('Extracted Data')}} <small class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
