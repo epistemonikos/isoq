@@ -211,7 +211,7 @@ export default {
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
-        complete_by_author: false,
+        complete_by_author: true,
         url_doi: null,
         authors: '',
         lists_authors: ''
@@ -230,7 +230,7 @@ export default {
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
-        complete_by_author: false,
+        complete_by_author: true,
         url_doi: null,
         authors: '',
         lists_authors: ''
