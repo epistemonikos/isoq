@@ -795,9 +795,11 @@
                 right
                 text="Export">
                 <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                <!--
                 <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
                 <b-dropdown-item disabled>to GRADE</b-dropdown-item>
                 <b-dropdown-divider></b-dropdown-divider>
+                -->
                 <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
               </b-dropdown>
             </b-col>
@@ -932,6 +934,7 @@
                 Select all items
               </b-button>
               <b-table
+                class="toDoc"
                 selectable
                 select-mode="multi"
                 selected-variant="warning"
@@ -1825,28 +1828,8 @@ export default {
       document.body.removeChild(downloadLink)
     },
     generateAndDownload: function () {
-      let element = document.getElementsByTagName('tbody')
-      var nroElements = element[0].children.length
-      var icon = (element[0].children[0].children.length > 1) ? JSON.parse(JSON.stringify(element[0].children[0].children[5].innerHTML)) : ''
       let title = document.getElementById('project-title').innerHTML
-
-      var cnt = 0
-      while (cnt < nroElements) {
-        if (element[0].children.length > 1) {
-          element[0].children[cnt].children[5].innerHTML = ''
-        }
-        cnt++
-      }
-
       this.Export2Doc('toDoc', title)
-
-      cnt = 0
-      while (cnt < nroElements) {
-        if (element[0].children.length > 1) {
-          element[0].children[cnt].children[5].innerHTML = icon
-        }
-        cnt++
-      }
     },
     processRIS: function (reference = {}) {
       let txt = ''
