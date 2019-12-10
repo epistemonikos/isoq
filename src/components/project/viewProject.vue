@@ -123,7 +123,11 @@
             <b-col
               cols="12">
               <h3>Key information on Included Studies</h3>
-              <p>To optimize the functionality of iSoQf and save you time please add the following information. You first need to upload your reference list of included studies before moving on to characteristics of studies and methodological assessment tables. All of these files are needed in order to apply the CERQual approach and by including them here the relevant information will be automatically extracted where needed in the evidence profiles saving you time and reducing potential errors.</p>
+              <p>
+                To optimize the functionality of iSoQf, and save you time, please add the following information.
+                You must first upload your reference list of included studies before moving on to the characteristics of studies, methodological assessment and extracted data tables.
+                All of these information is needed in order to apply the CERQual approach, and by including them here the relevant information will be automatically extracted where needed in the CERQual Assessment Worksheets and Evidence Profiles, saving you time and reducing potential errors.
+              </p>
             </b-col>
             <b-col
               cols="12">
