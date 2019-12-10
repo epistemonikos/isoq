@@ -17,10 +17,11 @@
           cols="12"
           sm="2">
             <b-button
+              id="printButton"
               @click="print"
               variant="outline-info"
               block
-              v-b-tooltip.hover title="If you want to exclude or include the Characteristics of Studies, Methodological Assessments and Extracted Data tables in the file you are about to export or print, click the edit button and adjust your on/off settings for each table. Whatever is on in edit mode will be included in the exported or printed file.">
+              v-b-tooltip:printButton.bottom="'If you want to exclude or include the Characteristics of Studies, Methodological Assessments and Extracted Data tables in the file you are about to export or print, click the edit button and adjust your on/off settings for each table. Whatever is on in edit mode will be included in the exported or printed file.'">
               Print
             </b-button>
         </b-col>
@@ -29,8 +30,10 @@
           cols="12"
           sm="2">
             <b-button
+              id="editButton"
               @click="changeMode"
               variant="outline-primary"
+              v-b-tooltip:editButton.top="'Press to edit'"
               block>
               Edit
             </b-button>
@@ -38,7 +41,7 @@
         <b-col
           v-if="mode==='edit'"
           cols="12"
-          sm="3">
+          sm="4">
             <b-button
               @click="changeMode"
               variant="outline-success"
@@ -361,6 +364,7 @@
               <template v-if="evidence_profile.length">
                 <h3>Evidence Profile</h3>
                 <b-table
+                  class="d-print-none"
                   v-if="mode==='edit'"
                   id="assessments"
                   responsive
@@ -573,28 +577,28 @@
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
                   <template v-slot:head(isoqf_id)="data">
-                    <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(name)="data">
-                    <span v-b-tooltip.hover title="Synthesised review finding you are applying the CERQual approach to">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(methodological-limit)="data">
-                    <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(coherence)="data">
-                    <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(adequacy)="data">
-                    <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(relevance)="data">
-                    <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(cerqual)="data">
-                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:head(references)="data">
-                    <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
+                    {{data.label}}
                   </template>
                   <template v-slot:cell(isoqf_id)="data">
                     {{data.item.isoqf_id}}
@@ -855,6 +859,7 @@
                   :current-page="extracted_data_table_settings.currentPage">
                   <template v-slot:cell(actions)="data">
                     <b-button
+                      class="d-print-none"
                       @click="openModalStageFiveEditDataItem(data)"
                       variant="outline-success">
                       <font-awesome-icon
@@ -862,6 +867,7 @@
                         :title="$t('Edit')" />
                     </b-button>
                     <b-button
+                      class="d-print-none"
                       @click="openModalStageFiveRemoveDataItem(data)"
                       variant="outline-danger">
                       <font-awesome-icon
