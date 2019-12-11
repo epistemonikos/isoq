@@ -971,8 +971,8 @@
               <h5>Has the review been published</h5>
               <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
-              <h5>Is the iSoQf being completed by the review authors?</h5>
-              <p>{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+              <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+              <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
             </b-col>
           </b-row>
           <b-row>
