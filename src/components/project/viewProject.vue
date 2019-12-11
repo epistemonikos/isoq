@@ -963,7 +963,7 @@
                 <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
               </ul>
 
-              <h5 v-if="!project.complete_by_author">Authors of the list</h5>
+              <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
               <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
                 <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
               </ul>
