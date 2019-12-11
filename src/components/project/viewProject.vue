@@ -333,6 +333,9 @@
                 @ok="saveImportedData('isoqf_characteristics')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <b-alert show variant="danger">
+                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
                 </p>
@@ -592,6 +595,9 @@
                 @ok="saveImportedData('isoqf_assessments')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <b-alert show variant="danger">
+                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
                 </p>
@@ -610,7 +616,7 @@
                     class="mb-2"
                     cols="12">
                     <b-form-file
-                      id="input-template-chars-file"
+                      id="input-template-methodological-file"
                       plain
                       @change="loadTableImportData($event)"></b-form-file>
                   </b-col>
@@ -831,6 +837,9 @@
                 @ok="saveImportedData('isoqf_extracted_data')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <b-alert show variant="danger">
+                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
                 </p>
@@ -849,7 +858,7 @@
                     class="mb-2"
                     cols="12">
                     <b-form-file
-                      id="input-template-chars-file"
+                      id="input-template-extracted-data-file"
                       plain
                       @change="loadTableImportData($event)"></b-form-file>
                   </b-col>
