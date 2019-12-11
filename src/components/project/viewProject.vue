@@ -126,7 +126,7 @@
               <p>
                 To optimize the functionality of iSoQf, and save you time, please add the following information.
                 You must first upload your reference list of included studies before moving on to the characteristics of studies, methodological assessment and extracted data tables.
-                All of these information is needed in order to apply the CERQual approach, and by including them here the relevant information will be automatically extracted where needed in the CERQual Assessment Worksheets and Evidence Profiles, saving you time and reducing potential errors.
+                All of this information is needed in order to apply the CERQual approach, and by including them here the relevant information will be automatically extracted where needed in the CERQual Assessment Worksheets and Evidence Profiles, saving you time and reducing potential errors.
               </p>
             </b-col>
             <b-col
