@@ -198,7 +198,7 @@
               </b-row>
               <b-table
                 id="chars-of-studies-table"
-                v-if="charsOfStudies.fieldsObj.length > 2"
+                v-if="charsOfStudies.fieldsObj.length > 1"
                 :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
                 :current-page="charsOfStudiesConfigTable.currentPage"
@@ -221,6 +221,7 @@
                 </template>
               </b-table>
               <b-pagination
+                v-if="charsOfStudies.items.length"
                 align="center"
                 v-model="charsOfStudiesConfigTable.currentPage"
                 :total-rows="charsOfStudies.items.length"
@@ -432,7 +433,7 @@
               </b-row>
 
               <b-table
-                v-if="methodologicalTableRefs.fieldsObj.length"
+                v-if="methodologicalTableRefs.fieldsObj.length > 1"
                 class="table-content-refs mt-3"
                 :per-page="methodologicalTableRefsTableSettings.perPage"
                 :current-page="methodologicalTableRefsTableSettings.currentPage"
@@ -455,6 +456,7 @@
                 </template>
               </b-table>
               <b-pagination
+                v-if="methodologicalTableRefs.items.length"
                 align="center"
                 v-model="methodologicalTableRefsTableSettings.currentPage"
                 :total-rows="methodologicalTableRefs.items.length"
@@ -672,7 +674,7 @@
               </b-row>
 
               <b-table
-                v-if="extractedDataTableRefs.fieldsObj.length > 2"
+                v-if="extractedDataTableRefs.fieldsObj.length > 1"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
                 :current-page="extractedDataTableRefsTableSettings.currentPage"
                 class="table-content-refs mt-3"
@@ -697,6 +699,7 @@
                 </template>
               </b-table>
               <b-pagination
+                v-if="extractedDataTableRefs.items.length"
                 align="center"
                 v-model="extractedDataTableRefsTableSettings.currentPage"
                 :total-rows="extractedDataTableRefs.items.length"
@@ -2255,20 +2258,18 @@ export default {
           if (response.data.length) {
             this.methodologicalTableRefs = response.data[0]
             if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
-              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
-
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
               this.methodologicalFieldsModal.fields = []
+
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
                   this.methodologicalFieldsModal.fields.push(f.label)
                   this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
-
-              this.methodologicalTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
 
               this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
 
