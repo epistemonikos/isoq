@@ -408,7 +408,8 @@
                       </p>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         Edit
                         <font-awesome-icon
@@ -419,7 +420,8 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         Assessment not completed
                         <font-awesome-icon
@@ -440,7 +442,8 @@
                       </p>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'coherence')">
                         Edit
                         <font-awesome-icon
@@ -451,7 +454,8 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'coherence')">
                         Assessment not completed
                         <font-awesome-icon
@@ -472,7 +476,8 @@
                       </p>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'adequacy')">
                         Edit
                         <font-awesome-icon
@@ -483,7 +488,8 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'adequacy')">
                         Assessment not completed
                         <font-awesome-icon
@@ -504,7 +510,8 @@
                       </p>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'relevance')">
                         Edit
                         <font-awesome-icon
@@ -515,7 +522,8 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'relevance')">
                         Assessment not completed
                         <font-awesome-icon
@@ -536,7 +544,8 @@
                       </p>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'cerqual')">
                         Edit
                         <font-awesome-icon
@@ -547,7 +556,8 @@
                     <div v-else>
                       <b-button
                         block
-                        variant="outline-info d-print-none"
+                        class="d-print-none"
+                        variant="outline-info"
                         @click="editStageTwo(data.item, 'cerqual')">
                         Assessment not completed
                         <font-awesome-icon
@@ -562,9 +572,13 @@
                         :key="index"
                         v-for="(ref, index) in data.item.references">{{ ref }}</li>
                     </div>
-                    <font-awesome-icon
-                      icon="highlighter"
-                      @click="openModalReferences"></font-awesome-icon>
+                    <b-button
+                      block
+                      class="d-print-none mt-2"
+                      variant="outline-info"
+                      @click="openModalReferences">
+                      Edit
+                    </b-button>
                   </template>
                 </b-table>
 
