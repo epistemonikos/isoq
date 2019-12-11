@@ -1751,7 +1751,7 @@ export default {
           this.lists = JSON.parse(JSON.stringify(response.data))
           if (this.lists.length) {
             let lists = JSON.parse(JSON.stringify(this.lists))
-            this.lastId = parseInt(lists.splice(lists.length - 1, 1)[0].isoqf_id) + 1
+            this.lastId = parseInt(lists.slice(-1)[0].isoqf_id) + 1
             for (let list of this.lists) {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
@@ -1838,10 +1838,7 @@ export default {
         references: []
       }
       axios.post('/api/isoqf_findings', params)
-        .then((response) => {
-          this.lastId = this.lastId + 1
-          // console.log(response)
-        })
+        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
