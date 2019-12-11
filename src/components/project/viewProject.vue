@@ -1847,7 +1847,7 @@ export default {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
-          if (this.references.length) {
+          if (this.references.length && (this.charsOfStudies.fields.length || this.methodologicalTableRefs.fields.length || this.extractedDataTableRefs.fields.length)) {
             this.$nextTick(() => {
               this.tabOpened = 2
             })
