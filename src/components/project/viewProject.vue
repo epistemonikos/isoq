@@ -321,6 +321,7 @@
                 </b-form-group>
               </b-modal>
               <b-modal
+                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -329,7 +330,7 @@
                 id="import-characteristics-table"
                 ref="import-characteristics-table"
                 title="Import table"
-                @ok="saveCharsImportedData"
+                @ok="saveImportedData('isoqf_characteristics')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <p>
@@ -338,7 +339,7 @@
                 <b-button
                   block
                   variant="outline-info"
-                  @click="generateTemplateChars">
+                  @click="generateTemplate">
                   Download template
                 </b-button>
                 <p
@@ -352,15 +353,15 @@
                     <b-form-file
                       id="input-template-chars-file"
                       plain
-                      @change="loadCharsTableData($event)"></b-form-file>
+                      @change="loadTableImportData($event)"></b-form-file>
                   </b-col>
                   <b-col
                     cols="12">
                     <b-table
-                      v-if="charsTableImport.items.length"
+                      v-if="importDataTable.items.length"
                       responsive
-                      :fields="charsTableImport.fieldsObj"
-                      :items="charsTableImport.items"
+                      :fields="importDataTable.fieldsObj"
+                      :items="importDataTable.items"
                     ></b-table>
                   </b-col>
                 </b-row>
@@ -428,7 +429,7 @@
               </b-row>
 
               <b-table
-                v-if="methodologicalTableRefs.fieldsObj.length > 2"
+                v-if="methodologicalTableRefs.fieldsObj.length"
                 class="table-content-refs mt-3"
                 :per-page="methodologicalTableRefsTableSettings.perPage"
                 :current-page="methodologicalTableRefsTableSettings.currentPage"
@@ -578,6 +579,52 @@
                   </ul>
                 </p>
               </b-modal>
+              <b-modal
+                scrollable
+                :no-close-on-backdrop="true"
+                :no-close-on-esc="true"
+                ok-title="Save"
+                cancel-title="Close"
+                size="lg"
+                id="import-methodological-table"
+                ref="import-methodological-table"
+                title="Import table"
+                @ok="saveImportedData('isoqf_assessments')"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                <p>
+                  In order to import a table you must first prepare the table using this template.
+                </p>
+                <b-button
+                  block
+                  variant="outline-info"
+                  @click="generateTemplate">
+                  Download template
+                </b-button>
+                <p
+                  class="mt-3">
+                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                </p>
+                <b-row>
+                  <b-col
+                    class="mb-2"
+                    cols="12">
+                    <b-form-file
+                      id="input-template-chars-file"
+                      plain
+                      @change="loadTableImportData($event)"></b-form-file>
+                  </b-col>
+                  <b-col
+                    cols="12">
+                    <b-table
+                      v-if="importDataTable.items.length"
+                      responsive
+                      :fields="importDataTable.fieldsObj"
+                      :items="importDataTable.items"
+                    ></b-table>
+                  </b-col>
+                </b-row>
+              </b-modal>
             </b-col>
             <b-col
               cols="12"
@@ -612,7 +659,7 @@
                     block
                     variant="outline-info"
                     :disabled="(references.length) ? false : true"
-                    v-b-modal.import-methodological-table>
+                    v-b-modal.import-extracted-data-table>
                     Import table
                   </b-button>
                 </b-col>
@@ -770,6 +817,52 @@
                     </li>
                   </ul>
                 </p>
+              </b-modal>
+              <b-modal
+                scrollable
+                :no-close-on-backdrop="true"
+                :no-close-on-esc="true"
+                ok-title="Save"
+                cancel-title="Close"
+                size="lg"
+                id="import-extracted-data-table"
+                ref="import-extracted-data-table"
+                title="Import table"
+                @ok="saveImportedData('isoqf_extracted_data')"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary">
+                <p>
+                  In order to import a table you must first prepare the table using this template.
+                </p>
+                <b-button
+                  block
+                  variant="outline-info"
+                  @click="generateTemplate">
+                  Download template
+                </b-button>
+                <p
+                  class="mt-3">
+                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                </p>
+                <b-row>
+                  <b-col
+                    class="mb-2"
+                    cols="12">
+                    <b-form-file
+                      id="input-template-chars-file"
+                      plain
+                      @change="loadTableImportData($event)"></b-form-file>
+                  </b-col>
+                  <b-col
+                    cols="12">
+                    <b-table
+                      v-if="importDataTable.items.length"
+                      responsive
+                      :fields="importDataTable.fieldsObj"
+                      :items="importDataTable.items"
+                    ></b-table>
+                  </b-col>
+                </b-row>
               </b-modal>
             </b-col>
           </b-row>
@@ -1123,6 +1216,9 @@
                 ref="modal-references-list"
                 title="Select references"
                 @ok="saveReferencesList"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary"
                 size="lg"
                 scrollable>
                 <div
@@ -1306,8 +1402,8 @@ export default {
         { value: true, text: 'yes' }
       ],
       msgUpdateProject: null,
-      pre_charsTableImport: '',
-      charsTableImport: {
+      pre_ImportDataTable: '',
+      importDataTable: {
         fields: [],
         items: [],
         fieldsObj: [
@@ -1379,7 +1475,7 @@ export default {
     this.getProject()
   },
   watch: {
-    pre_charsTableImport: function (data) {
+    pre_ImportDataTable: function (data) {
       const allLines = data.split(/\r\n|\n/)
       let fields = []
       let items = []
@@ -1398,7 +1494,7 @@ export default {
               obj.key = 'authors'
             }
             if (parseInt(cnt) > 1) {
-              this.charsTableImport.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
+              this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
               obj.key = 'column_' + columnFieldNro
               columnFieldNro++
             }
@@ -1423,8 +1519,8 @@ export default {
         }
       })
 
-      this.charsTableImport.fields = fields
-      this.charsTableImport.items = items
+      this.importDataTable.fields = fields
+      this.importDataTable.items = items
     },
     pre_references: function (data) {
       this.fileReferences = []
@@ -2237,7 +2333,7 @@ export default {
     dismissAlertProject: function () {
       this.msgUpdateProject = null
     },
-    generateTemplateChars: function () {
+    generateTemplate: function () {
       const _references = JSON.parse(JSON.stringify(this.references))
       let csvContent = 'data:text/csv;charset=utf-8,'
       csvContent += '"Reference ID", "Authors"' + '\r\n'
@@ -2254,21 +2350,51 @@ export default {
 
       link.click()
     },
-    loadCharsTableData: function (event) {
+    loadTableImportData: function (event) {
       const file = event.target.files[0]
       const reader = new FileReader()
       reader.onload = (e) => {
-        this.pre_charsTableImport = e.target.result
+        this.pre_ImportDataTable = e.target.result
       }
       reader.readAsText(file)
     },
-    saveCharsImportedData: function () {
+    saveImportedData: function (endpoint = '') {
       let params = {}
       params.organization = this.$route.params.org_id
       params.project_id = this.$route.params.id
-      params.fields = this.charsTableImport.fields
-      params.items = this.charsTableImport.items
-      axios.post('/api/isoqf_characteristics/', params)
+      params.fields = this.importDataTable.fields
+      params.items = this.importDataTable.items
+      if (endpoint === 'isoqf_characteristics') {
+        if (this.charsOfStudies.items.length) {
+          this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
+        } else {
+          this.insertImportedData(endpoint, params)
+        }
+      }
+      if (endpoint === 'isoqf_assessments') {
+        if (this.methodologicalTableRefs.items.length) {
+          this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
+        } else {
+          this.insertImportedData(endpoint, params)
+        }
+      }
+      if (endpoint === 'isoqf_extracted_data') {
+        if (this.extractedDataTableRefs.items.length) {
+          this.cleanImportedData(this.extractedDataTableRefs.id, endpoint, params)
+        } else {
+          this.insertImportedData(endpoint, params)
+        }
+      }
+      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Authors' }] }
+    },
+    cleanImportedData: function (id = '', endpoint = '', params = {}) {
+      axios.delete(`/api/${endpoint}/${id}`)
+        .then((response) => {
+          this.insertImportedData(endpoint, params)
+        })
+    },
+    insertImportedData: function (endpoint = '', params = {}) {
+      axios.post(`/api/${endpoint}/`, params)
         .then((response) => {
           this.getProject()
         })
