@@ -448,7 +448,7 @@
                   </b-button>
                   <b-button
                     variant="outline-danger"
-                    @click="removeItemMethodological(data.item.ref_id)">
+                    @click="removeItemMethodological(data.index, data.item.ref_id)">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
@@ -562,13 +562,13 @@
               </b-modal>
               <b-modal
                 ref="removeReferenceModalMethodological"
-                title="Remove reference"
+                title="Remove content"
                 ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-success"
                 @cancel="cleanRemoveReferenceMethodological"
-                @ok="removeRefsFromListsMethodological">
-                <p>This action will remove the reference and all relation with others findings associated to this.</p>
+                @ok="removeDataContentMethodological">
+                <p>This action will remove the content associated to this reference..</p>
                 <p
                   v-if="removeReferenceMethodological.findings.length === 0">
                   <b>No findings will be affected</b>
@@ -681,7 +681,6 @@
                 :items="extractedDataTableRefs.items">
                 <template
                   v-slot:cell(actions)="data">
-                  ***************
                   <b-button
                     variant="outline-danger"
                     @click="removeItemExtractedData(data.item.ref_id)">
@@ -2262,6 +2261,10 @@ export default {
 
               this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
 
+              if (items.length) {
+                this.methodologicalTableRefs.fieldsObj.push({ 'key': 'actions', 'label': '' })
+              }
+
               for (let item of items) {
                 this.methodologicalFieldsModal.items.push(item)
               }
@@ -2575,10 +2578,11 @@ export default {
           console.log(error)
         })
     },
-    removeItemMethodological: function (id) {
+    removeItemMethodological: function (index, id) {
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceMethodological.id = id
+      this.removeReferenceMethodological.index = index
 
       for (let list of lists) {
         for (let ref of list.references) {
@@ -2595,47 +2599,28 @@ export default {
         findings: []
       }
     },
-    removeRefsFromListsMethodological: function () {
-      const refId = JSON.parse(JSON.stringify(this.removeReferenceMethodological.id))
-      const findings = JSON.parse(JSON.stringify(this.removeReferenceMethodological.findings))
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      const assessment = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-
-      for (let list of lists) {
-        for (let finding of findings) {
-          if (finding === list.isoqf_id) {
-            let index = list.references.indexOf(refId)
-            if (index > -1) {
-              let params = {}
-              list.references.splice(index, 1)
-              params.references = list.references
-              axios.patch(`/api/isoqf_lists/${list.id}`, params)
-                .then((response) => {})
-                .catch((error) => {
-                  console.log(error)
-                })
-            }
-          }
-        }
-      }
+    removeDataContentMethodological: function () {
+      const index = this.removeReferenceMethodological.index
+      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
       let params = {}
-      let index = 0
-      for (let item of assessment.items) {
-        if (item.ref_id === refId) {
-          assessment.items.splice(index, 1)
+      let cnt = 0
+      let items = []
+
+      for (let item of _items) {
+        if (cnt === index) {
+          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+        } else {
+          items.push(item)
         }
-        index++
+        cnt++
       }
-      params.items = assessment.items
-      axios.patch(`/api/isoqf_assessments/${assessment.id}`, params)
+
+      params.items = items
+
+      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
         .then((response) => {
-          this.methodologicalTableRefs.items = response.data['$set'].items
+          this.getMethodological()
         })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_references/${refId}`)
-        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
