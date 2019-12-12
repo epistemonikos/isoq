@@ -679,15 +679,6 @@
                 class="table-content-refs mt-3"
                 :fields="extractedDataTableRefs.fieldsObj"
                 :items="extractedDataTableRefs.items">
-                <template
-                  v-slot:cell(actions)="data">
-                  <b-button
-                    variant="outline-danger"
-                    @click="removeItemExtractedData(data.item.ref_id)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                  </b-button>
-                </template>
               </b-table>
               <b-pagination
                 v-if="extractedDataTableRefs.items.length"
@@ -776,47 +767,6 @@
                     variant="outline-success">
                     Add new column
                   </b-button>
-              </b-modal>
-              <b-modal
-                ref="edit-extracted-data-data"
-                title="Edit data"
-                scrollable
-                @ok="saveDataExtractedData"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-form-group
-                  v-for="field of extractedDataTableRefs.fields"
-                  :key="field.id"
-                  :label="field.label">
-                  <b-form-input
-                    v-if="field.key !== 'actions'"
-                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-model="extractedDataFieldsModal.items[extractedDataFieldsModal.selected_item_index][field.key]"></b-form-input>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                ref="removeReferenceModalExtractedData"
-                title="Remove reference"
-                ok-title="Confirm"
-                ok-variant="outline-danger"
-                cancel-variant="outline-success"
-                @cancel="cleanRemoveReferenceExtractedData"
-                @ok="removeRefsFromListsExtractedData">
-                <p>This action will remove the reference and all relation with others findings associated to this.</p>
-                <p
-                  v-if="removeReferenceExtractedData.findings.length === 0">
-                  <b>No findings will be affected</b>
-                </p>
-                <p
-                  v-if="removeReferenceExtractedData.findings.length">
-                  <b>Findings that will be affected</b>
-                  <ul>
-                    <li v-for="(finding, index) in removeReferenceExtractedData.findings" :key="index">
-                      {{ `finding # ${finding}`}}
-                    </li>
-                  </ul>
-                </p>
               </b-modal>
               <b-modal
                 scrollable
@@ -2276,29 +2226,31 @@ export default {
       axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
-            this.extractedDataTableRefs = response.data[0]
-            if (Object.prototype.hasOwnProperty.call(this.extractedDataTableRefs, 'fields')) {
-              this.extractedDataTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+            let _extractedData = response.data[0]
+            if (Object.prototype.hasOwnProperty.call(_extractedData, 'fields')) {
+              _extractedData.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
 
-              const fields = JSON.parse(JSON.stringify(this.extractedDataTableRefs.fields))
-              const items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
+              const fields = JSON.parse(JSON.stringify(_extractedData.fields))
 
               this.extractedDataFieldsModal.fields = []
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  this.extractedDataFieldsModal.fields.push(f.label)
-                  this.extractedDataTableRefs.fieldsObj.push({ key: f.key, label: f.label })
+                  _extractedData.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
 
-              this.extractedDataTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
-
-              this.extractedDataFieldsModal.nroColumns = (this.extractedDataTableRefs.fieldsObj.length === 2) ? 1 : this.extractedDataTableRefs.fieldsObj.length - 2
-
-              for (let item of items) {
-                this.extractedDataFieldsModal.items.push(item)
-              }
+              this.extractedDataFieldsModal.nroColumns = (_extractedData.fieldsObj.length === 2) ? 1 : _extractedData.fieldsObj.length - 2
             }
+            if (Object.prototype.hasOwnProperty.call(_extractedData, 'items')) {
+              const _items = _extractedData.items
+              let items = []
+              for (let item of _items) {
+                let itemObj = { 'ref_id': item.ref_id, 'authors': item.authors }
+                items.push(itemObj)
+              }
+              _extractedData.items = items
+            }
+            this.extractedDataTableRefs = _extractedData
           }
         })
     },
@@ -2806,71 +2758,6 @@ export default {
         .then((response) => {
           this.getProject()
         })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    removeItemExtractedData: function (id) {
-      let lists = JSON.parse(JSON.stringify(this.lists))
-
-      this.removeReferenceExtractedData.id = id
-
-      for (let list of lists) {
-        for (let ref of list.references) {
-          if (id === ref) {
-            this.removeReferenceExtractedData.findings.push(list.isoqf_id)
-          }
-        }
-      }
-      this.$refs['removeReferenceModalExtractedData'].show()
-    },
-    cleanRemoveReferenceExtractedData: function () {
-      this.removeReferenceExtractedData = {
-        id: null,
-        findings: []
-      }
-    },
-    removeRefsFromListsExtractedData: function () {
-      const refId = JSON.parse(JSON.stringify(this.removeReferenceExtractedData.id))
-      const findings = JSON.parse(JSON.stringify(this.removeReferenceExtractedData.findings))
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      const extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
-
-      for (let list of lists) {
-        for (let finding of findings) {
-          if (finding === list.isoqf_id) {
-            let index = list.references.indexOf(refId)
-            if (index > -1) {
-              let params = {}
-              list.references.splice(index, 1)
-              params.references = list.references
-              axios.patch(`/api/isoqf_lists/${list.id}`, params)
-                .then((response) => {})
-                .catch((error) => {
-                  console.log(error)
-                })
-            }
-          }
-        }
-      }
-      let params = {}
-      let index = 0
-      for (let item of extractedData.items) {
-        if (item.ref_id === refId) {
-          extractedData.items.splice(index, 1)
-        }
-        index++
-      }
-      params.items = extractedData.items
-      axios.patch(`/api/isoqf_extracted_data/${extractedData.id}`, params)
-        .then((response) => {
-          this.extractedDataTableRefs.items = response.data['$set'].items
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_references/${refId}`)
-        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
