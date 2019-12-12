@@ -716,7 +716,7 @@
               class="mt-3"
               v-if="show.selected.includes('cs')">
               <h3>{{$t('Characteristics of Studies')}} <small class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the Key Information section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link @click="$router.go(-1)">Key Information</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <b-table
@@ -745,46 +745,37 @@
                   :per-page="characteristics_studies_table_settings.perPage"
                   :total-rows="characteristics_studies.items.length"
                   limit="11"></b-pagination>
-              </template>
-              <template v-else>
-                <div class="text-center my-5">
-                  <bc-action-table
-                    :displayImport="true"
-                    :displayCreateTable="true"
-                    :importUrl="`/api/isoqf_characteristics?organization=${this.list.organization}&list_id=${this.$route.params.id}`"
-                    @response-ok-api="getStageThree"></bc-action-table>
-                </div>
-              </template>
 
-              <b-modal
-                title="Edit data"
-                ref="modal-stage-three-edit-data"
-                @ok="saveStageThreeEditedData">
-                <b-form-group
-                  v-for="(item, index) in buffer_characteristics_studies.fields"
-                  :key="index"
-                  :label="`${item.label}`"
-                  :label-for="`data-${index}`">
-                  <b-form-textarea
-                    :id="`data-${index}`"
-                    row="3"
-                    v-model="modal_stage_three_data[item.key]"></b-form-textarea>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                title="Remove a row"
-                @ok="removeStageThreeItemData"
-                ref="modal-stage-three-remove-data"
-                scrollable
-                size="lg">
-                <p>Are you sure you wanna remove this row?</p>
-                <b-table
-                  responsive
-                  :fields="buffer_modal_stage_three.fields"
-                  :items="buffer_modal_stage_three.data"
-                  class="mb-5">
-                </b-table>
-              </b-modal>
+                <b-modal
+                  title="Edit data"
+                  ref="modal-stage-three-edit-data"
+                  @ok="saveStageThreeEditedData">
+                  <b-form-group
+                    v-for="(item, index) in buffer_characteristics_studies.fields"
+                    :key="index"
+                    :label="`${item.label}`"
+                    :label-for="`data-${index}`">
+                    <b-form-textarea
+                      :id="`data-${index}`"
+                      row="3"
+                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                  </b-form-group>
+                </b-modal>
+                <b-modal
+                  title="Remove a row"
+                  @ok="removeStageThreeItemData"
+                  ref="modal-stage-three-remove-data"
+                  scrollable
+                  size="lg">
+                  <p>Are you sure you wanna remove this row?</p>
+                  <b-table
+                    responsive
+                    :fields="buffer_modal_stage_three.fields"
+                    :items="buffer_modal_stage_three.data"
+                    class="mb-5">
+                  </b-table>
+                </b-modal>
+              </template>
             </div>
             <!--</b-tab>-->
             <!-- Methodological Assessments -->
@@ -793,7 +784,7 @@
               class="mt-3"
               v-if="show.selected.includes('ma')">
               <h3>{{$t('Methodological Assessments')}} <small class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the Key Information section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link @click="$router.go(-1)">Key Information</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
@@ -843,15 +834,6 @@
                     :items="buffer_stage_four_remove_item.items"></b-table>
                 </b-modal>
                 <!-- end of -->
-              </template>
-              <template v-else>
-                <div class="text-center my-5 d-print-none">
-                  <bc-action-table
-                    :displayImport="true"
-                    :displayCreateTable="true"
-                    :importUrl="`/api/isoqf_assessments?organization=${this.list.organization}&list_id=${this.$route.params.id}`"
-                    @response-ok-api="getStageFour"></bc-action-table>
-                </div>
               </template>
             </div>
             <!--</b-tab>-->
@@ -927,13 +909,9 @@
                 </b-modal>
               </template>
               <template v-else>
-                <div class="text-center my-5 d-print-none">
-                  <bc-action-table
-                    :displayImport="true"
-                    :displayCreateTable="true"
-                    :importUrl="`/api/isoqf_extracted_data?organization=${this.list.organization}&list_id=${this.$route.params.id}`"
-                    @response-ok-api="getStageFive"></bc-action-table>
-                </div>
+                <p class="font-weight-light">
+                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Key Information</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                </p>
               </template>
             </div>
             <!--</b-tab>-->
