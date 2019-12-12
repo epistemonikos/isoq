@@ -214,7 +214,7 @@
                   </b-button>
                   <b-button
                     variant="outline-danger"
-                    @click="removeItemCharOfStudies(data.item.ref_id)">
+                    @click="removeItemCharOfStudies(data.index, data.item.ref_id)">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
@@ -371,16 +371,15 @@
                 </b-row>
               </b-modal>
               <b-modal
-                id="removeReferenceModalCharsOfStudies"
-                ref="removeReferenceModalCharsOfStudies"
-                title="Remove reference"
+                id="removeContentModalCharsOfStudies"
+                ref="removeContentModalCharsOfStudies"
+                title="Remove content"
                 ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-success"
-                @cancel="cleanRemoveReferenceCharsOfStudies"
-                @ok="removeRefsFromLists">
-                {{ removeReferenceCharsOfStudies.id }}
-                <p>This action will remove the reference and all relation with others findings associated to this.</p>
+                @cancel="cleanRemoveContentCharsOfStudies"
+                @ok="removeDataFromLists">
+                <p>This action will remove the content associated to this reference.</p>
                 <p
                   v-if="removeReferenceCharsOfStudies.findings.length === 0">
                   <b>No findings will be affected</b>
@@ -682,14 +681,7 @@
                 :items="extractedDataTableRefs.items">
                 <template
                   v-slot:cell(actions)="data">
-                  <!--
-                  <b-button
-                    variant="outline-success"
-                    @click="addDataExtractedData(data.index)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
-                  </b-button>
-                  -->
+                  ***************
                   <b-button
                     variant="outline-danger"
                     @click="removeItemExtractedData(data.item.ref_id)">
@@ -2409,10 +2401,11 @@ export default {
           console.log(error)
         })
     },
-    removeItemCharOfStudies: function (id) {
+    removeItemCharOfStudies: function (index, id) {
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceCharsOfStudies.id = id
+      this.removeReferenceCharsOfStudies.index = index
 
       for (let list of lists) {
         for (let ref of list.references) {
@@ -2421,64 +2414,41 @@ export default {
           }
         }
       }
-      this.$refs['removeReferenceModalCharsOfStudies'].show()
+      this.$refs['removeContentModalCharsOfStudies'].show()
     },
-    removeRefsFromLists: function () {
-      const refId = JSON.parse(JSON.stringify(this.removeReferenceCharsOfStudies.id))
-      const findings = JSON.parse(JSON.stringify(this.removeReferenceCharsOfStudies.findings))
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-
-      for (let list of lists) {
-        for (let finding of findings) {
-          console.log('===', finding, list.isoqf_id)
-          if (finding === list.isoqf_id) {
-            let index = list.references.indexOf(refId)
-            console.log(index)
-            if (index > -1) {
-              let params = {}
-              list.references.splice(index, 1)
-              params.references = list.references
-              axios.patch(`/api/isoqf_lists/${list.id}`, params)
-                .then((response) => {
-                  // console.log(resposne)
-                })
-                .catch((error) => {
-                  console.log(error)
-                })
-            }
-          }
-        }
-      }
+    removeDataFromLists: function () {
+      const index = this.removeReferenceCharsOfStudies.index
+      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
       let params = {}
-      let index = 0
-      for (let item of charsOfStudies.items) {
-        if (item.ref_id === refId) {
-          charsOfStudies.items.splice(index, 1)
+      let cnt = 0
+      let items = []
+
+      for (let item of _items) {
+        if (cnt === index) {
+          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+        } else {
+          items.push(item)
         }
-        index++
+        cnt++
       }
-      params.items = charsOfStudies.items
-      axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, params)
+
+      params.items = items
+
+      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
-          this.charsOfStudies.items = response.data['$set'].items
+          this.getCharacteristics()
         })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_references/${refId}`)
-        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
     },
-    cleanRemoveReferenceCharsOfStudies: function () {
+    cleanRemoveContentCharsOfStudies: function () {
       this.removeReferenceCharsOfStudies = {
         id: null,
         findings: []
       }
     },
-    openModalMethodological: function (edit = false) {
+    openModcontent: function (edit = false) {
       let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
       let fields = []
       const excluded = ['ref_id', 'authors', 'actions']
