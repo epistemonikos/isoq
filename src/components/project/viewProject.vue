@@ -133,13 +133,6 @@
               cols="12">
               <h4>References for included Studies</h4>
               <p>You must import only the references for your final list of included studies </p>
-              <b-alert
-                v-if="msgUploadReferences"
-                show
-                variant="info"
-                dismissible
-                class="my-2"
-                @dismissed="msgUploadReferences=''">{{ msgUploadReferences }}</b-alert>
               <b-row>
                 <b-col
                   cols="6">
@@ -158,6 +151,33 @@
                     @click="saveReferences">
                       Upload
                   </b-button>
+                </b-col>
+              </b-row>
+              <b-row
+                v-if="references.length"
+                class="mt-3">
+                <b-col
+                  cols="12">
+                  <b-card
+                    bg-variant="light">
+                    <b-row>
+                      <b-col
+                        cols="6"
+                        class="pt-2">
+                        <span>
+                          You have <b>{{ references.length }}</b> references loaded
+                        </span>
+                      </b-col>
+                      <b-col cols="6">
+                        <b-button
+                          block
+                          @click="openModalReferencesSingle"
+                          variant="outline-primary">
+                          View references
+                        </b-button>
+                      </b-col>
+                    </b-row>
+                  </b-card>
                 </b-col>
               </b-row>
             </b-col>
@@ -1072,34 +1092,6 @@
                   </div>
                 </template>
               </b-table>
-              <!--
-              <b-table
-                v-if="mode==='view'"
-                class="toDoc"
-                responsive
-                id="findingsPrint"
-                ref="findingsPrint"
-                :fields="fields"
-                :items="lists"
-                empty-text="There are no findings to show"
-                show-empty
-                :busy="table_settings.isBusy"
-                :current-page="table_settings.currentPage"
-                :per-page="table_settings.perPage"
-                :filter="table_settings.filter"
-                @filtered="onFiltered"
-                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']">
-                <template v-slot:cell(name)="data">
-                  {{ data.item.name.replace(/’/g, "'") }}
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-              -->
               <b-pagination
                 v-if="mode === 'edit'"
                 class="d-print-none"
@@ -1124,46 +1116,7 @@
                     v-model="summarized_review"></b-form-input>
                 </b-form-group>
                 </b-modal>
-              <b-modal
-                id="modal-references"
-                ref="modal-references"
-                title="References"
-                @ok="getProject"
-                scrollable
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <div
-                  class="mt-2"
-                  v-if="references.length">
-                  <p>Below are the references you have uploaded.</p>
-                  <b-table
-                    head-variant="light"
-                    hover
-                    bordered
-                    borderless
-                    :fields="fields_references_table"
-                    :items="references">
-                    <template v-slot:cell(action)="data">
-                      <font-awesome-icon
-                        icon="trash"
-                        @click="data.toggleDetails"></font-awesome-icon>
-                    </template>
-                    <template v-slot:row-details="data">
-                      <b-card>
-                        <p>You are about to exclude a study from your review. This will delete it an all associated information from all tables in iSoQf. Are you sure you want to delete this reference?</p>
-                        <b-button
-                          block
-                          variant="outline-success"
-                          @click="data.toggleDetails">No</b-button>
-                        <b-button
-                          block
-                          variant="outline-danger"
-                          @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
-                      </b-card>
-                    </template>
-                  </b-table>
-                </div>
-              </b-modal>
+
               <b-modal
                 id="modal-references-list"
                 ref="modal-references-list"
@@ -1225,6 +1178,51 @@
           </b-alert>
         </b-tab>
       </b-tabs>
+      <b-modal
+        id="modal-references"
+        ref="modal-references"
+        title="References"
+        size="lg"
+        @ok="getProject"
+        scrollable
+        ok-variant="outline-success"
+        cancel-variant="outline-secondary">
+        <div
+          class="mt-2"
+          v-if="references.length">
+          <p>Below are the references you have uploaded.</p>
+          <b-table
+            hover
+            bordered
+            borderless
+            striped
+            :fields="fields_references_table"
+            :items="references">
+            <template v-slot:cell(action)="data">
+              <b-button
+                variant="outline-danger"
+                @click="data.toggleDetails">
+                <font-awesome-icon
+                  icon="trash"></font-awesome-icon>
+              </b-button>
+
+            </template>
+            <template v-slot:row-details="data">
+              <b-card>
+                <p>You are about to exclude a study from your review. This will delete it an all associated information from all tables in iSoQf. Are you sure you want to delete this reference?</p>
+                <b-button
+                  block
+                  variant="outline-success"
+                  @click="data.toggleDetails">No</b-button>
+                <b-button
+                  block
+                  variant="outline-danger"
+                  @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+              </b-card>
+            </template>
+          </b-table>
+        </div>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -1660,7 +1658,7 @@ export default {
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
-          this.getReferences()
+          this.getReferences(false)
         }))
         .catch((error) => {
           console.log('error', error)
@@ -1784,15 +1782,16 @@ export default {
           console.log(error)
         })
     },
-    getReferences: function () {
+    getReferences: function (changeTab = true) {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           this.references = response.data
-          if (this.references.length && (this.charsOfStudies.fields.length || this.methodologicalTableRefs.fields.length || this.extractedDataTableRefs.fields.length)) {
-            this.$nextTick(() => {
-              this.tabOpened = 2
-            })
-            console.log('tabopened', this.tabOpened)
+          if (changeTab) {
+            if (this.references.length) {
+              this.$nextTick(() => {
+                this.tabOpened = 2
+              })
+            }
           }
         })
         .catch((error) => {
@@ -1801,7 +1800,7 @@ export default {
     },
     openModalReferencesSingle: function (showModal) {
       if (showModal) {
-        this.getReferences()
+        this.getReferences(false)
         this.msgUploadReferences = ''
         this.$refs['modal-references'].show()
       }
