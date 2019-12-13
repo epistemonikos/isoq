@@ -1572,7 +1572,10 @@ export default {
     },
     stageFiveRemoveDataItem: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      items.splice(items.length - 1, 1)
+      const item = items[this.buffer_extracted_data.remove_index_item]
+      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors }
+      items[this.buffer_extracted_data.remove_index_item] = newItem
+
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
         .then((response) => {
           this.getStageFive()
