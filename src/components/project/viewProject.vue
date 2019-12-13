@@ -428,7 +428,7 @@
                     block
                     variant="outline-primary"
                     v-if="methodologicalTableRefs.fields.length <= 2"
-                    @click="openModalMethodological()"
+                    @click="openModcontent()"
                     :disabled="(references.length) ? false : true">
                     Create column headings
                   </b-button>
@@ -436,7 +436,7 @@
                     block
                     variant="outline-primary"
                     v-if="methodologicalTableRefs.fields.length > 2"
-                    @click="openModalMethodological(true)">
+                    @click="openModcontent(true)">
                     Edit column headings
                   </b-button>
                 </b-col>
@@ -1981,6 +1981,9 @@ export default {
     },
     confirmRemoveReferenceById: function (refId) {
       let lists = JSON.parse(JSON.stringify(this.lists))
+      let _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+      let _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      let _extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
       let objs = []
 
       for (let list of lists) {
@@ -1996,19 +1999,66 @@ export default {
         }
       }
       let requests = []
+
+      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
+        if (_charsOfStudies.items.length) {
+          let items = []
+
+          for (let item of _charsOfStudies.items) {
+            if (item.ref_id !== refId) {
+              items.push(item)
+            }
+          }
+          _charsOfStudies.items = items
+
+          requests.push(axios.patch(`/api/isoqf_characteristics/${_charsOfStudies.id}`, _charsOfStudies))
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+        if (_assessments.items.length) {
+          let items = []
+
+          for (let item of _assessments.items) {
+            if (item.ref_id !== refId) {
+              items.push(item)
+            }
+          }
+          _assessments.items = items
+
+          requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(_extractedData, 'id')) {
+        if (_extractedData.items.length) {
+          let items = []
+
+          for (let item of _extractedData.items) {
+            if (item.ref_id !== refId) {
+              items.push(item)
+            }
+          }
+          _extractedData.items = items
+
+          requests.push(axios.patch(`/api/isoqf_extracted_data/${_extractedData.id}`, _extractedData))
+        }
+      }
+
       for (let o of objs) {
         requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
       }
+
       if (requests.length) {
         axios.all(requests)
-          .then(axios.spread((response) => {
-            //
-          }))
+          .then(axios.spread(function (response) {}))
       }
 
       axios.delete(`/api/isoqf_references/${refId}`)
         .then((response) => {
+          this.getReferences(false)
           this.openModalReferencesSingle(false)
+          this.getProject()
         })
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
