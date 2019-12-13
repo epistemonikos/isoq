@@ -739,6 +739,7 @@
                   </template>
                 </b-table>
                 <b-pagination
+                  v-if="characteristics_studies.items.length"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="characteristics_studies_table_settings.currentPage"
@@ -762,12 +763,12 @@
                   </b-form-group>
                 </b-modal>
                 <b-modal
-                  title="Remove a row"
+                  title="Remove data content"
                   @ok="removeStageThreeItemData"
                   ref="modal-stage-three-remove-data"
                   scrollable
                   size="lg">
-                  <p>Are you sure you wanna remove this row?</p>
+                  <p>Are you sure you want to delete all the content for this row?</p>
                   <b-table
                     responsive
                     :fields="buffer_modal_stage_three.fields"
@@ -802,6 +803,7 @@
                   </template>
                 </b-table>
                 <b-pagination
+                  v-if="stage_four.items.length"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="methodological_assessments_table_settings.currentPage"
@@ -825,10 +827,10 @@
                 <b-modal
                   @ok="removeDataStageFour"
                   ref="modal-remove-data-stage-four"
-                  title="Remove item"
+                  title="Remove data content"
                   scrollable
                   size="lg">
-                  <p>Are you sure you wanna remove this row?</p>
+                  <p>Are you sure you want to delete all the content for this row?</p>
                   <b-table
                     :fields="buffer_stage_four_remove_item.fields"
                     :items="buffer_stage_four_remove_item.items"></b-table>
@@ -877,6 +879,7 @@
                   </template>
                 </b-table>
                 <b-pagination
+                  v-if="extracted_data.items.length"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="extracted_data_table_settings.currentPage"
@@ -886,9 +889,11 @@
                 <b-modal
                   id="modal-stage-five-remove-data-item"
                   ref="modal-stage-five-remove-data-item"
-                  title="Remove data item"
-                  @ok="stageFiveRemoveDataItem">
-                  <p>Are you sure you wanna remove this row?</p>
+                  title="Remove data content"
+                  @ok="stageFiveRemoveDataItem"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <p>Are you sure you want to delete all the content for this row?</p>
                 </b-modal>
                 <b-modal
                   title="Edit data"
