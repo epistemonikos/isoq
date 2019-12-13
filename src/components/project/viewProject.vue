@@ -1184,46 +1184,79 @@
         title="References"
         size="lg"
         @ok="getProject"
+        @cancel="confirmRemoveAllReferences($event)"
         scrollable
         ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <div
-          class="mt-2"
-          v-if="references.length">
-          <p>Below are the references you have uploaded.</p>
-          <b-table
-            hover
-            bordered
-            borderless
-            striped
-            :fields="fields_references_table"
-            :items="references">
-            <template v-slot:cell(action)="data">
+        ok-title="Close"
+        cancel-variant="outline-danger"
+        cancel-title="Remove all references"
+        :cancel-disabled="disableBtnRemoveAllRefs">
+        <template v-if="appearMsgRemoveReferences">
+          <b-row>
+            <b-col
+              cols="12">
+              <p>This action will remove all the references</p>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col
+              cols="6">
               <b-button
-                variant="outline-danger"
-                @click="data.toggleDetails">
-                <font-awesome-icon
-                  icon="trash"></font-awesome-icon>
+                block
+                @click="removeAllReferences"
+                variant="outline-danger">
+                Continue
               </b-button>
-
-            </template>
-            <template v-slot:row-details="data">
-              <b-card>
-                <p>You are about to exclude a study from your review. This will delete it, an all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
-                <p>{{ findRelatedFindings(data.item.id) }}</p>
-                <p>Are you sure you want to delete this reference?</p>
+            </b-col>
+            <b-col
+              cols="6">
+              <b-button
+                block
+                @click="appearMsgRemoveReferences = false"
+                variant="outline-success">
+                Cancel
+              </b-button>
+            </b-col>
+          </b-row>
+        </template>
+        <template v-else>
+          <div
+            class="mt-2"
+            v-if="references.length">
+            <p>Below are the references you have uploaded.</p>
+            <b-table
+              hover
+              bordered
+              borderless
+              striped
+              :fields="fields_references_table"
+              :items="references">
+              <template v-slot:cell(action)="data">
                 <b-button
-                  block
-                  variant="outline-success"
-                  @click="data.toggleDetails">No</b-button>
-                <b-button
-                  block
                   variant="outline-danger"
-                  @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
-              </b-card>
-            </template>
-          </b-table>
-        </div>
+                  @click="data.toggleDetails">
+                  <font-awesome-icon
+                    icon="trash"></font-awesome-icon>
+                </b-button>
+              </template>
+              <template v-slot:row-details="data">
+                <b-card>
+                  <p>You are about to exclude a study from your review. This will delete it, an all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>{{ findRelatedFindings(data.item.id) }}</p>
+                  <p>Are you sure you want to delete this reference?</p>
+                  <b-button
+                    block
+                    variant="outline-success"
+                    @click="data.toggleDetails">No</b-button>
+                  <b-button
+                    block
+                    variant="outline-danger"
+                    @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                </b-card>
+              </template>
+            </b-table>
+          </div>
+        </template>
       </b-modal>
     </b-container>
   </div>
@@ -1419,7 +1452,9 @@ export default {
         id: null,
         findings: []
       },
-      dismissAlertPrint: false
+      dismissAlertPrint: false,
+      appearMsgRemoveReferences: false,
+      disableBtnRemoveAllRefs: false
     }
   },
   mounted () {
@@ -1804,6 +1839,8 @@ export default {
       if (showModal) {
         this.getReferences(false)
         this.msgUploadReferences = ''
+        this.appearMsgRemoveReferences = false
+        this.disableBtnRemoveAllRefs = false
         this.$refs['modal-references'].show()
       }
     },
@@ -2779,6 +2816,40 @@ export default {
           return 'No findings will be affected.'
         }
       }
+    },
+    confirmRemoveAllReferences: function (event) {
+      event.preventDefault()
+      this.appearMsgRemoveReferences = true
+      this.disableBtnRemoveAllRefs = true
+    },
+    removeAllReferences: function () {
+      const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      const _extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
+      const _references = JSON.parse(JSON.stringify(this.references))
+      let requests = []
+
+      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
+        requests.push(axios.delete(`/api/isoqf_characteristics/${_charsOfStudies.id}`))
+      }
+      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+        requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
+      }
+      if (Object.prototype.hasOwnProperty.call(_extractedData, 'id')) {
+        requests.push(axios.delete(`/api/isoqf_extracted_data/${_extractedData.id}`))
+      }
+
+      for (let reference of _references) {
+        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
+      }
+
+      axios.all(requests)
+        .then(axios.spread(function () {
+          this.getReferences()
+          this.openModalReferencesSingle(false)
+          this.getProject()
+          this.$refs['modal-references'].hide()
+        }.bind(this)))
     }
   }
 }
