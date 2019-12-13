@@ -2873,6 +2873,7 @@ export default {
       this.disableBtnRemoveAllRefs = true
     },
     removeAllReferences: function () {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
       const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
       const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
       const _extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
@@ -2888,7 +2889,14 @@ export default {
       if (Object.prototype.hasOwnProperty.call(_extractedData, 'id')) {
         requests.push(axios.delete(`/api/isoqf_extracted_data/${_extractedData.id}`))
       }
-
+      for (let list of _lists) {
+        list.references = []
+        axios.patch(`/api/isoqf_lists/${list.id}`, list)
+          .then((response) => {})
+          .catch((error) => {
+            console.log(error)
+          })
+      }
       for (let reference of _references) {
         requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
       }
