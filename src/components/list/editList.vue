@@ -843,6 +843,10 @@
               class="mt-3"
               v-if="show.selected.includes('ed')">
               <h3>{{$t('Extracted Data')}} <small class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
+              <p class="d-print-none font-weight-light">
+                To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Key Information</b-link> Section of iSoQf.
+                Once your headings are created you will be able to return here to add the extracted data from each study contribute to the finding.
+              </p>
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
