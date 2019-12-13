@@ -355,7 +355,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
-                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
@@ -617,7 +617,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
-                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
@@ -802,7 +802,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
-                  <b>Beware:</b> The new loaded and saved data will be destroy the previous data and all the relations
+                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
                 <p>
                   In order to import a table you must first prepare the table using this template.
