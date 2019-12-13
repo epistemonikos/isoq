@@ -1209,7 +1209,9 @@
             </template>
             <template v-slot:row-details="data">
               <b-card>
-                <p>You are about to exclude a study from your review. This will delete it an all associated information from all tables in iSoQf. Are you sure you want to delete this reference?</p>
+                <p>You are about to exclude a study from your review. This will delete it, an all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                <p>{{ findRelatedFindings(data.item.id) }}</p>
+                <p>Are you sure you want to delete this reference?</p>
                 <b-button
                   block
                   variant="outline-success"
@@ -2760,6 +2762,23 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    findRelatedFindings: function (refId = null) {
+      if (refId) {
+        let findings = []
+        for (let list of this.lists) {
+          for (let ref of list.raw_ref) {
+            if (ref.id === refId) {
+              findings.push(`#${list.isoqf_id}`)
+            }
+          }
+        }
+        if (findings.length) {
+          return 'The findings affected are: ' + findings.join(', ')
+        } else {
+          return 'No findings will be affected.'
+        }
+      }
     }
   }
 }
