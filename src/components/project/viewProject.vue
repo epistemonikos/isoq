@@ -1826,7 +1826,11 @@ export default {
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
-                this.tabOpened = 2
+                if (this.$route.hash) {
+                  this.tabOpened = 1
+                } else {
+                  this.tabOpened = 2
+                }
               })
             }
           }
