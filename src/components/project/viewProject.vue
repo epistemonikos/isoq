@@ -336,9 +336,13 @@
                   :key="field.id"
                   :label="field.label">
                   <b-form-input
-                    v-if="field.key !== 'actions'"
                     :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-input>
+                    v-if="field.key === 'ref_id' || field.key === 'authors'"
+                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
+                  </b-form-input>
+                  <b-form-textarea
+                    v-if="field.key !== 'ref_id' && field.key !== 'authors'"
+                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -575,9 +579,12 @@
                   :key="field.id"
                   :label="field.label">
                   <b-form-input
-                    v-if="field.key !== 'actions'"
                     :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                    v-if="field.key === 'ref_id' || field.key === 'authors'"
                     v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-input>
+                  <b-form-textarea
+                    v-if="field.key !== 'ref_id' && field.key !== 'authors'"
+                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -2968,9 +2975,9 @@ export default {
         }.bind(this)))
     },
     editModalFindingName: function (index) {
-      const listName = this.lists[index].name
+      const list_name = this.lists[index].name
       this.editFindingName.index = index
-      this.editFindingName.name = listName
+      this.editFindingName.name = list_name
       this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
