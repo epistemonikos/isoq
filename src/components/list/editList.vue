@@ -765,14 +765,23 @@
                   ref="modal-stage-three-edit-data"
                   @ok="saveStageThreeEditedData">
                   <b-form-group
-                    v-for="(item, index) in buffer_characteristics_studies.fields"
+                    v-for="(field, index) in buffer_characteristics_studies.fields"
                     :key="index"
-                    :label="`${item.label}`"
+                    :label="`${field.label}`"
                     :label-for="`data-${index}`">
+                    <b-form-input
+                      :id="`data-${index}`"
+                      v-if="field.key === 'ref_id' || field.key === 'authors'"
+                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                      v-model="modal_stage_three_data[field.key]"></b-form-input>
+                    <b-form-textarea
+                      :id="`data-${index}`"
+                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
+                      v-model="modal_stage_three_data[field.key]"></b-form-textarea>
                     <b-form-textarea
                       :id="`data-${index}`"
                       row="3"
-                      v-model="modal_stage_three_data[item.key]"></b-form-textarea>
+                      v-model="modal_stage_three_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <b-modal
@@ -867,16 +876,17 @@
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
                   class="toDoc"
-                  id="extracted"
+                  :id="(mode==='view') ? 'extracted-view' : 'extracted'"
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
-                  :fields="extracted_data.fieldsObj"
+                  :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                   :items="extracted_data.items"
                   :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
-                  <template v-slot:cell(actions)="data">
+                  <template
+                    v-if="mode==='edit'"
+                    v-slot:cell(actions)="data">
                     <b-button
-                      v-if="mode==='edit'"
                       class="d-print-none"
                       @click="openModalStageFiveEditDataItem(data)"
                       variant="outline-success">
@@ -885,7 +895,6 @@
                         :title="$t('Edit')" />
                     </b-button>
                     <b-button
-                      v-if="mode==='edit'"
                       class="d-print-none"
                       @click="openModalStageFiveRemoveDataItem(data)"
                       variant="outline-danger">
@@ -926,10 +935,14 @@
                     :id="`label-field-${index}`"
                     :label="`${field.label}`"
                     :label-for="`input-field-${index}`">
+                    <b-form-input
+                      :id="`input-field-${index}`"
+                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                      v-if="field.key === 'ref_id' || field.key === 'authors'"
+                      v-model="buffer_extracted_data_items[field.key]"></b-form-input>
                     <b-form-textarea
                       :id="`input-field-${index}`"
-                      type="text"
-                      :disabled="field.key === 'ref_id' || field.key === 'authors'"
+                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                       v-model="buffer_extracted_data_items[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
@@ -1120,11 +1133,13 @@ export default {
       extracted_data: {
         id: null,
         fields: [],
-        items: []
+        items: [],
+        fieldsObj: []
       },
       importUrl: '',
       references: [],
-      mode: 'edit'
+      mode: 'edit',
+      mode_print_fieldsObj: []
     }
   },
   mounted () {
@@ -1541,6 +1556,9 @@ export default {
             for (let field of _fields) {
               if (field.key !== 'ref_id') {
                 this.extracted_data.fieldsObj.push(field)
+                if (field.key !== 'actions') {
+                  this.mode_print_fieldsObj.push(field)
+                }
               }
             }
 
@@ -1688,14 +1706,6 @@ export default {
       font-size: 0.8rem;
       padding-top: 0.4rem;
       list-style-type: none;
-    }
-  div >>>
-    #characteristics.table thead th:last-child {
-      width: 2%;
-    }
-  div >>>
-    #methodological.table thead th:last-child {
-      width: 2%;
     }
   div >>>
     #extracted.table thead th:last-child {
