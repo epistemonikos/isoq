@@ -9,9 +9,21 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2>CERQual Assessment Worksheet <small class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+      <h2 class="toDoc">CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <b-row
         class="d-print-none justify-content-end mb-2">
+        <b-col
+          v-if="mode==='view'"
+          cols="12"
+          sm="2">
+            <b-button
+              id="exportButton"
+              variant="outline-secondary"
+              block
+              @click="generateAndDownload('toDoc', 'filename')">
+              Export to MS-Word
+            </b-button>
+        </b-col>
         <b-col
           v-if="mode==='view'"
           cols="12"
@@ -583,6 +595,7 @@
                 </b-table>
 
                 <b-table
+                  class="toDoc"
                   v-if="mode==='view'"
                   id="assessments-print"
                   responsive striped caption-top
@@ -715,7 +728,7 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('cs')">
-              <h3>{{$t('Characteristics of Studies')}} <small class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
+              <h3 class="toDoc">{{$t('Characteristics of Studies')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
@@ -726,7 +739,7 @@
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
-                  class="mb-5">
+                  class="mb-5 toDoc">
                   <template v-slot:cell(actions)="row">
                     <font-awesome-icon
                       @click="modalDeleteStageThreeItemData(row)"
@@ -784,11 +797,12 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ma')">
-              <h3>{{$t('Methodological Assessments')}} <small class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
+              <h3 class="toDoc">{{$t('Methodological Assessments')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
+                  class="toDoc"
                   id="methodological"
                   responsive
                   striped
@@ -844,7 +858,7 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
-              <h3>{{$t('Extracted Data')}} <small class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
+              <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <p class="d-print-none font-weight-light">
                 To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> Section of iSoQf.
                 Once your headings are created you will be able to return here to add the extracted data from each study contribute to the finding.
@@ -852,6 +866,7 @@
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
+                  class="toDoc"
                   id="extracted"
                   responsive striped caption-top
                   :filter="extracted_data_table_settings.filter"
@@ -861,6 +876,7 @@
                   :current-page="extracted_data_table_settings.currentPage">
                   <template v-slot:cell(actions)="data">
                     <b-button
+                      v-if="mode==='edit'"
                       class="d-print-none"
                       @click="openModalStageFiveEditDataItem(data)"
                       variant="outline-success">
@@ -869,6 +885,7 @@
                         :title="$t('Edit')" />
                     </b-button>
                     <b-button
+                      v-if="mode==='edit'"
                       class="d-print-none"
                       @click="openModalStageFiveRemoveDataItem(data)"
                       variant="outline-danger">
@@ -1591,6 +1608,43 @@ export default {
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
       this.$refs['modal-stage-five-data'].show()
+    },
+    generateAndDownload: function (element, filename) {
+      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
+      const postHtml = '</body></html>'
+
+      let objs = document.getElementsByClassName(element)
+      let content = ''
+      for (let o of objs) {
+        content = content + o.innerHTML + ' '
+      }
+
+      var html = preHtml + content + postHtml
+
+      const blob = new Blob(['\ufeff', html], {
+        type: 'application/msword'
+      })
+
+      // Specify link url
+      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html)
+
+      // Specify file name
+      filename = filename ? filename + '.doc' : 'document.doc'
+
+      // Create download link element
+      var downloadLink = document.createElement('a')
+
+      document.body.appendChild(downloadLink)
+
+      if (navigator.msSaveOrOpenBlob) {
+        navigator.msSaveOrOpenBlob(blob, filename)
+      } else {
+        downloadLink.href = url
+        downloadLink.download = filename
+        downloadLink.click()
+      }
+
+      document.body.removeChild(downloadLink)
     }
   }
 }
