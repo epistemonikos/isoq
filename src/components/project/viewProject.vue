@@ -1039,6 +1039,28 @@
                   <span v-if="mode === 'edit'">
                     <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
                     <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                    <b-row>
+                      <b-col
+                        cols="6">
+                        <b-button
+                          block
+                          v-if="mode==='edit'"
+                          variant="outline-info"
+                          @click="editModalFindingName(data.index)">
+                          Edit
+                        </b-button>
+                      </b-col>
+                      <b-col
+                        cols="6">
+                        <b-button
+                          block
+                          v-if="mode==='edit'"
+                          variant="outline-info"
+                          @click="removeModalFinding(data.index)">
+                          Remove
+                        </b-button>
+                      </b-col>
+                    </b-row>
                   </span>
                   <span v-else>
                     {{ data.item.name }}
@@ -1100,6 +1122,34 @@
                 :per-page="table_settings.perPage"
                 aria-controls="findings"
                 align="center"></b-pagination>
+              <b-modal
+                id="edit-finding-name"
+                ref="edit-finding-name"
+                title="Edit finding"
+                ok-title="Save"
+                ok-variant="outline-success"
+                cancel-variant="outline-secondary"
+                @ok="updateListName">
+                <b-form-group
+                  label="Title"
+                  label-for="finding-name">
+                  <b-form-input
+                    id="finding-name"
+                    v-model="editFindingName.name"></b-form-input>
+                </b-form-group>
+              </b-modal>
+              <b-modal
+                id="remove-finding"
+                ref="remove-finding"
+                title="Remove finding"
+                ok-title="Remove"
+                ok-variant="outline-danger"
+                cancel-variant="outline-secondary"
+                @ok="confirmRemoveFinding">
+                <p>
+                  Are you sure you want to remove this finding?
+                </p>
+              </b-modal>
               <b-modal
                 id="add-summarized"
                 ref="add-summarized"
@@ -1454,7 +1504,11 @@ export default {
       },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
-      disableBtnRemoveAllRefs: false
+      disableBtnRemoveAllRefs: false,
+      editFindingName: {
+        index: null,
+        name: null
+      }
     }
   },
   mounted () {
@@ -2912,6 +2966,40 @@ export default {
           this.getProject()
           this.$refs['modal-references'].hide()
         }.bind(this)))
+    },
+    editModalFindingName: function (index) {
+      const list_name = this.lists[index].name
+      this.editFindingName.index = index
+      this.editFindingName.name = list_name
+      this.$refs['edit-finding-name'].show()
+    },
+    updateListName: function () {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      const index = this.editFindingName.index
+      _lists[index].name = this.editFindingName.name
+
+      axios.patch(`/api/isoqf_lists/${_lists[index].id}`, _lists[index])
+        .then((response) => {
+          this.getLists()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    removeModalFinding: function (index) {
+      this.editFindingName.index = index
+      this.$refs['remove-finding'].show()
+    },
+    confirmRemoveFinding: function () {
+      const index = this.editFindingName.index
+      const _list = JSON.parse(JSON.stringify(this.lists[index]))
+      axios.delete(`/api/isoqf_lists/${_list.id}`)
+        .then((response) => {
+          this.getLists()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
