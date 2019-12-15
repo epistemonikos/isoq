@@ -2975,9 +2975,9 @@ export default {
         }.bind(this)))
     },
     editModalFindingName: function (index) {
-      const list_name = this.lists[index].name
+      const listName = this.lists[index].name
       this.editFindingName.index = index
-      this.editFindingName.name = list_name
+      this.editFindingName.name = listName
       this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
