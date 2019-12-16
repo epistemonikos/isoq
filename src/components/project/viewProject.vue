@@ -1327,7 +1327,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, an all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
