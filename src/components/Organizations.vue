@@ -3,20 +3,18 @@
     <b-container>
       <h2 class="mb-5">{{ $t("Organizations") }}</h2>
       <b-row>
-        <b-card-group columns>
-          <b-card
-            v-for="org in organizations"
-            v-bind:key="org.id"
-            v-bind:title="org.name"
-            v-bind:img-src="org.image || default_logo_org">
-            <b-card-text>
-              {{org.description}}
-            </b-card-text>
-            <template slot="footer">
-              <b-link :to="{name: 'viewOrganization', params: {id: org.id}}">{{ $t("view our iSoQf" )}}</b-link>
+        <b-col
+          cols="12">
+          <b-table
+            id="organizations"
+            striped
+            :fields="fields"
+            :items="organizations">
+            <template v-slot:cell(name)="data">
+              <b-link :to="{name: 'viewOrganization', params: {id: data.item.id}}">{{ (data.item.name === 'My frameworks') ? 'My iSoQf' : data.item.name }}</b-link>
             </template>
-          </b-card>
-        </b-card-group>
+          </b-table>
+        </b-col>
       </b-row>
     </b-container>
   </div>
@@ -27,7 +25,10 @@ export default {
   data () {
     return {
       default_logo_org: '//placehold.it/800x600',
-      organizations: []
+      organizations: [],
+      fields: [
+        { key: 'name', label: 'Name' }
+      ]
     }
   },
   mounted () {
@@ -43,6 +44,5 @@ export default {
 }
 </script>
 
-<style>
-
+<style scoped>
 </style>
