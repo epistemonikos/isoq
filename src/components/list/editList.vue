@@ -3,7 +3,7 @@
     <b-container>
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
-          <b-link @click="$router.go(-1)">
+          <b-link :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
             <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
             return to ISoQf table
           </b-link>
