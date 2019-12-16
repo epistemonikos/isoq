@@ -71,9 +71,9 @@
           cols="12">
           <b-form-group>
             <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
-              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn on to create or add a table with descriptive information about each study contributing to this finding">Characteristics Studies</span></b-form-checkbox>
-              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn on to create or add a table with your methodological assessments (quality/critical appraisal) for each study contributing to this finding">Methodological Assessments</span></b-form-checkbox>
-              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn on to create or add a table with all the extracted data coming from the studies contributing to this finding">Extracted Data</span></b-form-checkbox>
+              <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Characteristics of Studies table below.">Characteristics Studies</span></b-form-checkbox>
+              <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Methodological Assessments table below.">Methodological Assessments</span></b-form-checkbox>
+              <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Extracted Data table below.">Extracted Data</span></b-form-checkbox>
             </b-form-checkbox-group>
           </b-form-group>
         </b-col>
@@ -870,7 +870,7 @@
               <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <p class="d-print-none font-weight-light">
                 To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> Section of iSoQf.
-                Once your headings are created you will be able to return here to add the extracted data from each study contribute to the finding.
+                Once your headings are created you will be able to return here to add the extracted data from each study contributing to the finding.
               </p>
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
