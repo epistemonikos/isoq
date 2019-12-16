@@ -412,7 +412,7 @@
                 cancel-variant="outline-success"
                 @cancel="cleanRemoveContentCharsOfStudies"
                 @ok="removeDataFromLists">
-                <p>Are you sure you want to delete all the content for this row.</p>
+                <p>Are you sure you want to delete all the content for this row?</p>
                 <p
                   v-if="removeReferenceCharsOfStudies.findings.length === 0">
                   <b>No findings will be affected</b>
@@ -527,7 +527,7 @@
                         v-if="methodologicalTableRefs.id">
                         <b-button
                           variant="outline-danger"
-                          @click="deleteFieldFromCharsSudies(cnt - 1)">
+                          @click="deleteFieldFromMethodological(index)">
                           <font-awesome-icon
                             icon="trash"></font-awesome-icon>
                         </b-button>
@@ -570,7 +570,7 @@
                           </b-button>
                           <b-button
                             variant="outline-danger"
-                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            @click="deleteFieldFromMethodological(index)">
                             <font-awesome-icon
                               icon="trash"></font-awesome-icon>
                           </b-button>
@@ -614,7 +614,7 @@
                 cancel-variant="outline-success"
                 @cancel="cleanRemoveReferenceMethodological"
                 @ok="removeDataContentMethodological">
-                <p>Are you sure you want to delete all the content for this row.</p>
+                <p>Are you sure you want to delete all the content for this row?</p>
                 <p
                   v-if="removeReferenceMethodological.findings.length === 0">
                   <b>No findings will be affected</b>
@@ -1327,7 +1327,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, an all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
@@ -2373,6 +2373,8 @@ export default {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
+          } else {
+            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
@@ -2405,6 +2407,8 @@ export default {
                 this.methodologicalFieldsModal.items.push(item)
               }
             }
+          } else {
+            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
@@ -2437,6 +2441,8 @@ export default {
               _extractedData.items = items
             }
             this.extractedDataTableRefs = _extractedData
+          } else {
+            this.extractedDataTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
@@ -2690,6 +2696,44 @@ export default {
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
         .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    deleteFieldFromMethodological: function (index) {
+      let params = {}
+      const _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
+      const _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+      let removedField = _fields.splice(index, 1)[0]
+
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      params.fields = _fields
+      params.items = _items
+
+      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
+        .then((response) => {
+          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          const excluded = ['ref_id', 'authors', 'actions']
+          let editFields = []
+          for (let field of _fields) {
+            if (!excluded.includes(field.key)) {
+              editFields.push(field)
+            }
+          }
+
+          this.methodologicalFieldsModalEdit.fields = editFields
+          this.methodologicalFieldsModalEdit.nroColumns = editFields.length
           this.getProject()
         })
         .catch((error) => {
