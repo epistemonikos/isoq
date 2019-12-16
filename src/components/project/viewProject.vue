@@ -527,7 +527,7 @@
                         v-if="methodologicalTableRefs.id">
                         <b-button
                           variant="outline-danger"
-                          @click="deleteFieldFromCharsSudies(cnt - 1)">
+                          @click="deleteFieldFromMethodological(index)">
                           <font-awesome-icon
                             icon="trash"></font-awesome-icon>
                         </b-button>
@@ -570,7 +570,7 @@
                           </b-button>
                           <b-button
                             variant="outline-danger"
-                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            @click="deleteFieldFromMethodological(index)">
                             <font-awesome-icon
                               icon="trash"></font-awesome-icon>
                           </b-button>
@@ -2690,6 +2690,44 @@ export default {
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
         .then((response) => {
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    deleteFieldFromMethodological: function (index) {
+      let params = {}
+      const _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
+      const _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+      let removedField = _fields.splice(index, 1)[0]
+
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      params.fields = _fields
+      params.items = _items
+
+      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
+        .then((response) => {
+          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          const excluded = ['ref_id', 'authors', 'actions']
+          let editFields = []
+          for (let field of _fields) {
+            if (!excluded.includes(field.key)) {
+              editFields.push(field)
+            }
+          }
+
+          this.methodologicalFieldsModalEdit.fields = editFields
+          this.methodologicalFieldsModalEdit.nroColumns = editFields.length
           this.getProject()
         })
         .catch((error) => {
