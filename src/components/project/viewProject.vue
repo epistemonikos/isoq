@@ -2373,6 +2373,8 @@ export default {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
+          } else {
+            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
@@ -2405,6 +2407,8 @@ export default {
                 this.methodologicalFieldsModal.items.push(item)
               }
             }
+          } else {
+            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
@@ -2437,6 +2441,8 @@ export default {
               _extractedData.items = items
             }
             this.extractedDataTableRefs = _extractedData
+          } else {
+            this.extractedDataTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
           }
         })
     },
