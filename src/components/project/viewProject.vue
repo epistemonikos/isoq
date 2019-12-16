@@ -412,7 +412,7 @@
                 cancel-variant="outline-success"
                 @cancel="cleanRemoveContentCharsOfStudies"
                 @ok="removeDataFromLists">
-                <p>Are you sure you want to delete all the content for this row.</p>
+                <p>Are you sure you want to delete all the content for this row?</p>
                 <p
                   v-if="removeReferenceCharsOfStudies.findings.length === 0">
                   <b>No findings will be affected</b>
@@ -614,7 +614,7 @@
                 cancel-variant="outline-success"
                 @cancel="cleanRemoveReferenceMethodological"
                 @ok="removeDataContentMethodological">
-                <p>Are you sure you want to delete all the content for this row.</p>
+                <p>Are you sure you want to delete all the content for this row?</p>
                 <p
                   v-if="removeReferenceMethodological.findings.length === 0">
                   <b>No findings will be affected</b>
