@@ -2,17 +2,9 @@
   <div class="mt-4">
     <b-container>
       <b-row>
-        <b-col cols="12" sm="3" class="text-center">
-          <template v-if="org.logo_url">
-            <b-img rounded="circle" width="150" height="150" v-bind:src="org.logo_url"></b-img>
-          </template>
-          <template v-else>
-            <b-img rounded="circle" width="150" height="150" src="https://picsum.photos/125/125/?image=48"></b-img>
-          </template>
-        </b-col>
-        <b-col cols="12" sm="9">
-          <h2>{{org.name}}</h2>
-          <p>{{org.description}}</p>
+        <b-col cols="12">
+          <h2>{{ (org.name === 'My frameworks') ? 'My iSoQf' : org.name }}</h2>
+          <p>{{ org.description }}</p>
         </b-col>
       </b-row>
       <div class="my-4">
@@ -22,34 +14,48 @@
             <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
-        <ul class="mt-5">
-          <li class="my-3" v-for="(project, index) in org.projects" v-bind:key="index">
-            <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: project.id}}">{{project.name}}</b-link>
-            <font-awesome-icon
-              icon="trash"
-              pull="right"
-              v-bind:title="$t('Remove')"
-              @click="modalRemoveProject(project)" />
-            <!--
-            <font-awesome-icon
-              icon="plus-square"
-              pull="right"
-              v-bind:title="$t('Add')"
-              @click="ModalAddList(project.id)" />
-            -->
-            <font-awesome-icon
-              icon="edit"
-              pull="right"
-              title="Edit"
-              @click="openModalEditProject(project)" />
-            <font-awesome-icon
-              v-if="!project.private"
-              icon="globe"
-              pull="right"
-              title="Public"
-              />
-          </li>
-        </ul>
+        <b-row
+          class="mt-3">
+          <b-col
+            cols="12">
+            <b-table
+              id="organizations"
+              responsive
+              striped
+              bordered
+              borderless
+              hover
+              head-variant="light"
+              :fields="projectTable.fields"
+              :items="org.projects">
+              <template v-slot:cell(private)="data">
+                <font-awesome-icon
+                  v-if="!data.item.private"
+                  icon="globe"
+                  title="Public"></font-awesome-icon>
+              </template>
+              <template v-slot:cell(name)="data">
+                <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: data.item.id}}">{{ data.item.name }}</b-link>
+              </template>
+              <template v-slot:cell(actions)="data">
+                <b-button
+                  variant="outline-success"
+                  @click="openModalEditProject(data.item)">
+                  <font-awesome-icon
+                    icon="edit"
+                    title="Edit"></font-awesome-icon>
+                </b-button>
+                <b-button
+                  variant="outline-danger"
+                  @click="modalRemoveProject(data.item)">
+                  <font-awesome-icon
+                    icon="trash"
+                    v-bind:title="$t('Remove')"></font-awesome-icon>
+                </b-button>
+              </template>
+            </b-table>
+          </b-col>
+        </b-row>
       </div>
       <!-- modals -->
       <b-modal
@@ -155,7 +161,10 @@
         ref="new-project-list"
         :title="(buffer_project_list.id) ? 'Edit summarized review finding' : 'New summarized review finding'"
         @ok="AddOrUpdateProjectList"
-        @hidden="cleanProjectList">
+        @hidden="cleanProjectList"
+        ok-title="Save"
+        ok-variant="outline-success"
+        cancel-variant="outline-secondary">
         <b-form-group
           label="Summarized review"
           label-for="summarized-review">
@@ -170,7 +179,9 @@
         ref="modal-remove-project"
         title="Delete project"
         @ok="removeProject"
-        @cancel="cleanProject">
+        @cancel="cleanProject"
+        ok-variant="outline-danger"
+        cancel-variant="outline-secondary">
         <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
       </b-modal>
     </b-container>
@@ -254,6 +265,13 @@ export default {
         warning_message: '',
         plan: '',
         projects: []
+      },
+      projectTable: {
+        fields: [
+          { key: 'private', label: '' },
+          { key: 'name', label: 'Title' },
+          { key: 'actions', label: '' }
+        ]
       }
     }
   },
@@ -405,6 +423,9 @@ export default {
 }
 </script>
 
-<style>
-
+<style scoped>
+  div >>>
+    table#organizations thead th:nth-child(2) {
+      width: 85%
+    }
 </style>
