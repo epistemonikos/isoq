@@ -295,27 +295,36 @@
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
-                  <b-form-group
-                    v-for="cnt in parseInt(charsOfStudiesFieldsModalEdit.nroColumns)"
-                    :key="cnt"
-                    :label="`Column #${cnt}`">
-                    <b-input-group
-                      v-if="charsOfStudiesFieldsModalEdit.fields.length">
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="charsOfStudiesFieldsModalEdit.fields[cnt - 1].label"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
+                  <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    <b-form-group
+                      v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
+                      :key="index"
+                      :label="`Column #${index}`">
+                      <b-input-group>
+                        <b-form-input
+                          :id="`column_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append
+                          v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
+                          <b-button
+                            :id="`drag-button-chars-${index}`"
+                            variant="outline-secondary"
+                            v-b-tooltip
+                            title="Drag to sort">
+                            <font-awesome-icon
+                              icon="arrows-alt"></font-awesome-icon>
+                          </b-button>
+                          <b-button
+                            variant="outline-danger"
+                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </draggable>
                   <b-button
                     class="mb-2"
                     @click="charsOfStudiesNewColumn"
@@ -538,27 +547,37 @@
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
-                  <b-form-group
-                    v-for="cnt in parseInt(methodologicalFieldsModalEdit.nroColumns)"
-                    :key="cnt"
-                    :label="`Columnn #${cnt}`">
-                    <b-input-group
-                      v-if="methodologicalFieldsModalEdit.fields.length">
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="methodologicalFieldsModalEdit.fields[cnt - 1].label"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="methodologicalFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromCharsSudiesEdit(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
+                  <draggable v-model="methodologicalFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    <b-form-group
+                      v-for="(field, index) in methodologicalFieldsModalEdit.fields"
+                      :key="index"
+                      :label="`Columnn #${index}`">
+                      <b-input-group
+                        v-if="methodologicalFieldsModalEdit.fields.length">
+                        <b-form-input
+                          :id="`column_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append
+                          v-if="methodologicalFieldsModalEdit.fields.length > 1">
+                          <b-button
+                            :id="`drag-button-meth-${index}`"
+                            variant="outline-secondary"
+                            v-b-tooltip
+                            title="Drag to sort">
+                            <font-awesome-icon
+                              icon="arrows-alt"></font-awesome-icon>
+                          </b-button>
+                          <b-button
+                            variant="outline-danger"
+                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </draggable>
                   <b-button
                     class="mb-2"
                     @click="methodologicalNewColumn"
@@ -767,27 +786,37 @@
                   <p class="font-weight-light">
                     Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
-                  <b-form-group
-                    v-for="cnt in parseInt(extractedDataFieldsModalEdit.nroColumns)"
-                    :key="cnt"
-                    :label="`Columnn #${cnt}`">
-                    <b-input-group
-                      v-if="extractedDataFieldsModalEdit.fields.length">
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="extractedDataFieldsModalEdit.fields[cnt - 1].label"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="extractedDataFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromExtractedDataEdit(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
+                  <draggable v-model="extractedDataFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    <b-form-group
+                      v-for="(field, index) in extractedDataFieldsModalEdit.fields"
+                      :key="index"
+                      :label="`Columnn #${index}`">
+                      <b-input-group
+                        v-if="extractedDataFieldsModalEdit.fields.length">
+                        <b-form-input
+                          :id="`column_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append
+                          v-if="extractedDataFieldsModalEdit.fields.length > 1">
+                          <b-button
+                            :id="`drag-button-extracted-${index}`"
+                            variant="outline-secondary"
+                            v-b-tooltip
+                            title="Drag to sort">
+                            <font-awesome-icon
+                              icon="arrows-alt"></font-awesome-icon>
+                          </b-button>
+                          <b-button
+                            variant="outline-danger"
+                            @click="deleteFieldFromExtractedDataEdit(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </draggable>
                   <b-button
                     class="mb-2"
                     @click="extractedDataNewColumn"
@@ -1321,8 +1350,12 @@
 
 <script>
 import axios from 'axios'
+import draggable from 'vuedraggable'
 
 export default {
+  components: {
+    draggable
+  },
   data () {
     return {
       project: {
