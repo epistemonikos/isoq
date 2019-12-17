@@ -154,29 +154,43 @@
                 </b-col>
               </b-row>
               <b-row
-                v-if="references.length"
                 class="mt-3">
                 <b-col
                   cols="12">
                   <b-card
                     bg-variant="light">
-                    <b-row>
-                      <b-col
-                        cols="6"
-                        class="pt-2">
-                        <span>
-                          You have <b>{{ references.length }}</b> references loaded
-                        </span>
-                      </b-col>
-                      <b-col cols="6">
-                        <b-button
-                          block
-                          @click="openModalReferencesSingle"
-                          variant="outline-primary">
-                          View references
-                        </b-button>
-                      </b-col>
-                    </b-row>
+                    <template
+                      v-if="loadReferences">
+                      <div class="text-center text-danger my-2">
+                        <b-spinner class="align-middle"></b-spinner>
+                        <strong>Loading...</strong>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <b-row v-if="!references.length">
+                        <b-col
+                          cols="12">
+                            <p>No references has been loaded.</p>
+                        </b-col>
+                      </b-row>
+                      <b-row v-else>
+                        <b-col
+                          cols="6"
+                          class="pt-2">
+                          <span>
+                            You have <b>{{ references.length }}</b> references loaded
+                          </span>
+                        </b-col>
+                        <b-col cols="6">
+                          <b-button
+                            block
+                            @click="openModalReferencesSingle"
+                            variant="outline-primary">
+                            View references
+                          </b-button>
+                        </b-col>
+                      </b-row>
+                    </template>
                   </b-card>
                 </b-col>
               </b-row>
@@ -1196,7 +1210,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-form-group
-                  label="Summarized review"
+                  label="Summarized review finding"
                   label-for="summarized-review">
                   <b-form-input
                     id="summarized-review"
@@ -1408,6 +1422,7 @@ export default {
       ],
       pre_references: '',
       references: [],
+      loadReferences: true,
       fileReferences: [],
       fields_references_table:
         [
@@ -1767,6 +1782,7 @@ export default {
       reader.readAsText(file)
     },
     saveReferences: function () {
+      this.loadReferences = true
       const references = this.fileReferences
       let axiosArray = []
       for (let ref of references) {
@@ -1855,6 +1871,7 @@ export default {
       this.$refs['add-summarized'].show()
     },
     saveSummarized: function () {
+      this.table_settings.isBusy = true
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
@@ -1929,6 +1946,7 @@ export default {
               })
             }
           }
+          this.loadReferences = false
         })
         .catch((error) => {
           console.log(error)
@@ -1956,6 +1974,7 @@ export default {
       this.$refs['modal-references-list'].show()
     },
     saveReferencesList: function () {
+      this.loadReferences = true
       this.table_settings.isBusy = true
       const params = {
         references: this.selected_references
