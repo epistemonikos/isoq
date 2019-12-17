@@ -298,6 +298,7 @@ export default {
         })
     },
     AddProject: function () {
+      this.projectTable.isBusy = true
       if (this.buffer_project.id) {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
