@@ -410,20 +410,99 @@ export default {
     removeProject: function () {
       const _projects = JSON.parse(JSON.stringify(this.org.projects))
       let _lists = []
+      let _charsOfStudies = []
+      let _methAssessments = []
+      let _extractedData = []
+      let _references = []
+      let _request = []
+      const projectId = this.org.remove_project_id
+
       for (let project of _projects) {
-        if (project.id === this.org.remove_project_id) {
+        if (project.id === projectId) {
           _lists = project.lists
         }
       }
 
-      let _request = []
       for (let list of _lists) {
+        axios.get(`/api/isoqf_findings?organization=${this.org.id}&list_id=${list.id}`)
+          .then((response) => {
+            for (let finding of response.data) {
+              axios.delete(`/api/isoqf_findings/${finding.id}`)
+                .then((response) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            }
+          })
+          .catch((error) => {
+            console.log(error)
+          })
         _request.push(axios.delete(`/api/isoqf_lists/${list.id}`))
       }
 
+      axios.get(`/api/isoqf_characteristics?organization=${this.org.id}&project_id=${projectId}`)
+        .then((response) => {
+          _charsOfStudies = response.data
+          for (let study of _charsOfStudies) {
+            axios.delete(`/api/isoqf_characteristics/${study.id}`)
+              .then((response) => {})
+              .catch((error) => {
+                console.log(error)
+              })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
+      axios.get(`/api/isoqf_assessments?organization=${this.org.id}&project_id=${projectId}`)
+        .then((response) => {
+          _methAssessments = response.data
+          for (let assessment of _methAssessments) {
+            axios.delete(`/api/isoqf_assessments/${assessment.id}`)
+              .then((response) => {})
+              .catch((error) => {
+                console.log(error)
+              })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
+      axios.get(`/api/isoqf_extracted_data?organization=${this.org.id}&project_id=${projectId}`)
+        .then((response) => {
+          _extractedData = response.data
+          for (let extractedData of _extractedData) {
+            axios.delete(`/api/isoqf_extracted_data/${extractedData.id}`)
+              .then((response) => {})
+              .catch((error) => {
+                console.log(error)
+              })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
+      axios.get(`/api/isoqf_references?organization=${this.org.id}&project_id=${projectId}`)
+        .then((response) => {
+          _references = response.data
+          for (let reference of _references) {
+            axios.delete(`/api/isoqf_references/${reference.id}`)
+              .then((response) => {})
+              .catch((error) => {
+                console.log(error)
+              })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
       axios.all(_request)
         .then(axios.spread(function () {
-          axios.delete(`/api/isoqf_projects/${this.org.remove_project_id}`)
+          axios.delete(`/api/isoqf_projects/${projectId}`)
             .then((response) => {
               this.buffer_project = this.tmp_buffer_project
               delete this.org.remove_project_id
