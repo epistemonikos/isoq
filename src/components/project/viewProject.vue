@@ -231,6 +231,7 @@
                 </b-col>
               </b-row>
               <b-table
+                responsive
                 id="chars-of-studies-table"
                 v-if="charsOfStudies.fieldsObj.length > 1"
                 :fields="charsOfStudies.fieldsObj"
@@ -479,6 +480,7 @@
               </b-row>
 
               <b-table
+                responsive
                 v-if="methodologicalTableRefs.fieldsObj.length > 1"
                 class="table-content-refs mt-3"
                 :per-page="methodologicalTableRefsTableSettings.perPage"
@@ -733,6 +735,7 @@
               </b-row>
 
               <b-table
+                responsive
                 v-if="extractedDataTableRefs.fieldsObj.length > 1"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
                 :current-page="extractedDataTableRefsTableSettings.currentPage"
@@ -892,7 +895,7 @@
           <b-row
             v-if="references.length"
             align-h="end"
-            class="mt-5">
+            class="mt-5 mb-2">
             <b-col
               cols="2">
               <b-button
@@ -1340,6 +1343,7 @@
             v-if="references.length">
             <p>Below are the references you have uploaded.</p>
             <b-table
+              responsive
               hover
               bordered
               borderless
