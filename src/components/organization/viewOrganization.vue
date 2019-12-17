@@ -408,16 +408,32 @@ export default {
       this.$refs['modal-remove-project'].show()
     },
     removeProject: function () {
-      axios.delete(`/api/isoqf_projects/${this.org.remove_project_id}`)
-        .then((response) => {
-          this.buffer_project = this.tmp_buffer_project
-          delete this.org.remove_project_id
-          this.getOrganization()
-          this.getProjectsAndLists()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      const _projects = JSON.parse(JSON.stringify(this.org.projects))
+      let _lists = []
+      for (let project of _projects) {
+        if (project.id === this.org.remove_project_id) {
+          _lists = project.lists
+        }
+      }
+
+      let _request = []
+      for (let list of _lists) {
+        _request.push(axios.delete(`/api/isoqf_lists/${list.id}`))
+      }
+
+      axios.all(_request)
+        .then(axios.spread(function () {
+          axios.delete(`/api/isoqf_projects/${this.org.remove_project_id}`)
+            .then((response) => {
+              this.buffer_project = this.tmp_buffer_project
+              delete this.org.remove_project_id
+              this.getOrganization()
+              this.getProjectsAndLists()
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        }.bind(this)))
     }
   }
 }
