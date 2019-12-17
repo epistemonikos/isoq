@@ -889,6 +889,20 @@
               </b-modal>
             </b-col>
           </b-row>
+          <b-row
+            v-if="references.length"
+            align-h="end"
+            class="mt-5">
+            <b-col
+              cols="2">
+              <b-button
+                block
+                variant="success"
+                @click="tabOpened=2">
+                Continue to iSoQf
+              </b-button>
+            </b-col>
+          </b-row>
         </b-tab>
         <b-tab
           :disabled="(references.length) ? false : true"
