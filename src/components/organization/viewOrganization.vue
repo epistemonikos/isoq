@@ -26,6 +26,7 @@
               borderless
               hover
               head-variant="light"
+              :busy="projectTable.isBusy"
               :fields="projectTable.fields"
               :items="org.projects">
               <template v-slot:cell(private)="data">
@@ -52,6 +53,12 @@
                     icon="trash"
                     v-bind:title="$t('Remove')"></font-awesome-icon>
                 </b-button>
+              </template>
+              <template v-slot:table-busy>
+                <div class="text-center text-danger my-2">
+                  <b-spinner class="align-middle"></b-spinner>
+                  <strong>Loading...</strong>
+                </div>
               </template>
             </b-table>
           </b-col>
@@ -271,7 +278,8 @@ export default {
           { key: 'private', label: '' },
           { key: 'name', label: 'Title' },
           { key: 'actions', label: '' }
-        ]
+        ],
+        isBusy: true
       }
     }
   },
@@ -371,6 +379,7 @@ export default {
             }
           }
         })
+        this.projectTable.isBusy = false
       }))
     },
     editProjectList: function (projectPosition, listPosition) {
@@ -390,6 +399,7 @@ export default {
           this.buffer_project_list = this.tmp_buffer_project_list
           this.getProjectsAndLists()
           this.$refs['new-project-list'].hide()
+          this.projectTable.isBusy = true
         })
         .catch((error) => {
           console.log(error)
@@ -408,6 +418,7 @@ export default {
       this.$refs['modal-remove-project'].show()
     },
     removeProject: function () {
+      this.projectTable.isBusy = true
       const _projects = JSON.parse(JSON.stringify(this.org.projects))
       let _lists = []
       let _charsOfStudies = []
