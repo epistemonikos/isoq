@@ -1043,6 +1043,7 @@
                 responsive
                 id="findings"
                 ref="findings"
+                sort-by="isoqf_id"
                 :fields="fields"
                 :items="lists"
                 empty-text="There are no findings to show"
