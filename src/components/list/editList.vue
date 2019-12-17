@@ -437,7 +437,7 @@
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         Assessment not completed
                         <font-awesome-icon
-                          data.item.methodological_limitations.notes
+                          v-if="data.item.methodological_limitations.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
                     </div>
