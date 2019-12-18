@@ -13,7 +13,7 @@
           <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("About") }}</b-nav-item>
           <b-nav-item :to="$i18nRoute({ name: 'Browse'})">{{ $t("Browse") }}</b-nav-item>
           <template v-if="$store.getters.isLoggedIn">
-            <b-nav-item :to="$i18nRoute({ name: 'Organizations'})">{{ $t("Organizations") }}</b-nav-item>
+            <b-nav-item :to="$i18nRoute({ name: 'Organizations'})">Workspaces</b-nav-item>
             <b-nav-item @click="logout">{{ $t('Logout') }}</b-nav-item>
           </template>
           <template v-else>
