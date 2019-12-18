@@ -2523,7 +2523,7 @@ export default {
       csvContent += '"Reference ID", "Authors"' + '\r\n'
 
       for (let ref of _references) {
-        csvContent += ref.id + ', ' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
+        csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
       }
 
       let encodedUri = encodeURI(csvContent)
