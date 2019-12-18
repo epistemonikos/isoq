@@ -2520,7 +2520,7 @@ export default {
     generateTemplate: function () {
       const _references = JSON.parse(JSON.stringify(this.references))
       let csvContent = 'data:text/csv;charset=utf-8,'
-      csvContent += '"Reference ID", "Authors"' + '\r\n'
+      csvContent += '"Reference ID","Authors"' + '\r\n'
 
       for (let ref of _references) {
         csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
