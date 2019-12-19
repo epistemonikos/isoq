@@ -231,6 +231,7 @@
                 </b-col>
               </b-row>
               <b-table
+                sort-by="authors"
                 responsive
                 id="chars-of-studies-table"
                 v-if="charsOfStudies.fieldsObj.length > 1"
@@ -480,6 +481,7 @@
               </b-row>
 
               <b-table
+                sort-by="authors"
                 responsive
                 v-if="methodologicalTableRefs.fieldsObj.length > 1"
                 class="table-content-refs mt-3"
@@ -735,6 +737,7 @@
               </b-row>
 
               <b-table
+                sort-by="authors"
                 responsive
                 v-if="extractedDataTableRefs.fieldsObj.length > 1"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
@@ -1250,12 +1253,12 @@
                   v-if="references.length">
                   <b-form-group>
                     <b-form-checkbox
-                      v-for="ref in references"
+                      v-for="ref in refs"
                       v-model="selected_references"
                       :key="ref.id"
                       :value="ref.id"
                       name="references">
-                      {{ getDataDisplayRef(ref) }}
+                      {{ ref.content }}
                     </b-form-checkbox>
                   </b-form-group>
                 </div>
@@ -1343,6 +1346,7 @@
             v-if="references.length">
             <p>Below are the references you have uploaded.</p>
             <b-table
+              sort-by="authors"
               responsive
               hover
               bordered
@@ -1440,6 +1444,7 @@ export default {
       ],
       pre_references: '',
       references: [],
+      refs: [],
       loadReferences: true,
       fileReferences: [],
       fields_references_table:
@@ -1952,7 +1957,14 @@ export default {
     getReferences: function (changeTab = true) {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
+          let _references = response.data
           this.references = response.data
+          let _refs = []
+          for (let reference of _references) {
+            _refs.push({'id': reference.id, 'content': this.getDataDisplayRef(reference)})
+          }
+
+          this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
