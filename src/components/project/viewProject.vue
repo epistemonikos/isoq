@@ -911,7 +911,7 @@
             align-h="end"
             class="mt-5 mb-2">
             <b-col
-              cols="2">
+              cols="6">
               <b-button
                 block
                 variant="success"
@@ -1236,6 +1236,7 @@
                 id="add-summarized"
                 ref="add-summarized"
                 title="Summarized review finding"
+                :ok-disabled="(summarized_review)?false:true"
                 @ok="saveSummarized"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -1247,7 +1248,7 @@
                     id="summarized-review"
                     v-model="summarized_review"></b-form-input>
                 </b-form-group>
-                </b-modal>
+              </b-modal>
 
               <b-modal
                 id="modal-references-list"
