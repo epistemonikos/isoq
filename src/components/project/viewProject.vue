@@ -269,6 +269,7 @@
                 ref="open-char-of-studies-table-modal"
                 scrollable
                 title="Column Headers"
+                :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
                 @ok="saveCharacteristicsStudiesFields"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -277,11 +278,11 @@
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
                   <b-form-group
-                    label="Nro of columnns">
+                    label="No of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="charsOfStudiesFieldsModal.nroColumns"
-                      type="number" min="1" max="10"></b-form-input>
+                      type="number" min="1"></b-form-input>
                   </b-form-group>
                   <b-form-group
                     v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
@@ -295,8 +296,10 @@
                       <b-input-group-append
                         v-if="charsOfStudies.id">
                         <b-button
+                          variant="outline-danger"
                           @click="deleteFieldFromCharsSudies(cnt - 1)">
-                          Del {{ cnt - 1 }}
+                          <font-awesome-icon
+                            icon="trash"></font-awesome-icon>
                         </b-button>
                       </b-input-group-append>
                     </b-input-group>
@@ -307,7 +310,11 @@
                 ref="open-char-of-studies-table-modal-edit"
                 scrollable
                 title="Edit Column Headers"
-                @ok="updateCharacteristicsStudiesFields">
+                :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
+                @ok="updateCharacteristicsStudiesFields"
+                ok-variant="outline-success"
+                ok-title="Save"
+                cancel-variant="outline-secondary">
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
@@ -518,6 +525,7 @@
                 ref="open-methodological-table-modal"
                 scrollable
                 title="Column Headers"
+                :ok-disabled="(methodologicalFieldsModal.fields.length)?((methodologicalFieldsModal.fields[0].length)?false:true):true"
                 @ok="saveMethodologicalFields"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -526,7 +534,7 @@
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
                   <b-form-group
-                    label="Nro of columnns">
+                    label="No of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="methodologicalFieldsModal.nroColumns"
@@ -558,6 +566,7 @@
                 ref="open-methodological-table-modal-edit"
                 scrollable
                 title="Edit Columns header"
+                :ok-disabled="(methodologicalFieldsModalEdit.fields.length)?((methodologicalFieldsModalEdit.fields[0].label.length)?false:true):false"
                 @ok="updateMethodologicalFields"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -759,6 +768,7 @@
                 ref="open-extracted-data-table-modal"
                 scrollable
                 title="Column Headers"
+                :ok-disabled="(extractedDataFieldsModal.fields.length)?false:true"
                 @ok="saveExtractedDataFields"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -767,7 +777,7 @@
                     Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
                   <b-form-group
-                    label="Nro of columnns">
+                    label="No of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="extractedDataFieldsModal.nroColumns"
@@ -799,6 +809,7 @@
                 ref="open-extracted-data-table-modal-edit"
                 scrollable
                 title="Edit Column Headers"
+                :ok-disabled="(extractedDataFieldsModalEdit.fields.length)?((extractedDataFieldsModalEdit.fields[0].label.length)?false:true):false"
                 @ok="updateExtractedDataFields"
                 ok-title="Save"
                 ok-variant="outline-success"
