@@ -147,7 +147,7 @@
             v-model="buffer_project.lists_authors"></b-form-input>
         </b-form-group>
         <b-form-group
-          :label="$t('Visible')"
+          label="Is this iSoQF will be available for other users?"
           label-for="select-project-list-status">
           <b-select
             id="select-project-list-status"
@@ -188,6 +188,7 @@
         title="Delete project"
         @ok="removeProject"
         @cancel="cleanProject"
+        ok-title="Remove"
         ok-variant="outline-danger"
         cancel-variant="outline-secondary">
         <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
