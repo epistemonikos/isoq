@@ -1071,7 +1071,7 @@
               </b-button>
               <b-table
                 class="toDoc"
-                selectable
+                :selectable="(mode==='view')?true:false"
                 select-mode="multi"
                 selected-variant="warning"
                 responsive
