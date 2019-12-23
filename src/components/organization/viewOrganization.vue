@@ -72,6 +72,7 @@
         :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
         @ok="AddProject"
         @cancel="closeModalProject"
+        :ok-disabled="!buffer_project.name"
         ok-title="Save"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
