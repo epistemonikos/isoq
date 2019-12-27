@@ -40,18 +40,18 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  title="Edit"
                   variant="outline-success"
                   @click="openModalEditProject(data.item)">
                   <font-awesome-icon
-                    icon="edit"
-                    title="Edit"></font-awesome-icon>
+                    icon="edit"></font-awesome-icon>
                 </b-button>
                 <b-button
+                  title="Remove"
                   variant="outline-danger"
                   @click="modalRemoveProject(data.item)">
                   <font-awesome-icon
-                    icon="trash"
-                    v-bind:title="$t('Remove')"></font-awesome-icon>
+                    icon="trash"></font-awesome-icon>
                 </b-button>
               </template>
               <template v-slot:table-busy>
@@ -535,6 +535,14 @@ export default {
 <style scoped>
   div >>>
     table#organizations thead th:nth-child(2) {
-      width: 85%
+      width: 70%
+    }
+  div >>>
+    table#organizations thead th:last-child {
+      width: 20%
+    }
+  div >>>
+    table#organizations tbody td:last-child {
+      text-align: right;
     }
 </style>
