@@ -396,7 +396,7 @@
                 size="lg"
                 id="import-characteristics-table"
                 ref="import-characteristics-table"
-                title="Import table"
+                title="Import table +++"
                 @ok="saveImportedData('isoqf_characteristics')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -545,7 +545,7 @@
                 id="open-methodological-table-modal"
                 ref="open-methodological-table-modal"
                 scrollable
-                title="Column Headers"
+                title="Column Headers +++"
                 :ok-disabled="(methodologicalFieldsModal.fields.length)?((methodologicalFieldsModal.fields[0].length)?false:true):true"
                 @ok="saveMethodologicalFields"
                 ok-title="Save"
@@ -690,7 +690,7 @@
                 size="lg"
                 id="import-methodological-table"
                 ref="import-methodological-table"
-                title="Import table"
+                title="Import table ---"
                 @ok="saveImportedData('isoqf_assessments')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -784,7 +784,7 @@
               <b-table
                 sort-by="authors"
                 responsive
-                v-if="extractedDataTableRefs.fieldsObj.length > 1"
+                v-if="extractedDataTableRefs.fieldsObj.length"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
                 :current-page="extractedDataTableRefsTableSettings.currentPage"
                 class="table-content-refs mt-3"
@@ -1674,41 +1674,43 @@ export default {
       let items = []
 
       allLines.forEach((line, index) => {
-        const contents = this.CSVtoArray(line)
-        let columnFieldNro = 0
-        let columnItemNro = 0
-        if (index === 0) {
-          for (let cnt in contents) {
+        if (line !== '') {
+          const contents = this.CSVtoArray(line)
+          let columnFieldNro = 0
+          let columnItemNro = 0
+          if (index === 0) {
+            for (let cnt in contents) {
+              let obj = {}
+              if (parseInt(cnt) === 0) {
+                obj.key = 'ref_id'
+              }
+              if (parseInt(cnt) === 1) {
+                obj.key = 'authors'
+              }
+              if (parseInt(cnt) > 1) {
+                this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
+                obj.key = 'column_' + columnFieldNro
+                columnFieldNro++
+              }
+              obj.label = contents[cnt]
+              fields.push(obj)
+            }
+          } else {
             let obj = {}
-            if (parseInt(cnt) === 0) {
-              obj.key = 'ref_id'
+            for (let cnt in contents) {
+              if (parseInt(cnt) === 0) {
+                obj.ref_id = contents[cnt]
+              }
+              if (parseInt(cnt) === 1) {
+                obj.authors = contents[cnt]
+              }
+              if (parseInt(cnt) > 1) {
+                obj[`column_${columnItemNro}`] = contents[cnt]
+                columnItemNro++
+              }
             }
-            if (parseInt(cnt) === 1) {
-              obj.key = 'authors'
-            }
-            if (parseInt(cnt) > 1) {
-              this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
-              obj.key = 'column_' + columnFieldNro
-              columnFieldNro++
-            }
-            obj.label = contents[cnt]
-            fields.push(obj)
+            items.push(obj)
           }
-        } else {
-          let obj = {}
-          for (let cnt in contents) {
-            if (parseInt(cnt) === 0) {
-              obj.ref_id = contents[cnt]
-            }
-            if (parseInt(cnt) === 1) {
-              obj.authors = contents[cnt]
-            }
-            if (parseInt(cnt) > 1) {
-              obj[`column_${columnItemNro}`] = contents[cnt]
-              columnItemNro++
-            }
-          }
-          items.push(obj)
         }
       })
 
@@ -2425,7 +2427,6 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
         axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
           .then((response) => {
-            console.log(response.data)
             this.getProject()
           }).catch((error) => {
             console.log('error: ', error)
@@ -2479,6 +2480,9 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
+              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              this.charsOfStudies.items = _items
+
               this.charsOfStudiesFieldsModal.fields = []
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
@@ -2491,7 +2495,7 @@ export default {
 
               this.charsOfStudiesFieldsModal.nroColumns = (this.charsOfStudies.fieldsObj.length === 2) ? 1 : this.charsOfStudies.fieldsObj.length - 2
 
-              for (let item of items) {
+              for (let item of _items) {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
@@ -2509,6 +2513,9 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
+              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              this.methodologicalTableRefs.items = _items
+
               this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
               this.methodologicalFieldsModal.fields = []
 
@@ -2518,6 +2525,7 @@ export default {
                   this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
+              this.methodologicalTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
 
               this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
 
@@ -2525,7 +2533,7 @@ export default {
                 this.methodologicalTableRefs.fieldsObj.push({ 'key': 'actions', 'label': '' })
               }
 
-              for (let item of items) {
+              for (let item of _items) {
                 this.methodologicalFieldsModal.items.push(item)
               }
             }
@@ -2551,7 +2559,7 @@ export default {
                 }
               }
 
-              this.extractedDataFieldsModal.nroColumns = (_extractedData.fieldsObj.length === 2) ? 1 : _extractedData.fieldsObj.length - 2
+              this.extractedDataFieldsModal.nroColumns = (_extractedData.fieldsObj.length === 1) ? 1 : _extractedData.fieldsObj.length - 1
             }
             if (Object.prototype.hasOwnProperty.call(_extractedData, 'items')) {
               const _items = _extractedData.items
@@ -2654,10 +2662,12 @@ export default {
         }
       }
       this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
+      this.pre_ImportDataTable = ''
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
         .then((response) => {
+          this.pre_ImportDataTable = ''
           this.insertImportedData(endpoint, params)
         })
     },
@@ -2766,7 +2776,6 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
         axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
           .then((response) => {
-            console.log(response.data)
             this.getProject()
           }).catch((error) => {
             console.log('error: ', error)
