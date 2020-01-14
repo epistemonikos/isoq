@@ -545,4 +545,8 @@ export default {
     table#organizations tbody td:last-child {
       text-align: right;
     }
+  div >>>
+    table#organizations tbody td a {
+      text-decoration: underline;
+    }
 </style>
