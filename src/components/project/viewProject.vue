@@ -645,7 +645,6 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                {{ methodologicalTableRefs.fields }}
                 <b-form-group
                   v-for="field of methodologicalTableRefs.fields"
                   :key="field.id"
