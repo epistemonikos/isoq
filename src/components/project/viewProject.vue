@@ -118,21 +118,21 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Key information">
+        <b-tab title="Uploaded Data">
           <b-row>
             <b-col
               cols="12">
-              <h3>Key information on Included Studies</h3>
+              <h3>Add Data Needed to Make CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information.
-                You must first upload your reference list of included studies before moving on to the characteristics of studies, methodological assessment and extracted data tables.
-                All of this information is needed in order to apply the CERQual approach, and by including them here the relevant information will be automatically extracted where needed in the CERQual Assessment Worksheets and Evidence Profiles, saving you time and reducing potential errors.
+                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
               cols="12">
-              <h4>References for included Studies</h4>
-              <p>You must import only the references for your final list of included studies </p>
+              <h4>STEP 1: Upload the references for your included Studies (required)</h4>
+              <p class="font-weight-light">
+                You must import only the references for your final list of included studies
+              </p>
               <b-row>
                 <b-col
                   cols="6">
@@ -170,7 +170,7 @@
                       <b-row v-if="!references.length">
                         <b-col
                           cols="12">
-                            <p>No references has been loaded.</p>
+                            <p>No references have been uploaded</p>
                         </b-col>
                       </b-row>
                       <b-row v-else>
@@ -198,12 +198,13 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h5>Characteristics of Studies table</h5>
+              <h4>STEP 2: Create or Import your Characteristics of Studies Table (recommended)</h4>
               <p class="font-weight-light">
-                Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)
+                Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
               </p>
               <b-row>
-                <b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-primary"
@@ -220,7 +221,12 @@
                     Edit column headings
                   </b-button>
                 </b-col>
-                <b-col>
+                <b-col
+                  sm="2">
+                  <p class="text-center pt-1">OR</p>
+                </b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-info"
@@ -277,8 +283,12 @@
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
+                  <ul class="font-weight-light text-danger">
+                    <li>Do not add columns for author or year (these will be added automatically)</li>
+                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                  </ul>
                   <b-form-group
-                    label="No of columnns">
+                    label="Number of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="charsOfStudiesFieldsModal.nroColumns"
@@ -393,19 +403,24 @@
                 <b-alert show variant="danger">
                   <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
-                <p>
-                  In order to import a table you must first prepare the table using this template.
+                <p
+                 class="font-weight-light">
+                  To upload a table, follow these steps:
                 </p>
+                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
                 <b-button
                   block
                   variant="outline-info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
+                <h4
+                  class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                  class="mt-3">
-                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                  class="font-weight-light">
+                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
+                <h4>STEP 3: Import the populated template to iSoQf</h4>
                 <b-row>
                   <b-col
                     class="mb-2"
@@ -454,12 +469,13 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h5>Methodological Assessments table</h5>
+              <h4>STEP 3: Create or import your Methodological Assessments Table (recommended)</h4>
               <p class="font-weight-light">
-                Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)
+                Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
               <b-row>
-                <b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-primary"
@@ -476,7 +492,12 @@
                     Edit column headings
                   </b-button>
                 </b-col>
-                <b-col>
+                <b-col
+                  sm="2">
+                  <p class="text-center pt-1">OR</p>
+                </b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-info"
@@ -533,8 +554,12 @@
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
+                  <ul class="font-weight-light text-danger">
+                    <li>Do not add columns for author or year (these will be added automatically)</li>
+                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                  </ul>
                   <b-form-group
-                    label="No of columnns">
+                    label="Number of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="methodologicalFieldsModal.nroColumns"
@@ -620,6 +645,7 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                {{ methodologicalTableRefs.fields }}
                 <b-form-group
                   v-for="field of methodologicalTableRefs.fields"
                   :key="field.id"
@@ -672,19 +698,24 @@
                 <b-alert show variant="danger">
                   <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
-                <p>
-                  In order to import a table you must first prepare the table using this template.
+                <p
+                  class="font-weight-light">
+                  To upload a table, follow these steps:
                 </p>
+                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
                 <b-button
                   block
                   variant="outline-info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
+                <h4
+                  class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                  class="mt-3">
-                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                 class="font-weight-light">
+                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
+                <h4>STEP 3: Import the populated template to iSoQf</h4>
                 <b-row>
                   <b-col
                     class="mb-2"
@@ -709,15 +740,16 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h5>Extracted data table</h5>
+              <h4>STEP 4: Create or Import  the Headings of your Extracted Data Table (recommended)</h4>
               <p class="font-weight-light">
-                Data extracted from each of the contributing studies.
+                Data extracted from the included studies
               </p>
               <p class="font-weight-light">
-                You will add the extracted data to this table only when you complete the CERQual Assessment Worksheet for each finding. At this stage, just add the column headings
+                * Note that this table operates differently from the previous two. At this stage you will only add the column headings and not the data. Data will be added to the table later when you complete the CERQual assessment worksheets)
               </p>
               <b-row>
-                <b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-primary"
@@ -734,7 +766,12 @@
                     Edit column headings
                   </b-button>
                 </b-col>
-                <b-col>
+                <b-col
+                  sm="2">
+                  <p class="text-center pt-1">OR</p>
+                </b-col>
+                <b-col
+                  sm="5">
                   <b-button
                     block
                     variant="outline-info"
@@ -776,8 +813,12 @@
                   <p class="font-weight-light">
                     Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
+                  <ul class="font-weight-light text-danger">
+                    <li>Do not add columns for author or year (these will be added automatically)</li>
+                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                  </ul>
                   <b-form-group
-                    label="No of columnns">
+                    label="Number of columnns">
                     <b-form-input
                       id="nro-columns"
                       v-model="extractedDataFieldsModal.nroColumns"
@@ -871,19 +912,24 @@
                 <b-alert show variant="danger">
                   <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
-                <p>
-                  In order to import a table you must first prepare the table using this template.
+                <p
+                  class="font-weight-light">
+                  To upload a table, follow these steps:
                 </p>
+                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
                 <b-button
                   block
                   variant="outline-info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
+                <h4
+                  class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                  class="mt-3">
-                  The columns "Reference ID" and "Authors" <b>must not</b> be altered in any way.
+                  class="font-weight-light">
+                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
+                <h4>STEP 3: Import the populated template to iSoQf</h4>
                 <b-row>
                   <b-col
                     class="mb-2"
@@ -986,7 +1032,7 @@
                   variant="outline-success"
                   block
                   v-b-tooltip.hover title="Click to enter view mode where you can export or print">
-                  View
+                  Print or Export
                 </b-button>
             </b-col>
           </b-row>
@@ -1033,7 +1079,7 @@
                           v-model="table_settings.filter"
                           type="search"
                           id="filterInput"
-                          placeholder="Type to Search"></b-form-input>
+                          placeholder="Type to search the table below"></b-form-input>
                         <b-input-group-append>
                           <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
                         </b-input-group-append>
@@ -1054,32 +1100,45 @@
                       View references
                     </b-button>
                   </b-col>
-                  <b-col
-                    class="mt-2 mt-sm-0"
-                    cols="12"
-                    sm="4">
-                    <b-button
-                      v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
-                      variant="outline-primary"
-                      @click="modalAddSummarized"
-                      block>
-                      Add finding
-                    </b-button>
-                  </b-col>
                 </b-row>
               </b-card>
             </b-col>
+            <b-col
+              cols="12">
+              <b-row
+                class="mb-2">
+                <b-col
+                  v-if="mode==='view'"
+                  cols="12">
+                  <b-alert class="d-print-none" v-model="dismissAlertPrint" variant="danger" dismissible>
+                    You must select at least one item of the table
+                  </b-alert>
+                </b-col>
+                <b-col
+                  v-if="mode==='view'"
+                  cols="4">
+                  <b-button
+                    variant="outline-primary"
+                    class="d-print-none"
+                    @click="$refs.findings.selectAllRows()"
+                    block>
+                    Select all items
+                  </b-button>
+                </b-col>
+                <b-col
+                  v-if="mode!=='view'"
+                  cols="4">
+                  <b-button
+                    v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
+                    variant="primary"
+                    @click="modalAddSummarized"
+                    block>
+                    Add review finding to the table
+                  </b-button>
+                </b-col>
+              </b-row>
+            </b-col>
             <b-col cols="12">
-              <b-alert class="d-print-none" v-model="dismissAlertPrint" variant="danger" dismissible>
-                You must select at least one item of the table
-              </b-alert>
-              <b-button
-                v-if="mode==='view'"
-                class="mb-2 d-print-none"
-                variant="outline-primary"
-                @click="$refs.findings.selectAllRows()">
-                Select all items
-              </b-button>
               <b-table
                 class="toDoc"
                 :selectable="(mode==='view')?true:false"
@@ -1091,7 +1150,6 @@
                 sort-by="isoqf_id"
                 :fields="fields"
                 :items="lists"
-                empty-text="There are no findings to show"
                 show-empty
                 :busy="table_settings.isBusy"
                 :current-page="table_settings.currentPage"
@@ -1151,7 +1209,7 @@
                 <template v-slot:cell(cerqual_option)="data">
                   {{ data.item.cerqual_option }}
                   <b-button
-                    v-if="mode==='edit'"
+                    v-if="mode==='edit' && data.item.references.length"
                     class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -1165,7 +1223,7 @@
                 <template v-slot:cell(cerqual_explanation)="data">
                   {{ data.item.cerqual_explanation }}
                   <b-button
-                    v-if="mode==='edit'"
+                    v-if="mode==='edit' && data.item.references.length"
                     class="d-print-none"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -1184,10 +1242,13 @@
                     class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
                     @click="openModalReferences(data.item.isoqf_id)">
-                    <span v-if="data.item.references.length === 0">Add </span>
-                    <span v-if="data.item.references.length">Edit </span>
-                    references
+                    Select references
                   </b-button>
+                </template>
+                <template v-slot:empty>
+                  <p class="text-center">
+                    There are no findings to show, <a href="#" @click="modalAddSummarized">add review finding</a>
+                  </p>
                 </template>
                 <template v-slot:table-busy>
                   <div class="text-center text-danger my-2">
@@ -1213,11 +1274,11 @@
                 cancel-variant="outline-secondary"
                 @ok="updateListName">
                 <b-form-group
-                  label="Title"
+                  label="Summarized review finding"
                   label-for="finding-name">
-                  <b-form-input
+                  <b-form-textarea
                     id="finding-name"
-                    v-model="editFindingName.name"></b-form-input>
+                    v-model="editFindingName.name"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -1244,9 +1305,9 @@
                 <b-form-group
                   label="Summarized review finding"
                   label-for="summarized-review">
-                  <b-form-input
+                  <b-form-textarea
                     id="summarized-review"
-                    v-model="summarized_review"></b-form-input>
+                    v-model="summarized_review"></b-form-textarea>
                 </b-form-group>
               </b-modal>
 
@@ -1463,7 +1524,7 @@ export default {
         [
           {
             key: 'authors',
-            label: 'Authors',
+            label: 'Author(s)',
             formatter: value => {
               if (value.length === 1) {
                 return value[0]
@@ -1512,7 +1573,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Authors' }
+          { key: 'authors', label: 'Author(s), Year' }
         ]
       },
       charsOfStudiesConfigTable: {
@@ -1534,7 +1595,7 @@ export default {
         fields: [],
         items: [],
         fieldsObj: [
-          { key: 'authors', label: 'Authors' }
+          { key: 'authors', label: 'Author(s), Year' }
         ]
       },
       removeReferenceCharsOfStudies: {
@@ -1546,7 +1607,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Authors' }
+          { key: 'authors', label: 'Author(s), Year' }
         ]
       },
       methodologicalTableRefsTableSettings: {
@@ -1572,7 +1633,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Authors' }
+          { key: 'authors', label: 'Author(s), Year' }
         ]
       },
       extractedDataTableRefsTableSettings: {
@@ -2238,7 +2299,7 @@ export default {
     deleteFieldFromCharsSudies: function (index) {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
 
       fields.splice(index, 1)
 
@@ -2264,7 +2325,7 @@ export default {
       let removedField = _fields.splice(index, 1)[0]
 
       _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       for (let item of _items) {
         if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
@@ -2339,7 +2400,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
       params.items = []
 
       for (let cnt in fields) {
@@ -2386,7 +2447,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
 
       fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       params.fields = fields
 
@@ -2414,7 +2475,7 @@ export default {
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
-              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
 
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
@@ -2436,7 +2497,7 @@ export default {
               }
             }
           } else {
-            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
+            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     },
@@ -2449,7 +2510,7 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
-              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
               this.methodologicalFieldsModal.fields = []
 
               for (let f of fields) {
@@ -2470,7 +2531,7 @@ export default {
               }
             }
           } else {
-            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
+            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     },
@@ -2480,7 +2541,7 @@ export default {
           if (response.data.length) {
             let _extractedData = response.data[0]
             if (Object.prototype.hasOwnProperty.call(_extractedData, 'fields')) {
-              _extractedData.fieldsObj = [{ 'key': 'authors', 'label': 'Authors' }]
+              _extractedData.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
 
               const fields = JSON.parse(JSON.stringify(_extractedData.fields))
 
@@ -2504,7 +2565,7 @@ export default {
             }
             this.extractedDataTableRefs = _extractedData
           } else {
-            this.extractedDataTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Authors' } ] }
+            this.extractedDataTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     },
@@ -2544,7 +2605,7 @@ export default {
     generateTemplate: function () {
       const _references = JSON.parse(JSON.stringify(this.references))
       let csvContent = 'data:text/csv;charset=utf-8,'
-      csvContent += '"Reference ID","Authors"' + '\r\n'
+      csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
 
       for (let ref of _references) {
         csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
@@ -2593,7 +2654,7 @@ export default {
           this.insertImportedData(endpoint, params)
         }
       }
-      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Authors' }] }
+      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
@@ -2680,7 +2741,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
       params.items = []
 
       for (let cnt in fields) {
@@ -2742,7 +2803,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
 
       fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       params.fields = fields
 
@@ -2772,7 +2833,7 @@ export default {
       let removedField = _fields.splice(index, 1)[0]
 
       _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       for (let item of _items) {
         if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
@@ -2892,7 +2953,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
       params.items = []
 
       for (let cnt in fields) {
@@ -2936,7 +2997,7 @@ export default {
     deleteFieldFromExtractedData: function (index) {
       let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s)'}]
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
 
       fields.splice(index, 1)
 
@@ -2959,7 +3020,7 @@ export default {
       let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
 
       fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       params.fields = fields
 
@@ -2989,7 +3050,7 @@ export default {
       let removedField = _fields.splice(index, 1)[0]
 
       _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
 
       for (let item of _items) {
         if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {

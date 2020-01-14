@@ -4,14 +4,15 @@
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
           <b-link :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
-            <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
+            <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
             return to ISoQf table
           </b-link>
         </b-col>
       </b-row>
       <h2 class="toDoc">CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <b-row
-        class="d-print-none justify-content-end mb-2">
+        v-if="mode==='view'"
+        class="d-print-none justify-content-end mb-2 pt-2">
         <b-col
           v-if="mode==='view'"
           cols="12"
@@ -50,34 +51,34 @@
               Edit
             </b-button>
         </b-col>
-        <b-col
-          v-if="mode==='edit'"
-          cols="12"
-          sm="4">
-            <b-button
-              @click="changeMode"
-              variant="outline-success"
-              block
-              v-b-tooltip.hover title="Click to enter view mode where you can export or print">
-              View CERQual Evidence Profile
-            </b-button>
-        </b-col>
       </b-row>
-      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row
-        v-if="mode==='edit'"
-        class="d-print-none">
+        v-if="mode==='edit'">
         <b-col
-          cols="12">
-          <b-form-group>
-            <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches>
+          class="d-print-none"
+          cols="10">
+          <b-form-group class="pt-3">
+            <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches size="lg">
               <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Characteristics of Studies table below.">Characteristics Studies</span></b-form-checkbox>
               <b-form-checkbox value="ma"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Methodological Assessments table below.">Methodological Assessments</span></b-form-checkbox>
               <b-form-checkbox value="ed"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Extracted Data table below.">Extracted Data</span></b-form-checkbox>
             </b-form-checkbox-group>
           </b-form-group>
         </b-col>
+        <b-col
+          cols="2"
+          sm="2">
+            <b-button
+              class="mt-2"
+              @click="changeMode"
+              variant="outline-success"
+              block
+              v-b-tooltip.hover title="Click to enter view mode where you can export or print">
+              Print or Export
+            </b-button>
+        </b-col>
       </b-row>
+      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row class="mt-2">
         <b-col cols="12">
           <!--<b-tabs>-->
@@ -86,7 +87,7 @@
               <b-modal
                 id="modal-stage-two"
                 ref="modal-stage-two"
-                v-bind:title="$t('Evidence profile')"
+                :title="$t('Evidence profile') + ' - ' + buffer_modal_stage_two.title"
                 scrollable
                 @ok="saveStageOneAndTwo"
                 ok-title="Save"
@@ -96,7 +97,10 @@
                   <h6>{{$t('Methodological Limitations')}}</h6>
                   <p class="font-weight-light">
                     Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
-                    Explain any concern in your own words. (tip: Refer to your Methodological Assessments table). Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
+                    Explain any concern in your own words. Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
+                  </p>
+                  <p class="font-weight-light">
+                    tip: Refer to your Methodological Assessments table
                   </p>
                   <p class="font-weight-light">
                     You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
@@ -128,13 +132,13 @@
                   </a>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="$t('Explanation')"
+                    :label="$t('Explanation')"
                     label-for="input-ml-explanation"
                     description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-ml-explanation"
                       v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                      :placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
@@ -153,7 +157,10 @@
                   <p class="font-weight-light">
                     Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
                     You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
-                    Explain any concerns in your own words. (tip: refer to your Extracted Data in relation to your review finding)
+                    Explain any concerns in your own words.
+                  </p>
+                  <p class="font-weight-light">
+                    tip: refer to your Extracted Data in relation to your review finding
                   </p>
                   <p class="font-weight-light">
                     You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
@@ -185,13 +192,13 @@
                   </a>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="$t('Explanation')"
+                    :label="$t('Explanation')"
                     label-for="input-coherence-explanation"
                     description="We highly encourage you to add an explanation.">
                     <b-form-textarea
                       id="input-coherence-explanation"
                       v-model="buffer_modal_stage_two.coherence.explanation"
-                      v-bind:placeholder="$t('Enter an explanation')"></b-form-textarea>
+                      :placeholder="$t('Enter an explanation')"></b-form-textarea>
                   </b-form-group>
                   <b-form-group
                     class="mt-2"
@@ -209,7 +216,10 @@
                   <h6>{{$t('Adequacy')}}</h6>
                   <p class="font-weight-light">
                     Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
-                    Explain any concerns in your own words. (tip: refer to your Characteristics of Studies table and your Extracted Data for this finding)
+                    Explain any concerns in your own words.
+                  </p>
+                  <p class="font-weight-light">
+                    tip: refer to your Characteristics of Studies table and your Extracted Data for this finding
                   </p>
                   <p class="font-weight-light">
                     You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
@@ -241,7 +251,7 @@
                   </a>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="$t('Explanation')"
+                    :label="$t('Explanation')"
                     label-for="input-adequacy-explanation"
                     description="We highly encourage you to add an explanation.">
                     <b-form-textarea
@@ -265,7 +275,10 @@
                   <h6>{{$t('Relevance')}}</h6>
                   <p class="font-weight-light">
                     Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
-                    You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate. (tip: refer to your Characteristics of Studies table and your review question)
+                    You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate.
+                  </p>
+                  <p class="font-weight-light">
+                    tip: refer to your Characteristics of Studies table and your review question
                   </p>
                   <p class="font-weight-light">
                     You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
@@ -297,7 +310,7 @@
                   </a>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="$t('Explanation')"
+                    :label="$t('Explanation')"
                     label-for="input-relevance-explanation"
                     description="We highly encourage you to add an explanation.">
                     <b-form-textarea
@@ -353,7 +366,7 @@
                   </a>
                   <b-form-group
                     class="mt-2"
-                    v-bind:label="$t('Explanation')"
+                    :label="$t('Explanation')"
                     label-for="input-cerqual"
                     description="We highly encourage you to add an explanation.">
                     <b-form-textarea
@@ -567,6 +580,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        v-if="data.item.methodological_limitations.option && data.item.coherence.option && data.item.adequacy.option && data.item.relevance.option"
                         block
                         class="d-print-none"
                         variant="outline-info"
@@ -678,7 +692,7 @@
                   <b-card>
                     <h5>Progress status</h5>
                     <p class="font-weight-light">
-                      This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment. Each assessment accounts for 20% of the total.
+                      This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.
                     </p>
                     <p v-if="list.cerqual.option !== null">
                       Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
@@ -724,7 +738,7 @@
               <!-- end of Evidence Profile-->
             <!--</b-tab>-->
             <!-- Characteristics of Studies -->
-            <!--<b-tab v-bind:title="$t('Characteristics of Studies')">-->
+            <!--<b-tab :title="$t('Characteristics of Studies')">-->
             <div
               class="mt-3"
               v-if="show.selected.includes('cs')">
@@ -802,7 +816,7 @@
             </div>
             <!--</b-tab>-->
             <!-- Methodological Assessments -->
-            <!--<b-tab v-bind:title="$t('Methodological Assessments')">-->
+            <!--<b-tab :title="$t('Methodological Assessments')">-->
             <div
               class="mt-3"
               v-if="show.selected.includes('ma')">
@@ -863,7 +877,7 @@
             </div>
             <!--</b-tab>-->
             <!-- Extracted data -->
-            <!--<b-tab v-bind:title="$t('Extracted Data')">-->
+            <!--<b-tab :title="$t('Extracted Data')">-->
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
@@ -1070,11 +1084,11 @@ export default {
         organization: ''
       },
       buffer_modal_stage_two: {
-        methodological_limitations: {option: null, explanation: '', notes: ''},
-        coherence: {option: null, explanation: '', notes: ''},
-        adequacy: {option: null, explanation: '', notes: ''},
-        relevance: {option: null, explanation: '', notes: ''},
-        cerqual: {option: null, explanation: '', notes: ''}
+        methodological_limitations: {option: null, explanation: '', notes: '', title: 'a'},
+        coherence: {option: null, explanation: '', notes: '', title: 'b'},
+        adequacy: {option: null, explanation: '', notes: '', title: 'c'},
+        relevance: {option: null, explanation: '', notes: '', title: 'd'},
+        cerqual: {option: null, explanation: '', notes: '', title: 'e'}
       },
       buffer_modal_stage_three: {
         fields: [],
@@ -1338,7 +1352,15 @@ export default {
       let theData = JSON.parse(JSON.stringify(data))
       this.buffer_modal_stage_one.name = theData.name
       this.buffer_modal_stage_two = {...theData}
+      const titles = {
+        'methodological-limitations': 'Methodological limitations',
+        'coherence': 'Coherence',
+        'adequacy': 'Adequacy',
+        'relevance': 'Relevance',
+        'cerqual': 'Cerqual Assessment of Confidence'
+      }
       this.buffer_modal_stage_two.type = type
+      this.buffer_modal_stage_two.title = titles[type]
       this.$refs['modal-stage-two'].show()
     },
     getStageThree: function () {
