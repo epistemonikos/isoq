@@ -211,7 +211,7 @@
                     v-if="charsOfStudies.fields.length <= 2"
                     @click="openModalCharsOfStudies"
                     :disabled="(references.length) ? false : true">
-                    Create column headings
+                    Create Table
                   </b-button>
                   <b-button
                     block
@@ -482,7 +482,7 @@
                     v-if="methodologicalTableRefs.fields.length <= 2"
                     @click="openModcontent()"
                     :disabled="(references.length) ? false : true">
-                    Create column headings
+                    Create Table
                   </b-button>
                   <b-button
                     block
@@ -751,7 +751,7 @@
                     v-if="extractedDataTableRefs.fields.length <= 2"
                     @click="openModalExtractedData()"
                     :disabled="(references.length) ? false : true">
-                    Create column headings
+                    Create Table
                   </b-button>
                   <b-button
                     block

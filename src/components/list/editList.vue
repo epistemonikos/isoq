@@ -99,7 +99,7 @@
                     Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
                     Explain any concern in your own words. Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
                   </p>
-                  <p class="font-weight-normal">
+                  <p class="font-weight-normal text-primary">
                     tip: Refer to your Methodological Assessments table
                   </p>
                   <p class="font-weight-light">
@@ -159,7 +159,7 @@
                     You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
                     Explain any concerns in your own words.
                   </p>
-                  <p class="font-weight-normal">
+                  <p class="font-weight-normal text-primary">
                     tip: refer to your Extracted Data in relation to your review finding
                   </p>
                   <p class="font-weight-light">
@@ -218,7 +218,7 @@
                     Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
                     Explain any concerns in your own words.
                   </p>
-                  <p class="font-weight-normal">
+                  <p class="font-weight-normal text-primary">
                     tip: refer to your Characteristics of Studies table and your Extracted Data for this finding
                   </p>
                   <p class="font-weight-light">
@@ -277,7 +277,7 @@
                     Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
                     You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate.
                   </p>
-                  <p class="font-weight-normal">
+                  <p class="font-weight-normal text-primary">
                     tip: refer to your Characteristics of Studies table and your review question
                   </p>
                   <p class="font-weight-light">
