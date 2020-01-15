@@ -396,7 +396,7 @@
                 size="lg"
                 id="import-characteristics-table"
                 ref="import-characteristics-table"
-                title="Import table +++"
+                title="Import table"
                 @ok="saveImportedData('isoqf_characteristics')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -417,7 +417,7 @@
                 <h4
                   class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                  class="font-weight-light">
+                  class="font-weight-light text-danger">
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
                 <h4>STEP 3: Import the populated template to iSoQf</h4>
@@ -545,7 +545,7 @@
                 id="open-methodological-table-modal"
                 ref="open-methodological-table-modal"
                 scrollable
-                title="Column Headers +++"
+                title="Column Headers"
                 :ok-disabled="(methodologicalFieldsModal.fields.length)?((methodologicalFieldsModal.fields[0].length)?false:true):true"
                 @ok="saveMethodologicalFields"
                 ok-title="Save"
@@ -554,10 +554,6 @@
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
-                  <ul class="font-weight-light text-danger">
-                    <li>Do not add columns for author or year (these will be added automatically)</li>
-                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                  </ul>
                   <b-form-group
                     label="Number of columnns">
                     <b-form-input
@@ -690,7 +686,7 @@
                 size="lg"
                 id="import-methodological-table"
                 ref="import-methodological-table"
-                title="Import table ---"
+                title="Import table"
                 @ok="saveImportedData('isoqf_assessments')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -711,7 +707,7 @@
                 <h4
                   class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                 class="font-weight-light">
+                 class="font-weight-light text-danger">
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
                 <h4>STEP 3: Import the populated template to iSoQf</h4>
@@ -784,7 +780,7 @@
               <b-table
                 sort-by="authors"
                 responsive
-                v-if="extractedDataTableRefs.fieldsObj.length"
+                v-if="extractedDataTableRefs.items.length"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
                 :current-page="extractedDataTableRefsTableSettings.currentPage"
                 class="table-content-refs mt-3"
@@ -812,10 +808,6 @@
                   <p class="font-weight-light">
                     Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
                   </p>
-                  <ul class="font-weight-light text-danger">
-                    <li>Do not add columns for author or year (these will be added automatically)</li>
-                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                  </ul>
                   <b-form-group
                     label="Number of columnns">
                     <b-form-input
@@ -925,7 +917,7 @@
                 <h4
                   class="mt-3">STEP 2: Populate the template with your information.</h4>
                 <p
-                  class="font-weight-light">
+                  class="font-weight-light text-danger">
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
                 <h4>STEP 3: Import the populated template to iSoQf</h4>
@@ -2610,12 +2602,14 @@ export default {
       this.msgUpdateProject = null
     },
     generateTemplate: function () {
-      const _references = JSON.parse(JSON.stringify(this.references))
+      // const _references = JSON.parse(JSON.stringify(this.references))
+      const _refs = JSON.parse(JSON.stringify(this.refs))
       let csvContent = 'data:text/csv;charset=utf-8,'
       csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
 
-      for (let ref of _references) {
-        csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
+      for (let ref of _refs) {
+        // csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
+        csvContent += ref.id + ',' + '"' + ref.content.split(';')[0] + '"' + '\r\n'
       }
 
       let encodedUri = encodeURI(csvContent)

@@ -3,7 +3,7 @@
     <b-container>
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
-          <b-link :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
+          <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
             <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
             return to ISoQf table
           </b-link>
@@ -79,7 +79,7 @@
         </b-col>
       </b-row>
       <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
-      <b-row class="mt-2">
+      <b-row class="mt-4">
         <b-col cols="12">
           <!--<b-tabs>-->
             <!-- Evidence Profile-->
@@ -99,7 +99,7 @@
                     Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
                     Explain any concern in your own words. Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
                   </p>
-                  <p class="font-weight-light">
+                  <p class="font-weight-normal">
                     tip: Refer to your Methodological Assessments table
                   </p>
                   <p class="font-weight-light">
@@ -159,7 +159,7 @@
                     You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
                     Explain any concerns in your own words.
                   </p>
-                  <p class="font-weight-light">
+                  <p class="font-weight-normal">
                     tip: refer to your Extracted Data in relation to your review finding
                   </p>
                   <p class="font-weight-light">
@@ -218,7 +218,7 @@
                     Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
                     Explain any concerns in your own words.
                   </p>
-                  <p class="font-weight-light">
+                  <p class="font-weight-normal">
                     tip: refer to your Characteristics of Studies table and your Extracted Data for this finding
                   </p>
                   <p class="font-weight-light">
@@ -277,7 +277,7 @@
                     Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
                     You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate.
                   </p>
-                  <p class="font-weight-light">
+                  <p class="font-weight-normal">
                     tip: refer to your Characteristics of Studies table and your review question
                   </p>
                   <p class="font-weight-light">
@@ -882,10 +882,12 @@
               class="mt-3"
               v-if="show.selected.includes('ed')">
               <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
+              <!--
               <p class="d-print-none font-weight-light">
                 To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> Section of iSoQf.
                 Once your headings are created you will be able to return here to add the extracted data from each study contributing to the finding.
               </p>
+              -->
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
@@ -962,7 +964,7 @@
                 </b-modal>
               </template>
               <template v-else>
-                <p class="font-weight-light">
+                <p class="d-print-none font-weight-light">
                   To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Key Information</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
@@ -1691,6 +1693,10 @@ export default {
 </script>
 
 <style scoped>
+  div >>>
+    a.return {
+      font-size: 1.2rem;
+    }
   div >>>
     h3 span {
       font-size: 1.55rem
