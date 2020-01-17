@@ -1720,8 +1720,9 @@ export default {
       let base = { authors: [], user_definable: [] }
 
       allLines.forEach((line) => {
-        const key = line.split('  - ')[0]
-        const content = line.split('  - ')[1]
+        const _line = line.split('  - ')
+        const key = _line[0]
+        const content = _line[1]
 
         if (key === 'TY') {
           base['type'] = content
@@ -2133,59 +2134,57 @@ export default {
       let txt = ''
 
       if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
-        txt += 'TY  - ' + reference.type + '\r'
+        txt += 'TY  - ' + reference.type + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'abstract')) {
-        txt += 'AB  - ' + reference.abstract + '\r'
+        txt += 'AB  - ' + reference.abstract + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'title')) {
-        txt += 'TI  - ' + reference.title + '\r'
+        txt += 'TI  - ' + reference.title + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         var cnt = 1
         for (let a of reference.authors) {
-          txt += `A${cnt} - ` + a + '\r'
+          txt += `A${cnt}  - ` + a + '\r\n'
           cnt++
         }
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'publication_year')) {
-        txt += 'PY  - ' + reference.publication_year + '\r'
+        txt += 'PY  - ' + reference.publication_year + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'database')) {
-        txt += 'DB  - ' + reference.database + '\r'
+        txt += 'DB  - ' + reference.database + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'volume_number')) {
-        txt += 'VL  - ' + reference.volume_number + '\r'
+        txt += 'VL  - ' + reference.volume_number + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'url')) {
-        txt += 'UR  - ' + reference.url + '\r'
+        txt += 'UR  - ' + reference.url + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'start_page')) {
-        txt += 'SP  - ' + reference.start_page + '\r'
+        txt += 'SP  - ' + reference.start_page + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'isbn_issn')) {
-        txt += 'SN  - ' + reference.isbn_issn + '\r'
+        txt += 'SN  - ' + reference.isbn_issn + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'date')) {
-        txt += 'DA  - ' + reference.date + '\r'
+        txt += 'DA  - ' + reference.date + '\r\n'
       }
       if (Object.prototype.hasOwnProperty.call(reference, 'user_definable')) {
         var count = 1
         for (let c of reference.user_definable) {
-          txt += `C${count} - ` + c + '\r'
+          txt += `C${count} - ` + c + '\r\n'
           count++
         }
       }
-      txt += 'ER  - \n\r'
+      txt += 'ER  - ' + '\r\n'
       return txt
     },
     exportToRIS: function () {
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      var content = ''
-      for (let l of lists) {
-        for (let r of l.raw_ref) {
-          content += this.processRIS(r)
-        }
+      const _refs = JSON.parse(JSON.stringify(this.references))
+      let content = ''
+      for (let ref of _refs) {
+        content += this.processRIS(ref)
       }
 
       var element = document.createElement('a')
