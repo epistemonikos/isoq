@@ -133,26 +133,67 @@
               <p class="font-weight-light">
                 You must import only the references for your final list of included studies
               </p>
-              <b-row>
-                <b-col
-                  cols="6">
-                  <b-form-file
-                    id="input-ris-file-key"
-                    plain
-                    @change="loadRefs($event)"></b-form-file>
-                </b-col>
-                <b-col
-                  cols="6">
-                  <b-button
-                    block
-                    :disabled="(fileReferences.length >= 1) ? false : true"
-                    class="mt-2"
-                    variant="success"
-                    @click="saveReferences">
-                      Upload
-                  </b-button>
-                </b-col>
-              </b-row>
+              <b-card no-body>
+                <b-tabs card>
+                  <b-tab title="Import from">
+                    <b-row>
+                      <b-col
+                        sm="6">
+                        <p>You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)</p>
+                        <b-form-textarea
+                          v-model="episte_request"
+                          placeholder="Ej: 17253524"></b-form-textarea>
+                        <b-button
+                          class="mt-2"
+                          block
+                          variant="outline-primary"
+                          @click="EpisteRequest">Find</b-button>
+                      </b-col>
+                      <b-col
+                        sm="6">
+                        <ul v-if="episte_response.length">
+                          <li v-for="(r, index) in episte_response" :key="index">
+                            <b-form-checkbox
+                              :id="`checkbox-${index}`"
+                              v-model="episte_selected"
+                              :name="`checkbox-${index}`"
+                              :value="index">
+                              {{ r.citation }}
+                            </b-form-checkbox>
+                          </li>
+                        </ul>
+                        <b-button
+                          v-if="episte_response.length"
+                          variant="outline-success"
+                          block
+                          @click="saveReferences('EpisteDB')">Import references</b-button>
+                      </b-col>
+                    </b-row>
+                  </b-tab>
+                  <b-tab title="File upload" active>
+                    <b-row>
+                      <b-col
+                        cols="6">
+                        <b-form-file
+                          id="input-ris-file-key"
+                          plain
+                          @change="loadRefs($event)"></b-form-file>
+                      </b-col>
+                      <b-col
+                        cols="6">
+                        <b-button
+                          block
+                          :disabled="(fileReferences.length >= 1) ? false : true"
+                          class="mt-2"
+                          variant="success"
+                          @click="saveReferences">
+                            Upload
+                        </b-button>
+                      </b-col>
+                    </b-row>
+                  </b-tab>
+                </b-tabs>
+              </b-card>
               <b-row
                 class="mt-3">
                 <b-col
@@ -1651,7 +1692,10 @@ export default {
       editFindingName: {
         index: null,
         name: null
-      }
+      },
+      episte_request: '',
+      episte_response: [],
+      episte_selected: []
     }
   },
   mounted () {
@@ -1780,6 +1824,30 @@ export default {
     }
   },
   methods: {
+    EpisteRequest: function () {
+      this.episte_response = []
+      const allLines = this.episte_request.split(/\r\n|\n/)
+      allLines.forEach((line, index) => {
+        console.log('aaa', line)
+        const instance = axios.create({
+          withCredentials: true,
+          headers: {
+            'Authorization': 'Token token="bcd43ca4789d1d52b28a288828d738c2"'
+          }
+        })
+
+        instance.get(`https://api.epistemonikos.org/v1/documents/${line}?show=relations`)
+          .then((response) => {
+            console.log(response.data)
+            let obj = {}
+            obj.citation = response.data.citation
+            obj.content = response.data.content
+            this.episte_response.push(obj)
+          }).catch((error) => {
+            console.log(error)
+          })
+      })
+    },
     CSVtoArray: function (text) {
       // https://stackoverflow.com/a/8497474
       const reValid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/
@@ -1871,9 +1939,25 @@ export default {
       }
       reader.readAsText(file)
     },
-    saveReferences: function () {
+    saveReferences: function (from = '') {
       this.loadReferences = true
-      const references = this.fileReferences
+      let references = ''
+      if (!from) {
+        references = this.fileReferences
+      } else {
+        let _r = []
+        for (let index of this.episte_selected) {
+          let content = JSON.parse(JSON.stringify(this.episte_response[index].content))
+          content.publication_year = content.year
+          delete (content.year)
+          content.isbn_issn = content.publication.ISSN
+          if (content.publication.type === 'journal') {
+            content.type = 'JOUR'
+          }
+          _r.push(content)
+        }
+        references = _r
+      }
       let axiosArray = []
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
