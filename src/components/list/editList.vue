@@ -56,7 +56,8 @@
         v-if="mode==='edit'">
         <b-col
           class="d-print-none"
-          cols="10">
+          sm="10"
+          cols="12">
           <b-form-group class="pt-3">
             <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches size="lg">
               <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Characteristics of Studies table below.">Characteristics Studies</span></b-form-checkbox>
@@ -66,7 +67,7 @@
           </b-form-group>
         </b-col>
         <b-col
-          cols="2"
+          cols="12"
           sm="2">
             <b-button
               class="mt-2"
@@ -78,7 +79,7 @@
             </b-button>
         </b-col>
       </b-row>
-      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
+      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row class="mt-4">
         <b-col cols="12">
           <!--<b-tabs>-->

@@ -1118,7 +1118,8 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  cols="4">
+                  sm="4"
+                  cols="12">
                   <b-button
                     v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
                     variant="primary"
@@ -1172,7 +1173,8 @@
                     <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
                     <b-row>
                       <b-col
-                        cols="6">
+                        sm="6"
+                        cols="12">
                         <b-button
                           block
                           v-if="mode==='edit'"
@@ -1182,7 +1184,9 @@
                         </b-button>
                       </b-col>
                       <b-col
-                        cols="6">
+                        class="mt-1 mt-sm-0"
+                        sm="6"
+                        cols="12">
                         <b-button
                           block
                           v-if="mode==='edit'"
