@@ -249,14 +249,16 @@
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
+                    block
                     variant="outline-success"
-                    @click="addDataCharsOfStudies(data.index)">
+                    @click="addDataCharsOfStudies((charsOfStudiesConfigTable.currentPage > 1) ? (charsOfStudiesConfigTable.perPage * (charsOfStudiesConfigTable.currentPage - 1)) + data.index : data.index)">
                     <font-awesome-icon
                       icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
+                    block
                     variant="outline-danger"
-                    @click="removeItemCharOfStudies(data.index, data.item.ref_id)">
+                    @click="removeItemCharOfStudies((charsOfStudiesConfigTable.currentPage > 1) ? (charsOfStudiesConfigTable.perPage * (charsOfStudiesConfigTable.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
@@ -398,6 +400,7 @@
                 ref="import-characteristics-table"
                 title="Import table"
                 @ok="saveImportedData('isoqf_characteristics')"
+                @cancel="cleanVars('import-characteristics-table')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
@@ -511,6 +514,7 @@
               <b-table
                 sort-by="authors"
                 responsive
+                id="methodological-table"
                 v-if="methodologicalTableRefs.fieldsObj.length > 1"
                 class="table-content-refs mt-3"
                 :per-page="methodologicalTableRefsTableSettings.perPage"
@@ -520,14 +524,16 @@
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
+                    block
                     variant="outline-success"
-                    @click="addDataMethodological(data.index)">
+                    @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
                     <font-awesome-icon
                       icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
+                    block
                     variant="outline-danger"
-                    @click="removeItemMethodological(data.index, data.item.ref_id)">
+                    @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
@@ -688,6 +694,7 @@
                 ref="import-methodological-table"
                 title="Import table"
                 @ok="saveImportedData('isoqf_assessments')"
+                @cancel="cleanVars('import-methodological-table')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
@@ -898,6 +905,7 @@
                 ref="import-extracted-data-table"
                 title="Import table"
                 @ok="saveImportedData('isoqf_extracted_data')"
+                @cancel="cleanVars('import-extracted-data-table')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-alert show variant="danger">
@@ -1452,6 +1460,7 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
+import parser from '../../plugins/parser'
 
 export default {
   components: {
@@ -1667,7 +1676,8 @@ export default {
 
       allLines.forEach((line, index) => {
         if (line !== '') {
-          const contents = this.CSVtoArray(line)
+          let contents = parser.parse(line)
+          contents = contents[0]
           let columnFieldNro = 0
           let columnItemNro = 0
           if (index === 0) {
@@ -1780,25 +1790,6 @@ export default {
     }
   },
   methods: {
-    CSVtoArray: function (text) {
-      // https://stackoverflow.com/a/8497474
-      const reValid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/
-      const reValue = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g
-
-      if (!reValid.test(text)) return null
-      let a = []
-      text.replace(reValue,
-        function (m0, m1, m2, m3) {
-          if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"))
-          else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"'))
-          else if (m3 !== undefined) a.push(m3)
-          return ''
-        }
-      )
-
-      if (/,\s*$/.test(text)) a.push('')
-      return a
-    },
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
       if (this.mode === 'view') {
@@ -2657,6 +2648,11 @@ export default {
       this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
       this.pre_ImportDataTable = ''
     },
+    cleanVars: function (modal = '') {
+      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
+      this.pre_ImportDataTable = ''
+      this.$refs[modal].hide()
+    },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
         .then((response) => {
@@ -3260,6 +3256,14 @@ export default {
   div >>>
     .table-content-refs.table tbody td:last-child {
       text-align: right;
+    }
+  div >>>
+    table#chars-of-studies-table tbody td:last-child {
+      min-width: 10%;
+    }
+  div >>>
+    table#methodological-table tbody td:last-child {
+      min-width: 10%;
     }
   @media print {
     div >>>
