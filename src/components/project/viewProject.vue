@@ -1253,7 +1253,7 @@
                 </template>
               </b-table>
               <b-pagination
-                v-if="mode === 'edit'"
+                v-if="mode === 'edit' && lists.length"
                 class="d-print-none"
                 v-model="table_settings.currentPage"
                 :total-rows="lists.length"
