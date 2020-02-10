@@ -336,7 +336,8 @@
                   <template v-else-if="charsOfStudiesFieldsModal.stage === 2">
                     <div v-for="(header, index) in charsOfStudiesFieldsModal.mainFields"
                       :key="index">
-                      <h4>{{ header.label }}</h4>
+                      <h4 v-if="header.label.length" class="mt-2">{{ header.label }}</h4>
+                      <h4 v-else class="mt-2 text-muted">No title header</h4>
                       <b-form-group
                         v-for="(field, fIndex) in header.fields"
                           :key="fIndex"
@@ -405,7 +406,7 @@
                 id="open-char-of-studies-table-modal-edit"
                 ref="open-char-of-studies-table-modal-edit"
                 scrollable
-                title="Edit Column Headers ******"
+                title="Edit Column Headers"
                 :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
                 @ok="updateCharacteristicsStudiesFields"
                 ok-variant="outline-success"
