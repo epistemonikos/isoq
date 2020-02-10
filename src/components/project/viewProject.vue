@@ -205,14 +205,25 @@
               <b-row>
                 <b-col
                   sm="5">
-                  <b-button
+                  <!--<b-button
                     block
                     variant="outline-primary"
                     v-if="charsOfStudies.fields.length <= 2"
                     @click="openModalCharsOfStudies"
                     :disabled="(references.length) ? false : true">
                     Create Table
-                  </b-button>
+                  </b-button>-->
+                  <b-dropdown
+                    block
+                    split
+                    split-variant="outline-primary"
+                    variant="primary"
+                    text="Create Table"
+                    v-if="charsOfStudies.fields.length <= 2"
+                    :disabled="(references.length) ? false : true">
+                    <b-dropdown-item @click="openModalCharsOfStudies(false)">Single Header</b-dropdown-item>
+                    <b-dropdown-item @click="openModalCharsOfStudies(true)">Multi Header</b-dropdown-item>
+                  </b-dropdown>
                   <b-button
                     block
                     variant="outline-primary"
@@ -239,6 +250,7 @@
               <b-table
                 sort-by="authors"
                 responsive
+                bordered
                 id="chars-of-studies-table"
                 v-if="charsOfStudies.fieldsObj.length > 1"
                 :fields="charsOfStudies.fieldsObj"
@@ -246,6 +258,21 @@
                 :current-page="charsOfStudiesConfigTable.currentPage"
                 :per-page="charsOfStudiesConfigTable.perPage"
                 class="table-content-refs mt-3">
+                <template
+                  v-if="charsOfStudies.tableTop.length"
+                  v-slot:thead-top>
+                  <b-tr>
+                    <b-th></b-th>
+                    <b-th
+                      v-for="(value, index) of charsOfStudies.tableTop"
+                      :key="index"
+                      :colspan="value.colspan"
+                      class="text-center">
+                      {{ value.label }}
+                    </b-th>
+                    <b-th></b-th>
+                  </b-tr>
+                </template>
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
@@ -280,13 +307,53 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                  <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                  </p>
-                  <ul class="font-weight-light text-danger">
-                    <li>Do not add columns for author or year (these will be added automatically)</li>
-                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                  </ul>
+                <p class="font-weight-light">
+                  Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                </p>
+                <ul class="font-weight-light text-danger">
+                  <li>Do not add columns for author or year (these will be added automatically)</li>
+                  <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                </ul>
+                <template v-if="charsOfStudiesFieldsModal.multiHeaders">
+                  <template v-if="charsOfStudiesFieldsModal.stage === 1">
+                    <b-form-group
+                      v-for="(field, index) in charsOfStudiesFieldsModal.mainFields"
+                      :key="index"
+                      :label="`Main Column #${index + 1}`">
+                      <b-input-group>
+                        <b-form-input
+                          :id="`header_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                      </b-input-group>
+                    </b-form-group>
+                    <b-button
+                      @click="addColumnHeader(charsOfStudiesFieldsModal)"
+                      variant="success">Add Column Headers</b-button>
+                  </template>
+                  <template v-else-if="charsOfStudiesFieldsModal.stage === 2">
+                    <div v-for="(header, index) in charsOfStudiesFieldsModal.mainFields"
+                      :key="index">
+                      <h4>{{ header.label }}</h4>
+                      <b-form-group
+                        v-for="(field, fIndex) in header.fields"
+                          :key="fIndex"
+                          :label="`Column #${fIndex + 1}`">
+                        <b-form-input
+                          v-model="field.label"></b-form-input>
+                      </b-form-group>
+                      <b-button
+                        @click="addFields(charsOfStudiesFieldsModal, index)"
+                        variant="outline-success">
+                        Add column
+                      </b-button>
+                    </div>
+                  </template>
+                  <template v-else>
+                    done
+                  </template>
+                </template>
+                <template v-else>
                   <b-form-group
                     label="Number of columnns">
                     <b-form-input
@@ -314,17 +381,101 @@
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
+                </template>
+                <template
+                  v-if="charsOfStudiesFieldsModal.multiHeaders"
+                  v-slot:modal-footer>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModal.stage > 1"
+                    @click="prevStep(charsOfStudiesFieldsModal)"
+                    variant="outline-success">Prev</b-button>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModal.stage < 2"
+                    @click="nextStep(charsOfStudiesFieldsModal)"
+                    variant="outline-success">Next</b-button>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModal.stage === 2"
+                    @click="saveHeadersAndFields(charsOfStudiesFieldsModal)"
+                    variant="outline-success">Save</b-button>
+                </template>
               </b-modal>
               <b-modal
                 id="open-char-of-studies-table-modal-edit"
                 ref="open-char-of-studies-table-modal-edit"
                 scrollable
-                title="Edit Column Headers"
+                title="Edit Column Headers ******"
                 :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
                 @ok="updateCharacteristicsStudiesFields"
                 ok-variant="outline-success"
                 ok-title="Save"
                 cancel-variant="outline-secondary">
+                <template v-if="charsOfStudiesFieldsModalEdit.multiHeaders">
+                  <template v-if="charsOfStudiesFieldsModalEdit.stage === 1">
+                    <b-form-group
+                      v-for="(field, index) in charsOfStudiesFieldsModalEdit.mainFields"
+                      :key="index"
+                      :label="`Main Column #${index + 1}`">
+                      <b-input-group>
+                        <b-form-input
+                          :id="`header_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append>
+                          <b-button
+                            variant="outline-danger"
+                            @click="removeMainHeader(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                    <b-button
+                      @click="addColumnHeader(charsOfStudiesFieldsModalEdit)"
+                      variant="outline-success">Add Column Headers</b-button>
+                  </template>
+                  <template v-else-if="charsOfStudiesFieldsModalEdit.stage === 2">
+                    <div v-for="(header, index) in charsOfStudiesFieldsModalEdit.mainFields"
+                      :key="index">
+                      <h4 v-if="header.label.length" class="mt-2">{{ header.label }}</h4>
+                      <h4 v-else class="mt-2 text-muted">No title header</h4>
+                      <draggable v-model="header.fields" :group="`columns_${index}`" @start="drag=true" @end="drag=false">
+                        <b-form-group
+                          v-for="(field, fIndex) in header.fields"
+                            :key="fIndex"
+                            :label="`Column #${fIndex + 1}`">
+                          <b-input-group>
+                            <b-form-input
+                              v-model="field.label"></b-form-input>
+                            <b-input-group-append
+                              v-if="header.fields.length > 1">
+                              <b-button
+                                :id="`drag-button-chars-${index}`"
+                                variant="outline-secondary"
+                                v-b-tooltip
+                                title="Drag to sort">
+                                <font-awesome-icon
+                                  icon="arrows-alt"></font-awesome-icon>
+                              </b-button>
+                              <b-button
+                                variant="outline-danger"
+                                @click="deleteFieldMultiHeadersFromCharsSudiesEdit(index, fIndex)">
+                                <font-awesome-icon
+                                  icon="trash"></font-awesome-icon>
+                              </b-button>
+                            </b-input-group-append>
+                          </b-input-group>
+                        </b-form-group>
+                      </draggable>
+                      <b-button
+                        @click="addFields(charsOfStudiesFieldsModalEdit, index)"
+                        variant="outline-success">
+                        Add column {{header.key}}
+                      </b-button>
+                    </div>
+                  </template>
+                </template>
+                <template v-else>
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
@@ -364,6 +515,23 @@
                     variant="outline-success">
                     Add new column
                   </b-button>
+                </template>
+                <template
+                  v-if="charsOfStudiesFieldsModalEdit.multiHeaders"
+                  v-slot:modal-footer>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModalEdit.stage > 1"
+                    @click="prevStep(charsOfStudiesFieldsModalEdit)"
+                    variant="outline-success">Prev</b-button>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModalEdit.stage < 2"
+                    @click="nextStep(charsOfStudiesFieldsModalEdit)"
+                    variant="outline-success">Next</b-button>
+                  <b-button
+                    v-if="charsOfStudiesFieldsModalEdit.stage === 2"
+                    @click="saveHeadersAndFields(charsOfStudiesFieldsModalEdit)"
+                    variant="outline-success">Save</b-button>
+                </template>
               </b-modal>
               <b-modal
                 ref="edit-chars-of-studies-data"
@@ -1555,13 +1723,24 @@ export default {
       msgUploadReferences: '',
       charsOfStudiesFieldsModal: {
         nroColumns: 1,
+        mainFields: [
+          { key: 'header_0', label: '', fields: [ { key: 'column_0_0', label: '' } ] },
+          { key: 'header_1', label: '', fields: [ { key: 'column_1_0', label: '' } ] }
+        ],
         fields: [],
         items: [],
-        selected_item_index: 0
+        selected_item_index: 0,
+        nroMainColumns: 2,
+        stage: 1,
+        multiHeaders: false
       },
       charsOfStudiesFieldsModalEdit: {
         nroColumns: 1,
-        fields: []
+        fields: [],
+        mainFields: [],
+        nroMainColumns: 2,
+        stage: 1,
+        multiHeaders: false
       },
       charsOfStudies: {
         fields: [],
@@ -1569,7 +1748,8 @@ export default {
         authors: '',
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ]
+        ],
+        tableTop: []
       },
       charsOfStudiesConfigTable: {
         currentPage: 1,
@@ -1905,6 +2085,111 @@ export default {
         .catch((error) => {
           console.log('error', error)
         })
+    },
+    prevStep: function (obj) {
+      obj.stage = obj.stage - 1
+    },
+    nextStep: function (obj) {
+      obj.stage = obj.stage + 1
+    },
+    addColumnHeader: function (obj) {
+      const _mainFields = JSON.parse(JSON.stringify(obj.mainFields))
+      let length = _mainFields.length
+
+      if (this.charsOfStudies.id) {
+        length = parseInt(_mainFields.slice(-1)[0].key.split('_').slice(-1)) + 1
+      }
+
+      const newObj = { 'key': `header_${length}`, 'label': '', 'fields': [ { 'key': `column_${length}_0`, 'label': '' } ] }
+      obj.mainFields.push(newObj)
+    },
+    addFields: function (obj, index) {
+      const parent = obj.mainFields[index].key.split('_')[1]
+      let length = obj.mainFields[index].fields.length
+      if (this.charsOfStudies.id) {
+        length = parseInt(obj.mainFields[index].fields.slice(-1)[0].key.split('_').slice(-1)) + 1
+      }
+
+      obj.mainFields[index].fields.push({ key: 'column_' + parent + '_' + length, label: '' })
+    },
+    saveHeadersAndFields: function (obj) {
+      let params = {}
+      const mainFields = JSON.parse(JSON.stringify(obj.mainFields))
+      const references = JSON.parse(JSON.stringify(this.references))
+      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      params.mainFields = mainFields
+      params.items = []
+      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
+      for (let mf of mainFields) {
+        for (let f of mf.fields) {
+          params.fields.push(f)
+        }
+      }
+
+      if (this.charsOfStudies.id) {
+        params.items = _items
+      } else {
+        for (let r of references) {
+          let objItem = {}
+          for (let mf of mainFields) {
+            for (let f of mf.fields) {
+              objItem[f.key] = ''
+            }
+          }
+          objItem.ref_id = r.id
+          objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+          params.items.push(objItem)
+        }
+      }
+
+      params.organization = this.$route.params.org_id
+      params.project_id = this.$route.params.id
+
+      if (this.charsOfStudies.id) {
+        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+          .then((response) => {
+            obj.multiHeaders = false
+            obj.stage = 1
+            obj.mainFields = [
+              { key: 'header_0', label: '', fields: [ { key: 'column_0_0', label: '' } ] },
+              { key: 'header_1', label: '', fields: [ { key: 'column_1_0', label: '' } ] }
+            ]
+            this.getProject()
+            this.$refs['open-char-of-studies-table-modal-edit'].hide()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios.post('/api/isoqf_characteristics', params)
+          .then((response) => {
+            obj.multiHeaders = false
+            obj.stage = 1
+            obj.mainFields = [
+              { key: 'header_0', label: '', fields: [ { key: 'column_0_0', label: '' } ] },
+              { key: 'header_1', label: '', fields: [ { key: 'column_1_0', label: '' } ] }
+            ]
+            this.getProject()
+            this.$refs['open-char-of-studies-table-modal'].hide()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    removeMainHeader: function (index) {
+      const _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.mainFields[index].fields))
+      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      for (let f of _fields) {
+        for (let i of _items) {
+          delete i[f.key]
+        }
+      }
+
+      this.charsOfStudies.items = _items
+      this.charsOfStudiesFieldsModalEdit.mainFields.splice(index, 1)
     },
     getProject: function () {
       const params = {
@@ -2313,6 +2598,19 @@ export default {
           console.log('error: ', error)
         })
     },
+    deleteFieldMultiHeadersFromCharsSudiesEdit: function (index, fIndex) {
+      let _mainFields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.mainFields))
+      const removedField = _mainFields[index].fields.splice(fIndex, 1)[0]
+      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      this.charsOfStudiesFieldsModalEdit.mainFields = _mainFields
+    },
     deleteFieldFromCharsSudiesEdit: function (index) {
       let params = {}
       const _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
@@ -2351,7 +2649,11 @@ export default {
           console.log(error)
         })
     },
-    openModalCharsOfStudies: function () {
+    openModalCharsOfStudies: function (multi = false) {
+      this.charsOfStudiesFieldsModal.multiHeaders = false
+      if (multi) {
+        this.charsOfStudiesFieldsModal.multiHeaders = true
+      }
       let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
       let editFields = []
       const excluded = ['ref_id', 'authors', 'actions']
@@ -2371,6 +2673,12 @@ export default {
         if (!excluded.includes(field.key)) {
           fields.push(field)
         }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'mainFields')) {
+        const mainFields = JSON.parse(JSON.stringify(this.charsOfStudies.mainFields))
+        this.charsOfStudiesFieldsModalEdit.mainFields = mainFields
+        this.charsOfStudiesFieldsModalEdit.multiHeaders = true
       }
 
       this.charsOfStudiesFieldsModalEdit.fields = fields
@@ -2474,6 +2782,15 @@ export default {
 
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+              let tableTop = []
+
+              if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'mainFields')) {
+                const _tableTop = JSON.parse(JSON.stringify(this.charsOfStudies.mainFields))
+                for (let tt of _tableTop) {
+                  tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+                }
+              }
+              this.charsOfStudies.tableTop = tableTop
 
               const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
               this.charsOfStudies.items = _items
@@ -3176,6 +3493,7 @@ export default {
           this.getReferences()
           this.openModalReferencesSingle(false)
           this.getProject()
+          this.resetData()
           this.$refs['modal-references'].hide()
         }.bind(this)))
     },
@@ -3212,6 +3530,19 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    resetData: function () {
+      this.charsOfStudiesFieldsModal.nroColumns = 1
+      this.charsOfStudiesFieldsModal.selected_item_index = 0
+      this.charsOfStudiesFieldsModal.nroMainColumns = 2
+      this.charsOfStudiesFieldsModal.stage = 1
+      this.charsOfStudiesFieldsModal.multiHeaders = false
+      this.charsOfStudiesFieldsModalEditnroColumns = 1
+      this.charsOfStudiesFieldsModalEditfields = []
+      this.charsOfStudiesFieldsModalEditmainFields = []
+      this.charsOfStudiesFieldsModalEdit.nroMainColumns = 2
+      this.charsOfStudiesFieldsModalEdit.stage = 1
+      this.charsOfStudiesFieldsModalEdit.multiHeaders = false
     }
   }
 }
@@ -3222,6 +3553,14 @@ export default {
     .nav-fill .nav-item {
       text-transform: uppercase;
       font-weight: bold;
+    }
+  div >>>
+    #chars-of-studies-table thead th:first-child {
+      width: 25%;
+    }
+  div >>>
+    #chars-of-studies-table thead th:last-child {
+      width: 13%;
     }
   div >>>
     #findings.table thead th {
