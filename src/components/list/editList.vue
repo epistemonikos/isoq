@@ -56,7 +56,8 @@
         v-if="mode==='edit'">
         <b-col
           class="d-print-none"
-          cols="10">
+          sm="10"
+          cols="12">
           <b-form-group class="pt-3">
             <b-form-checkbox-group id="checkbox-group-2" v-model="show.selected" switches size="lg">
               <b-form-checkbox value="cs"><span v-b-tooltip.hover title="Turn ON to see, or OFF to hide, the Characteristics of Studies table below.">Characteristics Studies</span></b-form-checkbox>
@@ -66,7 +67,7 @@
           </b-form-group>
         </b-col>
         <b-col
-          cols="2"
+          cols="12"
           sm="2">
             <b-button
               class="mt-2"
@@ -78,7 +79,7 @@
             </b-button>
         </b-col>
       </b-row>
-      <h3 v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
+      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
       <b-row class="mt-4">
         <b-col cols="12">
           <!--<b-tabs>-->
@@ -743,17 +744,34 @@
               class="mt-3"
               v-if="show.selected.includes('cs')">
               <h3 class="toDoc">{{$t('Characteristics of Studies')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <b-table
                   id="characteristics"
-                  responsive striped caption-top
+                  responsive
+                  striped
+                  caption-top
+                  bordered
                   :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
                   :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5 toDoc">
+                  <template
+                    v-if="characteristics_studies.tableTop.length"
+                    v-slot:thead-top>
+                    <b-tr>
+                      <b-th></b-th>
+                      <b-th
+                        v-for="(value, index) of characteristics_studies.tableTop"
+                        :key="index"
+                        :colspan="value.colspan"
+                        class="text-center">
+                        {{ value.label }}
+                      </b-th>
+                    </b-tr>
+                  </template>
                   <template v-slot:cell(actions)="row">
                     <font-awesome-icon
                       @click="modalDeleteStageThreeItemData(row)"
@@ -821,7 +839,7 @@
               class="mt-3"
               v-if="show.selected.includes('ma')">
               <h3 class="toDoc">{{$t('Methodological Assessments')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
@@ -884,7 +902,7 @@
               <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <!--
               <p class="d-print-none font-weight-light">
-                To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Key Information</b-link> Section of iSoQf.
+                To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> Section of iSoQf.
                 Once your headings are created you will be able to return here to add the extracted data from each study contributing to the finding.
               </p>
               -->
@@ -965,7 +983,7 @@
               </template>
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Key Information</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Uploaded Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
             </div>
@@ -1404,6 +1422,16 @@ export default {
             }
             this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
             this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
+
+            let tableTop = []
+
+            if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
+              const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
+              for (let tt of _tableTop) {
+                tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+              }
+            }
+            this.characteristics_studies.tableTop = tableTop
           } else {
             this.characteristics_studies = {
               items: [],
