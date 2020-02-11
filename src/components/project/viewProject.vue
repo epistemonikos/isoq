@@ -186,7 +186,7 @@
                           :disabled="(fileReferences.length >= 1) ? false : true"
                           class="mt-2"
                           variant="success"
-                          @click="saveReferences">
+                          @click="saveReferences()">
                             Upload
                         </b-button>
                       </b-col>
