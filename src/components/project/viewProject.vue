@@ -1274,7 +1274,7 @@
           </b-row>
           <b-row>
             <b-col
-              v-if="mode==='edit'"
+              v-if="mode==='edit' && this.lists.length"
               cols="12"
               class="my-2 d-print-none">
               <b-card
