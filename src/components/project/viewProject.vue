@@ -846,6 +846,7 @@
                 v-if="extractedDataTableRefs.items.length"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
                 :current-page="extractedDataTableRefsTableSettings.currentPage"
+                id="extracted-data-table"
                 class="table-content-refs mt-3"
                 :fields="extractedDataTableRefs.fieldsObj"
                 :items="extractedDataTableRefs.items">
@@ -856,7 +857,7 @@
                 v-model="extractedDataTableRefsTableSettings.currentPage"
                 :total-rows="extractedDataTableRefs.items.length"
                 :per-page="extractedDataTableRefsTableSettings.perPage"
-                aria-controls="chars-of-studies-table"></b-pagination>
+                aria-controls="extracted-data-table"></b-pagination>
 
               <b-modal
                 id="open-extracted-data-table-modal"
@@ -3665,7 +3666,19 @@ export default {
       width: 25%;
     }
   div >>>
+    #methodological-table thead th:first-child {
+      width: 25%;
+    }
+  div >>>
+    #extracted-data-table thead th:first-child {
+      width: 25%;
+    }
+  div >>>
     #chars-of-studies-table thead th:last-child {
+      width: 13%;
+    }
+  div >>>
+    #methodological-table thead th:last-child {
       width: 13%;
     }
   div >>>
@@ -3697,18 +3710,6 @@ export default {
       font-size: 0.8rem;
       padding-top: 0.4rem;
       list-style-type: none;
-    }
-  div >>>
-    .table-content-refs.table thead th:first-child {
-      width: 35%;
-    }
-  div >>>
-    .table-content-refs.table thead th:last-child {
-      width: 15%;
-    }
-  div >>>
-    .table-content-refs.table tbody td:last-child {
-      text-align: right;
     }
   div >>>
     table#chars-of-studies-table tbody td:last-child {
