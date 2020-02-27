@@ -322,7 +322,7 @@
                 </template>
               </b-table>
               <b-pagination
-                v-if="charsOfStudies.items.length"
+                v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesConfigTable.perPage"
                 align="center"
                 v-model="charsOfStudiesConfigTable.currentPage"
                 :total-rows="charsOfStudies.items.length"
@@ -597,7 +597,7 @@
                 </template>
               </b-table>
               <b-pagination
-                v-if="methodologicalTableRefs.items.length"
+                v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
                 align="center"
                 v-model="methodologicalTableRefsTableSettings.currentPage"
                 :total-rows="methodologicalTableRefs.items.length"
@@ -852,7 +852,7 @@
                 :items="extractedDataTableRefs.items">
               </b-table>
               <b-pagination
-                v-if="extractedDataTableRefs.items.length"
+                v-if="extractedDataTableRefs.items.length && extractedDataTableRefs.items.length > extractedDataTableRefsTableSettings.perPage"
                 align="center"
                 v-model="extractedDataTableRefsTableSettings.currentPage"
                 :total-rows="extractedDataTableRefs.items.length"
