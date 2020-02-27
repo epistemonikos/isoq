@@ -280,7 +280,6 @@
               <b-table
                 sort-by="authors"
                 responsive
-                bordered
                 id="chars-of-studies-table"
                 v-if="charsOfStudies.fieldsObj.length > 1"
                 :fields="charsOfStudies.fieldsObj"
