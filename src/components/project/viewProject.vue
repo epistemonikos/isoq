@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4">
-    <b-container>
+    <b-container fluid>
       <b-row align-h="end">
         <b-col cols="12" class="text-right d-print-none">
           <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}">
@@ -118,7 +118,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Uploaded Data">
+        <b-tab title="My Data">
           <b-row>
             <b-col
               cols="12">
@@ -1296,20 +1296,6 @@
                     </b-form-group>
                   </b-col>
                 </b-row>
-                <b-row
-                  align-h="end">
-                  <b-col
-                    class="mt-2 mt-sm-0"
-                    cols="12"
-                    sm="4">
-                    <b-button
-                      variant="outline-primary"
-                      block
-                      @click="openModalReferencesSingle">
-                      View references
-                    </b-button>
-                  </b-col>
-                </b-row>
               </b-card>
             </b-col>
             <b-col
@@ -1336,14 +1322,28 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  sm="4"
+                  sm="3"
+                  md="4"
                   cols="12">
                   <b-button
                     v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
-                    variant="primary"
+                    :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddSummarized"
                     block>
                     Add review finding to the table
+                  </b-button>
+                </b-col>
+                <b-col
+                  v-if="mode!=='view'"
+                  sm="3"
+                  md="4"
+                  cols="12">
+                  <b-button
+                    v-b-tooltip.hover title="Create, edit and delete your categories"
+                    variant="outline-secondary"
+                    @click="modalListCategories"
+                    block>
+                    Admin your Categories
                   </b-button>
                 </b-col>
               </b-row>
@@ -1355,6 +1355,7 @@
                 select-mode="multi"
                 selected-variant="warning"
                 responsive
+                head-variant="light"
                 id="findings"
                 ref="findings"
                 sort-by="isoqf_id"
@@ -1389,14 +1390,15 @@
                   <span v-if="mode === 'edit'">
                     <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
                     <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                    <b-row>
+                    <b-row
+                      class="mt-3">
                       <b-col
                         sm="6"
                         cols="12">
                         <b-button
                           block
                           v-if="mode==='edit'"
-                          variant="outline-info"
+                          variant="outline-success"
                           @click="editModalFindingName(data.index)">
                           Edit
                         </b-button>
@@ -1408,7 +1410,7 @@
                         <b-button
                           block
                           v-if="mode==='edit'"
-                          variant="outline-info"
+                          variant="outline-danger"
                           @click="removeModalFinding(data.index)">
                           Remove
                         </b-button>
@@ -1471,7 +1473,7 @@
                 </template>
               </b-table>
               <b-pagination
-                v-if="mode === 'edit' && lists.length"
+                v-if="mode === 'edit' && lists.length > table_settings.perPage"
                 class="d-print-none"
                 v-model="table_settings.currentPage"
                 :total-rows="lists.length"
@@ -1481,7 +1483,7 @@
               <b-modal
                 id="edit-finding-name"
                 ref="edit-finding-name"
-                title="Edit finding"
+                title="Edit Summarized review finding"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
@@ -1492,6 +1494,14 @@
                   <b-form-textarea
                     id="finding-name"
                     v-model="editFindingName.name"></b-form-textarea>
+                </b-form-group>
+                <b-form-group
+                  v-if="list_categories.options.length"
+                  label="Choose a category"
+                  description="Also you can leave this option and choose later.">
+                  <b-form-select
+                    v-model="editFindingName.category"
+                    :options="list_categories.options"></b-form-select>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -1509,19 +1519,46 @@
               <b-modal
                 id="add-summarized"
                 ref="add-summarized"
-                title="Summarized review finding"
+                title="Add Summarized review finding"
                 :ok-disabled="(summarized_review)?false:true"
                 @ok="saveSummarized"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                <b-form-group
-                  label="Summarized review finding"
-                  label-for="summarized-review">
-                  <b-form-textarea
-                    id="summarized-review"
-                    v-model="summarized_review"></b-form-textarea>
-                </b-form-group>
+                <template
+                  v-if="(!(list_categories.options.length) && !(lists.length)) && !list_categories.skip">
+                  <h5>Group your Summarized review finding</h5>
+                  <p>Create a category for organize your information or just skip this step, you will still create categories in the <b>Admin your Categories</b> button and then associate to your Summarized review findings.</p>
+                  <b-form-group
+                    label="Name of Category">
+                    <b-form-input
+                      v-model="list_category.name"></b-form-input>
+                  </b-form-group>
+                  <b-button
+                    variant="outline-primary"
+                    @click="list_categories.skip=true">Skip</b-button>
+                  <b-button
+                    variant="outline-success"
+                    @click="saveListCategoryName">Create</b-button>
+                </template>
+                <template
+                  v-else>
+                  <b-form-group
+                    label="Summarized review finding"
+                    label-for="summarized-review">
+                    <b-form-textarea
+                      id="summarized-review"
+                      v-model="summarized_review"></b-form-textarea>
+                  </b-form-group>
+                  <b-form-group
+                    v-if="list_categories.options.length"
+                    label="Choose a category"
+                    description="Also you can leave this option and choose later.">
+                    <b-form-select
+                      v-model="list_categories.selected"
+                      :options="list_categories.options"></b-form-select>
+                  </b-form-group>
+                </template>
               </b-modal>
 
               <b-modal
@@ -1553,6 +1590,81 @@
                   v-if="references.length === 0">
                   <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
                 </div>
+              </b-modal>
+
+              <b-modal
+                id="modalEditListCategories"
+                ref="modalEditListCategories"
+                title="Categories"
+                scrollable
+                ok-only
+                ok-title="Close"
+                ok-variant="outline-success">
+                <b-table
+                  head-variant="highlight"
+                  striped
+                  v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                  :fields="modal_edit_list_categories.fields"
+                  :items="modal_edit_list_categories.options">
+                  <template v-slot:cell(actions)="data">
+                    <b-button
+                      block
+                      variant="outline-success"
+                      @click="editListCategoryName(data.index)">Edit</b-button>
+                    <b-button
+                      block
+                      variant="outline-danger"
+                      class="mt-1"
+                      @click="removeListCategory(data.index)">Remove</b-button>
+                  </template>
+                </b-table>
+                <b-button
+                  v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                  variant="outline-primary"
+                  @click="modal_edit_list_categories.new=true">
+                  Add new category
+                </b-button>
+                <template
+                  v-if="modal_edit_list_categories.new">
+                  <b-form-group
+                    class="mt-3"
+                    label="Add column name">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.name"></b-form-input>
+                  </b-form-group>
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-success"
+                    @click="saveNewCategory">Save</b-button>
+                </template>
+                <template
+                  class="mt-3"
+                  v-if="modal_edit_list_categories.edit">
+                  <b-form-group
+                    label="Edit column name">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.name"></b-form-input>
+                  </b-form-group>
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-success"
+                    @click="updateCategoryName(modal_edit_list_categories.index)">Save</b-button>
+                </template>
+                <template
+                  class="mt-3"
+                  v-if="modal_edit_list_categories.remove">
+                  <p>Confirm you want to remove <b>{{ modal_edit_list_categories.name }}</b> from categories?</p>
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-danger"
+                    @click="removeCategory(modal_edit_list_categories.index)">Confirm</b-button>
+                </template>
               </b-modal>
             </b-col>
           </b-row>
@@ -1687,10 +1799,48 @@ export default {
         authors: ''
       },
       lists: [],
+      list_categories: {
+        options: [],
+        selected: null,
+        skip: false
+      },
+      modal_edit_list_categories: {
+        id: null,
+        fields: [
+          { key: 'text', label: 'Category name' },
+          { key: 'actions', label: '' }
+        ],
+        options: [],
+        new: false,
+        edit: false,
+        remove: false,
+        name: '',
+        index: null
+      },
+      list_category: {
+        name: ''
+      },
       fields: [
         {
           key: 'isoqf_id',
           label: '#'
+        },
+        {
+          key: 'category',
+          label: 'Category',
+          formatter: (value, key, item) => {
+            if (value === null) {
+              return ''
+            }
+            const categories = this.list_categories.options
+            let category = ''
+            for (let cat of categories) {
+              if (cat.value === value) {
+                category = cat.text
+              }
+            }
+            return category
+          }
         },
         {
           key: 'name',
@@ -1896,6 +2046,7 @@ export default {
     this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
+    this.getListCategories()
   },
   watch: {
     pre_ImportDataTable: function (data) {
@@ -2323,6 +2474,7 @@ export default {
         })
     },
     modalAddSummarized: function () {
+      this.list_categories.selected = null
       this.$refs['add-summarized'].show()
     },
     saveSummarized: function () {
@@ -2333,7 +2485,8 @@ export default {
         name: this.summarized_review,
         isoqf_id: this.lastId,
         cerqual: { option: null, explanation: '' },
-        references: []
+        references: [],
+        category: this.list_categories.selected
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
@@ -2343,6 +2496,7 @@ export default {
           this.getLists()
           this.createFinding(listId, listName)
           this.summarized_review = ''
+          this.list_categories.selected = null
         })
         .catch((error) => {
           console.log(error)
@@ -3579,15 +3733,17 @@ export default {
         }.bind(this)))
     },
     editModalFindingName: function (index) {
-      const listName = this.lists[index].name
+      const list = this.lists[index]
       this.editFindingName.index = index
-      this.editFindingName.name = listName
+      this.editFindingName.name = list.name
+      this.editFindingName.category = list.category
       this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       const index = this.editFindingName.index
       _lists[index].name = this.editFindingName.name
+      _lists[index].category = this.editFindingName.category
 
       axios.patch(`/api/isoqf_lists/${_lists[index].id}`, _lists[index])
         .then((response) => {
@@ -3624,6 +3780,155 @@ export default {
       this.charsOfStudiesFieldsModalEdit.nroMainColumns = 2
       this.charsOfStudiesFieldsModalEdit.stage = 1
       this.charsOfStudiesFieldsModalEdit.multiHeaders = false
+    },
+    getListCategories: function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_list_categories/', { params })
+        .then((response) => {
+          if (response.data.length) {
+            const options = JSON.parse(JSON.stringify(response.data[0].options))
+            this.list_categories.options = options
+            this.modal_edit_list_categories.id = response.data[0].id
+            this.modal_edit_list_categories.options = options
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    saveListCategoryName: function () {
+      const options = [
+        { value: 0, text: this.list_category.name }
+      ]
+      const params = {
+        options: options,
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.post('/api/isoqf_list_categories/', params)
+        .then((response) => {
+          this.list_categories.options = response.data.options
+          this.list_categories.selected = null
+          this.list_categories.skip = false
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    modalListCategories: function () {
+      this.getListCategories()
+      this.$refs['modalEditListCategories'].show()
+    },
+    saveNewCategory: function () {
+      const objID = this.modal_edit_list_categories.id
+      let _options = JSON.parse(JSON.stringify(this.list_categories.options))
+      if (_options.length) {
+        const newValue = (_options[_options.length - 1].value !== null) ? parseInt(_options[_options.length - 1].value) + 1 : 0
+        _options.push({ value: newValue, text: this.modal_edit_list_categories.name })
+      } else {
+        _options = [
+          { value: 0, text: this.modal_edit_list_categories.name }
+        ]
+      }
+      const params = {
+        options: _options,
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      if (objID) {
+        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
+          .then((response) => {
+            this.getListCategories()
+            this.modal_edit_list_categories.new = false
+            this.modal_edit_list_categories.name = ''
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios.post('/api/isoqf_list_categories/', params)
+          .then((response) => {
+            this.getListCategories()
+            this.modal_edit_list_categories.new = false
+            this.modal_edit_list_categories.name = ''
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    editListCategoryName: function (index) {
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.edit = true
+      this.modal_edit_list_categories.index = index
+    },
+    updateCategoryName: function (index) {
+      const objID = this.modal_edit_list_categories.id
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      _options[index].text = this.modal_edit_list_categories.name
+
+      if (objID) {
+        const params = {
+          options: _options,
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        }
+        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
+          .then((response) => {
+            this.getListCategories()
+            this.modal_edit_list_categories.edit = false
+            this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.index = null
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    removeListCategory: function (index) {
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.remove = true
+      this.modal_edit_list_categories.index = index
+    },
+    removeCategory: function () {
+      const objID = this.modal_edit_list_categories.id
+      const index = this.modal_edit_list_categories.index
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      _options.splice(index, 1)
+
+      if (objID) {
+        const params = {
+          options: _options,
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        }
+        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
+          .then((response) => {
+            this.getListCategories()
+            this.modal_edit_list_categories.remove = false
+            this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.index = null
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    modalCancelCategoryButtons: function () {
+      this.modal_edit_list_categories.new = false
+      this.modal_edit_list_categories.edit = false
+      this.modal_edit_list_categories.remove = false
+      this.modal_edit_list_categories.name = ''
+      this.modal_edit_list_categories.index = null
     }
   }
 }
@@ -3648,7 +3953,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings.table thead th:nth-child(2) {
+    #findings.table thead th:nth-child(3) {
       width: 45%;
     }
   div >>>
