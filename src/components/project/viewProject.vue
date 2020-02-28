@@ -1272,10 +1272,10 @@
                   {{ data.item.cerqual_option }}
                   <b-button
                     v-if="mode==='edit' && data.item.references.length"
-                    class="d-print-none"
+                    class="d-print-none mt-2"
                     :disabled="(data.item.references.length) ? false : true"
                     block
-                    variant="outline-info"
+                    :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
                     :to="{name: 'editList', params: {id: data.item.id}}">
                       <span v-if="data.item.cerqual_option===''">Complete</span>
                       <span v-if="data.item.cerqual_option!=''">Edit</span>
@@ -1286,10 +1286,10 @@
                   {{ data.item.cerqual_explanation }}
                   <b-button
                     v-if="mode==='edit' && data.item.references.length"
-                    class="d-print-none"
+                    class="d-print-none mt-2"
                     :disabled="(data.item.references.length) ? false : true"
                     block
-                    variant="outline-info"
+                    :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
                     :to="{name: 'editList', params: {id: data.item.id}}">
                       <span v-if="data.item.cerqual_explanation===''">Complete</span>
                       <span v-if="data.item.cerqual_explanation!=''">Edit</span>
@@ -1354,13 +1354,13 @@
               <b-modal
                 id="remove-finding"
                 ref="remove-finding"
-                title="Remove finding"
-                ok-title="Remove"
+                title="Remove summarized review finding"
+                ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
                 @ok="confirmRemoveFinding">
                 <p>
-                  Are you sure you want to remove this finding?
+                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
                 </p>
               </b-modal>
               <b-modal
@@ -3482,6 +3482,7 @@ export default {
     },
     removeModalFinding: function (index) {
       this.editFindingName.index = index
+      this.editFindingName.name = this.lists[index].name
       this.$refs['remove-finding'].show()
     },
     confirmRemoveFinding: function () {
