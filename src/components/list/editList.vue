@@ -79,6 +79,7 @@
             <!-- Evidence Profile-->
             <!--<b-tab :title="$t('Evidence Profile')">-->
               <b-modal
+                :size="(buffer_modal_stage_two.type === 'cerqual') ? '' : 'xl'"
                 id="modal-stage-two"
                 ref="modal-stage-two"
                 :title="$t('Evidence profile') + ' - ' + buffer_modal_stage_two.title"
@@ -87,298 +88,361 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
-                  <h6>{{$t('Methodological Limitations')}}</h6>
-                  <p class="font-weight-light">
-                    Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
-                    Explain any concern in your own words. Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
-                  </p>
-                  <p class="font-weight-normal text-primary">
-                    tip: Refer to your Methodological Assessments table
-                  </p>
-                  <p class="font-weight-light">
-                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
-                  </p>
-                  <b-form-radio-group
-                    v-model="buffer_modal_stage_two.methodological_limitations.option"
-                    name="methodological-limitations"
-                    stacked>
-                    <b-form-radio value="0">
-                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="1">
-                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="2">
-                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="3">
-                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                  </b-form-radio-group>
-                  <a
-                    @click="buffer_modal_stage_two.methodological_limitations.option = null"
-                    v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
-                    class="mt-2 font-weight-light text-danger">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                    clear my selection
-                  </a>
-                  <b-form-group
-                    class="mt-2"
-                    :label="$t('Explanation')"
-                    label-for="input-ml-explanation"
-                    description="We highly encourage you to add an explanation.">
-                    <b-form-textarea
-                      id="input-ml-explanation"
-                      v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                      :placeholder="$t('Enter an explanation')"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-2"
-                    label="Notes"
-                    label-for="input-ml-notes"
-                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                    <b-form-textarea
-                      id="input-ml-notes"
-                      v-model="buffer_modal_stage_two.methodological_limitations.notes"
-                      :placeholder="$t('Enter a note')"></b-form-textarea>
-                  </b-form-group>
-                </div>
-                <div v-if="buffer_modal_stage_two.type === 'coherence'">
-                  <!-- coherence -->
-                  <h6>{{$t('Coherence')}}</h6>
-                  <p class="font-weight-light">
-                    Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
-                    You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
-                    Explain any concerns in your own words.
-                  </p>
-                  <p class="font-weight-normal text-primary">
-                    tip: refer to your Extracted Data in relation to your review finding
-                  </p>
-                  <p class="font-weight-light">
-                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
-                  </p>
-                  <b-form-radio-group
-                    v-model="buffer_modal_stage_two.coherence.option"
-                    name="coherence"
-                    stacked>
-                    <b-form-radio value="0">
-                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="1">
-                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="2">
-                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="3">
-                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                  </b-form-radio-group>
-                  <a
-                    @click="buffer_modal_stage_two.coherence.option = null"
-                    v-if="buffer_modal_stage_two.coherence.option !== null"
-                    class="mt-2 font-weight-light text-danger">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                    clear my selection
-                  </a>
-                  <b-form-group
-                    class="mt-2"
-                    :label="$t('Explanation')"
-                    label-for="input-coherence-explanation"
-                    description="We highly encourage you to add an explanation.">
-                    <b-form-textarea
-                      id="input-coherence-explanation"
-                      v-model="buffer_modal_stage_two.coherence.explanation"
-                      :placeholder="$t('Enter an explanation')"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-2"
-                    label="Notes"
-                    label-for="input-ml-notes"
-                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                    <b-form-textarea
-                      id="input-ml-notes"
-                      v-model="buffer_modal_stage_two.coherence.notes"
-                      :placeholder="$t('Enter a note')"></b-form-textarea>
-                  </b-form-group>
-                  <!-- adequacy -->
-                </div>
-                <div v-if="buffer_modal_stage_two.type === 'adequacy'">
-                  <h6>{{$t('Adequacy')}}</h6>
-                  <p class="font-weight-light">
-                    Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
-                    Explain any concerns in your own words.
-                  </p>
-                  <p class="font-weight-normal text-primary">
-                    tip: refer to your Characteristics of Studies table and your Extracted Data for this finding
-                  </p>
-                  <p class="font-weight-light">
-                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
-                  </p>
-                  <b-form-radio-group
-                    v-model="buffer_modal_stage_two.adequacy.option"
-                    name="adequacy"
-                    stacked>
-                    <b-form-radio value="0">
-                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="1">
-                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="2">
-                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="3">
-                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                  </b-form-radio-group>
-                  <a
-                    @click="buffer_modal_stage_two.adequacy.option = null"
-                    v-if="buffer_modal_stage_two.adequacy.option !== null"
-                    class="mt-2 font-weight-light text-danger">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                    clear my selection
-                  </a>
-                  <b-form-group
-                    class="mt-2"
-                    :label="$t('Explanation')"
-                    label-for="input-adequacy-explanation"
-                    description="We highly encourage you to add an explanation.">
-                    <b-form-textarea
-                      id="input-adequacy-explanation"
-                      v-model="buffer_modal_stage_two.adequacy.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-2"
-                    label="Notes"
-                    label-for="input-ml-notes"
-                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                    <b-form-textarea
-                      id="input-ml-notes"
-                      v-model="buffer_modal_stage_two.adequacy.notes"
-                      :placeholder="$t('Enter a note')"></b-form-textarea>
-                  </b-form-group>
-                  <!-- relevance -->
-                </div>
-                <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                  <h6>{{$t('Relevance')}}</h6>
-                  <p class="font-weight-light">
-                    Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
-                    You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate.
-                  </p>
-                  <p class="font-weight-normal text-primary">
-                    tip: refer to your Characteristics of Studies table and your review question
-                  </p>
-                  <p class="font-weight-light">
-                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
-                  </p>
-                  <b-form-radio-group
-                    v-model="buffer_modal_stage_two.relevance.option"
-                    name="relevance"
-                    stacked>
-                    <b-form-radio value="0">
-                      No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="1">
-                      Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="2">
-                      Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="3">
-                      Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
-                    </b-form-radio>
-                  </b-form-radio-group>
-                  <a
-                    @click="buffer_modal_stage_two.relevance.option = null"
-                    v-if="buffer_modal_stage_two.relevance.option !== null"
-                    class="mt-2 font-weight-light text-danger">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                    clear my selection
-                  </a>
-                  <b-form-group
-                    class="mt-2"
-                    :label="$t('Explanation')"
-                    label-for="input-relevance-explanation"
-                    description="We highly encourage you to add an explanation.">
-                    <b-form-textarea
-                      id="input-relevance-explanation"
-                      v-model="buffer_modal_stage_two.relevance.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-2"
-                    label="Notes"
-                    label-for="input-ml-notes"
-                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                    <b-form-textarea
-                      id="input-ml-notes"
-                      v-model="buffer_modal_stage_two.relevance.notes"
-                      :placeholder="$t('Enter a note')"></b-form-textarea>
-                  </b-form-group>
-                  <!-- CERQual assessment -->
-                </div>
-                <div v-if="buffer_modal_stage_two.type === 'cerqual'">
-                  <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
-                  <p class="font-weight-ligth">
-                    To what extent is the review finding a reasonable representation of the phenomenon of interest?
-                    Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance).
-                  </p>
-                  <p class="font-weight-ligth">
-                    You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
-                  </p>
-                  <b-form-radio-group
-                    v-model="buffer_modal_stage_two.cerqual.option"
-                    name="cerqual"
-                    stacked>
-                    <b-form-radio value="0">
-                      High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="1">
-                      Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="2">
-                      Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                    </b-form-radio>
-                    <b-form-radio value="3">
-                      Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                    </b-form-radio>
-                  </b-form-radio-group>
-                  <a
-                    @click="buffer_modal_stage_two.cerqual.option = null"
-                    v-if="buffer_modal_stage_two.cerqual.option !== null"
-                    class="mt-2 font-weight-light text-danger">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                    clear my selection
-                  </a>
-                  <b-form-group
-                    class="mt-2"
-                    :label="$t('Explanation')"
-                    label-for="input-cerqual"
-                    description="We highly encourage you to add an explanation.">
-                    <b-form-textarea
-                      id="input-cerqual"
-                      v-model="buffer_modal_stage_two.cerqual.explanation"
-                      placeholder="Enter an explanation"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-2"
-                    label="Notes"
-                    label-for="input-ml-notes"
-                    description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                    <b-form-textarea
-                      id="input-ml-notes"
-                      v-model="buffer_modal_stage_two.cerqual.notes"
-                      :placeholder="$t('Enter a note')"></b-form-textarea>
-                  </b-form-group>
-                </div>
+                <template v-if="buffer_modal_stage_two.type === 'cerqual'">
+                  <div>
+                    <h6>{{$t('CERQual Assessment of Confidence')}}</h6>
+                    <p class="font-weight-ligth">
+                      To what extent is the review finding a reasonable representation of the phenomenon of interest?
+                      Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance).
+                    </p>
+                    <p class="font-weight-ligth">
+                      You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
+                    </p>
+                    <b-form-radio-group
+                      v-model="buffer_modal_stage_two.cerqual.option"
+                      name="cerqual"
+                      stacked>
+                      <b-form-radio value="0">
+                        High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                      </b-form-radio>
+                      <b-form-radio value="1">
+                        Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                      </b-form-radio>
+                      <b-form-radio value="2">
+                        Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                      </b-form-radio>
+                      <b-form-radio value="3">
+                        Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                      </b-form-radio>
+                    </b-form-radio-group>
+                    <a
+                      @click="buffer_modal_stage_two.cerqual.option = null"
+                      v-if="buffer_modal_stage_two.cerqual.option !== null"
+                      class="mt-2 font-weight-light text-danger">
+                      <font-awesome-icon
+                        icon="trash"></font-awesome-icon>
+                      clear my selection
+                    </a>
+                    <b-form-group
+                      class="mt-2"
+                      :label="$t('Explanation')"
+                      label-for="input-cerqual"
+                      description="We highly encourage you to add an explanation.">
+                      <b-form-textarea
+                        id="input-cerqual"
+                        v-model="buffer_modal_stage_two.cerqual.explanation"
+                        placeholder="Enter an explanation"></b-form-textarea>
+                    </b-form-group>
+                    <b-form-group
+                      class="mt-2"
+                      label="Notes"
+                      label-for="input-ml-notes"
+                      description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                      <b-form-textarea
+                        id="input-ml-notes"
+                        v-model="buffer_modal_stage_two.cerqual.notes"
+                        :placeholder="$t('Enter a note')"></b-form-textarea>
+                    </b-form-group>
+                  </div>
+                </template>
+                <template v-else>
+                  <b-container>
+                    <b-row>
+                      <b-col>
+                        <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
+                          <h6>{{$t('Methodological Limitations')}}</h6>
+                          <p class="font-weight-light">
+                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
+                            Explain any concern in your own words. Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
+                          </p>
+                          <p class="font-weight-normal text-primary">
+                            tip: Refer to your Methodological Assessments table
+                          </p>
+                          <p class="font-weight-light">
+                            You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
+                          </p>
+                          <b-form-radio-group
+                            v-model="buffer_modal_stage_two.methodological_limitations.option"
+                            name="methodological-limitations"
+                            stacked>
+                            <b-form-radio value="0">
+                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="1">
+                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="2">
+                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="3">
+                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                          </b-form-radio-group>
+                          <a
+                            @click="buffer_modal_stage_two.methodological_limitations.option = null"
+                            v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
+                            class="mt-2 font-weight-light text-danger">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                            clear my selection
+                          </a>
+                          <b-form-group
+                            class="mt-2"
+                            :label="$t('Explanation')"
+                            label-for="input-ml-explanation"
+                            description="We highly encourage you to add an explanation.">
+                            <b-form-textarea
+                              id="input-ml-explanation"
+                              v-model="buffer_modal_stage_two.methodological_limitations.explanation"
+                              :placeholder="$t('Enter an explanation')"></b-form-textarea>
+                          </b-form-group>
+                          <b-form-group
+                            class="mt-2"
+                            label="Notes"
+                            label-for="input-ml-notes"
+                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            <b-form-textarea
+                              id="input-ml-notes"
+                              v-model="buffer_modal_stage_two.methodological_limitations.notes"
+                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                          </b-form-group>
+                        </div>
+                        <div v-if="buffer_modal_stage_two.type === 'coherence'">
+                          <!-- coherence -->
+                          <h6>{{$t('Coherence')}}</h6>
+                          <p class="font-weight-light">
+                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
+                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data.
+                            Explain any concerns in your own words.
+                          </p>
+                          <p class="font-weight-normal text-primary">
+                            tip: refer to your Extracted Data in relation to your review finding
+                          </p>
+                          <p class="font-weight-light">
+                            You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
+                          </p>
+                          <b-form-radio-group
+                            v-model="buffer_modal_stage_two.coherence.option"
+                            name="coherence"
+                            stacked>
+                            <b-form-radio value="0">
+                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="1">
+                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="2">
+                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="3">
+                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                          </b-form-radio-group>
+                          <a
+                            @click="buffer_modal_stage_two.coherence.option = null"
+                            v-if="buffer_modal_stage_two.coherence.option !== null"
+                            class="mt-2 font-weight-light text-danger">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                            clear my selection
+                          </a>
+                          <b-form-group
+                            class="mt-2"
+                            :label="$t('Explanation')"
+                            label-for="input-coherence-explanation"
+                            description="We highly encourage you to add an explanation.">
+                            <b-form-textarea
+                              id="input-coherence-explanation"
+                              v-model="buffer_modal_stage_two.coherence.explanation"
+                              :placeholder="$t('Enter an explanation')"></b-form-textarea>
+                          </b-form-group>
+                          <b-form-group
+                            class="mt-2"
+                            label="Notes"
+                            label-for="input-ml-notes"
+                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            <b-form-textarea
+                              id="input-ml-notes"
+                              v-model="buffer_modal_stage_two.coherence.notes"
+                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                          </b-form-group>
+                          <!-- adequacy -->
+                        </div>
+                        <div v-if="buffer_modal_stage_two.type === 'adequacy'">
+                          <h6>{{$t('Adequacy')}}</h6>
+                          <p class="font-weight-light">
+                            Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?
+                            Explain any concerns in your own words.
+                          </p>
+                          <p class="font-weight-normal text-primary">
+                            tip: refer to your Characteristics of Studies table and your Extracted Data for this finding
+                          </p>
+                          <p class="font-weight-light">
+                            You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
+                          </p>
+                          <b-form-radio-group
+                            v-model="buffer_modal_stage_two.adequacy.option"
+                            name="adequacy"
+                            stacked>
+                            <b-form-radio value="0">
+                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="1">
+                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="2">
+                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="3">
+                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                          </b-form-radio-group>
+                          <a
+                            @click="buffer_modal_stage_two.adequacy.option = null"
+                            v-if="buffer_modal_stage_two.adequacy.option !== null"
+                            class="mt-2 font-weight-light text-danger">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                            clear my selection
+                          </a>
+                          <b-form-group
+                            class="mt-2"
+                            :label="$t('Explanation')"
+                            label-for="input-adequacy-explanation"
+                            description="We highly encourage you to add an explanation.">
+                            <b-form-textarea
+                              id="input-adequacy-explanation"
+                              v-model="buffer_modal_stage_two.adequacy.explanation"
+                              placeholder="Enter an explanation"></b-form-textarea>
+                          </b-form-group>
+                          <b-form-group
+                            class="mt-2"
+                            label="Notes"
+                            label-for="input-ml-notes"
+                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            <b-form-textarea
+                              id="input-ml-notes"
+                              v-model="buffer_modal_stage_two.adequacy.notes"
+                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                          </b-form-group>
+                          <!-- relevance -->
+                        </div>
+                        <div v-if="buffer_modal_stage_two.type === 'relevance'">
+                          <h6>{{$t('Relevance')}}</h6>
+                          <p class="font-weight-light">
+                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
+                            You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate.
+                          </p>
+                          <p class="font-weight-normal text-primary">
+                            tip: refer to your Characteristics of Studies table and your review question
+                          </p>
+                          <p class="font-weight-light">
+                            You can find guidance on how to make this assessment in the “Guidance on applying CERQual” tab at the top right of this page.
+                          </p>
+                          <b-form-radio-group
+                            v-model="buffer_modal_stage_two.relevance.option"
+                            name="relevance"
+                            stacked>
+                            <b-form-radio value="0">
+                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="1">
+                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="2">
+                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="3">
+                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
+                            </b-form-radio>
+                          </b-form-radio-group>
+                          <a
+                            @click="buffer_modal_stage_two.relevance.option = null"
+                            v-if="buffer_modal_stage_two.relevance.option !== null"
+                            class="mt-2 font-weight-light text-danger">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                            clear my selection
+                          </a>
+                          <b-form-group
+                            class="mt-2"
+                            :label="$t('Explanation')"
+                            label-for="input-relevance-explanation"
+                            description="We highly encourage you to add an explanation.">
+                            <b-form-textarea
+                              id="input-relevance-explanation"
+                              v-model="buffer_modal_stage_two.relevance.explanation"
+                              placeholder="Enter an explanation"></b-form-textarea>
+                          </b-form-group>
+                          <b-form-group
+                            class="mt-2"
+                            label="Notes"
+                            label-for="input-ml-notes"
+                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            <b-form-textarea
+                              id="input-ml-notes"
+                              v-model="buffer_modal_stage_two.relevance.notes"
+                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                          </b-form-group>
+                          <!-- CERQual assessment -->
+                        </div>
+                      </b-col>
+                      <b-col>
+                        <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
+                          <h4>Methodological Assessments</h4>
+                          <b-table
+                            responsive
+                            head-variant="light"
+                            outlined
+                            :fields="stage_four.fieldsObj"
+                            :items="stage_four.items">
+                          </b-table>
+                        </div>
+
+                        <div v-if="buffer_modal_stage_two.type === 'coherence'">
+                          <h4>Extracted Data</h4>
+                          <b-table
+                            responsive
+                            head-variant="light"
+                            outlined
+                            :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                            :items="extracted_data.items">
+                          </b-table>
+                        </div>
+
+                        <div v-if="buffer_modal_stage_two.type === 'adequacy'">
+                          <h4>Characteristics of Studies</h4>
+                          <b-table
+                            responsive
+                            head-variant="light"
+                            outlined
+                            :fields="characteristics_studies.fieldsObj"
+                            :items="characteristics_studies.items">
+                          </b-table>
+                          <h4>Extracted Data</h4>
+                          <b-table
+                            responsive
+                            head-variant="light"
+                            outlined
+                            :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                            :items="extracted_data.items">
+                          </b-table>
+                        </div>
+
+                        <div v-if="buffer_modal_stage_two.type === 'relevance'">
+                          <h4>Characteristics of Studies</h4>
+                          <b-table
+                            responsive
+                            head-variant="light"
+                            outlined
+                            :fields="characteristics_studies.fieldsObj"
+                            :items="characteristics_studies.items">
+                          </b-table>
+                        </div>
+                      </b-col>
+                    </b-row>
+                  </b-container>
+                </template>
               </b-modal>
 
               <div
@@ -1128,7 +1192,8 @@ export default {
         extracted_data: {
           fields: [],
           items: []
-        }
+        },
+        cerqual: {}
       },
       buffer_stage_four: {
         nroOfColumns: 1,
