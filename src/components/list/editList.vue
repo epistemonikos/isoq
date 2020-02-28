@@ -981,7 +981,7 @@
               </template>
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
             </div>
