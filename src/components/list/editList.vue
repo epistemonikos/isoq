@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4">
-    <b-container>
+    <b-container fluid>
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
           <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
@@ -387,8 +387,30 @@
                   </b-form-group>
                 </div>
               </b-modal>
+
+              <div
+                v-if="mode==='edit'"
+                class="d-print-none">
+                <b-card>
+                  <h5>Progress status</h5>
+                  <p class="font-weight-light">
+                    This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.
+                  </p>
+                  <p v-if="list.cerqual.option !== null">
+                    Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
+                  </p>
+                  <b-progress
+                    :max="status_evidence_profile.max"
+                    :variant="status_evidence_profile.variant"
+                    show-progress
+                    class="mb-3">
+                    <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
+                  </b-progress>
+                </b-card>
+              </div>
+
               <template v-if="evidence_profile.length">
-                <h3>Evidence Profile</h3>
+                <h3 class="mt-4">Evidence Profile</h3>
                 <b-table
                   class="d-print-none"
                   v-if="mode==='edit'"
@@ -424,6 +446,16 @@
                   </template>
                   <template v-slot:cell(methodological-limit)="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'methodological-limitations')">
+                        Edit
+                        <font-awesome-icon
+                          v-if="data.item.methodological_limitations.notes"
+                          icon="comments"></font-awesome-icon>
+                      </b-button>
                       <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
                       <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
@@ -432,22 +464,12 @@
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
                       </p>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'methodological-limitations')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.methodological_limitations.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
                     </div>
                     <div v-else>
                       <b-button
                         block
                         class="d-print-none"
-                        variant="outline-info"
+                        variant="info"
                         @click="editStageTwo(data.item, 'methodological-limitations')">
                         Assessment not completed
                         <font-awesome-icon
@@ -458,6 +480,16 @@
                   </template>
                   <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'coherence')">
+                        Edit
+                        <font-awesome-icon
+                          v-if="data.item.coherence.notes"
+                          icon="comments"></font-awesome-icon>
+                      </b-button>
                       <p>{{select_options[data.item.coherence.option].text}}</p>
                       <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
@@ -466,22 +498,12 @@
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
                       </p>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'coherence')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.coherence.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
                     </div>
                     <div v-else>
                       <b-button
                         block
                         class="d-print-none"
-                        variant="outline-info"
+                        variant="info"
                         @click="editStageTwo(data.item, 'coherence')">
                         Assessment not completed
                         <font-awesome-icon
@@ -492,6 +514,16 @@
                   </template>
                   <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'adequacy')">
+                        Edit
+                        <font-awesome-icon
+                          v-if="data.item.adequacy.notes"
+                          icon="comments"></font-awesome-icon>
+                      </b-button>
                       <p>{{select_options[data.item.adequacy.option].text}}</p>
                       <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
@@ -500,22 +532,12 @@
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
                       </p>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'adequacy')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.adequacy.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
                     </div>
                     <div v-else>
                       <b-button
                         block
                         class="d-print-none"
-                        variant="outline-info"
+                        variant="info"
                         @click="editStageTwo(data.item, 'adequacy')">
                         Assessment not completed
                         <font-awesome-icon
@@ -526,6 +548,16 @@
                   </template>
                   <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'relevance')">
+                        Edit
+                        <font-awesome-icon
+                          v-if="data.item.relevance.notes"
+                          icon="comments"></font-awesome-icon>
+                      </b-button>
                       <p>{{select_options[data.item.relevance.option].text}}</p>
                       <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
@@ -534,22 +566,12 @@
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
                       </p>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'relevance')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.relevance.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
                     </div>
                     <div v-else>
                       <b-button
                         block
                         class="d-print-none"
-                        variant="outline-info"
+                        variant="info"
                         @click="editStageTwo(data.item, 'relevance')">
                         Assessment not completed
                         <font-awesome-icon
@@ -560,6 +582,16 @@
                   </template>
                   <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.cerqual.option !== null">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="editStageTwo(data.item, 'cerqual')">
+                        Edit
+                        <font-awesome-icon
+                          v-if="data.item.cerqual.notes"
+                          icon="comments"></font-awesome-icon>
+                      </b-button>
                       <p>{{level_confidence[data.item.cerqual.option].text}}</p>
                       <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
@@ -568,23 +600,13 @@
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
                       </p>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'cerqual')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.cerqual.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
                     </div>
                     <div v-else>
                       <b-button
                         v-if="data.item.methodological_limitations.option && data.item.coherence.option && data.item.adequacy.option && data.item.relevance.option"
                         block
                         class="d-print-none"
-                        variant="outline-info"
+                        variant="info"
                         @click="editStageTwo(data.item, 'cerqual')">
                         Assessment not completed
                         <font-awesome-icon
@@ -594,18 +616,18 @@
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
+                    <b-button
+                      block
+                      class="d-print-none mb-3"
+                      variant="outline-info"
+                      @click="openModalReferences">
+                      Edit
+                    </b-button>
                     <div v-if="Object.prototype.hasOwnProperty.call(data.item, 'references')">
                       <li
                         :key="index"
                         v-for="(ref, index) in data.item.references">{{ ref }}</li>
                     </div>
-                    <b-button
-                      block
-                      class="d-print-none mt-2"
-                      variant="outline-info"
-                      @click="openModalReferences">
-                      Edit
-                    </b-button>
                   </template>
                 </b-table>
 
@@ -687,26 +709,6 @@
                   </template>
                 </b-table>
 
-                <div
-                  v-if="mode==='edit'"
-                  class="d-print-none">
-                  <b-card>
-                    <h5>Progress status</h5>
-                    <p class="font-weight-light">
-                      This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.
-                    </p>
-                    <p v-if="list.cerqual.option !== null">
-                      Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
-                    </p>
-                    <b-progress
-                      :max="status_evidence_profile.max"
-                      :variant="status_evidence_profile.variant"
-                      show-progress
-                      class="mb-3">
-                      <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
-                    </b-progress>
-                  </b-card>
-                </div>
                 <b-modal
                   id="modalReferences"
                   ref="modalReferences"
@@ -736,10 +738,7 @@
                   </p>
                 </div>
               </template>
-              <!-- end of Evidence Profile-->
-            <!--</b-tab>-->
-            <!-- Characteristics of Studies -->
-            <!--<b-tab :title="$t('Characteristics of Studies')">-->
+
             <div
               class="mt-3"
               v-if="show.selected.includes('cs')">
@@ -751,8 +750,7 @@
                   id="characteristics"
                   responsive
                   striped
-                  caption-top
-                  bordered
+
                   :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
@@ -784,7 +782,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="characteristics_studies.items.length"
+                  v-if="characteristics_studies.items.length && characteristics_studies.items.length > characteristics_studies_table_settings.perPage"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="characteristics_studies_table_settings.currentPage"
@@ -858,7 +856,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="stage_four.items.length"
+                  v-if="stage_four.items.length && stage_four.items.length > methodological_assessments_table_settings.perPage"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="methodological_assessments_table_settings.currentPage"
@@ -893,19 +891,11 @@
                 <!-- end of -->
               </template>
             </div>
-            <!--</b-tab>-->
-            <!-- Extracted data -->
-            <!--<b-tab :title="$t('Extracted Data')">-->
+
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
               <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
-              <!--
-              <p class="d-print-none font-weight-light">
-                To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> Section of iSoQf.
-                Once your headings are created you will be able to return here to add the extracted data from each study contributing to the finding.
-              </p>
-              -->
               <template v-if="extracted_data.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
                 <b-table
@@ -939,7 +929,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="extracted_data.items.length"
+                  v-if="extracted_data.items.length && extracted_data.items.length > extracted_data_table_settings.perPage"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="extracted_data_table_settings.currentPage"
