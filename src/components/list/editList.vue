@@ -409,6 +409,7 @@
                   v-if="mode==='edit'"
                   id="assessments"
                   responsive
+                  head-variant="light"
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
@@ -738,12 +739,16 @@
               <h3 class="toDoc">{{$t('Characteristics of Studies')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
-                <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
+                <bc-filters
+                  v-if="mode==='edit'"
+                  class="d-print-none"
+                  :tableSettings="characteristics_studies_table_settings">
+                </bc-filters>
                 <b-table
                   id="characteristics"
                   responsive
-                  striped
-
+                  head-variant="light"
+                  outlined
                   :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
@@ -775,7 +780,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="characteristics_studies.items.length && characteristics_studies.items.length > characteristics_studies_table_settings.perPage"
+                  v-if="characteristics_studies.items.length && characteristics_studies.items.length > characteristics_studies_table_settings.perPage && mode==='edit'"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="characteristics_studies_table_settings.currentPage"
@@ -827,18 +832,22 @@
             <!-- Methodological Assessments -->
             <!--<b-tab :title="$t('Methodological Assessments')">-->
             <div
-              class="mt-3"
+              class="mt-5 mb-5"
               v-if="show.selected.includes('ma')">
               <h3 class="toDoc">{{$t('Methodological Assessments')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
-                <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
+                <bc-filters
+                  v-if="mode==='edit'"
+                  class="d-print-none"
+                  :tableSettings="methodological_assessments_table_settings">
+                </bc-filters>
                 <b-table
                   class="toDoc"
                   id="methodological"
                   responsive
-                  striped
-                  caption-top
+                  head-variant="light"
+                  outlined
                   :fields="stage_four.fieldsObj"
                   :items="stage_four.items"
                   :per-page="methodological_assessments_table_settings.perPage"
@@ -849,7 +858,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="stage_four.items.length && stage_four.items.length > methodological_assessments_table_settings.perPage"
+                  v-if="stage_four.items.length && stage_four.items.length > methodological_assessments_table_settings.perPage && mode==='edit'"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="methodological_assessments_table_settings.currentPage"
@@ -890,11 +899,17 @@
               v-if="show.selected.includes('ed')">
               <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
               <template v-if="extracted_data.fields.length">
-                <bc-filters class="d-print-none" :tableSettings="extracted_data_table_settings"></bc-filters>
+                <bc-filters
+                  v-if="mode==='edit'"
+                  class="d-print-none"
+                  :tableSettings="extracted_data_table_settings">
+                </bc-filters>
                 <b-table
                   class="toDoc"
                   :id="(mode==='view') ? 'extracted-view' : 'extracted'"
-                  responsive striped caption-top
+                  responsive
+                  head-variant="light"
+                  outlined
                   :filter="extracted_data_table_settings.filter"
                   :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                   :items="extracted_data.items"
@@ -922,7 +937,7 @@
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="extracted_data.items.length && extracted_data.items.length > extracted_data_table_settings.perPage"
+                  v-if="extracted_data.items.length && extracted_data.items.length > extracted_data_table_settings.perPage && mode==='edit'"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="extracted_data_table_settings.currentPage"
