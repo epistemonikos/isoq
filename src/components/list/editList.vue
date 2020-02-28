@@ -736,7 +736,7 @@
               class="mt-3"
               v-if="show.selected.includes('cs')">
               <h3 class="toDoc">{{$t('Characteristics of Studies')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="characteristics_studies_table_settings"></bc-filters>
                 <b-table
@@ -830,7 +830,7 @@
               class="mt-3"
               v-if="show.selected.includes('ma')">
               <h3 class="toDoc">{{$t('Methodological Assessments')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">Uploaded Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters class="d-print-none" :tableSettings="methodological_assessments_table_settings"></bc-filters>
                 <b-table
@@ -966,7 +966,7 @@
               </template>
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">Uploaded Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link @click="$router.go(-1)">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
             </div>
