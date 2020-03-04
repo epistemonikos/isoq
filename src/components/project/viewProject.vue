@@ -466,20 +466,18 @@
                  class="font-weight-light">
                   To upload a table, follow these steps:
                 </p>
-                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
+                <h4>STEP 1: Download the template (excel file) and save it to your computer and populate the template with your information.</h4>
+                <p
+                  class="font-weight-light text-danger">
+                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                </p>
                 <b-button
                   block
                   variant="outline-info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4
-                  class="mt-3">STEP 2: Populate the template with your information.</h4>
-                <p
-                  class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
-                </p>
-                <h4>STEP 3: Import the populated template to iSoQf</h4>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
                 <b-row>
                   <b-col
                     class="mb-2"
@@ -1202,11 +1200,12 @@
                 select-mode="multi"
                 selected-variant="warning"
                 responsive
+                :bordered="(lists.length)?false:true"
                 head-variant="light"
                 id="findings"
                 ref="findings"
                 sort-by="isoqf_id"
-                :fields="fields"
+                :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
                 :items="lists"
                 show-empty
                 :busy="table_settings.isBusy"
@@ -1358,7 +1357,7 @@
                 ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
-                @ok="confirmRemoveFinding">
+                @ok="confirmRemoveList">
                 <p>
                   Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
                 </p>
@@ -1372,40 +1371,21 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                <template
-                  v-if="(!(list_categories.options.length) && !(lists.length)) && !list_categories.skip">
-                  <h5>Group your Summarized review finding</h5>
-                  <p>Create a category for organize your information or just skip this step, you will still create categories in the <b>Admin your Categories</b> button and then associate to your Summarized review findings.</p>
-                  <b-form-group
-                    label="Name of Category">
-                    <b-form-input
-                      v-model="list_category.name"></b-form-input>
-                  </b-form-group>
-                  <b-button
-                    variant="outline-primary"
-                    @click="list_categories.skip=true">Skip</b-button>
-                  <b-button
-                    variant="outline-success"
-                    @click="saveListCategoryName">Create</b-button>
-                </template>
-                <template
-                  v-else>
-                  <b-form-group
-                    label="Summarized review finding"
-                    label-for="summarized-review">
-                    <b-form-textarea
-                      id="summarized-review"
-                      v-model="summarized_review"></b-form-textarea>
-                  </b-form-group>
-                  <b-form-group
-                    v-if="list_categories.options.length"
-                    label="Choose a category"
-                    description="Also you can leave this option and choose later.">
-                    <b-form-select
-                      v-model="list_categories.selected"
-                      :options="list_categories.options"></b-form-select>
-                  </b-form-group>
-                </template>
+                <b-form-group
+                  label="Summarized review finding"
+                  label-for="summarized-review">
+                  <b-form-textarea
+                    id="summarized-review"
+                    v-model="summarized_review"></b-form-textarea>
+                </b-form-group>
+                <b-form-group
+                  v-if="list_categories.options.length"
+                  label="Choose a category"
+                  description="Also you can leave this option and choose later.">
+                  <b-form-select
+                    v-model="list_categories.selected"
+                    :options="list_categories.options"></b-form-select>
+                </b-form-group>
               </b-modal>
 
               <b-modal
@@ -1648,8 +1628,7 @@ export default {
       lists: [],
       list_categories: {
         options: [],
-        selected: null,
-        skip: false
+        selected: null
       },
       modal_edit_list_categories: {
         id: null,
@@ -1667,45 +1646,69 @@ export default {
       list_category: {
         name: ''
       },
-      fields: [
-        {
-          key: 'isoqf_id',
-          label: '#'
-        },
-        {
-          key: 'category',
-          label: 'Category',
-          formatter: (value, key, item) => {
-            if (value === null) {
-              return ''
-            }
-            const categories = this.list_categories.options
-            let category = ''
-            for (let cat of categories) {
-              if (cat.value === value) {
-                category = cat.text
+      fields: {
+        with_categories: [
+          {
+            key: 'isoqf_id',
+            label: '#'
+          },
+          {
+            key: 'category',
+            label: 'Category',
+            formatter: (value, key, item) => {
+              if (value === null) {
+                return ''
               }
+              const categories = this.list_categories.options
+              let category = ''
+              for (let cat of categories) {
+                if (cat.value === value) {
+                  category = cat.text
+                }
+              }
+              return category
             }
-            return category
+          },
+          {
+            key: 'name',
+            label: 'Summarized review finding'
+          },
+          {
+            key: 'cerqual_option',
+            label: 'CERQual Assessment of confidence'
+          },
+          {
+            key: 'cerqual_explanation',
+            label: 'Explanation of CERQual Assessment'
+          },
+          {
+            key: 'ref_list',
+            label: 'References'
           }
-        },
-        {
-          key: 'name',
-          label: 'Summarized review finding'
-        },
-        {
-          key: 'cerqual_option',
-          label: 'CERQual Assessment of confidence'
-        },
-        {
-          key: 'cerqual_explanation',
-          label: 'Explanation of CERQual Assessment'
-        },
-        {
-          key: 'ref_list',
-          label: 'References'
-        }
-      ],
+        ],
+        without_categories: [
+          {
+            key: 'isoqf_id',
+            label: '#'
+          },
+          {
+            key: 'name',
+            label: 'Summarized review finding'
+          },
+          {
+            key: 'cerqual_option',
+            label: 'CERQual Assessment of confidence'
+          },
+          {
+            key: 'cerqual_explanation',
+            label: 'Explanation of CERQual Assessment'
+          },
+          {
+            key: 'ref_list',
+            label: 'References'
+          }
+        ]
+      },
       table_settings: {
         isBusy: true,
         currentPage: 1,
@@ -3464,6 +3467,18 @@ export default {
       this.editFindingName.index = index
       this.editFindingName.name = list.name
       this.editFindingName.category = list.category
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: list.id
+      }
+      axios.get('/api/isoqf_findings/', {params})
+        .then((response) => {
+          // console.log('finding_id', response.data[0].id)
+          this.editFindingName.finding_id = response.data[0].id
+        })
+        .catch((error) => {
+          console.log(error)
+        })
       this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
@@ -3474,8 +3489,20 @@ export default {
 
       axios.patch(`/api/isoqf_lists/${_lists[index].id}`, _lists[index])
         .then((response) => {
+          this.updateFinding(this.editFindingName.finding_id, this.editFindingName.name)
           this.getLists()
         })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    updateFinding: function (findingID, name) {
+      const params = {
+        name: name,
+        'evidence_profile.name': name
+      }
+      axios.patch(`/api/isoqf_findings/${findingID}`, params)
+        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
@@ -3483,15 +3510,35 @@ export default {
     removeModalFinding: function (index) {
       this.editFindingName.index = index
       this.editFindingName.name = this.lists[index].name
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: this.lists[index].id
+      }
+      axios.get('/api/isoqf_findings/', {params})
+        .then((response) => {
+          // console.log('finding_id', response.data[0].id)
+          this.editFindingName.finding_id = response.data[0].id
+        })
+        .catch((error) => {
+          console.log(error)
+        })
       this.$refs['remove-finding'].show()
     },
-    confirmRemoveFinding: function () {
+    confirmRemoveList: function () {
       const index = this.editFindingName.index
       const _list = JSON.parse(JSON.stringify(this.lists[index]))
       axios.delete(`/api/isoqf_lists/${_list.id}`)
         .then((response) => {
+          this.confirmRemoveFinding(this.editFindingName.finding_id)
           this.getLists()
         })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    confirmRemoveFinding: function (findingID) {
+      axios.delete(`/api/isoqf_findings/${findingID}`)
+        .then((response) => {})
         .catch((error) => {
           console.log(error)
         })
