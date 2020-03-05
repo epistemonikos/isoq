@@ -90,7 +90,7 @@
                 cancel-variant="outline-secondary">
                 <template v-if="buffer_modal_stage_two.type === 'cerqual'">
                   <div>
-                    <p class="font-weight-ligth">
+                    <p class="font-weight-light">
                       To what extent is the review finding a reasonable representation of the phenomenon of interest?
                     </p>
                     <b-form-radio-group
