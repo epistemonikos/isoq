@@ -362,6 +362,8 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
+                          <h4>Review Finding</h4>
+                          <p>{{ list.name }}</p>
                           <h4>Extracted Data</h4>
                           <b-table
                             responsive
