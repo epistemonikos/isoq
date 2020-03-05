@@ -129,7 +129,7 @@
             </b-col>
             <b-col
               cols="12">
-              <h4>STEP 1: Upload the references for your included Studies (required)</h4>
+              <h4 class="mt-5">STEP 1: Upload the references for your included Studies (required)</h4>
               <p class="font-weight-light">
                 You must import only the references for your final list of included studies
               </p>
@@ -139,7 +139,9 @@
                     <b-row>
                       <b-col
                         sm="6">
-                        <p>You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)</p>
+                        <p class="font-weight-light">
+                          You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
+                        </p>
                         <b-form-textarea
                           v-model="episte_request"
                           placeholder="Ej: 17253524"></b-form-textarea>
@@ -174,6 +176,9 @@
                     <b-row>
                       <b-col
                         cols="6">
+                        <p class="font-weight-light">
+                          Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style. Step 2: Import the .ris/.txt file into iSoQf.
+                        </p>
                         <b-form-file
                           id="input-ris-file-key"
                           plain
@@ -239,7 +244,7 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4>STEP 2: Create or Import your Characteristics of Studies Table (recommended)</h4>
+              <h4 class="mt-5">STEP 2: Create or Import your Characteristics of Studies Table (recommended)</h4>
               <p class="font-weight-light">
                 Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
               </p>
@@ -526,7 +531,7 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4>STEP 3: Create or import your Methodological Assessments Table (recommended)</h4>
+              <h4 class="mt-5">STEP 3: Create or import your Methodological Assessments Table (recommended)</h4>
               <p class="font-weight-light">
                 Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
@@ -793,6 +798,7 @@
                 </b-row>
               </b-modal>
             </b-col>
+            <!--
             <b-col
               cols="12"
               class="mt-3">
@@ -1005,6 +1011,7 @@
                 </b-row>
               </b-modal>
             </b-col>
+            -->
           </b-row>
           <b-row
             v-if="references.length"
