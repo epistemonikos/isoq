@@ -449,10 +449,7 @@
                 v-if="mode==='edit'"
                 class="d-print-none">
                 <b-card>
-                  <h5>Progress status</h5>
-                  <p class="font-weight-light">
-                    This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.
-                  </p>
+                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.">*</span></h5>
                   <p v-if="list.cerqual.option !== null">
                     Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
                   </p>
@@ -679,13 +676,9 @@
                       class="d-print-none mb-3"
                       variant="outline-info"
                       @click="openModalReferences">
-                      Edit
+                      View or Edit references
                     </b-button>
-                    <div v-if="Object.prototype.hasOwnProperty.call(data.item, 'references')">
-                      <li
-                        :key="index"
-                        v-for="(ref, index) in data.item.references">{{ ref }}</li>
-                    </div>
+                    There are <b>{{ data.item.references.length }}</b> references.
                   </template>
                 </b-table>
 
@@ -1193,7 +1186,8 @@ export default {
           fields: [],
           items: []
         },
-        cerqual: {}
+        cerqual: {},
+        references: []
       },
       buffer_stage_four: {
         nroOfColumns: 1,
@@ -1270,7 +1264,14 @@ export default {
     getAllReferences: function () {
       axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
-          this.references = response.data
+          let _references = response.data
+          // this.references = response.data
+          let _refs = []
+          for (let reference of _references) {
+            _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
+          }
+
+          this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
           console.log(error)
@@ -1390,7 +1391,7 @@ export default {
     saveListName: function () {
       let params = {
         organization: this.list.organization,
-        name: this.buffer_modal_stage_one.name,
+        // name: this.buffer_modal_stage_one.name,
         cerqual: this.buffer_modal_stage_two.cerqual
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
@@ -1405,11 +1406,11 @@ export default {
     },
     saveStageOneAndTwo: function () {
       delete this.buffer_modal_stage_two.type
-      this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
+      // this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
-        name: this.buffer_modal_stage_one.name,
+        // name: this.buffer_modal_stage_one.name,
         evidence_profile: this.buffer_modal_stage_two
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
