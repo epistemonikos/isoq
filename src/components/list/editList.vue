@@ -119,7 +119,7 @@
                       clear my selection
                     </a>
                     <b-form-group
-                      class="mt-2"
+                      class="mt-4 font-weight-light"
                       label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance). (guidance available here)"
                       label-for="input-cerqual"
                       description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -129,7 +129,7 @@
                         placeholder="Enter an explanation"></b-form-textarea>
                     </b-form-group>
                     <b-form-group
-                      class="mt-2"
+                      class="mt-2 font-weight-light"
                       label="Notes"
                       label-for="input-ml-notes"
                       description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
@@ -175,7 +175,7 @@
                             clear my selection
                           </a>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-4 font-weight-light"
                             label="Explain any concerns you have in your own words."
                             label-for="input-ml-explanation"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -185,7 +185,7 @@
                               :placeholder="$t('Enter an explanation')"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
@@ -226,7 +226,7 @@
                             clear my selection
                           </a>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-coherence-explanation"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -236,7 +236,7 @@
                               :placeholder="$t('Enter an explanation')"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
@@ -277,7 +277,7 @@
                             clear my selection
                           </a>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-adequacy-explanation"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -287,7 +287,7 @@
                               placeholder="Enter an explanation"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
@@ -328,7 +328,7 @@
                             clear my selection
                           </a>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate."
                             label-for="input-relevance-explanation"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -338,7 +338,7 @@
                               placeholder="Enter an explanation"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
-                            class="mt-2"
+                            class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
