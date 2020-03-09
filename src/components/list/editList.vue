@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4">
-    <b-container fluid>
+    <b-container>
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
           <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
@@ -143,7 +143,8 @@
                 <template v-else>
                   <b-container>
                     <b-row>
-                      <b-col>
+                      <b-col
+                       cols="6">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <p class="font-weight-light">
                             Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available here)
@@ -349,7 +350,8 @@
                           <!-- CERQual assessment -->
                         </div>
                       </b-col>
-                      <b-col>
+                      <b-col
+                        cols="6">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <h4>Methodological Assessments</h4>
                           <b-table
@@ -757,12 +759,15 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('cs')">
-              <h3 class="toDoc">{{$t('Characteristics of Studies')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small></h3>
+              <h3 class="toDoc">
+                {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small>
+              </h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
                   class="d-print-none"
+                  idname="chars-of-studies-filter"
                   :tableSettings="characteristics_studies_table_settings">
                 </bc-filters>
                 <b-table
@@ -855,12 +860,15 @@
             <div
               class="mt-5 mb-5"
               v-if="show.selected.includes('ma')">
-              <h3 class="toDoc">{{$t('Methodological Assessments')}} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small></h3>
+              <h3 class="toDoc">
+                {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
+              </h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
                   class="d-print-none"
+                  idname="meth-assessments-filter"
                   :tableSettings="methodological_assessments_table_settings">
                 </bc-filters>
                 <b-table
@@ -918,11 +926,14 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
-              <h3 class="toDoc">{{$t('Extracted Data')}} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small></h3>
+              <h3 class="toDoc">
+                {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
+              </h3>
               <template v-if="extracted_data.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
                   class="d-print-none"
+                  idname="extracted-data-filter"
                   :tableSettings="extracted_data_table_settings">
                 </bc-filters>
                 <b-table
