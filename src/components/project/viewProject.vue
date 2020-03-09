@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4">
-    <b-container fluid>
+    <b-container>
       <b-row align-h="end">
         <b-col cols="12" class="text-right d-print-none">
           <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}">
@@ -124,7 +124,7 @@
               cols="12">
               <h3>Add Data Needed to Make CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
+                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 3 steps.
               </p>
             </b-col>
             <b-col
@@ -140,7 +140,7 @@
                       <b-col
                         sm="6">
                         <p class="font-weight-light">
-                          You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
+                          <b>STEP 1:</b> You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
                         </p>
                         <b-form-textarea
                           v-model="episte_request"
@@ -177,7 +177,7 @@
                       <b-col
                         cols="6">
                         <p class="font-weight-light">
-                          Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style. Step 2: Import the .ris/.txt file into iSoQf.
+                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style. Step 2: Import the .ris/.txt file into iSoQf.
                         </p>
                         <b-form-file
                           id="input-ris-file-key"
@@ -1191,11 +1191,11 @@
                   md="4"
                   cols="12">
                   <b-button
-                    v-b-tooltip.hover title="Create, edit and delete your categories"
+                    v-b-tooltip.hover title="If you want to categorize your review findings, for example by theme or topic, you can do so by creating review finding categories here."
                     variant="outline-secondary"
                     @click="modalListCategories"
                     block>
-                    Admin your Categories
+                    Assign categories to your review findings
                   </b-button>
                 </b-col>
               </b-row>
@@ -1346,12 +1346,13 @@
                   label-for="finding-name">
                   <b-form-textarea
                     id="finding-name"
-                    v-model="editFindingName.name"></b-form-textarea>
+                    v-model="editFindingName.name"
+                    rows="5"></b-form-textarea>
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"
-                  label="Choose a category"
-                  description="Also you can leave this option and choose later.">
+                  label="Select review finding category"
+                  description="You can leave this option blank. You can always assign a finding to a category later.">
                   <b-form-select
                     v-model="editFindingName.category"
                     :options="list_categories.options"></b-form-select>
@@ -1383,12 +1384,13 @@
                   label-for="summarized-review">
                   <b-form-textarea
                     id="summarized-review"
-                    v-model="summarized_review"></b-form-textarea>
+                    v-model="summarized_review"
+                    rows="5"></b-form-textarea>
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"
-                  label="Choose a category"
-                  description="Also you can leave this option and choose later.">
+                  label="Select review finding category"
+                  description="You can leave this option blank. You can always assign a finding to a category later.">
                   <b-form-select
                     v-model="list_categories.selected"
                     :options="list_categories.options"></b-form-select>
@@ -1429,11 +1431,14 @@
               <b-modal
                 id="modalEditListCategories"
                 ref="modalEditListCategories"
-                title="Categories"
+                title="Review Finding Categories"
                 scrollable
                 ok-only
                 ok-title="Close"
                 ok-variant="outline-success">
+                <p class="font-weight-light">
+                  Some reviewers choose to group their review findings into different categories, for example into themes or topics. To do so, add the names of the categories here. After you have created review finding categories you will be prompted to select a category for each finding you add. You can choose not to assign a category to a review finding, or assign it later.
+                </p>
                 <b-table
                   head-variant="highlight"
                   striped
@@ -1456,7 +1461,7 @@
                   v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
                   variant="outline-primary"
                   @click="modal_edit_list_categories.new=true">
-                  Add new category
+                  Add new review finding category
                 </b-button>
                 <template
                   v-if="modal_edit_list_categories.new">
@@ -1660,8 +1665,12 @@ export default {
             label: '#'
           },
           {
+            key: 'name',
+            label: 'Summarized review finding'
+          },
+          {
             key: 'category',
-            label: 'Category',
+            label: 'Review Finding Categories',
             formatter: (value, key, item) => {
               if (value === null) {
                 return ''
@@ -1675,10 +1684,6 @@ export default {
               }
               return category
             }
-          },
-          {
-            key: 'name',
-            label: 'Summarized review finding'
           },
           {
             key: 'cerqual_option',
@@ -3741,7 +3746,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings.table thead th:nth-child(3) {
+    #findings.table thead th:nth-child(2) {
       width: 45%;
     }
   div >>>
