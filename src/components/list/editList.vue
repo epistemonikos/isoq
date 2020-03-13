@@ -396,6 +396,8 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
+                          <h4>Review Finding</h4>
+                          <p>{{ list.name }}</p>
                           <h4>Characteristics of Studies</h4>
                           <b-table
                             responsive
