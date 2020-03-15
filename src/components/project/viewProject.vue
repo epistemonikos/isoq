@@ -1207,7 +1207,7 @@
                 select-mode="multi"
                 selected-variant="warning"
                 responsive
-                :bordered="(lists.length)?false:true"
+                bordered
                 head-variant="light"
                 id="findings"
                 ref="findings"
@@ -1220,7 +1220,7 @@
                 :per-page="table_settings.perPage"
                 :filter="table_settings.filter"
                 @filtered="onFiltered"
-                :filter-included-fields="['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']">
+                :filter-included-fields="table_settings.filterOn">
                 <template v-slot:head(isoqf_id)="data">
                   <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
                 </template>
@@ -1236,6 +1236,7 @@
                 <template v-slot:head(ref_list)="data">
                   <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
                 </template>
+                <!-- data -->
                 <template v-slot:cell(isoqf_id)="data">
                   {{ data.item.isoqf_id }}
                 </template>
@@ -1303,13 +1304,13 @@
                   </b-button>
                 </template>
                 <template v-slot:cell(ref_list)="data">
-                  {{ data.item.ref_list }}
+                  There are <b>{{ data.item.raw_ref.length }}</b> references.
                   <b-button
                     v-if="mode==='edit'"
                     block
                     class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                    @click="openModalReferences(data.item.isoqf_id)">
+                    @click="openModalReferences(data.index, data.item.isoqf_id)">
                     Select references
                   </b-button>
                 </template>
@@ -1726,7 +1727,8 @@ export default {
         currentPage: 1,
         perPage: 5,
         filter: null,
-        totalRows: 1
+        totalRows: 1,
+        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']
       },
       summarized_review: '',
       select_options: [
@@ -1895,7 +1897,8 @@ export default {
       },
       episte_request: '',
       episte_response: [],
-      episte_selected: []
+      episte_selected: [],
+      finding: {}
     }
   },
   mounted () {
@@ -2337,7 +2340,21 @@ export default {
         this.$refs['modal-references'].show()
       }
     },
-    openModalReferences: function (isoqfId) {
+    openModalReferences: function (index, isoqfId) {
+      let list = JSON.parse(JSON.stringify(this.lists[index]))
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: list.id
+      }
+      axios.get('/api/isoqf_findings/', {params})
+        .then((response) => {
+          if (response.data.length) {
+            this.finding = JSON.parse(JSON.stringify(response.data[0]))
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
       let cnt = 0
       for (let list of this.lists) {
         if (list.isoqf_id === isoqfId) {
@@ -2357,10 +2374,26 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
         .then((response) => {
+          this.updateFindingReferences(this.selected_references)
           this.selected_references = []
           this.selected_list_index = null
           this.getReferences()
           this.getLists()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    updateFindingReferences: function (references) {
+      const params = {
+        'evidence_profile.references': references
+      }
+      axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
+        .then((response) => {
+          this.finding = {}
+        })
+        .catch((error) => {
+          console.log(error)
         })
     },
     onFiltered (filteredItems) {

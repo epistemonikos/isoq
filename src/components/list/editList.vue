@@ -464,6 +464,7 @@
                   <template v-slot:head(references)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
                   </template>
+                  <!-- content -->
                   <template v-slot:cell(isoqf_id)="data">
                     {{data.item.isoqf_id}}
                   </template>
@@ -744,7 +745,7 @@
                         :key="ref.id"
                         :value="ref.id"
                         name="references">
-                        {{ parseReference(ref) }}
+                        {{ ref.content }}
                       </b-form-checkbox>
                     </b-form-group>
                   </div>
@@ -1207,7 +1208,8 @@ export default {
       importUrl: '',
       references: [],
       mode: 'edit',
-      mode_print_fieldsObj: []
+      mode_print_fieldsObj: [],
+      findings: null
     }
   },
   mounted () {
@@ -1220,15 +1222,19 @@ export default {
     print: function () {
       window.print()
     },
-    parseReference: (reference) => {
+    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.publication_year + semicolon
         } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + '; ' + reference.title
+          result = reference.authors[0] + ' et al., ' + reference.publication_year + semicolon
+        }
+        if (!onlyAuthors) {
+          result = result + reference.title
         }
         return result
       } else {
@@ -1245,7 +1251,7 @@ export default {
           // this.references = response.data
           let _refs = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
+            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
@@ -1261,7 +1267,19 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
         .then((response) => {
+          this.updateReferencesInFindings()
+        })
+    },
+    updateReferencesInFindings: function () {
+      let params = {
+        'evidence_profile.references': this.list.references
+      }
+      axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
+        .then((response) => {
           this.getList()
+        })
+        .catch((error) => {
+          console.log(error)
         })
     },
     getList: function () {
@@ -1311,7 +1329,7 @@ export default {
 
             authors.push(this.renderReference(reference))
           }
-          this.evidence_profile = [Object.assign({}, this.evidence_profile[0], { references: authors })]
+          this.evidence_profile = [Object.assign({}, this.evidence_profile, { references: authors })]
         }))
         .catch((error) => {
           console.log(error)
@@ -1325,15 +1343,14 @@ export default {
       axios.get('/api/isoqf_findings', {params})
         .then((response) => {
           if (response.data.length) {
-            this.findings = response.data[0]
-          }
-          this.evidence_profile = []
-          if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
-            let evidenceProfile = this.findings.evidence_profile
-            this.evidence_profile.push(evidenceProfile)
+            this.findings = JSON.parse(JSON.stringify(response.data[0]))
+            // // this.evidence_profile = []
+            if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
+              this.evidence_profile.push(this.findings.evidence_profile)
+            }
           }
           this.getStatus()
-          this.getReferences()
+          // this.getReferences()
         }).catch((error) => {
           console.log(error)
         })
