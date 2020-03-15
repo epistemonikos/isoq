@@ -1178,7 +1178,7 @@
                   md="4"
                   cols="12">
                   <b-button
-                    v-b-tooltip.hover title="Copy and paste one summarized review finding at the time into the iSoQf"
+                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddSummarized"
                     block>
