@@ -1435,7 +1435,7 @@ export default {
         'coherence': 'Coherence',
         'adequacy': 'Adequacy',
         'relevance': 'Relevance',
-        'cerqual': 'Cerqual Assessment of Confidence'
+        'cerqual': 'CERQual Assessment of Confidence'
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
