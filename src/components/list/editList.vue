@@ -955,7 +955,7 @@
                     v-slot:cell(actions)="data">
                     <b-button
                       class="d-print-none"
-                      @click="openModalStageFiveEditDataItem(data)"
+                      @click="openModalExtractedDataEditDataItem(data)"
                       variant="outline-success">
                       <font-awesome-icon
                         icon="edit"
@@ -963,7 +963,7 @@
                     </b-button>
                     <b-button
                       class="d-print-none"
-                      @click="openModalStageFiveRemoveDataItem(data)"
+                      @click="openModalExtractedDataRemoveDataItem(data)"
                       variant="outline-danger">
                       <font-awesome-icon
                         icon="trash"
@@ -983,7 +983,7 @@
                   id="modal-stage-five-remove-data-item"
                   ref="modal-stage-five-remove-data-item"
                   title="Remove data content"
-                  @ok="stageFiveRemoveDataItem"
+                  @ok="extractedDataRemoveDataItem"
                   ok-variant="outline-success"
                   cancel-variant="outline-secondary">
                   <p>Are you sure you want to delete all the content for this row?</p>
@@ -992,7 +992,7 @@
                   title="Edit data"
                   id="modal-stage-five-data"
                   ref="modal-stage-five-data"
-                  @ok="saveDataStageFive"
+                  @ok="saveDataExtractedData"
                   cancel-variant="outline-secondary"
                   ok-variant="outline-success"
                   ok-title="Save">
@@ -1296,7 +1296,7 @@ export default {
           this.getStageOneData()
           this.getStageThree()
           this.getStageFour()
-          this.getStageFive()
+          this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         })
         .catch((error) => {
@@ -1650,7 +1650,7 @@ export default {
           console.log(error)
         })
     },
-    getStageFive: function () {
+    getExtractedData: function () {
       let params = {
         organization: this.list.organization,
         project_id: this.list.project_id
@@ -1688,7 +1688,7 @@ export default {
           console.log(error)
         })
     },
-    saveDataStageFive: function () {
+    saveDataExtractedData: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
       if (Object.prototype.hasOwnProperty.call(this.extracted_data, 'edit_index_item')) {
         items[this.extracted_data.edit_index_item] = this.buffer_extracted_data_items
@@ -1703,7 +1703,7 @@ export default {
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
         .then((response) => {
-          this.getStageFive()
+          this.getExtractedData()
           this.buffer_extracted_data = {fields: [], items: [], id: null}
           this.buffer_extracted_data_items = {}
         })
@@ -1711,11 +1711,11 @@ export default {
           console.log(error)
         })
     },
-    openModalStageFiveRemoveDataItem: function (data) {
+    openModalExtractedDataRemoveDataItem: function (data) {
       this.buffer_extracted_data.remove_index_item = data.index
       this.$refs['modal-stage-five-remove-data-item'].show()
     },
-    stageFiveRemoveDataItem: function () {
+    extractedDataRemoveDataItem: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
       const item = items[this.buffer_extracted_data.remove_index_item]
       let newItem = { 'ref_id': item.ref_id, 'authors': item.authors }
@@ -1723,14 +1723,14 @@ export default {
 
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
         .then((response) => {
-          this.getStageFive()
+          this.getExtractedData()
           delete this.buffer_extracted_data.remove_index_item
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    openModalStageFiveEditDataItem: function (data) {
+    openModalExtractedDataEditDataItem: function (data) {
       this.extracted_data.edit_index_item = data.index
       this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
