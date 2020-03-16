@@ -9,6 +9,7 @@
           </b-link>
         </b-col>
       </b-row>
+      {{tabOpened}}
       <b-tabs
         content-class="mt-3"
         fill
@@ -1022,6 +1023,7 @@
               <b-button
                 block
                 variant="success"
+                class="mb-3"
                 @click="tabOpened=2">
                 Continue to iSoQf
               </b-button>
@@ -2318,7 +2320,8 @@ export default {
             if (this.references.length) {
               this.$nextTick(() => {
                 if (this.$route.hash) {
-                  this.tabOpened = 1
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQf', '#Guidance-on-Applying-CERQual']
+                  this.tabOpened = tabs.indexOf(this.$route.hash)
                 } else {
                   this.tabOpened = 2
                 }

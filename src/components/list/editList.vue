@@ -120,7 +120,7 @@
                     </a>
                     <b-form-group
                       class="mt-4 font-weight-light"
-                      label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance). (guidance available here)"
+                      label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance)."
                       label-for="input-cerqual"
                       description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
                       <b-form-textarea
@@ -147,7 +147,7 @@
                        cols="6">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <p class="font-weight-light">
-                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available here)
+                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.methodological_limitations.option"
@@ -198,7 +198,7 @@
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
                           <!-- coherence -->
                           <p class="font-weight-light">
-                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding? You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data. (guidance available here)
+                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding? You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.coherence.option"
@@ -249,7 +249,7 @@
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <p class="font-weight-light">
-                            Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?  (guidance available here)
+                            Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?  (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.adequacy.option"
@@ -300,7 +300,7 @@
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
                           <p class="font-weight-light">
-                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding? You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available here)
+                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding? You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.relevance.option"
@@ -765,7 +765,7 @@
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. year, country, participants, topic, setting, etc.)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
@@ -866,7 +866,7 @@
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
               <template v-if="stage_four.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
@@ -1016,7 +1016,7 @@
               </template>
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#KeyInformation`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
             </div>
