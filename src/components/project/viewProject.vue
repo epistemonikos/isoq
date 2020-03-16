@@ -9,7 +9,6 @@
           </b-link>
         </b-col>
       </b-row>
-      {{tabOpened}}
       <b-tabs
         content-class="mt-3"
         fill
@@ -1030,9 +1029,8 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab
-          :disabled="(references.length) ? false : true"
-          title="iSoQf">
+        <b-tab title="iSoQf"
+          :disabled="(references.length) ? false : true">
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
               <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
