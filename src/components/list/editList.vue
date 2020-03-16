@@ -1344,7 +1344,7 @@ export default {
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
-            // // this.evidence_profile = []
+            this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push(this.findings.evidence_profile)
             }
