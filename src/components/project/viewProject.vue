@@ -2033,7 +2033,6 @@ export default {
       this.episte_response = []
       const allLines = this.episte_request.split(/\r\n|\n/)
       allLines.forEach((line, index) => {
-        console.log('aaa', line)
         const instance = axios.create({
           withCredentials: true,
           headers: {
@@ -2043,7 +2042,6 @@ export default {
 
         instance.get(`https://api.epistemonikos.org/v1/documents/${line}?show=relations`)
           .then((response) => {
-            console.log(response.data)
             let obj = {}
             obj.citation = response.data.citation
             obj.content = response.data.content
