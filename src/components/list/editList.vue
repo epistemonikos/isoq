@@ -799,11 +799,11 @@
                   </template>
                   <template v-slot:cell(actions)="row">
                     <font-awesome-icon
-                      @click="modalDeleteStageThreeItemData(row)"
+                      @click="modalDeleteCharsOfStudiesItemData(row)"
                       icon="trash"
                       title="Remove"/>
                     <font-awesome-icon
-                      @click="openModalStageThreEditData(row)"
+                      @click="openModalCharsOfStudiesditData(row)"
                       icon="edit"
                       title="Edit" />
                   </template>
@@ -820,7 +820,7 @@
                 <b-modal
                   title="Edit data"
                   ref="modal-stage-three-edit-data"
-                  @ok="saveStageThreeEditedData">
+                  @ok="saveCharsOfStudiesEditedData">
                   <b-form-group
                     v-for="(field, index) in buffer_characteristics_studies.fields"
                     :key="index"
@@ -843,7 +843,7 @@
                 </b-modal>
                 <b-modal
                   title="Remove data content"
-                  @ok="removeStageThreeItemData"
+                  @ok="removeCharsOfStudiesItemData"
                   ref="modal-stage-three-remove-data"
                   scrollable
                   size="lg">
@@ -1251,7 +1251,7 @@ export default {
           // this.references = response.data
           let _refs = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
+            _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
@@ -1294,7 +1294,7 @@ export default {
           }
           this.getAllReferences()
           this.getStageOneData()
-          this.getStageThree()
+          this.getCharsOfStudies()
           this.getStageFour()
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
@@ -1441,7 +1441,7 @@ export default {
       this.buffer_modal_stage_two.title = titles[type]
       this.$refs['modal-stage-two'].show()
     },
-    getStageThree: function () {
+    getCharsOfStudies: function () {
       let params = {
         organization: this.list.organization,
         // list_id: this.$route.params.id
@@ -1501,7 +1501,7 @@ export default {
           console.log(error)
         })
     },
-    openModalStageThreEditData: function (row) {
+    openModalCharsOfStudiesditData: function (row) {
       let item = JSON.parse(JSON.stringify(row))
       let index = item.index
       let data = item.item
@@ -1510,27 +1510,27 @@ export default {
       this.characteristics_studies.data_index = index
       this.$refs['modal-stage-three-edit-data'].show()
     },
-    saveStageThreeEditedData: function () {
-      let stageThreeData = {}
+    saveCharsOfStudiesEditedData: function () {
+      let CharsOfStudiesData = {}
       let index = this.characteristics_studies.data_index
 
-      stageThreeData.items = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      delete stageThreeData.items[index]
-      stageThreeData.items[index] = this.modal_stage_three_data
-      stageThreeData.organization = this.characteristics_studies.organization
-      stageThreeData.list_id = this.characteristics_studies.list_id
+      CharsOfStudiesData.items = JSON.parse(JSON.stringify(this.characteristics_studies.items))
+      delete CharsOfStudiesData.items[index]
+      CharsOfStudiesData.items[index] = this.modal_stage_three_data
+      CharsOfStudiesData.organization = this.characteristics_studies.organization
+      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
 
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeData)
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
         .then((response) => {
           this.modal_stage_three_data = {}
           delete this.characteristics_studies.data_index
-          this.getStageThree()
+          this.getCharsOfStudies()
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    modalDeleteStageThreeItemData: function (row) {
+    modalDeleteCharsOfStudiesItemData: function (row) {
       let item = JSON.parse(JSON.stringify(row))
       let index = item.index
       let fields = JSON.parse(JSON.stringify(this.characteristics_studies.fields))
@@ -1542,20 +1542,20 @@ export default {
       this.characteristics_studies.data_index = index
       this.$refs['modal-stage-three-remove-data'].show()
     },
-    removeStageThreeItemData: function () {
+    removeCharsOfStudiesItemData: function () {
       let data = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      let stageThreeData = {}
+      let CharsOfStudiesData = {}
 
       data.splice(this.characteristics_studies.data_index, 1)
-      stageThreeData.items = data
-      stageThreeData.organization = this.characteristics_studies.organization
-      stageThreeData.list_id = this.characteristics_studies.list_id
+      CharsOfStudiesData.items = data
+      CharsOfStudiesData.organization = this.characteristics_studies.organization
+      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
 
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, stageThreeData)
+      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
         .then((response) => {
           this.modal_stage_three_data = {}
           delete this.characteristics_studies.data_index
-          this.getStageThree()
+          this.getCharsOfStudies()
         })
         .catch((error) => {
           console.log(error)
