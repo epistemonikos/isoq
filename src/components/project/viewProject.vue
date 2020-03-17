@@ -146,6 +146,7 @@
                           v-model="episte_request"
                           placeholder="Ej: 17253524"></b-form-textarea>
                         <b-button
+                          id="btnEpisteRequest"
                           class="mt-2"
                           block
                           variant="outline-primary"
@@ -153,22 +154,37 @@
                       </b-col>
                       <b-col
                         sm="6">
-                        <ul v-if="episte_response.length">
-                          <li v-for="(r, index) in episte_response" :key="index">
-                            <b-form-checkbox
-                              :id="`checkbox-${index}`"
-                              v-model="episte_selected"
-                              :name="`checkbox-${index}`"
-                              :value="index">
-                              {{ r.citation }}
-                            </b-form-checkbox>
-                          </li>
-                        </ul>
-                        <b-button
-                          v-if="episte_response.length"
-                          variant="outline-success"
-                          block
-                          @click="saveReferences('EpisteDB')">Import references</b-button>
+                        <template
+                          v-if="episte_loading">
+                          <div class="text-center text-danger my-2">
+                            <b-spinner class="align-middle"></b-spinner>
+                            <strong>Loading...</strong>
+                          </div>
+                        </template>
+                        <template
+                          v-else-if="episte_error">
+                          <p class="font-weight-light">
+                            The reference could not be reached, try again or using other ID
+                          </p>
+                        </template>
+                        <template v-else>
+                          <ul v-if="episte_response.length">
+                            <li v-for="(r, index) in episte_response" :key="index">
+                              <b-form-checkbox
+                                :id="`checkbox-${index}`"
+                                v-model="episte_selected"
+                                :name="`checkbox-${index}`"
+                                :value="index">
+                                {{ r.citation }}
+                              </b-form-checkbox>
+                            </li>
+                          </ul>
+                          <b-button
+                            v-if="episte_response.length"
+                            variant="outline-success"
+                            block
+                            @click="saveReferences('EpisteDB')">Import references</b-button>
+                        </template>
                       </b-col>
                     </b-row>
                   </b-tab>
@@ -1898,6 +1914,8 @@ export default {
       episte_request: '',
       episte_response: [],
       episte_selected: [],
+      episte_loading: false,
+      episte_error: false,
       finding: {}
     }
   },
@@ -2030,6 +2048,9 @@ export default {
   },
   methods: {
     EpisteRequest: function () {
+      document.getElementById('btnEpisteRequest').disabled = true
+      this.episte_loading = true
+      this.episte_error = false
       this.episte_response = []
       const allLines = this.episte_request.split(/\r\n|\n/)
       allLines.forEach((line, index) => {
@@ -2046,7 +2067,12 @@ export default {
             obj.citation = response.data.citation
             obj.content = response.data.content
             this.episte_response.push(obj)
+            document.getElementById('btnEpisteRequest').disabled = false
+            this.episte_loading = false
           }).catch((error) => {
+            this.episte_loading = false
+            this.episte_error = true
+            document.getElementById('btnEpisteRequest').disabled = false
             console.log(error)
           })
       })
@@ -2325,7 +2351,7 @@ export default {
             }
           }
           this.loadReferences = false
-          if (!this.extractedDataTableRefs.items.length) {
+          if (this.extractedDataTableRefs.items.length) {
             this.saveExtractedDataFields()
           }
         })
