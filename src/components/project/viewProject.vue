@@ -2325,6 +2325,9 @@ export default {
             }
           }
           this.loadReferences = false
+          if (!this.extractedDataTableRefs.items.length) {
+            this.saveExtractedDataFields()
+          }
         })
         .catch((error) => {
           console.log(error)
