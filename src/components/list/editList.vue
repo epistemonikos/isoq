@@ -72,7 +72,7 @@
             </b-button>
         </b-col>
       </b-row>
-      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span>{{list.name}}</span></h3>
+      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
       <b-row class="mt-4">
         <b-col cols="12">
           <!--<b-tabs>-->
@@ -1786,6 +1786,10 @@ export default {
   div >>>
     h3 span {
       font-size: 1.55rem
+    }
+  div >>>
+    h3 span.title-finding {
+      font-weight: 300;
     }
   div >>>
     #assessments.table thead th:first-child {
