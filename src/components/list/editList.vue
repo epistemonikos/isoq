@@ -9,7 +9,7 @@
           </b-link>
         </b-col>
       </b-row>
-      <h2 class="toDoc">CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+      <h2 class="toDoc">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <b-row
         v-if="mode==='view'"
         class="d-print-none justify-content-end mb-2 pt-2">
@@ -1014,11 +1014,13 @@
                   </b-form-group>
                 </b-modal>
               </template>
+              <!--
               <template v-else>
                 <p class="d-print-none font-weight-light">
                   To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
+              -->
             </div>
             <!--</b-tab>-->
           <!--</b-tabs>-->
