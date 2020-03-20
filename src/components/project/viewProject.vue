@@ -2190,6 +2190,7 @@ export default {
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
+          this.episte_response = []
           this.getReferences(false)
         }))
         .catch((error) => {
