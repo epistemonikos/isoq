@@ -75,7 +75,7 @@
                   v-model="project.url_doi"></b-input>
               </b-form-group>
               <b-form-group
-                label="Is the iSoQf being completed by the review authors?"
+                label="Visibility on the iSoQf database"
                 label-for="completed-by-author-status">
                 <b-select
                   id="completed-by-author-status"
@@ -487,7 +487,7 @@
                  class="font-weight-light">
                   To upload a table, follow these steps:
                 </p>
-                <h4>STEP 1: Download the template (excel file) and save it to your computer and populate the template with your information.</h4>
+                <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
                 <p
                   class="font-weight-light text-danger">
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
@@ -779,20 +779,18 @@
                   class="font-weight-light">
                   To upload a table, follow these steps:
                 </p>
-                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
+                <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
+                <p
+                  class="font-weight-light text-danger">
+                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                </p>
                 <b-button
                   block
                   variant="outline-info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4
-                  class="mt-3">STEP 2: Populate the template with your information.</h4>
-                <p
-                 class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
-                </p>
-                <h4>STEP 3: Import the populated template to iSoQf</h4>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
                 <b-row>
                   <b-col
                     class="mb-2"
@@ -1327,11 +1325,12 @@
                     class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
                     @click="openModalReferences(data.index, data.item.isoqf_id)">
-                    Select references
+                    <span v-if="data.item.references.length">View or select references</span>
+                    <span v-else>Select references</span>
                   </b-button>
                 </template>
                 <template v-slot:empty>
-                  <p class="text-center">
+                  <p class="text-center my-5">
                     There are no findings to show, <a href="#" @click="modalAddSummarized">add review finding</a>
                   </p>
                 </template>
