@@ -147,7 +147,7 @@
             v-model="buffer_project.lists_authors"></b-form-input>
         </b-form-group>
         <b-form-group
-          label="Is this iSoQF will be available for other users?"
+          label="Visibility on the iSoQf database"
           label-for="select-project-list-status">
           <b-select
             id="select-project-list-status"
