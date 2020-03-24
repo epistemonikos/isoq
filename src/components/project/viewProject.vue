@@ -1318,16 +1318,20 @@
                   </b-button>
                 </template>
                 <template v-slot:cell(ref_list)="data">
-                  There are <b>{{ data.item.raw_ref.length }}</b> references.
-                  <b-button
-                    v-if="mode==='edit'"
-                    block
-                    class="mt-2 d-print-none"
-                    :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                    @click="openModalReferences(data.index, data.item.isoqf_id)">
-                    <span v-if="data.item.references.length">View or edit references</span>
-                    <span v-else>Select references</span>
-                  </b-button>
+                  <template v-if="mode!=='edit'">
+                    {{ data.item.ref_list }}
+                  </template>
+                  <template v-else>
+                    There are <b>{{ data.item.raw_ref.length }}</b> references.
+                    <b-button
+                      block
+                      class="mt-2 d-print-none"
+                      :variant="(data.item.references.length) ? 'outline-info' : 'info'"
+                      @click="openModalReferences(data.index, data.item.isoqf_id)">
+                      <span v-if="data.item.references.length">View or edit references</span>
+                      <span v-else>Select references</span>
+                    </b-button>
+                  </template>
                 </template>
                 <template v-slot:empty>
                   <p class="text-center my-5">
