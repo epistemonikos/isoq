@@ -449,7 +449,7 @@
                   :filter="evidence_profile_table_settings.filter"
                   :per-page="evidence_profile_table_settings.perPage">
                   <template v-slot:head(isoqf_id)="data">
-                    <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{data.label}}</span>
+                    <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{data.label}}</span>
                   </template>
                   <template v-slot:head(methodological-limit)="data">
                     <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
