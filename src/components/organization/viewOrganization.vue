@@ -216,8 +216,10 @@ export default {
         }
       },
       global_status: [
-        { value: false, text: 'public' },
-        { value: true, text: 'private' }
+        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },

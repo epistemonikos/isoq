@@ -75,7 +75,7 @@
                   v-model="project.url_doi"></b-input>
               </b-form-group>
               <b-form-group
-                label="Visibility on the iSoQf database"
+                label="Is the iSoQf being completed by the review authors?"
                 label-for="completed-by-author-status">
                 <b-select
                   id="completed-by-author-status"
@@ -92,7 +92,7 @@
                 </b-form-input>
               </b-form-group>
               <b-form-group
-                label="Visible?"
+                label="Visibility on the iSoQf database"
                 label-for="project-list-status">
                 <b-select
                   id="project-list-status"
@@ -1236,7 +1236,7 @@
                 @filtered="onFiltered"
                 :filter-included-fields="table_settings.filterOn">
                 <template v-slot:head(isoqf_id)="data">
-                  <span v-b-tooltip.hover title="Automatic numbering of synthesised review findings">{{ data.label }}</span>
+                  <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{ data.label }}</span>
                 </template>
                 <template v-slot:head(name)="data">
                   <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
@@ -1325,7 +1325,7 @@
                     class="mt-2 d-print-none"
                     :variant="(data.item.references.length) ? 'outline-info' : 'info'"
                     @click="openModalReferences(data.index, data.item.isoqf_id)">
-                    <span v-if="data.item.references.length">View or select references</span>
+                    <span v-if="data.item.references.length">View or edit references</span>
                     <span v-else>Select references</span>
                   </b-button>
                 </template>
@@ -1831,8 +1831,10 @@ export default {
       },
       tabOpened: 1,
       global_status: [
-        { value: false, text: 'public' },
-        { value: true, text: 'private' }
+        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
