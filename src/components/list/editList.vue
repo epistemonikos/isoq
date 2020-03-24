@@ -144,7 +144,7 @@
                   <b-container>
                     <b-row>
                       <b-col
-                       cols="6">
+                       cols="4">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <p class="font-weight-light">
                             Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
@@ -351,10 +351,11 @@
                         </div>
                       </b-col>
                       <b-col
-                        cols="6">
+                        cols="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <h4>Methodological Assessments</h4>
                           <b-table
+                            class="table-small-font"
                             responsive
                             head-variant="light"
                             outlined
@@ -368,6 +369,7 @@
                           <p>{{ project.review_question }}</p>
                           <h4>Extracted Data</h4>
                           <b-table
+                            class="table-small-font"
                             responsive
                             head-variant="light"
                             outlined
@@ -379,6 +381,7 @@
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <h4>Characteristics of Studies</h4>
                           <b-table
+                            class="table-small-font"
                             responsive
                             head-variant="light"
                             outlined
@@ -387,6 +390,7 @@
                           </b-table>
                           <h4>Extracted Data</h4>
                           <b-table
+                            class="table-small-font"
                             responsive
                             head-variant="light"
                             outlined
@@ -400,6 +404,7 @@
                           <p>{{ project.review_question }}</p>
                           <h4>Characteristics of Studies</h4>
                           <b-table
+                            class="table-small-font"
                             responsive
                             head-variant="light"
                             outlined
@@ -1842,5 +1847,9 @@ export default {
     #extracted.table thead th:last-child {
       text-align: right;
       width: 13%;
+    }
+  div >>>
+    .table-small-font {
+      font-size: 14px;
     }
 </style>
