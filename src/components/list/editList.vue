@@ -364,8 +364,8 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
-                          <h4>Review Finding</h4>
-                          <p>{{ list.name }}</p>
+                          <h4>Review Question</h4>
+                          <p>{{ project.review_question }}</p>
                           <h4>Extracted Data</h4>
                           <b-table
                             responsive
@@ -396,8 +396,8 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <h4>Review Finding</h4>
-                          <p>{{ list.name }}</p>
+                          <h4>Review Question</h4>
+                          <p>{{ project.review_question }}</p>
                           <h4>Characteristics of Studies</h4>
                           <b-table
                             responsive
@@ -1042,6 +1042,7 @@ export default {
   },
   data () {
     return {
+      project: {},
       /** filters **/
       nroOfRows: 1,
       evidence_profile_table_settings: {
@@ -1287,19 +1288,29 @@ export default {
     getList: function () {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
-          this.list = {...response.data}
+          this.list = JSON.parse(JSON.stringify(response.data))
           this.list.sources = []
           this.evidence_profile = []
           this.extracted_data = {
             fields: [],
             items: []
           }
+          this.getProject(this.list.project_id)
           this.getAllReferences()
           this.getStageOneData()
           this.getCharsOfStudies()
           this.getStageFour()
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    getProject: function (projectId) {
+      axios.get(`/api/isoqf_projects/${projectId}`)
+        .then((response) => {
+          this.project = response.data
         })
         .catch((error) => {
           console.log(error)
