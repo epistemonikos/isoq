@@ -655,7 +655,7 @@
                     There are <b>{{ data.item.references.length }}</b> references.
                   </template>
                 </b-table>
-
+                <!-- display table in print mode -->
                 <b-table
                   class="toDoc"
                   v-if="mode==='view'"
@@ -726,11 +726,11 @@
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
-                    <div v-if="Object.prototype.hasOwnProperty.call(data.item, 'references')">
-                      <li
-                        :key="index"
-                        v-for="(ref, index) in data.item.references">{{ ref }}</li>
-                    </div>
+                    <p
+                      class="reference-txt"
+                      v-for="(item, key) in data.value" :key="key">
+                      {{item}}
+                    </p>
                   </template>
                 </b-table>
 
@@ -1126,7 +1126,21 @@ export default {
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
         { key: 'cerqual', label: 'CERQual Assessment of confidence' },
-        { key: 'references', label: 'References' }
+        {
+          key: 'references',
+          label: 'References',
+          formatter: value => {
+            let references = []
+            for (let item of value) {
+              for (let reference of this.references) {
+                if (item === reference.id) {
+                  references.push(reference.content)
+                }
+              }
+            }
+            return references
+          }
+        }
         /*
         {key: 'actions', label: 'Actions'}
         */
@@ -1851,5 +1865,9 @@ export default {
   div >>>
     .table-small-font {
       font-size: 14px;
+    }
+  div >>>
+    .reference-txt {
+      font-size: 12px;
     }
 </style>
