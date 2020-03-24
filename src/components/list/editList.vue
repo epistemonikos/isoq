@@ -1134,7 +1134,7 @@ export default {
             for (let item of value) {
               for (let reference of this.references) {
                 if (item === reference.id) {
-                  references.push(reference.content)
+                  references.push(reference.content.split(';')[0])
                 }
               }
             }
