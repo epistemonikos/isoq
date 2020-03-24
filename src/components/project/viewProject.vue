@@ -302,12 +302,13 @@
                 sort-by="authors"
                 responsive
                 id="chars-of-studies-table"
+                class="table-content-refs mt-3"
                 v-if="charsOfStudies.fieldsObj.length > 1"
                 :fields="charsOfStudies.fieldsObj"
                 :items="charsOfStudies.items"
-                :current-page="charsOfStudiesConfigTable.currentPage"
-                :per-page="charsOfStudiesConfigTable.perPage"
-                class="table-content-refs mt-3">
+                :current-page="charsOfStudiesTableSettings.currentPage"
+                :per-page="charsOfStudiesTableSettings.perPage"
+                :busy="charsOfStudiesTableSettings.isBusy">
                 <template
                   v-if="charsOfStudies.tableTop.length"
                   v-slot:thead-top>
@@ -328,25 +329,31 @@
                   <b-button
                     block
                     variant="outline-success"
-                    @click="addDataCharsOfStudies((charsOfStudiesConfigTable.currentPage > 1) ? (charsOfStudiesConfigTable.perPage * (charsOfStudiesConfigTable.currentPage - 1)) + data.index : data.index)">
+                    @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
                     <font-awesome-icon
                       icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
                     block
                     variant="outline-danger"
-                    @click="removeItemCharOfStudies((charsOfStudiesConfigTable.currentPage > 1) ? (charsOfStudiesConfigTable.perPage * (charsOfStudiesConfigTable.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
+                    @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
                 </template>
+                <template v-slot:table-busy>
+                  <div class="text-center text-danger my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </div>
+                </template>
               </b-table>
               <b-pagination
-                v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesConfigTable.perPage"
+                v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
                 align="center"
-                v-model="charsOfStudiesConfigTable.currentPage"
+                v-model="charsOfStudiesTableSettings.currentPage"
                 :total-rows="charsOfStudies.items.length"
-                :per-page="charsOfStudiesConfigTable.perPage"
+                :per-page="charsOfStudiesTableSettings.perPage"
                 aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
@@ -595,7 +602,8 @@
                 :per-page="methodologicalTableRefsTableSettings.perPage"
                 :current-page="methodologicalTableRefsTableSettings.currentPage"
                 :fields="methodologicalTableRefs.fieldsObj"
-                :items="methodologicalTableRefs.items">
+                :items="methodologicalTableRefs.items"
+                :busy="methodologicalTableRefsTableSettings.isBusy">
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
@@ -612,6 +620,12 @@
                     <font-awesome-icon
                       icon="trash"></font-awesome-icon>
                   </b-button>
+                </template>
+                <template v-slot:table-busy>
+                  <div class="text-center text-danger my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </div>
                 </template>
               </b-table>
               <b-pagination
@@ -1829,9 +1843,10 @@ export default {
         ],
         tableTop: []
       },
-      charsOfStudiesConfigTable: {
+      charsOfStudiesTableSettings: {
         currentPage: 1,
-        perPage: 10
+        perPage: 10,
+        isBusy: false
       },
       tabOpened: 1,
       global_status: [
@@ -1867,7 +1882,8 @@ export default {
       },
       methodologicalTableRefsTableSettings: {
         currentPage: 1,
-        perPage: 10
+        perPage: 10,
+        isBusy: false
       },
       methodologicalFieldsModal: {
         nroColumns: 1,
@@ -2812,6 +2828,7 @@ export default {
         })
     },
     getCharacteristics: function () {
+      this.charsOfStudiesTableSettings.isBusy = true
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
@@ -2850,12 +2867,14 @@ export default {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
+            this.charsOfStudiesTableSettings.isBusy = false
           } else {
             this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     },
     getMethodological: function () {
+      this.methodologicalTableRefsTableSettings.isBusy = true
       axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
@@ -2887,6 +2906,8 @@ export default {
               for (let item of _items) {
                 this.methodologicalFieldsModal.items.push(item)
               }
+
+              this.methodologicalTableRefsTableSettings.isBusy = false
             }
           } else {
             this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
@@ -2994,6 +3015,7 @@ export default {
       params.fields = this.importDataTable.fields
       params.items = this.importDataTable.items
       if (endpoint === 'isoqf_characteristics') {
+        this.charsOfStudiesTableSettings.isBusy = true
         if (this.charsOfStudies.items.length) {
           this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
         } else {
@@ -3001,6 +3023,7 @@ export default {
         }
       }
       if (endpoint === 'isoqf_assessments') {
+        this.methodologicalTableRefsTableSettings.isBusy = true
         if (this.methodologicalTableRefs.items.length) {
           this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
         } else {
