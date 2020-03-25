@@ -1123,8 +1123,6 @@
                   v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
                   Publish
                 </b-button>
-
-
             </b-col>
             <b-col
               class="mt-1 mt-sm-0"
@@ -1285,7 +1283,7 @@
                 </template>
                 <template v-slot:cell(name)="data">
                   <span v-if="mode === 'edit'">
-                    <b-link v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
                     <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
                     <b-row
                       class="mt-3">
@@ -3864,6 +3862,11 @@ export default {
     .nav-fill .nav-item {
       text-transform: uppercase;
       font-weight: bold;
+    }
+  div >>>
+    a.table-edit-list {
+      color: #000;
+      text-decoration: underline;
     }
   div >>>
     #chars-of-studies-table thead th:first-child {
