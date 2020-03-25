@@ -1117,6 +1117,21 @@
               cols="12"
               sm="2">
                 <b-button
+                  @click="modalChangePublicStatus"
+                  variant="outline-primary"
+                  block
+                  v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
+                  Publish
+                </b-button>
+
+
+            </b-col>
+            <b-col
+              class="mt-1 mt-sm-0"
+              v-if="mode==='edit'"
+              cols="12"
+              sm="2">
+                <b-button
                   @click="changeMode"
                   variant="outline-success"
                   block
@@ -1652,6 +1667,27 @@
           </div>
         </template>
       </b-modal>
+      <b-modal
+        ref="modal-change-status"
+        scrollable
+        size="xl"
+        title="Publish to the iSoQf Database"
+        ok-title="Save"
+        ok-variant="outline-success"
+        @ok="savePublicStatus"
+        cancel-variant="outline-secondary">
+        <p class="font-weight-light">
+          By publishing your iSoQf to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+        </p>
+        <b-form-group>
+          <b-form-radio-group
+            id="modal-publish-status"
+            v-model="modal_project.private"
+            :options="global_status"
+            name="modal-radio-status"
+          ></b-form-radio-group>
+        </b-form-group>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -1671,6 +1707,7 @@ export default {
         name: '',
         authors: ''
       },
+      modal_project: {},
       lists: [],
       list_categories: {
         options: [],
@@ -3800,6 +3837,23 @@ export default {
       this.modal_edit_list_categories.remove = false
       this.modal_edit_list_categories.name = ''
       this.modal_edit_list_categories.index = null
+    },
+    modalChangePublicStatus: function () {
+      this.modal_project = JSON.parse(JSON.stringify(this.project))
+      this.$refs['modal-change-status'].show()
+    },
+    savePublicStatus: function () {
+      const params = {
+        private: this.modal_project.private
+      }
+      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        .then((response) => {
+          this.modal_project = {}
+          this.getProject()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }

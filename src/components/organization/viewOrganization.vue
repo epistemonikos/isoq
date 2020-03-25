@@ -148,7 +148,8 @@
         </b-form-group>
         <b-form-group
           label="Visibility on the iSoQf database"
-          label-for="select-project-list-status">
+          label-for="select-project-list-status"
+          description="When you finish your iSoQf you can publish some, or all of it, to the iSoQf database. Until you are finished, keep it “private”. You can change these settings at any time.">
           <b-select
             id="select-project-list-status"
             v-model="buffer_project.private"
@@ -248,7 +249,7 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: true,
+        private: 'private',
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
