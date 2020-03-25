@@ -11,7 +11,7 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
           <b-col cols="12" class="text-right">
-            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="outline-primary" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
+            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="success" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <b-row
@@ -30,13 +30,12 @@
               :fields="projectTable.fields"
               :items="org.projects">
               <template v-slot:cell(private)="data">
-                <font-awesome-icon
-                  v-if="!data.item.private"
-                  icon="globe"
-                  title="Public"></font-awesome-icon>
+                <b-badge variant="light" class="publish-status">
+                  {{ data.item.private }}
+                </b-badge>
               </template>
               <template v-slot:cell(name)="data">
-                <b-link :to="{name: 'viewProject', params: {org_id: org.id, id: data.item.id}}">{{ data.item.name }}</b-link>
+                <b-link class="link-project" :to="{name: 'viewProject', params: {org_id: org.id, id: data.item.id}}">{{ data.item.name }}</b-link>
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
@@ -537,12 +536,20 @@ export default {
 
 <style scoped>
   div >>>
+    .publish-status {
+      text-transform: uppercase;
+    }
+  div >>>
+    .link-project {
+      color: #000;
+    }
+  div >>>
     table#organizations thead th:nth-child(2) {
-      width: 70%
+      width: 70%;
     }
   div >>>
     table#organizations thead th:last-child {
-      width: 20%
+      width: 20%;
     }
   div >>>
     table#organizations tbody td:last-child {
