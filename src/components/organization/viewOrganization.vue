@@ -31,7 +31,7 @@
               :items="org.projects">
               <template v-slot:cell(private)="data">
                 <b-badge variant="light" class="publish-status">
-                  {{ data.item.private }}
+                  {{ data.item.public_type }}
                 </b-badge>
               </template>
               <template v-slot:cell(name)="data">
@@ -151,7 +151,7 @@
           description="When you finish your iSoQf you can publish some, or all of it, to the iSoQf database. Until you are finished, keep it “private”. You can change these settings at any time.">
           <b-select
             id="select-project-list-status"
-            v-model="buffer_project.private"
+            v-model="buffer_project.public_type"
             :options="global_status"></b-select>
         </b-form-group>
         <b-form-group
@@ -248,7 +248,8 @@ export default {
         id: null,
         name: '',
         description: '',
-        private: 'private',
+        private: true,
+        public_type: '',
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
@@ -303,6 +304,10 @@ export default {
     },
     AddProject: function () {
       this.projectTable.isBusy = true
+      this.buffer_project.private = true
+      if (this.buffer_project.public_type !== 'private') {
+        this.buffer_project.private = false
+      }
       if (this.buffer_project.id) {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)

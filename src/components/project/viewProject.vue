@@ -96,7 +96,7 @@
                 label-for="project-list-status">
                 <b-select
                   id="project-list-status"
-                  v-model="project.private"
+                  v-model="project.public_type"
                   :options="global_status"></b-select>
               </b-form-group>
               <b-form-group
@@ -1680,7 +1680,7 @@
         <b-form-group>
           <b-form-radio-group
             id="modal-publish-status"
-            v-model="modal_project.private"
+            v-model="modal_project.public_type"
             :options="global_status"
             name="modal-radio-status"
           ></b-form-radio-group>
@@ -3005,6 +3005,10 @@ export default {
     },
     updateProjectInfo: function () {
       let project = JSON.parse(JSON.stringify(this.project))
+      project.private = true
+      if (project.public_type !== 'private') {
+        project.private = false
+      }
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then((response) => {
           this.msgUpdateProject = 'The project has been updated'
@@ -3841,9 +3845,13 @@ export default {
       this.$refs['modal-change-status'].show()
     },
     savePublicStatus: function () {
-      const params = {
-        private: this.modal_project.private
+      let params = {}
+      params.private = true
+      if (this.modal_project.public_type !== 'private') {
+        params.private = false
       }
+      params.public_type = this.modal_project.public_type
+
       axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
         .then((response) => {
           this.modal_project = {}
