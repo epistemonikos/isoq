@@ -359,8 +359,8 @@
                             responsive
                             head-variant="light"
                             outlined
-                            :fields="stage_four.fieldsObj"
-                            :items="stage_four.items">
+                            :fields="meth_assessments.fieldsObj"
+                            :items="meth_assessments.items">
                           </b-table>
                         </div>
 
@@ -773,10 +773,13 @@
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
-                  v-if="mode==='edit'"
+                  v-if="mode==='edit' && characteristics_studies.items.length"
                   class="d-print-none"
                   idname="chars-of-studies-filter"
-                  :tableSettings="characteristics_studies_table_settings">
+                  :tableSettings="characteristics_studies_table_settings"
+                  type="chars_of_studies"
+                  :fields="characteristics_studies.fields"
+                  :items="characteristics_studies.items">
                 </bc-filters>
                 <b-table
                   id="characteristics"
@@ -872,12 +875,15 @@
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
-              <template v-if="stage_four.fields.length">
+              <template v-if="meth_assessments.fields.length">
                 <bc-filters
-                  v-if="mode==='edit'"
+                  v-if="mode==='edit' && meth_assessments.items.length"
                   class="d-print-none"
                   idname="meth-assessments-filter"
-                  :tableSettings="methodological_assessments_table_settings">
+                  :tableSettings="methodological_assessments_table_settings"
+                  type="meth_assessments"
+                  :fields="meth_assessments.fields"
+                  :items="meth_assessments.items">
                 </bc-filters>
                 <b-table
                   class="toDoc"
@@ -885,47 +891,47 @@
                   responsive
                   head-variant="light"
                   outlined
-                  :fields="stage_four.fieldsObj"
-                  :items="stage_four.items"
+                  :fields="meth_assessments.fieldsObj"
+                  :items="meth_assessments.items"
                   :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
                   <template v-slot:cell(actions)="row">
-                    <font-awesome-icon icon="trash" @click="openModalRemoveDataStageFour(row)" :title="$t('Remove')" />
-                    <font-awesome-icon icon="edit" @click="openModalEditDataStageFour(row)" :title="$t('Edit')" />
+                    <font-awesome-icon icon="trash" @click="openModalRemoveDataMethAssessments(row)" :title="$t('Remove')" />
+                    <font-awesome-icon icon="edit" @click="openModalEditDataMethAssessments(row)" :title="$t('Edit')" />
                   </template>
                 </b-table>
                 <b-pagination
-                  v-if="stage_four.items.length && stage_four.items.length > methodological_assessments_table_settings.perPage && mode==='edit'"
+                  v-if="meth_assessments.items.length && meth_assessments.items.length > methodological_assessments_table_settings.perPage && mode==='edit'"
                   class="mt-5 d-print-none"
                   align="center"
                   v-model="methodological_assessments_table_settings.currentPage"
                   :per-page="methodological_assessments_table_settings.perPage"
-                  :total-rows="stage_four.items.length"
+                  :total-rows="meth_assessments.items.length"
                   limit="11"></b-pagination>
                 <b-modal
                   ref="modal-edit-data-stage-four"
                   title="Edit data"
-                  @ok="saveUpdateDataStageFour">
+                  @ok="saveUpdateDataMethAssessments">
                   <b-form-group
-                    v-for="(field, index) in buffer_modal_stage_four_fields"
+                    v-for="(field, index) in buffer_modal_meth_assessments_fields"
                     :key="index"
                     :label="`${field.label}`"
                     :label-for="`column-${index}`">
                     <b-form-textarea
                       :id="`column-${index}`"
-                      v-model="modal_stage_four_data[field.key]"></b-form-textarea>
+                      v-model="modal_meth_assessments_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <b-modal
-                  @ok="removeDataStageFour"
+                  @ok="removeDataMethAssessments"
                   ref="modal-remove-data-stage-four"
                   title="Remove data content"
                   scrollable
                   size="lg">
                   <p>Are you sure you want to delete all the content for this row?</p>
                   <b-table
-                    :fields="buffer_stage_four_remove_item.fields"
-                    :items="buffer_stage_four_remove_item.items"></b-table>
+                    :fields="buffer_meth_assessments_remove_item.fields"
+                    :items="buffer_meth_assessments_remove_item.items"></b-table>
                 </b-modal>
                 <!-- end of -->
               </template>
@@ -1189,19 +1195,19 @@ export default {
         cerqual: {},
         references: []
       },
-      buffer_stage_four: {
+      buffer_meth_assessments: {
         nroOfColumns: 1,
         fields: [],
         items: []
       },
-      buffer_stage_four_remove_item: {
+      buffer_meth_assessments_remove_item: {
         fields: [],
         items: []
       },
-      buffer_stage_four_data: {
+      buffer_meth_assessments_data: {
         fields: []
       },
-      stage_four: {
+      meth_assessments: {
         nroOfColumns: 1,
         fields: [],
         items: []
@@ -1219,8 +1225,8 @@ export default {
       },
       buffer_characteristics_studies: {},
       modal_stage_three_data: {},
-      modal_stage_four_data: {},
-      buffer_modal_stage_four_fields: {},
+      modal_meth_assessments_data: {},
+      buffer_modal_meth_assessments_fields: {},
       extracted_data: {
         id: null,
         fields: [],
@@ -1318,7 +1324,7 @@ export default {
           this.getAllReferences()
           this.getStageOneData()
           this.getCharsOfStudies()
-          this.getStageFour()
+          this.getMethAssessments()
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         })
@@ -1593,7 +1599,7 @@ export default {
           console.log(error)
         })
     },
-    getStageFour: function () {
+    getMethAssessments: function () {
       let params = {
         organization: this.list.organization,
         project_id: this.list.project_id
@@ -1623,60 +1629,60 @@ export default {
               }
             }
 
-            this.stage_four = data
+            this.meth_assessments = data
           } else {
-            this.stage_four = { nroOfColumns: 1, fields: [], items: [] }
+            this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
           }
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    openModalEditDataStageFour: function (row) {
-      let tmpFields = JSON.parse(JSON.stringify(this.stage_four.fields))
-      let tmpData = JSON.parse(JSON.stringify(this.stage_four.items))
+    openModalEditDataMethAssessments: function (row) {
+      let tmpFields = JSON.parse(JSON.stringify(this.meth_assessments.fields))
+      let tmpData = JSON.parse(JSON.stringify(this.meth_assessments.items))
 
       tmpFields.splice(tmpFields.length - 1, 1)
-      this.buffer_modal_stage_four_fields = tmpFields
-      this.modal_stage_four_data = tmpData.splice(row.index, 1)[0]
-      this.buffer_stage_four.key_item = row.index
+      this.buffer_modal_meth_assessments_fields = tmpFields
+      this.modal_meth_assessments_data = tmpData.splice(row.index, 1)[0]
+      this.buffer_meth_assessments.key_item = row.index
       this.$refs['modal-edit-data-stage-four'].show()
     },
-    saveUpdateDataStageFour: function () {
-      let tmpData = JSON.parse(JSON.stringify(this.modal_stage_four_data))
-      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+    saveUpdateDataMethAssessments: function () {
+      let tmpData = JSON.parse(JSON.stringify(this.modal_meth_assessments_data))
+      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
 
-      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
-      tmpStageFour.items[this.buffer_stage_four.key_item] = tmpData
-      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, tmpStageFour)
+      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
+      tmpMethAssessments.items[this.buffer_meth_assessments.key_item] = tmpData
+      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
         .then((response) => {
-          delete this.buffer_stage_four.key_item
+          delete this.buffer_meth_assessments.key_item
           this.$refs['modal-edit-data-stage-four'].hide()
-          this.modal_stage_four_data = {}
-          this.getStageFour()
+          this.modal_meth_assessments_data = {}
+          this.getMethAssessments()
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    openModalRemoveDataStageFour: function (row) {
-      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
-      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
-      this.buffer_stage_four_remove_item.fields = tmpStageFour.fields
-      this.buffer_stage_four_remove_item.items = []
-      this.buffer_stage_four_remove_item.items.push(tmpStageFour.items[row.index])
-      this.buffer_stage_four_remove_item.key_item = row.index
+    openModalRemoveDataMethAssessments: function (row) {
+      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
+      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
+      this.buffer_meth_assessments_remove_item.fields = tmpMethAssessments.fields
+      this.buffer_meth_assessments_remove_item.items = []
+      this.buffer_meth_assessments_remove_item.items.push(tmpMethAssessments.items[row.index])
+      this.buffer_meth_assessments_remove_item.key_item = row.index
       this.$refs['modal-remove-data-stage-four'].show()
     },
-    removeDataStageFour: function () {
-      let tmpStageFour = JSON.parse(JSON.stringify(this.stage_four))
+    removeDataMethAssessments: function () {
+      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
 
-      tmpStageFour.fields.splice(tmpStageFour.fields.length - 1, 1)
-      tmpStageFour.items.splice(this.buffer_stage_four_remove_item.key_item, 1)
-      axios.patch(`/api/isoqf_assessments/${this.stage_four.id}`, tmpStageFour)
+      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
+      tmpMethAssessments.items.splice(this.buffer_meth_assessments_remove_item.key_item, 1)
+      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
         .then((response) => {
-          this.buffer_stage_four_remove_item = {fields: [], items: []}
-          this.getStageFour()
+          this.buffer_meth_assessments_remove_item = {fields: [], items: []}
+          this.getMethAssessments()
         })
         .catch((error) => {
           console.log(error)
