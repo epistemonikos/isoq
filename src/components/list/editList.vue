@@ -79,7 +79,7 @@
             <!-- Evidence Profile-->
             <!--<b-tab :title="$t('Evidence Profile')">-->
               <b-modal
-                :size="(buffer_modal_stage_two.type === 'cerqual') ? '' : 'xl'"
+                size="xl"
                 id="modal-stage-two"
                 ref="modal-stage-two"
                 :title="$t('Evidence profile') + ' - ' + buffer_modal_stage_two.title"
@@ -88,59 +88,6 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
-                <template v-if="buffer_modal_stage_two.type === 'cerqual'">
-                  <div>
-                    <p class="font-weight-light">
-                      To what extent is the review finding a reasonable representation of the phenomenon of interest?
-                    </p>
-                    <b-form-radio-group
-                      v-model="buffer_modal_stage_two.cerqual.option"
-                      name="cerqual"
-                      stacked>
-                      <b-form-radio value="0">
-                        High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                      </b-form-radio>
-                      <b-form-radio value="1">
-                        Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                      </b-form-radio>
-                      <b-form-radio value="2">
-                        Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                      </b-form-radio>
-                      <b-form-radio value="3">
-                        Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                      </b-form-radio>
-                    </b-form-radio-group>
-                    <a
-                      @click="buffer_modal_stage_two.cerqual.option = null"
-                      v-if="buffer_modal_stage_two.cerqual.option !== null"
-                      class="mt-2 font-weight-light text-danger">
-                      <font-awesome-icon
-                        icon="trash"></font-awesome-icon>
-                      clear my selection
-                    </a>
-                    <b-form-group
-                      class="mt-4 font-weight-light"
-                      label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance)."
-                      label-for="input-cerqual"
-                      description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
-                      <b-form-textarea
-                        id="input-cerqual"
-                        v-model="buffer_modal_stage_two.cerqual.explanation"
-                        placeholder="Enter an explanation"></b-form-textarea>
-                    </b-form-group>
-                    <b-form-group
-                      class="mt-2 font-weight-light"
-                      label="Notes"
-                      label-for="input-ml-notes"
-                      description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
-                      <b-form-textarea
-                        id="input-ml-notes"
-                        v-model="buffer_modal_stage_two.cerqual.notes"
-                        :placeholder="$t('Enter a note')"></b-form-textarea>
-                    </b-form-group>
-                  </div>
-                </template>
-                <template v-else>
                   <b-container>
                     <b-row>
                       <b-col
@@ -349,6 +296,56 @@
                           </b-form-group>
                           <!-- CERQual assessment -->
                         </div>
+                        <div v-if="buffer_modal_stage_two.type === 'cerqual'">
+                          <p class="font-weight-light">
+                            To what extent is the review finding a reasonable representation of the phenomenon of interest?
+                          </p>
+                          <b-form-radio-group
+                            v-model="buffer_modal_stage_two.cerqual.option"
+                            name="cerqual"
+                            stacked>
+                            <b-form-radio value="0">
+                              High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="1">
+                              Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="2">
+                              Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                            </b-form-radio>
+                            <b-form-radio value="3">
+                              Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                            </b-form-radio>
+                          </b-form-radio-group>
+                          <a
+                            @click="buffer_modal_stage_two.cerqual.option = null"
+                            v-if="buffer_modal_stage_two.cerqual.option !== null"
+                            class="mt-2 font-weight-light text-danger">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                            clear my selection
+                          </a>
+                          <b-form-group
+                            class="mt-4 font-weight-light"
+                            label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance)."
+                            label-for="input-cerqual"
+                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
+                            <b-form-textarea
+                              id="input-cerqual"
+                              v-model="buffer_modal_stage_two.cerqual.explanation"
+                              placeholder="Enter an explanation"></b-form-textarea>
+                          </b-form-group>
+                          <b-form-group
+                            class="mt-2 font-weight-light"
+                            label="Notes"
+                            label-for="input-ml-notes"
+                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            <b-form-textarea
+                              id="input-ml-notes"
+                              v-model="buffer_modal_stage_two.cerqual.notes"
+                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                          </b-form-group>
+                        </div>
                       </b-col>
                       <b-col
                         cols="8">
@@ -412,10 +409,34 @@
                             :items="characteristics_studies.items">
                           </b-table>
                         </div>
+
+                        <div v-if="buffer_modal_stage_two.type === 'cerqual'">
+                          <h5>Methodological limitations</h5>
+                          <p>
+                            {{select_options[evidence_profile[0].methodological_limitations.option].text}}
+                            <br>
+                            <b>Explanation:</b> <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                          </p>
+                          <h5>Coherence</h5>
+                          <p>{{select_options[evidence_profile[0].coherence.option].text}}
+                            <br>
+                            <b>Explanation:</b> <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                          </p>
+                          <h5>Adequacy</h5>
+                          <p>{{select_options[evidence_profile[0].adequacy.option].text}}
+                            <br>
+                            <b>Explanation:</b> <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                          </p>
+                          <h5>Relevance</h5>
+                          <p>{{select_options[evidence_profile[0].relevance.option].text}}
+                            <br>
+                            <b>Explanation:</b> <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                          </p>
+                        </div>
                       </b-col>
                     </b-row>
                   </b-container>
-                </template>
+
               </b-modal>
 
               <div
