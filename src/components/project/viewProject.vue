@@ -266,7 +266,7 @@
               </p>
               <b-row>
                 <b-col
-                  sm="5">
+                  sm="4">
                   <b-button
                     block
                     variant="outline-primary"
@@ -284,17 +284,25 @@
                   </b-button>
                 </b-col>
                 <b-col
-                  sm="2">
+                  sm="1">
                   <p class="text-center pt-1">OR</p>
                 </b-col>
                 <b-col
-                  sm="5">
+                  sm="4">
                   <b-button
                     block
                     variant="outline-info"
                     :disabled="(references.length) ? false : true"
                     v-b-modal.import-characteristics-table>
                     Import table
+                  </b-button>
+                </b-col>
+                <b-col
+                  sm="3">
+                  <b-button
+                    block
+                    @click="exportTableToCSV('chars_of_studies')">
+                    Export to XLS file
                   </b-button>
                 </b-col>
               </b-row>
@@ -560,7 +568,7 @@
               </p>
               <b-row>
                 <b-col
-                  sm="5">
+                  sm="4">
                   <b-button
                     block
                     variant="outline-primary"
@@ -578,17 +586,25 @@
                   </b-button>
                 </b-col>
                 <b-col
-                  sm="2">
+                  sm="1">
                   <p class="text-center pt-1">OR</p>
                 </b-col>
                 <b-col
-                  sm="5">
+                  sm="4">
                   <b-button
                     block
                     variant="outline-info"
                     :disabled="(references.length) ? false : true"
                     v-b-modal.import-methodological-table>
                     Import table
+                  </b-button>
+                </b-col>
+                <b-col
+                  sm="3">
+                  <b-button
+                    block
+                    @click="exportTableToCSV('meth_assessments')">
+                    Export to XLS file
                   </b-button>
                 </b-col>
               </b-row>
@@ -3860,6 +3876,55 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    exportTableToCSV: function (type) {
+      var csv = 'data:text/csv;charset=utf-8,'
+      const _types = ['chars_of_studies', 'meth_assessments']
+      let _protoCSV = []
+      let _keys = []
+      var cnt = 1
+
+      if (_types.indexOf(type) !== -1) {
+        switch (type) {
+          case 'chars_of_studies':
+            _protoCSV.push(JSON.parse(JSON.stringify(this.charsOfStudies.fields)))
+            _protoCSV.push(JSON.parse(JSON.stringify(this.charsOfStudies.items)))
+            break
+          case 'meth_assessments':
+            _protoCSV.push(JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields)))
+            _protoCSV.push(JSON.parse(JSON.stringify(this.methodologicalTableRefs.items)))
+            break
+          default:
+            break
+        }
+
+        for (let _element in _protoCSV) {
+          if (_element === '0') {
+            cnt = 1
+            for (let element of _protoCSV[_element]) {
+              _keys.push(element.key)
+              csv = csv.concat('"' + element.label + ((cnt < _protoCSV[_element].length) ? '",' : '"' + '\n'))
+              cnt++
+            }
+          } else {
+            for (let index in _protoCSV[_element]) {
+              cnt = 1
+              for (let key of _keys) {
+                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < Object.keys(_protoCSV[_element][index]).length) ? '",' : '"' + '\n'))
+                cnt++
+              }
+            }
+          }
+        }
+      }
+
+      let encodedUri = encodeURI(csv)
+      let link = document.createElement('a')
+      link.setAttribute('href', encodedUri)
+      link.setAttribute('download', type + '.csv')
+      document.body.appendChild(link)
+
+      link.click()
     }
   }
 }
