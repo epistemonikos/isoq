@@ -30,7 +30,7 @@
               :fields="projectTable.fields"
               :items="org.projects">
               <template v-slot:cell(private)="data">
-                <b-badge variant="light" class="publish-status">
+                <b-badge variant="light" class="publish-status" v-b-tooltip.hover :title="global_status.map((obj)=>{ if (obj.value === data.item.public_type) { return obj.text } })">
                   {{ data.item.public_type }}
                 </b-badge>
               </template>
