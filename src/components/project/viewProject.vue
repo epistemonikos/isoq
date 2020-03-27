@@ -1134,10 +1134,10 @@
               sm="2">
                 <b-button
                   @click="modalChangePublicStatus"
-                  variant="outline-primary"
+                  :variant="(!project.private) ? 'outline-primary' : 'primary'"
                   block
                   v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
-                  Publish
+                  <span v-if="!project.private">Published</span><span v-else>Publish</span>
                 </b-button>
             </b-col>
             <b-col
