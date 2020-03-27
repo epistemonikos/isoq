@@ -759,22 +759,29 @@
                   id="modalReferences"
                   ref="modalReferences"
                   title="References"
+                  size="lg"
                   scrollable
                   @ok="saveReferencesList">
-                  <div
-                    class="mt-2"
-                    v-if="references.length">
-                    <b-form-group>
+                  <b-alert
+                    v-if="list.cerqual.option"
+                    show
+                    variant="danger">
+                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                  </b-alert>
+                  <b-table
+                    striped
+                    responsive
+                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author, Year, Publication'}]"
+                    :items="references">
+                    <template v-slot:cell(checkbox)="data">
                       <b-form-checkbox
-                        v-for="ref in references"
+                        :id="`checkbox-${data.index}`"
                         v-model="list.references"
-                        :key="ref.id"
-                        :value="ref.id"
-                        name="references">
-                        {{ ref.content }}
+                        :name="`checkbox-${data.index}`"
+                        :value="data.item.id">
                       </b-form-checkbox>
-                    </b-form-group>
-                  </div>
+                    </template>
+                  </b-table>
                 </b-modal>
               </template>
               <template v-else>

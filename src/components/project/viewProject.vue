@@ -1463,32 +1463,56 @@
               <b-modal
                 id="modal-references-list"
                 ref="modal-references-list"
-                title="Select references"
+                title="References"
                 @ok="saveReferencesList"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
                 size="lg"
                 scrollable>
-                <div
-                  class="mt-2"
-                  v-if="references.length">
-                  <b-form-group>
-                    <b-form-checkbox
-                      v-for="ref in refs"
-                      v-model="selected_references"
-                      :key="ref.id"
-                      :value="ref.id"
-                      name="references">
-                      {{ ref.content }}
-                    </b-form-checkbox>
-                  </b-form-group>
-                </div>
-                <div
-                  class="mt-2"
-                  v-if="references.length === 0">
-                  <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
-                </div>
+                <template v-if="references.length">
+                  <div
+                    class="mt-2">
+                    <b-alert
+                      v-if="selected_list_index && lists[selected_list_index].cerqual_option"
+                      show
+                      variant="danger">
+                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                    </b-alert>
+                    <b-table
+                      responsive
+                      striped
+                      :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author, Year, Publication'}]"
+                      :items="refs">
+                      <template v-slot:cell(checkbox)="data">
+                        <b-form-checkbox
+                          :id="`checkbox-${data.index}`"
+                          v-model="selected_references"
+                          :name="`checkbox-${data.index}`"
+                          :value="data.item.id">
+                        </b-form-checkbox>
+                      </template>
+                    </b-table>
+                    <!--
+                    <b-form-group>
+                      <b-form-checkbox
+                        v-for="ref in refs"
+                        v-model="selected_references"
+                        :key="ref.id"
+                        :value="ref.id"
+                        name="references">
+                        {{ ref.content }}
+                      </b-form-checkbox>
+                    </b-form-group>
+                    -->
+                  </div>
+                </template>
+                <template v-else>
+                  <div
+                    class="mt-2">
+                    <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
+                  </div>
+                </template>
               </b-modal>
 
               <b-modal
