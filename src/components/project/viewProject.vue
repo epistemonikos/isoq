@@ -1218,17 +1218,19 @@
                     You must select at least one item of the table
                   </b-alert>
                 </b-col>
+                <!--
                 <b-col
                   v-if="mode==='view'"
                   cols="4">
                   <b-button
                     variant="outline-primary"
                     class="d-print-none"
-                    @click="$refs.findings.selectAllRows()"
+                    @click="$refs['findings-print'].selectAllRows()"
                     block>
                     Select all items
                   </b-button>
                 </b-col>
+                -->
                 <b-col
                   v-if="mode!=='view'"
                   sm="3"
@@ -1257,137 +1259,179 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col cols="12">
-              <b-table
-                class="toDoc"
-                :selectable="(mode==='view')?true:false"
-                select-mode="multi"
-                selected-variant="warning"
-                responsive
-                bordered
-                head-variant="light"
-                id="findings"
-                ref="findings"
-                sort-by="isoqf_id"
-                :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
-                :items="lists"
-                show-empty
-                :busy="table_settings.isBusy"
-                :current-page="table_settings.currentPage"
-                :per-page="table_settings.perPage"
-                :filter="table_settings.filter"
-                @filtered="onFiltered"
-                :filter-included-fields="table_settings.filterOn">
-                <template v-slot:head(isoqf_id)="data">
-                  <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(name)="data">
-                  <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(cerqual_option)="data">
-                  <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(cerqual_explanation)="data">
-                  <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(ref_list)="data">
-                  <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
-                </template>
-                <!-- data -->
-                <template v-slot:cell(isoqf_id)="data">
-                  {{ data.item.isoqf_id }}
-                </template>
-                <template v-slot:cell(name)="data">
-                  <span v-if="mode === 'edit'">
-                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                    <b-row
-                      class="mt-3">
-                      <b-col
-                        sm="6"
-                        cols="12">
-                        <b-button
-                          block
-                          v-if="mode==='edit'"
-                          variant="outline-success"
-                          @click="editModalFindingName(data.index)">
-                          Edit
-                        </b-button>
-                      </b-col>
-                      <b-col
-                        class="mt-1 mt-sm-0"
-                        sm="6"
-                        cols="12">
-                        <b-button
-                          block
-                          v-if="mode==='edit'"
-                          variant="outline-danger"
-                          @click="removeModalFinding(data.index)">
-                          Remove
-                        </b-button>
-                      </b-col>
-                    </b-row>
-                  </span>
-                  <span v-else>
-                    {{ data.item.name }}
-                  </span>
-                </template>
-                <template v-slot:cell(cerqual_option)="data">
-                  {{ data.item.cerqual_option }}
-                  <b-button
-                    v-if="mode==='edit' && data.item.references.length"
-                    class="d-print-none mt-2"
-                    :disabled="(data.item.references.length) ? false : true"
-                    block
-                    :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
-                    :to="{name: 'editList', params: {id: data.item.id}}">
-                      <span v-if="data.item.cerqual_option===''">Complete</span>
-                      <span v-if="data.item.cerqual_option!=''">Edit</span>
-                      CERQual Assessment
-                    </b-button>
-                </template>
-                <template v-slot:cell(cerqual_explanation)="data">
-                  {{ data.item.cerqual_explanation }}
-                  <b-button
-                    v-if="mode==='edit' && data.item.references.length"
-                    class="d-print-none mt-2"
-                    :disabled="(data.item.references.length) ? false : true"
-                    block
-                    :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
-                    :to="{name: 'editList', params: {id: data.item.id}}">
-                      <span v-if="data.item.cerqual_explanation===''">Complete</span>
-                      <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                      CERQual Assessment
-                  </b-button>
-                </template>
-                <template v-slot:cell(ref_list)="data">
-                  <template v-if="mode!=='edit'">
-                    {{ data.item.ref_list }}
+            <b-col cols="12" class="toDoc">
+              <template
+                v-if="mode==='edit'">
+                <b-table
+                  :selectable="(mode==='view')?true:false"
+                  select-mode="multi"
+                  selected-variant="warning"
+                  responsive
+                  bordered
+                  head-variant="light"
+                  id="findings"
+                  ref="findings"
+                  sort-by="isoqf_id"
+                  :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
+                  :items="lists"
+                  show-empty
+                  :busy="table_settings.isBusy"
+                  :current-page="table_settings.currentPage"
+                  :per-page="table_settings.perPage"
+                  :filter="table_settings.filter"
+                  @filtered="onFiltered"
+                  :filter-included-fields="table_settings.filterOn">
+                  <template v-slot:head(isoqf_id)="data">
+                    <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{ data.label }}</span>
                   </template>
-                  <template v-else>
-                    There are <b>{{ data.item.raw_ref.length }}</b> references.
+                  <template v-slot:head(name)="data">
+                    <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
+                  </template>
+                  <template v-slot:head(cerqual_option)="data">
+                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+                  </template>
+                  <template v-slot:head(cerqual_explanation)="data">
+                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                  </template>
+                  <template v-slot:head(ref_list)="data">
+                    <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
+                  </template>
+                  <!-- data -->
+                  <template v-slot:cell(isoqf_id)="data">
+                    {{ data.item.isoqf_id }}
+                  </template>
+                  <template v-slot:cell(name)="data">
+                    <span v-if="mode === 'edit'">
+                      <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                      <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                      <b-row
+                        class="mt-3">
+                        <b-col
+                          sm="6"
+                          cols="12">
+                          <b-button
+                            block
+                            v-if="mode==='edit'"
+                            variant="outline-success"
+                            @click="editModalFindingName(data.index)">
+                            Edit
+                          </b-button>
+                        </b-col>
+                        <b-col
+                          class="mt-1 mt-sm-0"
+                          sm="6"
+                          cols="12">
+                          <b-button
+                            block
+                            v-if="mode==='edit'"
+                            variant="outline-danger"
+                            @click="removeModalFinding(data.index)">
+                            Remove
+                          </b-button>
+                        </b-col>
+                      </b-row>
+                    </span>
+                    <span v-else>
+                      {{ data.item.name }}
+                    </span>
+                  </template>
+                  <template v-slot:cell(cerqual_option)="data">
+                    {{ data.item.cerqual_option }}
                     <b-button
+                      v-if="mode==='edit' && data.item.references.length"
+                      class="d-print-none mt-2"
+                      :disabled="(data.item.references.length) ? false : true"
                       block
-                      class="mt-2 d-print-none"
-                      :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                      @click="openModalReferences(data.index, data.item.isoqf_id)">
-                      <span v-if="data.item.references.length">View or edit references</span>
-                      <span v-else>Select references</span>
+                      :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
+                      :to="{name: 'editList', params: {id: data.item.id}}">
+                        <span v-if="data.item.cerqual_option===''">Complete</span>
+                        <span v-if="data.item.cerqual_option!=''">Edit</span>
+                        CERQual Assessment
+                      </b-button>
+                  </template>
+                  <template v-slot:cell(cerqual_explanation)="data">
+                    {{ data.item.cerqual_explanation }}
+                    <b-button
+                      v-if="mode==='edit' && data.item.references.length"
+                      class="d-print-none mt-2"
+                      :disabled="(data.item.references.length) ? false : true"
+                      block
+                      :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
+                      :to="{name: 'editList', params: {id: data.item.id}}">
+                        <span v-if="data.item.cerqual_explanation===''">Complete</span>
+                        <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+                        CERQual Assessment
                     </b-button>
                   </template>
-                </template>
-                <template v-slot:empty>
-                  <p class="text-center my-5">
-                    There are no findings to show, <a href="#" @click="modalAddSummarized">add review finding</a>
-                  </p>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
+                  <template v-slot:cell(ref_list)="data">
+                    <template v-if="mode!=='edit'">
+                      {{ data.item.ref_list }}
+                    </template>
+                    <template v-else>
+                      There are <b>{{ data.item.raw_ref.length }}</b> references.
+                      <b-button
+                        block
+                        class="mt-2 d-print-none"
+                        :variant="(data.item.references.length) ? 'outline-info' : 'info'"
+                        @click="openModalReferences(data.index, data.item.isoqf_id)">
+                        <span v-if="data.item.references.length">View or edit references</span>
+                        <span v-else>Select references</span>
+                      </b-button>
+                    </template>
+                  </template>
+                  <template v-slot:empty>
+                    <p class="text-center my-5">
+                      There are no findings to show, <a href="#" @click="modalAddSummarized">add review finding</a>
+                    </p>
+                  </template>
+                  <template v-slot:table-busy>
+                    <div class="text-center text-danger my-2">
+                      <b-spinner class="align-middle"></b-spinner>
+                      <strong>Loading...</strong>
+                    </div>
+                  </template>
+                </b-table>
+              </template>
+              <!-- printed version -->
+              <template v-else>
+                <b-table-simple
+                  ref="findings-print">
+                  <b-thead>
+                    <b-tr>
+                      <b-th>#</b-th>
+                      <b-th>Summarized review finding</b-th>
+                      <b-th>CERQual Assessment of confidence</b-th>
+                      <b-th>Explanation of CERQual Assessment</b-th>
+                      <b-th>References</b-th>
+                    </b-tr>
+                  </b-thead>
+                  <b-tbody>
+                    <b-tr v-for="(item, index) of lists_print_version" :key="index">
+                      <template v-if="item.is_category">
+                        <b-td
+                          colspan="5"
+                          class="text-center text-uppercase font-weight-bolder"
+                          style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                          {{ item.name }}
+                        </b-td>
+                      </template>
+                      <template v-else>
+                        <b-td
+                          style="vertical-align: top;">{{ item.isoqf_id }}</b-td>
+                        <b-td
+                          style="vertical-align: top;">{{ item.name }}</b-td>
+                        <b-td
+                          style="vertical-align: top;">{{ item.cerqual_option }}</b-td>
+                        <b-td
+                          style="vertical-align: top;">{{ item.cerqual_explanation }}</b-td>
+                        <b-td
+                          style="vertical-align: top;">{{ item.ref_list }}</b-td>
+                      </template>
+                    </b-tr>
+                  </b-tbody>
+                </b-table-simple>
+              </template>
+              <!-- eopv -->
               <b-pagination
                 v-if="mode === 'edit' && lists.length > table_settings.perPage"
                 class="d-print-none"
@@ -1554,7 +1598,7 @@
                   v-if="modal_edit_list_categories.new">
                   <b-form-group
                     class="mt-3"
-                    label="Add column name">
+                    label="Add category name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
@@ -1569,7 +1613,7 @@
                   class="mt-3"
                   v-if="modal_edit_list_categories.edit">
                   <b-form-group
-                    label="Edit column name">
+                    label="Edit category name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
@@ -1751,6 +1795,7 @@ export default {
         options: [],
         selected: null
       },
+      lists_print_version: [],
       modal_edit_list_categories: {
         id: null,
         fields: [
@@ -2016,10 +2061,10 @@ export default {
     }
   },
   mounted () {
+    this.getListCategories()
     this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
-    this.getListCategories()
   },
   watch: {
     pre_ImportDataTable: function (data) {
@@ -2178,18 +2223,20 @@ export default {
       if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
         this.table_settings.currentPage = 1
-        this.$refs.findings.selectAllRows()
+        // this.$refs.findings.selectAllRows()
       } else {
         this.table_settings.perPage = 5
-        this.$refs.findings.clearSelected()
+        // this.$refs.findings.clearSelected()
       }
     },
     printiSoQf: function () {
+      /*
       if (!document.getElementsByClassName('b-table-row-selected').length) {
         this.dismissAlertPrint = true
       } else {
-        window.print()
-      }
+      */
+      window.print()
+      // }
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
@@ -2326,6 +2373,8 @@ export default {
       axios.get('/api/isoqf_lists', { params })
         .then((response) => {
           this.lists = JSON.parse(JSON.stringify(response.data))
+          let _lists = JSON.parse(JSON.stringify(response.data))
+
           if (this.lists.length) {
             let lists = JSON.parse(JSON.stringify(this.lists))
             this.lastId = parseInt(lists.slice(-1)[0].isoqf_id) + 1
@@ -2348,6 +2397,53 @@ export default {
                   }
                 }
               }
+            }
+
+            if (this.list_categories.options.length) {
+              let _arr = []
+              for (let category of this.list_categories.options) {
+                _arr.push({'name': category.text, 'value': category.value, 'items': []})
+              }
+
+              for (let list of _lists) {
+                if (_arr.length) {
+                  for (let element of _arr) {
+                    if (element.value === list.category) {
+                      element.items.push(
+                        {
+                          'isoqf_id': list.isoqf_id,
+                          'name': list.name,
+                          'cerqual_option': list.cerqual_option,
+                          'cerqual_explanation': list.cerqual_explanation,
+                          'ref_list': list.ref_list
+                        }
+                      )
+                    }
+                  }
+                }
+              }
+              let newArr = []
+              for (let cat of _arr) {
+                newArr.push({'is_category': true, 'name': cat.name})
+                for (let item of cat.items) {
+                  newArr.push(item)
+                }
+              }
+              this.lists_print_version = newArr
+            } else {
+              let items = []
+              for (let list of _lists) {
+                items.push(
+                  {
+                    'isoqf_id': list.isoqf_id,
+                    'name': list.name,
+                    'cerqual_option': list.cerqual_option,
+                    'cerqual_explanation': list.cerqual_explanation,
+                    'ref_list': list.ref_list
+                  }
+                )
+              }
+              this.lists_print_version = items
             }
           }
           this.table_settings.isBusy = false
@@ -3792,6 +3888,7 @@ export default {
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
           .then((response) => {
             this.getListCategories()
+            this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
           })
@@ -3802,6 +3899,7 @@ export default {
         axios.post('/api/isoqf_list_categories/', params)
           .then((response) => {
             this.getListCategories()
+            this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
           })
@@ -3832,6 +3930,7 @@ export default {
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
           .then((response) => {
             this.getListCategories()
+            this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.name = ''
             this.modal_edit_list_categories.index = null
@@ -3851,9 +3950,8 @@ export default {
     removeCategory: function () {
       const objID = this.modal_edit_list_categories.id
       const index = this.modal_edit_list_categories.index
-      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
-
-      _options.splice(index, 1)
+      const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+      const deletedItem = _options.splice(index, 1)
 
       if (objID) {
         const params = {
@@ -3864,6 +3962,7 @@ export default {
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
           .then((response) => {
             this.getListCategories()
+            this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.name = ''
             this.modal_edit_list_categories.index = null
@@ -3949,6 +4048,20 @@ export default {
       document.body.appendChild(link)
 
       link.click()
+    },
+    updateLists: function (deletedCategoryValue) {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      let _request = []
+      for (let list of _lists) {
+        if (list.category === deletedCategoryValue[0].value) {
+          list.category = null
+          _request.push(axios.patch(`/api/isoqf_lists/${list.id}`, list))
+        }
+      }
+      axios.all(_request)
+        .then(axios.spread((...response) => {
+          this.getLists()
+        }))
     }
   }
 }
