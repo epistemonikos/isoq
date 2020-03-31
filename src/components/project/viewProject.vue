@@ -1395,6 +1395,7 @@
               <!-- printed version -->
               <template v-else>
                 <b-table-simple
+                  id="findings-print"
                   ref="findings-print">
                   <b-thead>
                     <b-tr>
@@ -1425,7 +1426,11 @@
                         <b-td
                           style="vertical-align: top;">{{ item.cerqual_explanation }}</b-td>
                         <b-td
-                          style="vertical-align: top;">{{ item.ref_list }}</b-td>
+                          style="vertical-align: top;">
+                          <ul class="list-unstyled">
+                            <li v-for="(item, index) of item.ref_list" :key="index">{{item}}</li>
+                          </ul>
+                        </b-td>
                       </template>
                     </b-tr>
                   </b-tbody>
@@ -2409,13 +2414,14 @@ export default {
                 if (_arr.length) {
                   for (let element of _arr) {
                     if (element.value === list.category) {
+                      let _refList = list.ref_list.split(';')
                       element.items.push(
                         {
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
                           'cerqual_explanation': list.cerqual_explanation,
-                          'ref_list': list.ref_list
+                          'ref_list': _refList
                         }
                       )
                     }
@@ -2433,13 +2439,14 @@ export default {
             } else {
               let items = []
               for (let list of _lists) {
+                let _refList = list.ref_list.split(';')
                 items.push(
                   {
                     'isoqf_id': list.isoqf_id,
                     'name': list.name,
                     'cerqual_option': list.cerqual_option,
                     'cerqual_explanation': list.cerqual_explanation,
-                    'ref_list': list.ref_list
+                    'ref_list': _refList
                   }
                 )
               }
@@ -4113,6 +4120,26 @@ export default {
   div >>>
     #findings.table thead th:last-child {
       width: 5%;
+    }
+  div >>>
+    #findings-print.table thead th {
+      width: 15%;
+    }
+  div >>>
+    #findings-print.table thead th:nth-child(2) {
+      width: 45%;
+    }
+  div >>>
+    #findings-print.table thead th:first-child {
+      width: 5%;
+    }
+  div >>>
+    #findings-print.table thead th:last-child {
+      width: 5%;
+    }
+  div >>>
+    #findings-print li {
+      font-size: 12px;
     }
   div >>>
     #export-button button:first-child {
