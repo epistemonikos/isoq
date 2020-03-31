@@ -1523,7 +1523,7 @@
                   <div
                     class="mt-2">
                     <b-alert
-                      v-if="selected_list_index && lists[selected_list_index].cerqual_option"
+                      v-if="selected_list_index !== '' && lists[selected_list_index].cerqual_option"
                       show
                       variant="danger">
                       <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
