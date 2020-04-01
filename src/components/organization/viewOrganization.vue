@@ -68,6 +68,7 @@
         scrollable
         id="new-project"
         ref="new-project"
+        size="lg"
         :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
         @ok="AddProject"
         @cancel="closeModalProject"
@@ -93,6 +94,21 @@
             required
             :placeholder="$t('Title of review')"
             v-model="buffer_project.name"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          label="Author name"
+          label-for="input-project-author">
+          <b-form-input
+            id="input-project-author"
+            v-model="buffer_project.author"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          label="Author email"
+          label-for="input-project-author-email">
+          <b-form-input
+            type="email"
+            id="input-project-author-email"
+            v-model="buffer_project.author_email"></b-form-input>
         </b-form-group>
         <b-form-group
           :label="$t('Authors')"
@@ -236,7 +252,9 @@ export default {
         complete_by_author: true,
         url_doi: null,
         authors: '',
-        lists_authors: ''
+        lists_authors: '',
+        author: '',
+        author_email: ''
       },
       tmp_buffer_project_list: {
         id: null,
@@ -256,7 +274,9 @@ export default {
         complete_by_author: true,
         url_doi: null,
         authors: '',
-        lists_authors: ''
+        lists_authors: '',
+        author: '',
+        author_email: ''
       },
       buffer_project_list: {
         id: null,

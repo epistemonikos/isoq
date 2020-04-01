@@ -42,6 +42,20 @@
                   v-model="project.name"></b-form-input>
               </b-form-group>
               <b-form-group
+                label="Author"
+                label-for="author">
+                <b-form-input
+                  id="author"
+                  v-model="project.author"></b-form-input>
+              </b-form-group>
+              <b-form-group
+                label="Author email"
+                label-for="author_email">
+                <b-form-input
+                  id="author_email"
+                  v-model="project.author_email"></b-form-input>
+              </b-form-group>
+              <b-form-group
                 label="Authors"
                 label-for="authors">
                 <b-form-input
@@ -3161,6 +3175,7 @@ export default {
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then((response) => {
           this.msgUpdateProject = 'The project has been updated'
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
           this.msgUpdateProject = error
