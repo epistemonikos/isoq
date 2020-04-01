@@ -1510,6 +1510,7 @@
               </b-modal>
 
               <b-modal
+                v-if="selected_list_index >= 0"
                 id="modal-references-list"
                 ref="modal-references-list"
                 title="References"
@@ -1523,7 +1524,7 @@
                   <div
                     class="mt-2">
                     <b-alert
-                      v-if="(selected_list_index !== null || selected_list_index !== '')"
+                      v-if="showBanner"
                       show
                       variant="danger">
                       <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
@@ -2062,7 +2063,8 @@ export default {
       episte_selected: [],
       episte_loading: false,
       episte_error: false,
-      finding: {}
+      finding: {},
+      showBanner: false
     }
   },
   mounted () {
@@ -2592,6 +2594,10 @@ export default {
       }
       this.getReferences()
       this.selected_references = this.lists[this.selected_list_index].references
+      this.showBanner = false
+      if (this.lists[this.selected_list_index].cerqual_option !== '') {
+        this.showBanner = true
+      }
       this.$refs['modal-references-list'].show()
     },
     saveReferencesList: function () {
