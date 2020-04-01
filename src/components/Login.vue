@@ -57,7 +57,8 @@ export default {
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
-          this.$router.push('/')
+          const path = { 'path': (this.$route.query.redirect) ? this.$route.query.redirect : '/' }
+          this.$router.push(path)
         })
         .catch((error) => console.log(error))
     }
