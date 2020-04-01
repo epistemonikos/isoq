@@ -793,7 +793,7 @@
               </template>
 
             <div
-              class="mt-3"
+              class="mt-5"
               v-if="show.selected.includes('cs')">
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
