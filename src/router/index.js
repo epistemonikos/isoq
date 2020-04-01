@@ -55,7 +55,7 @@ var routes = [
     }
   },
   {
-    path: '/organizations',
+    path: '/orgs',
     name: 'Organizations',
     component: Organizations,
     meta: {
@@ -64,7 +64,7 @@ var routes = [
     }
   },
   {
-    path: '/organization/:id',
+    path: '/org/:id',
     name: 'viewOrganization',
     component: ViewOrganization,
     meta: {
@@ -72,7 +72,7 @@ var routes = [
     }
   },
   {
-    path: '/organization/:org_id/project/:id',
+    path: '/org/:org_id/project/:id',
     name: 'viewProject',
     component: ViewProject,
     meta: {
