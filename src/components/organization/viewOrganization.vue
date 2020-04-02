@@ -11,7 +11,11 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
           <b-col cols="12" class="text-right">
-            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table" variant="success" v-b-modal.new-project>{{ $t("Add new project") }}</b-button>
+            <b-button
+              v-b-tooltip.hover
+              title="Create a new Interactive Summary of Qualitative Findings Table"
+              variant="success"
+              @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
         <b-row
@@ -333,7 +337,7 @@ export default {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
           .then((response) => {
-            this.buffer_project = this.tmp_buffer_project
+            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.getProjectsAndLists()
           })
           .catch((error) => {
@@ -342,7 +346,7 @@ export default {
       } else {
         axios.post('/api/isoqf_projects', this.buffer_project)
           .then((response) => {
-            this.buffer_project = this.tmp_buffer_project
+            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.$refs['new-project'].hide()
             this.getProjectsAndLists()
           })
@@ -372,10 +376,10 @@ export default {
           }
         })
           .then((response) => {
-            this.buffer_project = this.tmp_buffer_project
+            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.$refs['new-project-list'].hide()
             // get project lists
-            this.buffer_project_list = this.tmp_buffer_project_list
+            this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
             this.getProjectsAndLists()
           })
           .catch((error) => {
@@ -418,16 +422,16 @@ export default {
       this.$refs['new-project-list'].show()
     },
     cleanProjectList: function () {
-      this.buffer_project_list = this.tmp_buffer_project_list
+      this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
     },
     cleanProject: function () {
-      this.buffer_project = this.tmp_buffer_project
+      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
     updateProjectList: function () {
       axios.patch(`/api/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
         .then((response) => {
-          this.buffer_project = this.tmp_buffer_project
-          this.buffer_project_list = this.tmp_buffer_project_list
+          this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+          this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
           this.getProjectsAndLists()
           this.$refs['new-project-list'].hide()
           this.projectTable.isBusy = true
@@ -436,8 +440,12 @@ export default {
           console.log(error)
         })
     },
+    openModalNewFindingTable: function () {
+      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+      this.$refs['new-project'].show()
+    },
     closeModalProject: function () {
-      this.buffer_project = this.tmp_buffer_project
+      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
     openModalEditProject: function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
@@ -546,7 +554,7 @@ export default {
         .then(axios.spread(function () {
           axios.delete(`/api/isoqf_projects/${projectId}`)
             .then((response) => {
-              this.buffer_project = this.tmp_buffer_project
+              this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
               delete this.org.remove_project_id
               this.getOrganization()
               this.getProjectsAndLists()
