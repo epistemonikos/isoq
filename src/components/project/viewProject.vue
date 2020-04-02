@@ -2445,7 +2445,10 @@ export default {
                 if (_arr.length) {
                   for (let element of _arr) {
                     if (element.value === list.category) {
-                      let _refList = list.ref_list.split(';')
+                      let _refList = []
+                      if (list.ref_list) {
+                        _refList = list.ref_list.split(';')
+                      }
                       element.items.push(
                         {
                           'isoqf_id': list.isoqf_id,
@@ -2470,7 +2473,10 @@ export default {
             } else {
               let items = []
               for (let list of _lists) {
-                let _refList = list.ref_list.split(';')
+                let _refList = []
+                if (list.ref_list) {
+                  _refList = list.ref_list.split(';')
+                }
                 items.push(
                   {
                     'isoqf_id': list.isoqf_id,
