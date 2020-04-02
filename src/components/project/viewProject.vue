@@ -2447,7 +2447,8 @@ export default {
                     if (element.value === list.category) {
                       let _refList = []
                       if (list.ref_list) {
-                        _refList = list.ref_list.split(';')
+                        _refList = list.ref_list.split('; ')
+                        _refList.splice(-1, 1)
                       }
                       element.items.push(
                         {
@@ -2475,7 +2476,8 @@ export default {
               for (let list of _lists) {
                 let _refList = []
                 if (list.ref_list) {
-                  _refList = list.ref_list.split(';')
+                  _refList = list.ref_list.split('; ')
+                  _refList.splice(-1, 1)
                 }
                 items.push(
                   {
