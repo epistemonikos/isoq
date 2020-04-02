@@ -1089,95 +1089,106 @@
         </b-tab>
         <b-tab title="iSoQf"
           :disabled="(references.length) ? false : true">
+          <b-row>
+            <b-col
+              cols="12">
+              <b-row
+                class="d-print-none justify-content-end mb-2">
+                <b-col
+                  v-if="mode==='view'"
+                  cols="12"
+                  md="3"
+                  xl="3">
+                  <b-dropdown
+                    id="export-button"
+                    class="mt-1"
+                    block
+                    variant="outline-secondary"
+                    right
+                    text="Export">
+                    <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                    <!--
+                    <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
+                    <b-dropdown-item disabled>to GRADE</b-dropdown-item>
+                    <b-dropdown-divider></b-dropdown-divider>
+                    -->
+                    <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+                  </b-dropdown>
+                </b-col>
+                <b-col
+                  v-if="mode==='view'"
+                  cols="12"
+                  md="3"
+                  xl="3">
+                    <b-button
+                      class="mt-1"
+                      variant="outline-info"
+                      block
+                      @click="printiSoQf">
+                      <font-awesome-icon icon="print"></font-awesome-icon>
+                      Print
+                    </b-button>
+                </b-col>
+                <b-col
+                  v-if="mode==='view'"
+                  cols="12"
+                  md="3"
+                  xl="3">
+                    <b-button
+                      class="mt-1"
+                      @click="changeMode"
+                      variant="outline-primary"
+                      block>
+                      <font-awesome-icon icon="edit"></font-awesome-icon>
+                      Edit
+                    </b-button>
+                </b-col>
+                <b-col
+                  v-if="mode==='edit'"
+                  cols="12"
+                  md="3"
+                  xl="3">
+                    <b-button
+                      class="mt-1"
+                      @click="modalChangePublicStatus"
+                      :variant="(!project.private) ? 'outline-primary' : 'primary'"
+                      block
+                      v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
+                      <span v-if="!project.private">Published</span><span v-else>Publish</span>
+                    </b-button>
+                </b-col>
+                <b-col
+                  v-if="mode==='edit'"
+                  cols="12"
+                  md="3"
+                  xl="3">
+                    <b-button
+                      class="mt-1"
+                      @click="changeMode"
+                      variant="outline-success"
+                      block
+                      v-b-tooltip.hover title="Click to enter view mode where you can export or print">
+                      Print or Export
+                    </b-button>
+                </b-col>
+              </b-row>
+            </b-col>
+          </b-row>
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
               <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
             </b-col>
           </b-row>
-          <b-row
-            class="d-print-none justify-content-end mb-5">
-            <b-col
-              cols="12"
-              sm="2">
-              <b-dropdown
-                v-if="mode==='view'"
-                id="export-button"
-                class="btn-block"
-                variant="outline-secondary"
-                right
-                text="Export">
-                <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-                <!--
-                <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
-                <b-dropdown-item disabled>to GRADE</b-dropdown-item>
-                <b-dropdown-divider></b-dropdown-divider>
-                -->
-                <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
-              </b-dropdown>
-            </b-col>
-            <b-col
-              class="mt-1 mt-sm-0"
-              v-if="mode==='view'"
-              cols="12"
-              sm="2">
-                <b-button
-                  variant="outline-info"
-                  block
-                  @click="printiSoQf">
-                  <font-awesome-icon icon="print"></font-awesome-icon>
-                  Print
-                </b-button>
-            </b-col>
-            <b-col
-              class="mt-1 mt-sm-0"
-              v-if="mode==='view'"
-              cols="12"
-              sm="2">
-                <b-button
-                  @click="changeMode"
-                  variant="outline-primary"
-                  block>
-                  <font-awesome-icon icon="edit"></font-awesome-icon>
-                  Edit
-                </b-button>
-            </b-col>
-            <b-col
-              class="mt-1 mt-sm-0"
-              v-if="mode==='edit'"
-              cols="12"
-              sm="2">
-                <b-button
-                  @click="modalChangePublicStatus"
-                  :variant="(!project.private) ? 'outline-primary' : 'primary'"
-                  block
-                  v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
-                  <span v-if="!project.private">Published</span><span v-else>Publish</span>
-                </b-button>
-            </b-col>
-            <b-col
-              class="mt-1 mt-sm-0"
-              v-if="mode==='edit'"
-              cols="12"
-              sm="2">
-                <b-button
-                  @click="changeMode"
-                  variant="outline-success"
-                  block
-                  v-b-tooltip.hover title="Click to enter view mode where you can export or print">
-                  Print or Export
-                </b-button>
-            </b-col>
-          </b-row>
           <b-row>
-            <b-col cols="12" class="toDoc">
+            <b-col cols="12" class="toDoc mb-3">
               <h3 id="project-title">{{project.name}}</h3>
             </b-col>
-            <b-col cols="12" sm="6" class="toDoc">
+            <b-col cols="12" md="6" class="toDoc">
               <p v-if="project.description">{{project.description}}</p>
               <h5>Review question</h5>
               <p>{{project.review_question}}</p>
             </b-col>
-            <b-col cols="12" sm="6" class="toDoc">
+            <b-col cols="12" md="6" class="toDoc">
               <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
               <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                 <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
@@ -1247,10 +1258,12 @@
                 -->
                 <b-col
                   v-if="mode!=='view'"
-                  sm="3"
-                  md="4"
+                  sm="6"
+                  md="6"
+                  xl="4"
                   cols="12">
                   <b-button
+                    class="mt-1"
                     v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddSummarized"
@@ -1260,10 +1273,12 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  sm="3"
-                  md="4"
+                  sm="6"
+                  md="6"
+                  xl="4"
                   cols="12">
                   <b-button
+                    class="mt-1"
                     v-b-tooltip.hover title="If you want to categorize your review findings, for example by theme or topic, you can do so by creating review finding categories here."
                     variant="outline-secondary"
                     @click="modalListCategories"
