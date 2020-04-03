@@ -312,7 +312,8 @@
                   </b-button>
                 </b-col>
                 <b-col
-                  sm="3">
+                  sm="3"
+                  v-if="charsOfStudies.items.length > 1">
                   <b-button
                     variant="outline-secondary"
                     block
@@ -615,8 +616,10 @@
                   </b-button>
                 </b-col>
                 <b-col
-                  sm="3">
+                  sm="3"
+                  v-if="methodologicalTableRefs.fieldsObj > 1">
                   <b-button
+                    variant="outline-secondary"
                     block
                     @click="exportTableToCSV('meth_assessments')">
                     Export to XLS file
