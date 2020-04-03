@@ -1263,11 +1263,13 @@
                   </b-button>
                 </b-col>
                 <b-col
+                  v-if="mode!=='view' && lists.length > 1"
                   md="4"
                   cols="12">
                   <b-button
                     class="mt-1"
                     block
+                    variant="outline-secondary"
                     @click="modalSortFindings">Sort your review findings</b-button>
 
                   <b-modal
@@ -1282,8 +1284,13 @@
                     @ok="saveSortedLists">
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                        <b-list-group-item v-for="(item, index) of sorted_lists" :key="index">
-                          {{ item.name }}
+                        <b-list-group-item v-for="(item, index) of sorted_lists" :key="index" class="flex-column align-items-start">
+                          <div
+                            v-if="item.category >= 0"
+                            class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ getCategoryName(item.category) }}</h5>
+                          </div>
+                          <p>{{ item.name }}</p>
                         </b-list-group-item>
                       </draggable>
                     </b-list-group>
@@ -1313,7 +1320,7 @@
                   :filter="table_settings.filter"
                   @filtered="onFiltered"
                   :filter-included-fields="table_settings.filterOn">
-                  <template v-slot:head(isoqf_id)="data">
+                  <template v-slot:head(sort)="data">
                     <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{ data.label }}</span>
                   </template>
                   <template v-slot:head(name)="data">
@@ -1329,8 +1336,8 @@
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
                   </template>
                   <!-- data -->
-                  <template v-slot:cell(isoqf_id)="data">
-                    {{ data.item.isoqf_id }}
+                  <template v-slot:cell(sort)="data">
+                    {{ data.item.sort }}
                   </template>
                   <template v-slot:cell(name)="data">
                     <span v-if="mode === 'edit'">
@@ -1450,7 +1457,7 @@
                       </template>
                       <template v-else>
                         <b-td
-                          style="vertical-align: top;">{{ item.isoqf_id }}</b-td>
+                          style="vertical-align: top;">{{ item.sort }}</b-td>
                         <b-td
                           style="vertical-align: top;">{{ item.name }}</b-td>
                         <b-td
@@ -1853,7 +1860,7 @@ export default {
       fields: {
         with_categories: [
           {
-            key: 'isoqf_id',
+            key: 'sort',
             label: '#'
           },
           {
@@ -1892,7 +1899,7 @@ export default {
         ],
         without_categories: [
           {
-            key: 'isoqf_id',
+            key: 'sort',
             label: '#'
           },
           {
@@ -4168,6 +4175,16 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    getCategoryName: function (id) {
+      const _categories = JSON.parse(JSON.stringify(this.list_categories))
+      let _category = ''
+      for (let category of _categories.options) {
+        if (category.value === id) {
+          _category = category.text
+        }
+      }
+      return _category
     }
   }
 }
