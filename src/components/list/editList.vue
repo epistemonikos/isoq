@@ -1313,7 +1313,7 @@ export default {
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     saveReferencesList: function () {
@@ -1335,7 +1335,7 @@ export default {
           this.getList()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getList: function () {
@@ -1357,7 +1357,7 @@ export default {
           this.evidence_profile_table_settings.isBusy = false
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getProject: function (projectId) {
@@ -1366,7 +1366,7 @@ export default {
           this.project = response.data
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     renderReference: function (reference) {
@@ -1398,7 +1398,7 @@ export default {
           this.evidence_profile = [Object.assign({}, this.evidence_profile, { references: authors })]
         }))
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getStageOneData: function () {
@@ -1418,7 +1418,7 @@ export default {
           this.getStatus()
           // this.getReferences()
         }).catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getStatus: function () {
@@ -1461,7 +1461,7 @@ export default {
           this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     saveStageOneAndTwo: function () {
@@ -1480,7 +1480,7 @@ export default {
             this.saveListName()
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       } else {
         axios.post(`/api/isoqf_findings`, params)
@@ -1488,7 +1488,7 @@ export default {
             this.getStageOneData()
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -1564,7 +1564,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalCharsOfStudiesditData: function (row) {
@@ -1593,7 +1593,7 @@ export default {
           this.getCharsOfStudies()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     modalDeleteCharsOfStudiesItemData: function (row) {
@@ -1624,7 +1624,7 @@ export default {
           this.getCharsOfStudies()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getMethAssessments: function () {
@@ -1663,7 +1663,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalEditDataMethAssessments: function (row) {
@@ -1690,7 +1690,7 @@ export default {
           this.getMethAssessments()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalRemoveDataMethAssessments: function (row) {
@@ -1713,7 +1713,7 @@ export default {
           this.getMethAssessments()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getExtractedData: function () {
@@ -1751,7 +1751,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     saveDataExtractedData: function () {
@@ -1774,7 +1774,7 @@ export default {
           this.buffer_extracted_data_items = {}
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalExtractedDataRemoveDataItem: function (data) {
@@ -1793,7 +1793,7 @@ export default {
           delete this.buffer_extracted_data.remove_index_item
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalExtractedDataEditDataItem: function (data) {
@@ -1839,6 +1839,24 @@ export default {
       }
 
       document.body.removeChild(downloadLink)
+    },
+    printErrors: function (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        console.log(error.request)
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log('Error', error.message)
+      }
+      console.log(error.config)
     }
   }
 }

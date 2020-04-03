@@ -314,6 +314,7 @@
                 <b-col
                   sm="3">
                   <b-button
+                    variant="outline-secondary"
                     block
                     @click="exportTableToCSV('chars_of_studies')">
                     Export to XLS file
@@ -2261,7 +2262,7 @@ export default {
             this.episte_loading = false
             this.episte_error = true
             document.getElementById('btnEpisteRequest').disabled = false
-            console.log(error)
+            this.printErrors(error)
           })
       })
     },
@@ -2409,7 +2410,7 @@ export default {
           this.getExtractedData()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getLists: function () { // related to summary review of a finding
@@ -2527,7 +2528,7 @@ export default {
           this.table_settings.totalRows = this.lists.length
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     modalAddSummarized: function () {
@@ -2556,7 +2557,7 @@ export default {
           this.list_categories.selected = null
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     createFinding: function (listId, listName) {
@@ -2594,7 +2595,7 @@ export default {
       axios.post('/api/isoqf_findings', params)
         .then((response) => {})
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getReferences: function (changeTab = true) {
@@ -2626,7 +2627,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalReferencesSingle: function (showModal) {
@@ -2651,7 +2652,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
       let cnt = 0
       for (let list of this.lists) {
@@ -2683,7 +2684,7 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     updateFindingReferences: function (references) {
@@ -2695,7 +2696,7 @@ export default {
           this.finding = {}
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     onFiltered (filteredItems) {
@@ -2958,7 +2959,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalCharsOfStudies: function () {
@@ -3048,7 +3049,7 @@ export default {
             this.getProject()
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -3076,7 +3077,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getCharacteristics: function () {
@@ -3217,7 +3218,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     updateProjectInfo: function () {
@@ -3315,7 +3316,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     removeItemCharOfStudies: function (index, id) {
@@ -3356,7 +3357,7 @@ export default {
           this.getCharacteristics()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     cleanRemoveContentCharsOfStudies: function () {
@@ -3425,7 +3426,7 @@ export default {
             this.getProject()
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -3468,7 +3469,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     deleteFieldFromMethodological: function (index) {
@@ -3506,7 +3507,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     addDataMethodological: function (index = 0) {
@@ -3526,7 +3527,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     removeItemMethodological: function (index, id) {
@@ -3573,7 +3574,7 @@ export default {
           this.getMethodological()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     openModalExtractedData: function (edit = false) {
@@ -3636,7 +3637,7 @@ export default {
             this.getProject()
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -3685,7 +3686,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     deleteFieldFromExtractedDataEdit: function (index) {
@@ -3723,7 +3724,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     extractedDataNewColumn: function () {
@@ -3758,7 +3759,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     findRelatedFindings: function (refId = null) {
@@ -3805,7 +3806,7 @@ export default {
         axios.patch(`/api/isoqf_lists/${list.id}`, list)
           .then((response) => {})
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
       for (let reference of _references) {
@@ -3836,7 +3837,7 @@ export default {
           this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
       this.$refs['edit-finding-name'].show()
     },
@@ -3852,7 +3853,7 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     updateFinding: function (findingID, name) {
@@ -3863,7 +3864,7 @@ export default {
       axios.patch(`/api/isoqf_findings/${findingID}`, params)
         .then((response) => {})
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     removeModalFinding: function (index) {
@@ -3879,7 +3880,7 @@ export default {
           this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
       this.$refs['remove-finding'].show()
     },
@@ -3892,14 +3893,14 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     confirmRemoveFinding: function (findingID) {
       axios.delete(`/api/isoqf_findings/${findingID}`)
         .then((response) => {})
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     resetData: function () {
@@ -3924,7 +3925,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     saveListCategoryName: function () {
@@ -3943,7 +3944,7 @@ export default {
           this.list_categories.skip = false
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     modalListCategories: function () {
@@ -3975,7 +3976,7 @@ export default {
             this.modal_edit_list_categories.name = ''
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       } else {
         axios.post('/api/isoqf_list_categories/', params)
@@ -3986,7 +3987,7 @@ export default {
             this.modal_edit_list_categories.name = ''
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -4018,7 +4019,7 @@ export default {
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -4050,7 +4051,7 @@ export default {
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       }
     },
@@ -4079,7 +4080,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     exportTableToCSV: function (type) {
@@ -4173,7 +4174,7 @@ export default {
           this.getLists()
         }))
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
     },
     getCategoryName: function (id) {
@@ -4185,6 +4186,24 @@ export default {
         }
       }
       return _category
+    },
+    printErrors: function (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        console.log(error.request)
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log('Error', error.message)
+      }
+      console.log(error.config)
     }
   }
 }
