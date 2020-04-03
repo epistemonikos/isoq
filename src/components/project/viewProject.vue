@@ -1237,30 +1237,8 @@
               <b-row
                 class="mb-2">
                 <b-col
-                  v-if="mode==='view'"
-                  cols="12">
-                  <b-alert class="d-print-none" v-model="dismissAlertPrint" variant="danger" dismissible>
-                    You must select at least one item of the table
-                  </b-alert>
-                </b-col>
-                <!--
-                <b-col
-                  v-if="mode==='view'"
-                  cols="4">
-                  <b-button
-                    variant="outline-primary"
-                    class="d-print-none"
-                    @click="$refs['findings-print'].selectAllRows()"
-                    block>
-                    Select all items
-                  </b-button>
-                </b-col>
-                -->
-                <b-col
                   v-if="mode!=='view'"
-                  sm="6"
-                  md="6"
-                  xl="4"
+                  md="4"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1273,9 +1251,7 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  sm="6"
-                  md="6"
-                  xl="4"
+                  md="4"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1285,6 +1261,33 @@
                     block>
                     Assign categories to your review findings
                   </b-button>
+                </b-col>
+                <b-col
+                  md="4"
+                  cols="12">
+                  <b-button
+                    class="mt-1"
+                    block
+                    @click="modalSortFindings">Sort your review findings</b-button>
+
+                  <b-modal
+                    title="Sort your review findings"
+                    ref="modal-sort-findings"
+                    id="modal-sort-findings"
+                    size="lg"
+                    ok-title="Save"
+                    ok-variant="outline-success"
+                    cancel-variant="outline-primary"
+                    scrollable
+                    @ok="saveSortedLists">
+                    <b-list-group>
+                      <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
+                        <b-list-group-item v-for="(item, index) of sorted_lists" :key="index">
+                          {{ item.name }}
+                        </b-list-group-item>
+                      </draggable>
+                    </b-list-group>
+                  </b-modal>
                 </b-col>
               </b-row>
             </b-col>
@@ -1300,7 +1303,7 @@
                   head-variant="light"
                   id="findings"
                   ref="findings"
-                  sort-by="isoqf_id"
+                  sort-by="sort"
                   :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
                   :items="lists"
                   show-empty
@@ -2093,7 +2096,8 @@ export default {
       episte_loading: false,
       episte_error: false,
       finding: {},
-      showBanner: false
+      showBanner: false,
+      sorted_lists: []
     }
   },
   mounted () {
@@ -2456,7 +2460,8 @@ export default {
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
                           'cerqual_explanation': list.cerqual_explanation,
-                          'ref_list': _refList
+                          'ref_list': _refList,
+                          'sort': list.sort
                         }
                       )
                     }
@@ -2470,6 +2475,15 @@ export default {
                   newArr.push(item)
                 }
               }
+              newArr.sort(function (a, b) {
+                if (a.sort < b.sort) {
+                  return -1
+                }
+                if (a.sort > b.sort) {
+                  return 1
+                }
+                return 0
+              })
               this.lists_print_version = newArr
             } else {
               let items = []
@@ -2485,10 +2499,20 @@ export default {
                     'name': list.name,
                     'cerqual_option': list.cerqual_option,
                     'cerqual_explanation': list.cerqual_explanation,
-                    'ref_list': _refList
+                    'ref_list': _refList,
+                    'sort': list.sort
                   }
                 )
               }
+              items.sort(function (a, b) {
+                if (a.sort < b.sort) {
+                  return -1
+                }
+                if (a.sort > b.sort) {
+                  return 1
+                }
+                return 0
+              })
               this.lists_print_version = items
             }
           }
@@ -4113,6 +4137,37 @@ export default {
         .then(axios.spread((...response) => {
           this.getLists()
         }))
+    },
+    modalSortFindings: function () {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      _lists.sort(function (a, b) {
+        if (a.sort < b.sort) {
+          return -1
+        }
+        if (a.sort > b.sort) {
+          return 1
+        }
+        return 0
+      })
+      this.sorted_lists = _lists
+      this.$refs['modal-sort-findings'].show()
+    },
+    saveSortedLists: function () {
+      let cnt = 1
+      let requests = []
+      for (let list of this.sorted_lists) {
+        list.sort = cnt
+        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort}))
+        cnt++
+      }
+
+      axios.all(requests)
+        .then(axios.spread((response) => {
+          this.getLists()
+        }))
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
