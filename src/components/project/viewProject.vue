@@ -617,7 +617,7 @@
                 </b-col>
                 <b-col
                   sm="3"
-                  v-if="methodologicalTableRefs.fieldsObj > 1">
+                  v-if="methodologicalTableRefs.fields.length > 2">
                   <b-button
                     variant="outline-secondary"
                     block
@@ -860,220 +860,6 @@
                 </b-row>
               </b-modal>
             </b-col>
-            <!--
-            <b-col
-              cols="12"
-              class="mt-3">
-              <h4>STEP 4: Create or Import  the Headings of your Extracted Data Table (recommended)</h4>
-              <p class="font-weight-light">
-                Data extracted from the included studies
-              </p>
-              <p class="font-weight-light">
-                * Note that this table operates differently from the previous two. At this stage you will only add the column headings and not the data. Data will be added to the table later when you complete the CERQual assessment worksheets)
-              </p>
-              <b-row>
-                <b-col
-                  sm="5">
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="extractedDataTableRefs.fields.length <= 2"
-                    @click="openModalExtractedData()"
-                    :disabled="(references.length) ? false : true">
-                    Create Table
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="extractedDataTableRefs.fields.length > 2"
-                    @click="openModalExtractedData(true)">
-                    Edit column headings
-                  </b-button>
-                </b-col>
-                <b-col
-                  sm="2">
-                  <p class="text-center pt-1">OR</p>
-                </b-col>
-                <b-col
-                  sm="5">
-                  <b-button
-                    block
-                    variant="outline-info"
-                    :disabled="(references.length) ? false : true"
-                    v-b-modal.import-extracted-data-table>
-                    Import table
-                  </b-button>
-                </b-col>
-              </b-row>
-
-              <b-table
-                sort-by="authors"
-                responsive
-                v-if="extractedDataTableRefs.items.length"
-                :per-page="extractedDataTableRefsTableSettings.perPage"
-                :current-page="extractedDataTableRefsTableSettings.currentPage"
-                id="extracted-data-table"
-                class="table-content-refs mt-3"
-                :fields="extractedDataTableRefs.fieldsObj"
-                :items="extractedDataTableRefs.items">
-              </b-table>
-              <b-pagination
-                v-if="extractedDataTableRefs.items.length && extractedDataTableRefs.items.length > extractedDataTableRefsTableSettings.perPage"
-                align="center"
-                v-model="extractedDataTableRefsTableSettings.currentPage"
-                :total-rows="extractedDataTableRefs.items.length"
-                :per-page="extractedDataTableRefsTableSettings.perPage"
-                aria-controls="extracted-data-table"></b-pagination>
-
-              <b-modal
-                id="open-extracted-data-table-modal"
-                ref="open-extracted-data-table-modal"
-                scrollable
-                title="Column Headers"
-                :ok-disabled="(extractedDataFieldsModal.fields.length)?false:true"
-                @ok="saveExtractedDataFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                  <p class="font-weight-light">
-                    Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
-                  </p>
-                  <b-form-group
-                    label="Number of columnns">
-                    <b-form-input
-                      id="nro-columns"
-                      v-model="extractedDataFieldsModal.nroColumns"
-                      type="number" min="1" max="10"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    v-for="cnt in parseInt(extractedDataFieldsModal.nroColumns)"
-                    :key="cnt"
-                    :label="`Columnn #${cnt}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="extractedDataFieldsModal.fields[cnt - 1]"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="extractedDataTableRefs.id">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromExtractedData(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-              </b-modal>
-              <b-modal
-                id="open-extracted-data-table-modal-edit"
-                ref="open-extracted-data-table-modal-edit"
-                scrollable
-                title="Edit Column Headers"
-                :ok-disabled="(extractedDataFieldsModalEdit.fields.length)?((extractedDataFieldsModalEdit.fields[0].label.length)?false:true):false"
-                @ok="updateExtractedDataFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                  <p class="font-weight-light">
-                    Column headings describe the categories you extracted data to. If you used a framework to extract your data, each column would be a component of your framework.
-                  </p>
-                  <draggable v-model="extractedDataFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
-                    <b-form-group
-                      v-for="(field, index) in extractedDataFieldsModalEdit.fields"
-                      :key="index"
-                      :label="`Columnn #${index}`">
-                      <b-input-group
-                        v-if="extractedDataFieldsModalEdit.fields.length">
-                        <b-form-input
-                          :id="`column_${index}`"
-                          v-model="field.label"
-                          type="text"></b-form-input>
-                        <b-input-group-append
-                          v-if="extractedDataFieldsModalEdit.fields.length > 1">
-                          <b-button
-                            :id="`drag-button-extracted-${index}`"
-                            variant="outline-secondary"
-                            v-b-tooltip
-                            title="Drag to sort">
-                            <font-awesome-icon
-                              icon="arrows-alt"></font-awesome-icon>
-                          </b-button>
-                          <b-button
-                            variant="outline-danger"
-                            @click="deleteFieldFromExtractedDataEdit(index)">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                          </b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </draggable>
-                  <b-button
-                    class="mb-2"
-                    @click="extractedDataNewColumn"
-                    variant="outline-success">
-                    Add new column
-                  </b-button>
-              </b-modal>
-              <b-modal
-                scrollable
-                :no-close-on-backdrop="true"
-                :no-close-on-esc="true"
-                ok-title="Save"
-                cancel-title="Close"
-                size="lg"
-                id="import-extracted-data-table"
-                ref="import-extracted-data-table"
-                title="Import table"
-                @ok="saveImportedData('isoqf_extracted_data')"
-                @cancel="cleanVars('import-extracted-data-table')"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-alert show variant="danger">
-                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
-                </b-alert>
-                <p
-                  class="font-weight-light">
-                  To upload a table, follow these steps:
-                </p>
-                <h4>STEP 1: Download the template (excel file) and save it to your computer.</h4>
-                <b-button
-                  block
-                  variant="outline-info"
-                  @click="generateTemplate">
-                  Download template
-                </b-button>
-                <h4
-                  class="mt-3">STEP 2: Populate the template with your information.</h4>
-                <p
-                  class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
-                </p>
-                <h4>STEP 3: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-extracted-data-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
-              </b-modal>
-            </b-col>
-            -->
           </b-row>
           <b-row
             v-if="references.length"
@@ -2068,32 +1854,6 @@ export default {
         id: null,
         findings: []
       },
-      extractedDataTableRefs: {
-        fields: [],
-        items: [],
-        authors: '',
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      },
-      extractedDataTableRefsTableSettings: {
-        currentPage: 1,
-        perPage: 10
-      },
-      extractedDataFieldsModal: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
-      extractedDataFieldsModalEdit: {
-        nroColumns: 1,
-        fields: []
-      },
-      removeReferenceExtractedData: {
-        id: null,
-        findings: []
-      },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
       disableBtnRemoveAllRefs: false,
@@ -2386,6 +2146,7 @@ export default {
           this.fileReferences = []
           this.episte_response = []
           this.getReferences(false)
+          this.saveExtractedDataFields()
         }))
         .catch((error) => {
           console.log('error', error)
@@ -2410,7 +2171,6 @@ export default {
           this.getLists() // summary review
           this.getCharacteristics()
           this.getMethodological()
-          this.getExtractedData()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -2625,9 +2385,6 @@ export default {
             }
           }
           this.loadReferences = false
-          if (this.extractedDataTableRefs.items.length) {
-            this.saveExtractedDataFields()
-          }
         })
         .catch((error) => {
           this.printErrors(error)
@@ -2814,7 +2571,6 @@ export default {
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
       let _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      let _extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
       let objs = []
 
       for (let list of lists) {
@@ -2858,21 +2614,6 @@ export default {
           _assessments.items = items
 
           requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
-        }
-      }
-
-      if (Object.prototype.hasOwnProperty.call(_extractedData, 'id')) {
-        if (_extractedData.items.length) {
-          let items = []
-
-          for (let item of _extractedData.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
-            }
-          }
-          _extractedData.items = items
-
-          requests.push(axios.patch(`/api/isoqf_extracted_data/${_extractedData.id}`, _extractedData))
         }
       }
 
@@ -3155,10 +2896,6 @@ export default {
 
               this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
 
-              if (items.length) {
-                this.methodologicalTableRefs.fieldsObj.push({ 'key': 'actions', 'label': '' })
-              }
-
               for (let item of _items) {
                 this.methodologicalFieldsModal.items.push(item)
               }
@@ -3167,40 +2904,6 @@ export default {
             }
           } else {
             this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
-          }
-        })
-    },
-    getExtractedData: function () {
-      axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          if (response.data.length) {
-            let _extractedData = response.data[0]
-            if (Object.prototype.hasOwnProperty.call(_extractedData, 'fields')) {
-              _extractedData.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-
-              const fields = JSON.parse(JSON.stringify(_extractedData.fields))
-
-              this.extractedDataFieldsModal.fields = []
-              for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  _extractedData.fieldsObj.push({ key: f.key, label: f.label })
-                }
-              }
-
-              this.extractedDataFieldsModal.nroColumns = (_extractedData.fieldsObj.length === 1) ? 1 : _extractedData.fieldsObj.length - 1
-            }
-            if (Object.prototype.hasOwnProperty.call(_extractedData, 'items')) {
-              const _items = _extractedData.items
-              let items = []
-              for (let item of _items) {
-                let itemObj = { 'ref_id': item.ref_id, 'authors': item.authors }
-                items.push(itemObj)
-              }
-              _extractedData.items = items
-            }
-            this.extractedDataTableRefs = _extractedData
-          } else {
-            this.extractedDataTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     },
@@ -3287,13 +2990,6 @@ export default {
         this.methodologicalTableRefsTableSettings.isBusy = true
         if (this.methodologicalTableRefs.items.length) {
           this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
-        }
-      }
-      if (endpoint === 'isoqf_extracted_data') {
-        if (this.extractedDataTableRefs.items.length) {
-          this.cleanImportedData(this.extractedDataTableRefs.id, endpoint, params)
         } else {
           this.insertImportedData(endpoint, params)
         }
@@ -3580,191 +3276,6 @@ export default {
           this.printErrors(error)
         })
     },
-    openModalExtractedData: function (edit = false) {
-      let _fields = JSON.parse(JSON.stringify(this.extractedDataTableRefs.fields))
-      let fields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      if (edit) {
-        this.extractedDataFieldsModalEdit.fields = fields
-        this.extractedDataFieldsModalEdit.nroColumns = fields.length
-        this.$refs['open-extracted-data-table-modal-edit'].show()
-      } else {
-        this.extractedDataFieldsModal.fields = fields
-        this.$refs['open-extracted-data-table-modal'].show()
-      }
-    },
-    saveExtractedDataFields: function () {
-      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-      params.items = []
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.nro_of_fields = fields.length
-
-      for (let r of references) {
-        let objItem = {}
-        for (let cnt in fields) {
-          objItem['column_' + cnt] = ''
-        }
-        objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
-        params.items.push(objItem)
-      }
-
-      if (Object.prototype.hasOwnProperty.call(this.extractedDataTableRefs, 'id')) {
-        axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
-          .then((response) => {
-            this.getProject()
-          }).catch((error) => {
-            console.log('error: ', error)
-          })
-      } else {
-        axios.post('/api/isoqf_extracted_data', params)
-          .then((response) => {
-            // this.charsOfStudies = response.data
-            this.getProject()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
-    deleteFieldFromExtractedData: function (index) {
-      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModal.fields))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-
-      fields.splice(index, 1)
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
-        .then((response) => {
-          this.getProject()
-        }).catch((error) => {
-          console.log('error: ', error)
-        })
-    },
-    updateExtractedDataFields: function () {
-      let params = {}
-      let fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let _items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-          }
-        }
-      }
-
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
-        .then((response) => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    deleteFieldFromExtractedDataEdit: function (index) {
-      let params = {}
-      const _fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
-      const _items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
-
-      let removedField = _fields.splice(index, 1)[0]
-
-      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      for (let item of _items) {
-        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
-          delete item[removedField.key]
-        }
-      }
-
-      params.fields = _fields
-      params.items = _items
-
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedDataTableRefs.id}`, params)
-        .then((response) => {
-          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
-          const excluded = ['ref_id', 'authors', 'actions']
-          let editFields = []
-          for (let field of _fields) {
-            if (!excluded.includes(field.key)) {
-              editFields.push(field)
-            }
-          }
-
-          this.extractedDataFieldsModalEdit.fields = editFields
-          this.extractedDataFieldsModalEdit.nroColumns = editFields.length
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    extractedDataNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.extractedDataFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      this.extractedDataFieldsModalEdit.nroColumns = fields.length + 1
-      column = parseInt(this.extractedDataFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
-      this.extractedDataFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
-    },
-    addDataExtractedData: function (index = 0) {
-      let items = JSON.parse(JSON.stringify(this.extractedDataTableRefs.items))
-
-      this.extractedDataFieldsModal.items = items
-      this.extractedDataFieldsModal.selected_item_index = index
-      this.$refs['edit-extracted-data-data'].show()
-    },
-    saveDataExtractedData: function () {
-      let params = {}
-      const id = this.extractedDataTableRefs.id
-      params.items = this.extractedDataFieldsModal.items
-
-      axios.patch(`/api/isoqf_extracted_data/${id}`, params)
-        .then((response) => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     findRelatedFindings: function (refId = null) {
       if (refId) {
         let findings = []
@@ -3791,7 +3302,6 @@ export default {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
       const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      const _extractedData = JSON.parse(JSON.stringify(this.extractedDataTableRefs))
       const _references = JSON.parse(JSON.stringify(this.references))
       let requests = []
 
@@ -3800,9 +3310,6 @@ export default {
       }
       if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
         requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
-      }
-      if (Object.prototype.hasOwnProperty.call(_extractedData, 'id')) {
-        requests.push(axios.delete(`/api/isoqf_extracted_data/${_extractedData.id}`))
       }
       for (let list of _lists) {
         list.references = []
