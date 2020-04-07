@@ -472,7 +472,22 @@ export default {
           .then((response) => {
             for (let finding of response.data) {
               axios.delete(`/api/isoqf_findings/${finding.id}`)
-                .then((response) => {})
+                .then((response) => {
+                  axios.get(`/api/isoqf_extracted_data?organization=${this.org.id}&finding_id=${finding.id}`)
+                    .then((response) => {
+                      _extractedData = response.data
+                      for (let extractedData of _extractedData) {
+                        axios.delete(`/api/isoqf_extracted_data/${extractedData.id}`)
+                          .then((response) => {})
+                          .catch((error) => {
+                            console.log(error)
+                          })
+                      }
+                    })
+                    .catch((error) => {
+                      console.log(error)
+                    })
+                })
                 .catch((error) => {
                   console.log(error)
                 })
@@ -514,20 +529,7 @@ export default {
           console.log(error)
         })
 
-      axios.get(`/api/isoqf_extracted_data?organization=${this.org.id}&project_id=${projectId}`)
-        .then((response) => {
-          _extractedData = response.data
-          for (let extractedData of _extractedData) {
-            axios.delete(`/api/isoqf_extracted_data/${extractedData.id}`)
-              .then((response) => {})
-              .catch((error) => {
-                console.log(error)
-              })
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+
 
       axios.get(`/api/isoqf_references?organization=${this.org.id}&project_id=${projectId}`)
         .then((response) => {
