@@ -3722,9 +3722,9 @@ export default {
       const _references = JSON.parse(JSON.stringify(this.references))
       let params = {
         fields: [
-          { key: 'ref_id', value: 'Reference ID' },
-          { key: 'authors', value: 'Author(s), Year' },
-          { key: 'column_0', value: '' }
+          { key: 'ref_id', label: 'Reference ID' },
+          { key: 'authors', label: 'Author(s), Year' },
+          { key: 'column_0', label: '' }
         ],
         items: [],
         organization: this.$route.params.org_id,

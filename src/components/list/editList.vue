@@ -1039,7 +1039,7 @@
                     v-for="(field, index) in buffer_extracted_data.fields"
                     :key="index"
                     :id="`label-field-${index}`"
-                    :label="`${field.label}`"
+                    :label="(field.key === 'column_0') ? 'Add your data' : field.label"
                     :label-for="`input-field-${index}`">
                     <b-form-input
                       :id="`input-field-${index}`"
@@ -1358,7 +1358,6 @@ export default {
           this.getStageOneData()
           this.getCharsOfStudies()
           this.getMethAssessments()
-          this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         })
         .catch((error) => {
@@ -1421,7 +1420,7 @@ export default {
             }
           }
           this.getStatus()
-          // this.getReferences()
+          this.getExtractedData()
         }).catch((error) => {
           this.printErrors(error)
         })
@@ -1724,8 +1723,9 @@ export default {
     getExtractedData: function () {
       let params = {
         organization: this.list.organization,
-        project_id: this.list.project_id
+        finding_id: this.findings.id
       }
+
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
