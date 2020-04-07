@@ -1073,11 +1073,13 @@
 import axios from 'axios'
 import bCardFilters from '../tableActions/Filters'
 import bCardActionTable from '../tableActions/ActionTable'
+import draggable from 'vuedraggable'
 
 export default {
   components: {
     'bc-filters': bCardFilters,
-    'bc-action-table': bCardActionTable
+    'bc-action-table': bCardActionTable,
+    draggable
   },
   data () {
     return {
@@ -1261,6 +1263,9 @@ export default {
         items: [],
         fieldsObj: []
       },
+      tmpExtractedDataFields: [
+        { key: 'column_0', label: '' }
+      ],
       importUrl: '',
       references: [],
       mode: 'edit',
