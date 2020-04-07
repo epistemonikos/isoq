@@ -368,13 +368,7 @@ export default {
       if (this.buffer_project_list.id) {
         this.updateProjectList()
       } else {
-        axios.post('/api/isoqf_lists', this.buffer_project_list, {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': document.location.origin
-          }
-        })
+        axios.post('/api/isoqf_lists', this.buffer_project_list)
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.$refs['new-project-list'].hide()
@@ -465,6 +459,7 @@ export default {
       let _extractedData = []
       let _references = []
       let _request = []
+      let _list_categories = []
       const projectId = this.org.remove_project_id
 
       for (let project of _projects) {
@@ -540,6 +535,21 @@ export default {
           _references = response.data
           for (let reference of _references) {
             axios.delete(`/api/isoqf_references/${reference.id}`)
+              .then((response) => {})
+              .catch((error) => {
+                console.log(error)
+              })
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      axios.get(`/api/isoqf_list_categories?organization=${this.org.id}&project_id=${projectId}`)
+        .then((response) => {
+          let _categories = response.data
+
+          for (let category of _categories) {
+            axios.delete(`/api/isoqf_list_categories/${category.id}`)
               .then((response) => {})
               .catch((error) => {
                 console.log(error)
