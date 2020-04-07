@@ -459,7 +459,6 @@ export default {
       let _extractedData = []
       let _references = []
       let _request = []
-      let _list_categories = []
       const projectId = this.org.remove_project_id
 
       for (let project of _projects) {
