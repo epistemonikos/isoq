@@ -2146,7 +2146,6 @@ export default {
           this.fileReferences = []
           this.episte_response = []
           this.getReferences(false)
-          this.saveExtractedDataFields()
         }))
         .catch((error) => {
           console.log('error', error)
@@ -3410,7 +3409,9 @@ export default {
     },
     confirmRemoveFinding: function (findingID) {
       axios.delete(`/api/isoqf_findings/${findingID}`)
-        .then((response) => {})
+        .then((response) => {
+          this.deleteExtractedData(findingID)
+        })
         .catch((error) => {
           this.printErrors(error)
         })
@@ -3717,7 +3718,7 @@ export default {
       }
       console.log(error.config)
     },
-    createExtractedData: function (listId) {
+    createExtractedData: function (findingID) {
       const _references = JSON.parse(JSON.stringify(this.references))
       let params = {
         fields: [
@@ -3727,7 +3728,7 @@ export default {
         ],
         items: [],
         organization: this.$route.params.org_id,
-        list_id: listId
+        finding_id: findingID
       }
 
       for (let reference of _references) {
@@ -3736,6 +3737,25 @@ export default {
 
       axios.post('/api/isoqf_extracted_data', params)
         .then((response) => {})
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    deleteExtractedData: function (findingID) {
+      const params = {
+        organization: this.$route.params.org_id,
+        finding_id: findingID
+      }
+      axios.get('/api/isoqf_extracted_data', {params})
+        .then((response) => {
+          axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
+            .then((response) => {
+              this.getLists()
+            })
+            .catch((error) => {
+              this.printErrors(error)
+            })
+        })
         .catch((error) => {
           this.printErrors(error)
         })
