@@ -2356,7 +2356,9 @@ export default {
         references: []
       }
       axios.post('/api/isoqf_findings', params)
-        .then((response) => {})
+        .then((response) => {
+          this.createExtractedData(response.data.id)
+        })
         .catch((error) => {
           this.printErrors(error)
         })
@@ -3714,6 +3716,29 @@ export default {
         console.log('Error', error.message)
       }
       console.log(error.config)
+    },
+    createExtractedData: function (listId) {
+      const _references = JSON.parse(JSON.stringify(this.references))
+      let params = {
+        fields: [
+          { key: 'ref_id', value: 'Reference ID' },
+          { key: 'authors', value: 'Author(s), Year' },
+          { key: 'column_0', value: '' }
+        ],
+        items: [],
+        organization: this.$route.params.org_id,
+        list_id: listId
+      }
+
+      for (let reference of _references) {
+        params.items.push({ 'ref_id': reference.id, 'authors': this.parseReference(reference, true), 'column_0': '' })
+      }
+
+      axios.post('/api/isoqf_extracted_data', params)
+        .then((response) => {})
+        .catch((error) => {
+          this.printErrors(error)
+        })
     }
   }
 }
