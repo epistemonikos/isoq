@@ -1034,7 +1034,7 @@
                     class="mt-1"
                     v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
-                    @click="modalAddSummarized"
+                    @click="modalAddReviewFinding"
                     block>
                     Add review finding to the table
                   </b-button>
@@ -1210,7 +1210,7 @@
                   </template>
                   <template v-slot:empty>
                     <p class="text-center my-5">
-                      There are no findings to show, <a href="#" @click="modalAddSummarized">add review finding</a>
+                      There are no findings to show, <a href="#" @click="modalAddReviewFinding">add review finding</a>
                     </p>
                   </template>
                   <template v-slot:table-busy>
@@ -1316,7 +1316,7 @@
                 ref="add-summarized"
                 title="Add Summarized review finding"
                 :ok-disabled="(summarized_review)?false:true"
-                @ok="saveSummarized"
+                @ok="createReviewFinding"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -2294,11 +2294,11 @@ export default {
           this.printErrors(error)
         })
     },
-    modalAddSummarized: function () {
+    modalAddReviewFinding: function () {
       this.list_categories.selected = null
       this.$refs['add-summarized'].show()
     },
-    saveSummarized: function () {
+    createReviewFinding: function () {
       this.table_settings.isBusy = true
       const params = {
         organization: this.$route.params.org_id,
