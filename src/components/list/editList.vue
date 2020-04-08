@@ -366,12 +366,51 @@
                           <p>{{ list.name }}</p>
                           <h4>Extracted Data</h4>
                           <b-table
-                            class="table-small-font"
+                            class="table-small-font extracted-data"
                             responsive
                             head-variant="light"
                             outlined
                             :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                             :items="extracted_data.items">
+                            <template v-slot:cell(column_0)="data">
+                              <template
+                                v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                <b-form-group>
+                                  <b-form-textarea
+                                    rows="5"
+                                    v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                </b-form-group>
+                              </template>
+                              <template
+                                v-else>
+                                {{ data.item.column_0 }}
+                              </template>
+                            </template>
+                            <template v-slot:cell(actions)="data">
+                              <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                <b-button
+                                  block
+                                  variant="success"
+                                  @click="updateContentExtractedDataItem(data.item.index)">
+                                  Save
+                                </b-button>
+                                <b-button
+                                  block
+                                  variant="outline-secondary"
+                                  @click="cancelExtractedDataInPlace">
+                                  Cancel
+                                </b-button>
+                              </template>
+                              <template v-else>
+                                <b-button
+                                  variant="outline-success"
+                                  @click="editExtractedDataInPlace(data.index)">
+                                  <font-awesome-icon
+                                    icon="edit"
+                                    :title="$t('Edit')" />
+                                </b-button>
+                              </template>
+                            </template>
                           </b-table>
                         </div>
 
@@ -387,12 +426,52 @@
                           </b-table>
                           <h4>Extracted Data</h4>
                           <b-table
-                            class="table-small-font"
+                            class="table-small-font extracted-data"
                             responsive
                             head-variant="light"
                             outlined
                             :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                             :items="extracted_data.items">
+                            <template v-slot:cell(column_0)="data">
+                              <template
+                                v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                <b-form-group>
+                                  <b-form-textarea
+                                    rows="5"
+                                    v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                </b-form-group>
+
+                              </template>
+                              <template
+                                v-else>
+                                {{ data.item.column_0 }}
+                              </template>
+                            </template>
+                            <template v-slot:cell(actions)="data">
+                              <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                <b-button
+                                  block
+                                  variant="success"
+                                  @click="updateContentExtractedDataItem(data.item.index)">
+                                  Save
+                                </b-button>
+                                <b-button
+                                  block
+                                  variant="outline-secondary"
+                                  @click="cancelExtractedDataInPlace">
+                                  Cancel
+                                </b-button>
+                              </template>
+                              <template v-else>
+                                <b-button
+                                  variant="outline-success"
+                                  @click="editExtractedDataInPlace(data.index)">
+                                  <font-awesome-icon
+                                    icon="edit"
+                                    :title="$t('Edit')" />
+                                </b-button>
+                              </template>
+                            </template>
                           </b-table>
                         </div>
 
@@ -1019,8 +1098,8 @@
                   :total-rows="extracted_data.items.length"
                   limit="11"></b-pagination>
                 <b-modal
-                  id="modal-stage-five-remove-data-item"
-                  ref="modal-stage-five-remove-data-item"
+                  id="modal-extracted-data-remove-data-item"
+                  ref="modal-extracted-data-remove-data-item"
                   title="Remove data content"
                   @ok="extractedDataRemoveDataItem"
                   ok-variant="outline-success"
@@ -1029,8 +1108,8 @@
                 </b-modal>
                 <b-modal
                   title="Edit data"
-                  id="modal-stage-five-data"
-                  ref="modal-stage-five-data"
+                  id="modal-extracted-data-data"
+                  ref="modal-extracted-data-data"
                   @ok="saveDataExtractedData"
                   cancel-variant="outline-secondary"
                   ok-variant="outline-success"
@@ -1270,7 +1349,11 @@ export default {
       references: [],
       mode: 'edit',
       mode_print_fieldsObj: [],
-      findings: null
+      findings: null,
+      showEditExtractedDataInPlace: {
+        display: false,
+        item: { authors: '', column_0: '', ref_id: null }
+      }
     }
   },
   mounted () {
@@ -1745,11 +1828,24 @@ export default {
 
             const _references = this.list.references
             let _items = []
+            let extractedDataItems = JSON.parse(JSON.stringify(this.extracted_data.items))
+            extractedDataItems.sort(function (a, b) {
+              if (a.authors < b.authors) {
+                return -1
+              }
+              if (a.authors > b.authors) {
+                return 1
+              }
+              return 0
+            })
+            this.extracted_data.original_items = extractedDataItems
             for (let reference of _references) {
-              for (let item of this.extracted_data.items) {
+              let index = 0
+              for (let item of extractedDataItems) {
                 if (item.ref_id === reference) {
-                  _items.push(item)
+                  _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
                 }
+                index++
               }
             }
             this.extracted_data.items = _items
@@ -1760,17 +1856,19 @@ export default {
         })
     },
     saveDataExtractedData: function () {
-      let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      if (Object.prototype.hasOwnProperty.call(this.extracted_data, 'edit_index_item')) {
-        items[this.extracted_data.edit_index_item] = this.buffer_extracted_data_items
-      } else {
-        items.push(this.buffer_extracted_data_items)
+      let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
+      let _originalItems = JSON.parse(JSON.stringify(this.extracted_data.original_items))
+
+      for (let index in _originalItems) {
+        if (_item.index === parseInt(index)) {
+          _originalItems[index] = { 'authors': _item.authors, 'column_0': _item.column_0, 'ref_id': _item.ref_id }
+        }
       }
 
       let params = {
         organization: this.list.organization,
         list_id: this.$route.params.id,
-        items: items
+        items: _originalItems
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
         .then((response) => {
@@ -1784,7 +1882,7 @@ export default {
     },
     openModalExtractedDataRemoveDataItem: function (data) {
       this.buffer_extracted_data.remove_index_item = data.index
-      this.$refs['modal-stage-five-remove-data-item'].show()
+      this.$refs['modal-extracted-data-remove-data-item'].show()
     },
     extractedDataRemoveDataItem: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
@@ -1806,7 +1904,7 @@ export default {
       this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
-      this.$refs['modal-stage-five-data'].show()
+      this.$refs['modal-extracted-data-data'].show()
     },
     generateAndDownload: function (element, filename) {
       const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
@@ -1862,6 +1960,46 @@ export default {
         console.log('Error', error.message)
       }
       console.log(error.config)
+    },
+    editExtractedDataInPlace: function (index) {
+      const _item = JSON.parse(JSON.stringify(this.extracted_data.items[index]))
+      this.showEditExtractedDataInPlace.display = true
+      this.showEditExtractedDataInPlace.item = _item
+    },
+    cancelExtractedDataInPlace: function () {
+      this.showEditExtractedDataInPlace.display = false
+      this.showEditExtractedDataInPlace.item = {}
+    },
+    updateContentExtractedDataItem: function (index = 0) {
+      const _items = JSON.parse(JSON.stringify(this.extracted_data.items))
+      const _index = parseInt(index)
+      let _originals = JSON.parse(JSON.stringify(this.extracted_data.original_items))
+      if (_index) {
+        let item = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
+        _originals[_index] = item
+      }
+
+      for (let index in _originals) {
+        for (let item of _items) {
+          if (item.index === index) {
+            _originals[index] = { 'authors': item.authors, 'column_0': item.column_0, 'ref_id': item.ref_id }
+          }
+        }
+        index++
+      }
+      const params = {
+        organization: this.list.organization,
+        finding_id: this.findings.id,
+        items: _originals
+      }
+      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
+        .then((response) => {
+          this.getExtractedData()
+          this.showEditExtractedDataInPlace.display = false
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
     }
   }
 }
@@ -1922,6 +2060,10 @@ export default {
   div >>>
     .table-small-font {
       font-size: 14px;
+    }
+  div >>>
+    .table-small-font.extracted-data thead th:last-child {
+      width: 3%;
     }
   div >>>
     .reference-txt {
