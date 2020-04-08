@@ -1127,7 +1127,7 @@
                   </template>
                   <!-- data -->
                   <template v-slot:cell(sort)="data">
-                    {{ data.item.sort }}
+                    {{ parseInt(data.index) + 1 }}
                   </template>
                   <template v-slot:cell(name)="data">
                     <span v-if="mode === 'edit'">
@@ -1205,6 +1205,7 @@
                         @click="openModalReferences(data.index, data.item.isoqf_id)">
                         <span v-if="data.item.references.length">View or edit references</span>
                         <span v-else>Select references</span>
+                        {{ data.index }}
                       </b-button>
                     </template>
                   </template>
@@ -2182,8 +2183,14 @@ export default {
       }
       axios.get('/api/isoqf_lists', { params })
         .then((response) => {
-          this.lists = JSON.parse(JSON.stringify(response.data))
-          let _lists = JSON.parse(JSON.stringify(response.data))
+          let data = JSON.parse(JSON.stringify(response.data))
+          data.sort(function (a, b) {
+            if (a.sort < b.sort) { return -1 }
+            if (a.sort > b.sort) { return 1 }
+            return 0
+          })
+          this.lists = data
+          let _lists = data
 
           if (this.lists.length) {
             let lists = JSON.parse(JSON.stringify(this.lists))
@@ -2306,7 +2313,8 @@ export default {
         isoqf_id: this.lastId,
         cerqual: { option: null, explanation: '' },
         references: [],
-        category: this.list_categories.selected
+        category: this.list_categories.selected,
+        sort: 0
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
@@ -2350,7 +2358,8 @@ export default {
           cerqual: {
             explanation: '',
             option: null
-          }
+          },
+          references: []
         },
         references: []
       }
@@ -2401,7 +2410,9 @@ export default {
       }
     },
     openModalReferences: function (index, isoqfId) {
+      this.selected_list_index = index
       let list = JSON.parse(JSON.stringify(this.lists[index]))
+
       const params = {
         organization: this.$route.params.org_id,
         list_id: list.id
@@ -2415,17 +2426,11 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-      let cnt = 0
-      for (let list of this.lists) {
-        if (list.isoqf_id === isoqfId) {
-          this.selected_list_index = cnt
-        }
-        cnt++
-      }
+
       this.getReferences()
-      this.selected_references = this.lists[this.selected_list_index].references
+      this.selected_references = this.lists[index].references
       this.showBanner = false
-      if (this.lists[this.selected_list_index].cerqual_option !== '') {
+      if (this.lists[index].cerqual_option !== '') {
         this.showBanner = true
       }
       this.$refs['modal-references-list'].show()
