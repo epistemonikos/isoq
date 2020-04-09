@@ -5,7 +5,6 @@ import ForgotPassword from '@/components/ForgotPassword'
 import CreateAccount from '@/components/CreateAccount'
 import Organizations from '@/components/Organizations'
 import ViewOrganization from '@/components/organization/viewOrganization'
-import ViewList from '@/components/list/viewList'
 import EditList from '@/components/list/editList'
 import ViewProject from '@/components/project/viewProject'
 import Browse from '@/components/Browse'
@@ -76,15 +75,6 @@ var routes = [
     name: 'viewProject',
     component: ViewProject,
     meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/list/:id',
-    name: 'viewList',
-    component: ViewList,
-    meta: {
-      title: 'interactive Summaries of Quality findings - List',
       requiresAuth: true
     }
   },
