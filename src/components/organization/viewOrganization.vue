@@ -1,12 +1,12 @@
 <template>
-  <div class="mt-4">
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="py-5">
+        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQf' : org.name }}</h2>
+        <p v-if="org.description">{{ org.description }}</p>
+      </b-container>
+    </b-container>
     <b-container>
-      <b-row>
-        <b-col cols="12">
-          <h2>{{ (org.name === 'My frameworks') ? 'My iSoQf' : org.name }}</h2>
-          <p>{{ org.description }}</p>
-        </b-col>
-      </b-row>
       <div class="my-4">
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end">
@@ -27,7 +27,6 @@
               responsive
               striped
               bordered
-              borderless
               hover
               head-variant="light"
               :busy="projectTable.isBusy"

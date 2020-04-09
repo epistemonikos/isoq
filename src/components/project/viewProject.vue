@@ -1,19 +1,46 @@
 <template>
-  <div class="mt-4">
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="pt-5">
+        <b-row align-h="end">
+          <b-col
+            cols="12"
+            md="11">
+            <h2>{{ project.name }}</h2>
+          </b-col>
+          <b-col
+            cols="12"
+            md="1"
+            class="text-right d-print-none">
+            <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}">
+              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
+              {{ $t('back') }}
+            </b-link>
+          </b-col>
+        </b-row>
+        <b-nav id="tabsTitle" tabs fill class="pt-5">
+          <b-nav-item
+            :active="(tabOpened === 0) ? true : false"
+            @click="tabOpened=0">Project properties</b-nav-item>
+          <b-nav-item
+            :active="(tabOpened === 1) ? true : false"
+            @click="tabOpened=1">My Data</b-nav-item>
+          <b-nav-item
+            :active="(tabOpened === 2) ? true : false"
+            @click="tabOpened=2">iSoQf</b-nav-item>
+          <b-nav-item
+            :active="(tabOpened === 3) ? true : false"
+            @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
+        </b-nav>
+      </b-container>
+    </b-container>
     <b-container>
-      <b-row align-h="end">
-        <b-col cols="12" class="text-right d-print-none">
-          <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}">
-            <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
-            {{ $t('back') }}
-          </b-link>
-        </b-col>
-      </b-row>
       <b-tabs
+        id="tabsContent"
         content-class="mt-3"
         fill
         v-model="tabOpened">
-        <b-tab title="Project properties">
+        <b-tab>
           <b-row>
             <b-col
               cols="12">
@@ -132,7 +159,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="My Data">
+        <b-tab>
           <b-row>
             <b-col
               cols="12">
@@ -877,7 +904,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="iSoQf"
+        <b-tab
           :disabled="(references.length) ? false : true">
           <b-row>
             <b-col
@@ -970,30 +997,34 @@
             </b-col>
           </b-row>
           <b-row>
-            <b-col cols="12" class="toDoc mb-3">
-              <h3 id="project-title">{{project.name}}</h3>
-            </b-col>
-            <b-col cols="12" md="6" class="toDoc">
-              <p v-if="project.description">{{project.description}}</p>
-              <h5>Review question</h5>
-              <p>{{project.review_question}}</p>
-            </b-col>
-            <b-col cols="12" md="6" class="toDoc">
-              <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-              <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-                <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-              </ul>
+            <b-col cols="12">
+              <b-card>
+                <b-row>
+                  <b-col cols="12" md="6" class="toDoc">
+                    <h5 v-if="project.description">Description</h5>
+                    <p v-if="project.description">{{project.description}}</p>
+                    <h5>Review question</h5>
+                    <p>{{project.review_question}}</p>
+                  </b-col>
+                  <b-col cols="12" md="6" class="toDoc">
+                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                    <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                      <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                    </ul>
 
-              <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
-              <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
-                <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
-              </ul>
+                    <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
+                    <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
+                      <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
+                    </ul>
 
-              <h5>Has the review been published</h5>
-              <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                    <h5>Has the review been published</h5>
+                    <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
-              <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
-              <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                    <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                  </b-col>
+                </b-row>
+              </b-card>
             </b-col>
           </b-row>
           <b-row>
@@ -1205,7 +1236,6 @@
                         @click="openModalReferences(data.index, data.item.isoqf_id)">
                         <span v-if="data.item.references.length">View or edit references</span>
                         <span v-else>Select references</span>
-                        {{ data.index }}
                       </b-button>
                     </template>
                   </template>
@@ -1475,7 +1505,7 @@
             </b-col>
           </b-row>
         </b-tab>
-        <b-tab title="Guidance on applying CERQual">
+        <b-tab>
           <h3>Introduction to CERQual</h3>
           <p><a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3</a></p>
           <p>[Lewin S, Booth A, Glenton C, Munthe-Kaas H, Rashidian A, Wainwright M, Bohren MA, Tunçalp Ö, Colvin CJ, Garside R, Carlsen B, Langlois EV, Noyes J. Applying GRADE-CERQual to qualitative evidence synthesis findings: introduction to the series. Implement Sci. 2018 Jan 25;13(Suppl 1):2]</p>
@@ -3857,6 +3887,35 @@ export default {
   div >>>
     table#methodological-table tbody td:last-child {
       min-width: 10%;
+    }
+  div >>>
+    #tabsContent .nav-link {
+      display: none;
+      padding: 0;
+    }
+    #tabsContent ul {
+      border-bottom: 0px;
+    }
+    #tabsTitle {
+      border-bottom: 1px solid #bbb;
+    }
+    #tabsTitle a {
+      color: #3d3d3d;
+    }
+    #tabsTitle li:first-child,
+    #tabsTitle li:last-child {
+      margin-left: 0px;
+      margin-right: 0px;
+    }
+    #tabsTitle li {
+      border-top: 2px;
+      border-left: 2px;
+      border-right: 2px;
+      border-color: #bbb;
+      border-style: solid;
+      border-bottom: 0px;
+      margin-left: 5px;
+      margin-right: 5px;
     }
   @media print {
     div >>>

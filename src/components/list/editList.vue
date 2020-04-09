@@ -1,15 +1,21 @@
 <template>
-  <div class="mt-4">
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="py-5">
+        <b-row>
+          <b-col cols="12" class="text-right d-print-none">
+            <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
+              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
+              return to ISoQf table
+            </b-link>
+          </b-col>
+        </b-row>
+        <h2 class="toDoc">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+        <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
+        <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
+      </b-container>
+    </b-container>
     <b-container>
-      <b-row>
-        <b-col cols="12" class="text-right d-print-none">
-          <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
-            <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
-            return to ISoQf table
-          </b-link>
-        </b-col>
-      </b-row>
-      <h2 class="toDoc">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
       <b-row
         v-if="mode==='view'"
         class="d-print-none justify-content-end mb-2 pt-2">
@@ -72,7 +78,7 @@
             </b-button>
         </b-col>
       </b-row>
-      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
+
       <b-row class="mt-4">
         <b-col cols="12">
           <!--<b-tabs>-->
@@ -543,6 +549,7 @@
                   v-if="mode==='edit'"
                   id="assessments"
                   responsive
+                  bordered
                   head-variant="light"
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"

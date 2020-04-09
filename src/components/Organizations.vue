@@ -1,7 +1,11 @@
 <template>
-  <div class="mt-4">
-    <b-container>
-      <h2 class="mb-5">Workspaces</h2>
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="py-5">
+        <h2>Workspaces</h2>
+      </b-container>
+    </b-container>
+    <b-container class="mt-5">
       <b-row>
         <b-col
           sm="6"
@@ -10,6 +14,8 @@
           <b-table
             id="my-workspace"
             striped
+            bordered
+            head-variant="light"
             :fields="fields"
             :items="myOrganization">
             <template v-slot:cell(name)="data">
@@ -24,6 +30,8 @@
           <b-table
             id="organizations"
             striped
+            bordered
+            head-variant="light"
             :fields="fields"
             :items="otherOrganizations">
             <template v-slot:cell(name)="data">
