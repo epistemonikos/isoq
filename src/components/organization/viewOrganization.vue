@@ -528,8 +528,6 @@ export default {
           console.log(error)
         })
 
-
-
       axios.get(`/api/isoqf_references?organization=${this.org.id}&project_id=${projectId}`)
         .then((response) => {
           _references = response.data
