@@ -1,7 +1,11 @@
 <template>
-  <div class="mt-4">
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="py-5">
+        <h2>Browse public iSoQf tables</h2>
+      </b-container>
+    </b-container>
     <div class="container">
-      <h1>Browse public iSoQf tables</h1>
       <b-row
         class="my-4">
         <b-col
@@ -32,6 +36,8 @@
       </b-row>
       <b-table
         striped
+        bordered
+        head-variant="light"
         :fields="table_settings.fields"
         :items="public_tables"
         :per-page="table_settings.per_page"
