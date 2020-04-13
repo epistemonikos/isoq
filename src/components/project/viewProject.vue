@@ -1005,7 +1005,7 @@
                         <b-col
                          cols="11">
                          <p
-                          class="mb-0"
+                          class="mb-0 text-left"
                           >Project properties</p>
                         </b-col>
                         <b-col
@@ -1936,6 +1936,9 @@ export default {
         if (isOpen) {
           this.changeTxtProjectProperties = '-'
         }
+        if (!isOpen && this.mode === 'view') {
+          this.$root.$emit('bv::toggle::collapse', 'info-project')
+        }
       }
     })
   },
@@ -2096,11 +2099,10 @@ export default {
       if (this.mode === 'view') {
         this.table_settings.perPage = this.lists.length
         this.table_settings.currentPage = 1
-        // this.$refs.findings.selectAllRows()
       } else {
         this.table_settings.perPage = 5
-        // this.$refs.findings.clearSelected()
       }
+      this.$root.$emit('bv::toggle::collapse', 'info-project')
     },
     printiSoQf: function () {
       /*
@@ -3951,6 +3953,9 @@ export default {
       border-bottom: 0px;
       margin-left: 5px;
       margin-right: 5px;
+    }
+    .card-header {
+      padding: .5rem .5rem 0 .5rem;
     }
   @media print {
     div >>>
