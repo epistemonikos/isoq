@@ -329,8 +329,10 @@ export default {
     AddProject: function () {
       this.projectTable.isBusy = true
       this.buffer_project.private = true
+      this.buffer_project.is_public = false
       if (this.buffer_project.public_type !== 'private') {
         this.buffer_project.private = false
+        this.buffer_project.is_public = true
       }
       if (this.buffer_project.id) {
         delete this.buffer_project.lists

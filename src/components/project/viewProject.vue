@@ -2966,8 +2966,10 @@ export default {
     updateProjectInfo: function () {
       let project = JSON.parse(JSON.stringify(this.project))
       project.private = true
+      project.is_public = false
       if (project.public_type !== 'private') {
         project.private = false
+        project.is_public = true
       }
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then((response) => {
@@ -3617,8 +3619,10 @@ export default {
     savePublicStatus: function () {
       let params = {}
       params.private = true
+      params.is_public = false
       if (this.modal_project.public_type !== 'private') {
         params.private = false
+        params.is_public = true
       }
       params.public_type = this.modal_project.public_type
 
