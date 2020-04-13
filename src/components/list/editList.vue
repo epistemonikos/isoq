@@ -97,7 +97,8 @@
                   <b-container>
                     <b-row>
                       <b-col
-                       cols="4">
+                       cols="12"
+                       md="4">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <p class="font-weight-light">
                             Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
@@ -354,7 +355,8 @@
                         </div>
                       </b-col>
                       <b-col
-                        cols="8">
+                        cols="12"
+                        md="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <h4>Methodological Assessments</h4>
                           <b-table
