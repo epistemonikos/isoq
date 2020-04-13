@@ -5,14 +5,14 @@
         <b-row align-h="end">
           <b-col
             cols="12"
-            md="11">
-            <h2>{{ project.name }}</h2>
+            md="11" class="toDoc">
+            <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
           <b-col
             cols="12"
             md="1"
-            class="text-right d-print-none">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}">
+            class="text-right">
+            <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}" class="d-print-none">
               <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
               {{ $t('back') }}
             </b-link>
@@ -175,7 +175,7 @@
                 You must import only the references for your final list of included studies
               </p>
               <b-card no-body>
-                <b-tabs card>
+                <b-tabs id="import-data" card>
                   <b-tab title="Import from">
                     <b-row>
                       <b-col
@@ -3924,6 +3924,11 @@ export default {
   div >>>
     table#methodological-table tbody td:last-child {
       min-width: 10%;
+    }
+  div >>>
+    #import-data a.nav-link {
+      display: block;
+      padding: .5rem 1rem;
     }
   div >>>
     #tabsContent .nav-link {
