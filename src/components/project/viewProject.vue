@@ -998,33 +998,55 @@
           </b-row>
           <b-row>
             <b-col cols="12">
-              <b-card>
-                <b-row>
-                  <b-col cols="12" md="6" class="toDoc">
-                    <h5 v-if="project.description">Description</h5>
-                    <p v-if="project.description">{{project.description}}</p>
-                    <h5>Review question</h5>
-                    <p>{{project.review_question}}</p>
-                  </b-col>
-                  <b-col cols="12" md="6" class="toDoc">
-                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-                    <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-                      <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-                    </ul>
+                <b-card header-tag="header">
+                  <template v-slot:header>
+                    <b-container fluid>
+                      <b-row v-b-toggle.info-project>
+                        <b-col
+                         cols="11">
+                         <p
+                          class="mb-0"
+                          >Project properties</p>
+                        </b-col>
+                        <b-col
+                          cols="1"
+                          align-self="end">
+                          <p class="text-right">
+                            {{ changeTxtProjectProperties }}
+                          </p>
+                        </b-col>
+                      </b-row>
+                    </b-container>
 
-                    <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
-                    <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
-                      <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
-                    </ul>
+                  </template>
+                  <b-collapse id="info-project">
+                    <b-row>
+                      <b-col cols="12" md="8" class="toDoc">
+                        <h5 v-if="project.description">Description</h5>
+                        <p v-if="project.description">{{project.description}}</p>
+                        <h5>Review question</h5>
+                        <p>{{project.review_question}}</p>
+                      </b-col>
+                      <b-col cols="12" md="4" class="toDoc">
+                        <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                        <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                          <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                        </ul>
 
-                    <h5>Has the review been published</h5>
-                    <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                        <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
+                        <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
+                          <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
+                        </ul>
 
-                    <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
-                    <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
-                  </b-col>
-                </b-row>
-              </b-card>
+                        <h5>Has the review been published</h5>
+                        <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                        <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                        <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                      </b-col>
+                    </b-row>
+                  </b-collapse>
+                </b-card>
             </b-col>
           </b-row>
           <b-row>
@@ -1899,7 +1921,8 @@ export default {
       episte_error: false,
       finding: {},
       showBanner: false,
-      sorted_lists: []
+      sorted_lists: [],
+      changeTxtProjectProperties: '+'
     }
   },
   mounted () {
@@ -1907,6 +1930,14 @@ export default {
     this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
+    this.$root.$on('bv::collapse::state', (collapseId, isOpen) => {
+      if (collapseId === 'info-project') {
+        this.changeTxtProjectProperties = '+'
+        if (isOpen) {
+          this.changeTxtProjectProperties = '-'
+        }
+      }
+    })
   },
   watch: {
     pre_ImportDataTable: function (data) {
