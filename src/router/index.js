@@ -25,8 +25,7 @@ var routes = [
     name: 'About',
     component: About,
     meta: {
-      title: 'interactive Summaries of Quality findings - About',
-      requiresAuth: true
+      title: 'interactive Summaries of Quality findings - About'
     }
   },
   {
@@ -54,7 +53,7 @@ var routes = [
     }
   },
   {
-    path: '/orgs',
+    path: '/workspaces',
     name: 'Organizations',
     component: Organizations,
     meta: {
@@ -63,15 +62,15 @@ var routes = [
     }
   },
   {
-    path: '/org/:id',
+    path: '/workspace/:id',
     name: 'viewOrganization',
     component: ViewOrganization,
     meta: {
-      title: 'interactive Summaries of Quality findings - Organization'
+      title: 'interactive Summaries of Quality findings - Workspace'
     }
   },
   {
-    path: '/org/:org_id/isoqf/:id',
+    path: '/workspace/:org_id/isoqf/:id',
     name: 'viewProject',
     component: ViewProject,
     meta: {
