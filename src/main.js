@@ -39,6 +39,9 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   // store.dispatch('getLogginInfo', {})
+  const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
+  if (nearestWithTitle) document.title = nearestWithTitle.meta.title
+
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (store.getters.isLoggedIn) {
       next()

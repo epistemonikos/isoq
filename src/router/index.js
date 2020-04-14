@@ -25,7 +25,7 @@ var routes = [
     name: 'About',
     component: About,
     meta: {
-      title: 'interactive Summaries of Quality findings - About'
+      title: 'About - interactive Summaries of Quality findings'
     }
   },
   {
@@ -33,7 +33,7 @@ var routes = [
     name: 'Login',
     component: Login,
     meta: {
-      title: 'interactive Summaries of Quality findings - Login'
+      title: 'Login - interactive Summaries of Quality findings'
     }
   },
   {
@@ -41,7 +41,7 @@ var routes = [
     name: 'ForgotPassword',
     component: ForgotPassword,
     meta: {
-      title: 'interactive Summaries of Quality findings - Forgot password'
+      title: 'Forgot password - interactive Summaries of Quality findings'
     }
   },
   {
@@ -49,16 +49,7 @@ var routes = [
     name: 'CreateAccount',
     component: CreateAccount,
     meta: {
-      title: 'interactive Summaries of Quality findings - Create an account'
-    }
-  },
-  {
-    path: '/workspaces',
-    name: 'Organizations',
-    component: Organizations,
-    meta: {
-      title: 'interactive Summaries of Quality findings - Organizations',
-      requiresAuth: true
+      title: 'Create an account - interactive Summaries of Quality findings'
     }
   },
   {
@@ -66,7 +57,24 @@ var routes = [
     name: 'viewOrganization',
     component: ViewOrganization,
     meta: {
-      title: 'interactive Summaries of Quality findings - Workspace'
+      title: 'Workspace - interactive Summaries of Quality findings'
+    }
+  },
+  {
+    path: '/browse',
+    name: 'Browse',
+    component: Browse,
+    meta: {
+      title: 'Browse - interactive Summaries of Quality findings'
+    }
+  },
+  {
+    path: '/workspaces',
+    name: 'Organizations',
+    component: Organizations,
+    meta: {
+      title: 'Organizations - interactive Summaries of Quality findings',
+      requiresAuth: true
     }
   },
   {
@@ -82,16 +90,8 @@ var routes = [
     name: 'editList',
     component: EditList,
     meta: {
-      title: 'interactive Summaries of Quality findings - Edit iSoQf',
+      title: 'Edit iSoQf - interactive Summaries of Quality findings',
       requiresAuth: true
-    }
-  },
-  {
-    path: '/browse',
-    name: 'Browse',
-    component: Browse,
-    meta: {
-      title: 'interactive Summaries of Quality findings - Browse'
     }
   }
 ]
