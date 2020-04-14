@@ -71,7 +71,7 @@ var routes = [
     }
   },
   {
-    path: '/org/:org_id/project/:id',
+    path: '/org/:org_id/isoqf/:id',
     name: 'viewProject',
     component: ViewProject,
     meta: {
@@ -79,11 +79,11 @@ var routes = [
     }
   },
   {
-    path: '/list/:id/edit',
+    path: '/worksheet/:id/edit',
     name: 'editList',
     component: EditList,
     meta: {
-      title: 'interactive Summaries of Quality findings - Edit List',
+      title: 'interactive Summaries of Quality findings - Edit iSoQf',
       requiresAuth: true
     }
   },
