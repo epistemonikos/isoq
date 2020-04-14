@@ -88,7 +88,7 @@ export default {
   },
   methods: {
     getPublicTables: function () {
-      axios.get('/api/isoqf_projects?published_status=true')
+      axios.get('/api/isoqf_projects?private=false')
         .then((response) => {
           this.public_tables = response.data
           this.table_settings.isBusy = false
