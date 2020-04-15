@@ -53,19 +53,20 @@ var routes = [
     }
   },
   {
-    path: '/workspace/:id',
-    name: 'viewOrganization',
-    component: ViewOrganization,
-    meta: {
-      title: 'Workspace - interactive Summaries of Quality findings'
-    }
-  },
-  {
     path: '/browse',
     name: 'Browse',
     component: Browse,
     meta: {
       title: 'Browse - interactive Summaries of Quality findings'
+    }
+  },
+  {
+    path: '/workspace/:id',
+    name: 'viewOrganization',
+    component: ViewOrganization,
+    meta: {
+      title: 'Workspace - interactive Summaries of Quality findings',
+      requiresAuth: true
     }
   },
   {
