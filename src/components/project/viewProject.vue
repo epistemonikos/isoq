@@ -408,6 +408,7 @@
                 aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
+                size="xl"
                 id="open-char-of-studies-table-modal"
                 ref="open-char-of-studies-table-modal"
                 scrollable
@@ -453,6 +454,7 @@
                 </b-form-group>
               </b-modal>
               <b-modal
+                size="xl"
                 id="open-char-of-studies-table-modal-edit"
                 ref="open-char-of-studies-table-modal-edit"
                 scrollable
@@ -503,6 +505,7 @@
                 </b-button>
               </b-modal>
               <b-modal
+                size="xl"
                 ref="edit-chars-of-studies-data"
                 title="Edit data"
                 scrollable
@@ -530,7 +533,7 @@
                 :no-close-on-esc="true"
                 ok-title="Save"
                 cancel-title="Close"
-                size="lg"
+                size="xl"
                 id="import-characteristics-table"
                 ref="import-characteristics-table"
                 title="Import table"
@@ -578,6 +581,7 @@
                 </b-row>
               </b-modal>
               <b-modal
+                size="xl"
                 id="removeContentModalCharsOfStudies"
                 ref="removeContentModalCharsOfStudies"
                 title="Remove content"
@@ -698,6 +702,7 @@
                 aria-controls="chars-of-studies-table"></b-pagination>
 
               <b-modal
+                size="xl"
                 id="open-methodological-table-modal"
                 ref="open-methodological-table-modal"
                 scrollable
@@ -739,6 +744,7 @@
                   </b-form-group>
               </b-modal>
               <b-modal
+                size="xl"
                 id="open-methodological-table-modal-edit"
                 ref="open-methodological-table-modal-edit"
                 scrollable
@@ -790,6 +796,7 @@
                   </b-button>
               </b-modal>
               <b-modal
+                size="xl"
                 ref="edit-methodological-data"
                 title="Edit data"
                 scrollable
@@ -811,6 +818,7 @@
                 </b-form-group>
               </b-modal>
               <b-modal
+                size="xl"
                 ref="removeReferenceModalMethodological"
                 title="Remove content"
                 ok-title="Confirm"
@@ -839,7 +847,7 @@
                 :no-close-on-esc="true"
                 ok-title="Save"
                 cancel-title="Close"
-                size="lg"
+                size="xl"
                 id="import-methodological-table"
                 ref="import-methodological-table"
                 title="Import table"
@@ -1119,7 +1127,7 @@
                     title="Sort your review findings"
                     ref="modal-sort-findings"
                     id="modal-sort-findings"
-                    size="lg"
+                    size="xl"
                     ok-title="Save"
                     ok-variant="outline-success"
                     cancel-variant="outline-primary"
@@ -1328,6 +1336,7 @@
                 aria-controls="findings"
                 align="center"></b-pagination>
               <b-modal
+                size="xl"
                 id="edit-finding-name"
                 ref="edit-finding-name"
                 title="Edit Summarized review finding"
@@ -1353,6 +1362,7 @@
                 </b-form-group>
               </b-modal>
               <b-modal
+                size="xl"
                 id="remove-finding"
                 ref="remove-finding"
                 title="Remove summarized review finding"
@@ -1365,6 +1375,7 @@
                 </p>
               </b-modal>
               <b-modal
+                size="xl"
                 id="add-summarized"
                 ref="add-summarized"
                 title="Add Summarized review finding"
@@ -1400,7 +1411,7 @@
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
-                size="lg"
+                size="xl"
                 scrollable>
                 <template v-if="references.length">
                   <div
@@ -1448,6 +1459,7 @@
               </b-modal>
 
               <b-modal
+                size="xl"
                 id="modalEditListCategories"
                 ref="modalEditListCategories"
                 title="Review Finding Categories"
@@ -1559,7 +1571,7 @@
         id="modal-references"
         ref="modal-references"
         title="References"
-        size="lg"
+        size="xl"
         @ok="getProject"
         @cancel="confirmRemoveAllReferences($event)"
         scrollable
@@ -2007,7 +2019,7 @@ export default {
         const _line = line.split('  - ')
         const key = _line[0]
         const content = _line[1]
-
+        console.log('key', key)
         if (key === 'TY') {
           base['type'] = content
         }

@@ -76,7 +76,7 @@
       id="modal-stage-import-tsv"
       ref="modal-stage-import-tsv"
       scrollable
-      size="lg"
+      size="xl"
       @ok="importTSV"
       @cancel="cleanTSV"
       title="Import data">
@@ -99,6 +99,7 @@
     <!-- end import modal -->
     <!-- modal drop table -->
     <b-modal
+      size="xl"
       id="modal-drop-table"
       title="Drop table"
       ref="modal-drop-table"
@@ -108,6 +109,7 @@
     <!-- end modal drop table-->
     <!-- create study tables -->
     <b-modal
+      size="xl"
       title="Add Columns"
       ref="modal-create-fields"
       @ok="saveCreateFields">
@@ -134,6 +136,7 @@
     <!-- end of create study tables -->
     <!-- modal edit fields -->
     <b-modal
+      size="xl"
       title="Edit fields"
       ref="modal-edit-fields"
       @ok="saveUpdateFields"
@@ -167,6 +170,7 @@
     <!-- end of modal edit fields -->
     <!-- create study data -->
     <b-modal
+      size="xl"
       title="Add data"
       ref="modal-add-data"
       @ok="saveNewData">

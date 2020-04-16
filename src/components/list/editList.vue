@@ -847,7 +847,7 @@
                   id="modalReferences"
                   ref="modalReferences"
                   title="References"
-                  size="lg"
+                  size="xl"
                   scrollable
                   @ok="saveReferencesList">
                   <b-alert
@@ -942,6 +942,7 @@
                   limit="11"></b-pagination>
 
                 <b-modal
+                  size="xl"
                   title="Edit data"
                   ref="modal-stage-three-edit-data"
                   @ok="saveCharsOfStudiesEditedData">
@@ -970,7 +971,7 @@
                   @ok="removeCharsOfStudiesItemData"
                   ref="modal-stage-three-remove-data"
                   scrollable
-                  size="lg">
+                  size="xl">
                   <p>Are you sure you want to delete all the content for this row?</p>
                   <b-table
                     responsive
@@ -1025,6 +1026,7 @@
                   :total-rows="meth_assessments.items.length"
                   limit="11"></b-pagination>
                 <b-modal
+                  size="xl"
                   ref="modal-edit-data-stage-four"
                   title="Edit data"
                   @ok="saveUpdateDataMethAssessments">
@@ -1043,7 +1045,7 @@
                   ref="modal-remove-data-stage-four"
                   title="Remove data content"
                   scrollable
-                  size="lg">
+                  size="xl">
                   <p>Are you sure you want to delete all the content for this row?</p>
                   <b-table
                     :fields="buffer_meth_assessments_remove_item.fields"
@@ -1116,6 +1118,7 @@
                   <p>Are you sure you want to delete all the content for this row?</p>
                 </b-modal>
                 <b-modal
+                  size="xl"
                   title="Edit data"
                   id="modal-extracted-data-data"
                   ref="modal-extracted-data-data"
