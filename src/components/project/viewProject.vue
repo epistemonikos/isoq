@@ -34,7 +34,7 @@
         </b-nav>
       </b-container>
     </b-container>
-    <b-container>
+    <b-container class="mb-5">
       <b-tabs
         id="tabsContent"
         content-class="mt-3"
