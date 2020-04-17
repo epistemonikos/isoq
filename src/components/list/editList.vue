@@ -10,7 +10,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <h2 class="toDoc">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
       </b-container>
@@ -100,8 +100,12 @@
                        cols="12"
                        md="4">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
+                          <p class="font-weight-bold">
+                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
+                          </p>
                           <p class="font-weight-light">
-                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding? Remember this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            <b><u>Remember</u></b> this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
+                            (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.methodological_limitations.option"
@@ -151,8 +155,14 @@
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
                           <!-- coherence -->
+                          <p class="font-weight-bold">
+                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
+                          </p>
                           <p class="font-weight-light">
-                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding? You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                          </p>
+                          <p class="font-weight-light">
+                            <b><u>Remember</u></b>, coherence is not about the consistency of findings between studies, but is about the fit between the extracted data and the review finding as you have written it.
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.coherence.option"
@@ -203,7 +213,8 @@
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <p class="font-weight-light">
-                            Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?  (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            <b>Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?</b>
+                            (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.adequacy.option"
@@ -253,8 +264,11 @@
                           <!-- relevance -->
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
+                          <p class="font-weight-bold">
+                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
+                          </p>
                           <p class="font-weight-light">
-                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding? You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="`/organization/${list.organization}/project/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.relevance.option"
@@ -594,8 +608,8 @@
                           v-if="data.item.methodological_limitations.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
-                      <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
+                      <p><b>{{select_options[data.item.methodological_limitations.option].text}}</b></p>
+                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -628,8 +642,8 @@
                           v-if="data.item.coherence.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p>{{select_options[data.item.coherence.option].text}}</p>
-                      <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
+                      <p><b>{{select_options[data.item.coherence.option].text}}</b></p>
+                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -662,8 +676,8 @@
                           v-if="data.item.adequacy.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p>{{select_options[data.item.adequacy.option].text}}</p>
-                      <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
+                      <p><b>{{select_options[data.item.adequacy.option].text}}</b></p>
+                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -696,8 +710,8 @@
                           v-if="data.item.relevance.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p>{{select_options[data.item.relevance.option].text}}</p>
-                      <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
+                      <p><b>{{select_options[data.item.relevance.option].text}}</b></p>
+                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -730,8 +744,8 @@
                           v-if="data.item.cerqual.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p>{{level_confidence[data.item.cerqual.option].text}}</p>
-                      <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
+                      <p><b>{{level_confidence[data.item.cerqual.option].text}}</b></p>
+                      <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -806,32 +820,32 @@
                   </template>
                   <template v-slot:cell(methodological-limit)="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
-                      <p>{{select_options[data.item.methodological_limitations.option].text}}</p>
-                      <p v-if="data.item.methodological_limitations.explanation"><b>Explanation:</b> {{data.item.methodological_limitations.explanation}}</p>
+                      <p><b>{{select_options[data.item.methodological_limitations.option].text}}</b></p>
+                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
-                      <p>{{select_options[data.item.coherence.option].text}}</p>
-                      <p v-if="data.item.coherence.explanation"><b>Explanation:</b> {{data.item.coherence.explanation}}</p>
+                      <p><b>{{select_options[data.item.coherence.option].text}}</b></p>
+                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
-                      <p>{{select_options[data.item.adequacy.option].text}}</p>
-                      <p v-if="data.item.adequacy.explanation"><b>Explanation:</b> {{data.item.adequacy.explanation}}</p>
+                      <p><b>{{select_options[data.item.adequacy.option].text}}</b></p>
+                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
-                      <p>{{select_options[data.item.relevance.option].text}}</p>
-                      <p v-if="data.item.relevance.explanation"><b>Explanation:</b> {{data.item.relevance.explanation}}</p>
+                      <p><b>{{select_options[data.item.relevance.option].text}}</b></p>
+                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.cerqual.option !== null">
-                      <p>{{level_confidence[data.item.cerqual.option].text}}</p>
-                      <p v-if="data.item.cerqual.explanation"><b>Explanation:</b> {{data.item.cerqual.explanation}}</p>
+                      <p><b>{{level_confidence[data.item.cerqual.option].text}}</b></p>
+                      <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
@@ -859,7 +873,7 @@
                   <b-table
                     striped
                     responsive
-                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author, Year, Publication'}]"
+                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
                     :items="references">
                     <template v-slot:cell(checkbox)="data">
                       <b-form-checkbox
@@ -1130,7 +1144,7 @@
                     v-for="(field, index) in buffer_extracted_data.fields"
                     :key="index"
                     :id="`label-field-${index}`"
-                    :label="(field.key === 'column_0') ? 'Add your data' : field.label"
+                    :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : field.label"
                     :label-for="`input-field-${index}`">
                     <b-form-input
                       :id="`input-field-${index}`"
@@ -1140,7 +1154,8 @@
                     <b-form-textarea
                       :id="`input-field-${index}`"
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="buffer_extracted_data_items[field.key]"></b-form-textarea>
+                      v-model="buffer_extracted_data_items[field.key]"
+                      rows="6"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
               </template>
