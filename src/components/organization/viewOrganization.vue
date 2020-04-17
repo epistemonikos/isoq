@@ -42,6 +42,13 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  title="Invite"
+                  variant="outline-secondary">
+                  <font-awesome-icon
+                    icon="users"
+                    @click="modalShareOptions(data.index)"></font-awesome-icon>
+                </b-button>
+                <b-button
                   title="Edit"
                   variant="outline-success"
                   @click="openModalEditProject(data.item)">
@@ -71,7 +78,7 @@
         scrollable
         id="new-project"
         ref="new-project"
-        size="lg"
+        size="xl"
         :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
         @ok="AddProject"
         @cancel="closeModalProject"
@@ -87,103 +94,11 @@
             <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
-        <b-form-group
-          :label="$t('Title of review')"
-          label-for="input-project-list-name"
-          description="Insert the title that you plan to use for this report or paper.">
-          <b-form-input
-            id="input-project-list-name"
-            type="text"
-            required
-            :placeholder="$t('Title of review')"
-            v-model="buffer_project.name"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          label="Author name"
-          label-for="input-project-author">
-          <b-form-input
-            id="input-project-author"
-            v-model="buffer_project.author"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          label="Author email"
-          label-for="input-project-author-email">
-          <b-form-input
-            type="email"
-            id="input-project-author-email"
-            v-model="buffer_project.author_email"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Authors')"
-          label-for="input-project-authors"
-          description="First then last name of all authors separated by commas">
-          <b-form-input
-            id="input-project-authors"
-            :placeholder="$t('Authors of review')"
-            v-model="buffer_project.authors"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Review question')"
-          label-for="input-project-review-question">
-          <b-form-input
-            id="input-project-review-question"
-            :placeholder="$t('Insert main question that the review addresses')"
-            v-model="buffer_project.review_question"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Has this review been published?')"
-          label-for="select-project-list-published-status">
-          <b-select
-            id="select-project-list-published-status"
-            v-model="buffer_project.published_status"
-            :options="yes_or_no"></b-select>
-        </b-form-group>
-        <b-form-group
-          v-if="buffer_project.published_status"
-          :label="$t('URL or DOI')"
-          label-for="select-project-list-url-doi">
-          <b-input
-            placeholder="https://doi.org/10.1109/5.771073"
-            type="url"
-            id="select-project-list-url-doi"
-            v-model="buffer_project.url_doi"></b-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Is the iSoQf being completed by the review authors?')"
-          label-for="select-project-list-completed-by-author-status">
-          <b-select
-            id="select-project-list-completed-by-author-status"
-            v-model="buffer_project.complete_by_author"
-            :options="yes_or_no"></b-select>
-        </b-form-group>
-        <b-form-group
-          v-if="!buffer_project.complete_by_author"
-          label="Please list the authors of this iSoQf"
-          label-for="input-project-list-authors">
-          <b-form-input
-            id="input-project-list-authors"
-            v-model="buffer_project.lists_authors"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          label="Visibility on the iSoQf database"
-          label-for="select-project-list-status"
-          description="When you finish your iSoQf you can publish some, or all of it, to the iSoQf database. Until you are finished, keep it “private”. You can change these settings at any time.">
-          <b-select
-            id="select-project-list-status"
-            v-model="buffer_project.public_type"
-            :options="global_status"></b-select>
-        </b-form-group>
-        <b-form-group
-          label="Aditional information"
-          label-for="input-project-list-description">
-          <b-form-textarea
-            id="input-project-list-description"
-            placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organization or government"
-            v-model="buffer_project.description"
-            rows="3"></b-form-textarea>
-        </b-form-group>
+        <organizationForm
+          :formData="buffer_project"></organizationForm>
       </b-modal>
       <b-modal
+        size="xl"
         id="new-project-list"
         ref="new-project-list"
         :title="(buffer_project_list.id) ? 'Edit summarized review finding' : 'New summarized review finding'"
@@ -212,14 +127,53 @@
         cancel-variant="outline-secondary">
         <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
       </b-modal>
+      <b-modal
+        size="xl"
+        id="modal-share-options"
+        ref="modal-share-options"
+        title="Invite"
+        scrollable>
+        <b-tabs>
+          <b-tab
+            title="Invite">
+            <b-form-group
+              label="Insert emails separated by commas"
+              label-for="input-emails-invite">
+              <b-form-textarea
+                v-model="tmp_buffer_project.invite_emails"
+                id="input-emails-invite"></b-form-textarea>
+            </b-form-group>
+            <b-form-group
+              label="Can:">
+              <b-form-select
+                v-model="tmp_buffer_project.sharedType"
+                :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
+            </b-form-group>
+            <b-button
+              variant="success"
+              @click="saveSharedProject(tmp_buffer_project.index)">Invite</b-button>
+          </b-tab>
+          <b-tab
+            title="Can access">
+            <b-table
+              responsive
+              :fields="['email', 'name', 'actions']"
+              :items="[{email: 'damian@pistemonikos.org', 'name': 'diaman', 'actions':''},{email: 'damian@pistemonikos.org', 'name': 'diaman', 'actions':''}]"></b-table>
+          </b-tab>
+        </b-tabs>
+      </b-modal>
     </b-container>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import organizationForm from '../organization/organizationForm'
 
 export default {
+  components: {
+    'organizationForm': organizationForm
+  },
   data () {
     return {
       project_id: '',
@@ -258,7 +212,10 @@ export default {
         authors: '',
         lists_authors: '',
         author: '',
-        author_email: ''
+        author_email: '',
+        is_public: false,
+        sharedType: 0,
+        invite_emails: ''
       },
       tmp_buffer_project_list: {
         id: null,
@@ -280,7 +237,10 @@ export default {
         authors: '',
         lists_authors: '',
         author: '',
-        author_email: ''
+        author_email: '',
+        is_public: false,
+        sharedType: 0,
+        invite_emails: ''
       },
       buffer_project_list: {
         id: null,
@@ -573,6 +533,151 @@ export default {
               console.log(error)
             })
         }.bind(this)))
+    },
+    modalShareOptions: function (index) {
+      this.org.projects[index].sharedTo = {user_views: [], user_edits: []}
+      this.org.projects[index].sharedType = 0
+      this.tmp_buffer_project = this.org.projects[index]
+      this.tmp_buffer_project.index = index
+      this.$refs['modal-share-options'].show()
+    },
+    saveSharedProject: function (index) {
+      const params = {
+        is_public: true
+      }
+      let requestsPush = []
+      let requestsGet = []
+      let requestsGetFindings = []
+
+      for (let list of this.org.projects[index].lists) {
+        requestsPush.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
+      }
+      axios.all(requestsGet)
+        .then(responses => {})
+        .catch((error) => {
+          console.log(error)
+        })
+
+      for (let list of this.org.projects[index].lists) {
+        requestsGet.push(axios.get(`/api/isoqf_lists/${list.id}`))
+        requestsGetFindings.push(axios.get(`/api/isoqf_findings/?organization=${list.organization}&list_id=${list.id}`))
+      }
+      axios.all(requestsGet)
+        .then(responses => {
+          let references = []
+          let requests = []
+          let requestsAssessments = []
+          let requestsCharacteristics = []
+
+          for (let response of responses) {
+            let _response = response.data
+            for (let reference of _response.references) {
+              references.push(reference)
+            }
+            requestsAssessments.push(axios.get(`/api/isoqf_assessments?project_id=${_response.project_id}`))
+            requestsCharacteristics.push(axios.get(`/api/isoqf_characteristics?project_id=${_response.project_id}`))
+          }
+
+          axios.all(requestsAssessments)
+            .then((responses) => {
+              let requests = []
+              for (let response of responses) {
+                for (let _response of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_assessments/${_response.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((responses) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+          axios.all(requestsCharacteristics)
+            .then((responses) => {
+              let requests = []
+              for (let response of responses) {
+                for (let _response of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_characteristics/${_response.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((responses) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+
+          for (let reference of references) {
+            requests.push(axios.patch(`/api/isoqf_references/${reference}`, params))
+          }
+          axios.all(requests)
+            .then(responses => {})
+        })
+      axios.all(requestsGetFindings)
+        .then((responses) => {
+          let requests = []
+          let requestsGet = []
+          for (let response of responses) {
+            let _response = response.data[0]
+            requests.push(axios.patch(`/api/isoqf_findings/${_response.id}`, params))
+            requestsGet.push(axios.get(`/api/isoqf_extracted_data?finding_id=${_response.id}`))
+          }
+
+          axios.all(requests)
+            .then((responses) => {})
+            .catch((error) => {
+              console.log(error)
+            })
+          axios.all(requestsGet)
+            .then((responses) => {
+              console.log(responses)
+              let _responses = responses
+              let requests = []
+
+              for (let response of _responses) {
+                for (let extractedDataItem of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_extracted_data/${extractedDataItem.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((response) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
+      this.tmp_buffer_project = {
+        id: null,
+        name: '',
+        description: '',
+        private: true,
+        public_type: 'private',
+        organization: this.$route.params.id,
+        review_question: '',
+        published_status: false,
+        complete_by_author: true,
+        url_doi: null,
+        authors: '',
+        lists_authors: '',
+        author: '',
+        author_email: '',
+        is_public: false,
+        sharedType: 0,
+        invite_emails: ''
+      }
     }
   }
 }
