@@ -61,90 +61,8 @@
           <b-row>
             <b-col
               cols="12">
-              <b-form-group
-                label="Title of review"
-                label-for="projectName">
-                <b-form-input
-                  id="projectName"
-                  v-model="project.name"></b-form-input>
-              </b-form-group>
-              <b-form-group
-                label="Author"
-                label-for="author">
-                <b-form-input
-                  id="author"
-                  v-model="project.author"></b-form-input>
-              </b-form-group>
-              <b-form-group
-                label="Author email"
-                label-for="author_email">
-                <b-form-input
-                  id="author_email"
-                  v-model="project.author_email"></b-form-input>
-              </b-form-group>
-              <b-form-group
-                label="Authors"
-                label-for="authors">
-                <b-form-input
-                  id="authors"
-                  v-model="project.authors">
-                </b-form-input>
-              </b-form-group>
-              <b-form-group
-                label="Review question"
-                label-for="review_question">
-                <b-form-textarea
-                  id="review_question"
-                  v-model="project.review_question"></b-form-textarea>
-              </b-form-group>
-              <b-form-group
-                label-for="has-been-published"
-                label="Has this review been published?">
-                <b-select
-                  id="has-been-published"
-                  v-model="project.published_status"
-                  :options="yes_or_no"></b-select>
-              </b-form-group>
-              <b-form-group
-                v-if="project.published_status"
-                :label="$t('URL or DOI')"
-                label-for="project-list-url-doi">
-                <b-input
-                  placeholder="https://doi.org/10.1109/5.771073"
-                  type="url"
-                  id="project-list-url-doi"
-                  v-model="project.url_doi"></b-input>
-              </b-form-group>
-              <b-form-group
-                label="Is the iSoQf being completed by the review authors?"
-                label-for="completed-by-author-status">
-                <b-select
-                  id="completed-by-author-status"
-                  v-model="project.complete_by_author"
-                  :options="yes_or_no"></b-select>
-              </b-form-group>
-              <b-form-group
-                v-if="!project.complete_by_author"
-                label="Please list the authors of this iSoQf"
-                label-for="list-authors">
-                <b-form-input
-                  id="list-authors"
-                  v-model="project.lists_authors">
-                </b-form-input>
-              </b-form-group>
-              <b-form-group
-                label="Visibility on the iSoQf database"
-                label-for="project-list-status">
-                <b-select
-                  id="project-list-status"
-                  v-model="project.public_type"
-                  :options="global_status"></b-select>
-              </b-form-group>
-              <b-form-group
-                label="Aditional information">
-                <b-form-textarea
-                  v-model="project.description"></b-form-textarea>
-              </b-form-group>
+              <organizationForm
+                :formData="project"></organizationForm>
             </b-col>
           </b-row>
           <b-row align-h="end">
@@ -234,7 +152,10 @@
                       <b-col
                         cols="6">
                         <p class="font-weight-light">
-                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style. Step 2: Import the .ris/.txt file into iSoQf.
+                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
+                        </p>
+                        <p class="font-weight-light">
+                          <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
                         </p>
                         <b-form-file
                           id="input-ris-file-key"
@@ -360,21 +281,6 @@
                 :current-page="charsOfStudiesTableSettings.currentPage"
                 :per-page="charsOfStudiesTableSettings.perPage"
                 :busy="charsOfStudiesTableSettings.isBusy">
-                <template
-                  v-if="charsOfStudies.tableTop.length"
-                  v-slot:thead-top>
-                  <b-tr>
-                    <b-th></b-th>
-                    <b-th
-                      v-for="(value, index) of charsOfStudies.tableTop"
-                      :key="index"
-                      :colspan="value.colspan"
-                      class="text-center">
-                      {{ value.label }}
-                    </b-th>
-                    <b-th></b-th>
-                  </b-tr>
-                </template>
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
@@ -554,8 +460,7 @@
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
                 <b-button
-                  block
-                  variant="outline-info"
+                  variant="info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
@@ -868,8 +773,7 @@
                   The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
                 </p>
                 <b-button
-                  block
-                  variant="outline-info"
+                  variant="info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
@@ -932,6 +836,7 @@
                     right
                     text="Export">
                     <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                    <b-dropdown-item>to MS Excel (CSV)</b-dropdown-item>
                     <!--
                     <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
                     <b-dropdown-item disabled>to GRADE</b-dropdown-item>
@@ -950,8 +855,7 @@
                       variant="outline-info"
                       block
                       @click="printiSoQf">
-                      <font-awesome-icon icon="print"></font-awesome-icon>
-                      Print
+                      Print or save as PDF
                     </b-button>
                 </b-col>
                 <b-col
@@ -1030,10 +934,14 @@
                   <b-collapse id="info-project">
                     <b-row>
                       <b-col cols="12" md="8" class="toDoc">
-                        <h5 v-if="project.description">Description</h5>
-                        <p v-if="project.description">{{project.description}}</p>
                         <h5>Review question</h5>
                         <p>{{project.review_question}}</p>
+
+                        <h5>Has the review been published?</h5>
+                        <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                        <h5 v-if="project.description">Aditional Information</h5>
+                        <p v-if="project.description">{{project.description}}</p>
                       </b-col>
                       <b-col cols="12" md="4" class="toDoc">
                         <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
@@ -1041,13 +949,9 @@
                           <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
                         </ul>
 
-                        <h5 v-if="!project.complete_by_author">Authors of the iSoQf</h5>
-                        <ul v-if="!project.complete_by_author && Object.prototype.hasOwnProperty.call(project, 'lists_authors')">
-                          <li v-for="(author, index) in project.lists_authors.split(',')" :key="index">{{ author.trim() }}</li>
-                        </ul>
-
-                        <h5>Has the review been published</h5>
-                        <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                        <h5>Corresponding author</h5>
+                        <p v-if="project.author">{{ project.author }}</p>
+                        <p v-if="project.author_email">{{ project.author_email }}</p>
 
                         <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
                         <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
@@ -1192,10 +1096,8 @@
                   </template>
                   <template v-slot:cell(name)="data">
                     <span v-if="mode === 'edit'">
-                      <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                      <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
                       <b-row
-                        class="mt-3">
+                        class="mb-3">
                         <b-col
                           sm="6"
                           cols="12">
@@ -1220,16 +1122,17 @@
                           </b-button>
                         </b-col>
                       </b-row>
+                      <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                      <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
                     </span>
                     <span v-else>
                       {{ data.item.name }}
                     </span>
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
-                    {{ data.item.cerqual_option }}
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
-                      class="d-print-none mt-2"
+                      class="d-print-none mb-3"
                       :disabled="(data.item.references.length) ? false : true"
                       block
                       :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
@@ -1238,12 +1141,12 @@
                         <span v-if="data.item.cerqual_option!=''">Edit</span>
                         CERQual Assessment
                       </b-button>
+                    <b>{{ data.item.cerqual_option }}</b>
                   </template>
                   <template v-slot:cell(cerqual_explanation)="data">
-                    {{ data.item.cerqual_explanation }}
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
-                      class="d-print-none mt-2"
+                      class="d-print-none mb-3"
                       :disabled="(data.item.references.length) ? false : true"
                       block
                       :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
@@ -1252,21 +1155,22 @@
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
                         CERQual Assessment
                     </b-button>
+                    <b>{{ data.item.cerqual_explanation }}</b>
                   </template>
                   <template v-slot:cell(ref_list)="data">
                     <template v-if="mode!=='edit'">
                       {{ data.item.ref_list }}
                     </template>
                     <template v-else>
-                      There are <b>{{ data.item.raw_ref.length }}</b> references.
                       <b-button
                         block
-                        class="mt-2 d-print-none"
+                        class="mb-3 d-print-none"
                         :variant="(data.item.references.length) ? 'outline-info' : 'info'"
                         @click="openModalReferences(data.index, data.item.isoqf_id)">
                         <span v-if="data.item.references.length">View or edit references</span>
                         <span v-else>Select references</span>
                       </b-button>
+                      There are <b>{{ data.item.raw_ref.length }}</b> references.
                     </template>
                   </template>
                   <template v-slot:empty>
@@ -1425,7 +1329,7 @@
                     <b-table
                       responsive
                       striped
-                      :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author, Year, Publication'}]"
+                      :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
                       :items="refs">
                       <template v-slot:cell(checkbox)="data">
                         <b-form-checkbox
@@ -1502,12 +1406,6 @@
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-success"
-                    @click="saveNewCategory">Save</b-button>
                 </template>
                 <template
                   class="mt-3"
@@ -1534,6 +1432,14 @@
                   <b-button
                     variant="outline-danger"
                     @click="removeCategory(modal_edit_list_categories.index)">Confirm</b-button>
+                </template>
+                <template v-slot:modal-footer v-if="modal_edit_list_categories.new">
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-success"
+                    @click="saveNewCategory">Save</b-button>
                 </template>
               </b-modal>
             </b-col>
@@ -1678,10 +1584,12 @@
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import parser from '../../plugins/parser'
+import organizationForm from '../organization/organizationForm'
 
 export default {
   components: {
-    draggable
+    draggable,
+    organizationForm
   },
   data () {
     return {
@@ -1841,10 +1749,6 @@ export default {
       msgUploadReferences: '',
       charsOfStudiesFieldsModal: {
         nroColumns: 1,
-        mainFields: [
-          { key: 'header_0', label: '', fields: [ { key: 'column_0_0', label: '' } ] },
-          { key: 'header_1', label: '', fields: [ { key: 'column_1_0', label: '' } ] }
-        ],
         fields: [],
         items: [],
         selected_item_index: 0
@@ -1852,7 +1756,8 @@ export default {
       charsOfStudiesFieldsModalEdit: {
         nroColumns: 1,
         fields: [],
-        mainFields: []
+        items: [],
+        selected_item_index: 0
       },
       charsOfStudies: {
         fields: [],
@@ -1860,8 +1765,7 @@ export default {
         authors: '',
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ],
-        tableTop: []
+        ]
       },
       charsOfStudiesTableSettings: {
         currentPage: 1,
@@ -2226,15 +2130,6 @@ export default {
         .catch((error) => {
           console.log('error', error)
         })
-    },
-    addFields: function (obj, index) {
-      const parent = obj.mainFields[index].key.split('_')[1]
-      let length = obj.mainFields[index].fields.length
-      if (this.charsOfStudies.id) {
-        length = parseInt(obj.mainFields[index].fields.slice(-1)[0].key.split('_').slice(-1)) + 1
-      }
-
-      obj.mainFields[index].fields.push({ key: 'column_' + parent + '_' + length, label: '' })
     },
     getProject: function () {
       const params = {
@@ -2809,11 +2704,6 @@ export default {
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'mainFields')) {
-        const mainFields = JSON.parse(JSON.stringify(this.charsOfStudies.mainFields))
-        this.charsOfStudiesFieldsModalEdit.mainFields = mainFields
-      }
-
       this.charsOfStudiesFieldsModalEdit.fields = fields
       this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
       this.$refs['open-char-of-studies-table-modal-edit'].show()
@@ -2916,15 +2806,6 @@ export default {
 
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-              let tableTop = []
-
-              if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'mainFields')) {
-                const _tableTop = JSON.parse(JSON.stringify(this.charsOfStudies.mainFields))
-                for (let tt of _tableTop) {
-                  tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
-                }
-              }
-              this.charsOfStudies.tableTop = tableTop
 
               const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
               this.charsOfStudies.items = _items
@@ -3808,7 +3689,7 @@ export default {
         fields: [
           { key: 'ref_id', label: 'Reference ID' },
           { key: 'authors', label: 'Author(s), Year' },
-          { key: 'column_0', label: '' }
+          { key: 'column_0', label: 'Extracted data supporting the review finding' }
         ],
         items: [],
         organization: this.$route.params.org_id,
