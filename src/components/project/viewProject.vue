@@ -222,7 +222,106 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">STEP 2: Create or Import your Characteristics of Studies Table (recommended)</h4>
+              <h4 class="mt-5">
+                STEP 2: Enter the study inclusion and exclusion criteria used in the review (recommended)
+              </h4>
+              <b-container>
+                <b-row>
+                  <b-col
+                    cols="12"
+                    md="6">
+                    <b-alert
+                      dismissible
+                      @dismiss-count-down="countDownChanged"
+                      @dismissed="ui.project.inclusion.success.show=false"
+                      variant="success"
+                      :show="ui.project.inclusion.success.dismissCountDown">Updated</b-alert>
+                    <b-alert
+                      dismissible
+                      @dismissed="ui.project.inclusion.error.show=false"
+                      variant="warning"
+                      :show="ui.project.inclusion.error.show">Error</b-alert>
+                    <b-form-group
+                      label="Inclusion criteria"
+                      label-for="inclusion-criteria"
+                      description="Please enter the study inclusion criteria used in the review">
+                      <b-form-textarea
+                        id="inclusion-criteria"
+                        rows="6"
+                        v-model="project.inclusion"></b-form-textarea>
+                    </b-form-group>
+                    <b-container fluid>
+                      <b-row>
+                        <b-col
+                          cols="12"
+                          md="6">
+                          <b-button
+                            block
+                            variant="outline-danger"
+                            @click="criteriaAction('exclusion','clean')">Remove</b-button>
+                        </b-col>
+                        <b-col
+                          cols="12"
+                          md="6">
+                          <b-button
+                            block
+                            variant="outline-success"
+                            @click="criteriaAction('inclusion')">Save or Update</b-button>
+                        </b-col>
+                      </b-row>
+                    </b-container>
+                  </b-col>
+                  <b-col
+                    cols="12"
+                    md="6">
+                    <b-alert
+                      dismissible
+                      @dismiss-count-down="countDownChanged"
+                      @dismissed="ui.project.exclusion.success.show=false"
+                      variant="success"
+                      :show="ui.project.exclusion.success.dismissCountDown">Updated</b-alert>
+                    <b-alert
+                      dismissible
+                      @dismissed="ui.project.exclusion.error.show=false"
+                      variant="warning"
+                      :show="ui.project.exclusion.error.show">Error</b-alert>
+                    <b-form-group
+                      label="Exclusion criteria"
+                      label-for="exclusion-criteria"
+                      description="please enter the study exclusion criteria used in the review">
+                      <b-form-textarea
+                        id="exclusion-criteria"
+                        rows="6"
+                        v-model="project.exclusion"></b-form-textarea>
+                    </b-form-group>
+                    <b-container fluid>
+                      <b-row>
+                        <b-col
+                          cols="12"
+                          md="6">
+                          <b-button
+                            block
+                            variant="outline-danger"
+                            @click="criteriaAction('exclusion','clean')">Remove</b-button>
+                        </b-col>
+                        <b-col
+                          cols="12"
+                          md="6">
+                          <b-button
+                            block
+                            variant="outline-success"
+                            @click="criteriaAction('exclusion')">Save or Update</b-button>
+                        </b-col>
+                      </b-row>
+                    </b-container>
+                  </b-col>
+                </b-row>
+              </b-container>
+            </b-col>
+            <b-col
+              cols="12"
+              class="mt-3">
+              <h4 class="mt-5">STEP 3: Create or Import your Characteristics of Studies Table (recommended)</h4>
               <p class="font-weight-light">
                 Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
               </p>
@@ -514,7 +613,7 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">STEP 3: Create or import your Methodological Assessments Table (recommended)</h4>
+              <h4 class="mt-5">STEP 4: Create or import your Methodological Assessments Table (recommended)</h4>
               <p class="font-weight-light">
                 Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
@@ -1597,6 +1696,35 @@ export default {
         name: '',
         authors: ''
       },
+      ui: {
+        project: {
+          type: '',
+          inclusion: {
+            success: {
+              show: false,
+              dismissSecs: 5,
+              dismissCountDown: 0
+            },
+            error: {
+              show: false,
+              dismissSecs: 5,
+              dismissCountDown: 0
+            }
+          },
+          exclusion: {
+            success: {
+              show: false,
+              dismissSecs: 5,
+              dismissCountDown: 0
+            },
+            error: {
+              show: false,
+              dismissSecs: 5,
+              dismissCountDown: 0
+            }
+          }
+        }
+      },
       modal_project: {},
       lists: [],
       list_categories: {
@@ -2138,6 +2266,12 @@ export default {
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
         .then((response) => {
           this.project = response.data
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+            this.project.inclusion = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+            this.project.exclusion = ''
+          }
           this.getLists() // summary review
           this.getCharacteristics()
           this.getMethodological()
@@ -3724,6 +3858,50 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    criteriaAction: function (type, action = '') {
+      let params = {}
+      if (type === 'inclusion') {
+        params.inclusion = this.project.inclusion || ''
+        if (action === 'clean') {
+          params.inclusion = ''
+        }
+      } else {
+        params.exclusion = this.project.exclusion || ''
+        if (action === 'clean') {
+          params.exclusion = ''
+        }
+      }
+      axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+        .then((response) => {
+          if (type === 'inclusion') {
+            this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
+            this.ui.project.type = 'inclusion'
+            this.getProject()
+          }
+          if (type === 'exclusion') {
+            this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
+            this.ui.project.type = 'exclusion'
+            this.getProject()
+          }
+        })
+        .catch((error) => {
+          this.printErrors(error)
+          if (type === 'inclusion') {
+            this.ui.project.inclusion.error.show = true
+          }
+          if (type === 'exclusion') {
+            this.ui.project.exclusion.error.show = true
+          }
+        })
+    },
+    countDownChanged (dismissCountDown) {
+      if (this.ui.project.type === 'inclusion') {
+        this.ui.project.inclusion.success.dismissCountDown = dismissCountDown
+      }
+      if (this.ui.project.type === 'exclusion') {
+        this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
+      }
     }
   }
 }
