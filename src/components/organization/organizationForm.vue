@@ -22,7 +22,8 @@
     </b-form-group>
     <b-form-group
       label="Corresponding author"
-      label-for="input-project-author">
+      label-for="input-project-author"
+      description="First then last name">
       <b-form-input
         id="input-project-author"
         v-model="formData.author"></b-form-input>
