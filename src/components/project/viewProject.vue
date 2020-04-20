@@ -2409,6 +2409,11 @@ export default {
       this.$refs['add-summarized'].show()
     },
     createList: function () {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      let _sort = 1
+      if (_lists.length) {
+        _sort = parseInt(_lists.slice(-1)[0].sort) + 1
+      }
       this.table_settings.isBusy = true
       const params = {
         organization: this.$route.params.org_id,
@@ -2418,7 +2423,7 @@ export default {
         cerqual: { option: null, explanation: '' },
         references: [],
         category: this.list_categories.selected,
-        sort: 0
+        sort: _sort
       }
       axios.post('/api/isoqf_lists/', params)
         .then((response) => {
