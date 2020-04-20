@@ -500,6 +500,10 @@
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
                           <h4>Review Question</h4>
                           <p>{{ project.review_question }}</p>
+                          <h4>Inclusion criteria</h4>
+                          <p>{{ project.inclusion }}</p>
+                          <h4>Exclusion criteria</h4>
+                          <p>{{ project.exclusion }}</p>
                           <h4>Characteristics of Studies</h4>
                           <b-table
                             class="table-small-font"
