@@ -83,7 +83,7 @@
               cols="12">
               <h3>Add Data Needed to Make CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 3 steps.
+                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
