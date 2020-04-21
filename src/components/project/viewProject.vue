@@ -935,12 +935,6 @@
                     right
                     text="Export">
                     <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-                    <b-dropdown-item>to MS Excel (CSV)</b-dropdown-item>
-                    <!--
-                    <b-dropdown-item disabled>to Cochrane</b-dropdown-item>
-                    <b-dropdown-item disabled>to GRADE</b-dropdown-item>
-                    <b-dropdown-divider></b-dropdown-divider>
-                    -->
                     <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                   </b-dropdown>
                 </b-col>
