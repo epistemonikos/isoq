@@ -2100,4 +2100,9 @@ export default {
     .reference-txt {
       font-size: 12px;
     }
+  @media print {
+    @page {
+      size: A4 landscape;
+    }
+  }
 </style>

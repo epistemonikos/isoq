@@ -4033,6 +4033,9 @@ export default {
       padding: .5rem .5rem 0 .5rem;
     }
   @media print {
+    @page {
+      size: A4 landscape;
+    }
     div >>>
       #findings tbody tr:not(.b-table-row-selected) {
         display: none !important;
