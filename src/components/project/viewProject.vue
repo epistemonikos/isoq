@@ -1136,9 +1136,9 @@
                           <div
                             v-if="item.category >= 0"
                             class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ getCategoryName(item.category) }}</h5>
+                            <h5 class="mb-1">{{ item.name }}</h5>
                           </div>
-                          <p>{{ item.name }}</p>
+                          <p class="font-weight-light">{{ getCategoryName(item.category) }}</p>
                         </b-list-group-item>
                       </draggable>
                     </b-list-group>
