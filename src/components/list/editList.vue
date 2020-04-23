@@ -854,9 +854,8 @@
                   </template>
                   <template v-slot:cell(references)="data">
                     <p
-                      class="reference-txt"
-                      v-for="(item, key) in data.value" :key="key">
-                      {{item}}
+                      class="reference-txt">
+                      {{data.value}}
                     </p>
                   </template>
                 </b-table>
@@ -878,7 +877,7 @@
                     striped
                     responsive
                     :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
-                    :items="references">
+                    :items="refsWithTitle">
                     <template v-slot:cell(checkbox)="data">
                       <b-form-checkbox
                         :id="`checkbox-${data.index}`"
@@ -1276,20 +1275,17 @@ export default {
           key: 'references',
           label: 'References',
           formatter: value => {
-            let references = []
+            let references = ''
             for (let item of value) {
               for (let reference of this.references) {
                 if (item === reference.id) {
-                  references.push(reference.content.split(';')[0])
+                  references = references.concat(reference.content)
                 }
               }
             }
             return references
           }
         }
-        /*
-        {key: 'actions', label: 'Actions'}
-        */
       ],
       /** tables fields **/
       initial_modal_stage_one: {
@@ -1378,6 +1374,7 @@ export default {
       ],
       importUrl: '',
       references: [],
+      refsWithTitle: [],
       mode: 'edit',
       mode_print_fieldsObj: [],
       findings: null,
@@ -1401,12 +1398,14 @@ export default {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + semicolon
-        } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + semicolon
+        if (reference.authors.length < 1) {
+          result = 'no autho(s)'
+        } else if (reference.authors.length === 1) {
+          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+        } else if (reference.authors.length === 2) {
+          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -1425,11 +1424,14 @@ export default {
           let _references = response.data
           // this.references = response.data
           let _refs = []
+          let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
+            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
+            _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
+          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
           this.printErrors(error)

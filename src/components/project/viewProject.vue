@@ -1305,18 +1305,24 @@
                       </template>
                       <template v-else>
                         <b-td
-                          style="vertical-align: top;">{{ item.sort }}</b-td>
-                        <b-td
-                          style="vertical-align: top;">{{ item.name }}</b-td>
-                        <b-td
-                          style="vertical-align: top;">{{ item.cerqual_option }}</b-td>
-                        <b-td
-                          style="vertical-align: top;">{{ item.cerqual_explanation }}</b-td>
+                          style="vertical-align: top;">
+                          <p>{{ item.sort }}</p>
+                        </b-td>
                         <b-td
                           style="vertical-align: top;">
-                          <ul class="list-unstyled">
-                            <li v-for="(item, index) of item.ref_list" :key="index">{{item}}</li>
-                          </ul>
+                          <p>{{ item.name }}</p>
+                        </b-td>
+                        <b-td
+                          style="vertical-align: top;">
+                          <p>{{ item.cerqual_option }}</p>
+                        </b-td>
+                        <b-td
+                          style="vertical-align: top;">
+                          <p>{{ item.cerqual_explanation }}</p>
+                        </b-td>
+                        <b-td
+                          style="vertical-align: top;">
+                          <p class="references">{{ item.ref_list }}</p>
                         </b-td>
                       </template>
                     </b-tr>
@@ -1837,12 +1843,14 @@ export default {
             key: 'authors',
             label: 'Author(s)',
             formatter: value => {
-              if (value.length === 1) {
-                return value[0]
-              } else if (value.length < 3) {
-                return value[0] + ', ' + value[1]
+              if (value.length < 1) {
+                return 'no author(s)'
+              } else if (value.length === 1) {
+                return value[0].split(',')[0]
+              } else if (value.length === 2) {
+                return value[0].split(',')[0] + ' & ' + value[1].split(',')[0]
               } else {
-                return value[0] + ' et al.'
+                return value[0].split(',')[0] + ' et al.'
               }
             }
           },
@@ -2155,12 +2163,14 @@ export default {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length === 1) {
-          result = reference.authors[0] + ', ' + reference.publication_year + semicolon
-        } else if (reference.authors.length < 3) {
-          result = reference.authors[0] + ', ' + reference.authors[1] + ', ' + reference.publication_year + semicolon
+        if (reference.authors.length < 1) {
+          result = 'no author(s)'
+        } else if (reference.authors.length === 1) {
+          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+        } else if (reference.authors.length === 2) {
+          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0] + ' et al., ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -2185,9 +2195,6 @@ export default {
         return result
       }
       // return _references
-    },
-    getDataDisplayRef: function (reference) {
-      return this.parseReference(reference)
     },
     getConfidence: function (value, key, item) {
       if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
@@ -2324,18 +2331,13 @@ export default {
                 if (_arr.length) {
                   for (let element of _arr) {
                     if (element.value === list.category) {
-                      let _refList = []
-                      if (list.ref_list) {
-                        _refList = list.ref_list.split('; ')
-                        _refList.splice(-1, 1)
-                      }
                       element.items.push(
                         {
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
                           'cerqual_explanation': list.cerqual_explanation,
-                          'ref_list': _refList,
+                          'ref_list': list.ref_list,
                           'sort': list.sort
                         }
                       )
@@ -2363,18 +2365,13 @@ export default {
             } else {
               let items = []
               for (let list of _lists) {
-                let _refList = []
-                if (list.ref_list) {
-                  _refList = list.ref_list.split('; ')
-                  _refList.splice(-1, 1)
-                }
                 items.push(
                   {
                     'isoqf_id': list.isoqf_id,
                     'name': list.name,
                     'cerqual_option': list.cerqual_option,
                     'cerqual_explanation': list.cerqual_explanation,
-                    'ref_list': _refList,
+                    'ref_list': list.ref_list,
                     'sort': list.sort
                   }
                 )
@@ -2477,11 +2474,14 @@ export default {
     getReferences: function (changeTab = true) {
       axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
-          let _references = response.data
-          this.references = response.data
+          const data = JSON.parse(JSON.stringify(response.data))
+          let _references = data
+          this.references = data
           let _refs = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.getDataDisplayRef(reference)})
+            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+              _refs.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+            }
           }
 
           this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
@@ -3970,7 +3970,7 @@ export default {
       width: 5%;
     }
   div >>>
-    #findings-print li {
+    #findings-print .references {
       font-size: 12px;
     }
   div >>>
