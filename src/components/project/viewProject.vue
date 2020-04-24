@@ -2053,7 +2053,7 @@ export default {
         const _line = line.split('  - ')
         const key = _line[0]
         const content = _line[1]
-        console.log('key', key)
+
         if (key === 'TY') {
           base['type'] = content
         }
@@ -3441,7 +3441,6 @@ export default {
       }
       axios.get('/api/isoqf_findings/', {params})
         .then((response) => {
-          // console.log('finding_id', response.data[0].id)
           this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
@@ -3450,6 +3449,7 @@ export default {
       this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
+      this.table_settings.isBusy = true
       let _lists = JSON.parse(JSON.stringify(this.lists))
       const index = this.editFindingName.index
       _lists[index].name = this.editFindingName.name
