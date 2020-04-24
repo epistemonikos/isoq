@@ -574,7 +574,8 @@
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
-                  :per-page="evidence_profile_table_settings.perPage">
+                  :per-page="evidence_profile_table_settings.perPage"
+                  :busy="evidence_profile_table_settings.isBusy">
                   <template v-slot:head(isoqf_id)="data">
                     <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{data.label}}</span>
                   </template>
@@ -780,6 +781,12 @@
                       View or Edit references
                     </b-button>
                     There are <b>{{ data.item.references.length }}</b> references.
+                  </template>
+                  <template v-slot:table-busy>
+                    <div class="text-center text-danger my-2">
+                      <b-spinner class="align-middle"></b-spinner>
+                      <strong>Loading...</strong>
+                    </div>
                   </template>
                 </b-table>
                 <!-- display table in print mode -->
@@ -1537,6 +1544,7 @@ export default {
           }
           this.getStatus()
           this.getExtractedData()
+          this.evidence_profile_table_settings.isBusy = false
         }).catch((error) => {
           this.printErrors(error)
         })
@@ -1585,6 +1593,7 @@ export default {
         })
     },
     saveStageOneAndTwo: function () {
+      this.evidence_profile_table_settings.isBusy = true
       delete this.buffer_modal_stage_two.type
       // this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
       let params = {
