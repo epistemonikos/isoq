@@ -2163,19 +2163,20 @@ export default {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = 'no author(s)'
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+        if (reference.authors.length) {
+          if (reference.authors.length === 1) {
+            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else if (reference.authors.length === 2) {
+            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else {
+            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          }
+          if (!onlyAuthors) {
+            result = result + reference.title
+          }
         } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          return result
         }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
       } else {
         return result
       }
@@ -2243,19 +2244,19 @@ export default {
         axiosArray.push(newPromise)
       }
       axios.all(axiosArray)
-        .then(axios.spread((...responses) => {
-          var cnt = 0
-          responses.forEach(res => {
-            if (this.references.push(res.data)) {
-              cnt++
-            }
-          })
+        .then((responses) => {
+          let cnt = 0
+          for (let response of responses) {
+            this.references.push(response.data)
+            cnt++
+          }
+
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
           this.episte_response = []
           this.getReferences(false)
-        }))
+        })
         .catch((error) => {
           console.log('error', error)
         })
@@ -2480,7 +2481,7 @@ export default {
           let _refs = []
           for (let reference of _references) {
             if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              _refs.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+              _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
             }
           }
 
@@ -2746,14 +2747,14 @@ export default {
       if (authors.length) {
         const nroAuthors = authors.length
         if (nroAuthors === 1) {
-          return authors[0] + ', ' + pubYear
+          return authors[0].split(',')[0] + ' ' + pubYear
         } else if (nroAuthors === 2) {
-          return authors[0] + ', ' + authors[1] + ', ' + pubYear
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
         } else {
-          return authors[0] + ' et al., ' + ' ' + pubYear
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
         }
       } else {
-        return ''
+        return 'author(s) not found'
       }
     },
     deleteFieldFromCharsSudies: function (index) {
