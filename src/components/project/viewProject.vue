@@ -2175,11 +2175,10 @@ export default {
             result = result + reference.title
           }
         } else {
-          return result
+          return 'author(s) not found'
         }
-      } else {
-        return result
       }
+      return result
     },
     displayReferences: function (value, key, references) {
       let _references = []
@@ -2480,8 +2479,9 @@ export default {
           this.references = data
           let _refs = []
           for (let reference of _references) {
+            let content = this.parseReference(reference)
             if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              _refs.push({'id': reference.id, 'content': this.parseReference(reference)})
+              _refs.push({'id': reference.id, 'content': content})
             }
           }
 
