@@ -3409,7 +3409,13 @@ export default {
       if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
         requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
       }
+      for (let reference of _references) {
+        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
+      }
+
+      let _requestFindings = []
       for (let list of _lists) {
+        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
         list.references = []
         axios.patch(`/api/isoqf_lists/${list.id}`, list)
           .then((response) => {})
@@ -3417,18 +3423,46 @@ export default {
             this.printErrors(error)
           })
       }
-      for (let reference of _references) {
-        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-      }
+      if (_requestFindings.length) {
+        axios.all(_requestFindings)
+          .then((responses) => {
+            let getExtractedData = []
+            for (let response of responses) {
+              let finding = response.data[0]
+              getExtractedData.push(axios.get(`/api/isoqf_extracted_data/?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
+            }
+            if (getExtractedData.length) {
+              this.getAndDeleteExtractedData(getExtractedData)
+            }
+          })
+          .catch((error) => {
+            this.printErrors(error)
+          })
 
+      }
       axios.all(requests)
-        .then(axios.spread(function () {
+        .then((responses) => {
           this.getReferences()
           this.openModalReferencesSingle(false)
           this.getProject()
           this.resetData()
           this.$refs['modal-references'].hide()
-        }.bind(this)))
+        })
+    },
+    getAndDeleteExtractedData: function (requests) {
+      if (requests.length) {
+        axios.all(requests)
+          .then((responses) => {
+            for (let response of responses) {
+              let data = response.data[0]
+              axios.patch(`/api/isoqf_extracted_data/${data.id}`, { items: [] })
+                .then((response) => {})
+                .catch((error) => {
+                  this.printErrors(error)
+                })
+            }
+          })
+      }
     },
     editModalFindingName: function (index) {
       const list = this.lists[index]
