@@ -1154,13 +1154,8 @@
                     v-for="(field, index) in buffer_extracted_data.fields"
                     :key="index"
                     :id="`label-field-${index}`"
-                    :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : field.label"
+                    :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : ''"
                     :label-for="`input-field-${index}`">
-                    <b-form-input
-                      :id="`input-field-${index}`"
-                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                      v-if="field.key === 'ref_id' || field.key === 'authors'"
-                      v-model="buffer_extracted_data_items[field.key]"></b-form-input>
                     <b-form-textarea
                       :id="`input-field-${index}`"
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
