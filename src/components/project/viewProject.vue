@@ -2246,9 +2246,12 @@ export default {
         .then((responses) => {
           let cnt = 0
           for (let response of responses) {
-            this.references.push(response.data)
+            const data = response.data
+            this.references.push(data)
             cnt++
           }
+          const _references = JSON.parse(JSON.stringify(this.references))
+          this.prefetchDataForExtractedDataUpdate(_references)
 
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
@@ -2259,6 +2262,69 @@ export default {
         .catch((error) => {
           console.log('error', error)
         })
+    },
+    prefetchDataForExtractedDataUpdate: function (references) {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      let _requestFindings = []
+      let _requestExtractedData = []
+
+      for (let list of _lists) {
+        _requestFindings.push(axios.get(`/api/isoqf_findings/?organization=${this.$route.params.org_id}&list_id=${list.id}`))
+      }
+      axios.all(_requestFindings)
+        .then((responses) => {
+          for (let _response of responses) {
+            let response = _response.data[0]
+            _requestExtractedData.push(axios.get(`/api/isoqf_extracted_data/?organization=${response.organization}&finding_id=${response.id}`))
+          }
+          this.updateExtractedDataReferences(_requestExtractedData, references)
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    updateExtractedDataReferences: function (querys = [], references = []) {
+      if (references.length) {
+        if (querys.length) {
+          axios.all(querys)
+            .then((responses) => {
+              let item = {}
+              let _items = []
+              let patchExtractedData = []
+              for (let reference of references) {
+                item = {
+                  'ref_id': reference.id,
+                  'authors': this.parseReference(reference, true),
+                  'column_0': ''
+                }
+                _items.push(item)
+              }
+              for (let _response of responses) {
+                let response = _response.data[0]
+                for (let _item of _items) {
+                  for (let item of response.items) {
+                    if (item.ref_id === _item.ref_id) {
+                      if (item.column_0.length) {
+                        _item.column_0 = item.column_0
+                      }
+                    }
+                  }
+                }
+                const params = {
+                  items: _items
+                }
+                patchExtractedData.push(axios.patch(`/api/isoqf_extracted_data/${response.id}`, params))
+              }
+              if (patchExtractedData.length) {
+                axios.all(patchExtractedData)
+                  .then((responses) => {})
+                  .catch((error) => {
+                    this.printErrors(error)
+                  })
+              }
+            })
+        }
+      }
     },
     getProject: function () {
       const params = {
@@ -3438,7 +3504,6 @@ export default {
           .catch((error) => {
             this.printErrors(error)
           })
-
       }
       axios.all(requests)
         .then((responses) => {
