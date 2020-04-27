@@ -235,7 +235,7 @@
                       @dismiss-count-down="countDownChanged"
                       @dismissed="ui.project.inclusion.success.show=false"
                       variant="success"
-                      :show="ui.project.inclusion.success.dismissCountDown">Updated</b-alert>
+                      :show="ui.project.inclusion.success.dismissCountDown">Saved!</b-alert>
                     <b-alert
                       dismissible
                       @dismissed="ui.project.inclusion.error.show=false"
@@ -248,28 +248,9 @@
                       <b-form-textarea
                         id="inclusion-criteria"
                         rows="6"
-                        v-model="project.inclusion"></b-form-textarea>
+                        v-model="project.inclusion"
+                        @></b-form-textarea>
                     </b-form-group>
-                    <b-container fluid>
-                      <b-row>
-                        <b-col
-                          cols="12"
-                          md="6">
-                          <b-button
-                            block
-                            variant="outline-danger"
-                            @click="criteriaAction('exclusion','clean')">Remove</b-button>
-                        </b-col>
-                        <b-col
-                          cols="12"
-                          md="6">
-                          <b-button
-                            block
-                            variant="outline-success"
-                            @click="criteriaAction('inclusion')">Save or Update</b-button>
-                        </b-col>
-                      </b-row>
-                    </b-container>
                   </b-col>
                   <b-col
                     cols="12"
@@ -279,7 +260,7 @@
                       @dismiss-count-down="countDownChanged"
                       @dismissed="ui.project.exclusion.success.show=false"
                       variant="success"
-                      :show="ui.project.exclusion.success.dismissCountDown">Updated</b-alert>
+                      :show="ui.project.exclusion.success.dismissCountDown">Saved!</b-alert>
                     <b-alert
                       dismissible
                       @dismissed="ui.project.exclusion.error.show=false"
@@ -294,26 +275,6 @@
                         rows="6"
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
-                    <b-container fluid>
-                      <b-row>
-                        <b-col
-                          cols="12"
-                          md="6">
-                          <b-button
-                            block
-                            variant="outline-danger"
-                            @click="criteriaAction('exclusion','clean')">Remove</b-button>
-                        </b-col>
-                        <b-col
-                          cols="12"
-                          md="6">
-                          <b-button
-                            block
-                            variant="outline-success"
-                            @click="criteriaAction('exclusion')">Save or Update</b-button>
-                        </b-col>
-                      </b-row>
-                    </b-container>
                   </b-col>
                 </b-row>
               </b-container>
@@ -1674,6 +1635,7 @@ import axios from 'axios'
 import draggable from 'vuedraggable'
 import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
+import _debounce from 'lodash.debounce'
 
 export default {
   components: {
@@ -1684,7 +1646,9 @@ export default {
     return {
       project: {
         name: '',
-        authors: ''
+        authors: '',
+        inclusion: '',
+        exclusion: ''
       },
       ui: {
         project: {
@@ -1961,24 +1925,13 @@ export default {
       changeTxtProjectProperties: '+'
     }
   },
-  mounted () {
-    this.getListCategories()
-    this.getReferences()
-    this.openModalReferencesSingle(false)
-    this.getProject()
-    this.$root.$on('bv::collapse::state', (collapseId, isOpen) => {
-      if (collapseId === 'info-project') {
-        this.changeTxtProjectProperties = '+'
-        if (isOpen) {
-          this.changeTxtProjectProperties = '-'
-        }
-        if (!isOpen && this.mode === 'view') {
-          this.$root.$emit('bv::toggle::collapse', 'info-project')
-        }
-      }
-    })
-  },
   watch: {
+    'project.inclusion': function () {
+      this.saveInclusionCriteria()
+    },
+    'project.exclusion': function () {
+      this.saveExclusionCriteria()
+    },
     pre_ImportDataTable: function (data) {
       const allLines = data.split(/\r\n|\n/)
       let fields = []
@@ -2098,6 +2051,27 @@ export default {
         }
       })
     }
+  },
+  mounted () {
+    this.getListCategories()
+    this.getReferences()
+    this.openModalReferencesSingle(false)
+    this.getProject()
+    this.$root.$on('bv::collapse::state', (collapseId, isOpen) => {
+      if (collapseId === 'info-project') {
+        this.changeTxtProjectProperties = '+'
+        if (isOpen) {
+          this.changeTxtProjectProperties = '-'
+        }
+        if (!isOpen && this.mode === 'view') {
+          this.$root.$emit('bv::toggle::collapse', 'info-project')
+        }
+      }
+    })
+  },
+  created: function () {
+    this.saveInclusionCriteria = _debounce(function () { this.criteriaAction('inclusion') }, 1500)
+    this.saveExclusionCriteria = _debounce(function () { this.criteriaAction('exclusion') }, 1500)
   },
   methods: {
     EpisteRequest: function () {
