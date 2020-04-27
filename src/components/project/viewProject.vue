@@ -229,18 +229,8 @@
                 <b-row>
                   <b-col
                     cols="12"
-                    md="6">
-                    <b-alert
-                      dismissible
-                      @dismiss-count-down="countDownChanged"
-                      @dismissed="ui.project.inclusion.success.show=false"
-                      variant="success"
-                      :show="ui.project.inclusion.success.dismissCountDown">Saved!</b-alert>
-                    <b-alert
-                      dismissible
-                      @dismissed="ui.project.inclusion.error.show=false"
-                      variant="warning"
-                      :show="ui.project.inclusion.error.show">Error</b-alert>
+                    md="6"
+                    class="pl-0">
                     <b-form-group
                       label="Inclusion criteria"
                       label-for="inclusion-criteria"
@@ -254,18 +244,8 @@
                   </b-col>
                   <b-col
                     cols="12"
-                    md="6">
-                    <b-alert
-                      dismissible
-                      @dismiss-count-down="countDownChanged"
-                      @dismissed="ui.project.exclusion.success.show=false"
-                      variant="success"
-                      :show="ui.project.exclusion.success.dismissCountDown">Saved!</b-alert>
-                    <b-alert
-                      dismissible
-                      @dismissed="ui.project.exclusion.error.show=false"
-                      variant="warning"
-                      :show="ui.project.exclusion.error.show">Error</b-alert>
+                    md="6"
+                    class="pr-0">
                     <b-form-group
                       label="Exclusion criteria"
                       label-for="exclusion-criteria"
