@@ -4049,7 +4049,7 @@ export default {
     }
   div >>>
     #findings-print.table thead th:nth-child(2) {
-      width: 45%;
+      width: 35%;
     }
   div >>>
     #findings-print.table thead th:first-child {
@@ -4057,7 +4057,7 @@ export default {
     }
   div >>>
     #findings-print.table thead th:last-child {
-      width: 5%;
+      width: 15%;
     }
   div >>>
     #findings-print .references {
