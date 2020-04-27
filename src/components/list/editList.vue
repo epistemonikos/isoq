@@ -2062,15 +2062,11 @@ export default {
     }
   div >>>
     #assessments-print.table thead th:nth-child(2) {
-      width: 45%;
+      width: 35%;
     }
   div >>>
     #assessments-print.table thead th:last-child {
-      width: 3%;
-    }
-  div >>>
-    #assessments-print.table thead th {
-      width: 10%;
+      width: 15%;
     }
   div >>>
     .table tbody td div li {
