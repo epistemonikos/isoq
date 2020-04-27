@@ -1043,8 +1043,7 @@
                         </ul>
 
                         <h5>Corresponding author</h5>
-                        <p v-if="project.author">{{ project.author }}</p>
-                        <p v-if="project.author_email">{{ project.author_email }}</p>
+                        <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
 
                         <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
                         <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
