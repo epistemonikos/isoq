@@ -11,7 +11,7 @@
           <b-row>
             <b-col
               cols="12"
-              sm="8"
+              sm="9"
               align-self="center">
               <b-form-group
                 label="Search">
@@ -28,21 +28,11 @@
             </b-col>
             <b-col
               cols="12"
-              sm="2"
-              align-self="center">
-              <b-form-group label="Items per page" >
-                <b-form-select
-                  v-model="tableSettings.perPage"
-                  :options="tableSettings.pageOptions"></b-form-select>
-              </b-form-group>
-            </b-col>
-            <b-col
-              cols="12"
-              sm="2"
-              align-self="center">
+              sm="3"
+              align-self="center"
+              class="pt-3">
               <b-button
                 block
-                class="mt-4"
                 @click="exportToCSV(type)">
                 Export to XLS file
               </b-button>
