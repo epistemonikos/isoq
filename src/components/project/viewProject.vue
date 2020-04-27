@@ -1164,7 +1164,6 @@
                   show-empty
                   :busy="table_settings.isBusy"
                   :current-page="table_settings.currentPage"
-                  :per-page="table_settings.perPage"
                   :filter="table_settings.filter"
                   @filtered="onFiltered"
                   :filter-included-fields="table_settings.filterOn">
@@ -1330,14 +1329,6 @@
                 </b-table-simple>
               </template>
               <!-- eopv -->
-              <b-pagination
-                v-if="mode === 'edit' && lists.length > table_settings.perPage"
-                class="d-print-none"
-                v-model="table_settings.currentPage"
-                :total-rows="lists.length"
-                :per-page="table_settings.perPage"
-                aria-controls="findings"
-                align="center"></b-pagination>
               <b-modal
                 size="xl"
                 id="edit-finding-name"
