@@ -1256,7 +1256,7 @@ export default {
       ],
       evidence_profile_fields_print_version: [
         { key: 'isoqf_id', label: '#' },
-        { key: 'name', label: 'Finding' },
+        { key: 'name', label: 'Summarized review finding' },
         { key: 'methodological-limit', label: 'Methodological limitations' },
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
