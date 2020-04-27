@@ -140,7 +140,8 @@
                             <b-form-textarea
                               id="input-ml-explanation"
                               v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                              :placeholder="$t('Enter an explanation')"></b-form-textarea>
+                              :placeholder="$t('Enter an explanation')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -150,7 +151,8 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.methodological_limitations.notes"
-                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                              :placeholder="$t('Enter a note')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
@@ -197,7 +199,8 @@
                             <b-form-textarea
                               id="input-coherence-explanation"
                               v-model="buffer_modal_stage_two.coherence.explanation"
-                              :placeholder="$t('Enter an explanation')"></b-form-textarea>
+                              :placeholder="$t('Enter an explanation')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -207,7 +210,8 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
-                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                              :placeholder="$t('Enter a note')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <!-- adequacy -->
                         </div>
@@ -249,7 +253,8 @@
                             <b-form-textarea
                               id="input-adequacy-explanation"
                               v-model="buffer_modal_stage_two.adequacy.explanation"
-                              placeholder="Enter an explanation"></b-form-textarea>
+                              placeholder="Enter an explanation"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -259,7 +264,8 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
-                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                              :placeholder="$t('Enter a note')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <!-- relevance -->
                         </div>
@@ -303,7 +309,8 @@
                             <b-form-textarea
                               id="input-relevance-explanation"
                               v-model="buffer_modal_stage_two.relevance.explanation"
-                              placeholder="Enter an explanation"></b-form-textarea>
+                              placeholder="Enter an explanation"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -313,7 +320,8 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
-                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                              :placeholder="$t('Enter a note')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <!-- CERQual assessment -->
                         </div>
@@ -354,7 +362,8 @@
                             <b-form-textarea
                               id="input-cerqual"
                               v-model="buffer_modal_stage_two.cerqual.explanation"
-                              placeholder="Enter an explanation"></b-form-textarea>
+                              placeholder="Enter an explanation"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -364,7 +373,8 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"
-                              :placeholder="$t('Enter a note')"></b-form-textarea>
+                              :placeholder="$t('Enter a note')"
+                              rows="9"></b-form-textarea>
                           </b-form-group>
                         </div>
                       </b-col>
@@ -518,24 +528,27 @@
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <h5>Methodological limitations</h5>
                           <p>
-                            {{select_options[evidence_profile[0].methodological_limitations.option].text}}
+                            <b>{{select_options[evidence_profile[0].methodological_limitations.option].text}}</b>
                             <br>
-                            <b>Explanation:</b> <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                            Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
                           </p>
                           <h5>Coherence</h5>
-                          <p>{{select_options[evidence_profile[0].coherence.option].text}}
+                          <p>
+                            <b>{{select_options[evidence_profile[0].coherence.option].text}}</b>
                             <br>
-                            <b>Explanation:</b> <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                            Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
                           </p>
                           <h5>Adequacy</h5>
-                          <p>{{select_options[evidence_profile[0].adequacy.option].text}}
+                          <p>
+                            <b>{{select_options[evidence_profile[0].adequacy.option].text}}</b>
                             <br>
-                            <b>Explanation:</b> <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                            Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
                           </p>
                           <h5>Relevance</h5>
-                          <p>{{select_options[evidence_profile[0].relevance.option].text}}
+                          <p>
+                            <b>{{select_options[evidence_profile[0].relevance.option].text}}</b>
                             <br>
-                            <b>Explanation:</b> <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                            Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
                           </p>
                         </div>
                       </b-col>
