@@ -1046,8 +1046,8 @@
                         <p v-if="project.author">{{ project.author }}</p>
                         <p v-if="project.author_email">{{ project.author_email }}</p>
 
-                        <h5 v-if="project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
-                        <p v-if="project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                        <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                        <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
                       </b-col>
                     </b-row>
                   </b-collapse>
@@ -1305,7 +1305,7 @@
                       <template v-else>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ item.sort }}</p>
+                          <p>{{ index + 1 }}</p>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
