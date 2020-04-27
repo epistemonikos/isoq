@@ -89,7 +89,7 @@
         :options="global_status"></b-select>
     </b-form-group>
     <b-form-group
-      label="Aditional information"
+      label="Additional information"
       label-for="input-project-list-description">
       <b-form-textarea
         id="input-project-list-description"

@@ -1033,7 +1033,7 @@
                         <h5>Has the review been published?</h5>
                         <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
-                        <h5 v-if="project.description">Aditional Information</h5>
+                        <h5 v-if="project.description">Additional Information</h5>
                         <p v-if="project.description">{{project.description}}</p>
                       </b-col>
                       <b-col cols="12" md="4" class="toDoc">
