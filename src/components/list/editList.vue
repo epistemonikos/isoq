@@ -574,7 +574,6 @@
                   :fields="evidence_profile_fields"
                   :items="evidence_profile"
                   :filter="evidence_profile_table_settings.filter"
-                  :per-page="evidence_profile_table_settings.perPage"
                   :busy="evidence_profile_table_settings.isBusy">
                   <template v-slot:head(isoqf_id)="data">
                     <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{data.label}}</span>
@@ -797,8 +796,7 @@
                   responsive striped caption-top
                   :fields="evidence_profile_fields_print_version"
                   :items="evidence_profile"
-                  :filter="evidence_profile_table_settings.filter"
-                  :per-page="evidence_profile_table_settings.perPage">
+                  :filter="evidence_profile_table_settings.filter">
                   <template v-slot:head(isoqf_id)="data">
                     {{data.label}}
                   </template>
@@ -910,7 +908,11 @@
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">
+                To add data or make changes to this table do so in the
+                <b-link :to="{name: 'viewProject', params: {'org_id': list.organization, 'id': list.project_id }}">My Data</b-link>
+                section of iSoQf
+              </p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
                   v-if="mode==='edit' && characteristics_studies.items.length"
@@ -929,7 +931,6 @@
                   :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
-                  :per-page="characteristics_studies_table_settings.perPage"
                   class="mb-5 toDoc">
                   <template
                     v-if="characteristics_studies.tableTop.length"
@@ -956,14 +957,6 @@
                       title="Edit" />
                   </template>
                 </b-table>
-                <b-pagination
-                  v-if="characteristics_studies.items.length && characteristics_studies.items.length > characteristics_studies_table_settings.perPage && mode==='edit'"
-                  class="mt-5 d-print-none"
-                  align="center"
-                  v-model="characteristics_studies_table_settings.currentPage"
-                  :per-page="characteristics_studies_table_settings.perPage"
-                  :total-rows="characteristics_studies.items.length"
-                  limit="11"></b-pagination>
 
                 <b-modal
                   size="xl"
@@ -1015,7 +1008,7 @@
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="{name: 'viewProject', params: {'org_id': list.organization, 'id': list.project_id }}">My Data</b-link> section of iSoQf</p>
               <template v-if="meth_assessments.fields.length">
                 <bc-filters
                   v-if="mode==='edit' && meth_assessments.items.length"
@@ -1034,21 +1027,13 @@
                   outlined
                   :fields="meth_assessments.fieldsObj"
                   :items="meth_assessments.items"
-                  :per-page="methodological_assessments_table_settings.perPage"
                   :filter="methodological_assessments_table_settings.filter">
                   <template v-slot:cell(actions)="row">
                     <font-awesome-icon icon="trash" @click="openModalRemoveDataMethAssessments(row)" :title="$t('Remove')" />
                     <font-awesome-icon icon="edit" @click="openModalEditDataMethAssessments(row)" :title="$t('Edit')" />
                   </template>
                 </b-table>
-                <b-pagination
-                  v-if="meth_assessments.items.length && meth_assessments.items.length > methodological_assessments_table_settings.perPage && mode==='edit'"
-                  class="mt-5 d-print-none"
-                  align="center"
-                  v-model="methodological_assessments_table_settings.currentPage"
-                  :per-page="methodological_assessments_table_settings.perPage"
-                  :total-rows="meth_assessments.items.length"
-                  limit="11"></b-pagination>
+
                 <b-modal
                   size="xl"
                   ref="modal-edit-data-stage-four"
@@ -1101,7 +1086,6 @@
                   :filter="extracted_data_table_settings.filter"
                   :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                   :items="extracted_data.items"
-                  :per-page="extracted_data_table_settings.perPage"
                   :current-page="extracted_data_table_settings.currentPage">
                   <template
                     v-if="mode==='edit'"
@@ -1124,14 +1108,6 @@
                     </b-button>
                   </template>
                 </b-table>
-                <b-pagination
-                  v-if="extracted_data.items.length && extracted_data.items.length > extracted_data_table_settings.perPage && mode==='edit'"
-                  class="mt-5 d-print-none"
-                  align="center"
-                  v-model="extracted_data_table_settings.currentPage"
-                  :per-page="extracted_data_table_settings.perPage"
-                  :total-rows="extracted_data.items.length"
-                  limit="11"></b-pagination>
                 <b-modal
                   id="modal-extracted-data-remove-data-item"
                   ref="modal-extracted-data-remove-data-item"
