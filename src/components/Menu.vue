@@ -3,7 +3,7 @@
     <b-navbar id="main-navbar" toggleable="lg">
       <b-navbar-brand :to="{name: 'MainPage'}">
         <img :src="iconUrl" alt="GRADE CERQual">
-        <span>interactive Summary of Qualitative Findings</span>
+        <p>interactive Summary of Qualitative Findings</p>
       </b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
