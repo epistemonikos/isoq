@@ -103,7 +103,9 @@
                         </p>
                         <b-form-textarea
                           v-model="episte_request"
-                          placeholder="Ej: 17253524"></b-form-textarea>
+                          placeholder="Ej: 17253524"
+                          rows="6"
+                          max-rows="100"></b-form-textarea>
                         <b-button
                           id="btnEpisteRequest"
                           class="mt-2"
@@ -472,7 +474,9 @@
                   </b-form-input>
                   <b-form-textarea
                     v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"></b-form-textarea>
+                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
+                    rows="6"
+                    max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -761,7 +765,9 @@
                     v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-input>
                   <b-form-textarea
                     v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-textarea>
+                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"
+                    rows="6"
+                    max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal

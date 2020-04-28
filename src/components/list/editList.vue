@@ -1001,10 +1001,13 @@
                     <b-form-textarea
                       :id="`data-${index}`"
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="modal_stage_three_data[field.key]"></b-form-textarea>
+                      v-model="modal_stage_three_data[field.key]"
+                      rows="6"
+                      max-rows="100"></b-form-textarea>
                     <b-form-textarea
                       :id="`data-${index}`"
-                      row="3"
+                      rows="6"
+                      max-rows="100"
                       v-model="modal_stage_three_data[field.key]"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
@@ -1071,7 +1074,9 @@
                     :label-for="`column-${index}`">
                     <b-form-textarea
                       :id="`column-${index}`"
-                      v-model="modal_meth_assessments_data[field.key]"></b-form-textarea>
+                      v-model="modal_meth_assessments_data[field.key]"
+                      rows="6"
+                      max-rows="100"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
                 <b-modal
@@ -1161,7 +1166,8 @@
                       :id="`input-field-${index}`"
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                       v-model="buffer_extracted_data_items[field.key]"
-                      rows="6"></b-form-textarea>
+                      rows="6"
+                      max-rows="100"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
               </template>
