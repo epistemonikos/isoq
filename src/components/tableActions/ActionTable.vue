@@ -181,7 +181,8 @@
         :label-for="`data-${index}`">
         <b-form-textarea
           :id="`data-${index}`"
-          row="3"
+          rows="6"
+          max-rows="100"
           v-model="newItem[item.key]"></b-form-textarea>
       </b-form-group>
     </b-modal>
