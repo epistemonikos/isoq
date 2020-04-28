@@ -238,6 +238,7 @@
                       <b-form-textarea
                         id="inclusion-criteria"
                         rows="6"
+                        max-rows="100"
                         v-model="project.inclusion"
                         @></b-form-textarea>
                     </b-form-group>
@@ -253,6 +254,7 @@
                       <b-form-textarea
                         id="exclusion-criteria"
                         rows="6"
+                        max-rows="100"
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
                   </b-col>
@@ -1284,7 +1286,8 @@
                   <b-form-textarea
                     id="finding-name"
                     v-model="editFindingName.name"
-                    rows="5"></b-form-textarea>
+                    rows="6"
+                    max-rows="100"></b-form-textarea>
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"
@@ -1324,7 +1327,8 @@
                   <b-form-textarea
                     id="summarized-review"
                     v-model="summarized_review"
-                    rows="5"></b-form-textarea>
+                    rows="6"
+                    max-rows="100"></b-form-textarea>
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"

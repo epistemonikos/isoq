@@ -141,7 +141,8 @@
                               id="input-ml-explanation"
                               v-model="buffer_modal_stage_two.methodological_limitations.explanation"
                               :placeholder="$t('Enter an explanation')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -152,7 +153,8 @@
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.methodological_limitations.notes"
                               :placeholder="$t('Enter a note')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
@@ -200,7 +202,8 @@
                               id="input-coherence-explanation"
                               v-model="buffer_modal_stage_two.coherence.explanation"
                               :placeholder="$t('Enter an explanation')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -211,7 +214,8 @@
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
                               :placeholder="$t('Enter a note')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <!-- adequacy -->
                         </div>
@@ -254,7 +258,8 @@
                               id="input-adequacy-explanation"
                               v-model="buffer_modal_stage_two.adequacy.explanation"
                               placeholder="Enter an explanation"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -265,7 +270,8 @@
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
                               :placeholder="$t('Enter a note')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <!-- relevance -->
                         </div>
@@ -310,7 +316,8 @@
                               id="input-relevance-explanation"
                               v-model="buffer_modal_stage_two.relevance.explanation"
                               placeholder="Enter an explanation"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -321,7 +328,8 @@
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
                               :placeholder="$t('Enter a note')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <!-- CERQual assessment -->
                         </div>
@@ -363,7 +371,8 @@
                               id="input-cerqual"
                               v-model="buffer_modal_stage_two.cerqual.explanation"
                               placeholder="Enter an explanation"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
@@ -374,7 +383,8 @@
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"
                               :placeholder="$t('Enter a note')"
-                              rows="9"></b-form-textarea>
+                              rows="6"
+                              max-rows="100"></b-form-textarea>
                           </b-form-group>
                         </div>
                       </b-col>
@@ -409,7 +419,8 @@
                                 v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
                                 <b-form-group>
                                   <b-form-textarea
-                                    rows="5"
+                                    rows="6"
+                                    max-rows="100"
                                     v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
                                 </b-form-group>
                               </template>
@@ -469,7 +480,8 @@
                                 v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
                                 <b-form-group>
                                   <b-form-textarea
-                                    rows="5"
+                                    rows="6"
+                                    max-rows="100"
                                     v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
                                 </b-form-group>
 

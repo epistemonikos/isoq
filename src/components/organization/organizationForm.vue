@@ -43,6 +43,7 @@
         id="input-project-review-question"
         :placeholder="$t('Insert main question that the review addresses')"
         rows="6"
+        max-rows="100"
         v-model="formData.review_question"></b-form-textarea>
     </b-form-group>
     <b-form-group
@@ -95,7 +96,8 @@
         id="input-project-list-description"
         placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organization or government"
         v-model="formData.description"
-        rows="3"></b-form-textarea>
+        rows="6"
+        max-rows="100"></b-form-textarea>
     </b-form-group>
   </div>
 </template>
