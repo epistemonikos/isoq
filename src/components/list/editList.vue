@@ -39,8 +39,7 @@
               id="printButton"
               @click="print"
               variant="outline-info"
-              block
-              v-b-tooltip:printButton.bottom="'If you want to exclude or include the Characteristics of Studies, Methodological Assessments and Extracted Data tables in the file you are about to export or print, click the edit button and adjust your on/off settings for each table. Whatever is on in edit mode will be included in the exported or printed file.'">
+              block>
               Print or save as PDF
             </b-button>
         </b-col>
