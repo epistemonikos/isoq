@@ -1099,6 +1099,9 @@
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
               </h3>
+              <p class="d-print-none font-weight-light">
+                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a CERQual assessment.
+              </p>
               <template v-if="extracted_data.fields.length">
                 <bc-filters
                   v-if="mode==='edit'"
