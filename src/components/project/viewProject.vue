@@ -1066,10 +1066,10 @@
                     class="mt-1"
                     block
                     variant="outline-secondary"
-                    @click="modalSortFindings">Sort your review findings</b-button>
+                    @click="modalSortFindings">Re-order your review findings</b-button>
 
                   <b-modal
-                    title="Sort your review findings"
+                    title="Re-order your review findings"
                     ref="modal-sort-findings"
                     id="modal-sort-findings"
                     size="xl"
@@ -1078,6 +1078,9 @@
                     cancel-variant="outline-primary"
                     scrollable
                     @ok="saveSortedLists">
+                    <p class="font-weight-light">
+                      Drag and drop findings to re-order them in the iSoQf table
+                    </p>
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
                         <b-list-group-item v-for="(item, index) of sorted_lists" :key="index" class="flex-column align-items-start">
