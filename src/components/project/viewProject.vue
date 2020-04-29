@@ -475,7 +475,7 @@
                   <b-form-textarea
                     v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                     v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
-                    rows="6"
+                    rows="2"
                     max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
@@ -766,7 +766,7 @@
                   <b-form-textarea
                     v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                     v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"
-                    rows="6"
+                    rows="2"
                     max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
