@@ -1316,6 +1316,9 @@
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
                 @ok="confirmRemoveList">
+                <p class="text-danger">
+                  Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
+                </p>
                 <p>
                   Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
                 </p>
