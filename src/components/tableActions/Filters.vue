@@ -64,7 +64,7 @@ export default {
   methods: {
     exportToCSV: function (type) {
       var csv = 'data:text/csv;charset=utf-8,'
-      const types = ['chars_of_studies', 'meth_assessments']
+      const types = ['chars_of_studies', 'meth_assessments', 'extracted_data']
       let _keys = []
       var cnt = 1
 
@@ -85,7 +85,7 @@ export default {
             for (let index in _protoCSV[_element]) {
               cnt = 1
               for (let key of _keys) {
-                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < Object.keys(_protoCSV[_element][index]).length) ? '",' : '"' + '\n'))
+                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < _keys.length) ? '",' : '"' + '\n'))
                 cnt++
               }
             }

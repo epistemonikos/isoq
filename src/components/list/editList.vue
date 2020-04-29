@@ -1105,7 +1105,10 @@
                   v-if="mode==='edit'"
                   class="d-print-none"
                   idname="extracted-data-filter"
-                  :tableSettings="extracted_data_table_settings">
+                  :tableSettings="extracted_data_table_settings"
+                  type="extracted_data"
+                  :fields="mode_print_fieldsObj"
+                  :items="extracted_data.items">
                 </bc-filters>
                 <b-table
                   class="toDoc"
