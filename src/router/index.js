@@ -74,7 +74,7 @@ var routes = [
     name: 'Organizations',
     component: Organizations,
     meta: {
-      title: 'Organizations - interactive Summaries of Qualitative Findings',
+      title: 'Workspaces - interactive Summaries of Qualitative Findings',
       requiresAuth: true
     }
   },
