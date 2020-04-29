@@ -1149,6 +1149,9 @@
                             v-if="mode==='edit'"
                             variant="outline-success"
                             @click="editModalFindingName(data.index)">
+                            <font-awesome-icon
+                              v-if=(data.item.notes.length)
+                              icon="comments"></font-awesome-icon>
                             Edit
                           </b-button>
                         </b-col>
@@ -1305,6 +1308,16 @@
                   <b-form-select
                     v-model="editFindingName.category"
                     :options="list_categories.options"></b-form-select>
+                </b-form-group>
+                <b-form-group
+                  label="Notes"
+                  label-for="finding-note"
+                  description="Optional space for reviewers to leave notes for each other about this review finding">
+                  <b-form-textarea
+                    id="finding-note"
+                    v-model="editFindingName.notes"
+                    rows="6"
+                    max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
               <b-modal
@@ -1908,7 +1921,8 @@ export default {
       disableBtnRemoveAllRefs: false,
       editFindingName: {
         index: null,
-        name: null
+        name: null,
+        notes: null
       },
       episte_request: '',
       episte_response: [],
@@ -2336,6 +2350,9 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
+              if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
+                list.notes = ''
+              }
               list.cerqual_option = ''
               if (list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
@@ -2370,7 +2387,8 @@ export default {
                           'cerqual_option': list.cerqual_option,
                           'cerqual_explanation': list.cerqual_explanation,
                           'ref_list': list.ref_list,
-                          'sort': list.sort
+                          'sort': list.sort,
+                          'notes': list.notes
                         }
                       )
                     }
@@ -2404,7 +2422,8 @@ export default {
                     'cerqual_option': list.cerqual_option,
                     'cerqual_explanation': list.cerqual_explanation,
                     'ref_list': list.ref_list,
-                    'sort': list.sort
+                    'sort': list.sort,
+                    'notes': list.notes
                   }
                 )
               }
@@ -3510,6 +3529,7 @@ export default {
       this.editFindingName.index = index
       this.editFindingName.name = list.name
       this.editFindingName.category = list.category
+      this.editFindingName.notes = list.notes
       const params = {
         organization: this.$route.params.org_id,
         list_id: list.id
@@ -3529,22 +3549,25 @@ export default {
       const index = this.editFindingName.index
       _lists[index].name = this.editFindingName.name
       _lists[index].category = this.editFindingName.category
+      _lists[index].notes = this.editFindingName.notes
 
       axios.patch(`/api/isoqf_lists/${_lists[index].id}`, _lists[index])
         .then((response) => {
-          this.updateFinding(this.editFindingName.finding_id, this.editFindingName.name)
+          this.updateFinding(this.editFindingName)
           this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
         })
     },
-    updateFinding: function (findingID, name) {
+    updateFinding: function (finding) {
       const params = {
-        name: name,
-        'evidence_profile.name': name
+        name: finding.name,
+        notes: finding.notes,
+        'evidence_profile.name': finding.name,
+        'evidence_profile.notes': finding.notes
       }
-      axios.patch(`/api/isoqf_findings/${findingID}`, params)
+      axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
         .then((response) => {})
         .catch((error) => {
           this.printErrors(error)
