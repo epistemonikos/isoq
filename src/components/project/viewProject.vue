@@ -1132,7 +1132,7 @@
                   </template>
                   <!-- data -->
                   <template v-slot:cell(sort)="data">
-                    {{ parseInt(data.index) + 1 }}
+                    {{ data.item.isoqf_id }}
                   </template>
                   <template v-slot:cell(name)="data">
                     <span v-if="mode === 'edit'">
@@ -1253,7 +1253,7 @@
                       <template v-else>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ index + 1 }}</p>
+                          <p>{{ item.isoqf_id }}</p>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
@@ -2314,6 +2314,12 @@ export default {
             if (a.sort > b.sort) { return 1 }
             return 0
           })
+          let cnt = 1
+          for (let d of data) {
+            d.sort = cnt
+            d.isoqf_id = cnt
+            cnt++
+          }
           this.lists = data
           let _lists = data
 
@@ -2420,31 +2426,41 @@ export default {
       this.$refs['add-summarized'].show()
     },
     createList: function () {
+      this.table_settings.isBusy = true
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _sort = 1
       if (_lists.length) {
         _sort = parseInt(_lists.slice(-1)[0].sort) + 1
       }
-      this.table_settings.isBusy = true
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        name: this.summarized_review,
-        isoqf_id: this.lastId,
-        cerqual: { option: null, explanation: '' },
-        references: [],
-        category: this.list_categories.selected,
-        sort: _sort
+      let querys = []
+      for (let list of _lists) {
+        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort, 'isoqf_id': list.isoqf_id}))
       }
-      axios.post('/api/isoqf_lists/', params)
-        .then((response) => {
-          const listId = response.data.id
-          const listName = response.data.name
+      axios.all(querys)
+        .then((responses) => {
+          const params = {
+            organization: this.$route.params.org_id,
+            project_id: this.$route.params.id,
+            name: this.summarized_review,
+            isoqf_id: this.lastId,
+            cerqual: { option: null, explanation: '' },
+            references: [],
+            category: this.list_categories.selected,
+            sort: _sort
+          }
+          axios.post('/api/isoqf_lists/', params)
+            .then((response) => {
+              const listId = response.data.id
+              const listName = response.data.name
 
-          this.getLists()
-          this.createFinding(listId, listName)
-          this.summarized_review = ''
-          this.list_categories.selected = null
+              this.getLists()
+              this.createFinding(listId, listName)
+              this.summarized_review = ''
+              this.list_categories.selected = null
+            })
+            .catch((error) => {
+              this.printErrors(error)
+            })
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3829,8 +3845,9 @@ export default {
       let cnt = 1
       let requests = []
       for (let list of this.sorted_lists) {
+        list.isoqf_id = cnt
         list.sort = cnt
-        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort}))
+        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'isoqf_id': cnt, 'sort': cnt}))
         cnt++
       }
 
