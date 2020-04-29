@@ -960,7 +960,7 @@
                          cols="11">
                          <p
                           class="mb-0 text-left"
-                          >Project properties</p>
+                          >{{ project.name }}</p>
                         </b-col>
                         <b-col
                           cols="1"
