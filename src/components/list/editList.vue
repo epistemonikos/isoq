@@ -52,7 +52,7 @@
               id="editButton"
               @click="changeMode"
               variant="outline-primary"
-              v-b-tooltip:editButton.top="'Press to edit'"
+              v-b-tooltip:editButton.top="'Click to edit'"
               block>
               Edit
             </b-button>
