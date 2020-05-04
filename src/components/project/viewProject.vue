@@ -1183,6 +1183,9 @@
                       block
                       :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
                       :to="{name: 'editList', params: {id: data.item.id}}">
+                        <font-awesome-icon
+                          v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+                          icon="comments"></font-awesome-icon>
                         <span v-if="data.item.cerqual_option===''">Complete</span>
                         <span v-if="data.item.cerqual_option!=''">Edit</span>
                         CERQual Assessment

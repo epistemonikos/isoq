@@ -1587,7 +1587,14 @@ export default {
       let params = {
         organization: this.list.organization,
         // name: this.buffer_modal_stage_one.name,
-        cerqual: this.buffer_modal_stage_two.cerqual
+        cerqual: this.buffer_modal_stage_two.cerqual,
+        evidence_profile: {
+          methodological_limitations: this.buffer_modal_stage_two.methodological_limitations,
+          coherence: this.buffer_modal_stage_two.coherence,
+          adequacy: this.buffer_modal_stage_two.adequacy,
+          relevance: this.buffer_modal_stage_two.relevance,
+          cerqual: this.buffer_modal_stage_two.cerqual
+        }
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
