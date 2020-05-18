@@ -286,7 +286,7 @@
                     variant="outline-primary"
                     v-if="charsOfStudies.fields.length > 2"
                     @click="openModalCharsOfStudiesEdit">
-                    Edit column headings
+                    Add or Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
@@ -580,7 +580,7 @@
                     variant="outline-primary"
                     v-if="methodologicalTableRefs.fields.length > 2"
                     @click="openModcontent(true)">
-                    Edit column headings
+                    Add or Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
