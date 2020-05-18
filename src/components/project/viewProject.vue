@@ -1180,6 +1180,7 @@
                     </div>
                     <div v-else>
                       <b-button
+                        variant="info"
                         @click="editModalFindingName(data.index)">Assign a category</b-button>
                     </div>
 
