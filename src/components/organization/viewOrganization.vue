@@ -75,7 +75,6 @@
       </div>
       <!-- modals -->
       <b-modal
-        scrollable
         id="new-project"
         ref="new-project"
         size="xl"
