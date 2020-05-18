@@ -1780,7 +1780,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']
+        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name']
       },
       summarized_review: '',
       select_options: [
