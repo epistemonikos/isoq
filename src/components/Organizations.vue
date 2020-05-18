@@ -62,7 +62,7 @@ export default {
   methods: {
     getOrganizations: function () {
       for (let org of this.$store.state.user.orgs) {
-        if (org.name === 'My frameworks' || org.name === 'My iSoQf') {
+        if ((org.name === 'My frameworks' || org.name === 'My iSoQf') && this.$store.state.user.personal_organization === org.id) {
           org.name = 'My iSoQf'
           this.myOrganization.push(org)
         } else {

@@ -33,7 +33,11 @@
               :fields="projectTable.fields"
               :items="org.projects">
               <template v-slot:cell(private)="data">
-                <b-badge variant="light" class="publish-status" v-b-tooltip.hover :title="global_status.map((obj)=>{ if (obj.value === data.item.public_type) { return obj.text } })">
+                <b-badge
+                  variant="light"
+                  class="publish-status"
+                  v-b-tooltip.hover
+                  :title="global_status.map((obj)=>{ if (obj.value === data.item.public_type) { return obj.text } })">
                   {{ data.item.public_type }}
                 </b-badge>
               </template>
@@ -141,7 +145,9 @@
               label-for="input-emails-invite">
               <b-form-textarea
                 v-model="tmp_buffer_project.invite_emails"
-                id="input-emails-invite"></b-form-textarea>
+                id="input-emails-invite"
+                rows="6"
+                max-rows="100"></b-form-textarea>
             </b-form-group>
             <b-form-group
               label="Can:">
@@ -176,6 +182,7 @@ export default {
   },
   data () {
     return {
+      users: [],
       project_id: '',
       organization: '',
       ui: {
@@ -264,7 +271,7 @@ export default {
       },
       projectTable: {
         fields: [
-          { key: 'private', label: '' },
+          { key: 'private', label: 'Public' },
           { key: 'name', label: 'Title' },
           { key: 'actions', label: '' }
         ],
@@ -274,6 +281,7 @@ export default {
   },
   mounted () {
     this.getOrganization()
+    this.getUsers()
   },
   methods: {
     getOrganization: function () {
@@ -541,6 +549,15 @@ export default {
       this.tmp_buffer_project.index = index
       this.$refs['modal-share-options'].show()
     },
+    getUsers: function () {
+      axios.get('/users/get_all')
+        .then((response) => {
+          this.users = JSON.parse(JSON.stringify(response.data))
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     saveSharedProject: function (index) {
       const params = {
         is_public: true
@@ -548,11 +565,57 @@ export default {
       let requestsPush = []
       let requestsGet = []
       let requestsGetFindings = []
+      let _checkUsers = []
+      const project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+
+      const sharedUsers = project.invite_emails.split(',')
+      for (let user of sharedUsers) {
+        _checkUsers.push(axios.get(`/users/check_email?email=${user.trim()}`))
+      }
+      axios.all(_checkUsers)
+        .then((responses) => {
+          for (let response of responses) {
+            let _response = JSON.parse(JSON.stringify(response.data))
+            if (_response.error === 'Mail already exists') {
+              let userEmail = response.request.responseURL.split('=')[1]
+              let _roles = ['user']
+              console.log(project)
+              if (project.sharedType) {
+                _roles.push('editor')
+              }
+              let params = {
+                org: {
+                  id: this.$route.params.id,
+                  roles: _roles
+                }
+              }
+              let user = this.users.find(u => u.username === userEmail)
+              console.log(userEmail)
+              console.log('user', user)
+              if (user !== undefined) {
+                axios.patch(`/users/${user.id}/update_roles`, params)
+                  .then((response) => {})
+                  .catch((error) => {
+                    console.log(error)
+                  })
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
+      axios.patch(`/api/isoqf_projects/${this.org.projects[index].id}`, params)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error)
+        })
 
       for (let list of this.org.projects[index].lists) {
         requestsPush.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
       }
-      axios.all(requestsGet)
+      axios.all(requestsPush)
         .then(responses => {})
         .catch((error) => {
           console.log(error)
@@ -580,13 +643,13 @@ export default {
 
           axios.all(requestsAssessments)
             .then((responses) => {
-              let requests = []
+              let requestsPatch = []
               for (let response of responses) {
                 for (let _response of response.data) {
-                  requests.push(axios.patch(`/api/isoqf_assessments/${_response.id}`, params))
+                  requestsPatch.push(axios.patch(`/api/isoqf_assessments/${_response.id}`, params))
                 }
               }
-              axios.all(requests)
+              axios.all(requestsPatch)
                 .then((responses) => {})
                 .catch((error) => {
                   console.log(error)
@@ -597,13 +660,13 @@ export default {
             })
           axios.all(requestsCharacteristics)
             .then((responses) => {
-              let requests = []
+              let requestsPatch = []
               for (let response of responses) {
                 for (let _response of response.data) {
-                  requests.push(axios.patch(`/api/isoqf_characteristics/${_response.id}`, params))
+                  requestsPatch.push(axios.patch(`/api/isoqf_characteristics/${_response.id}`, params))
                 }
               }
-              axios.all(requests)
+              axios.all(requestsPatch)
                 .then((responses) => {})
                 .catch((error) => {
                   console.log(error)
@@ -621,15 +684,15 @@ export default {
         })
       axios.all(requestsGetFindings)
         .then((responses) => {
-          let requests = []
+          let requestsPatch = []
           let requestsGet = []
           for (let response of responses) {
             let _response = response.data[0]
-            requests.push(axios.patch(`/api/isoqf_findings/${_response.id}`, params))
+            requestsPatch.push(axios.patch(`/api/isoqf_findings/${_response.id}`, params))
             requestsGet.push(axios.get(`/api/isoqf_extracted_data?finding_id=${_response.id}`))
           }
 
-          axios.all(requests)
+          axios.all(requestsPatch)
             .then((responses) => {})
             .catch((error) => {
               console.log(error)
