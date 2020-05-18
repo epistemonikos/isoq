@@ -952,54 +952,53 @@
           </b-row>
           <b-row>
             <b-col cols="12">
-                <b-card header-tag="header">
-                  <template v-slot:header>
-                    <b-container fluid>
-                      <b-row v-b-toggle.info-project>
-                        <b-col
-                         cols="11">
-                         <p
-                          class="mb-0 text-left"
-                          >{{ project.name }}</p>
-                        </b-col>
-                        <b-col
-                          cols="1"
-                          align-self="end">
-                          <p class="text-right">
-                            {{ changeTxtProjectProperties }}
-                          </p>
-                        </b-col>
-                      </b-row>
-                    </b-container>
-
-                  </template>
-                  <b-collapse id="info-project">
-                    <b-row>
-                      <b-col cols="12" md="8" class="toDoc">
-                        <h5>Review question</h5>
-                        <p>{{project.review_question}}</p>
-
-                        <h5>Has the review been published?</h5>
-                        <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
-
-                        <h5 v-if="project.description">Additional Information</h5>
-                        <p v-if="project.description">{{project.description}}</p>
+              <b-card header-tag="header">
+                <template v-slot:header>
+                  <b-container fluid>
+                    <b-row v-b-toggle.info-project>
+                      <b-col
+                        cols="11">
+                        <p
+                        class="mb-0 text-left"
+                        >{{ project.name }}</p>
                       </b-col>
-                      <b-col cols="12" md="4" class="toDoc">
-                        <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-                        <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-                          <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-                        </ul>
-
-                        <h5>Corresponding author</h5>
-                        <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
-
-                        <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
-                        <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                      <b-col
+                        cols="1"
+                        align-self="end">
+                        <p class="text-right">
+                          {{ changeTxtProjectProperties }}
+                        </p>
                       </b-col>
                     </b-row>
-                  </b-collapse>
-                </b-card>
+                  </b-container>
+                </template>
+                <b-collapse id="info-project">
+                  <b-row>
+                    <b-col cols="12" md="8" class="toDoc">
+                      <h5>Review question</h5>
+                      <p>{{project.review_question}}</p>
+
+                      <h5>Has the review been published?</h5>
+                      <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                      <h5 v-if="project.description">Additional Information</h5>
+                      <p v-if="project.description">{{project.description}}</p>
+                    </b-col>
+                    <b-col cols="12" md="4" class="toDoc">
+                      <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                      <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                        <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                      </ul>
+
+                      <h5>Corresponding author</h5>
+                      <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+
+                      <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                      <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    </b-col>
+                  </b-row>
+                </b-collapse>
+              </b-card>
             </b-col>
           </b-row>
           <b-row>
@@ -1174,6 +1173,16 @@
                     <span v-else>
                       {{ data.item.name }}
                     </span>
+                  </template>
+                  <template v-slot:cell(category_name)="data">
+                    <div v-if="data.item.category_name!==null">
+                      {{ data.item.category_name }}
+                    </div>
+                    <div v-else>
+                      <b-button
+                        @click="editModalFindingName(data.index)">Assign a category</b-button>
+                    </div>
+
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
                     <b-button
@@ -1725,21 +1734,8 @@ export default {
             label: 'Summarized review finding'
           },
           {
-            key: 'category',
-            label: 'Review Finding Categories',
-            formatter: (value, key, item) => {
-              if (value === null) {
-                return ''
-              }
-              const categories = this.list_categories.options
-              let category = ''
-              for (let cat of categories) {
-                if (cat.value === value) {
-                  category = cat.text
-                }
-              }
-              return category
-            }
+            key: 'category_name',
+            label: 'Review Finding Categories'
           },
           {
             key: 'cerqual_option',
@@ -2355,6 +2351,18 @@ export default {
               }
               if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
                 list.notes = ''
+              }
+              if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
+                list.category = null
+              } else {
+                list.category_name = null
+                if (this.list_categories.options.length) {
+                  for (let category of this.list_categories.options) {
+                    if (list.category === category.value) {
+                      list.category_name = category.text
+                    }
+                  }
+                }
               }
               list.cerqual_option = ''
               if (list.cerqual.option != null) {
