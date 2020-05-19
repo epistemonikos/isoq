@@ -2030,7 +2030,7 @@ export default {
       const _items = JSON.parse(JSON.stringify(this.extracted_data.items))
       const _index = parseInt(index)
       let _originals = JSON.parse(JSON.stringify(this.extracted_data.original_items))
-      if (_index) {
+      if (_index !== -1) {
         let item = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
         _originals[_index] = item
       }
