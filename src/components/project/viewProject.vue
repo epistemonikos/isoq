@@ -522,6 +522,11 @@
                   </b-col>
                   <b-col
                     cols="12">
+                    <b-alert
+                      variant="info"
+                      :show="importDataTable.error !== null">
+                      {{ importDataTable.error }}
+                    </b-alert>
                     <b-table
                       v-if="importDataTable.items.length"
                       responsive
@@ -837,6 +842,11 @@
                   </b-col>
                   <b-col
                     cols="12">
+                    <b-alert
+                      variant="info"
+                      :show="importDataTable.error !== null">
+                      {{ importDataTable.error }}
+                    </b-alert>
                     <b-table
                       v-if="importDataTable.items.length"
                       responsive
@@ -1879,6 +1889,7 @@ export default {
       msgUpdateProject: null,
       pre_ImportDataTable: '',
       importDataTable: {
+        error: null,
         fields: [],
         items: [],
         fieldsObj: [
@@ -1949,42 +1960,48 @@ export default {
 
       allLines.forEach((line, index) => {
         if (line !== '') {
-          let contents = parser.parse(line)
-          contents = contents[0]
-          let columnFieldNro = 0
-          let columnItemNro = 0
-          if (index === 0) {
-            for (let cnt in contents) {
+          let contents = parser.parse(line)[0]
+          // contents = contents[0]
+          if (contents.length > 2) {
+            this.importDataTable.error = null
+            let columnFieldNro = 0
+            let columnItemNro = 0
+            if (index === 0) {
+              for (let cnt in contents) {
+                let obj = {}
+                if (parseInt(cnt) === 0) {
+                  obj.key = 'ref_id'
+                }
+                if (parseInt(cnt) === 1) {
+                  obj.key = 'authors'
+                }
+                if (parseInt(cnt) > 1) {
+                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
+                  obj.key = 'column_' + columnFieldNro
+                  columnFieldNro++
+                }
+                obj.label = contents[cnt]
+                fields.push(obj)
+              }
+            } else {
               let obj = {}
-              if (parseInt(cnt) === 0) {
-                obj.key = 'ref_id'
+              for (let cnt in contents) {
+                if (parseInt(cnt) === 0) {
+                  obj.ref_id = contents[cnt]
+                }
+                if (parseInt(cnt) === 1) {
+                  obj.authors = contents[cnt]
+                }
+                if (parseInt(cnt) > 1) {
+                  obj[`column_${columnItemNro}`] = contents[cnt]
+                  columnItemNro++
+                }
               }
-              if (parseInt(cnt) === 1) {
-                obj.key = 'authors'
-              }
-              if (parseInt(cnt) > 1) {
-                this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
-                obj.key = 'column_' + columnFieldNro
-                columnFieldNro++
-              }
-              obj.label = contents[cnt]
-              fields.push(obj)
+              items.push(obj)
             }
           } else {
-            let obj = {}
-            for (let cnt in contents) {
-              if (parseInt(cnt) === 0) {
-                obj.ref_id = contents[cnt]
-              }
-              if (parseInt(cnt) === 1) {
-                obj.authors = contents[cnt]
-              }
-              if (parseInt(cnt) > 1) {
-                obj[`column_${columnItemNro}`] = contents[cnt]
-                columnItemNro++
-              }
-            }
-            items.push(obj)
+            // 'send a message'
+            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,).'
           }
         }
       })
@@ -3165,11 +3182,25 @@ export default {
           this.insertImportedData(endpoint, params)
         }
       }
-      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      }
       this.pre_ImportDataTable = ''
     },
     cleanVars: function (modal = '') {
-      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      }
       this.pre_ImportDataTable = ''
       this.$refs[modal].hide()
     },
