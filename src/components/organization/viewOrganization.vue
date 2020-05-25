@@ -143,19 +143,20 @@
             <b-form-group
               label="Insert emails separated by commas"
               label-for="input-emails-invite">
-              <b-form-textarea
-                v-model="tmp_buffer_project.invite_emails"
-                id="input-emails-invite"
-                rows="6"
-                max-rows="100"></b-form-textarea>
+              <b-input
+                type="email"
+                v-model="buffer_project.sharedTo"></b-input>
             </b-form-group>
+            <b-button @click="addEmailForShare">add</b-button>
+            {{ buffer_project.invite_emails }}
             <b-form-group
               label="Can:">
               <b-form-select
-                v-model="tmp_buffer_project.sharedType"
+                v-model="buffer_project.sharedType"
                 :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
             </b-form-group>
             <b-button
+              :disabled="!buffer_project.invite_emails.length"
               variant="success"
               @click="saveSharedProject(tmp_buffer_project.index)">Invite</b-button>
           </b-tab>
@@ -222,7 +223,8 @@ export default {
         author_email: '',
         is_public: false,
         sharedType: 0,
-        invite_emails: ''
+        sharedTo: '',
+        invite_emails: []
       },
       tmp_buffer_project_list: {
         id: null,
@@ -247,7 +249,8 @@ export default {
         author_email: '',
         is_public: false,
         sharedType: 0,
-        invite_emails: ''
+        sharedTo: '',
+        invite_emails: []
       },
       buffer_project_list: {
         id: null,
@@ -558,6 +561,36 @@ export default {
           console.log(error)
         })
     },
+    addEmailForShare: function () {
+      let regex = /\S+@\S+\.\S+/
+      if (regex.test(this.buffer_project.sharedTo)) {
+        if (!this.buffer_project.invite_emails.includes(this.buffer_project.sharedTo)) {
+          this.buffer_project.invite_emails.push(this.buffer_project.sharedTo)
+          this.buffer_project.sharedTo = ''
+        }
+      } else {
+        console.log('error')
+      }
+    },
+    saveSharedProject: function (index) {
+      const sharedEmails = this.buffer_project.invite_emails.join()
+      const projectId = this.org.projects[index].id
+      const params = {
+        emails: sharedEmails,
+        user_can: this.buffer_project.sharedType,
+        org: this.$route.params.id
+      }
+      axios.post(`/share/project/${projectId}`, params)
+        .then((response) => {
+          this.buffer_project.sharedType = null
+          this.buffer_project.sharedTo = ''
+          this.buffer_project.invite_emails = []
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    }
+    /*
     saveSharedProject: function (index) {
       const params = {
         is_public: true
@@ -742,6 +775,7 @@ export default {
         invite_emails: ''
       }
     }
+    */
   }
 }
 </script>
