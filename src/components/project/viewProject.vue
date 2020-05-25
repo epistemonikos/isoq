@@ -2405,6 +2405,11 @@ export default {
                 list.status = 'unfinished'
               } else {
                 list.status = 'completed'
+                for (let key in list.evidence_profile) {
+                  if (list.evidence_profile[key].option === null) {
+                    list.status = 'unfinished'
+                  }
+                }
               }
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
