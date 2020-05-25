@@ -1113,7 +1113,6 @@
                   :selectable="(mode==='view')?true:false"
                   select-mode="multi"
                   selected-variant="warning"
-                  responsive
                   bordered
                   head-variant="light"
                   id="findings"
