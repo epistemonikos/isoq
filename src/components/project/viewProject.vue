@@ -1133,11 +1133,48 @@
                   <template v-slot:head(name)="data">
                     <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
                   </template>
+                  <template v-slot:head(category_name)="data">
+                    {{data.label}}
+                    <b-dropdown
+                      id="dropdown-categories"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item
+                      v-for="category of list_categories.options"
+                      :key="category.text"
+                      @click="table_settings.filter=category.text">{{ category.text }}</b-dropdown-item>
+                    </b-dropdown>
+                  </template>
                   <template v-slot:head(cerqual_option)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+                    <b-dropdown
+                      id="dropdown-cerqual-option"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item @click="table_settings.filter='High confidence'">High confidence</b-dropdown-item>
+                      <b-dropdown-item @click="table_settings.filter='Moderate confidence'">Moderate confidence</b-dropdown-item>
+                      <b-dropdown-item @click="table_settings.filter='Low confidence'">Low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="table_settings.filter='Very low confidence'">Very low confidence</b-dropdown-item>
+                      <b-dropdown-divider></b-dropdown-divider>
+                      <b-dropdown-item @click="table_settings.filter='completed'">Assessments completed</b-dropdown-item>
+                      <b-dropdown-item @click="table_settings.filter='unfinished'">Assessments not completed</b-dropdown-item>
+                    </b-dropdown>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
                     <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                    <b-dropdown
+                      id="dropdown-cerqual-explanation"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item @click="table_settings.filter='completed'">Completed</b-dropdown-item>
+                      <b-dropdown-item @click="table_settings.filter='unfinished'">Not completed</b-dropdown-item>
+                    </b-dropdown>
                   </template>
                   <template v-slot:head(ref_list)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
@@ -1790,7 +1827,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name']
+        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status']
       },
       summarized_review: '',
       select_options: [
@@ -2364,6 +2401,11 @@ export default {
             let lists = JSON.parse(JSON.stringify(this.lists))
             this.lastId = parseInt(lists.slice(-1)[0].isoqf_id) + 1
             for (let list of this.lists) {
+              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+                list.status = 'unfinished'
+              } else {
+                list.status = 'completed'
+              }
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
@@ -4137,6 +4179,24 @@ export default {
   div >>>
     table#methodological-table tbody td:last-child {
       min-width: 10%;
+    }
+  div >>>
+    #dropdown-categories .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-option .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-explanation .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
     }
   div >>>
     #import-data a.nav-link {
