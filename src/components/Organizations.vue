@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>Workspaces*</h2>
+        <h2>Workspaces</h2>
       </b-container>
     </b-container>
     <b-container class="mt-5">
