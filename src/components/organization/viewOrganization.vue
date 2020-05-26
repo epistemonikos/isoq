@@ -9,7 +9,7 @@
     <b-container>
       <div class="my-4">
         <h3>{{ $t("Projects") }}</h3>
-        <b-row align-h="end">
+        <b-row align-h="end" v-if="$store.state.user.is_owner">
           <b-col cols="12" class="text-right">
             <b-button
               v-b-tooltip.hover
@@ -46,6 +46,7 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  v-if="$store.state.user.is_owner"
                   title="Invite"
                   variant="outline-secondary">
                   <font-awesome-icon
@@ -53,6 +54,7 @@
                     @click="modalShareOptions(data.index)"></font-awesome-icon>
                 </b-button>
                 <b-button
+                  v-if="$store.state.user.can_write_other_orgs"
                   title="Edit"
                   variant="outline-success"
                   @click="openModalEditProject(data.item)">
@@ -60,6 +62,7 @@
                     icon="edit"></font-awesome-icon>
                 </b-button>
                 <b-button
+                  v-if="$store.state.user.is_owner"
                   title="Remove"
                   variant="outline-danger"
                   @click="modalRemoveProject(data.item)">
@@ -99,7 +102,8 @@
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
         <organizationForm
-          :formData="buffer_project"></organizationForm>
+          :formData="buffer_project"
+          :canWrite="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"></organizationForm>
       </b-modal>
       <b-modal
         size="xl"
@@ -148,7 +152,6 @@
                 v-model="buffer_project.sharedTo"></b-input>
             </b-form-group>
             <b-button @click="addEmailForShare">add</b-button>
-            {{ buffer_project.invite_emails }}
             <b-form-group
               label="Can:">
               <b-form-select
@@ -368,7 +371,34 @@ export default {
           }
         })
       ]).then(axios.spread((projects, lists) => {
-        this.$set(this.org, 'projects', projects.data)
+        if (this.$store.state.user.personal_organization === this.$route.params.id) {
+          this.$store.dispatch('usercan', true)
+          this.$store.dispatch('isowner', true)
+          this.$set(this.org, 'projects', projects.data)
+        } else {
+          this.$store.dispatch('isowner', false)
+          let _projectsData = projects.data
+          let _projects = []
+          for (let project of _projectsData) {
+            if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+              project.can_read = []
+            }
+            if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+              project.can_write = []
+            }
+            if (Object.prototype.hasOwnProperty.call(project, 'can_read') || Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+              if (project.can_read.includes(this.$store.state.user.id) || project.can_write.includes(this.$store.state.user.id)) {
+                this.$store.dispatch('usercan', false)
+                if (project.can_write.includes(this.$store.state.user.id)) {
+                  this.$store.dispatch('usercan', true)
+                }
+                _projects.push(project)
+              }
+            }
+          }
+          _projectsData = _projects
+          this.$set(this.org, 'projects', _projectsData)
+        }
         var projectlist = lists.data
 
         projects.data.forEach(function (v, k) {

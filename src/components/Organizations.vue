@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>Workspaces</h2>
+        <h2>Workspaces*</h2>
       </b-container>
     </b-container>
     <b-container class="mt-5">
@@ -62,8 +62,8 @@ export default {
   methods: {
     getOrganizations: function () {
       for (let org of this.$store.state.user.orgs) {
-        if ((org.name === 'My frameworks' || org.name === 'My iSoQf') && this.$store.state.user.personal_organization === org.id) {
-          org.name = 'My iSoQf'
+        if (this.$store.state.user.personal_organization === org.id) {
+          org.name = this.$store.state.user.first_name + '\'s projects'
           this.myOrganization.push(org)
         } else {
           this.otherOrganizations.push(org)

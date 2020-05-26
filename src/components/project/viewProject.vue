@@ -62,10 +62,11 @@
             <b-col
               cols="12">
               <organizationForm
-                :formData="project"></organizationForm>
+                :formData="project"
+                :canWrite="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"></organizationForm>
             </b-col>
           </b-row>
-          <b-row align-h="end">
+          <b-row align-h="end" v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs">
             <b-col
               cols="6">
               <b-button
@@ -107,6 +108,7 @@
                           rows="6"
                           max-rows="100"></b-form-textarea>
                         <b-button
+                          v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
                           id="btnEpisteRequest"
                           class="mt-2"
                           block
@@ -141,7 +143,7 @@
                             </li>
                           </ul>
                           <b-button
-                            v-if="episte_response.length"
+                            v-if="episte_response.length || $store.state.user.is_owner || $store.state.user.can_write_other_orgs"
                             variant="outline-success"
                             block
                             @click="saveReferences('EpisteDB')">Import references</b-button>
@@ -160,6 +162,7 @@
                           <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
                         </p>
                         <b-form-file
+                          :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                           id="input-ris-file-key"
                           plain
                           @change="loadRefs($event)"></b-form-file>
@@ -238,11 +241,11 @@
                       label-for="inclusion-criteria"
                       description="Please enter the study inclusion criteria used in the review">
                       <b-form-textarea
+                        :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                         id="inclusion-criteria"
                         rows="6"
                         max-rows="100"
-                        v-model="project.inclusion"
-                        @></b-form-textarea>
+                        v-model="project.inclusion"></b-form-textarea>
                     </b-form-group>
                   </b-col>
                   <b-col
@@ -254,6 +257,7 @@
                       label-for="exclusion-criteria"
                       description="please enter the study exclusion criteria used in the review">
                       <b-form-textarea
+                        :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                         id="exclusion-criteria"
                         rows="6"
                         max-rows="100"
@@ -276,29 +280,31 @@
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="charsOfStudies.fields.length <= 2"
+                    v-if="charsOfStudies.fields.length <= 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModalCharsOfStudies()"
-                    :disabled="(references.length) ? false : true">
+                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true">
                     Create Table
                   </b-button>
                   <b-button
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-primary"
-                    v-if="charsOfStudies.fields.length > 2"
+                    v-if="charsOfStudies.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModalCharsOfStudiesEdit">
                     Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
                   sm="1">
-                  <p class="text-center pt-1">OR</p>
+                  <p v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)" class="text-center pt-1">OR</p>
                 </b-col>
                 <b-col
                   sm="4">
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-info"
-                    :disabled="(references.length) ? false : true"
+                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true"
                     v-b-modal.import-characteristics-table>
                     Import table
                   </b-button>
@@ -328,6 +334,8 @@
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-success"
                     @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
@@ -335,6 +343,8 @@
                       icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-danger"
                     @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
@@ -570,15 +580,16 @@
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="methodologicalTableRefs.fields.length <= 2"
+                    v-if="methodologicalTableRefs.fields.length <= 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModcontent()"
-                    :disabled="(references.length) ? false : true">
+                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true">
                     Create Table
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="methodologicalTableRefs.fields.length > 2"
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    v-if="methodologicalTableRefs.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModcontent(true)">
                     Edit column headings
                   </b-button>
@@ -590,9 +601,10 @@
                 <b-col
                   sm="4">
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-info"
-                    :disabled="(references.length) ? false : true"
+                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true"
                     v-b-modal.import-methodological-table>
                     Import table
                   </b-button>
@@ -623,6 +635,8 @@
                 <template
                   v-slot:cell(actions)="data">
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-success"
                     @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
@@ -630,6 +644,8 @@
                       icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
+                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-danger"
                     @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
@@ -858,7 +874,7 @@
                 block
                 variant="success"
                 class="mb-3"
-                @click="tabOpened=2">
+                @click="nextTab">
                 Continue to iSoQf
               </b-button>
             </b-col>
@@ -920,6 +936,7 @@
                   md="3"
                   xl="3">
                     <b-button
+                      v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
                       class="mt-1"
                       @click="modalChangePublicStatus"
                       :variant="(!project.private) ? 'outline-primary' : 'primary'"
@@ -1029,6 +1046,7 @@
               </b-card>
             </b-col>
             <b-col
+              v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
               cols="12">
               <b-row
                 class="mb-2">
@@ -1099,7 +1117,7 @@
             </b-col>
             <b-col cols="12" class="toDoc">
               <template
-                v-if="mode==='edit'">
+                v-if="mode==='edit' && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)">
                 <b-table
                   :selectable="(mode==='view')?true:false"
                   select-mode="multi"
@@ -1540,6 +1558,7 @@
         ref="modal-references"
         title="References"
         size="xl"
+        :ok-only="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
         @ok="getProject"
         @cancel="confirmRemoveAllReferences($event)"
         scrollable
@@ -1592,6 +1611,7 @@
               :items="references">
               <template v-slot:cell(action)="data">
                 <b-button
+                  v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                   variant="outline-danger"
                   @click="data.toggleDetails">
                   <font-awesome-icon
@@ -4004,6 +4024,10 @@ export default {
       if (this.ui.project.type === 'exclusion') {
         this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
       }
+    },
+    nextTab () {
+      window.scrollTo({ 'top': 0, 'behavior': 'smooth' })
+      this.tabOpened = 2
     }
   }
 }

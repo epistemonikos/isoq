@@ -23,6 +23,12 @@ export const store = new Vuex.Store({
     logout (state) {
       state.status = ''
       state.user = {}
+    },
+    user_can (state, _bool) {
+      state.user.can_write_other_orgs = _bool
+    },
+    is_owner (state, _bool) {
+      state.user.is_owner = _bool
     }
   },
   actions: {
@@ -57,6 +63,12 @@ export const store = new Vuex.Store({
         // delete axios.defaults.headers.common['Authorization']
         resolve()
       })
+    },
+    usercan ({commit}, _bool) {
+      commit('user_can', _bool)
+    },
+    isowner ({commit}, _bool) {
+      commit('is_owner', _bool)
     }
   },
   getters: {
