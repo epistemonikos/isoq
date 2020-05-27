@@ -6,6 +6,13 @@
           <b-form @submit.prevent="login">
             <b-card
               header="Login">
+                <b-alert
+                  :show="$store.state.status === 'error'"
+                  variant="warning"
+                  dismissible
+                  @dismissed="changeStatus">
+                    The user or password are wrong or doesn't exist. try again.
+                </b-alert>
                 <b-form-group
                   id="input_group_email"
                   label="Email:"
@@ -63,6 +70,9 @@ export default {
           this.$router.push(path)
         })
         .catch((error) => console.log(error))
+    },
+    changeStatus () {
+      this.$store.dispatch('changeStatus')
     }
   }
 }

@@ -29,6 +29,9 @@ export const store = new Vuex.Store({
     },
     is_owner (state, _bool) {
       state.user.is_owner = _bool
+    },
+    change_status (state) {
+      state.status = ''
     }
   },
   actions: {
@@ -69,6 +72,9 @@ export const store = new Vuex.Store({
     },
     isowner ({commit}, _bool) {
       commit('is_owner', _bool)
+    },
+    changeStatus ({commit}) {
+      commit('change_status')
     }
   },
   getters: {
