@@ -303,9 +303,6 @@ export default {
       axios.post('/create_user', params)
         .then((response) => {
           this.login(this.user.username, this.user.password)
-          this.ui.display_create_account = false
-          this.ui.display_join_org_or_create_org = true
-          this.user = response.data
         })
         .catch((error) => {
           console.log(error)
@@ -314,7 +311,14 @@ export default {
     login (username, password) {
       this.$store
         .dispatch('login', {username, password})
-        .then((response) => {})
+        .then((response) => {
+          this.ui.display_create_account = false
+          this.ui.display_join_org_or_create_org = false
+          this.user = response.data
+          let orgPath = {'id': response.data.personal_organization}
+          const path = { 'name': 'viewOrganization', 'params': orgPath }
+          this.$router.push(path)
+        })
         .catch((error) => console.log(error))
     },
     jointToOrg: function () {
