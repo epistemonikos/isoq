@@ -46,6 +46,7 @@
                   id="input-live-help">This will be used for loggin.</b-form-text>
               </b-form-group>
               <b-form-group
+                v-if="false"
                 id="input_group_affiliation"
                 label="Affiliation:"
                 label-for="input_affiliation">
@@ -299,6 +300,15 @@ export default {
       let params = {
         user: this.user,
         organizations: this.organizations
+      }
+      if (Object.prototype.hasOwnProperty.call(this.$route.query, 'o') &&
+        Object.prototype.hasOwnProperty.call(this.$route.query, 'p') &&
+        Object.prototype.hasOwnProperty.call(this.$route.query, 'r')) {
+        params.shared = {
+          o: this.$route.query['o'],
+          p: this.$route.query['p'],
+          r: this.$route.query['r']
+        }
       }
       axios.post('/create_user', params)
         .then((response) => {
