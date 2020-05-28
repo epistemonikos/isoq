@@ -166,9 +166,10 @@
           <b-tab
             title="Can access">
             <b-table
+              v-if="users_allowed.length"
               responsive
-              :fields="['email', 'name', 'actions']"
-              :items="[{email: 'damian@pistemonikos.org', 'name': 'diaman', 'actions':''},{email: 'damian@pistemonikos.org', 'name': 'diaman', 'actions':''}]"></b-table>
+              :fields="['username', 'name', 'lastname']"
+              :items="users_allowed"></b-table>
           </b-tab>
         </b-tabs>
       </b-modal>
@@ -282,7 +283,8 @@ export default {
           { key: 'actions', label: '' }
         ],
         isBusy: true
-      }
+      },
+      users_allowed: []
     }
   },
   mounted () {
@@ -580,7 +582,33 @@ export default {
       this.org.projects[index].sharedType = 0
       this.tmp_buffer_project = this.org.projects[index]
       this.tmp_buffer_project.index = index
+      let querys = []
+      if (Object.prototype.hasOwnProperty.call(this.org.projects[index], 'can_read')) {
+        for (let user of this.org.projects[index].can_read) {
+          querys.push(axios.get(`/users/${user}`))
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(this.org.projects[index], 'can_write')) {
+        for (let user of this.org.projects[index].can_write) {
+          querys.push(axios.get(`/users/${user}`))
+        }
+      }
+      this.getUserSimpleData(querys)
       this.$refs['modal-share-options'].show()
+    },
+    getUserSimpleData: function (querys) {
+      axios.all(querys)
+        .then((responses) => {
+          let usersAllowed = []
+          for (let response of responses) {
+            const user = response.data
+            usersAllowed.push({ 'id': user.id, 'name': user.name, 'lastname': user.lastname, 'username': user.username })
+          }
+          this.users_allowed = usersAllowed
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     },
     getUsers: function () {
       axios.get('/users/get_all')
@@ -612,6 +640,7 @@ export default {
       }
       axios.post(`/share/project/${projectId}`, params)
         .then((response) => {
+          this.getProjectsAndLists()
           this.buffer_project.sharedType = null
           this.buffer_project.sharedTo = ''
           this.buffer_project.invite_emails = []
