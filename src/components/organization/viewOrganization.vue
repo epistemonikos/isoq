@@ -168,8 +168,14 @@
             <b-table
               v-if="users_allowed.length"
               responsive
-              :fields="['username', 'name', 'lastname']"
-              :items="users_allowed"></b-table>
+              :fields="['username', 'first_name', 'last_name', 'actions']"
+              :items="users_allowed">
+              <template v-slot:cell(actions)="data">
+                <b-button
+                  variant="danger"
+                  @click="unshare(data.index, data.item.id)">unshare</b-button>
+              </template>
+            </b-table>
           </b-tab>
         </b-tabs>
       </b-modal>
@@ -577,11 +583,7 @@ export default {
             })
         }.bind(this)))
     },
-    modalShareOptions: function (index) {
-      this.org.projects[index].sharedTo = {user_views: [], user_edits: []}
-      this.org.projects[index].sharedType = 0
-      this.tmp_buffer_project = this.org.projects[index]
-      this.tmp_buffer_project.index = index
+    usersCanList: function (index) {
       let querys = []
       if (Object.prototype.hasOwnProperty.call(this.org.projects[index], 'can_read')) {
         for (let user of this.org.projects[index].can_read) {
@@ -593,22 +595,26 @@ export default {
           querys.push(axios.get(`/users/${user}`))
         }
       }
-      this.getUserSimpleData(querys)
-      this.$refs['modal-share-options'].show()
-    },
-    getUserSimpleData: function (querys) {
       axios.all(querys)
         .then((responses) => {
           let usersAllowed = []
           for (let response of responses) {
             const user = response.data
-            usersAllowed.push({ 'id': user.id, 'name': user.name, 'lastname': user.lastname, 'username': user.username })
+            usersAllowed.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username })
           }
           this.users_allowed = usersAllowed
         })
         .catch((error) => {
           console.log(error)
         })
+    },
+    modalShareOptions: function (index) {
+      this.org.projects[index].sharedTo = {user_views: [], user_edits: []}
+      this.org.projects[index].sharedType = 0
+      this.tmp_buffer_project = this.org.projects[index]
+      this.tmp_buffer_project.index = index
+      this.usersCanList(index)
+      this.$refs['modal-share-options'].show()
     },
     getUsers: function () {
       axios.get('/users/get_all')
@@ -640,10 +646,23 @@ export default {
       }
       axios.post(`/share/project/${projectId}`, params)
         .then((response) => {
-          this.getProjectsAndLists()
-          this.buffer_project.sharedType = null
+          const index = this.tmp_buffer_project.index
+          this.org.projects[index] = response.data[0]
           this.buffer_project.sharedTo = ''
           this.buffer_project.invite_emails = []
+          this.usersCanList(index)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    unshare: function (_index, userId) {
+      const index = this.tmp_buffer_project.index
+      const projectId = this.org.projects[index].id
+      axios.post(`/share/project/${projectId}/unshare?user_id=${userId}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
+        .then((response) => {
+          this.org.projects[this.tmp_buffer_project.index] = response.data
+          this.users_allowed.splice(_index)
         })
         .catch((error) => {
           console.log(error)
