@@ -48,10 +48,10 @@
                 <b-button
                   v-if="$store.state.user.is_owner"
                   title="Invite"
-                  variant="outline-secondary">
+                  variant="outline-secondary"
+                  @click="modalShareOptions(data.index)">
                   <font-awesome-icon
-                    icon="users"
-                    @click="modalShareOptions(data.index)"></font-awesome-icon>
+                    icon="users"></font-awesome-icon>
                 </b-button>
                 <b-button
                   v-if="$store.state.user.can_write_other_orgs"
@@ -144,38 +144,63 @@
         <b-tabs>
           <b-tab
             title="Invite">
-            <b-form-group
-              label="Insert emails separated by commas"
-              label-for="input-emails-invite">
-              <b-input
-                type="email"
-                v-model="buffer_project.sharedTo"></b-input>
-            </b-form-group>
-            <b-button @click="addEmailForShare">add</b-button>
-            <b-form-group
-              label="Can:">
-              <b-form-select
-                v-model="buffer_project.sharedType"
-                :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
-            </b-form-group>
-            <b-button
-              :disabled="!buffer_project.invite_emails.length"
-              variant="success"
-              @click="saveSharedProject(tmp_buffer_project.index)">Invite</b-button>
+            <b-container>
+              <b-form-group
+                label="Insert emails separated by commas"
+                label-for="input-emails-invite">
+                <b-input
+                  type="email"
+                  v-model="buffer_project.sharedTo"></b-input>
+              </b-form-group>
+              <p
+                class="text-danger"
+                v-if="buffer_project.sharedToError != ''">
+                {{buffer_project.sharedToError}}
+              </p>
+              <b-button @click="addEmailForShare">add</b-button>
+              <div
+                class="my-3"
+                v-if="buffer_project.invite_emails.length">
+                <p class="mb-1 font-weight-light">This project will be shared with:</p>
+                <b-badge
+                class="mx-1"
+                v-for="(email, index) in buffer_project.invite_emails"
+                :key="index"
+                variant="dark">
+                  {{ email }}
+                  <span @click="removeSharedEmail(index)">x</span>
+                </b-badge>
+              </div>
+              <b-form-group
+                label="Can:">
+                <b-form-select
+                  v-model="buffer_project.sharedType"
+                  :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
+              </b-form-group>
+              <b-button
+                :disabled="!buffer_project.invite_emails.length"
+                variant="success"
+                @click="saveSharedProject(tmp_buffer_project.index)">Invite</b-button>
+            </b-container>
           </b-tab>
           <b-tab
             title="Can access">
-            <b-table
-              v-if="users_allowed.length"
-              responsive
-              :fields="['username', 'first_name', 'last_name', 'actions']"
-              :items="users_allowed">
-              <template v-slot:cell(actions)="data">
-                <b-button
-                  variant="danger"
-                  @click="unshare(data.index, data.item.id)">unshare</b-button>
-              </template>
-            </b-table>
+            <b-container>
+              <b-table
+                show-empty
+                responsive
+                :fields="['username', 'first_name', 'last_name', 'actions']"
+                :items="users_allowed">
+                <template v-slot:cell(actions)="data">
+                  <b-button
+                    variant="danger"
+                    @click="unshare(data.index, data.item.id)">unshare</b-button>
+                </template>
+                <template v-slot:empty>
+                  <p class="font-weight-light text-center my-3">No users will be access to this project</p>
+                </template>
+              </b-table>
+            </b-container>
           </b-tab>
         </b-tabs>
       </b-modal>
@@ -234,6 +259,7 @@ export default {
         is_public: false,
         sharedType: 0,
         sharedTo: '',
+        sharedToError: '',
         invite_emails: []
       },
       tmp_buffer_project_list: {
@@ -260,6 +286,7 @@ export default {
         is_public: false,
         sharedType: 0,
         sharedTo: '',
+        sharedToError: '',
         invite_emails: []
       },
       buffer_project_list: {
@@ -626,6 +653,7 @@ export default {
         })
     },
     addEmailForShare: function () {
+      this.buffer_project.sharedToError = ''
       let regex = /\S+@\S+\.\S+/
       if (regex.test(this.buffer_project.sharedTo)) {
         if (!this.buffer_project.invite_emails.includes(this.buffer_project.sharedTo)) {
@@ -633,13 +661,14 @@ export default {
           this.buffer_project.sharedTo = ''
         }
       } else {
-        console.log('error')
+        this.buffer_project.sharedToError = 'The email seems to be not valid'
       }
     },
     saveSharedProject: function (index) {
       const sharedEmails = this.buffer_project.invite_emails.join()
       const projectId = this.org.projects[index].id
       const params = {
+        current_user: this.$store.state.user.name,
         emails: sharedEmails,
         user_can: this.buffer_project.sharedType,
         org: this.$route.params.id
@@ -667,6 +696,9 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    removeSharedEmail: function (index) {
+      this.buffer_project.invite_emails.splice(index, 1)
     }
   }
 }
