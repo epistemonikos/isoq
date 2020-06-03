@@ -202,6 +202,24 @@
               </b-table>
             </b-container>
           </b-tab>
+          <b-tab
+            title="Temporal sharing">
+            <b-container>
+              <p>Enable this option for share with a user that will no create an account</p>
+              <b-form-checkbox
+                switch
+                v-model="tmp_buffer_project.sharedTokenOnOff"
+                :value="true"
+                :unchecked-value="false">Generate a temporary URL</b-form-checkbox>
+              <div
+                v-if="tmp_buffer_project.sharedTokenOnOff"
+                class="mt-2">
+                <p>Copy and Share this url</p>
+                <b-form-input
+                  :value="tmp_buffer_project.temporaryUrl"></b-form-input>
+              </div>
+            </b-container>
+          </b-tab>
         </b-tabs>
       </b-modal>
     </b-container>
@@ -260,6 +278,9 @@ export default {
         sharedType: 0,
         sharedTo: '',
         sharedToError: '',
+        sharedTokenOnOff: false,
+        sharedToken: '',
+        temporaryUrl: '',
         invite_emails: []
       },
       tmp_buffer_project_list: {
@@ -287,6 +308,9 @@ export default {
         sharedType: 0,
         sharedTo: '',
         sharedToError: '',
+        sharedTokenOnOff: false,
+        sharedToken: '',
+        temporaryUrl: '',
         invite_emails: []
       },
       buffer_project_list: {
@@ -323,6 +347,24 @@ export default {
   mounted () {
     this.getOrganization()
     this.getUsers()
+  },
+  watch: {
+    'tmp_buffer_project.sharedTokenOnOff': function () {
+      this.tmp_buffer_project.sharedToken = ''
+      this.tmp_buffer_project.temporaryUrl = ''
+      if (this.tmp_buffer_project.sharedTokenOnOff) {
+        this.tmp_buffer_project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
+        this.tmp_buffer_project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/workspace/' + this.org.projects[this.tmp_buffer_project.index].organization + '/isoqf/' + this.org.projects[this.tmp_buffer_project.index].id + '?t=' + this.tmp_buffer_project.sharedToken
+      }
+      const params = {
+        sharedToken: this.tmp_buffer_project.sharedToken
+      }
+      axios.patch(`/api/isoqf_projects/${this.org.projects[this.tmp_buffer_project.index].id}`, params)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error)
+        })
+    }
   },
   methods: {
     getOrganization: function () {
@@ -699,6 +741,15 @@ export default {
     },
     removeSharedEmail: function (index) {
       this.buffer_project.invite_emails.splice(index, 1)
+    },
+    randomString: function (len, charSet) {
+      charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+      var randomString = ''
+      for (var i = 0; i < len; i++) {
+        var randomPoz = Math.floor(Math.random() * charSet.length)
+        randomString += charSet.substring(randomPoz, randomPoz + 1)
+      }
+      return randomString
     }
   }
 }
