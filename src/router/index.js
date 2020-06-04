@@ -8,6 +8,7 @@ import ViewOrganization from '@/components/organization/viewOrganization'
 import EditList from '@/components/list/editList'
 import ViewProject from '@/components/project/viewProject'
 import Browse from '@/components/Browse'
+import NewPassword from '@/components/NewPassword'
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -93,6 +94,14 @@ var routes = [
     meta: {
       title: 'Edit iSoQf - interactive Summaries of Qualitative Findings',
       requiresAuth: true
+    }
+  },
+  {
+    path: '/accounts/new_password/:username/:token',
+    name: 'newPassword',
+    component: NewPassword,
+    meta: {
+      title: 'New password - interactive Summaries of Qualitative Findings'
     }
   }
 ]
