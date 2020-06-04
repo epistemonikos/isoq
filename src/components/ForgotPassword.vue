@@ -38,7 +38,7 @@
             <b-card
               v-if="ui.sent"
               header="Sent">
-              <p>An email was sent to you. You will recive the instructions to choose a new password.</p>
+              <p>An email was sent to you with instructions for resetting your password.</p>
             </b-card>
           </b-form>
         </b-col>
