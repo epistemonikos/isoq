@@ -894,6 +894,7 @@
                     right
                     text="Export">
                     <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                    <b-dropdown-item @click="ExportToWord">to MS Word 2</b-dropdown-item>
                     <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                   </b-dropdown>
                 </b-col>
@@ -1668,6 +1669,8 @@ import draggable from 'vuedraggable'
 import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import _debounce from 'lodash.debounce'
+import { saveAs } from 'file-saver'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType } from 'docx'
 
 export default {
   components: {
@@ -2663,6 +2666,282 @@ export default {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
+    },
+    ExportToWord: function (filename = '') {
+      filename = filename ? filename + '.docx' : 'document.docx'
+      const doc = new Document()
+
+      doc.addSection({
+        margins: {
+          top: 3,
+          right: 3,
+          bottom: 3,
+          left: 3
+        },
+        children: [
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: this.project.name,
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' }
+              })
+            ]
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: 'Summary of Qualitative Findings Table',
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' }
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Review question',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'lorem ipsum',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Authors of the review',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'lorem ipsum',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Corresponding author',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'lorem ipsum',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Has the review been published?',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'lorem ipsum',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Additional Information',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'lorem ipsum',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph('')
+        ]
+      })
+
+      const table = new Table({
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: '#',
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: 'Summarized review finding',
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: 'CERQual Assessment of confidence',
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: 'Explanation of CERQual Assessment',
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: 'References',
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ],
+        width: {
+          size: 10770,
+          type: WidthType.DXA
+        }
+      })
+
+      // revisar esto, aun no está completado
+      for (let finding of this.lists) {
+        this.generateTableForWord(finding)
+      }
+
+      doc.addSection({
+        children: [table]
+      })
+
+      Packer.toBlob(doc).then(blob => {
+        console.log(filename)
+        saveAs(blob, filename)
+      })
+    },
+    generateTableForWord (finding) {
+      return new TableRow({
+        rows: [
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: finding.sort
+                  })
+                ]
+              })
+            ]
+          }),
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: finding.name
+                  })
+                ]
+              })
+            ]
+          }),
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: ''
+                  })
+                ]
+              })
+            ]
+          }),
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: ''
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      })
     },
     Export2Doc (element, filename = '') {
       const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
@@ -4114,7 +4393,7 @@ export default {
     }
   div >>>
     #findings-print .references {
-      font-size: 12px;
+      font-size: 24px;
     }
   div >>>
     #export-button button:first-child {
