@@ -480,7 +480,6 @@
                 </b-form-group>
               </b-modal>
               <b-modal
-                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -511,30 +510,38 @@
                   Download template
                 </b-button>
                 <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-chars-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-alert
-                      variant="info"
-                      :show="importDataTable.error !== null">
-                      {{ importDataTable.error }}
-                    </b-alert>
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
+                <b-container>
+                  <b-row>
+                    <b-col
+                      class="mb-2"
+                      cols="12">
+                      <b-form-file
+                        id="input-template-chars-file"
+                        plain
+                        @change="loadTableImportData($event)"></b-form-file>
+                    </b-col>
+                    <b-col
+                      cols="12">
+                      <b-alert
+                        variant="info"
+                        :show="importDataTable.error !== null">
+                        {{ importDataTable.error }}
+                      </b-alert>
+                      <b-button
+                        variant="outline-info"
+                        class="my-2"
+                        v-if="importDataTable.items.length"
+                        @click="cleanVars()">Clean loaded data</b-button>
+                      <b-table
+                        v-if="importDataTable.items.length"
+                        responsive
+                        :fields="importDataTable.fieldsObj"
+                        :items="importDataTable.items"
+                      ></b-table>
+                    </b-col>
+                  </b-row>
+                </b-container>
+                <h4 class="mt-3">STEP 3: Accept or start again</h4>
               </b-modal>
               <b-modal
                 size="xl"
@@ -800,7 +807,6 @@
                 </p>
               </b-modal>
               <b-modal
-                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -831,30 +837,38 @@
                   Download template
                 </b-button>
                 <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-methodological-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-alert
-                      variant="info"
-                      :show="importDataTable.error !== null">
-                      {{ importDataTable.error }}
-                    </b-alert>
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
+                <b-container>
+                  <b-row>
+                    <b-col
+                      class="mb-2"
+                      cols="12">
+                      <b-form-file
+                        id="input-template-methodological-file"
+                        plain
+                        @change="loadTableImportData($event)"></b-form-file>
+                    </b-col>
+                    <b-col
+                      cols="12">
+                      <b-alert
+                        variant="info"
+                        :show="importDataTable.error !== null">
+                        {{ importDataTable.error }}
+                      </b-alert>
+                      <b-button
+                        variant="outline-info"
+                        class="my-2"
+                        v-if="importDataTable.items.length"
+                        @click="cleanVars()">Clean loaded data</b-button>
+                      <b-table
+                        v-if="importDataTable.items.length"
+                        responsive
+                        :fields="importDataTable.fieldsObj"
+                        :items="importDataTable.items"
+                      ></b-table>
+                    </b-col>
+                  </b-row>
+                </b-container>
+                <h4 class="mt-3">STEP 3: Accept or start again</h4>
               </b-modal>
             </b-col>
           </b-row>
@@ -2009,7 +2023,7 @@ export default {
             }
           } else {
             // 'send a message'
-            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,).'
+            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,) and should have at least one column.'
           }
         }
       })
@@ -3212,7 +3226,9 @@ export default {
         ]
       }
       this.pre_ImportDataTable = ''
-      this.$refs[modal].hide()
+      if (modal !== '') {
+        this.$refs[modal].hide()
+      }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
