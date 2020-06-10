@@ -1064,7 +1064,7 @@
                     variant="outline-secondary"
                     @click="modalListCategories"
                     block>
-                    Assign categories to your review findings
+                    Create categories for your review findings
                   </b-button>
                 </b-col>
                 <b-col
@@ -1185,15 +1185,21 @@
                     </span>
                   </template>
                   <template v-slot:cell(category_name)="data">
-                    <div v-if="data.item.category_name!==null">
+                    <div v-if="data.item.category_name !== ''">
+                      <b-button
+                        variant="outline-info"
+                        @click="editModalFindingName(data.index)">Edit category</b-button>
                       {{ data.item.category_name }}
+                      <span
+                        v-if="data.item.category_extra_info !== ''"
+                        v-b-tooltip.hover
+                        :title="data.item.category_extra_info">*</span>
                     </div>
                     <div v-else>
                       <b-button
                         variant="info"
                         @click="editModalFindingName(data.index)">Assign a category</b-button>
                     </div>
-
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
                     <b-button
@@ -1422,18 +1428,6 @@
                         </b-form-checkbox>
                       </template>
                     </b-table>
-                    <!--
-                    <b-form-group>
-                      <b-form-checkbox
-                        v-for="ref in refs"
-                        v-model="selected_references"
-                        :key="ref.id"
-                        :value="ref.id"
-                        name="references">
-                        {{ ref.content }}
-                      </b-form-checkbox>
-                    </b-form-group>
-                    -->
                   </div>
                 </template>
                 <template v-else>
@@ -1488,6 +1482,12 @@
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Extra information">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                  </b-form-group>
                 </template>
                 <template
                   class="mt-3"
@@ -1496,6 +1496,12 @@
                     label="Edit category name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Extra information">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
                   <b-button
                     variant="outline-primary"
@@ -1729,10 +1735,12 @@ export default {
         edit: false,
         remove: false,
         name: '',
+        extra_info: '',
         index: null
       },
       list_category: {
-        name: ''
+        name: '',
+        extra_info: ''
       },
       fields: {
         with_categories: [
@@ -2373,11 +2381,13 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
                 list.category = null
               } else {
-                list.category_name = null
+                list.category_name = ''
+                list.category_extra_info = ''
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
                     if (list.category === category.value) {
                       list.category_name = category.text
+                      list.category_extra_info = category.extra_info
                     }
                   }
                 }
@@ -3681,7 +3691,7 @@ export default {
     },
     saveListCategoryName: function () {
       const options = [
-        { value: 0, text: this.list_category.name }
+        { value: 0, text: this.list_category.name, extra_info: this.list_category.extra_info }
       ]
       const params = {
         options: options,
@@ -3707,10 +3717,10 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.list_categories.options))
       if (_options.length) {
         const newValue = (_options[_options.length - 1].value !== null) ? parseInt(_options[_options.length - 1].value) + 1 : 0
-        _options.push({ value: newValue, text: this.modal_edit_list_categories.name })
+        _options.push({ value: newValue, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info })
       } else {
         _options = [
-          { value: 0, text: this.modal_edit_list_categories.name }
+          { value: 0, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info }
         ]
       }
       const params = {
@@ -3725,6 +3735,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3736,6 +3747,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3746,6 +3758,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.edit = true
       this.modal_edit_list_categories.index = index
     },
@@ -3754,6 +3767,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       _options[index].text = this.modal_edit_list_categories.name
+      _options[index].extra_info = this.modal_edit_list_categories.extra_info
 
       if (objID) {
         const params = {
@@ -3767,6 +3781,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3778,6 +3793,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.remove = true
       this.modal_edit_list_categories.index = index
     },
@@ -3799,6 +3815,7 @@ export default {
             this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3811,6 +3828,7 @@ export default {
       this.modal_edit_list_categories.edit = false
       this.modal_edit_list_categories.remove = false
       this.modal_edit_list_categories.name = ''
+      this.modal_edit_list_categories.extra_info = ''
       this.modal_edit_list_categories.index = null
     },
     modalChangePublicStatus: function () {
