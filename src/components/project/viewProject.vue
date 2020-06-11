@@ -1478,7 +1478,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
-                    label="Extra information">
+                    label="Describe this category for the user viewing this table">
                     <b-form-input
                       v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
@@ -1493,7 +1493,7 @@
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
-                    label="Extra information">
+                    label="Describe this category for the user viewing this table">
                     <b-form-input
                       v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
