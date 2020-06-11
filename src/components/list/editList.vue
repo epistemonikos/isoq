@@ -62,8 +62,15 @@
         <b-col
           class="d-print-none"
           sm="10"
-          cols="12"
-        ></b-col>
+          cols="12">
+          <b-nav class="mt-2">
+            <b-nav-item disabled>Navigate this page:</b-nav-item>
+            <b-nav-item href="#evidence-profile">Evidence Profile</b-nav-item>
+            <b-nav-item href="#characteristics-of-studies">Characteristics of Studies</b-nav-item>
+            <b-nav-item href="#methodological-assessments">Methodological Assessments</b-nav-item>
+            <b-nav-item href="#extracted-data">Extracted Data</b-nav-item>
+          </b-nav>
+        </b-col>
         <b-col
           cols="12"
           sm="2">
@@ -587,6 +594,7 @@
               </div>
 
               <template v-if="evidence_profile.length">
+                <a name="evidence-profile"></a>
                 <h3 class="mt-4">Evidence Profile</h3>
                 <b-table
                   class="d-print-none"
@@ -929,6 +937,7 @@
             <div
               class="mt-5"
               v-if="show.selected.includes('cs')">
+              <a name="characteristics-of-studies"></a>
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
               </h3>
@@ -1032,6 +1041,7 @@
             <div
               class="mt-5 mb-5"
               v-if="show.selected.includes('ma')">
+              <a name="methodological-assessments"></a>
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
@@ -1096,6 +1106,7 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
+              <a name="extracted-data"></a>
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
               </h3>
