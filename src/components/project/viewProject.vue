@@ -241,9 +241,11 @@
                         id="inclusion-criteria"
                         rows="6"
                         max-rows="100"
-                        v-model="project.inclusion"
-                        @></b-form-textarea>
+                        v-model="project.inclusion"></b-form-textarea>
                     </b-form-group>
+                    <div class="float-right">
+                      <b-button variant="outline-success">Save</b-button>
+                    </div>
                   </b-col>
                   <b-col
                     cols="12"
@@ -259,6 +261,9 @@
                         max-rows="100"
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
+                    <div class="float-right">
+                      <b-button variant="outline-success">Save</b-button>
+                    </div>
                   </b-col>
                 </b-row>
               </b-container>
@@ -524,6 +529,7 @@
                 </b-alert>
                 <b-button
                   variant="outline-info"
+                  class="mb-2"
                   v-if="importDataTable.items.length"
                   @click="cleanVars()">Reject</b-button>
                 <b-table
@@ -840,6 +846,7 @@
                 </b-alert>
                 <b-button
                   variant="outline-info"
+                  class="mb-2"
                   v-if="importDataTable.items.length"
                   @click="cleanVars()">Reject</b-button>
                 <b-table
