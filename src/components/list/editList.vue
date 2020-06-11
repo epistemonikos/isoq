@@ -343,6 +343,9 @@
                           <p class="font-weight-light">
                             To what extent is the review finding a reasonable representation of the phenomenon of interest?
                           </p>
+                          <p>
+                            Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/5" target="_blank">here</a> for practical guidance on making an overall assessment of confidence for a review finding.
+                          </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.cerqual.option"
                             name="cerqual"
