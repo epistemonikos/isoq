@@ -1500,6 +1500,7 @@ export default {
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
           this.printErrors(error)
