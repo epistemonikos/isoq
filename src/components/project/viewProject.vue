@@ -94,12 +94,35 @@
               </p>
               <b-card no-body>
                 <b-tabs id="import-data" card>
-                  <b-tab title="Import from">
+                  <b-tab title="File upload" active>
+                    <p class="font-weight-light">
+                      <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
+                    </p>
+                    <p class="font-weight-light">
+                      <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
+                    </p>
+                    <b-form-file
+                      id="input-ris-file-key"
+                      plain
+                      @change="loadRefs($event)"></b-form-file>
+                    <b-button
+                      block
+                      :disabled="(fileReferences.length >= 1) ? false : true"
+                      class="mt-2"
+                      variant="success"
+                      @click="saveReferences()">
+                        Upload
+                    </b-button>
+                    <p>
+                      Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
+                    </p>
+                  </b-tab>
+                  <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
                         sm="6">
                         <p class="font-weight-light">
-                          <b>STEP 1:</b> You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
+                          You can import individual references from PubMed by pasting the references PMID below. The PMID is the 8-digit identification number appearing at the end of the web address for the article on PubMed. Add one PMID per line below and click Find.
                         </p>
                         <b-form-textarea
                           v-model="episte_request"
@@ -146,34 +169,6 @@
                             block
                             @click="saveReferences('EpisteDB')">Import references</b-button>
                         </template>
-                      </b-col>
-                    </b-row>
-                  </b-tab>
-                  <b-tab title="File upload" active>
-                    <b-row>
-                      <b-col
-                        cols="6">
-                        <p class="font-weight-light">
-                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
-                        </p>
-                        <p class="font-weight-light">
-                          <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
-                        </p>
-                        <b-form-file
-                          id="input-ris-file-key"
-                          plain
-                          @change="loadRefs($event)"></b-form-file>
-                      </b-col>
-                      <b-col
-                        cols="6">
-                        <b-button
-                          block
-                          :disabled="(fileReferences.length >= 1) ? false : true"
-                          class="mt-2"
-                          variant="success"
-                          @click="saveReferences()">
-                            Upload
-                        </b-button>
                       </b-col>
                     </b-row>
                   </b-tab>
