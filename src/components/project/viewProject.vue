@@ -3170,25 +3170,28 @@ export default {
       reader.readAsText(file)
     },
     saveImportedData: function (endpoint = '') {
-      let params = {}
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.fields = this.importDataTable.fields
-      params.items = this.importDataTable.items
-      if (endpoint === 'isoqf_characteristics') {
-        this.charsOfStudiesTableSettings.isBusy = true
-        if (this.charsOfStudies.items.length) {
-          this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
-        }
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        fields: this.importDataTable.fields,
+        items: this.importDataTable.items
       }
-      if (endpoint === 'isoqf_assessments') {
-        this.methodologicalTableRefsTableSettings.isBusy = true
-        if (this.methodologicalTableRefs.items.length) {
-          this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
+      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
+        if (endpoint === 'isoqf_characteristics') {
+          this.charsOfStudiesTableSettings.isBusy = true
+          if (this.charsOfStudies.items.length) {
+            this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
+        }
+        if (endpoint === 'isoqf_assessments') {
+          this.methodologicalTableRefsTableSettings.isBusy = true
+          if (this.methodologicalTableRefs.items.length) {
+            this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
         }
       }
       this.importDataTable = {
