@@ -1021,7 +1021,7 @@
                           v-model="table_settings.filter"
                           type="search"
                           id="filterInput"
-                          placeholder="Type to search the table below"></b-form-input>
+                          placeholder="Type to search the text in the table below"></b-form-input>
                         <b-input-group-append>
                           <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
                         </b-input-group-append>
