@@ -23,22 +23,6 @@
             </template>
           </b-table>
         </b-col>
-        <b-col
-          sm="6"
-          cols="12">
-          <h3>Other Workspaces</h3>
-          <b-table
-            id="organizations"
-            striped
-            bordered
-            head-variant="light"
-            :fields="fields"
-            :items="otherOrganizations">
-            <template v-slot:cell(name)="data">
-              <b-link :to="{ name: 'viewOrganization', params: { id: data.item.id } }">{{ data.item.name }}</b-link>
-            </template>
-          </b-table>
-        </b-col>
       </b-row>
     </b-container>
   </div>
@@ -62,11 +46,8 @@ export default {
   methods: {
     getOrganizations: function () {
       for (let org of this.$store.state.user.orgs) {
-        if (org.name === 'My frameworks' || org.name === 'My iSoQ') {
-          org.name = 'My iSoQ'
+        if (org.name !== 'Examples' && org.name !== 'Test organisation') {
           this.myOrganization.push(org)
-        } else {
-          this.otherOrganizations.push(org)
         }
       }
     }
