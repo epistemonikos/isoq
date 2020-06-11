@@ -611,7 +611,7 @@
                 <b-card>
                   <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.">*</span></h5>
                   <p v-if="list.cerqual.option !== null">
-                    Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
+                    Your CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
                   </p>
                   <b-progress
                     :max="status_evidence_profile.max"
@@ -974,7 +974,7 @@
               <p class="d-print-none font-weight-light">
                 To add data or make changes to this table do so in the
                 <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>
-                section of iSoQf
+                section of iSoQ
               </p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
@@ -1075,7 +1075,7 @@
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
               <template v-if="meth_assessments.fields.length">
                 <bc-filters
                   v-if="mode==='edit' && meth_assessments.items.length"
@@ -1220,7 +1220,7 @@
               <!--
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
               -->

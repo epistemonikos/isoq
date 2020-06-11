@@ -27,7 +27,7 @@
             @click="tabOpened=1">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
-            @click="tabOpened=2">iSoQf</b-nav-item>
+            @click="tabOpened=2">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
             @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
@@ -83,7 +83,7 @@
               cols="12">
               <h3>Add Data Needed to Make CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
+                To optimize the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
@@ -99,7 +99,7 @@
                       <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
                     </p>
                     <p class="font-weight-light">
-                      <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
+                      <b>STEP 2:</b> Import the .ris/.txt file into iSoQ.
                     </p>
                     <b-form-file
                       id="input-ris-file-key"
@@ -509,7 +509,7 @@
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
                 <b-form-file
                   id="input-template-chars-file"
                   plain
@@ -826,7 +826,7 @@
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
                 <b-form-file
                   id="input-template-methodological-file"
                   plain
@@ -863,7 +863,7 @@
                 variant="success"
                 class="mb-3"
                 @click="tabOpened=2">
-                Continue to iSoQf
+                Continue to iSoQ
               </b-button>
             </b-col>
           </b-row>
@@ -900,7 +900,7 @@
                       class="mt-1"
                       variant="outline-info"
                       block
-                      @click="printiSoQf">
+                      @click="printiSoQ">
                       Print or save as PDF
                     </b-button>
                 </b-col>
@@ -928,7 +928,7 @@
                       @click="modalChangePublicStatus"
                       :variant="(!project.private) ? 'outline-primary' : 'primary'"
                       block
-                      v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
+                      v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
                       <span v-if="!project.private">Published</span><span v-else>Publish</span>
                     </b-button>
                 </b-col>
@@ -997,7 +997,7 @@
                       <h5>Corresponding author</h5>
                       <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
 
-                      <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                      <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
                       <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
                     </b-col>
                   </b-row>
@@ -1041,7 +1041,7 @@
                   cols="12">
                   <b-button
                     class="mt-1"
-                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
+                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQ"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddList"
                     block>
@@ -1082,7 +1082,7 @@
                     scrollable
                     @ok="saveSortedLists">
                     <p class="font-weight-light">
-                      Drag and drop findings to re-order them in the iSoQf table
+                      Drag and drop findings to re-order them in the iSoQ table
                     </p>
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
@@ -1356,7 +1356,7 @@
                   Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
                 </p>
                 <p>
-                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
+                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
                 </p>
               </b-modal>
               <b-modal
@@ -1620,7 +1620,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
@@ -1641,13 +1641,13 @@
         ref="modal-change-status"
         scrollable
         size="xl"
-        title="Publish to the iSoQf Database"
+        title="Publish to the iSoQ Database"
         ok-title="Save"
         ok-variant="outline-success"
         @ok="savePublicStatus"
         cancel-variant="outline-secondary">
         <p class="font-weight-light">
-          By publishing your iSoQf to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+          By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
         </p>
         <b-form-group>
           <b-form-radio-group
@@ -1879,10 +1879,10 @@ export default {
       },
       tabOpened: 1,
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -2143,7 +2143,7 @@ export default {
       }
       this.$root.$emit('bv::toggle::collapse', 'info-project')
     },
-    printiSoQf: function () {
+    printiSoQ: function () {
       /*
       if (!document.getElementsByClassName('b-table-row-selected').length) {
         this.dismissAlertPrint = true
@@ -2584,7 +2584,7 @@ export default {
             if (this.references.length) {
               this.$nextTick(() => {
                 if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQf', '#Guidance-on-Applying-CERQual']
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-Applying-CERQual']
                   this.tabOpened = tabs.indexOf(this.$route.hash)
                 } else {
                   this.tabOpened = 2

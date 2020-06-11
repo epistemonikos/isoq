@@ -91,7 +91,7 @@ var routes = [
     name: 'editList',
     component: EditList,
     meta: {
-      title: 'Edit iSoQf - interactive Summaries of Qualitative Findings',
+      title: 'Edit iSoQ - interactive Summaries of Qualitative Findings',
       requiresAuth: true
     }
   }
