@@ -401,15 +401,23 @@
                         cols="12"
                         md="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
-                          <h4>Methodological Assessments</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="meth_assessments.fieldsObj"
-                            :items="meth_assessments.items">
-                          </b-table>
+                          <b-tabs content-class="mt-3">
+                            <b-tab title="Methodological Assessments" active>
+                              <h4>Methodological Assessments</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="meth_assessments.fieldsObj"
+                                :items="meth_assessments.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
@@ -467,85 +475,104 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
-                          <h4>Characteristics of Studies</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="characteristics_studies.fieldsObj"
-                            :items="characteristics_studies.items">
-                          </b-table>
-                          <h4>Extracted Data</h4>
-                          <b-table
-                            class="table-small-font extracted-data"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                            :items="extracted_data.items">
-                            <template v-slot:cell(column_0)="data">
-                              <template
-                                v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-form-group>
-                                  <b-form-textarea
-                                    rows="6"
-                                    max-rows="100"
-                                    v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                                </b-form-group>
+                          <b-tabs content-class="mt-3">
+                            <b-tab title="Extracted Data" active>
+                              <h4>Extracted Data</h4>
+                              <b-table
+                                class="table-small-font extracted-data"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                                :items="extracted_data.items">
+                                <template v-slot:cell(column_0)="data">
+                                  <template
+                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-form-group>
+                                      <b-form-textarea
+                                        rows="6"
+                                        max-rows="100"
+                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                    </b-form-group>
 
-                              </template>
-                              <template
-                                v-else>
-                                {{ data.item.column_0 }}
-                              </template>
-                            </template>
-                            <template v-slot:cell(actions)="data">
-                              <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-button
-                                  block
-                                  variant="success"
-                                  @click="updateContentExtractedDataItem(data.item.index)">
-                                  Save
-                                </b-button>
-                                <b-button
-                                  block
-                                  variant="outline-secondary"
-                                  @click="cancelExtractedDataInPlace">
-                                  Cancel
-                                </b-button>
-                              </template>
-                              <template v-else>
-                                <b-button
-                                  variant="outline-success"
-                                  @click="editExtractedDataInPlace(data.index)">
-                                  <font-awesome-icon
-                                    icon="edit"
-                                    :title="$t('Edit')" />
-                                </b-button>
-                              </template>
-                            </template>
-                          </b-table>
+                                  </template>
+                                  <template
+                                    v-else>
+                                    {{ data.item.column_0 }}
+                                  </template>
+                                </template>
+                                <template v-slot:cell(actions)="data">
+                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-button
+                                      block
+                                      variant="success"
+                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      Save
+                                    </b-button>
+                                    <b-button
+                                      block
+                                      variant="outline-secondary"
+                                      @click="cancelExtractedDataInPlace">
+                                      Cancel
+                                    </b-button>
+                                  </template>
+                                  <template v-else>
+                                    <b-button
+                                      variant="outline-success"
+                                      @click="editExtractedDataInPlace(data.index)">
+                                      <font-awesome-icon
+                                        icon="edit"
+                                        :title="$t('Edit')" />
+                                    </b-button>
+                                  </template>
+                                </template>
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Characteristics of Studies">
+                              <h4>Characteristics of Studies</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="characteristics_studies.fieldsObj"
+                                :items="characteristics_studies.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <h4>Review Question</h4>
-                          <p>{{ project.review_question }}</p>
-                          <h4>Inclusion criteria</h4>
-                          <p>{{ project.inclusion }}</p>
-                          <h4>Exclusion criteria</h4>
-                          <p>{{ project.exclusion }}</p>
-                          <h4>Characteristics of Studies</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="characteristics_studies.fieldsObj"
-                            :items="characteristics_studies.items">
-                          </b-table>
+                          <b-tabs>
+                            <b-tab title="Question and Criteria" active>
+                              <h4>Review Question</h4>
+                              <p>{{ project.review_question }}</p>
+                              <h4>Inclusion criteria</h4>
+                              <p>{{ project.inclusion }}</p>
+                              <h4>Exclusion criteria</h4>
+                              <p>{{ project.exclusion }}</p>
+                            </b-tab>
+                            <b-tab title="Characteristics of Studies">
+                              <h4>Characteristics of Studies</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="characteristics_studies.fieldsObj"
+                                :items="characteristics_studies.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
-
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <h5>Methodological limitations</h5>
                           <p>
