@@ -81,7 +81,7 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add Data Needed to Make CERQual Assessments</h3>
+              <h3>Add Data Needed to Make GRADE-CERQual Assessments</h3>
               <p>
                 To optimize the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
@@ -1131,7 +1131,7 @@
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
-                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
                   </template>
                   <template v-slot:head(ref_list)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
@@ -1208,7 +1208,7 @@
                           icon="comments"></font-awesome-icon>
                         <span v-if="data.item.cerqual_option===''">Complete</span>
                         <span v-if="data.item.cerqual_option!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                       </b-button>
                     <b>{{ data.item.cerqual_option }}</b>
                   </template>
@@ -1222,7 +1222,7 @@
                       :to="{name: 'editList', params: {id: data.item.id}}">
                         <span v-if="data.item.cerqual_explanation===''">Complete</span>
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                     </b-button>
                     <b>{{ data.item.cerqual_explanation }}</b>
                   </template>
@@ -1264,8 +1264,8 @@
                     <b-tr>
                       <b-th>#</b-th>
                       <b-th>Summarized review finding</b-th>
-                      <b-th>CERQual Assessment of confidence</b-th>
-                      <b-th>Explanation of CERQual Assessment</b-th>
+                      <b-th>GRADE-CERQual Assessment of confidence</b-th>
+                      <b-th>Explanation of GRADE-CERQual Assessment</b-th>
                       <b-th>References</b-th>
                     </b-tr>
                   </b-thead>
@@ -1406,7 +1406,7 @@
                       v-if="showBanner"
                       show
                       variant="danger">
-                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
                     </b-alert>
                     <b-table
                       responsive
@@ -1528,7 +1528,7 @@
           </b-row>
         </b-tab>
         <b-tab>
-          <h3>Introduction to CERQual</h3>
+          <h3>Introduction to GRADE-CERQual</h3>
           <p><a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3</a></p>
           <p>[Lewin S, Booth A, Glenton C, Munthe-Kaas H, Rashidian A, Wainwright M, Bohren MA, Tunçalp Ö, Colvin CJ, Garside R, Carlsen B, Langlois EV, Noyes J. Applying GRADE-CERQual to qualitative evidence synthesis findings: introduction to the series. Implement Sci. 2018 Jan 25;13(Suppl 1):2]</p>
           <h3>Assessing Methodological Limitations</h3>
@@ -1543,7 +1543,7 @@
           <h3>Assessing Relevance</h3>
           <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0693-6" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0693-6</a>
           <p>[Noyes J, Booth A, Lewin S, Carlsen B, Glenton C, Colvin CJ, Garside R, Bohren MA, Rashidian A, Wainwright M, Tunςalp Ö, Chandler J, Flottorp S, Pantoja T, Tucker JD, Munthe-Kaas H. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 6: how to assess relevance of the data. Implement Sci. 2018 Jan 25;13(Suppl 1):4.]</p>
-          <h3>Making an Overall CERQual Assessment of Confidence and Preparing SoQf Table</h3>
+          <h3>Making an Overall GRADE-CERQual Assessment of Confidence and Preparing SoQf Table</h3>
           <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2</a>
           <p>[Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 2: how to make an overall CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018 Jan 25;13(Suppl 1):10]</p>
           <h4>Additional resources:</h4>
@@ -1620,7 +1620,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
@@ -1752,11 +1752,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1774,11 +1774,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1880,7 +1880,7 @@ export default {
       tabOpened: 1,
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
         { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
         { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
