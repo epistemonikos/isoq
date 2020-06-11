@@ -510,38 +510,27 @@
                   Download template
                 </b-button>
                 <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-container>
-                  <b-row>
-                    <b-col
-                      class="mb-2"
-                      cols="12">
-                      <b-form-file
-                        id="input-template-chars-file"
-                        plain
-                        @change="loadTableImportData($event)"></b-form-file>
-                    </b-col>
-                    <b-col
-                      cols="12">
-                      <b-alert
-                        variant="info"
-                        :show="importDataTable.error !== null">
-                        {{ importDataTable.error }}
-                      </b-alert>
-                      <b-button
-                        variant="outline-info"
-                        class="my-2"
-                        v-if="importDataTable.items.length"
-                        @click="cleanVars()">Clean loaded data</b-button>
-                      <b-table
-                        v-if="importDataTable.items.length"
-                        responsive
-                        :fields="importDataTable.fieldsObj"
-                        :items="importDataTable.items"
-                      ></b-table>
-                    </b-col>
-                  </b-row>
-                </b-container>
-                <h4 class="mt-3">STEP 3: Accept or start again</h4>
+                <b-form-file
+                  id="input-template-chars-file"
+                  plain
+                  @change="loadTableImportData($event)"></b-form-file>
+                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <b-alert
+                  variant="info"
+                  :show="importDataTable.error !== null">
+                  {{ importDataTable.error }}
+                </b-alert>
+                <b-button
+                  variant="outline-info"
+                  v-if="importDataTable.items.length"
+                  @click="cleanVars()">Reject</b-button>
+                <b-table
+                  v-if="importDataTable.items.length"
+                  responsive
+                  :fields="importDataTable.fieldsObj"
+                  :items="importDataTable.items"></b-table>
               </b-modal>
               <b-modal
                 size="xl"
@@ -837,38 +826,27 @@
                   Download template
                 </b-button>
                 <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-container>
-                  <b-row>
-                    <b-col
-                      class="mb-2"
-                      cols="12">
-                      <b-form-file
-                        id="input-template-methodological-file"
-                        plain
-                        @change="loadTableImportData($event)"></b-form-file>
-                    </b-col>
-                    <b-col
-                      cols="12">
-                      <b-alert
-                        variant="info"
-                        :show="importDataTable.error !== null">
-                        {{ importDataTable.error }}
-                      </b-alert>
-                      <b-button
-                        variant="outline-info"
-                        class="my-2"
-                        v-if="importDataTable.items.length"
-                        @click="cleanVars()">Clean loaded data</b-button>
-                      <b-table
-                        v-if="importDataTable.items.length"
-                        responsive
-                        :fields="importDataTable.fieldsObj"
-                        :items="importDataTable.items"
-                      ></b-table>
-                    </b-col>
-                  </b-row>
-                </b-container>
-                <h4 class="mt-3">STEP 3: Accept or start again</h4>
+                <b-form-file
+                  id="input-template-methodological-file"
+                  plain
+                  @change="loadTableImportData($event)"></b-form-file>
+                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <b-alert
+                  variant="info"
+                  :show="importDataTable.error !== null">
+                  {{ importDataTable.error }}
+                </b-alert>
+                <b-button
+                  variant="outline-info"
+                  v-if="importDataTable.items.length"
+                  @click="cleanVars()">Reject</b-button>
+                <b-table
+                  v-if="importDataTable.items.length"
+                  responsive
+                  :fields="importDataTable.fieldsObj"
+                  :items="importDataTable.items"></b-table>
               </b-modal>
             </b-col>
           </b-row>
