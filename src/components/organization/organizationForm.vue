@@ -114,7 +114,7 @@ export default {
     return {
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
         { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
         { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],

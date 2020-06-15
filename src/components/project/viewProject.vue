@@ -30,7 +30,7 @@
             @click="tabOpened=2">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
+            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
@@ -1545,7 +1545,7 @@
           <p>[Noyes J, Booth A, Lewin S, Carlsen B, Glenton C, Colvin CJ, Garside R, Bohren MA, Rashidian A, Wainwright M, Tunςalp Ö, Chandler J, Flottorp S, Pantoja T, Tucker JD, Munthe-Kaas H. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 6: how to assess relevance of the data. Implement Sci. 2018 Jan 25;13(Suppl 1):4.]</p>
           <h3>Making an Overall GRADE-CERQual Assessment of Confidence and Preparing SoQf Table</h3>
           <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2</a>
-          <p>[Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 2: how to make an overall CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018 Jan 25;13(Suppl 1):10]</p>
+          <p>[Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 2: how to make an overall GRADE-CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018 Jan 25;13(Suppl 1):10]</p>
           <h4>Additional resources:</h4>
           <p>Booth A, Lewin S, Glenton C, Munthe-Kaas H, Toews I, Noyes J, Rashidian A, Berg RC, Nyakang'o B, Meerpohl JJ; GRADE-CERQual Coordinating Team. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 7: understanding the potential impacts of dissemination bias. Implement Sci. 2018 Jan 25;13(Suppl 1):12. <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0694-5" target="_blank">FULL TEXT</a><p>
           <p>Simon Lewin, Claire Glenton, Heather Munthe-Kaas, Benedicte Carlsen, Christopher J. Colvin, Metin Gülmezoglu, Jane Noyes, Andrew Booth, Ruth Garside, and Arash Rashidian. Using qualitative evidence in decision making for health and social interventions: an approach to assess confidence in findings from qualitative evidence syntheses (GRADE-CERQual). PLoS Med 12, no. 10 (2015) 001895. <a href="http://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1001895" target="_blank">FULL TEXT</a></p>
