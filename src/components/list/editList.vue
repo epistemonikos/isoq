@@ -215,7 +215,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
@@ -271,7 +271,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
@@ -329,7 +329,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
@@ -373,7 +373,7 @@
                           </a>
                           <b-form-group
                             class="mt-4 font-weight-light"
-                            label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance)."
+                            label="Explain your assessment by making reference to any identified concerns for all 4 components of GRADE-CERQual (methodological limitations, coherence, adequacy, relevance)."
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
                             <b-form-textarea
@@ -387,7 +387,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"
@@ -609,9 +609,9 @@
                 v-if="mode==='edit'"
                 class="d-print-none">
                 <b-card>
-                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.">*</span></h5>
+                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
                   <p v-if="list.cerqual.option !== null">
-                    Your CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
+                    Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
                   </p>
                   <b-progress
                     :max="status_evidence_profile.max"
@@ -938,7 +938,7 @@
                     v-if="list.cerqual.option"
                     show
                     variant="danger">
-                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
                   </b-alert>
                   <b-table
                     striped
@@ -1141,7 +1141,7 @@
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
               </h3>
               <p class="d-print-none font-weight-light">
-                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a CERQual assessment.
+                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
               </p>
               <template v-if="extracted_data.fields.length">
                 <bc-filters
@@ -1312,7 +1312,7 @@ export default {
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
         { key: 'references', label: 'References' }
         /*
         {key: 'actions', label: 'Actions'}
@@ -1325,7 +1325,7 @@ export default {
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
         {
           key: 'references',
           label: 'References',
@@ -1686,7 +1686,7 @@ export default {
         'coherence': 'Coherence',
         'adequacy': 'Adequacy',
         'relevance': 'Relevance',
-        'cerqual': 'CERQual Assessment of Confidence'
+        'cerqual': 'GRADE-CERQual Assessment of Confidence'
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
