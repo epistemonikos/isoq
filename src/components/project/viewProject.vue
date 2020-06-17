@@ -1005,39 +1005,15 @@
               </b-card>
             </b-col>
           </b-row>
-          <b-row>
-            <b-col
-              v-if="mode==='edit' && this.lists.length"
-              cols="12"
-              class="my-2 d-print-none">
-              <b-card
-                bg-variant="light">
-                <b-row>
-                  <b-col
-                    cols="12">
-                    <b-form-group>
-                      <b-input-group>
-                        <b-form-input
-                          v-model="table_settings.filter"
-                          type="search"
-                          id="filterInput"
-                          placeholder="Type to search the text in the table below"></b-form-input>
-                        <b-input-group-append>
-                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </b-col>
-                </b-row>
-              </b-card>
-            </b-col>
+          <b-row
+            class="mt-2">
             <b-col
               cols="12">
               <b-row
                 class="mb-2">
                 <b-col
                   v-if="mode!=='view'"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1050,7 +1026,7 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1063,7 +1039,7 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view' && lists.length > 1"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1098,7 +1074,43 @@
                     </b-list-group>
                   </b-modal>
                 </b-col>
+                <b-col
+                  v-if="mode!=='view' && lists.length > 1"
+                  md="3"
+                  cols="12">
+                  <b-button
+                    block
+                    variant="outline-secondary"
+                    @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+                </b-col>
               </b-row>
+            </b-col>
+            <b-col
+              v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
+              cols="12"
+              class="my-2 d-print-none">
+              <b-card
+                bg-variant="light">
+                <b-row>
+                  <b-col
+                    cols="12">
+                    <b-form-group>
+                      <b-input-group>
+                        <b-form-input
+                          v-model="table_settings.filter"
+                          type="search"
+                          id="filterInput"
+                          placeholder="Type to search the text in the table below"></b-form-input>
+                        <b-input-group-append>
+                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </b-col>
+                </b-row>
+                <b-button
+                  @click="toggleSearch(ui.project.displaySearch)">Close</b-button>
+              </b-card>
             </b-col>
             <b-col cols="12" class="toDoc">
               <template
@@ -1137,8 +1149,9 @@
                       <b-dropdown-item
                       v-for="category of list_categories.options"
                       :key="category.text"
-                      @click="table_settings.filter=category.text">{{ category.text }}</b-dropdown-item>
+                      @click="tableFilter(category.text, 1)">{{ category.text }}</b-dropdown-item>
                     </b-dropdown>
+                    <span v-if="ui.project.showFilterOne" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(cerqual_option)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
@@ -1148,14 +1161,15 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="table_settings.filter='High confidence'">High confidence</b-dropdown-item>
-                      <b-dropdown-item @click="table_settings.filter='Moderate confidence'">Moderate confidence</b-dropdown-item>
-                      <b-dropdown-item @click="table_settings.filter='Low confidence'">Low confidence</b-dropdown-item>
-                      <b-dropdown-item @click="table_settings.filter='Very low confidence'">Very low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('High confidence', 2)">High confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Moderate confidence', 2)">Moderate confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Low confidence', 2)">Low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Very low confidence', 2)">Very low confidence</b-dropdown-item>
                       <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-item @click="table_settings.filter='completed'">Assessments completed</b-dropdown-item>
-                      <b-dropdown-item @click="table_settings.filter='unfinished'">Assessments not completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('completed', 2)">Assessments completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('unfinished', 2)">Assessments not completed</b-dropdown-item>
                     </b-dropdown>
+                    <span v-if="ui.project.showFilterTwo" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
                     <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
@@ -1165,9 +1179,10 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="table_settings.filter='completed'">Completed</b-dropdown-item>
-                      <b-dropdown-item @click="table_settings.filter='unfinished'">Not completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('completed', 3)">Completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('unfinished', 3)">Not completed</b-dropdown-item>
                     </b-dropdown>
+                    <span v-if="ui.project.showFilterThree" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(ref_list)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
@@ -1744,7 +1759,11 @@ export default {
               dismissSecs: 5,
               dismissCountDown: 0
             }
-          }
+          },
+          displaySearch: false,
+          showFilterOne: false,
+          showFilterTwo: false,
+          showFilterThree: false
         }
       },
       modal_project: {},
@@ -4107,6 +4126,42 @@ export default {
       if (this.ui.project.type === 'exclusion') {
         this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
       }
+    },
+    toggleSearch (show) {
+      if (show) {
+        this.ui.project.displaySearch = false
+      } else {
+        this.ui.project.displaySearch = true
+      }
+      this.table_settings.filter = ''
+      window.scrollTo({ top: 500, behavior: 'smooth' })
+    },
+    tableFilter (txt, filter) {
+      this.table_settings.filter = txt
+      switch (filter) {
+        case 1:
+          this.ui.project.showFilterOne = true
+          this.ui.project.showFilterTwo = false
+          this.ui.project.showFilterThree = false
+          break
+        case 2:
+          this.ui.project.showFilterOne = false
+          this.ui.project.showFilterTwo = true
+          this.ui.project.showFilterThree = false
+          break
+        case 3:
+          this.ui.project.showFilterOne = false
+          this.ui.project.showFilterTwo = false
+          this.ui.project.showFilterThree = true
+          break
+      }
+      window.scrollTo({ top: 600, behavior: 'smooth' })
+    },
+    cleanTableFilter () {
+      this.ui.project.showFilterOne = false
+      this.ui.project.showFilterTwo = false
+      this.ui.project.showFilterThree = false
+      this.table_settings.filter = ''
     }
   }
 }
