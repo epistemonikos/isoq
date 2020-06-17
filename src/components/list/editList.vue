@@ -62,8 +62,15 @@
         <b-col
           class="d-print-none"
           sm="10"
-          cols="12"
-        ></b-col>
+          cols="12">
+          <b-nav class="mt-2">
+            <b-nav-item disabled>Navigate this page:</b-nav-item>
+            <b-nav-item href="#evidence-profile">Evidence Profile</b-nav-item>
+            <b-nav-item href="#characteristics-of-studies">Characteristics of Studies</b-nav-item>
+            <b-nav-item href="#methodological-assessments">Methodological Assessments</b-nav-item>
+            <b-nav-item href="#extracted-data">Extracted Data</b-nav-item>
+          </b-nav>
+        </b-col>
         <b-col
           cols="12"
           sm="2">
@@ -208,7 +215,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
@@ -264,7 +271,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
@@ -322,7 +329,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
@@ -335,6 +342,9 @@
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <p class="font-weight-light">
                             To what extent is the review finding a reasonable representation of the phenomenon of interest?
+                          </p>
+                          <p>
+                            Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/5" target="_blank">here</a> for practical guidance on making an overall assessment of confidence for a review finding.
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.cerqual.option"
@@ -363,7 +373,7 @@
                           </a>
                           <b-form-group
                             class="mt-4 font-weight-light"
-                            label="Explain your assessment by making reference to any identified concerns for all 4 components of CERQual (methodological limitations, coherence, adequacy, relevance)."
+                            label="Explain your assessment by making reference to any identified concerns for all 4 components of GRADE-CERQual (methodological limitations, coherence, adequacy, relevance)."
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
                             <b-form-textarea
@@ -377,7 +387,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"
@@ -391,15 +401,23 @@
                         cols="12"
                         md="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
-                          <h4>Methodological Assessments</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="meth_assessments.fieldsObj"
-                            :items="meth_assessments.items">
-                          </b-table>
+                          <b-tabs content-class="mt-3">
+                            <b-tab title="Methodological Assessments" active>
+                              <h4>Methodological Assessments</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="meth_assessments.fieldsObj"
+                                :items="meth_assessments.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
@@ -457,85 +475,104 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
-                          <h4>Characteristics of Studies</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="characteristics_studies.fieldsObj"
-                            :items="characteristics_studies.items">
-                          </b-table>
-                          <h4>Extracted Data</h4>
-                          <b-table
-                            class="table-small-font extracted-data"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                            :items="extracted_data.items">
-                            <template v-slot:cell(column_0)="data">
-                              <template
-                                v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-form-group>
-                                  <b-form-textarea
-                                    rows="6"
-                                    max-rows="100"
-                                    v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                                </b-form-group>
+                          <b-tabs content-class="mt-3">
+                            <b-tab title="Extracted Data" active>
+                              <h4>Extracted Data</h4>
+                              <b-table
+                                class="table-small-font extracted-data"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                                :items="extracted_data.items">
+                                <template v-slot:cell(column_0)="data">
+                                  <template
+                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-form-group>
+                                      <b-form-textarea
+                                        rows="6"
+                                        max-rows="100"
+                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                    </b-form-group>
 
-                              </template>
-                              <template
-                                v-else>
-                                {{ data.item.column_0 }}
-                              </template>
-                            </template>
-                            <template v-slot:cell(actions)="data">
-                              <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-button
-                                  block
-                                  variant="success"
-                                  @click="updateContentExtractedDataItem(data.item.index)">
-                                  Save
-                                </b-button>
-                                <b-button
-                                  block
-                                  variant="outline-secondary"
-                                  @click="cancelExtractedDataInPlace">
-                                  Cancel
-                                </b-button>
-                              </template>
-                              <template v-else>
-                                <b-button
-                                  variant="outline-success"
-                                  @click="editExtractedDataInPlace(data.index)">
-                                  <font-awesome-icon
-                                    icon="edit"
-                                    :title="$t('Edit')" />
-                                </b-button>
-                              </template>
-                            </template>
-                          </b-table>
+                                  </template>
+                                  <template
+                                    v-else>
+                                    {{ data.item.column_0 }}
+                                  </template>
+                                </template>
+                                <template v-slot:cell(actions)="data">
+                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-button
+                                      block
+                                      variant="success"
+                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      Save
+                                    </b-button>
+                                    <b-button
+                                      block
+                                      variant="outline-secondary"
+                                      @click="cancelExtractedDataInPlace">
+                                      Cancel
+                                    </b-button>
+                                  </template>
+                                  <template v-else>
+                                    <b-button
+                                      variant="outline-success"
+                                      @click="editExtractedDataInPlace(data.index)">
+                                      <font-awesome-icon
+                                        icon="edit"
+                                        :title="$t('Edit')" />
+                                    </b-button>
+                                  </template>
+                                </template>
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Characteristics of Studies">
+                              <h4>Characteristics of Studies</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="characteristics_studies.fieldsObj"
+                                :items="characteristics_studies.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <h4>Review Question</h4>
-                          <p>{{ project.review_question }}</p>
-                          <h4>Inclusion criteria</h4>
-                          <p>{{ project.inclusion }}</p>
-                          <h4>Exclusion criteria</h4>
-                          <p>{{ project.exclusion }}</p>
-                          <h4>Characteristics of Studies</h4>
-                          <b-table
-                            class="table-small-font"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="characteristics_studies.fieldsObj"
-                            :items="characteristics_studies.items">
-                          </b-table>
+                          <b-tabs>
+                            <b-tab title="Question and Criteria" active>
+                              <h4>Review Question</h4>
+                              <p>{{ project.review_question }}</p>
+                              <h4>Inclusion criteria</h4>
+                              <p>{{ project.inclusion }}</p>
+                              <h4>Exclusion criteria</h4>
+                              <p>{{ project.exclusion }}</p>
+                            </b-tab>
+                            <b-tab title="Characteristics of Studies">
+                              <h4>Characteristics of Studies</h4>
+                              <b-table
+                                class="table-small-font"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="characteristics_studies.fieldsObj"
+                                :items="characteristics_studies.items">
+                              </b-table>
+                            </b-tab>
+                            <b-tab title="Review Finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
-
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <h5>Methodological limitations</h5>
                           <p>
@@ -572,9 +609,9 @@
                 v-if="mode==='edit'"
                 class="d-print-none">
                 <b-card>
-                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 CERQual components, and lastly the overall assessment.">*</span></h5>
+                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
                   <p v-if="list.cerqual.option !== null">
-                    Your CERQual assessment has been added to the iSoQf for this finding. Click “return to iSoQf table” above to view it
+                    Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
                   </p>
                   <b-progress
                     :max="status_evidence_profile.max"
@@ -587,6 +624,7 @@
               </div>
 
               <template v-if="evidence_profile.length">
+                <a name="evidence-profile"></a>
                 <h3 class="mt-4">Evidence Profile</h3>
                 <b-table
                   class="d-print-none"
@@ -900,7 +938,7 @@
                     v-if="list.cerqual.option"
                     show
                     variant="danger">
-                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
                   </b-alert>
                   <b-table
                     striped
@@ -929,13 +967,14 @@
             <div
               class="mt-5"
               v-if="show.selected.includes('cs')">
+              <a name="characteristics-of-studies"></a>
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
               </h3>
               <p class="d-print-none font-weight-light">
                 To add data or make changes to this table do so in the
                 <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>
-                section of iSoQf
+                section of iSoQ
               </p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
@@ -1032,10 +1071,11 @@
             <div
               class="mt-5 mb-5"
               v-if="show.selected.includes('ma')">
+              <a name="methodological-assessments"></a>
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
               </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf</p>
+              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
               <template v-if="meth_assessments.fields.length">
                 <bc-filters
                   v-if="mode==='edit' && meth_assessments.items.length"
@@ -1096,11 +1136,12 @@
             <div
               class="mt-3"
               v-if="show.selected.includes('ed')">
+              <a name="extracted-data"></a>
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
               </h3>
               <p class="d-print-none font-weight-light">
-                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a CERQual assessment.
+                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
               </p>
               <template v-if="extracted_data.fields.length">
                 <bc-filters
@@ -1179,7 +1220,7 @@
               <!--
               <template v-else>
                 <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQf, once your headings are created you will be able to add the Extracted Data here.
+                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ, once your headings are created you will be able to add the Extracted Data here.
                 </p>
               </template>
               -->
@@ -1271,7 +1312,7 @@ export default {
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
         { key: 'references', label: 'References' }
         /*
         {key: 'actions', label: 'Actions'}
@@ -1284,7 +1325,7 @@ export default {
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
         {
           key: 'references',
           label: 'References',
@@ -1489,6 +1530,7 @@ export default {
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1644,7 +1686,7 @@ export default {
         'coherence': 'Coherence',
         'adequacy': 'Adequacy',
         'relevance': 'Relevance',
-        'cerqual': 'CERQual Assessment of Confidence'
+        'cerqual': 'GRADE-CERQual Assessment of Confidence'
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]

@@ -27,10 +27,10 @@
             @click="tabOpened=1">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
-            @click="tabOpened=2">iSoQf</b-nav-item>
+            @click="tabOpened=2">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
+            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
@@ -81,9 +81,9 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add Data Needed to Make CERQual Assessments</h3>
+              <h3>Add Data Needed to Make GRADE-CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
+                To optimize the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
@@ -94,12 +94,35 @@
               </p>
               <b-card no-body>
                 <b-tabs id="import-data" card>
-                  <b-tab title="Import from">
+                  <b-tab title="File upload" active>
+                    <p class="font-weight-light">
+                      <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
+                    </p>
+                    <p class="font-weight-light">
+                      <b>STEP 2:</b> Import the .ris/.txt file into iSoQ.
+                    </p>
+                    <b-form-file
+                      id="input-ris-file-key"
+                      plain
+                      @change="loadRefs($event)"></b-form-file>
+                    <b-button
+                      block
+                      :disabled="(fileReferences.length >= 1) ? false : true"
+                      class="mt-2"
+                      variant="success"
+                      @click="saveReferences()">
+                        Upload
+                    </b-button>
+                    <p>
+                      Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
+                    </p>
+                  </b-tab>
+                  <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
                         sm="6">
                         <p class="font-weight-light">
-                          <b>STEP 1:</b> You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
+                          You can import individual references from PubMed by pasting the references PMID below. The PMID is the 8-digit identification number appearing at the end of the web address for the article on PubMed. Add one PMID per line below and click Find.
                         </p>
                         <b-form-textarea
                           v-model="episte_request"
@@ -146,34 +169,6 @@
                             block
                             @click="saveReferences('EpisteDB')">Import references</b-button>
                         </template>
-                      </b-col>
-                    </b-row>
-                  </b-tab>
-                  <b-tab title="File upload" active>
-                    <b-row>
-                      <b-col
-                        cols="6">
-                        <p class="font-weight-light">
-                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
-                        </p>
-                        <p class="font-weight-light">
-                          <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
-                        </p>
-                        <b-form-file
-                          id="input-ris-file-key"
-                          plain
-                          @change="loadRefs($event)"></b-form-file>
-                      </b-col>
-                      <b-col
-                        cols="6">
-                        <b-button
-                          block
-                          :disabled="(fileReferences.length >= 1) ? false : true"
-                          class="mt-2"
-                          variant="success"
-                          @click="saveReferences()">
-                            Upload
-                        </b-button>
                       </b-col>
                     </b-row>
                   </b-tab>
@@ -241,9 +236,11 @@
                         id="inclusion-criteria"
                         rows="6"
                         max-rows="100"
-                        v-model="project.inclusion"
-                        @></b-form-textarea>
+                        v-model="project.inclusion"></b-form-textarea>
                     </b-form-group>
+                    <div class="float-right">
+                      <b-button variant="outline-success">Save</b-button>
+                    </div>
                   </b-col>
                   <b-col
                     cols="12"
@@ -259,6 +256,9 @@
                         max-rows="100"
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
+                    <div class="float-right">
+                      <b-button variant="outline-success">Save</b-button>
+                    </div>
                   </b-col>
                 </b-row>
               </b-container>
@@ -480,7 +480,6 @@
                 </b-form-group>
               </b-modal>
               <b-modal
-                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -510,31 +509,29 @@
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-chars-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-alert
-                      variant="info"
-                      :show="importDataTable.error !== null">
-                      {{ importDataTable.error }}
-                    </b-alert>
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                <b-form-file
+                  id="input-template-chars-file"
+                  plain
+                  @change="loadTableImportData($event)"></b-form-file>
+                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <b-alert
+                  variant="info"
+                  :show="importDataTable.error !== null">
+                  {{ importDataTable.error }}
+                </b-alert>
+                <b-button
+                  variant="outline-info"
+                  class="mb-2"
+                  v-if="importDataTable.items.length"
+                  @click="cleanVars()">Reject</b-button>
+                <b-table
+                  v-if="importDataTable.items.length"
+                  responsive
+                  :fields="importDataTable.fieldsObj"
+                  :items="importDataTable.items"></b-table>
               </b-modal>
               <b-modal
                 size="xl"
@@ -800,7 +797,6 @@
                 </p>
               </b-modal>
               <b-modal
-                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -830,31 +826,29 @@
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-methodological-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-alert
-                      variant="info"
-                      :show="importDataTable.error !== null">
-                      {{ importDataTable.error }}
-                    </b-alert>
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                <b-form-file
+                  id="input-template-methodological-file"
+                  plain
+                  @change="loadTableImportData($event)"></b-form-file>
+                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <b-alert
+                  variant="info"
+                  :show="importDataTable.error !== null">
+                  {{ importDataTable.error }}
+                </b-alert>
+                <b-button
+                  variant="outline-info"
+                  class="mb-2"
+                  v-if="importDataTable.items.length"
+                  @click="cleanVars()">Reject</b-button>
+                <b-table
+                  v-if="importDataTable.items.length"
+                  responsive
+                  :fields="importDataTable.fieldsObj"
+                  :items="importDataTable.items"></b-table>
               </b-modal>
             </b-col>
           </b-row>
@@ -869,7 +863,7 @@
                 variant="success"
                 class="mb-3"
                 @click="tabOpened=2">
-                Continue to iSoQf
+                Continue to iSoQ
               </b-button>
             </b-col>
           </b-row>
@@ -906,7 +900,7 @@
                       class="mt-1"
                       variant="outline-info"
                       block
-                      @click="printiSoQf">
+                      @click="printiSoQ">
                       Print or save as PDF
                     </b-button>
                 </b-col>
@@ -934,7 +928,7 @@
                       @click="modalChangePublicStatus"
                       :variant="(!project.private) ? 'outline-primary' : 'primary'"
                       block
-                      v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
+                      v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
                       <span v-if="!project.private">Published</span><span v-else>Publish</span>
                     </b-button>
                 </b-col>
@@ -1003,7 +997,7 @@
                       <h5>Corresponding author</h5>
                       <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
 
-                      <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
+                      <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
                       <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
                     </b-col>
                   </b-row>
@@ -1027,7 +1021,7 @@
                           v-model="table_settings.filter"
                           type="search"
                           id="filterInput"
-                          placeholder="Type to search the table below"></b-form-input>
+                          placeholder="Type to search the text in the table below"></b-form-input>
                         <b-input-group-append>
                           <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
                         </b-input-group-append>
@@ -1047,7 +1041,7 @@
                   cols="12">
                   <b-button
                     class="mt-1"
-                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
+                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQ"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddList"
                     block>
@@ -1064,7 +1058,7 @@
                     variant="outline-secondary"
                     @click="modalListCategories"
                     block>
-                    Assign categories to your review findings
+                    Create categories for your review findings
                   </b-button>
                 </b-col>
                 <b-col
@@ -1088,7 +1082,7 @@
                     scrollable
                     @ok="saveSortedLists">
                     <p class="font-weight-light">
-                      Drag and drop findings to re-order them in the iSoQf table
+                      Drag and drop findings to re-order them in the iSoQ table
                     </p>
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
@@ -1164,7 +1158,7 @@
                     </b-dropdown>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
-                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
                     <b-dropdown
                       id="dropdown-cerqual-explanation"
                       text=""
@@ -1221,15 +1215,21 @@
                     </span>
                   </template>
                   <template v-slot:cell(category_name)="data">
-                    <div v-if="data.item.category_name!==null">
+                    <div v-if="data.item.category_name !== ''">
+                      <b-button
+                        variant="outline-info"
+                        @click="editModalFindingName(data.index)">Edit category</b-button>
                       {{ data.item.category_name }}
+                      <span
+                        v-if="data.item.category_extra_info !== ''"
+                        v-b-tooltip.hover
+                        :title="data.item.category_extra_info">*</span>
                     </div>
                     <div v-else>
                       <b-button
                         variant="info"
                         @click="editModalFindingName(data.index)">Assign a category</b-button>
                     </div>
-
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
                     <b-button
@@ -1244,7 +1244,7 @@
                           icon="comments"></font-awesome-icon>
                         <span v-if="data.item.cerqual_option===''">Complete</span>
                         <span v-if="data.item.cerqual_option!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                       </b-button>
                     <b>{{ data.item.cerqual_option }}</b>
                   </template>
@@ -1258,7 +1258,7 @@
                       :to="{name: 'editList', params: {id: data.item.id}}">
                         <span v-if="data.item.cerqual_explanation===''">Complete</span>
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                     </b-button>
                     <b>{{ data.item.cerqual_explanation }}</b>
                   </template>
@@ -1300,8 +1300,8 @@
                     <b-tr>
                       <b-th>#</b-th>
                       <b-th>Summarized review finding</b-th>
-                      <b-th>CERQual Assessment of confidence</b-th>
-                      <b-th>Explanation of CERQual Assessment</b-th>
+                      <b-th>GRADE-CERQual Assessment of confidence</b-th>
+                      <b-th>Explanation of GRADE-CERQual Assessment</b-th>
                       <b-th>References</b-th>
                     </b-tr>
                   </b-thead>
@@ -1392,7 +1392,7 @@
                   Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
                 </p>
                 <p>
-                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
+                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
                 </p>
               </b-modal>
               <b-modal
@@ -1442,7 +1442,7 @@
                       v-if="showBanner"
                       show
                       variant="danger">
-                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
                     </b-alert>
                     <b-table
                       responsive
@@ -1458,18 +1458,6 @@
                         </b-form-checkbox>
                       </template>
                     </b-table>
-                    <!--
-                    <b-form-group>
-                      <b-form-checkbox
-                        v-for="ref in refs"
-                        v-model="selected_references"
-                        :key="ref.id"
-                        :value="ref.id"
-                        name="references">
-                        {{ ref.content }}
-                      </b-form-checkbox>
-                    </b-form-group>
-                    -->
                   </div>
                 </template>
                 <template v-else>
@@ -1524,6 +1512,12 @@
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Describe this category for the user viewing this table">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                  </b-form-group>
                 </template>
                 <template
                   class="mt-3"
@@ -1532,6 +1526,12 @@
                     label="Edit category name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Describe this category for the user viewing this table">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
                   <b-button
                     variant="outline-primary"
@@ -1564,7 +1564,7 @@
           </b-row>
         </b-tab>
         <b-tab>
-          <h3>Introduction to CERQual</h3>
+          <h3>Introduction to GRADE-CERQual</h3>
           <p><a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3</a></p>
           <p>[Lewin S, Booth A, Glenton C, Munthe-Kaas H, Rashidian A, Wainwright M, Bohren MA, Tunçalp Ö, Colvin CJ, Garside R, Carlsen B, Langlois EV, Noyes J. Applying GRADE-CERQual to qualitative evidence synthesis findings: introduction to the series. Implement Sci. 2018 Jan 25;13(Suppl 1):2]</p>
           <h3>Assessing Methodological Limitations</h3>
@@ -1579,9 +1579,9 @@
           <h3>Assessing Relevance</h3>
           <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0693-6" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0693-6</a>
           <p>[Noyes J, Booth A, Lewin S, Carlsen B, Glenton C, Colvin CJ, Garside R, Bohren MA, Rashidian A, Wainwright M, Tunςalp Ö, Chandler J, Flottorp S, Pantoja T, Tucker JD, Munthe-Kaas H. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 6: how to assess relevance of the data. Implement Sci. 2018 Jan 25;13(Suppl 1):4.]</p>
-          <h3>Making an Overall CERQual Assessment of Confidence and Preparing SoQf Table</h3>
+          <h3>Making an Overall GRADE-CERQual Assessment of Confidence and Preparing SoQf Table</h3>
           <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2</a>
-          <p>[Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 2: how to make an overall CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018 Jan 25;13(Suppl 1):10]</p>
+          <p>[Lewin S, Bohren M, Rashidian A, Munthe-Kaas H, Glenton C, Colvin CJ, Garside R, Noyes J, Booth A, Tunçalp Ö, Wainwright M, Flottorp S, Tucker JD, Carlsen B. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 2: how to make an overall GRADE-CERQual assessment of confidence and create a Summary of Qualitative Findings table. Implement Sci. 2018 Jan 25;13(Suppl 1):10]</p>
           <h4>Additional resources:</h4>
           <p>Booth A, Lewin S, Glenton C, Munthe-Kaas H, Toews I, Noyes J, Rashidian A, Berg RC, Nyakang'o B, Meerpohl JJ; GRADE-CERQual Coordinating Team. Applying GRADE-CERQual to qualitative evidence synthesis findings-paper 7: understanding the potential impacts of dissemination bias. Implement Sci. 2018 Jan 25;13(Suppl 1):12. <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0694-5" target="_blank">FULL TEXT</a><p>
           <p>Simon Lewin, Claire Glenton, Heather Munthe-Kaas, Benedicte Carlsen, Christopher J. Colvin, Metin Gülmezoglu, Jane Noyes, Andrew Booth, Ruth Garside, and Arash Rashidian. Using qualitative evidence in decision making for health and social interventions: an approach to assess confidence in findings from qualitative evidence syntheses (GRADE-CERQual). PLoS Med 12, no. 10 (2015) 001895. <a href="http://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1001895" target="_blank">FULL TEXT</a></p>
@@ -1656,7 +1656,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
@@ -1677,13 +1677,13 @@
         ref="modal-change-status"
         scrollable
         size="xl"
-        title="Publish to the iSoQf Database"
+        title="Publish to the iSoQ Database"
         ok-title="Save"
         ok-variant="outline-success"
         @ok="savePublicStatus"
         cancel-variant="outline-secondary">
         <p class="font-weight-light">
-          By publishing your iSoQf to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+          By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
         </p>
         <b-form-group>
           <b-form-radio-group
@@ -1765,10 +1765,12 @@ export default {
         edit: false,
         remove: false,
         name: '',
+        extra_info: '',
         index: null
       },
       list_category: {
-        name: ''
+        name: '',
+        extra_info: ''
       },
       fields: {
         with_categories: [
@@ -1786,11 +1788,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1808,11 +1810,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1913,10 +1915,10 @@ export default {
       },
       tabOpened: 1,
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -2037,7 +2039,7 @@ export default {
             }
           } else {
             // 'send a message'
-            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,).'
+            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,) and should have at least one column.'
           }
         }
       })
@@ -2177,7 +2179,7 @@ export default {
       }
       this.$root.$emit('bv::toggle::collapse', 'info-project')
     },
-    printiSoQf: function () {
+    printiSoQ: function () {
       /*
       if (!document.getElementsByClassName('b-table-row-selected').length) {
         this.dismissAlertPrint = true
@@ -2419,11 +2421,13 @@ export default {
               if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
                 list.category = null
               } else {
-                list.category_name = null
+                list.category_name = ''
+                list.category_extra_info = ''
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
                     if (list.category === category.value) {
                       list.category_name = category.text
+                      list.category_extra_info = category.extra_info
                     }
                   }
                 }
@@ -2626,7 +2630,7 @@ export default {
             if (this.references.length) {
               this.$nextTick(() => {
                 if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQf', '#Guidance-on-Applying-CERQual']
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-Applying-CERQual']
                   this.tabOpened = tabs.indexOf(this.$route.hash)
                 } else {
                   this.tabOpened = 2
@@ -3207,25 +3211,28 @@ export default {
       reader.readAsText(file)
     },
     saveImportedData: function (endpoint = '') {
-      let params = {}
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.fields = this.importDataTable.fields
-      params.items = this.importDataTable.items
-      if (endpoint === 'isoqf_characteristics') {
-        this.charsOfStudiesTableSettings.isBusy = true
-        if (this.charsOfStudies.items.length) {
-          this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
-        }
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        fields: this.importDataTable.fields,
+        items: this.importDataTable.items
       }
-      if (endpoint === 'isoqf_assessments') {
-        this.methodologicalTableRefsTableSettings.isBusy = true
-        if (this.methodologicalTableRefs.items.length) {
-          this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
+      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
+        if (endpoint === 'isoqf_characteristics') {
+          this.charsOfStudiesTableSettings.isBusy = true
+          if (this.charsOfStudies.items.length) {
+            this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
+        }
+        if (endpoint === 'isoqf_assessments') {
+          this.methodologicalTableRefsTableSettings.isBusy = true
+          if (this.methodologicalTableRefs.items.length) {
+            this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
         }
       }
       this.importDataTable = {
@@ -3248,7 +3255,9 @@ export default {
         ]
       }
       this.pre_ImportDataTable = ''
-      this.$refs[modal].hide()
+      if (modal !== '') {
+        this.$refs[modal].hide()
+      }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
@@ -3727,7 +3736,7 @@ export default {
     },
     saveListCategoryName: function () {
       const options = [
-        { value: 0, text: this.list_category.name }
+        { value: 0, text: this.list_category.name, extra_info: this.list_category.extra_info }
       ]
       const params = {
         options: options,
@@ -3753,10 +3762,10 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.list_categories.options))
       if (_options.length) {
         const newValue = (_options[_options.length - 1].value !== null) ? parseInt(_options[_options.length - 1].value) + 1 : 0
-        _options.push({ value: newValue, text: this.modal_edit_list_categories.name })
+        _options.push({ value: newValue, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info })
       } else {
         _options = [
-          { value: 0, text: this.modal_edit_list_categories.name }
+          { value: 0, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info }
         ]
       }
       const params = {
@@ -3771,6 +3780,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3782,6 +3792,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3792,6 +3803,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.edit = true
       this.modal_edit_list_categories.index = index
     },
@@ -3800,6 +3812,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       _options[index].text = this.modal_edit_list_categories.name
+      _options[index].extra_info = this.modal_edit_list_categories.extra_info
 
       if (objID) {
         const params = {
@@ -3813,6 +3826,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3824,6 +3838,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.remove = true
       this.modal_edit_list_categories.index = index
     },
@@ -3845,6 +3860,7 @@ export default {
             this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3857,6 +3873,7 @@ export default {
       this.modal_edit_list_categories.edit = false
       this.modal_edit_list_categories.remove = false
       this.modal_edit_list_categories.name = ''
+      this.modal_edit_list_categories.extra_info = ''
       this.modal_edit_list_categories.index = null
     },
     modalChangePublicStatus: function () {

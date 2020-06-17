@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>Browse public iSoQf tables</h2>
+        <h2>Browse public iSoQ tables</h2>
       </b-container>
     </b-container>
     <div class="container">

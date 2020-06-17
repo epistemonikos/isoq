@@ -17,7 +17,8 @@
                 label="Search">
                 <b-input-group>
                   <b-form-input
-                    v-model="tableSettings.filter"></b-form-input>
+                    v-model="tableSettings.filter"
+                    placeholder="Type to search the text in the table below"></b-form-input>
                   <b-input-group-append>
                     <b-button
                       :disabled="!tableSettings.filter"
