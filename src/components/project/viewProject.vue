@@ -1369,6 +1369,7 @@
                 <b-form-group
                   label="Summarized review finding"
                   label-for="finding-name">
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
                     id="finding-name"
                     v-model="editFindingName.name"
@@ -1423,6 +1424,7 @@
                 <b-form-group
                   label="Summarized review finding"
                   label-for="summarized-review">
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
                     id="summarized-review"
                     v-model="summarized_review"
