@@ -2224,6 +2224,10 @@ export default {
     .reference-txt {
       font-size: 12px;
     }
+  div >>>
+    #span-txt {
+      font-size: 2rem;
+    }
   @media print {
     @page {
       size: A4 landscape;
