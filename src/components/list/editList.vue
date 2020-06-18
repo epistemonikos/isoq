@@ -557,7 +557,7 @@
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <b-tabs>
+                          <b-tabs content-class="mt-3">
                             <b-tab title="Question and Criteria" active>
                               <h4>Review Question</h4>
                               <p>{{ project.review_question }}</p>
@@ -584,30 +584,38 @@
                           </b-tabs>
                         </div>
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
-                          <h5>Methodological limitations</h5>
-                          <p>
-                            <b>{{select_options[evidence_profile[0].methodological_limitations.option].text}}</b>
-                            <br>
-                            Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
-                          </p>
-                          <h5>Coherence</h5>
-                          <p>
-                            <b>{{select_options[evidence_profile[0].coherence.option].text}}</b>
-                            <br>
-                            Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
-                          </p>
-                          <h5>Adequacy</h5>
-                          <p>
-                            <b>{{select_options[evidence_profile[0].adequacy.option].text}}</b>
-                            <br>
-                            Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
-                          </p>
-                          <h5>Relevance</h5>
-                          <p>
-                            <b>{{select_options[evidence_profile[0].relevance.option].text}}</b>
-                            <br>
-                            Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
-                          </p>
+                          <b-tabs content-class="mt-3">
+                            <b-tab title="Methodological limitations">
+                              <h5>Methodological limitations</h5>
+                              <p>
+                                <b>{{select_options[evidence_profile[0].methodological_limitations.option].text}}</b>
+                                <br>
+                                Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                              </p>
+                              <h5>Coherence</h5>
+                              <p>
+                                <b>{{select_options[evidence_profile[0].coherence.option].text}}</b>
+                                <br>
+                                Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                              </p>
+                              <h5>Adequacy</h5>
+                              <p>
+                                <b>{{select_options[evidence_profile[0].adequacy.option].text}}</b>
+                                <br>
+                                Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                              </p>
+                              <h5>Relevance</h5>
+                              <p>
+                                <b>{{select_options[evidence_profile[0].relevance.option].text}}</b>
+                                <br>
+                                Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                              </p>
+                            </b-tab>
+                            <b-tab title="Review finding">
+                              <h4>Review Finding</h4>
+                              <p>{{ list.name }}</p>
+                            </b-tab>
+                          </b-tabs>
                         </div>
                       </b-col>
                     </b-row>
