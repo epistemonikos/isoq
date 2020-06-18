@@ -111,7 +111,7 @@
                           <span
                             id="span-txt"
                             class="bg-secondary text-white font-weight-bold py-1 px-2"
-                            @click="btnShowHideColumn(showPanel, buffer_modal_stage_two.type)">&#60;</span>
+                            @click="btnShowHideColumn(showPanel, buffer_modal_stage_two.type)">&lsaquo;</span>
                         </div>
 
                         <div id="left-methodological-limitations" v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
@@ -2149,13 +2149,13 @@ export default {
       if (val) {
         elLeft.className = 'col-md-1 col-12'
         elRight.className = 'col-md-11 col-12'
-        elSpan.innerHTML = '&#62;'
+        elSpan.innerHTML = '&rsaquo;'
         elPanel.className = 'invisible'
         this.showPanel = false
       } else {
         elLeft.className = 'col-md-4 col-12'
         elRight.className = 'col-md-8 col-12'
-        elSpan.innerHTML = '&#60;'
+        elSpan.innerHTML = '&lsaquo;'
         elPanel.className = 'visible'
         this.showPanel = true
       }
