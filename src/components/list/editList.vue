@@ -103,9 +103,18 @@
                   <b-container>
                     <b-row>
                       <b-col
-                       cols="12"
-                       md="4">
-                        <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
+                        id="left-modal-content"
+                        cols="12"
+                        md="4">
+                        <div
+                          class="float-right">
+                          <span
+                            id="span-txt"
+                            class="bg-secondary text-white font-weight-bold py-1 px-2"
+                            @click="btnShowHideColumn(showPanel, buffer_modal_stage_two.type)">&#60;</span>
+                        </div>
+
+                        <div id="left-methodological-limitations" v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <p class="font-weight-bold">
                             Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
                           </p>
@@ -165,7 +174,8 @@
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
                         </div>
-                        <div v-if="buffer_modal_stage_two.type === 'coherence'">
+
+                        <div id="left-coherence" v-if="buffer_modal_stage_two.type === 'coherence'">
                           <!-- coherence -->
                           <p class="font-weight-bold">
                             Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
@@ -229,7 +239,8 @@
                           </b-form-group>
                           <!-- adequacy -->
                         </div>
-                        <div v-if="buffer_modal_stage_two.type === 'adequacy'">
+
+                        <div id="left-adequacy" v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <p class="font-weight-light">
                             <b>Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?</b>
                             (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
@@ -287,7 +298,8 @@
                           </b-form-group>
                           <!-- relevance -->
                         </div>
-                        <div v-if="buffer_modal_stage_two.type === 'relevance'">
+
+                        <div id="left-relevance" v-if="buffer_modal_stage_two.type === 'relevance'">
                           <p class="font-weight-bold">
                             Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
                           </p>
@@ -347,7 +359,8 @@
                           </b-form-group>
                           <!-- CERQual assessment -->
                         </div>
-                        <div v-if="buffer_modal_stage_two.type === 'cerqual'">
+
+                        <div id="left-cerqual" v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <p class="font-weight-light">
                             To what extent is the review finding a reasonable representation of the phenomenon of interest?
                           </p>
@@ -408,6 +421,7 @@
                         </div>
                       </b-col>
                       <b-col
+                        id="right-modal-content"
                         cols="12"
                         md="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
@@ -583,6 +597,7 @@
                             </b-tab>
                           </b-tabs>
                         </div>
+
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <b-tabs content-class="mt-3">
                             <b-tab title="Methodological limitations">
@@ -1454,7 +1469,8 @@ export default {
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
-      }
+      },
+      showPanel: true
     }
   },
   mounted () {
@@ -1709,8 +1725,8 @@ export default {
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
       if (type === 'cerqual') { this.populateCerqualExplanation() }
+      this.showPanel = true
       this.$refs['modal-stage-two'].show()
-
     },
     getCharsOfStudies: function () {
       let params = {
@@ -2124,6 +2140,25 @@ export default {
     },
     populateCerqualExplanation () {
       this.buffer_modal_stage_two.cerqual.explanation = this.select_options[this.buffer_modal_stage_two.methodological_limitations.option].text + ' regarding methodological limitations, ' + this.select_options[this.buffer_modal_stage_two.coherence.option].text + ' regarding coherence, ' + this.select_options[this.buffer_modal_stage_two.adequacy.option].text + ' regarding adequacy, and ' + this.select_options[this.buffer_modal_stage_two.relevance.option].text + ' regarding relevance'
+    },
+    btnShowHideColumn: function (val, panel) {
+      const elLeft = document.getElementById('left-modal-content')
+      const elRight = document.getElementById('right-modal-content')
+      const elSpan = document.getElementById('span-txt')
+      const elPanel = document.getElementById('left-' + panel)
+      if (val) {
+        elLeft.className = 'col-md-1 col-12'
+        elRight.className = 'col-md-11 col-12'
+        elSpan.innerHTML = '&#62;'
+        elPanel.className = 'invisible'
+        this.showPanel = false
+      } else {
+        elLeft.className = 'col-md-4 col-12'
+        elRight.className = 'col-md-8 col-12'
+        elSpan.innerHTML = '&#60;'
+        elPanel.className = 'visible'
+        this.showPanel = true
+      }
     }
   }
 }
