@@ -1179,8 +1179,8 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="tableFilter('completed', 3)">Completed</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('unfinished', 3)">Not completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('with_explanation', 3)">Completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('without_explanation', 3)">Not completed</b-dropdown-item>
                     </b-dropdown>
                     <span v-if="ui.project.showFilterThree" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
@@ -1847,7 +1847,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status']
+        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
       },
       summarized_review: '',
       select_options: [
@@ -2423,12 +2423,15 @@ export default {
             for (let list of this.lists) {
               if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
                 list.status = 'unfinished'
+                list.explanation = 'without_explanation'
               } else {
                 list.status = 'completed'
-                for (let key in list.evidence_profile) {
-                  if (list.evidence_profile[key].option === null) {
-                    list.status = 'unfinished'
-                  }
+                list.explanation = 'with_explanation'
+                if (list.evidence_profile.cerqual.option === null) {
+                  list.status = 'unfinished'
+                }
+                if (list.evidence_profile.cerqual.explanation === '') {
+                  list.explanation = 'without_explanation'
                 }
               }
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
