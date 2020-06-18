@@ -117,16 +117,16 @@
                             v-model="buffer_modal_stage_two.methodological_limitations.option"
                             name="methodological-limitations"
                             stacked>
-                            <b-form-radio value="0">
+                            <b-form-radio value="0" @change="propExplanation('No/Very minor concerns regarding methodological limitations because...', 'methodological_limitations')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding methodological limitations because...', 'methodological_limitations')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding methodological limitations because...', 'methodological_limitations')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding methodological limitations because...', 'methodological_limitations')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -141,8 +141,10 @@
                           <b-form-group
                             class="mt-4 font-weight-light"
                             label="Explain any concerns you have in your own words."
-                            label-for="input-ml-explanation"
-                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
+                            label-for="input-ml-explanation">
+                            <template slot="description">
+                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example
+                            </template>
                             <b-form-textarea
                               id="input-ml-explanation"
                               v-model="buffer_modal_stage_two.methodological_limitations.explanation"
@@ -178,16 +180,16 @@
                             v-model="buffer_modal_stage_two.coherence.option"
                             name="coherence"
                             stacked>
-                            <b-form-radio value="0">
+                            <b-form-radio value="0" @change="propExplanation('No/very minor concerns regarding coherence because...', 'coherence')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding coherence because...', 'coherence')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding coherence because...', 'coherence')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding coherence because...', 'coherence')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -202,8 +204,10 @@
                           <b-form-group
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
-                            label-for="input-coherence-explanation"
-                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
+                            label-for="input-coherence-explanation">
+                            <template slot="description">
+                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
+                            </template>
                             <b-form-textarea
                               id="input-coherence-explanation"
                               v-model="buffer_modal_stage_two.coherence.explanation"
@@ -234,16 +238,16 @@
                             v-model="buffer_modal_stage_two.adequacy.option"
                             name="adequacy"
                             stacked>
-                            <b-form-radio value="0">
+                            <b-form-radio value="0" @change="propExplanation('No or very minor concerns regarding adequacy because...', 'adequacy')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding adequacy because...', 'adequacy')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding adequacy because...', 'adequacy')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding adequacy because...', 'adequacy')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -258,8 +262,10 @@
                           <b-form-group
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
-                            label-for="input-adequacy-explanation"
-                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
+                            label-for="input-adequacy-explanation">
+                            <template slot="description">
+                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
+                            </template>
                             <b-form-textarea
                               id="input-adequacy-explanation"
                               v-model="buffer_modal_stage_two.adequacy.explanation"
@@ -292,16 +298,16 @@
                             v-model="buffer_modal_stage_two.relevance.option"
                             name="relevance"
                             stacked>
-                            <b-form-radio value="0">
+                            <b-form-radio value="0" @change="propExplanation('No or very minor concerns regarding relevance because...', 'relevance')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding relevance because...', 'relevance')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding relevance because...', 'relevance')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding relevance because...', 'relevance')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -328,8 +334,10 @@
                           <b-form-group
                             class="mt-2 font-weight-light"
                             label="Notes"
-                            label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
+                            label-for="input-ml-notes">
+                            <template slot="description">
+                              Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
+                            </template>
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
@@ -373,9 +381,11 @@
                           </a>
                           <b-form-group
                             class="mt-4 font-weight-light"
-                            label="Explain your assessment by making reference to any identified concerns for all 4 components of GRADE-CERQual (methodological limitations, coherence, adequacy, relevance)."
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
+                            <template slot="label">
+                              Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.
+                            </template>
                             <b-form-textarea
                               id="input-cerqual"
                               v-model="buffer_modal_stage_two.cerqual.explanation"
@@ -1690,7 +1700,9 @@ export default {
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
+      if (type === 'cerqual') { this.populateCerqualExplanation() }
       this.$refs['modal-stage-two'].show()
+
     },
     getCharsOfStudies: function () {
       let params = {
@@ -2098,6 +2110,12 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    propExplanation: function (txt, type) {
+      this.buffer_modal_stage_two[type].explanation = txt
+    },
+    populateCerqualExplanation () {
+      this.buffer_modal_stage_two.cerqual.explanation = this.select_options[this.buffer_modal_stage_two.methodological_limitations.option].text + ' regarding methodological limitations, ' + this.select_options[this.buffer_modal_stage_two.coherence.option].text + ' regarding coherence, ' + this.select_options[this.buffer_modal_stage_two.adequacy.option].text + ' regarding adequacy, and ' + this.select_options[this.buffer_modal_stage_two.relevance.option].text + ' regarding relevance'
     }
   }
 }
