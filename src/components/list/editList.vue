@@ -107,10 +107,10 @@
                         cols="12"
                         md="4">
                         <div
-                          class="float-right">
+                          class="float-right mb-5">
                           <span
                             id="span-txt"
-                            class="bg-secondary text-white font-weight-bold py-1 px-2"
+                            class="bg-secondary text-white font-weight-bold ml-5 py-1 px-2"
                             @click="btnShowHideColumn(showPanel, buffer_modal_stage_two.type)">&lsaquo;</span>
                         </div>
 
@@ -241,7 +241,7 @@
                         </div>
 
                         <div id="left-adequacy" v-if="buffer_modal_stage_two.type === 'adequacy'">
-                          <p class="font-weight-light">
+                          <p class="font-weight-bold">
                             <b>Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?</b>
                             (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
@@ -361,7 +361,7 @@
                         </div>
 
                         <div id="left-cerqual" v-if="buffer_modal_stage_two.type === 'cerqual'">
-                          <p class="font-weight-light">
+                          <p class="font-weight-bold">
                             To what extent is the review finding a reasonable representation of the phenomenon of interest?
                           </p>
                           <p>
