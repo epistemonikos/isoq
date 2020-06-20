@@ -438,15 +438,21 @@
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
-                              <h4>Review Finding</h4>
-                              <p>{{ list.name }}</p>
+                              <edit-review-finding
+                                @update-list-data="getList(true)"
+                                :list="list"
+                                :finding="findings">
+                              </edit-review-finding>
                             </b-tab>
                           </b-tabs>
                         </div>
 
                         <div v-if="buffer_modal_stage_two.type === 'coherence'">
-                          <h4>Review Finding</h4>
-                          <p>{{ list.name }}</p>
+                          <edit-review-finding
+                            @update-list-data="getList(true)"
+                            :list="list"
+                            :finding="findings">
+                          </edit-review-finding>
                           <h4>Extracted Data</h4>
                           <b-table
                             class="table-small-font extracted-data"
@@ -564,8 +570,11 @@
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
-                              <h4>Review Finding</h4>
-                              <p>{{ list.name }}</p>
+                              <edit-review-finding
+                                @update-list-data="getList(true)"
+                                :list="list"
+                                :finding="findings">
+                              </edit-review-finding>
                             </b-tab>
                           </b-tabs>
                         </div>
@@ -592,8 +601,11 @@
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
-                              <h4>Review Finding</h4>
-                              <p>{{ list.name }}</p>
+                              <edit-review-finding
+                                @update-list-data="getList(true)"
+                                :list="list"
+                                :finding="findings">
+                              </edit-review-finding>
                             </b-tab>
                           </b-tabs>
                         </div>
@@ -627,8 +639,11 @@
                               </p>
                             </b-tab>
                             <b-tab title="Review finding">
-                              <h4>Review Finding</h4>
-                              <p>{{ list.name }}</p>
+                              <edit-review-finding
+                                @update-list-data="getList(true)"
+                                :list="list"
+                                :finding="findings">
+                              </edit-review-finding>
                             </b-tab>
                           </b-tabs>
                         </div>
@@ -1271,11 +1286,13 @@ import axios from 'axios'
 import bCardFilters from '../tableActions/Filters'
 import bCardActionTable from '../tableActions/ActionTable'
 import draggable from 'vuedraggable'
+import editReviewFinding from '../editReviewFinding'
 
 export default {
   components: {
     'bc-filters': bCardFilters,
     'bc-action-table': bCardActionTable,
+    'edit-review-finding': editReviewFinding,
     draggable
   },
   data () {
@@ -1389,11 +1406,11 @@ export default {
         organization: ''
       },
       buffer_modal_stage_two: {
-        methodological_limitations: {option: null, explanation: '', notes: '', title: 'a'},
-        coherence: {option: null, explanation: '', notes: '', title: 'b'},
-        adequacy: {option: null, explanation: '', notes: '', title: 'c'},
-        relevance: {option: null, explanation: '', notes: '', title: 'd'},
-        cerqual: {option: null, explanation: '', notes: '', title: 'e'}
+        methodological_limitations: {option: null, explanation: '', notes: '', title: ''},
+        coherence: {option: null, explanation: '', notes: '', title: ''},
+        adequacy: {option: null, explanation: '', notes: '', title: ''},
+        relevance: {option: null, explanation: '', notes: '', title: ''},
+        cerqual: {option: null, explanation: '', notes: '', title: ''}
       },
       buffer_modal_stage_three: {
         fields: [],
@@ -1511,7 +1528,6 @@ export default {
       axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
           let _references = response.data
-          // this.references = response.data
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
@@ -1548,7 +1564,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getList: function () {
+    getList: function (fromModal = false) {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
           this.list = JSON.parse(JSON.stringify(response.data))
@@ -1560,7 +1576,7 @@ export default {
           }
           this.getProject(this.list.project_id)
           this.getAllReferences()
-          this.getStageOneData()
+          this.getStageOneData(fromModal)
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
@@ -1611,7 +1627,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getStageOneData: function () {
+    getStageOneData: function (fromModal = false) {
       let params = {
         organization: this.list.organization,
         list_id: this.list.id
@@ -1623,6 +1639,13 @@ export default {
             this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push(this.findings.evidence_profile)
+            }
+            if (fromModal) {
+              const title = this.buffer_modal_stage_two.title
+              const type = this.buffer_modal_stage_two.type
+              this.buffer_modal_stage_two = this.evidence_profile[0]
+              this.buffer_modal_stage_two.title = title
+              this.buffer_modal_stage_two.type = type
             }
           }
           this.getStatus()
@@ -1661,8 +1684,6 @@ export default {
     },
     saveListName: function () {
       let params = {
-        organization: this.list.organization,
-        // name: this.buffer_modal_stage_one.name,
         cerqual: this.buffer_modal_stage_two.cerqual,
         evidence_profile: {
           methodological_limitations: this.buffer_modal_stage_two.methodological_limitations,
@@ -1675,7 +1696,6 @@ export default {
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
           this.list.cerqual = response.data['$set'].cerqual
-          this.list.name = this.buffer_modal_stage_one.name
           this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
@@ -1685,11 +1705,9 @@ export default {
     saveStageOneAndTwo: function () {
       this.evidence_profile_table_settings.isBusy = true
       delete this.buffer_modal_stage_two.type
-      // this.buffer_modal_stage_two.name = this.buffer_modal_stage_one.name
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
-        // name: this.buffer_modal_stage_one.name,
         evidence_profile: this.buffer_modal_stage_two
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
@@ -1731,7 +1749,6 @@ export default {
     getCharsOfStudies: function () {
       let params = {
         organization: this.list.organization,
-        // list_id: this.$route.params.id
         project_id: this.list.project_id
       }
       axios.get('/api/isoqf_characteristics', {params})
@@ -1753,7 +1770,6 @@ export default {
               let fields = JSON.parse(JSON.stringify(data.fields))
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-              // this.characteristics_studies.fields.push({key: 'actions', label: 'Actions'})
               this.characteristics_studies.fieldsObj = []
               let _fields = data.fields
               for (let field of _fields) {
