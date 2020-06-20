@@ -690,15 +690,31 @@
                   </template>
                   <template v-slot:head(methodological-limit)="data">
                     <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
+                    <span
+                      v-if="ui.methodological_assessments.display_warning"
+                      class="text-danger"
+                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">!</span>
                   </template>
                   <template v-slot:head(coherence)="data">
                     <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
+                    <span
+                      v-if="ui.coherence.display_warning"
+                      class="text-danger"
+                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">!</span>
                   </template>
                   <template v-slot:head(adequacy)="data">
                     <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
+                    <span
+                      v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
+                      class="text-danger"
+                      v-b-tooltip.hover title="You must complete the Extracted data table and the Characteristics of studies table">!</span>
                   </template>
                   <template v-slot:head(relevance)="data">
                     <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
+                    <span
+                      v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
+                      class="text-danger"
+                      v-b-tooltip.hover title="You must complete the Characteristics of studies table, the Inclusion and Exclusion criteria and the Review question">!</span>
                   </template>
                   <template v-slot:head(cerqual)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
@@ -1306,6 +1322,27 @@ export default {
   },
   data () {
     return {
+      ui: {
+        methodological_assessments: {
+          display_warning: true
+        },
+        coherence: {
+          display_warning: true
+        },
+        adequacy: {
+          extracted_data: {
+            display_warning: true
+          },
+          chars_of_studies: {
+            display_warning: true
+          }
+        },
+        relevance: {
+          chars_of_studies: {
+            display_warning: true
+          }
+        }
+      },
       project: {},
       /** filters **/
       nroOfRows: 1,
@@ -1766,12 +1803,27 @@ export default {
             let data = response.data[0]
             let items = []
 
-            for (let characteristic of data.items) {
+            let haveContent = 0
+            for (let item of data.items) {
               for (let reference of this.list.references) {
-                if (reference === characteristic.ref_id) {
-                  items.push(characteristic)
+                if (reference === item.ref_id) {
+                  items.push(item)
+                  for (let i in item) {
+                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
+                      if (item[i] === '') {
+                        haveContent++
+                      }
+                    }
+                  }
                 }
               }
+            }
+
+            this.ui.adequacy.chars_of_studies.display_warning = true
+            this.ui.relevance.chars_of_studies.display_warning = true
+            if (!haveContent) {
+              this.ui.adequacy.chars_of_studies.display_warning = false
+              this.ui.relevance.chars_of_studies.display_warning = false
             }
             data.items = items
             this.characteristics_studies = data
@@ -1885,12 +1937,24 @@ export default {
             let data = response.data[0]
             let items = []
 
+            let haveContent = 0
             for (let item of data.items) {
               for (let reference of _references) {
                 if (reference === item.ref_id) {
                   items.push(item)
+                  for (let i in item) {
+                    if (item[i] !== 'author' && item[i] !== 'ref_id') {
+                      if (item[i] === '') {
+                        haveContent++
+                      }
+                    }
+                  }
                 }
               }
+            }
+            this.ui.methodological_assessments.display_warning = true
+            if (!haveContent) {
+              this.ui.methodological_assessments.display_warning = false
             }
 
             data.items = items
@@ -1998,14 +2062,29 @@ export default {
               return 0
             })
             this.extracted_data.original_items = extractedDataItems
+            let haveContent = 0
             for (let reference of _references) {
               let index = 0
               for (let item of extractedDataItems) {
                 if (item.ref_id === reference) {
                   _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
+                  for (let i in item) {
+                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
+                      if (item[i] === '') {
+                        haveContent++
+                      }
+                    }
+                  }
                 }
                 index++
               }
+            }
+
+            this.ui.coherence.display_warning = true
+            this.ui.adequacy.extracted_data.display_warning = true
+            if (!haveContent) {
+              this.ui.coherence.display_warning = false
+              this.ui.adequacy.extracted_data.display_warning = false
             }
             this.extracted_data.items = _items
           }
