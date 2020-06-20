@@ -975,6 +975,8 @@
                   </template>
                 </b-table>
 
+                <back-to-top></back-to-top>
+
                 <b-modal
                   id="modalReferences"
                   ref="modalReferences"
@@ -1013,7 +1015,7 @@
               </template>
 
             <div
-              class="mt-5"
+              class="mt-5 mb-5"
               v-if="show.selected.includes('cs')">
               <a name="characteristics-of-studies"></a>
               <h3 class="toDoc">
@@ -1042,7 +1044,7 @@
                   :fields="characteristics_studies.fieldsObj"
                   :items="characteristics_studies.items"
                   :filter="characteristics_studies_table_settings.filter"
-                  class="mb-5 toDoc">
+                  class="toDoc">
                   <template
                     v-if="characteristics_studies.tableTop.length"
                     v-slot:thead-top>
@@ -1111,6 +1113,8 @@
                     class="mb-5">
                   </b-table>
                 </b-modal>
+
+                <back-to-top></back-to-top>
               </template>
             </div>
             <!--</b-tab>-->
@@ -1178,6 +1182,7 @@
                     :items="buffer_meth_assessments_remove_item.items"></b-table>
                 </b-modal>
                 <!-- end of -->
+                <back-to-top></back-to-top>
               </template>
             </div>
 
@@ -1264,6 +1269,8 @@
                       max-rows="100"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
+
+                <back-to-top></back-to-top>
               </template>
               <!--
               <template v-else>
@@ -1287,12 +1294,14 @@ import bCardFilters from '../tableActions/Filters'
 import bCardActionTable from '../tableActions/ActionTable'
 import draggable from 'vuedraggable'
 import editReviewFinding from '../editReviewFinding'
+import backToTop from '../backToTop'
 
 export default {
   components: {
     'bc-filters': bCardFilters,
     'bc-action-table': bCardActionTable,
     'edit-review-finding': editReviewFinding,
+    'back-to-top': backToTop,
     draggable
   },
   data () {

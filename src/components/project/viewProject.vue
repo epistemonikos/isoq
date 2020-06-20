@@ -314,250 +314,269 @@
                   </b-button>
                 </b-col>
               </b-row>
-              <b-table
-                sort-by="authors"
-                responsive
-                id="chars-of-studies-table"
-                class="table-content-refs mt-3"
-                v-if="charsOfStudies.fieldsObj.length > 1"
-                :fields="charsOfStudies.fieldsObj"
-                :items="charsOfStudies.items"
-                :current-page="charsOfStudiesTableSettings.currentPage"
-                :per-page="charsOfStudiesTableSettings.perPage"
-                :busy="charsOfStudiesTableSettings.isBusy">
-                <template
-                  v-slot:cell(actions)="data">
-                  <b-button
-                    block
-                    variant="outline-success"
-                    @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-danger"
-                    @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                  </b-button>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-              <b-pagination
-                v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
-                align="center"
-                v-model="charsOfStudiesTableSettings.currentPage"
-                :total-rows="charsOfStudies.items.length"
-                :per-page="charsOfStudiesTableSettings.perPage"
-                aria-controls="chars-of-studies-table"></b-pagination>
-
-              <b-modal
-                size="xl"
-                id="open-char-of-studies-table-modal"
-                ref="open-char-of-studies-table-modal"
-                scrollable
-                title="Column Headers"
-                :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
-                @ok="saveCharacteristicsStudiesFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <p class="font-weight-light">
-                  Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                </p>
-                <ul class="font-weight-light text-danger">
-                  <li>Do not add columns for author or year (these will be added automatically)</li>
-                  <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                </ul>
-                <b-form-group
-                  label="Number of columnns">
-                  <b-form-input
-                    id="nro-columns"
-                    v-model="charsOfStudiesFieldsModal.nroColumns"
-                    type="number" min="1"></b-form-input>
-                </b-form-group>
-                <b-form-group
-                  v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
-                  :key="cnt"
-                  :label="`Column #${cnt}`">
-                  <b-input-group>
-                    <b-form-input
-                      :id="`column_${cnt}`"
-                      v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
-                      type="text"></b-form-input>
-                    <b-input-group-append
-                      v-if="charsOfStudies.id">
+              <b-row>
+                <b-col
+                  cols="12">
+                  <b-table
+                    sort-by="authors"
+                    responsive
+                    id="chars-of-studies-table"
+                    class="table-content-refs mt-3"
+                    v-if="charsOfStudies.fieldsObj.length > 1"
+                    :fields="charsOfStudies.fieldsObj"
+                    :items="charsOfStudies.items"
+                    :current-page="charsOfStudiesTableSettings.currentPage"
+                    :per-page="charsOfStudiesTableSettings.perPage"
+                    :busy="charsOfStudiesTableSettings.isBusy">
+                    <template
+                      v-slot:cell(actions)="data">
                       <b-button
+                        block
+                        variant="outline-success"
+                        @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
+                        <font-awesome-icon
+                          icon="edit"></font-awesome-icon>
+                      </b-button>
+                      <b-button
+                        block
                         variant="outline-danger"
-                        @click="deleteFieldFromCharsSudies(cnt - 1)">
+                        @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
                         <font-awesome-icon
                           icon="trash"></font-awesome-icon>
                       </b-button>
-                    </b-input-group-append>
-                  </b-input-group>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="open-char-of-studies-table-modal-edit"
-                ref="open-char-of-studies-table-modal-edit"
-                scrollable
-                title="Edit Column Headers"
-                :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
-                @ok="updateCharacteristicsStudiesFields"
-                ok-variant="outline-success"
-                ok-title="Save"
-                cancel-variant="outline-secondary">
-                <p class="font-weight-light">
-                  Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                </p>
-                <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    </template>
+                    <template v-slot:table-busy>
+                      <div class="text-center text-danger my-2">
+                        <b-spinner class="align-middle"></b-spinner>
+                        <strong>Loading...</strong>
+                      </div>
+                    </template>
+                  </b-table>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <b-pagination
+                    v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
+                    align="center"
+                    v-model="charsOfStudiesTableSettings.currentPage"
+                    :total-rows="charsOfStudies.items.length"
+                    :per-page="charsOfStudiesTableSettings.perPage"
+                    aria-controls="chars-of-studies-table">
+                  </b-pagination>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <back-to-top></back-to-top>
+                </b-col>
+
+                <b-modal
+                  size="xl"
+                  id="open-char-of-studies-table-modal"
+                  ref="open-char-of-studies-table-modal"
+                  scrollable
+                  title="Column Headers"
+                  :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
+                  @ok="saveCharacteristicsStudiesFields"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <ul class="font-weight-light text-danger">
+                    <li>Do not add columns for author or year (these will be added automatically)</li>
+                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                  </ul>
                   <b-form-group
-                    v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
-                    :key="index"
-                    :label="`Column #${index}`">
+                    label="Number of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="charsOfStudiesFieldsModal.nroColumns"
+                      type="number" min="1"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Column #${cnt}`">
                     <b-input-group>
                       <b-form-input
-                        :id="`column_${index}`"
-                        v-model="field.label"
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
                         type="text"></b-form-input>
                       <b-input-group-append
-                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          :id="`drag-button-chars-${index}`"
-                          variant="outline-secondary"
-                          v-b-tooltip
-                          title="Drag to sort">
-                          <font-awesome-icon
-                            icon="arrows-alt"></font-awesome-icon>
-                        </b-button>
+                        v-if="charsOfStudies.id">
                         <b-button
                           variant="outline-danger"
-                          @click="deleteFieldFromCharsSudiesEdit(index)">
+                          @click="deleteFieldFromCharsSudies(cnt - 1)">
                           <font-awesome-icon
                             icon="trash"></font-awesome-icon>
                         </b-button>
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
-                </draggable>
-                <b-button
-                  class="mb-2"
-                  @click="charsOfStudiesNewColumn"
-                  variant="outline-success">
-                  Add new column
-                </b-button>
-              </b-modal>
-              <b-modal
-                size="xl"
-                ref="edit-chars-of-studies-data"
-                title="Edit data"
-                scrollable
-                @ok="saveDataCharsOfStudies"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-form-group
-                  v-for="field of charsOfStudies.fields"
-                  :key="field.id"
-                  :label="field.label">
-                  <b-form-input
-                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-if="field.key === 'ref_id' || field.key === 'authors'"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
-                  </b-form-input>
-                  <b-form-textarea
-                    v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
-                    rows="2"
-                    max-rows="100"></b-form-textarea>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                :no-close-on-backdrop="true"
-                :no-close-on-esc="true"
-                ok-title="Save"
-                cancel-title="Close"
-                size="xl"
-                id="import-characteristics-table"
-                ref="import-characteristics-table"
-                title="Import table"
-                @ok="saveImportedData('isoqf_characteristics')"
-                @cancel="cleanVars('import-characteristics-table')"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-alert show variant="danger">
-                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
-                </b-alert>
-                <p
-                 class="font-weight-light">
-                  To upload a table, follow these steps:
-                </p>
-                <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
-                <p
-                  class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
-                </p>
-                <b-button
-                  variant="info"
-                  @click="generateTemplate">
-                  Download template
-                </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
-                <b-form-file
-                  id="input-template-chars-file"
-                  plain
-                  @change="loadTableImportData($event)"></b-form-file>
-                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
-                <p>If it looks right, accept the import by clicking on "Save" button.</p>
-                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
-                <b-alert
-                  variant="info"
-                  :show="importDataTable.error !== null">
-                  {{ importDataTable.error }}
-                </b-alert>
-                <b-button
-                  variant="outline-info"
-                  class="mb-2"
-                  v-if="importDataTable.items.length"
-                  @click="cleanVars()">Reject</b-button>
-                <b-table
-                  v-if="importDataTable.items.length"
-                  responsive
-                  :fields="importDataTable.fieldsObj"
-                  :items="importDataTable.items"></b-table>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="removeContentModalCharsOfStudies"
-                ref="removeContentModalCharsOfStudies"
-                title="Remove content"
-                ok-title="Confirm"
-                ok-variant="outline-danger"
-                cancel-variant="outline-success"
-                @cancel="cleanRemoveContentCharsOfStudies"
-                @ok="removeDataFromLists">
-                <p>Are you sure you want to delete all the content for this row?</p>
-                <p
-                  v-if="removeReferenceCharsOfStudies.findings.length === 0">
-                  <b>No findings will be affected</b>
-                </p>
-                <p
-                  v-if="removeReferenceCharsOfStudies.findings.length">
-                  <b>Findings that will be affected</b>
-                  <ul>
-                    <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
-                      {{ `finding # ${finding}`}}
-                    </li>
-                  </ul>
-                </p>
-              </b-modal>
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  id="open-char-of-studies-table-modal-edit"
+                  ref="open-char-of-studies-table-modal-edit"
+                  scrollable
+                  title="Edit Column Headers"
+                  :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
+                  @ok="updateCharacteristicsStudiesFields"
+                  ok-variant="outline-success"
+                  ok-title="Save"
+                  cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    <b-form-group
+                      v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
+                      :key="index"
+                      :label="`Column #${index}`">
+                      <b-input-group>
+                        <b-form-input
+                          :id="`column_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append
+                          v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
+                          <b-button
+                            :id="`drag-button-chars-${index}`"
+                            variant="outline-secondary"
+                            v-b-tooltip
+                            title="Drag to sort">
+                            <font-awesome-icon
+                              icon="arrows-alt"></font-awesome-icon>
+                          </b-button>
+                          <b-button
+                            variant="outline-danger"
+                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </draggable>
+                  <b-button
+                    class="mb-2"
+                    @click="charsOfStudiesNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  ref="edit-chars-of-studies-data"
+                  title="Edit data"
+                  scrollable
+                  @ok="saveDataCharsOfStudies"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <b-form-group
+                    v-for="field of charsOfStudies.fields"
+                    :key="field.id"
+                    :label="field.label">
+                    <b-form-input
+                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                      v-if="field.key === 'ref_id' || field.key === 'authors'"
+                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
+                    </b-form-input>
+                    <b-form-textarea
+                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
+                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
+                      rows="2"
+                      max-rows="100"></b-form-textarea>
+                  </b-form-group>
+                </b-modal>
+
+                <b-modal
+                  :no-close-on-backdrop="true"
+                  :no-close-on-esc="true"
+                  ok-title="Save"
+                  cancel-title="Close"
+                  size="xl"
+                  id="import-characteristics-table"
+                  ref="import-characteristics-table"
+                  title="Import table"
+                  @ok="saveImportedData('isoqf_characteristics')"
+                  @cancel="cleanVars('import-characteristics-table')"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <b-alert show variant="danger">
+                    <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
+                  </b-alert>
+                  <p
+                  class="font-weight-light">
+                    To upload a table, follow these steps:
+                  </p>
+                  <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
+                  <p
+                    class="font-weight-light text-danger">
+                    The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                  </p>
+                  <b-button
+                    variant="info"
+                    @click="generateTemplate">
+                    Download template
+                  </b-button>
+                  <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                  <b-form-file
+                    id="input-template-chars-file"
+                    plain
+                    @change="loadTableImportData($event)"></b-form-file>
+                  <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                  <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                  <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                  <b-alert
+                    variant="info"
+                    :show="importDataTable.error !== null">
+                    {{ importDataTable.error }}
+                  </b-alert>
+                  <b-button
+                    variant="outline-info"
+                    class="mb-2"
+                    v-if="importDataTable.items.length"
+                    @click="cleanVars()">Reject</b-button>
+                  <b-table
+                    v-if="importDataTable.items.length"
+                    responsive
+                    :fields="importDataTable.fieldsObj"
+                    :items="importDataTable.items"></b-table>
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  id="removeContentModalCharsOfStudies"
+                  ref="removeContentModalCharsOfStudies"
+                  title="Remove content"
+                  ok-title="Confirm"
+                  ok-variant="outline-danger"
+                  cancel-variant="outline-success"
+                  @cancel="cleanRemoveContentCharsOfStudies"
+                  @ok="removeDataFromLists">
+                  <p>Are you sure you want to delete all the content for this row?</p>
+                  <p
+                    v-if="removeReferenceCharsOfStudies.findings.length === 0">
+                    <b>No findings will be affected</b>
+                  </p>
+                  <p
+                    v-if="removeReferenceCharsOfStudies.findings.length">
+                    <b>Findings that will be affected</b>
+                    <ul>
+                      <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
+                        {{ `finding # ${finding}`}}
+                      </li>
+                    </ul>
+                  </p>
+                </b-modal>
+              </b-row>
             </b-col>
             <b-col
               cols="12"
@@ -611,48 +630,63 @@
                 </b-col>
               </b-row>
 
-              <b-table
-                sort-by="authors"
-                responsive
-                id="methodological-table"
-                v-if="methodologicalTableRefs.fieldsObj.length > 1"
-                class="table-content-refs mt-3"
-                :per-page="methodologicalTableRefsTableSettings.perPage"
-                :current-page="methodologicalTableRefsTableSettings.currentPage"
-                :fields="methodologicalTableRefs.fieldsObj"
-                :items="methodologicalTableRefs.items"
-                :busy="methodologicalTableRefsTableSettings.isBusy">
-                <template
-                  v-slot:cell(actions)="data">
-                  <b-button
-                    block
-                    variant="outline-success"
-                    @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-danger"
-                    @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                  </b-button>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-              <b-pagination
-                v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
-                align="center"
-                v-model="methodologicalTableRefsTableSettings.currentPage"
-                :total-rows="methodologicalTableRefs.items.length"
-                :per-page="methodologicalTableRefsTableSettings.perPage"
-                aria-controls="chars-of-studies-table"></b-pagination>
+              <b-row>
+                <b-col
+                  cols="12">
+                  <b-table
+                    sort-by="authors"
+                    responsive
+                    id="methodological-table"
+                    v-if="methodologicalTableRefs.fieldsObj.length > 1"
+                    class="table-content-refs mt-3"
+                    :per-page="methodologicalTableRefsTableSettings.perPage"
+                    :current-page="methodologicalTableRefsTableSettings.currentPage"
+                    :fields="methodologicalTableRefs.fieldsObj"
+                    :items="methodologicalTableRefs.items"
+                    :busy="methodologicalTableRefsTableSettings.isBusy">
+                    <template
+                      v-slot:cell(actions)="data">
+                      <b-button
+                        block
+                        variant="outline-success"
+                        @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
+                        <font-awesome-icon
+                          icon="edit"></font-awesome-icon>
+                      </b-button>
+                      <b-button
+                        block
+                        variant="outline-danger"
+                        @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
+                        <font-awesome-icon
+                          icon="trash"></font-awesome-icon>
+                      </b-button>
+                    </template>
+                    <template v-slot:table-busy>
+                      <div class="text-center text-danger my-2">
+                        <b-spinner class="align-middle"></b-spinner>
+                        <strong>Loading...</strong>
+                      </div>
+                    </template>
+                  </b-table>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <b-pagination
+                    v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
+                    align="center"
+                    v-model="methodologicalTableRefsTableSettings.currentPage"
+                    :total-rows="methodologicalTableRefs.items.length"
+                    :per-page="methodologicalTableRefsTableSettings.perPage"
+                    aria-controls="chars-of-studies-table">
+                  </b-pagination>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <back-to-top></back-to-top>
+                </b-col>
+              </b-row>
 
               <b-modal
                 size="xl"
@@ -696,6 +730,7 @@
                     </b-input-group>
                   </b-form-group>
               </b-modal>
+
               <b-modal
                 size="xl"
                 id="open-methodological-table-modal-edit"
@@ -748,6 +783,7 @@
                     Add new column
                   </b-button>
               </b-modal>
+
               <b-modal
                 size="xl"
                 ref="edit-methodological-data"
@@ -772,6 +808,7 @@
                     max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
+
               <b-modal
                 size="xl"
                 ref="removeReferenceModalMethodological"
@@ -796,6 +833,7 @@
                   </ul>
                 </p>
               </b-modal>
+
               <b-modal
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
@@ -862,7 +900,7 @@
                 block
                 variant="success"
                 class="mb-3"
-                @click="tabOpened=2">
+                @click="continueToIsoq">
                 Continue to iSoQ
               </b-button>
             </b-col>
@@ -1577,6 +1615,8 @@
                     @click="saveNewCategory">Save</b-button>
                 </template>
               </b-modal>
+
+              <back-to-top></back-to-top>
             </b-col>
           </b-row>
         </b-tab>
@@ -1721,11 +1761,13 @@ import draggable from 'vuedraggable'
 import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import _debounce from 'lodash.debounce'
+import backToTop from '../backToTop'
 
 export default {
   components: {
     draggable,
-    organizationForm
+    organizationForm,
+    'back-to-top': backToTop
   },
   data () {
     return {
@@ -4167,6 +4209,10 @@ export default {
       this.ui.project.showFilterTwo = false
       this.ui.project.showFilterThree = false
       this.table_settings.filter = ''
+    },
+    continueToIsoq: function () {
+      window.scrollTo({top: 0, behavior: 'smooth'})
+      this.tabOpened = 2
     }
   }
 }
