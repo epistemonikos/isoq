@@ -2129,7 +2129,7 @@ export default {
     extractedDataRemoveDataItem: function () {
       let items = JSON.parse(JSON.stringify(this.extracted_data.items))
       const item = items[this.buffer_extracted_data.remove_index_item]
-      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors }
+      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
       items[this.buffer_extracted_data.remove_index_item] = newItem
 
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
