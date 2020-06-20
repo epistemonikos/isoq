@@ -1343,7 +1343,11 @@ export default {
           }
         }
       },
-      project: {},
+      project: {
+        inclusion: '',
+        exclusion: '',
+        review_question: ''
+      },
       /** filters **/
       nroOfRows: 1,
       evidence_profile_table_settings: {
