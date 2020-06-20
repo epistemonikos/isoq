@@ -239,7 +239,9 @@
                         v-model="project.inclusion"></b-form-textarea>
                     </b-form-group>
                     <div class="float-right">
-                      <b-button variant="outline-success">Save</b-button>
+                      <b-button
+                        variant="outline-success"
+                        @click="saveInclusionCriteria()">Save</b-button>
                     </div>
                   </b-col>
                   <b-col
@@ -249,7 +251,7 @@
                     <b-form-group
                       label="Exclusion criteria"
                       label-for="exclusion-criteria"
-                      description="please enter the study exclusion criteria used in the review">
+                      description="Please enter the study exclusion criteria used in the review">
                       <b-form-textarea
                         id="exclusion-criteria"
                         rows="6"
@@ -257,7 +259,9 @@
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
                     <div class="float-right">
-                      <b-button variant="outline-success">Save</b-button>
+                      <b-button
+                        variant="outline-success"
+                        @click="saveExclusionCriteria()">Save</b-button>
                     </div>
                   </b-col>
                 </b-row>
