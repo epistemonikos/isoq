@@ -1104,13 +1104,17 @@
                     </p>
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                        <b-list-group-item v-for="(item, index) of sorted_lists" :key="index" class="flex-column align-items-start">
+                        <b-list-group-item
+                          v-for="(item, index) of sorted_lists"
+                          :key="index"
+                          class="flex-column align-items-start"
+                          style="cursor: move">
                           <div
                             v-if="item.category >= 0"
                             class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">{{ item.name }}</h5>
                           </div>
-                          <p class="font-weight-light">{{ getCategoryName(item.category) }}</p>
+                          <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
                         </b-list-group-item>
                       </draggable>
                     </b-list-group>
