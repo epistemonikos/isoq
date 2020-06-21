@@ -1504,7 +1504,20 @@ export default {
         items: []
       },
       soqf: {},
-      evidence_profile: [],
+      evidence_profile: [
+        {
+          isoqf_id: 0,
+          cerqual: { explanation: '', option: null },
+          name: '',
+          title: '',
+          notes: '',
+          coherence: { explanation: '', option: 0 },
+          methodological_limitations: { explanation: '', option: 0 },
+          references: [],
+          relevance: { explanation: '', option: 0 },
+          adequacy: { explanation: '', option: 0 }
+        }
+      ],
       status_evidence_profile: {
         value: 0,
         max: 100,
