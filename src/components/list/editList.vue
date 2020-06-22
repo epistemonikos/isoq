@@ -71,7 +71,7 @@
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="You must complete the Characteristics of studies table">
+                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -80,7 +80,7 @@
               <span
                 v-if="ui.methodological_assessments.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="You must complete the Methodological assessments table">
+                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -89,7 +89,7 @@
               <span
                 v-if="ui.adequacy.extracted_data.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="You must complete the Extracted data table">
+                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -452,6 +452,12 @@
                           <b-tabs content-class="mt-3">
                             <b-tab title="Methodological Assessments" active>
                               <h4>Methodological Assessments</h4>
+                              <p
+                                v-if="ui.methodological_assessments.display_warning"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                              </p>
                               <b-table
                                 class="table-small-font"
                                 responsive
@@ -478,6 +484,12 @@
                             :finding="findings">
                           </edit-review-finding>
                           <h4>Extracted Data</h4>
+                          <p
+                            v-if="ui.adequacy.extracted_data.display_warning"
+                            class="text-danger">
+                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                            Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
+                          </p>
                           <b-table
                             class="table-small-font extracted-data"
                             responsive
@@ -532,6 +544,12 @@
                           <b-tabs content-class="mt-3">
                             <b-tab title="Extracted Data" active>
                               <h4>Extracted Data</h4>
+                              <p
+                                v-if="ui.adequacy.extracted_data.display_warning"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
+                              </p>
                               <b-table
                                 class="table-small-font extracted-data"
                                 responsive
@@ -584,6 +602,12 @@
                             </b-tab>
                             <b-tab title="Characteristics of Studies">
                               <h4>Characteristics of Studies</h4>
+                              <p
+                                v-if="ui.adequacy.chars_of_studies.display_warning"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                              </p>
                               <b-table
                                 class="table-small-font"
                                 responsive
@@ -607,14 +631,38 @@
                           <b-tabs content-class="mt-3">
                             <b-tab title="Question and Criteria" active>
                               <h4>Review Question</h4>
+                              <p
+                                v-if="project.review_question === ''"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                The review question is missing. Add it in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Project-Property`">Project Properties</b-link>.
+                              </p>
                               <p>{{ project.review_question }}</p>
                               <h4>Inclusion criteria</h4>
+                              <p
+                                v-if="project.inclusion === ''"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                The inclusion criteria are missing. Add them in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                              </p>
                               <p>{{ project.inclusion }}</p>
                               <h4>Exclusion criteria</h4>
+                              <p
+                                v-if="project.exclusion === ''"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                The exclusion criteria are missing. Add them in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                              </p>
                               <p>{{ project.exclusion }}</p>
                             </b-tab>
                             <b-tab title="Characteristics of Studies">
                               <h4>Characteristics of Studies</h4>
+                              <p
+                                v-if="ui.adequacy.chars_of_studies.display_warning"
+                                class="text-danger">
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                              </p>
                               <b-table
                                 class="table-small-font"
                                 responsive
@@ -717,7 +765,7 @@
                     <span
                       v-if="ui.methodological_assessments.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">
+                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click Edit below to see what's missing.">
                       <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                     </span>
                   </template>
@@ -726,7 +774,7 @@
                     <span
                       v-if="ui.coherence.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">
+                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click Edit below to see what's missing.">
                       <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                     </span>
                   </template>
@@ -735,7 +783,7 @@
                     <span
                       v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Extracted data table and the Characteristics of studies table">
+                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click Edit below to see what's missing.">
                       <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                     </span>
                   </template>
@@ -744,7 +792,7 @@
                     <span
                       v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Characteristics of studies table, the Inclusion and Exclusion criteria and the Review question">
+                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click Edit below to see what's missing.">
                       <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                     </span>
                   </template>
@@ -1071,7 +1119,7 @@
                 <span
                   v-if="ui.adequacy.chars_of_studies.display_warning"
                   class="text-danger"
-                  v-b-tooltip.hover title="You must complete the Extracted data table">
+                  v-b-tooltip.hover title="The Characteristics of Studies table, or some data within it, are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
               </h3>
@@ -1183,7 +1231,7 @@
                 <span
                   v-if="ui.methodological_assessments.display_warning"
                   class="text-danger"
-                  v-b-tooltip.hover title="You must complete the Methodological assessments table">
+                  v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
               </h3>
@@ -1255,7 +1303,7 @@
                 <span
                   v-if="ui.adequacy.extracted_data.display_warning"
                   class="text-danger"
-                  v-b-tooltip.hover title="You must complete the Extracted data table">
+                  v-b-tooltip.hover title="Some or all of the extracted data for this finding are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
               </h3>
