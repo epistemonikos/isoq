@@ -66,9 +66,33 @@
           <b-nav class="mt-2">
             <b-nav-item disabled>Navigate this page:</b-nav-item>
             <b-nav-item href="#evidence-profile">Evidence Profile</b-nav-item>
-            <b-nav-item href="#characteristics-of-studies">Characteristics of Studies</b-nav-item>
-            <b-nav-item href="#methodological-assessments">Methodological Assessments</b-nav-item>
-            <b-nav-item href="#extracted-data">Extracted Data</b-nav-item>
+            <b-nav-item href="#characteristics-of-studies">
+              Characteristics of Studies
+              <span
+                v-if="ui.adequacy.chars_of_studies.display_warning"
+                class="text-danger"
+                v-b-tooltip.hover title="You must complete the Characteristics of studies table">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              </span>
+            </b-nav-item>
+            <b-nav-item href="#methodological-assessments">
+              Methodological Assessments
+              <span
+                v-if="ui.methodological_assessments.display_warning"
+                class="text-danger"
+                v-b-tooltip.hover title="You must complete the Methodological assessments table">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              </span>
+            </b-nav-item>
+            <b-nav-item href="#extracted-data">
+              Extracted Data
+              <span
+                v-if="ui.adequacy.extracted_data.display_warning"
+                class="text-danger"
+                v-b-tooltip.hover title="You must complete the Extracted data table">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              </span>
+            </b-nav-item>
           </b-nav>
         </b-col>
         <b-col
@@ -693,28 +717,36 @@
                     <span
                       v-if="ui.methodological_assessments.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">!</span>
+                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">
+                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                    </span>
                   </template>
                   <template v-slot:head(coherence)="data">
                     <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
                     <span
                       v-if="ui.coherence.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">!</span>
+                      v-b-tooltip.hover title="You must complete the Methodological Assessments table">
+                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                    </span>
                   </template>
                   <template v-slot:head(adequacy)="data">
                     <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
                     <span
                       v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Extracted data table and the Characteristics of studies table">!</span>
+                      v-b-tooltip.hover title="You must complete the Extracted data table and the Characteristics of studies table">
+                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                    </span>
                   </template>
                   <template v-slot:head(relevance)="data">
                     <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
                     <span
                       v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
                       class="text-danger"
-                      v-b-tooltip.hover title="You must complete the Characteristics of studies table, the Inclusion and Exclusion criteria and the Review question">!</span>
+                      v-b-tooltip.hover title="You must complete the Characteristics of studies table, the Inclusion and Exclusion criteria and the Review question">
+                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                    </span>
                   </template>
                   <template v-slot:head(cerqual)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
@@ -1036,6 +1068,12 @@
               <a name="characteristics-of-studies"></a>
               <h3 class="toDoc">
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
+                <span
+                  v-if="ui.adequacy.chars_of_studies.display_warning"
+                  class="text-danger"
+                  v-b-tooltip.hover title="You must complete the Extracted data table">
+                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                </span>
               </h3>
               <p class="d-print-none font-weight-light">
                 To add data or make changes to this table do so in the
@@ -1142,6 +1180,12 @@
               <a name="methodological-assessments"></a>
               <h3 class="toDoc">
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
+                <span
+                  v-if="ui.methodological_assessments.display_warning"
+                  class="text-danger"
+                  v-b-tooltip.hover title="You must complete the Methodological assessments table">
+                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                </span>
               </h3>
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
               <template v-if="meth_assessments.fields.length">
@@ -1208,6 +1252,12 @@
               <a name="extracted-data"></a>
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
+                <span
+                  v-if="ui.adequacy.extracted_data.display_warning"
+                  class="text-danger"
+                  v-b-tooltip.hover title="You must complete the Extracted data table">
+                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                </span>
               </h3>
               <p class="d-print-none font-weight-light">
                 It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
@@ -1832,6 +1882,9 @@ export default {
                       }
                     }
                   }
+                  if (data.fields.length > Object.keys(item).length) {
+                    haveContent++
+                  }
                 }
               }
             }
@@ -1965,6 +2018,9 @@ export default {
                         haveContent++
                       }
                     }
+                  }
+                  if (data.fields.length > Object.keys(item).length) {
+                    haveContent++
                   }
                 }
               }
