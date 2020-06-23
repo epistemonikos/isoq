@@ -65,7 +65,15 @@
           cols="12">
           <b-nav class="mt-2">
             <b-nav-item disabled>Navigate this page:</b-nav-item>
-            <b-nav-item href="#evidence-profile">Evidence Profile</b-nav-item>
+            <b-nav-item href="#evidence-profile">
+              Evidence Profile
+              <span
+                v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
+                class="text-danger"
+                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              </span>
+            </b-nav-item>
             <b-nav-item href="#characteristics-of-studies">
               Characteristics of Studies
               <span
@@ -745,7 +753,15 @@
 
               <template v-if="evidence_profile.length">
                 <a name="evidence-profile"></a>
-                <h3 class="mt-4">Evidence Profile</h3>
+                <h3 class="mt-4">
+                  Evidence Profile
+                  <span
+                    v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
+                    class="text-danger"
+                    v-b-tooltip.hover title="Data are missing.">
+                    <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                  </span>
+                </h3>
                 <b-table
                   class="d-print-none"
                   v-if="mode==='edit'"
