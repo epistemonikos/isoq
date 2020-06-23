@@ -1936,6 +1936,9 @@ export default {
                 }
               }
             }
+            if (data.fields.length < 3) {
+              haveContent++
+            }
 
             this.ui.adequacy.chars_of_studies.display_warning = true
             this.ui.relevance.chars_of_studies.display_warning = true
@@ -2072,6 +2075,9 @@ export default {
                   }
                 }
               }
+            }
+            if (data.fields.length < 3) {
+              haveContent++
             }
             this.ui.methodological_assessments.display_warning = true
             if (!haveContent) {
