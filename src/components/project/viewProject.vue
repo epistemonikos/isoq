@@ -242,8 +242,17 @@
                     </b-form-group>
                     <div class="float-right">
                       <b-button
+                        :disabled="ui.project.inclusion.loading"
                         variant="outline-success"
-                        @click="saveInclusionCriteria()">Save</b-button>
+                        @click="criteriaAction('inclusion')">
+                        <b-spinner
+                          v-if="ui.project.inclusion.loading"
+                          small
+                          label="Saving"
+                          variant="success">
+                        </b-spinner>
+                        {{ ui.project.inclusion.loading_txt }}
+                      </b-button>
                     </div>
                   </b-col>
                   <b-col
@@ -262,8 +271,17 @@
                     </b-form-group>
                     <div class="float-right">
                       <b-button
+                        :disabled="ui.project.exclusion.loading"
                         variant="outline-success"
-                        @click="saveExclusionCriteria()">Save</b-button>
+                        @click="criteriaAction('exclusion')">
+                        <b-spinner
+                          v-if="ui.project.exclusion.loading"
+                          small
+                          label="Saving"
+                          variant="success">
+                        </b-spinner>
+                        {{ ui.project.exclusion.loading_txt }}
+                      </b-button>
                     </div>
                   </b-col>
                 </b-row>
@@ -1802,7 +1820,9 @@ export default {
               show: false,
               dismissSecs: 5,
               dismissCountDown: 0
-            }
+            },
+            loading: false,
+            loading_txt: 'Save'
           },
           exclusion: {
             success: {
@@ -1814,7 +1834,9 @@ export default {
               show: false,
               dismissSecs: 5,
               dismissCountDown: 0
-            }
+            },
+            loading: false,
+            loading_txt: 'Save'
           },
           displaySearch: false,
           showFilterOne: false,
@@ -4147,11 +4169,15 @@ export default {
     criteriaAction: function (type, action = '') {
       let params = {}
       if (type === 'inclusion') {
+        this.ui.project.inclusion.loading = true
+        this.ui.project.inclusion.loading_txt = 'Saving'
         params.inclusion = this.project.inclusion || ''
         if (action === 'clean') {
           params.inclusion = ''
         }
       } else {
+        this.ui.project.exclusion.loading = true
+        this.ui.project.exclusion.loading_txt = 'Saving'
         params.exclusion = this.project.exclusion || ''
         if (action === 'clean') {
           params.exclusion = ''
@@ -4160,11 +4186,15 @@ export default {
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
         .then((response) => {
           if (type === 'inclusion') {
+            this.ui.project.inclusion.loading = false
+            this.ui.project.inclusion.loading_txt = 'Save'
             this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
             this.ui.project.type = 'inclusion'
             this.getProject()
           }
           if (type === 'exclusion') {
+            this.ui.project.exclusion.loading = false
+            this.ui.project.exclusion.loading_txt = 'Save'
             this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
             this.ui.project.type = 'exclusion'
             this.getProject()
