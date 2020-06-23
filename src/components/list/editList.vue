@@ -71,7 +71,7 @@
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
+                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -80,7 +80,7 @@
               <span
                 v-if="ui.methodological_assessments.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
+                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -89,7 +89,7 @@
               <span
                 v-if="ui.adequacy.extracted_data.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data is missing. Click link to see what's missing.">
+                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
