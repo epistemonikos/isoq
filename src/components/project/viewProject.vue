@@ -117,6 +117,7 @@
                       Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
                     </p>
                   </b-tab>
+                  <!--
                   <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
@@ -172,6 +173,7 @@
                       </b-col>
                     </b-row>
                   </b-tab>
+                  -->
                 </b-tabs>
               </b-card>
               <b-row
@@ -309,7 +311,7 @@
                 </b-col>
                 <b-col
                   sm="3"
-                  v-if="charsOfStudies.items.length > 1">
+                  v-if="charsOfStudies.fields.length > 2">
                   <b-button
                     variant="outline-secondary"
                     block
@@ -333,7 +335,8 @@
                     :per-page="charsOfStudiesTableSettings.perPage"
                     :busy="charsOfStudiesTableSettings.isBusy">
                     <template
-                      v-slot:cell(actions)="data">
+                      v-slot:cell(actions)="data"
+                      v-if="charsOfStudies.fields.length > 2">
                       <b-button
                         block
                         variant="outline-success"
@@ -446,9 +449,9 @@
                           :id="`column_${index}`"
                           v-model="field.label"
                           type="text"></b-form-input>
-                        <b-input-group-append
-                          v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
+                        <b-input-group-append>
                           <b-button
+                            v-if="charsOfStudiesFieldsModalEdit.fields.length > 1"
                             :id="`drag-button-chars-${index}`"
                             variant="outline-secondary"
                             v-b-tooltip
@@ -649,7 +652,8 @@
                     :items="methodologicalTableRefs.items"
                     :busy="methodologicalTableRefsTableSettings.isBusy">
                     <template
-                      v-slot:cell(actions)="data">
+                      v-slot:cell(actions)="data"
+                      v-if="methodologicalTableRefs.fields.length > 2">
                       <b-button
                         block
                         variant="outline-success"
@@ -760,9 +764,9 @@
                           :id="`column_${index}`"
                           v-model="field.label"
                           type="text"></b-form-input>
-                        <b-input-group-append
-                          v-if="methodologicalFieldsModalEdit.fields.length > 1">
+                        <b-input-group-append>
                           <b-button
+                            v-if="methodologicalFieldsModalEdit.fields.length > 1"
                             :id="`drag-button-meth-${index}`"
                             variant="outline-secondary"
                             v-b-tooltip
@@ -3061,14 +3065,16 @@ export default {
       let fields = []
       let column = '0'
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
+      if (_fields.length) {
+        for (let field of _fields) {
+          if (!excluded.includes(field.key)) {
+            fields.push(field)
+          }
         }
+        this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
+        column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
       }
 
-      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
-      column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
       this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
     },
     saveCharacteristicsStudiesFields: function () {
