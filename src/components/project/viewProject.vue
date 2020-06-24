@@ -2550,14 +2550,14 @@ export default {
             }
 
             if (this.list_categories.options.length) {
-              let _arr = []
+              let categories = []
               for (let category of this.list_categories.options) {
-                _arr.push({'name': category.text, 'value': category.value, 'items': []})
+                categories.push({'name': category.text, 'value': category.value, 'items': []})
               }
 
               for (let list of _lists) {
-                if (_arr.length) {
-                  for (let element of _arr) {
+                if (categories.length) {
+                  for (let element of categories) {
                     if (element.value === list.category) {
                       element.items.push(
                         {
@@ -2575,7 +2575,7 @@ export default {
                 }
               }
               let newArr = []
-              for (let cat of _arr) {
+              for (let cat of categories) {
                 newArr.push({'is_category': true, 'name': cat.name})
                 for (let item of cat.items) {
                   newArr.push(item)
