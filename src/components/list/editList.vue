@@ -458,7 +458,10 @@
                         md="8">
                         <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
                           <b-tabs content-class="mt-3">
-                            <b-tab title="Methodological Assessments" active>
+                            <b-tab active>
+                              <template slot="title">
+                                Methodological Assessments <font-awesome-icon v-if="ui.methodological_assessments.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Methodological Assessments</h4>
                               <p
                                 v-if="ui.methodological_assessments.display_warning"
@@ -550,7 +553,10 @@
 
                         <div v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <b-tabs content-class="mt-3">
-                            <b-tab title="Extracted Data" active>
+                            <b-tab active>
+                              <template slot="title">
+                                Extracted Data <font-awesome-icon v-if="ui.adequacy.extracted_data.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Extracted Data</h4>
                               <p
                                 v-if="ui.adequacy.extracted_data.display_warning"
@@ -608,7 +614,10 @@
                                 </template>
                               </b-table>
                             </b-tab>
-                            <b-tab title="Characteristics of Studies">
+                            <b-tab>
+                              <template slot="title">
+                                Characteristics of Studies <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Characteristics of Studies</h4>
                               <p
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
@@ -637,7 +646,10 @@
 
                         <div v-if="buffer_modal_stage_two.type === 'relevance'">
                           <b-tabs content-class="mt-3">
-                            <b-tab title="Question and Criteria" active>
+                            <b-tab active>
+                              <template slot="title">
+                                Question and Criteria <font-awesome-icon v-if="(project.review_question === '') ? true : false || (project.inclusion === '') ? true : false || (project.exclusion === '') ? true : false" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Review Question</h4>
                               <p
                                 v-if="project.review_question === ''"
@@ -663,7 +675,10 @@
                               </p>
                               <p>{{ project.exclusion }}</p>
                             </b-tab>
-                            <b-tab title="Characteristics of Studies">
+                            <b-tab>
+                              <template slot="title">
+                                <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Characteristics of Studies</h4>
                               <p
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
