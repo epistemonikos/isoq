@@ -6,7 +6,7 @@
           <b-col cols="12" class="text-right d-print-none">
             <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
-              return to ISoQf table
+              return to ISoQ table
             </b-link>
           </b-col>
         </b-row>
