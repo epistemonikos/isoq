@@ -894,7 +894,7 @@
                     right
                     text="Export">
                     <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-                    <b-dropdown-item @click="ExportToWord">to MS Word 2</b-dropdown-item>
+                    <b-dropdown-item @click="ExportToWord(project.name)">to MS Word 2</b-dropdown-item>
                     <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                   </b-dropdown>
                 </b-col>
@@ -1670,7 +1670,7 @@ import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import _debounce from 'lodash.debounce'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign } from 'docx'
 
 export default {
   components: {
@@ -2672,12 +2672,6 @@ export default {
       const doc = new Document()
 
       doc.addSection({
-        margins: {
-          top: 3,
-          right: 3,
-          bottom: 3,
-          left: 3
-        },
         children: [
           new Paragraph({
             heading: HeadingLevel.HEADING_2,
@@ -2715,7 +2709,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'lorem ipsum',
+                text: this.project.review_question,
                 size: 24
               })
             ]
@@ -2733,7 +2727,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'lorem ipsum',
+                text: this.project.authors,
                 size: 24
               })
             ]
@@ -2750,10 +2744,7 @@ export default {
           }),
           new Paragraph({
             children: [
-              new TextRun({
-                text: 'lorem ipsum',
-                size: 24
-              })
+              this.generateAuthorInfo()
             ]
           }),
           new Paragraph(''),
@@ -2769,7 +2760,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'lorem ipsum',
+                text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length) ? ' | DOI: ' + this.project.url_doi : '') : 'No',
                 size: 24
               })
             ]
@@ -2787,7 +2778,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'lorem ipsum',
+                text: this.project.description,
                 size: 24
               })
             ]
@@ -2797,13 +2788,26 @@ export default {
       })
 
       const table = new Table({
+        width: {
+          size: '100%',
+          type: WidthType.PERCENTAGE
+        },
         rows: [
           new TableRow({
+            tableHeader: true,
             children: [
               new TableCell({
-                alignment: AlignmentType.CENTER,
+                verticalAlign: VerticalAlign.CENTER,
+                shading: {
+                  fill: '#DDDDDD'
+                },
+                width: {
+                  size: '5%',
+                  type: WidthType.PERCENTAGE
+                },
                 children: [
                   new Paragraph({
+                    alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
                         text: '#',
@@ -2815,6 +2819,14 @@ export default {
                 ]
               }),
               new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                width: {
+                  size: '40%',
+                  type: WidthType.PERCENTAGE
+                },
+                shading: {
+                  fill: '#DDDDDD'
+                },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
@@ -2829,6 +2841,14 @@ export default {
                 ]
               }),
               new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                width: {
+                  size: '20%',
+                  type: WidthType.PERCENTAGE
+                },
+                shading: {
+                  fill: '#DDDDDD'
+                },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
@@ -2843,6 +2863,14 @@ export default {
                 ]
               }),
               new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                shading: {
+                  fill: '#DDDDDD'
+                },
+                width: {
+                  size: '20%',
+                  type: WidthType.PERCENTAGE
+                },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
@@ -2857,6 +2885,14 @@ export default {
                 ]
               }),
               new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                shading: {
+                  fill: '#DDDDDD'
+                },
+                width: {
+                  size: '15%',
+                  type: WidthType.PERCENTAGE
+                },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
@@ -2871,76 +2907,137 @@ export default {
                 ]
               })
             ]
-          })
-        ],
-        width: {
-          size: 10770,
-          type: WidthType.DXA
-        }
+          }),
+          this.generateTableForWord(this.lists)
+        ]
       })
-
-      // revisar esto, aun no está completado
-      for (let finding of this.lists) {
-        this.generateTableForWord(finding)
-      }
 
       doc.addSection({
         children: [table]
       })
 
       Packer.toBlob(doc).then(blob => {
-        console.log(filename)
         saveAs(blob, filename)
       })
     },
-    generateTableForWord (finding) {
-      return new TableRow({
-        rows: [
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: finding.sort
-                  })
-                ]
-              })
-            ]
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: finding.name
-                  })
-                ]
-              })
-            ]
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: ''
-                  })
-                ]
-              })
-            ]
-          }),
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: ''
-                  })
-                ]
-              })
-            ]
-          })
-        ]
+    generateTableForWord (findings) {
+      for (let finding of findings) {
+        return new TableRow({
+          children: [
+            new TableCell({
+              width: {
+                size: '5%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: finding.sort,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            }),
+            new TableCell({
+              width: {
+                size: '40%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  indent: {
+                    left: 100,
+                    right: 100
+                  },
+                  children: [
+                    new TextRun({
+                      text: finding.name,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            }),
+            new TableCell({
+              width: {
+                size: '20%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  indent: {
+                    left: 100,
+                    right: 100
+                  },
+                  children: [
+                    new TextRun({
+                      text: finding.cerqual_option,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            }),
+            new TableCell({
+              width: {
+                size: '20%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  indent: {
+                    left: 100,
+                    right: 100
+                  },
+                  children: [
+                    new TextRun({
+                      text: finding.cerqual_explanation,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            }),
+            new TableCell({
+              width: {
+                size: '15%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  indent: {
+                    left: 100,
+                    right: 100
+                  },
+                  children: [
+                    new TextRun({
+                      text: finding.ref_list,
+                      size: 16
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      }
+    },
+    generateAuthorInfo: function () {
+      let data = ''
+      if (this.project.author.length) {
+        data = this.project.author.toString()
+        if (this.project.author_email.length) {
+          const email = this.project.author_email.toString()
+          data = data.concat(' - ' + email)
+        }
+      }
+
+      return new TextRun({
+        text: data,
+        size: 24
       })
     },
     Export2Doc (element, filename = '') {
