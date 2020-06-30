@@ -1670,7 +1670,7 @@ import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import _debounce from 'lodash.debounce'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
 
 export default {
   components: {
@@ -2783,137 +2783,162 @@ export default {
               })
             ]
           }),
-          new Paragraph('')
-        ]
-      })
-
-      const table = new Table({
-        width: {
-          size: '100%',
-          type: WidthType.PERCENTAGE
-        },
-        rows: [
-          new TableRow({
-            tableHeader: true,
-            children: [
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '5%',
-                  type: WidthType.PERCENTAGE
-                },
+          new Paragraph(''),
+          new Table({
+            borders: {
+              top: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              bottom: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              left: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              right: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideHorizontal: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideVertical: {
+                style: BorderStyle.NONE
+              }
+            },
+            width: {
+              size: '100%',
+              type: WidthType.PERCENTAGE
+            },
+            rows: [
+              new TableRow({
+                tableHeader: true,
                 children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '5%',
+                      type: WidthType.PERCENTAGE
+                    },
                     children: [
-                      new TextRun({
-                        text: '#',
-                        size: 22,
-                        bold: true
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: '#',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    width: {
+                      size: '40%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'Summarized review finding',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    width: {
+                      size: '20%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'CERQual Assessment of confidence',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '20%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'Explanation of CERQual Assessment',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '15%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'References',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
                       })
                     ]
                   })
                 ]
               }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                width: {
-                  size: '40%',
-                  type: WidthType.PERCENTAGE
-                },
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'Summarized review finding',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                width: {
-                  size: '20%',
-                  type: WidthType.PERCENTAGE
-                },
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'CERQual Assessment of confidence',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '20%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'Explanation of CERQual Assessment',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '15%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'References',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              })
+              this.generateTableForWord(this.lists)
             ]
-          }),
-          this.generateTableForWord(this.lists)
+          })
         ]
-      })
-
-      doc.addSection({
-        children: [table]
       })
 
       Packer.toBlob(doc).then(blob => {
