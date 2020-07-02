@@ -893,8 +893,7 @@
                     variant="outline-secondary"
                     right
                     text="Export">
-                    <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
-                    <b-dropdown-item @click="ExportToWord(project.name)">to MS Word 2</b-dropdown-item>
+                    <b-dropdown-item @click="ExportToWord(project.name)">to MS Word</b-dropdown-item>
                     <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                   </b-dropdown>
                 </b-col>
@@ -3001,47 +3000,6 @@ export default {
         text: data,
         size: 24
       })
-    },
-    Export2Doc (element, filename = '') {
-      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
-      const postHtml = '</body></html>'
-
-      let objs = document.getElementsByClassName(element)
-      let content = ''
-      for (let o of objs) {
-        content = content + o.innerHTML + ' '
-      }
-
-      var html = preHtml + content + postHtml
-
-      const blob = new Blob(['\ufeff', html], {
-        type: 'application/msword'
-      })
-
-      // Specify link url
-      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html)
-
-      // Specify file name
-      filename = filename ? filename + '.doc' : 'document.doc'
-
-      // Create download link element
-      var downloadLink = document.createElement('a')
-
-      document.body.appendChild(downloadLink)
-
-      if (navigator.msSaveOrOpenBlob) {
-        navigator.msSaveOrOpenBlob(blob, filename)
-      } else {
-        downloadLink.href = url
-        downloadLink.download = filename
-        downloadLink.click()
-      }
-
-      document.body.removeChild(downloadLink)
-    },
-    generateAndDownload: function () {
-      let title = document.getElementById('project-title').innerHTML
-      this.Export2Doc('toDoc', title)
     },
     processRIS: function (reference = {}) {
       let txt = ''
