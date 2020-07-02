@@ -2935,7 +2935,7 @@ export default {
                   })
                 ]
               }),
-              this.generateTableForWord(this.lists)
+              ...this.generateTableForWord(this.lists)
             ]
           })
         ]
@@ -2945,110 +2945,47 @@ export default {
         saveAs(blob, filename)
       })
     },
-    generateTableForWord (findings) {
-      for (let finding of findings) {
+    generateTableForWord: function (findings) {
+      return findings.map((finding) => {
         return new TableRow({
           children: [
-            new TableCell({
-              width: {
-                size: '5%',
-                type: WidthType.PERCENTAGE
-              },
-              children: [
-                new Paragraph({
-                  alignment: AlignmentType.CENTER,
-                  children: [
-                    new TextRun({
-                      text: finding.sort,
-                      size: 22
-                    })
-                  ]
-                })
-              ]
-            }),
-            new TableCell({
-              width: {
-                size: '40%',
-                type: WidthType.PERCENTAGE
-              },
-              children: [
-                new Paragraph({
-                  indent: {
-                    left: 100,
-                    right: 100
-                  },
-                  children: [
-                    new TextRun({
-                      text: finding.name,
-                      size: 22
-                    })
-                  ]
-                })
-              ]
-            }),
-            new TableCell({
-              width: {
-                size: '20%',
-                type: WidthType.PERCENTAGE
-              },
-              children: [
-                new Paragraph({
-                  indent: {
-                    left: 100,
-                    right: 100
-                  },
-                  children: [
-                    new TextRun({
-                      text: finding.cerqual_option,
-                      size: 22
-                    })
-                  ]
-                })
-              ]
-            }),
-            new TableCell({
-              width: {
-                size: '20%',
-                type: WidthType.PERCENTAGE
-              },
-              children: [
-                new Paragraph({
-                  indent: {
-                    left: 100,
-                    right: 100
-                  },
-                  children: [
-                    new TextRun({
-                      text: finding.cerqual_explanation,
-                      size: 22
-                    })
-                  ]
-                })
-              ]
-            }),
-            new TableCell({
-              width: {
-                size: '15%',
-                type: WidthType.PERCENTAGE
-              },
-              children: [
-                new Paragraph({
-                  indent: {
-                    left: 100,
-                    right: 100
-                  },
-                  children: [
-                    new TextRun({
-                      text: finding.ref_list,
-                      size: 16
-                    })
-                  ]
-                })
-              ]
-            })
+            this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: '20%', text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: '20%', text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: '15%', text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
           ]
         })
-      }
+      })
+    },
+    generateTableCell: function (content) {
+      return new TableCell({
+        width: {
+          size: content.width_size,
+          type: WidthType.PERCENTAGE
+        },
+        children: [
+          this.generateParagraph(content)
+        ]
+      })
+    },
+    generateParagraph: function (content) {
+      return new Paragraph({
+        indent: {
+          left: 100,
+          right: 100
+        },
+        alignment: content.alignment,
+        children: [
+          this.generateText(content)
+        ]
+      })
+    },
+    generateText: function (content) {
+      return new TextRun({
+        text: content.text,
+        size: content.font_size
+      })
     },
     generateAuthorInfo: function () {
       let data = ''
