@@ -27,7 +27,7 @@
               id="exportButton"
               variant="outline-secondary"
               block
-              @click="generateAndDownload('toDoc', 'filename')">
+              @click="exportToWord()">
               Export to MS-Word
             </b-button>
         </b-col>
@@ -1197,6 +1197,8 @@ import axios from 'axios'
 import bCardFilters from '../tableActions/Filters'
 import bCardActionTable from '../tableActions/ActionTable'
 import draggable from 'vuedraggable'
+import { saveAs } from 'file-saver'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 
 export default {
   components: {
@@ -1961,6 +1963,516 @@ export default {
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
       this.$refs['modal-extracted-data-data'].show()
+    },
+    exportToWord: function () {
+      const filename = (this.project.name || 'GRADE-CERQual Assessment Worksheet') + '.doc'
+      const doc = new Document()
+
+      doc.addSection({
+        size: {
+          orientation: PageOrientation.LANDSCAPE
+        },
+        children: [
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: this.project.name,
+                bold: true,
+                size: 24,
+                font: { name: 'Times New Roman' }
+              })
+            ]
+          }),
+          new Paragraph({
+            heading: HeadingLevel.HEADING_1,
+            children: [
+              new TextRun({
+                text: 'GRADE-CERQual Assessment Worksheet',
+                bold: true,
+                size: 28
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Table({
+            borders: {
+              top: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              bottom: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              left: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              right: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideHorizontal: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideVertical: {
+                style: BorderStyle.NONE
+              }
+            },
+            width: {
+              size: '100%',
+              type: WidthType.PERCENTAGE
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '2%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: '#'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '28%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Summarized Review Finding'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '12%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Methodological limitations'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '12%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Coherence'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '12%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Adequacy'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '12%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Relevance'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '12%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'GRADE-CERQual Assessment of confidence'
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '10%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'References'
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.evidence_profile[0].isoqf_id
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.evidence_profile[0].name
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.select_options[this.evidence_profile[0].methodological_limitations.option].text
+                          })
+                        ]
+                      }),
+                      new Paragraph(''),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].methodological_limitations.explanation : ''
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.select_options[this.evidence_profile[0].coherence.option].text
+                          })
+                        ]
+                      }),
+                      new Paragraph(''),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: (this.evidence_profile[0].coherence.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].coherence.explanation : ''
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.select_options[this.evidence_profile[0].adequacy.option].text
+                          })
+                        ]
+                      }),
+                      new Paragraph(''),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: (this.evidence_profile[0].adequacy.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].adequacy.explanation : ''
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.select_options[this.evidence_profile[0].relevance.option].text
+                          })
+                        ]
+                      }),
+                      new Paragraph(''),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: (this.evidence_profile[0].relevance.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].relevance.explanation : ''
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: this.level_confidence[this.evidence_profile[0].cerqual.option].text
+                          })
+                        ]
+                      }),
+                      new Paragraph(''),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: (this.evidence_profile[0].cerqual.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].cerqual.explanation : ''
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'references'
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Characteristics of Studies',
+                size: 24,
+                bold: true
+              })
+            ]
+          }),
+          this.generateTable(JSON.parse(JSON.stringify(this.characteristics_studies))),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Methodological Assessments',
+                size: 24,
+                bold: true
+              })
+            ]
+          }),
+          this.generateTable(JSON.parse(JSON.stringify(this.meth_assessments))),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Extracted Data',
+                size: 24,
+                bold: true
+              })
+            ]
+          }),
+          this.generateTable(JSON.parse(JSON.stringify(this.extracted_data)))
+        ]
+      })
+
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, filename)
+      })
+    },
+    generateTable: function (data) {
+      return new Table({
+        borders: {
+          top: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          bottom: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          left: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          right: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          insideHorizontal: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          insideVertical: {
+            style: BorderStyle.NONE
+          }
+        },
+        width: {
+          size: '100%',
+          type: WidthType.PERCENTAGE
+        },
+        rows: [
+          this.generateHeaderRow(JSON.parse(JSON.stringify(data.fields))),
+          ...this.generateBodyRow(JSON.parse(JSON.stringify(data.items)))
+        ]
+      })
+    },
+    generateHeaderRow: function (data) {
+      return new TableRow({
+        tableHeader: true,
+        children: [
+          ...this.generateCell(data)
+        ]
+      })
+    },
+    generateBodyRow: function (data) {
+      return data.map((item) => {
+        return new TableRow({
+          children: [
+            ...this.prepareBodyCell(item)
+          ]
+        })
+      })
+    },
+    generateCell: function (data) {
+      let headers = []
+      for (let d of data) {
+        if (d.key !== 'ref_id') {
+          headers.push(d)
+        }
+      }
+      return headers.map((content) => {
+        return new TableCell({
+          children: [
+            this.generateParagraph(content)
+          ]
+        })
+      })
+    },
+    prepareBodyCell: function (data) {
+      if (Object.prototype.hasOwnProperty.call(data, 'index')) {
+        delete data.index
+      }
+      let arr = []
+      const len = Object.keys(data).length - 2
+      if (len) {
+        arr.push(this.generateBodyCell(data.authors))
+        for (var cnt = 0; cnt < len; cnt++) {
+          arr.push(this.generateBodyCell(data['column_' + cnt.toString()]))
+        }
+      }
+      return arr
+    },
+    generateBodyCell: function (data) {
+      return new TableCell({
+        children: [
+          this.generateParagraph(data)
+        ]
+      })
+    },
+    generateParagraph: function (data) {
+      return new Paragraph({
+        children: [
+          this.generateText(data)
+        ]
+      })
+    },
+    generateText: function (data) {
+      if (Object.prototype.hasOwnProperty.call(data, 'label')) {
+        return new TextRun({
+          text: data.label
+        })
+      } else {
+        return new TextRun({
+          text: data
+        })
+      }
     },
     generateAndDownload: function (element, filename) {
       const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
