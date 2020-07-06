@@ -19,7 +19,7 @@
     "bootstrap-vue": "2.10.0",
     "docx": "^5.1.1",
     "file-saver": "^2.0.2",
-    "jquery": "3.4.1",
+    "jquery": "3.5.1",
     "lodash.debounce": "4.0.8",
     "vue": "^2.6.11",
     "vue-i18n": "8.11.2",
