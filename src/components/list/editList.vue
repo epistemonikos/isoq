@@ -2423,14 +2423,21 @@ export default {
     generateCell: function (data) {
       let headers = []
       for (let d of data) {
-        if (d.key !== 'ref_id') {
+        if (d.key !== 'ref_id' && d.key !== 'actions') {
           headers.push(d)
         }
       }
+      const length = headers.length
+      const size = 100 / length
       return headers.map((content) => {
         return new TableCell({
+          verticalAlign: VerticalAlign.CENTER,
+          width: {
+            size: size.toString() + '%',
+            type: WidthType.PERCENTAGE
+          },
           children: [
-            this.generateParagraph(content)
+            this.generateParagraph(content, true)
           ]
         })
       })
@@ -2448,47 +2455,51 @@ export default {
           numbers.push(newKey)
         }
       }
-      const len = numbers.sort().slice(-1)[0]
+      const len = numbers.sort((a, b) => { return a - b }).slice(-1)[0]
       if (len !== undefined) {
         if (len) {
-          arr.push(this.generateBodyCell(data.authors))
+          arr.push(this.generateBodyCell(data.authors, true, 20))
           for (var cnt = 0; cnt <= len; cnt++) {
             if (Object.prototype.hasOwnProperty.call(data, 'column_' + cnt.toString())) {
-              arr.push(this.generateBodyCell(data['column_' + cnt.toString()]))
+              arr.push(this.generateBodyCell(data['column_' + cnt.toString()], false, 20))
             }
           }
         } else {
-          arr.push(this.generateBodyCell(data.authors))
-          arr.push(this.generateBodyCell(data['column_0']))
+          arr.push(this.generateBodyCell(data.authors, true, 20))
+          arr.push(this.generateBodyCell(data['column_0'], false, 20))
         }
       } else {
-        arr.push(this.generateBodyCell(data.authors))
-        arr.push(this.generateBodyCell(''))
+        arr.push(this.generateBodyCell(data.authors, true, 20))
+        arr.push(this.generateBodyCell(' ', false, 20))
       }
       return arr
     },
-    generateBodyCell: function (data) {
+    generateBodyCell: function (data, isBold, size) {
       return new TableCell({
         children: [
-          this.generateParagraph(data)
+          this.generateParagraph(data, isBold, size)
         ]
       })
     },
-    generateParagraph: function (data) {
+    generateParagraph: function (data, isBold, size) {
       return new Paragraph({
         children: [
-          this.generateText(data)
+          this.generateText(data, isBold, size)
         ]
       })
     },
-    generateText: function (data) {
+    generateText: function (data, isBold = false, size = 20) {
       if (Object.prototype.hasOwnProperty.call(data, 'label')) {
         return new TextRun({
-          text: data.label
+          text: data.label,
+          bold: isBold,
+          size: size
         })
       } else {
         return new TextRun({
-          text: data
+          text: data,
+          bold: isBold,
+          size: size
         })
       }
     },
