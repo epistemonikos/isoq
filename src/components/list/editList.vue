@@ -2440,12 +2440,30 @@ export default {
         delete data.index
       }
       let arr = []
-      const len = Object.keys(data).length - 2
-      if (len) {
-        arr.push(this.generateBodyCell(data.authors))
-        for (var cnt = 0; cnt < len; cnt++) {
-          arr.push(this.generateBodyCell(data['column_' + cnt.toString()]))
+      const keys = Object.keys(data)
+      let numbers = []
+      for (let key of keys) {
+        if (key !== 'ref_id' && key !== 'authors') {
+          const newKey = parseInt(key.split('_')[1])
+          numbers.push(newKey)
         }
+      }
+      const len = numbers.sort().slice(-1)[0]
+      if (len !== undefined) {
+        if (len) {
+          arr.push(this.generateBodyCell(data.authors))
+          for (var cnt = 0; cnt <= len; cnt++) {
+            if (Object.prototype.hasOwnProperty.call(data, 'column_' + cnt.toString())) {
+              arr.push(this.generateBodyCell(data['column_' + cnt.toString()]))
+            }
+          }
+        } else {
+          arr.push(this.generateBodyCell(data.authors))
+          arr.push(this.generateBodyCell(data['column_0']))
+        }
+      } else {
+        arr.push(this.generateBodyCell(data.authors))
+        arr.push(this.generateBodyCell(''))
       }
       return arr
     },
