@@ -2046,7 +2046,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: '#'
+                            text: '#',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2065,7 +2067,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Summarized Review Finding'
+                            text: 'Summarized Review Finding',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2084,7 +2088,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Methodological limitations'
+                            text: 'Methodological limitations',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2103,7 +2109,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Coherence'
+                            text: 'Coherence',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2122,7 +2130,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Adequacy'
+                            text: 'Adequacy',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2141,7 +2151,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Relevance'
+                            text: 'Relevance',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2160,7 +2172,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'GRADE-CERQual Assessment of confidence'
+                            text: 'GRADE-CERQual Assessment of confidence',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2169,7 +2183,7 @@ export default {
                   new TableCell({
                     verticalAlign: VerticalAlign.CENTER,
                     shading: {
-                      fill: '#DDDDDD'
+                      fill: '#CCCCCC'
                     },
                     width: {
                       size: '10%',
@@ -2179,7 +2193,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'References'
+                            text: 'References',
+                            bold: true,
+                            size: 22
                           })
                         ]
                       })
@@ -2194,7 +2210,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.evidence_profile[0].isoqf_id
+                            text: this.evidence_profile[0].isoqf_id,
+                            size: 22
                           })
                         ]
                       })
@@ -2205,7 +2222,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.evidence_profile[0].name
+                            text: this.evidence_profile[0].name,
+                            size: 22
                           })
                         ]
                       })
@@ -2216,7 +2234,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].methodological_limitations.option].text
+                            text: this.select_options[this.evidence_profile[0].methodological_limitations.option].text,
+                            bold: true,
+                            size: 22
                           })
                         ]
                       }),
@@ -2224,7 +2244,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].methodological_limitations.explanation : ''
+                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].methodological_limitations.explanation : '',
+                            size: 22
                           })
                         ]
                       })
@@ -2235,7 +2256,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].coherence.option].text
+                            text: this.select_options[this.evidence_profile[0].coherence.option].text,
+                            bold: true,
+                            size: 22
                           })
                         ]
                       }),
@@ -2243,7 +2266,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].coherence.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].coherence.explanation : ''
+                            text: (this.evidence_profile[0].coherence.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].coherence.explanation : '',
+                            size: 22
                           })
                         ]
                       })
@@ -2254,7 +2278,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].adequacy.option].text
+                            text: this.select_options[this.evidence_profile[0].adequacy.option].text,
+                            bold: true,
+                            size: 22
                           })
                         ]
                       }),
@@ -2262,7 +2288,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].adequacy.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].adequacy.explanation : ''
+                            text: (this.evidence_profile[0].adequacy.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].adequacy.explanation : '',
+                            size: 22
                           })
                         ]
                       })
@@ -2273,7 +2300,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].relevance.option].text
+                            text: this.select_options[this.evidence_profile[0].relevance.option].text,
+                            bold: true,
+                            size: 22
                           })
                         ]
                       }),
@@ -2281,7 +2310,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].relevance.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].relevance.explanation : ''
+                            text: (this.evidence_profile[0].relevance.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].relevance.explanation : '',
+                            size: 22
                           })
                         ]
                       })
@@ -2292,7 +2322,9 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.level_confidence[this.evidence_profile[0].cerqual.option].text
+                            text: this.level_confidence[this.evidence_profile[0].cerqual.option].text,
+                            bold: true,
+                            size: 22
                           })
                         ]
                       }),
@@ -2300,7 +2332,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].cerqual.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].cerqual.explanation : ''
+                            text: (this.evidence_profile[0].cerqual.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].cerqual.explanation : '',
+                            size: 22
                           })
                         ]
                       })
@@ -2311,7 +2344,8 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'references'
+                            text: 'references',
+                            size: 16
                           })
                         ]
                       })
