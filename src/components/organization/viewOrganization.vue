@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQf' : org.name }}</h2>
+        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQ' : org.name }}</h2>
         <p v-if="org.description">{{ org.description }}</p>
       </b-container>
     </b-container>
@@ -78,7 +78,7 @@
         id="new-project"
         ref="new-project"
         size="xl"
-        :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
+        :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
         @ok="AddProject"
         @cancel="closeModalProject"
         :ok-disabled="!buffer_project.name"
@@ -188,10 +188,10 @@ export default {
         }
       },
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
