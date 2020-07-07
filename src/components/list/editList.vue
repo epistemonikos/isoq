@@ -2312,13 +2312,18 @@ export default {
         size: {
           orientation: PageOrientation.LANDSCAPE
         },
+        margins: {
+          top: 720,
+          right: 720,
+          bottom: 720,
+          left: 720
+        },
         children: [
           new Paragraph({
             heading: HeadingLevel.HEADING_2,
             children: [
               new TextRun({
                 text: this.project.name,
-                bold: true,
                 size: 24,
                 font: { name: 'Times New Roman' },
                 color: '000000'
@@ -2326,6 +2331,7 @@ export default {
             ]
           }),
           new Paragraph({
+            alignment: AlignmentType.CENTER,
             heading: HeadingLevel.HEADING_1,
             children: [
               new TextRun({

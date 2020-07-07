@@ -2821,6 +2821,12 @@ export default {
       const doc = new Document()
 
       doc.addSection({
+        margins: {
+          top: 720,
+          right: 720,
+          bottom: 720,
+          left: 720
+        },
         children: [
           new Paragraph({
             heading: HeadingLevel.HEADING_2,
