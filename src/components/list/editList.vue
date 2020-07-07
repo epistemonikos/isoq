@@ -2681,14 +2681,7 @@ export default {
                   }),
                   new TableCell({
                     children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'references',
-                            size: 16
-                          })
-                        ]
-                      })
+                      ...this.generateReferences()
                     ]
                   })
                 ]
@@ -2876,6 +2869,29 @@ export default {
           size: size
         })
       }
+    },
+    generateReferences: function () {
+      const allReferences = JSON.parse(JSON.stringify(this.references))
+      const listReferences = JSON.parse(JSON.stringify(this.list.references))
+      let epReferences = []
+      for (let reference of allReferences) {
+        if (listReferences.indexOf(reference.id) !== -1) {
+          epReferences.push(reference.content)
+        }
+      }
+      let arr = []
+      for (let epr of epReferences) {
+        arr.push(new Paragraph({
+          children: [
+            new TextRun({
+              text: epr,
+              size: 16
+            })
+          ]
+        })
+        )
+      }
+      return arr
     },
     generateAndDownload: function (element, filename) {
       const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
