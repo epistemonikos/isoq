@@ -4625,7 +4625,7 @@ export default {
     }
   div >>>
     #findings-print .references {
-      font-size: 24px;
+      font-size: 12px;
     }
   div >>>
     #export-button button:first-child {
@@ -4705,9 +4705,6 @@ export default {
       padding: .5rem .5rem 0 .5rem;
     }
   @media print {
-    @page {
-      size: A4 landscape;
-    }
     div >>>
       #findings tbody tr:not(.b-table-row-selected) {
         display: none !important;
