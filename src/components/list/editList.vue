@@ -2305,7 +2305,7 @@ export default {
       this.$refs['modal-extracted-data-data'].show()
     },
     exportToWord: function () {
-      const filename = (this.project.name || 'GRADE-CERQual Assessment Worksheet') + '.doc'
+      const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
       const doc = new Document()
 
       doc.addSection({
@@ -2320,7 +2320,8 @@ export default {
                 text: this.project.name,
                 bold: true,
                 size: 24,
-                font: { name: 'Times New Roman' }
+                font: { name: 'Times New Roman' },
+                color: '000000'
               })
             ]
           }),
@@ -2330,7 +2331,8 @@ export default {
               new TextRun({
                 text: 'GRADE-CERQual Assessment Worksheet',
                 bold: true,
-                size: 28
+                size: 28,
+                color: '000000'
               })
             ]
           }),

@@ -2817,7 +2817,7 @@ export default {
       this.table_settings.currentPage = 1
     },
     ExportToWord: function (filename = '') {
-      filename = filename ? filename + '.docx' : 'document.docx'
+      filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
       const doc = new Document()
 
       doc.addSection({
@@ -2829,7 +2829,8 @@ export default {
                 text: this.project.name,
                 bold: true,
                 size: 36,
-                font: { name: 'Times New Roman' }
+                font: { name: 'Times New Roman' },
+                color: '000000'
               })
             ]
           }),
@@ -2841,7 +2842,8 @@ export default {
                 text: 'Summary of Qualitative Findings Table',
                 bold: true,
                 size: 36,
-                font: { name: 'Times New Roman' }
+                font: { name: 'Times New Roman' },
+                color: '000000'
               })
             ]
           }),
