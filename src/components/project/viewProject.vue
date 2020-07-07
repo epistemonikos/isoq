@@ -3099,6 +3099,7 @@ export default {
     generateTableForWord: function (findings) {
       return findings.map((finding) => {
         return new TableRow({
+          tableHeader: true,
           children: [
             this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
             this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
