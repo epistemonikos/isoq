@@ -635,7 +635,6 @@ export default {
             })
           axios.all(requestsGet)
             .then((responses) => {
-              console.log(responses)
               let _responses = responses
               let requests = []
 
