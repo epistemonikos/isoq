@@ -3092,7 +3092,7 @@ export default {
                   })
                 ]
               }),
-              ...this.generateTableForWord(this.lists)
+              ...this.generateTable(this.lists, this.list_categories.options)
             ]
           })
         ]
@@ -3102,7 +3102,54 @@ export default {
         saveAs(blob, filename)
       })
     },
-    generateTableForWord: function (findings) {
+    generateTable: function (findings, categories = []) {
+      let _findings = {}
+      if (categories.length) {
+        for (let finding of findings) {
+          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
+            if (Object.prototype.hasOwnProperty.call(_findings, finding.category)) {
+              _findings[finding.category].push(finding)
+            } else {
+              _findings[finding.category] = []
+              _findings[finding.category].push(finding)
+            }
+          }
+        }
+        return this.generateTableWithCategories(_findings)
+      } else {
+        return this.generateTableWithoutCategories(findings)
+      }
+    },
+    generateTableWithCategories: function (findings) {
+      let content = []
+      for (const position in findings) {
+        const rowTitle = this.list_categories.options[`${position}`].text
+        content.push(
+          new TableRow({
+            children: [
+              new TableCell({
+                columnSpan: 5,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: rowTitle.toUpperCase(),
+                        bold: true,
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        )
+        content.push(...this.generateTableWithoutCategories(findings[position]))
+      }
+      return content
+    },
+    generateTableWithoutCategories: function (findings) {
       return findings.map((finding) => {
         return new TableRow({
           tableHeader: true,
