@@ -354,7 +354,7 @@ export default {
       this.tmp_buffer_project.temporaryUrl = ''
       if (this.tmp_buffer_project.sharedTokenOnOff) {
         this.tmp_buffer_project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
-        this.tmp_buffer_project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/workspace/' + this.org.projects[this.tmp_buffer_project.index].organization + '/isoqf/' + this.org.projects[this.tmp_buffer_project.index].id + '?t=' + this.tmp_buffer_project.sharedToken
+        this.tmp_buffer_project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + this.org.projects[this.tmp_buffer_project.index].organization + '/' + this.org.projects[this.tmp_buffer_project.index].id + '/' + this.tmp_buffer_project.sharedToken
       }
       const params = {
         sharedToken: this.tmp_buffer_project.sharedToken
