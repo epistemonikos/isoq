@@ -9,6 +9,7 @@ import EditList from '@/components/list/editList'
 import ViewProject from '@/components/project/viewProject'
 import Browse from '@/components/Browse'
 import NewPassword from '@/components/NewPassword'
+import previewContentSoQf from '@/components/previewContent/previewContentSoQf'
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -92,7 +93,7 @@ var routes = [
     name: 'editList',
     component: EditList,
     meta: {
-      title: 'Edit iSoQf - interactive Summaries of Qualitative Findings',
+      title: 'Edit iSoQ - interactive Summaries of Qualitative Findings',
       requiresAuth: true
     }
   },
@@ -102,6 +103,14 @@ var routes = [
     component: NewPassword,
     meta: {
       title: 'New password - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/preview/:org_id/:isoqf_id/:token',
+    name: 'previewContentSoQf',
+    component: previewContentSoQf,
+    meta: {
+      title: 'Preview iSoQ - interactive Summaries of Qualitative Findings'
     }
   }
 ]
