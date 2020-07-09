@@ -238,37 +238,21 @@
                       description="Please enter the study inclusion criteria used in the review"
                       :isEnabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                       criteria="inclusion"
-                      :dataTxt="project.inclusion"></criteria>
+                      :dataTxt="project.inclusion">
+                    </criteria>
                   </b-col>
                   <b-col
                     cols="12"
                     md="6"
                     class="pr-0">
-                    <b-form-group
+                    <criteria
+                      v-if="ui.project.show_criteria"
                       label="Exclusion criteria"
-                      label-for="exclusion-criteria"
-                      description="Please enter the study exclusion criteria used in the review">
-                      <b-form-textarea
-                        :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                        id="exclusion-criteria"
-                        rows="6"
-                        max-rows="100"
-                        v-model="project.exclusion"></b-form-textarea>
-                    </b-form-group>
-                    <div class="float-right">
-                      <b-button
-                        :disabled="ui.project.exclusion.loading"
-                        variant="outline-success"
-                        @click="criteriaAction('exclusion')">
-                        <b-spinner
-                          v-if="ui.project.exclusion.loading"
-                          small
-                          label="Saving"
-                          variant="success">
-                        </b-spinner>
-                        {{ ui.project.exclusion.loading_txt }}
-                      </b-button>
-                    </div>
+                      description="Please enter the study exclusion criteria used in the review"
+                      :isEnabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                      criteria="exclusion"
+                      :dataTxt="project.exclusion">
+                    </criteria>
                   </b-col>
                 </b-row>
               </b-container>
@@ -2059,9 +2043,6 @@ export default {
     }
   },
   watch: {
-    'project.exclusion': function () {
-      this.saveExclusionCriteria()
-    },
     pre_ImportDataTable: function (data) {
       const allLines = data.split(/\r\n|\n/)
       let fields = []
@@ -2204,9 +2185,6 @@ export default {
         }
       }
     })
-  },
-  created: function () {
-    this.saveExclusionCriteria = _debounce(function () { this.criteriaAction('exclusion') }, 1500)
   },
   methods: {
     EpisteRequest: function () {
@@ -4488,50 +4466,6 @@ export default {
         })
         .catch((error) => {
           this.printErrors(error)
-        })
-    },
-    criteriaAction: function (type, action = '') {
-      let params = {}
-      if (type === 'inclusion') {
-        this.ui.project.inclusion.loading = true
-        this.ui.project.inclusion.loading_txt = 'Saving'
-        params.inclusion = this.project.inclusion || ''
-        if (action === 'clean') {
-          params.inclusion = ''
-        }
-      } else {
-        this.ui.project.exclusion.loading = true
-        this.ui.project.exclusion.loading_txt = 'Saving'
-        params.exclusion = this.project.exclusion || ''
-        if (action === 'clean') {
-          params.exclusion = ''
-        }
-      }
-      axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
-        .then((response) => {
-          if (type === 'inclusion') {
-            this.ui.project.inclusion.loading = false
-            this.ui.project.inclusion.loading_txt = 'Save'
-            this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
-            this.ui.project.type = 'inclusion'
-            this.getProject()
-          }
-          if (type === 'exclusion') {
-            this.ui.project.exclusion.loading = false
-            this.ui.project.exclusion.loading_txt = 'Save'
-            this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
-            this.ui.project.type = 'exclusion'
-            this.getProject()
-          }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-          if (type === 'inclusion') {
-            this.ui.project.inclusion.error.show = true
-          }
-          if (type === 'exclusion') {
-            this.ui.project.exclusion.error.show = true
-          }
         })
     },
     countDownChanged (dismissCountDown) {
