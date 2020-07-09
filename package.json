@@ -1,7 +1,7 @@
 {
   "name": "isofq",
   "version": "1.0.0",
-  "description": "iSoQf",
+  "description": "iSoQ",
   "author": "ジョセフ·ダミアン·ガリード ☠ <damian.garrido.munoz@gmail.com>",
   "private": true,
   "scripts": {
@@ -14,9 +14,11 @@
     "@fortawesome/fontawesome-svg-core": "1.2.22",
     "@fortawesome/free-solid-svg-icons": "5.10.2",
     "@fortawesome/vue-fontawesome": "0.1.6",
-    "axios": "0.18.0",
+    "axios": "0.19.2",
     "bootstrap": "4.4.1",
     "bootstrap-vue": "2.10.0",
+    "docx": "^5.1.1",
+    "file-saver": "^2.0.2",
     "jquery": "3.4.1",
     "lodash.debounce": "4.0.8",
     "vue": "^2.6.11",

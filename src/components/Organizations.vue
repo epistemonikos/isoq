@@ -23,22 +23,6 @@
             </template>
           </b-table>
         </b-col>
-        <b-col
-          sm="6"
-          cols="12">
-          <h3>Other Workspaces</h3>
-          <b-table
-            id="organizations"
-            striped
-            bordered
-            head-variant="light"
-            :fields="fields"
-            :items="otherOrganizations">
-            <template v-slot:cell(name)="data">
-              <b-link :to="{ name: 'viewOrganization', params: { id: data.item.id } }">{{ data.item.name }}</b-link>
-            </template>
-          </b-table>
-        </b-col>
       </b-row>
     </b-container>
   </div>
@@ -65,8 +49,6 @@ export default {
         if (this.$store.state.user.personal_organization === org.id) {
           org.name = this.$store.state.user.first_name + '\'s projects'
           this.myOrganization.push(org)
-        } else {
-          this.otherOrganizations.push(org)
         }
       }
     }

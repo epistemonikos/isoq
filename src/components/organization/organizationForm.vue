@@ -72,7 +72,7 @@
         v-model="formData.url_doi"></b-input>
     </b-form-group>
     <b-form-group
-      :label="$t('Is the iSoQf being completed by the review authors?')"
+      :label="$t('Is the iSoQ being completed by the review authors?')"
       label-for="select-project-list-completed-by-author-status">
       <b-select
         :disabled="!canWrite"
@@ -82,7 +82,7 @@
     </b-form-group>
     <b-form-group
       v-if="!formData.complete_by_author"
-      label="Please list the authors of this iSoQf"
+      label="Please list the authors of this iSoQ"
       label-for="input-project-list-authors">
       <b-form-input
         :disabled="!canWrite"
@@ -90,9 +90,9 @@
         v-model="formData.lists_authors"></b-form-input>
     </b-form-group>
     <b-form-group
-      label="Visibility on the iSoQf database"
+      label="Visibility on the iSoQ database"
       label-for="select-project-list-status"
-      description="When you finish your iSoQf you can publish some, or all of it, to the iSoQf database. Until you are finished, keep it “private”. You can change these settings at any time.">
+      description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it “private”. You can change these settings at any time.">
       <b-select
         :disabled="!canWrite"
         id="select-project-list-status"
@@ -125,10 +125,10 @@ export default {
   data: function () {
     return {
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },

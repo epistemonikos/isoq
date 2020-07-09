@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQf' : org.name }}</h2>
+        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQ' : org.name }}</h2>
         <p v-if="org.description">{{ org.description }}</p>
       </b-container>
     </b-container>
@@ -82,11 +82,10 @@
       </div>
       <!-- modals -->
       <b-modal
-        scrollable
         id="new-project"
         ref="new-project"
         size="xl"
-        :title="(buffer_project.id) ? 'Edit iSoQf table' : 'New iSoQf table'"
+        :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
         @ok="AddProject"
         @cancel="closeModalProject"
         :ok-disabled="!buffer_project.name"
@@ -250,10 +249,10 @@ export default {
         }
       },
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -722,6 +721,107 @@ export default {
           this.buffer_project.sharedTo = ''
           this.buffer_project.invite_emails = []
           this.usersCanList(index)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      let requestsGet = []
+      let requestsGetFindings = []
+      for (let list of this.org.projects[index].lists) {
+        requestsGet.push(axios.get(`/api/isoqf_lists/${list.id}`))
+        requestsGetFindings.push(axios.get(`/api/isoqf_findings/?organization=${list.organization}&list_id=${list.id}`))
+      }
+      axios.all(requestsGet)
+        .then(responses => {
+          let references = []
+          let requests = []
+          let requestsAssessments = []
+          let requestsCharacteristics = []
+
+          for (let response of responses) {
+            let _response = response.data
+            for (let reference of _response.references) {
+              references.push(reference)
+            }
+            requestsAssessments.push(axios.get(`/api/isoqf_assessments?project_id=${_response.project_id}`))
+            requestsCharacteristics.push(axios.get(`/api/isoqf_characteristics?project_id=${_response.project_id}`))
+          }
+
+          axios.all(requestsAssessments)
+            .then((responses) => {
+              let requests = []
+              for (let response of responses) {
+                for (let _response of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_assessments/${_response.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((responses) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+          axios.all(requestsCharacteristics)
+            .then((responses) => {
+              let requests = []
+              for (let response of responses) {
+                for (let _response of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_characteristics/${_response.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((responses) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+
+          for (let reference of references) {
+            requests.push(axios.patch(`/api/isoqf_references/${reference}`, params))
+          }
+          axios.all(requests)
+            .then(responses => {})
+        })
+      axios.all(requestsGetFindings)
+        .then((responses) => {
+          let requests = []
+          let requestsGet = []
+          for (let response of responses) {
+            let _response = response.data[0]
+            requests.push(axios.patch(`/api/isoqf_findings/${_response.id}`, params))
+            requestsGet.push(axios.get(`/api/isoqf_extracted_data?finding_id=${_response.id}`))
+          }
+
+          axios.all(requests)
+            .then((responses) => {})
+            .catch((error) => {
+              console.log(error)
+            })
+          axios.all(requestsGet)
+            .then((responses) => {
+              let _responses = responses
+              let requests = []
+
+              for (let response of _responses) {
+                for (let extractedDataItem of response.data) {
+                  requests.push(axios.patch(`/api/isoqf_extracted_data/${extractedDataItem.id}`, params))
+                }
+              }
+              axios.all(requests)
+                .then((response) => {})
+                .catch((error) => {
+                  console.log(error)
+                })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
         })
         .catch((error) => {
           console.log(error)

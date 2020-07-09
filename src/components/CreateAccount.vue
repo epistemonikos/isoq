@@ -97,10 +97,10 @@
             v-if="ui.display_join_org_or_create_org"
             header="Your account has been created.">
             <p>
-              As an individual, you will be able to create iSoQf tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
+              As an individual, you will be able to create iSoQ tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
             </p>
             <p>
-              In order to share iSoQf tables with others you need to join an existing organisation or create a new one.
+              In order to share iSoQ tables with others you need to join an existing organisation or create a new one.
             </p>
             <b-row>
               <b-col cols="12" sm="6" class="text-center">
@@ -211,7 +211,7 @@
           <b-card
             v-if="ui.display_end_affiliation"
             header="You are done!">
-            <p>Now, you can create and share iSoQf tables with your organisation.</p>
+            <p>Now, you can create and share iSoQ tables with your organisation.</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
@@ -221,7 +221,7 @@
           <b-card
             v-if="ui.display_end_org_creation"
             header="Many thanks for registering your organisation">
-            <p>You can star using iSoQf right now and move your work to the organisation when created.</p>
+            <p>You can star using iSoQ right now and move your work to the organisation when created.</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"

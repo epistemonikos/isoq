@@ -27,10 +27,10 @@
             @click="tabOpened=1">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
-            @click="tabOpened=2">iSoQf</b-nav-item>
+            @click="tabOpened=2">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
+            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
@@ -82,9 +82,9 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add Data Needed to Make CERQual Assessments</h3>
+              <h3>Add Data Needed to Make GRADE-CERQual Assessments</h3>
               <p>
-                To optimize the functionality of iSoQf, and save you time, please add the following information organised into 4 steps.
+                To optimize the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
@@ -95,12 +95,36 @@
               </p>
               <b-card no-body>
                 <b-tabs id="import-data" card>
-                  <b-tab title="Import from">
+                  <b-tab title="File upload" active>
+                    <p class="font-weight-light">
+                      <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
+                    </p>
+                    <p class="font-weight-light">
+                      <b>STEP 2:</b> Import the .ris/.txt file into iSoQ.
+                    </p>
+                    <b-form-file
+                      id="input-ris-file-key"
+                      plain
+                      @change="loadRefs($event)"></b-form-file>
+                    <b-button
+                      block
+                      :disabled="(fileReferences.length >= 1) ? false : true"
+                      class="mt-2"
+                      variant="success"
+                      @click="saveReferences()">
+                        Upload
+                    </b-button>
+                    <p>
+                      Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
+                    </p>
+                  </b-tab>
+                  <!--
+                  <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
                         sm="6">
                         <p class="font-weight-light">
-                          <b>STEP 1:</b> You can import from Epistemonikos DB or PubMed pasting the ID of the references (one by line)
+                          You can import individual references from PubMed by pasting the references PMID below. The PMID is the 8-digit identification number appearing at the end of the web address for the article on PubMed. Add one PMID per line below and click Find.
                         </p>
                         <b-form-textarea
                           v-model="episte_request"
@@ -151,35 +175,7 @@
                       </b-col>
                     </b-row>
                   </b-tab>
-                  <b-tab title="File upload" active>
-                    <b-row>
-                      <b-col
-                        cols="6">
-                        <p class="font-weight-light">
-                          <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
-                        </p>
-                        <p class="font-weight-light">
-                          <b>STEP 2:</b> Import the .ris/.txt file into iSoQf.
-                        </p>
-                        <b-form-file
-                          :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                          id="input-ris-file-key"
-                          plain
-                          @change="loadRefs($event)"></b-form-file>
-                      </b-col>
-                      <b-col
-                        cols="6">
-                        <b-button
-                          block
-                          :disabled="(fileReferences.length >= 1) ? false : true"
-                          class="mt-2"
-                          variant="success"
-                          @click="saveReferences()">
-                            Upload
-                        </b-button>
-                      </b-col>
-                    </b-row>
-                  </b-tab>
+                  -->
                 </b-tabs>
               </b-card>
               <b-row
@@ -236,17 +232,13 @@
                     cols="12"
                     md="6"
                     class="pl-0">
-                    <b-form-group
+                    <criteria
+                      v-if="ui.project.show_criteria"
                       label="Inclusion criteria"
-                      label-for="inclusion-criteria"
-                      description="Please enter the study inclusion criteria used in the review">
-                      <b-form-textarea
-                        :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                        id="inclusion-criteria"
-                        rows="6"
-                        max-rows="100"
-                        v-model="project.inclusion"></b-form-textarea>
-                    </b-form-group>
+                      description="Please enter the study inclusion criteria used in the review"
+                      :isEnabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                      criteria="inclusion"
+                      :dataTxt="project.inclusion"></criteria>
                   </b-col>
                   <b-col
                     cols="12"
@@ -255,7 +247,7 @@
                     <b-form-group
                       label="Exclusion criteria"
                       label-for="exclusion-criteria"
-                      description="please enter the study exclusion criteria used in the review">
+                      description="Please enter the study exclusion criteria used in the review">
                       <b-form-textarea
                         :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                         id="exclusion-criteria"
@@ -263,6 +255,20 @@
                         max-rows="100"
                         v-model="project.exclusion"></b-form-textarea>
                     </b-form-group>
+                    <div class="float-right">
+                      <b-button
+                        :disabled="ui.project.exclusion.loading"
+                        variant="outline-success"
+                        @click="criteriaAction('exclusion')">
+                        <b-spinner
+                          v-if="ui.project.exclusion.loading"
+                          small
+                          label="Saving"
+                          variant="success">
+                        </b-spinner>
+                        {{ ui.project.exclusion.loading_txt }}
+                      </b-button>
+                    </div>
                   </b-col>
                 </b-row>
               </b-container>
@@ -291,7 +297,7 @@
                     variant="outline-primary"
                     v-if="charsOfStudies.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModalCharsOfStudiesEdit">
-                    Edit column headings
+                    Add or Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
@@ -311,7 +317,7 @@
                 </b-col>
                 <b-col
                   sm="3"
-                  v-if="charsOfStudies.items.length > 1">
+                  v-if="charsOfStudies.fields.length > 2">
                   <b-button
                     variant="outline-secondary"
                     block
@@ -320,252 +326,270 @@
                   </b-button>
                 </b-col>
               </b-row>
-              <b-table
-                sort-by="authors"
-                responsive
-                id="chars-of-studies-table"
-                class="table-content-refs mt-3"
-                v-if="charsOfStudies.fieldsObj.length > 1"
-                :fields="charsOfStudies.fieldsObj"
-                :items="charsOfStudies.items"
-                :current-page="charsOfStudiesTableSettings.currentPage"
-                :per-page="charsOfStudiesTableSettings.perPage"
-                :busy="charsOfStudiesTableSettings.isBusy">
-                <template
-                  v-slot:cell(actions)="data">
-                  <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    block
-                    variant="outline-success"
-                    @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
-                  </b-button>
-                  <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    block
-                    variant="outline-danger"
-                    @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                  </b-button>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-              <b-pagination
-                v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
-                align="center"
-                v-model="charsOfStudiesTableSettings.currentPage"
-                :total-rows="charsOfStudies.items.length"
-                :per-page="charsOfStudiesTableSettings.perPage"
-                aria-controls="chars-of-studies-table"></b-pagination>
-
-              <b-modal
-                size="xl"
-                id="open-char-of-studies-table-modal"
-                ref="open-char-of-studies-table-modal"
-                scrollable
-                title="Column Headers"
-                :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
-                @ok="saveCharacteristicsStudiesFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <p class="font-weight-light">
-                  Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                </p>
-                <ul class="font-weight-light text-danger">
-                  <li>Do not add columns for author or year (these will be added automatically)</li>
-                  <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                </ul>
-                <b-form-group
-                  label="Number of columnns">
-                  <b-form-input
-                    id="nro-columns"
-                    v-model="charsOfStudiesFieldsModal.nroColumns"
-                    type="number" min="1"></b-form-input>
-                </b-form-group>
-                <b-form-group
-                  v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
-                  :key="cnt"
-                  :label="`Column #${cnt}`">
-                  <b-input-group>
-                    <b-form-input
-                      :id="`column_${cnt}`"
-                      v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
-                      type="text"></b-form-input>
-                    <b-input-group-append
-                      v-if="charsOfStudies.id">
+              <b-row>
+                <b-col
+                  cols="12">
+                  <b-table
+                    sort-by="authors"
+                    responsive
+                    id="chars-of-studies-table"
+                    class="table-content-refs mt-3"
+                    v-if="charsOfStudies.fieldsObj.length > 1"
+                    :fields="charsOfStudies.fieldsObj"
+                    :items="charsOfStudies.items"
+                    :current-page="charsOfStudiesTableSettings.currentPage"
+                    :per-page="charsOfStudiesTableSettings.perPage"
+                    :busy="charsOfStudiesTableSettings.isBusy">
+                    <template
+                      v-slot:cell(actions)="data"
+                      v-if="charsOfStudies.fields.length > 2">
                       <b-button
+                        block
+                        variant="outline-success"
+                        @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
+                        <font-awesome-icon
+                          icon="edit"></font-awesome-icon>
+                      </b-button>
+                      <b-button
+                        block
                         variant="outline-danger"
-                        @click="deleteFieldFromCharsSudies(cnt - 1)">
+                        @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
                         <font-awesome-icon
                           icon="trash"></font-awesome-icon>
                       </b-button>
-                    </b-input-group-append>
-                  </b-input-group>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="open-char-of-studies-table-modal-edit"
-                ref="open-char-of-studies-table-modal-edit"
-                scrollable
-                title="Edit Column Headers"
-                :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
-                @ok="updateCharacteristicsStudiesFields"
-                ok-variant="outline-success"
-                ok-title="Save"
-                cancel-variant="outline-secondary">
-                <p class="font-weight-light">
-                  Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                </p>
-                <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    </template>
+                    <template v-slot:table-busy>
+                      <div class="text-center text-danger my-2">
+                        <b-spinner class="align-middle"></b-spinner>
+                        <strong>Loading...</strong>
+                      </div>
+                    </template>
+                  </b-table>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <b-pagination
+                    v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
+                    align="center"
+                    v-model="charsOfStudiesTableSettings.currentPage"
+                    :total-rows="charsOfStudies.items.length"
+                    :per-page="charsOfStudiesTableSettings.perPage"
+                    aria-controls="chars-of-studies-table">
+                  </b-pagination>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <back-to-top></back-to-top>
+                </b-col>
+
+                <b-modal
+                  size="xl"
+                  id="open-char-of-studies-table-modal"
+                  ref="open-char-of-studies-table-modal"
+                  scrollable
+                  title="Column Headers"
+                  :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
+                  @ok="saveCharacteristicsStudiesFields"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <ul class="font-weight-light text-danger">
+                    <li>Do not add columns for author or year (these will be added automatically)</li>
+                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+                  </ul>
                   <b-form-group
-                    v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
-                    :key="index"
-                    :label="`Column #${index}`">
+                    label="Number of columnns">
+                    <b-form-input
+                      id="nro-columns"
+                      v-model="charsOfStudiesFieldsModal.nroColumns"
+                      type="number" min="1"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
+                    :key="cnt"
+                    :label="`Column #${cnt}`">
                     <b-input-group>
                       <b-form-input
-                        :id="`column_${index}`"
-                        v-model="field.label"
+                        :id="`column_${cnt}`"
+                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
                         type="text"></b-form-input>
                       <b-input-group-append
-                        v-if="charsOfStudiesFieldsModalEdit.fields.length > 1">
-                        <b-button
-                          :id="`drag-button-chars-${index}`"
-                          variant="outline-secondary"
-                          v-b-tooltip
-                          title="Drag to sort">
-                          <font-awesome-icon
-                            icon="arrows-alt"></font-awesome-icon>
-                        </b-button>
+                        v-if="charsOfStudies.id">
                         <b-button
                           variant="outline-danger"
-                          @click="deleteFieldFromCharsSudiesEdit(index)">
+                          @click="deleteFieldFromCharsSudies(cnt - 1)">
                           <font-awesome-icon
                             icon="trash"></font-awesome-icon>
                         </b-button>
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
-                </draggable>
-                <b-button
-                  class="mb-2"
-                  @click="charsOfStudiesNewColumn"
-                  variant="outline-success">
-                  Add new column
-                </b-button>
-              </b-modal>
-              <b-modal
-                size="xl"
-                ref="edit-chars-of-studies-data"
-                title="Edit data"
-                scrollable
-                @ok="saveDataCharsOfStudies"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-form-group
-                  v-for="field of charsOfStudies.fields"
-                  :key="field.id"
-                  :label="field.label">
-                  <b-form-input
-                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-if="field.key === 'ref_id' || field.key === 'authors'"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
-                  </b-form-input>
-                  <b-form-textarea
-                    v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                    v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
-                    rows="2"
-                    max-rows="100"></b-form-textarea>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                scrollable
-                :no-close-on-backdrop="true"
-                :no-close-on-esc="true"
-                ok-title="Save"
-                cancel-title="Close"
-                size="xl"
-                id="import-characteristics-table"
-                ref="import-characteristics-table"
-                title="Import table"
-                @ok="saveImportedData('isoqf_characteristics')"
-                @cancel="cleanVars('import-characteristics-table')"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-alert show variant="danger">
-                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
-                </b-alert>
-                <p
-                 class="font-weight-light">
-                  To upload a table, follow these steps:
-                </p>
-                <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
-                <p
-                  class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
-                </p>
-                <b-button
-                  variant="info"
-                  @click="generateTemplate">
-                  Download template
-                </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  id="open-char-of-studies-table-modal-edit"
+                  ref="open-char-of-studies-table-modal-edit"
+                  scrollable
+                  title="Edit Column Headers"
+                  :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
+                  @ok="updateCharacteristicsStudiesFields"
+                  ok-variant="outline-success"
+                  ok-title="Save"
+                  cancel-variant="outline-secondary">
+                  <p class="font-weight-light">
+                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+                  </p>
+                  <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
+                    <b-form-group
+                      v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
+                      :key="index"
+                      :label="`Column #${index}`">
+                      <b-input-group>
+                        <b-form-input
+                          :id="`column_${index}`"
+                          v-model="field.label"
+                          type="text"></b-form-input>
+                        <b-input-group-append>
+                          <b-button
+                            v-if="charsOfStudiesFieldsModalEdit.fields.length > 1"
+                            :id="`drag-button-chars-${index}`"
+                            variant="outline-secondary"
+                            v-b-tooltip
+                            title="Drag to sort">
+                            <font-awesome-icon
+                              icon="arrows-alt"></font-awesome-icon>
+                          </b-button>
+                          <b-button
+                            variant="outline-danger"
+                            @click="deleteFieldFromCharsSudiesEdit(index)">
+                            <font-awesome-icon
+                              icon="trash"></font-awesome-icon>
+                          </b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </draggable>
+                  <b-button
                     class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-chars-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="removeContentModalCharsOfStudies"
-                ref="removeContentModalCharsOfStudies"
-                title="Remove content"
-                ok-title="Confirm"
-                ok-variant="outline-danger"
-                cancel-variant="outline-success"
-                @cancel="cleanRemoveContentCharsOfStudies"
-                @ok="removeDataFromLists">
-                <p>Are you sure you want to delete all the content for this row?</p>
-                <p
-                  v-if="removeReferenceCharsOfStudies.findings.length === 0">
-                  <b>No findings will be affected</b>
-                </p>
-                <p
-                  v-if="removeReferenceCharsOfStudies.findings.length">
-                  <b>Findings that will be affected</b>
-                  <ul>
-                    <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
-                      {{ `finding # ${finding}`}}
-                    </li>
-                  </ul>
-                </p>
-              </b-modal>
+                    @click="charsOfStudiesNewColumn"
+                    variant="outline-success">
+                    Add new column
+                  </b-button>
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  ref="edit-chars-of-studies-data"
+                  title="Edit data"
+                  scrollable
+                  @ok="saveDataCharsOfStudies"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <b-form-group
+                    v-for="field of charsOfStudies.fields"
+                    :key="field.id"
+                    :label="field.label">
+                    <b-form-input
+                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
+                      v-if="field.key === 'ref_id' || field.key === 'authors'"
+                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
+                    </b-form-input>
+                    <b-form-textarea
+                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
+                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
+                      rows="2"
+                      max-rows="100"></b-form-textarea>
+                  </b-form-group>
+                </b-modal>
+
+                <b-modal
+                  :no-close-on-backdrop="true"
+                  :no-close-on-esc="true"
+                  ok-title="Save"
+                  cancel-title="Close"
+                  size="xl"
+                  id="import-characteristics-table"
+                  ref="import-characteristics-table"
+                  title="Import table"
+                  @ok="saveImportedData('isoqf_characteristics')"
+                  @cancel="cleanVars('import-characteristics-table')"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-secondary">
+                  <b-alert show variant="danger">
+                    <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
+                  </b-alert>
+                  <p
+                  class="font-weight-light">
+                    To upload a table, follow these steps:
+                  </p>
+                  <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
+                  <p
+                    class="font-weight-light text-danger">
+                    The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                  </p>
+                  <b-button
+                    variant="info"
+                    @click="generateTemplate">
+                    Download template
+                  </b-button>
+                  <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                  <b-form-file
+                    id="input-template-chars-file"
+                    plain
+                    @change="loadTableImportData($event)"></b-form-file>
+                  <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                  <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                  <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                  <b-alert
+                    variant="info"
+                    :show="importDataTable.error !== null">
+                    {{ importDataTable.error }}
+                  </b-alert>
+                  <b-button
+                    variant="outline-info"
+                    class="mb-2"
+                    v-if="importDataTable.items.length"
+                    @click="cleanVars()">Reject</b-button>
+                  <b-table
+                    v-if="importDataTable.items.length"
+                    responsive
+                    :fields="importDataTable.fieldsObj"
+                    :items="importDataTable.items"></b-table>
+                </b-modal>
+
+                <b-modal
+                  size="xl"
+                  id="removeContentModalCharsOfStudies"
+                  ref="removeContentModalCharsOfStudies"
+                  title="Remove content"
+                  ok-title="Confirm"
+                  ok-variant="outline-danger"
+                  cancel-variant="outline-success"
+                  @cancel="cleanRemoveContentCharsOfStudies"
+                  @ok="removeDataFromLists">
+                  <p>Are you sure you want to delete all the content for this row?</p>
+                  <p
+                    v-if="removeReferenceCharsOfStudies.findings.length === 0">
+                    <b>No findings will be affected</b>
+                  </p>
+                  <p
+                    v-if="removeReferenceCharsOfStudies.findings.length">
+                    <b>Findings that will be affected</b>
+                    <ul>
+                      <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
+                        {{ `finding # ${finding}`}}
+                      </li>
+                    </ul>
+                  </p>
+                </b-modal>
+              </b-row>
             </b-col>
             <b-col
               cols="12"
@@ -591,7 +615,7 @@
                     :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     v-if="methodologicalTableRefs.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     @click="openModcontent(true)">
-                    Edit column headings
+                    Add or Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
@@ -621,52 +645,64 @@
                 </b-col>
               </b-row>
 
-              <b-table
-                sort-by="authors"
-                responsive
-                id="methodological-table"
-                v-if="methodologicalTableRefs.fieldsObj.length > 1"
-                class="table-content-refs mt-3"
-                :per-page="methodologicalTableRefsTableSettings.perPage"
-                :current-page="methodologicalTableRefsTableSettings.currentPage"
-                :fields="methodologicalTableRefs.fieldsObj"
-                :items="methodologicalTableRefs.items"
-                :busy="methodologicalTableRefsTableSettings.isBusy">
-                <template
-                  v-slot:cell(actions)="data">
-                  <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    block
-                    variant="outline-success"
-                    @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
-                  </b-button>
-                  <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    block
-                    variant="outline-danger"
-                    @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
-                  </b-button>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-              <b-pagination
-                v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
-                align="center"
-                v-model="methodologicalTableRefsTableSettings.currentPage"
-                :total-rows="methodologicalTableRefs.items.length"
-                :per-page="methodologicalTableRefsTableSettings.perPage"
-                aria-controls="chars-of-studies-table"></b-pagination>
+              <b-row>
+                <b-col
+                  cols="12">
+                  <b-table
+                    sort-by="authors"
+                    responsive
+                    id="methodological-table"
+                    v-if="methodologicalTableRefs.fieldsObj.length > 1"
+                    class="table-content-refs mt-3"
+                    :per-page="methodologicalTableRefsTableSettings.perPage"
+                    :current-page="methodologicalTableRefsTableSettings.currentPage"
+                    :fields="methodologicalTableRefs.fieldsObj"
+                    :items="methodologicalTableRefs.items"
+                    :busy="methodologicalTableRefsTableSettings.isBusy">
+                    <template
+                      v-slot:cell(actions)="data"
+                      v-if="methodologicalTableRefs.fields.length > 2">
+                      <b-button
+                        block
+                        variant="outline-success"
+                        @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
+                        <font-awesome-icon
+                          icon="edit"></font-awesome-icon>
+                      </b-button>
+                      <b-button
+                        block
+                        variant="outline-danger"
+                        @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
+                        <font-awesome-icon
+                          icon="trash"></font-awesome-icon>
+                      </b-button>
+                    </template>
+                    <template v-slot:table-busy>
+                      <div class="text-center text-danger my-2">
+                        <b-spinner class="align-middle"></b-spinner>
+                        <strong>Loading...</strong>
+                      </div>
+                    </template>
+                  </b-table>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <b-pagination
+                    v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
+                    align="center"
+                    v-model="methodologicalTableRefsTableSettings.currentPage"
+                    :total-rows="methodologicalTableRefs.items.length"
+                    :per-page="methodologicalTableRefsTableSettings.perPage"
+                    aria-controls="chars-of-studies-table">
+                  </b-pagination>
+                </b-col>
+
+                <b-col
+                  cols="12">
+                  <back-to-top></back-to-top>
+                </b-col>
+              </b-row>
 
               <b-modal
                 size="xl"
@@ -710,6 +746,7 @@
                     </b-input-group>
                   </b-form-group>
               </b-modal>
+
               <b-modal
                 size="xl"
                 id="open-methodological-table-modal-edit"
@@ -735,9 +772,9 @@
                           :id="`column_${index}`"
                           v-model="field.label"
                           type="text"></b-form-input>
-                        <b-input-group-append
-                          v-if="methodologicalFieldsModalEdit.fields.length > 1">
+                        <b-input-group-append>
                           <b-button
+                            v-if="methodologicalFieldsModalEdit.fields.length > 1"
                             :id="`drag-button-meth-${index}`"
                             variant="outline-secondary"
                             v-b-tooltip
@@ -762,6 +799,7 @@
                     Add new column
                   </b-button>
               </b-modal>
+
               <b-modal
                 size="xl"
                 ref="edit-methodological-data"
@@ -786,6 +824,7 @@
                     max-rows="100"></b-form-textarea>
                 </b-form-group>
               </b-modal>
+
               <b-modal
                 size="xl"
                 ref="removeReferenceModalMethodological"
@@ -810,8 +849,8 @@
                   </ul>
                 </p>
               </b-modal>
+
               <b-modal
-                scrollable
                 :no-close-on-backdrop="true"
                 :no-close-on-esc="true"
                 ok-title="Save"
@@ -841,26 +880,29 @@
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQf</h4>
-                <b-row>
-                  <b-col
-                    class="mb-2"
-                    cols="12">
-                    <b-form-file
-                      id="input-template-methodological-file"
-                      plain
-                      @change="loadTableImportData($event)"></b-form-file>
-                  </b-col>
-                  <b-col
-                    cols="12">
-                    <b-table
-                      v-if="importDataTable.items.length"
-                      responsive
-                      :fields="importDataTable.fieldsObj"
-                      :items="importDataTable.items"
-                    ></b-table>
-                  </b-col>
-                </b-row>
+                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                <b-form-file
+                  id="input-template-methodological-file"
+                  plain
+                  @change="loadTableImportData($event)"></b-form-file>
+                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
+                <p>If it looks right, accept the import by clicking on "Save" button.</p>
+                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <b-alert
+                  variant="info"
+                  :show="importDataTable.error !== null">
+                  {{ importDataTable.error }}
+                </b-alert>
+                <b-button
+                  variant="outline-info"
+                  class="mb-2"
+                  v-if="importDataTable.items.length"
+                  @click="cleanVars()">Reject</b-button>
+                <b-table
+                  v-if="importDataTable.items.length"
+                  responsive
+                  :fields="importDataTable.fieldsObj"
+                  :items="importDataTable.items"></b-table>
               </b-modal>
             </b-col>
           </b-row>
@@ -874,8 +916,8 @@
                 block
                 variant="success"
                 class="mb-3"
-                @click="nextTab">
-                Continue to iSoQf
+                @click="continueToIsoq">
+                Continue to iSoQ
               </b-button>
             </b-col>
           </b-row>
@@ -899,7 +941,7 @@
                     variant="outline-secondary"
                     right
                     text="Export">
-                    <b-dropdown-item @click="generateAndDownload">to MS Word</b-dropdown-item>
+                    <b-dropdown-item @click="ExportToWord(project.name)">to MS Word</b-dropdown-item>
                     <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
                   </b-dropdown>
                 </b-col>
@@ -912,7 +954,7 @@
                       class="mt-1"
                       variant="outline-info"
                       block
-                      @click="printiSoQf">
+                      @click="printiSoQ">
                       Print or save as PDF
                     </b-button>
                 </b-col>
@@ -941,7 +983,7 @@
                       @click="modalChangePublicStatus"
                       :variant="(!project.private) ? 'outline-primary' : 'primary'"
                       block
-                      v-b-tooltip.hover title="Click here when you have finished your iSoQf to select what you would like published to the publicly available iSoQf database">
+                      v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
                       <span v-if="!project.private">Published</span><span v-else>Publish</span>
                     </b-button>
                 </b-col>
@@ -969,82 +1011,57 @@
           </b-row>
           <b-row>
             <b-col cols="12">
-                <b-card header-tag="header">
-                  <template v-slot:header>
-                    <b-container fluid>
-                      <b-row v-b-toggle.info-project>
-                        <b-col
-                         cols="11">
-                         <p
-                          class="mb-0 text-left"
-                          >{{ project.name }}</p>
-                        </b-col>
-                        <b-col
-                          cols="1"
-                          align-self="end">
-                          <p class="text-right">
-                            {{ changeTxtProjectProperties }}
-                          </p>
-                        </b-col>
-                      </b-row>
-                    </b-container>
-
-                  </template>
-                  <b-collapse id="info-project">
-                    <b-row>
-                      <b-col cols="12" md="8" class="toDoc">
-                        <h5>Review question</h5>
-                        <p>{{project.review_question}}</p>
-
-                        <h5>Has the review been published?</h5>
-                        <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
-
-                        <h5 v-if="project.description">Additional Information</h5>
-                        <p v-if="project.description">{{project.description}}</p>
+              <b-card header-tag="header">
+                <template v-slot:header>
+                  <b-container fluid>
+                    <b-row v-b-toggle.info-project>
+                      <b-col
+                        cols="11">
+                        <p
+                        class="mb-0 text-left"
+                        >{{ project.name }}</p>
                       </b-col>
-                      <b-col cols="12" md="4" class="toDoc">
-                        <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-                        <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-                          <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-                        </ul>
-
-                        <h5>Corresponding author</h5>
-                        <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
-
-                        <h5 v-if="!project.complete_by_author">Is the iSoQf being completed by the review authors?</h5>
-                        <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                      <b-col
+                        cols="1"
+                        align-self="end">
+                        <p class="text-right">
+                          {{ changeTxtProjectProperties }}
+                        </p>
                       </b-col>
                     </b-row>
-                  </b-collapse>
-                </b-card>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col
-              v-if="mode==='edit' && this.lists.length"
-              cols="12"
-              class="my-2 d-print-none">
-              <b-card
-                bg-variant="light">
-                <b-row>
-                  <b-col
-                    cols="12">
-                    <b-form-group>
-                      <b-input-group>
-                        <b-form-input
-                          v-model="table_settings.filter"
-                          type="search"
-                          id="filterInput"
-                          placeholder="Type to search the table below"></b-form-input>
-                        <b-input-group-append>
-                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </b-col>
-                </b-row>
+                  </b-container>
+                </template>
+                <b-collapse id="info-project">
+                  <b-row>
+                    <b-col cols="12" md="8" class="toDoc">
+                      <h5>Review question</h5>
+                      <p>{{project.review_question}}</p>
+
+                      <h5>Has the review been published?</h5>
+                      <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                      <h5 v-if="project.description">Additional Information</h5>
+                      <p v-if="project.description">{{project.description}}</p>
+                    </b-col>
+                    <b-col cols="12" md="4" class="toDoc">
+                      <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                      <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                        <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                      </ul>
+
+                      <h5>Corresponding author</h5>
+                      <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+
+                      <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
+                      <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    </b-col>
+                  </b-row>
+                </b-collapse>
               </b-card>
             </b-col>
+          </b-row>
+          <b-row
+            class="mt-2">
             <b-col
               v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
               cols="12">
@@ -1052,11 +1069,11 @@
                 class="mb-2">
                 <b-col
                   v-if="mode!=='view'"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
-                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQf"
+                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQ"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddList"
                     block>
@@ -1065,7 +1082,7 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1073,12 +1090,12 @@
                     variant="outline-secondary"
                     @click="modalListCategories"
                     block>
-                    Assign categories to your review findings
+                    Create categories for your review findings
                   </b-button>
                 </b-col>
                 <b-col
                   v-if="mode!=='view' && lists.length > 1"
-                  md="4"
+                  md="3"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1097,23 +1114,63 @@
                     scrollable
                     @ok="saveSortedLists">
                     <p class="font-weight-light">
-                      Drag and drop findings to re-order them in the iSoQf table
+                      Drag and drop findings to re-order them in the iSoQ table
                     </p>
                     <b-list-group>
                       <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                        <b-list-group-item v-for="(item, index) of sorted_lists" :key="index" class="flex-column align-items-start">
+                        <b-list-group-item
+                          v-for="(item, index) of sorted_lists"
+                          :key="index"
+                          class="flex-column align-items-start"
+                          style="cursor: move">
                           <div
                             v-if="item.category >= 0"
                             class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">{{ item.name }}</h5>
                           </div>
-                          <p class="font-weight-light">{{ getCategoryName(item.category) }}</p>
+                          <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
                         </b-list-group-item>
                       </draggable>
                     </b-list-group>
                   </b-modal>
                 </b-col>
+                <b-col
+                  v-if="mode!=='view' && lists.length > 1"
+                  md="3"
+                  cols="12">
+                  <b-button
+                    block
+                    variant="outline-secondary"
+                    @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+                </b-col>
               </b-row>
+            </b-col>
+            <b-col
+              v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
+              cols="12"
+              class="my-2 d-print-none">
+              <b-card
+                bg-variant="light">
+                <b-row>
+                  <b-col
+                    cols="12">
+                    <b-form-group>
+                      <b-input-group>
+                        <b-form-input
+                          v-model="table_settings.filter"
+                          type="search"
+                          id="filterInput"
+                          placeholder="Type to search the text in the table below"></b-form-input>
+                        <b-input-group-append>
+                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </b-col>
+                </b-row>
+                <b-button
+                  @click="toggleSearch(ui.project.displaySearch)">Close</b-button>
+              </b-card>
             </b-col>
             <b-col cols="12" class="toDoc">
               <template
@@ -1122,7 +1179,6 @@
                   :selectable="(mode==='view')?true:false"
                   select-mode="multi"
                   selected-variant="warning"
-                  responsive
                   bordered
                   head-variant="light"
                   id="findings"
@@ -1142,11 +1198,51 @@
                   <template v-slot:head(name)="data">
                     <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
                   </template>
+                  <template v-slot:head(category_name)="data">
+                    {{data.label}}
+                    <b-dropdown
+                      id="dropdown-categories"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item
+                      v-for="category of list_categories.options"
+                      :key="category.text"
+                      @click="tableFilter(category.text, 1)">{{ category.text }}</b-dropdown-item>
+                    </b-dropdown>
+                    <span v-if="ui.project.showFilterOne" class="text-danger" @click="cleanTableFilter">&times;</span>
+                  </template>
                   <template v-slot:head(cerqual_option)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+                    <b-dropdown
+                      id="dropdown-cerqual-option"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item @click="tableFilter('High confidence', 2)">High confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Moderate confidence', 2)">Moderate confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Low confidence', 2)">Low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('Very low confidence', 2)">Very low confidence</b-dropdown-item>
+                      <b-dropdown-divider></b-dropdown-divider>
+                      <b-dropdown-item @click="tableFilter('completed', 2)">Assessments completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('unfinished', 2)">Assessments not completed</b-dropdown-item>
+                    </b-dropdown>
+                    <span v-if="ui.project.showFilterTwo" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
-                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                    <b-dropdown
+                      id="dropdown-cerqual-explanation"
+                      text=""
+                      class="finding-filter"
+                      :no-caret="false"
+                      size="sm">
+                      <b-dropdown-item @click="tableFilter('with_explanation', 3)">Completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('without_explanation', 3)">Not completed</b-dropdown-item>
+                    </b-dropdown>
+                    <span v-if="ui.project.showFilterThree" class="text-danger" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(ref_list)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
@@ -1193,6 +1289,23 @@
                       {{ data.item.name }}
                     </span>
                   </template>
+                  <template v-slot:cell(category_name)="data">
+                    <div v-if="data.item.category_name !== ''">
+                      <b-button
+                        variant="outline-info"
+                        @click="editModalFindingName(data.index)">Edit category</b-button>
+                      {{ data.item.category_name }}
+                      <span
+                        v-if="data.item.category_extra_info !== ''"
+                        v-b-tooltip.hover
+                        :title="data.item.category_extra_info">*</span>
+                    </div>
+                    <div v-else>
+                      <b-button
+                        variant="info"
+                        @click="editModalFindingName(data.index)">Assign a category</b-button>
+                    </div>
+                  </template>
                   <template v-slot:cell(cerqual_option)="data">
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
@@ -1206,7 +1319,7 @@
                           icon="comments"></font-awesome-icon>
                         <span v-if="data.item.cerqual_option===''">Complete</span>
                         <span v-if="data.item.cerqual_option!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                       </b-button>
                     <b>{{ data.item.cerqual_option }}</b>
                   </template>
@@ -1220,7 +1333,7 @@
                       :to="{name: 'editList', params: {id: data.item.id}}">
                         <span v-if="data.item.cerqual_explanation===''">Complete</span>
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                        CERQual Assessment
+                        GRADE-CERQual Assessment
                     </b-button>
                     <b>{{ data.item.cerqual_explanation }}</b>
                   </template>
@@ -1262,8 +1375,8 @@
                     <b-tr>
                       <b-th>#</b-th>
                       <b-th>Summarized review finding</b-th>
-                      <b-th>CERQual Assessment of confidence</b-th>
-                      <b-th>Explanation of CERQual Assessment</b-th>
+                      <b-th>GRADE-CERQual Assessment of confidence</b-th>
+                      <b-th>Explanation of GRADE-CERQual Assessment</b-th>
                       <b-th>References</b-th>
                     </b-tr>
                   </b-thead>
@@ -1316,6 +1429,7 @@
                 <b-form-group
                   label="Summarized review finding"
                   label-for="finding-name">
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
                     id="finding-name"
                     v-model="editFindingName.name"
@@ -1354,7 +1468,7 @@
                   Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
                 </p>
                 <p>
-                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQf table?
+                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
                 </p>
               </b-modal>
               <b-modal
@@ -1370,6 +1484,7 @@
                 <b-form-group
                   label="Summarized review finding"
                   label-for="summarized-review">
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
                     id="summarized-review"
                     v-model="summarized_review"
@@ -1404,7 +1519,7 @@
                       v-if="showBanner"
                       show
                       variant="danger">
-                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
                     </b-alert>
                     <b-table
                       responsive
@@ -1420,18 +1535,6 @@
                         </b-form-checkbox>
                       </template>
                     </b-table>
-                    <!--
-                    <b-form-group>
-                      <b-form-checkbox
-                        v-for="ref in refs"
-                        v-model="selected_references"
-                        :key="ref.id"
-                        :value="ref.id"
-                        name="references">
-                        {{ ref.content }}
-                      </b-form-checkbox>
-                    </b-form-group>
-                    -->
                   </div>
                 </template>
                 <template v-else>
@@ -1486,6 +1589,12 @@
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Describe this category for the user viewing this table">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                  </b-form-group>
                 </template>
                 <template
                   class="mt-3"
@@ -1494,6 +1603,12 @@
                     label="Edit category name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
+                  </b-form-group>
+                  <b-form-group
+                    class="mt-3"
+                    label="Describe this category for the user viewing this table">
+                    <b-form-input
+                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
                   <b-button
                     variant="outline-primary"
@@ -1522,6 +1637,8 @@
                     @click="saveNewCategory">Save</b-button>
                 </template>
               </b-modal>
+
+              <back-to-top></back-to-top>
             </b-col>
           </b-row>
         </b-tab>
@@ -1596,7 +1713,7 @@
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQf. If you exclude this study please remember to redo your CERQual assessments for all findings that it supported.</p>
+                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
                   <p>Are you sure you want to delete this reference?</p>
                   <b-button
@@ -1617,13 +1734,13 @@
         ref="modal-change-status"
         scrollable
         size="xl"
-        title="Publish to the iSoQf Database"
+        title="Publish to the iSoQ Database"
         ok-title="Save"
         ok-variant="outline-success"
         @ok="savePublicStatus"
         cancel-variant="outline-secondary">
         <p class="font-weight-light">
-          By publishing your iSoQf to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+          By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
         </p>
         <b-form-group>
           <b-form-radio-group
@@ -1645,12 +1762,18 @@ import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import _debounce from 'lodash.debounce'
 import contentGuidance from '../contentGuidance'
+import { saveAs } from 'file-saver'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
+import backToTop from '../backToTop'
+import Criteria from '../Criteria'
 
 export default {
   components: {
     draggable,
     organizationForm,
-    'content-guidance': contentGuidance
+    'content-guidance': contentGuidance,
+    'back-to-top': backToTop,
+    'criteria': Criteria
   },
   data () {
     return {
@@ -1673,7 +1796,9 @@ export default {
               show: false,
               dismissSecs: 5,
               dismissCountDown: 0
-            }
+            },
+            loading: false,
+            loading_txt: 'Save'
           },
           exclusion: {
             success: {
@@ -1685,8 +1810,15 @@ export default {
               show: false,
               dismissSecs: 5,
               dismissCountDown: 0
-            }
-          }
+            },
+            loading: false,
+            loading_txt: 'Save'
+          },
+          displaySearch: false,
+          showFilterOne: false,
+          showFilterTwo: false,
+          showFilterThree: false,
+          show_criteria: false
         }
       },
       modal_project: {},
@@ -1707,10 +1839,12 @@ export default {
         edit: false,
         remove: false,
         name: '',
+        extra_info: '',
         index: null
       },
       list_category: {
-        name: ''
+        name: '',
+        extra_info: ''
       },
       fields: {
         with_categories: [
@@ -1723,29 +1857,16 @@ export default {
             label: 'Summarized review finding'
           },
           {
-            key: 'category',
-            label: 'Review Finding Categories',
-            formatter: (value, key, item) => {
-              if (value === null) {
-                return ''
-              }
-              const categories = this.list_categories.options
-              let category = ''
-              for (let cat of categories) {
-                if (cat.value === value) {
-                  category = cat.text
-                }
-              }
-              return category
-            }
+            key: 'category_name',
+            label: 'Review Finding Categories'
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1763,11 +1884,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'CERQual Assessment of confidence'
+            label: 'GRADE-CERQual Assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual Assessment'
           },
           {
             key: 'ref_list',
@@ -1781,7 +1902,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list']
+        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
       },
       summarized_review: '',
       select_options: [
@@ -1868,10 +1989,10 @@ export default {
       },
       tabOpened: 1,
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQf is not publicly available on the iSoQf database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQf table, Evidence Profile, and GRADE CERQual Worksheets are publicly available on the iSoQf database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQf table and Evidence Profile are publicly available on the iSoQf database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQf table is available on the iSoQf database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -1880,6 +2001,7 @@ export default {
       msgUpdateProject: null,
       pre_ImportDataTable: '',
       importDataTable: {
+        error: null,
         fields: [],
         items: [],
         fieldsObj: [
@@ -1937,9 +2059,6 @@ export default {
     }
   },
   watch: {
-    'project.inclusion': function () {
-      this.saveInclusionCriteria()
-    },
     'project.exclusion': function () {
       this.saveExclusionCriteria()
     },
@@ -1950,42 +2069,48 @@ export default {
 
       allLines.forEach((line, index) => {
         if (line !== '') {
-          let contents = parser.parse(line)
-          contents = contents[0]
-          let columnFieldNro = 0
-          let columnItemNro = 0
-          if (index === 0) {
-            for (let cnt in contents) {
+          let contents = parser.parse(line)[0]
+          // contents = contents[0]
+          if (contents.length > 2) {
+            this.importDataTable.error = null
+            let columnFieldNro = 0
+            let columnItemNro = 0
+            if (index === 0) {
+              for (let cnt in contents) {
+                let obj = {}
+                if (parseInt(cnt) === 0) {
+                  obj.key = 'ref_id'
+                }
+                if (parseInt(cnt) === 1) {
+                  obj.key = 'authors'
+                }
+                if (parseInt(cnt) > 1) {
+                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
+                  obj.key = 'column_' + columnFieldNro
+                  columnFieldNro++
+                }
+                obj.label = contents[cnt]
+                fields.push(obj)
+              }
+            } else {
               let obj = {}
-              if (parseInt(cnt) === 0) {
-                obj.key = 'ref_id'
+              for (let cnt in contents) {
+                if (parseInt(cnt) === 0) {
+                  obj.ref_id = contents[cnt]
+                }
+                if (parseInt(cnt) === 1) {
+                  obj.authors = contents[cnt]
+                }
+                if (parseInt(cnt) > 1) {
+                  obj[`column_${columnItemNro}`] = contents[cnt]
+                  columnItemNro++
+                }
               }
-              if (parseInt(cnt) === 1) {
-                obj.key = 'authors'
-              }
-              if (parseInt(cnt) > 1) {
-                this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
-                obj.key = 'column_' + columnFieldNro
-                columnFieldNro++
-              }
-              obj.label = contents[cnt]
-              fields.push(obj)
+              items.push(obj)
             }
           } else {
-            let obj = {}
-            for (let cnt in contents) {
-              if (parseInt(cnt) === 0) {
-                obj.ref_id = contents[cnt]
-              }
-              if (parseInt(cnt) === 1) {
-                obj.authors = contents[cnt]
-              }
-              if (parseInt(cnt) > 1) {
-                obj[`column_${columnItemNro}`] = contents[cnt]
-                columnItemNro++
-              }
-            }
-            items.push(obj)
+            // 'send a message'
+            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,) and should have at least one column.'
           }
         }
       })
@@ -2081,7 +2206,6 @@ export default {
     })
   },
   created: function () {
-    this.saveInclusionCriteria = _debounce(function () { this.criteriaAction('inclusion') }, 1500)
     this.saveExclusionCriteria = _debounce(function () { this.criteriaAction('exclusion') }, 1500)
   },
   methods: {
@@ -2125,7 +2249,7 @@ export default {
       }
       this.$root.$emit('bv::toggle::collapse', 'info-project')
     },
-    printiSoQf: function () {
+    printiSoQ: function () {
       /*
       if (!document.getElementsByClassName('b-table-row-selected').length) {
         this.dismissAlertPrint = true
@@ -2314,6 +2438,7 @@ export default {
           if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
             this.project.exclusion = ''
           }
+          this.ui.project.show_criteria = true
           this.getLists() // summary review
           this.getCharacteristics()
           this.getMethodological()
@@ -2348,11 +2473,38 @@ export default {
             let lists = JSON.parse(JSON.stringify(this.lists))
             this.lastId = parseInt(lists.slice(-1)[0].isoqf_id) + 1
             for (let list of this.lists) {
+              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+                list.status = 'unfinished'
+                list.explanation = 'without_explanation'
+              } else {
+                list.status = 'completed'
+                list.explanation = 'with_explanation'
+                if (list.evidence_profile.cerqual.option === null) {
+                  list.status = 'unfinished'
+                }
+                if (list.evidence_profile.cerqual.explanation === '') {
+                  list.explanation = 'without_explanation'
+                }
+              }
               if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
                 list.references = []
               }
               if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
                 list.notes = ''
+              }
+              if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
+                list.category = null
+              } else {
+                list.category_name = ''
+                list.category_extra_info = ''
+                if (this.list_categories.options.length) {
+                  for (let category of this.list_categories.options) {
+                    if (list.category === category.value) {
+                      list.category_name = category.text
+                      list.category_extra_info = category.extra_info
+                    }
+                  }
+                }
               }
               list.cerqual_option = ''
               if (list.cerqual.option != null) {
@@ -2372,14 +2524,14 @@ export default {
             }
 
             if (this.list_categories.options.length) {
-              let _arr = []
+              let categories = []
               for (let category of this.list_categories.options) {
-                _arr.push({'name': category.text, 'value': category.value, 'items': []})
+                categories.push({'name': category.text, 'value': category.value, 'items': []})
               }
 
               for (let list of _lists) {
-                if (_arr.length) {
-                  for (let element of _arr) {
+                if (categories.length) {
+                  for (let element of categories) {
                     if (element.value === list.category) {
                       element.items.push(
                         {
@@ -2397,7 +2549,7 @@ export default {
                 }
               }
               let newArr = []
-              for (let cat of _arr) {
+              for (let cat of categories) {
                 newArr.push({'is_category': true, 'name': cat.name})
                 for (let item of cat.items) {
                   newArr.push(item)
@@ -2552,7 +2704,7 @@ export default {
             if (this.references.length) {
               this.$nextTick(() => {
                 if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQf', '#Guidance-on-Applying-CERQual']
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-Applying-CERQual']
                   this.tabOpened = tabs.indexOf(this.$route.hash)
                 } else {
                   this.tabOpened = 2
@@ -2636,46 +2788,396 @@ export default {
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
     },
-    Export2Doc (element, filename = '') {
-      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
-      const postHtml = '</body></html>'
+    ExportToWord: function (filename = '') {
+      filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
+      const doc = new Document()
 
-      let objs = document.getElementsByClassName(element)
-      let content = ''
-      for (let o of objs) {
-        content = content + o.innerHTML + ' '
-      }
-
-      var html = preHtml + content + postHtml
-
-      const blob = new Blob(['\ufeff', html], {
-        type: 'application/msword'
+      doc.addSection({
+        margins: {
+          top: 720,
+          right: 720,
+          bottom: 720,
+          left: 720
+        },
+        children: [
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: this.project.name,
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
+            ]
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: 'Summary of Qualitative Findings Table',
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Review question',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.review_question,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Authors of the review',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.authors,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Corresponding author',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              this.generateAuthorInfo()
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Has the review been published?',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length) ? ' | DOI: ' + this.project.url_doi : '') : 'No',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Additional Information',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.description,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Table({
+            borders: {
+              top: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              bottom: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              left: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              right: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideHorizontal: {
+                size: 1,
+                color: '000000',
+                style: BorderStyle.SINGLE
+              },
+              insideVertical: {
+                style: BorderStyle.NONE
+              }
+            },
+            width: {
+              size: '100%',
+              type: WidthType.PERCENTAGE
+            },
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                children: [
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '5%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: '#',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    width: {
+                      size: '40%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'Summarized review finding',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    width: {
+                      size: '20%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'CERQual Assessment of confidence',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '20%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'Explanation of CERQual Assessment',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '15%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: 'References',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              }),
+              ...this.generateTable(this.lists, this.list_categories.options)
+            ]
+          })
+        ]
       })
 
-      // Specify link url
-      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html)
-
-      // Specify file name
-      filename = filename ? filename + '.doc' : 'document.doc'
-
-      // Create download link element
-      var downloadLink = document.createElement('a')
-
-      document.body.appendChild(downloadLink)
-
-      if (navigator.msSaveOrOpenBlob) {
-        navigator.msSaveOrOpenBlob(blob, filename)
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, filename)
+      })
+    },
+    generateTable: function (findings, categories = []) {
+      let _findings = {}
+      if (categories.length) {
+        for (let finding of findings) {
+          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
+            if (Object.prototype.hasOwnProperty.call(_findings, finding.category)) {
+              _findings[finding.category].push(finding)
+            } else {
+              _findings[finding.category] = []
+              _findings[finding.category].push(finding)
+            }
+          }
+        }
+        return this.generateTableWithCategories(_findings)
       } else {
-        downloadLink.href = url
-        downloadLink.download = filename
-        downloadLink.click()
+        return this.generateTableWithoutCategories(findings)
+      }
+    },
+    generateTableWithCategories: function (findings) {
+      let content = []
+      for (const position in findings) {
+        const rowTitle = this.list_categories.options[`${position}`].text
+        content.push(
+          new TableRow({
+            children: [
+              new TableCell({
+                columnSpan: 5,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: rowTitle.toUpperCase(),
+                        bold: true,
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        )
+        content.push(...this.generateTableWithoutCategories(findings[position]))
+      }
+      return content
+    },
+    generateTableWithoutCategories: function (findings) {
+      return findings.map((finding) => {
+        return new TableRow({
+          tableHeader: true,
+          children: [
+            this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: '20%', text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: '20%', text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: '15%', text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
+          ]
+        })
+      })
+    },
+    generateTableCell: function (content) {
+      return new TableCell({
+        width: {
+          size: content.width_size,
+          type: WidthType.PERCENTAGE
+        },
+        children: [
+          this.generateParagraph(content)
+        ]
+      })
+    },
+    generateParagraph: function (content) {
+      return new Paragraph({
+        indent: {
+          left: 100,
+          right: 100
+        },
+        alignment: content.alignment,
+        children: [
+          this.generateText(content)
+        ]
+      })
+    },
+    generateText: function (content) {
+      return new TextRun({
+        text: content.text,
+        size: content.font_size
+      })
+    },
+    generateAuthorInfo: function () {
+      let data = ''
+      if (this.project.author.length) {
+        data = this.project.author.toString()
+        if (this.project.author_email.length) {
+          const email = this.project.author_email.toString()
+          data = data.concat(' - ' + email)
+        }
       }
 
-      document.body.removeChild(downloadLink)
-    },
-    generateAndDownload: function () {
-      let title = document.getElementById('project-title').innerHTML
-      this.Export2Doc('toDoc', title)
+      return new TextRun({
+        text: data,
+        size: 24
+      })
     },
     processRIS: function (reference = {}) {
       let txt = ''
@@ -2909,14 +3411,16 @@ export default {
       let fields = []
       let column = '0'
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
+      if (_fields.length) {
+        for (let field of _fields) {
+          if (!excluded.includes(field.key)) {
+            fields.push(field)
+          }
         }
+        this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
+        column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
       }
 
-      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
-      column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
       this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
     },
     saveCharacteristicsStudiesFields: function () {
@@ -3133,34 +3637,53 @@ export default {
       reader.readAsText(file)
     },
     saveImportedData: function (endpoint = '') {
-      let params = {}
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.fields = this.importDataTable.fields
-      params.items = this.importDataTable.items
-      if (endpoint === 'isoqf_characteristics') {
-        this.charsOfStudiesTableSettings.isBusy = true
-        if (this.charsOfStudies.items.length) {
-          this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        fields: this.importDataTable.fields,
+        items: this.importDataTable.items
+      }
+      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
+        if (endpoint === 'isoqf_characteristics') {
+          this.charsOfStudiesTableSettings.isBusy = true
+          if (this.charsOfStudies.items.length) {
+            this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
+        }
+        if (endpoint === 'isoqf_assessments') {
+          this.methodologicalTableRefsTableSettings.isBusy = true
+          if (this.methodologicalTableRefs.items.length) {
+            this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
         }
       }
-      if (endpoint === 'isoqf_assessments') {
-        this.methodologicalTableRefsTableSettings.isBusy = true
-        if (this.methodologicalTableRefs.items.length) {
-          this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
-        } else {
-          this.insertImportedData(endpoint, params)
-        }
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
       }
-      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
       this.pre_ImportDataTable = ''
     },
     cleanVars: function (modal = '') {
-      this.importDataTable = { fields: [], items: [], fieldsObj: [{ key: 'authors', label: 'Author(s), Year' }] }
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      }
       this.pre_ImportDataTable = ''
-      this.$refs[modal].hide()
+      if (modal !== '') {
+        this.$refs[modal].hide()
+      }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
@@ -3639,7 +4162,7 @@ export default {
     },
     saveListCategoryName: function () {
       const options = [
-        { value: 0, text: this.list_category.name }
+        { value: 0, text: this.list_category.name, extra_info: this.list_category.extra_info }
       ]
       const params = {
         options: options,
@@ -3665,10 +4188,10 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.list_categories.options))
       if (_options.length) {
         const newValue = (_options[_options.length - 1].value !== null) ? parseInt(_options[_options.length - 1].value) + 1 : 0
-        _options.push({ value: newValue, text: this.modal_edit_list_categories.name })
+        _options.push({ value: newValue, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info })
       } else {
         _options = [
-          { value: 0, text: this.modal_edit_list_categories.name }
+          { value: 0, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info }
         ]
       }
       const params = {
@@ -3683,6 +4206,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3694,6 +4218,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.new = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3704,6 +4229,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.edit = true
       this.modal_edit_list_categories.index = index
     },
@@ -3712,6 +4238,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       _options[index].text = this.modal_edit_list_categories.name
+      _options[index].extra_info = this.modal_edit_list_categories.extra_info
 
       if (objID) {
         const params = {
@@ -3725,6 +4252,7 @@ export default {
             this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3736,6 +4264,7 @@ export default {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
       this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.remove = true
       this.modal_edit_list_categories.index = index
     },
@@ -3757,6 +4286,7 @@ export default {
             this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
           })
           .catch((error) => {
@@ -3769,6 +4299,7 @@ export default {
       this.modal_edit_list_categories.edit = false
       this.modal_edit_list_categories.remove = false
       this.modal_edit_list_categories.name = ''
+      this.modal_edit_list_categories.extra_info = ''
       this.modal_edit_list_categories.index = null
     },
     modalChangePublicStatus: function () {
@@ -3962,11 +4493,15 @@ export default {
     criteriaAction: function (type, action = '') {
       let params = {}
       if (type === 'inclusion') {
+        this.ui.project.inclusion.loading = true
+        this.ui.project.inclusion.loading_txt = 'Saving'
         params.inclusion = this.project.inclusion || ''
         if (action === 'clean') {
           params.inclusion = ''
         }
       } else {
+        this.ui.project.exclusion.loading = true
+        this.ui.project.exclusion.loading_txt = 'Saving'
         params.exclusion = this.project.exclusion || ''
         if (action === 'clean') {
           params.exclusion = ''
@@ -3975,11 +4510,15 @@ export default {
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
         .then((response) => {
           if (type === 'inclusion') {
+            this.ui.project.inclusion.loading = false
+            this.ui.project.inclusion.loading_txt = 'Save'
             this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
             this.ui.project.type = 'inclusion'
             this.getProject()
           }
           if (type === 'exclusion') {
+            this.ui.project.exclusion.loading = false
+            this.ui.project.exclusion.loading_txt = 'Save'
             this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
             this.ui.project.type = 'exclusion'
             this.getProject()
@@ -4005,6 +4544,45 @@ export default {
     },
     nextTab () {
       window.scrollTo({ 'top': 0, 'behavior': 'smooth' })
+    },
+    toggleSearch (show) {
+      if (show) {
+        this.ui.project.displaySearch = false
+      } else {
+        this.ui.project.displaySearch = true
+      }
+      this.table_settings.filter = ''
+      window.scrollTo({ top: 500, behavior: 'smooth' })
+    },
+    tableFilter (txt, filter) {
+      this.table_settings.filter = txt
+      switch (filter) {
+        case 1:
+          this.ui.project.showFilterOne = true
+          this.ui.project.showFilterTwo = false
+          this.ui.project.showFilterThree = false
+          break
+        case 2:
+          this.ui.project.showFilterOne = false
+          this.ui.project.showFilterTwo = true
+          this.ui.project.showFilterThree = false
+          break
+        case 3:
+          this.ui.project.showFilterOne = false
+          this.ui.project.showFilterTwo = false
+          this.ui.project.showFilterThree = true
+          break
+      }
+      window.scrollTo({ top: 600, behavior: 'smooth' })
+    },
+    cleanTableFilter () {
+      this.ui.project.showFilterOne = false
+      this.ui.project.showFilterTwo = false
+      this.ui.project.showFilterThree = false
+      this.table_settings.filter = ''
+    },
+    continueToIsoq: function () {
+      window.scrollTo({top: 0, behavior: 'smooth'})
       this.tabOpened = 2
     }
   }
@@ -4101,6 +4679,24 @@ export default {
       min-width: 10%;
     }
   div >>>
+    #dropdown-categories .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-option .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-explanation .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
     #import-data a.nav-link {
       display: block;
       padding: .5rem 1rem;
@@ -4138,9 +4734,6 @@ export default {
       padding: .5rem .5rem 0 .5rem;
     }
   @media print {
-    @page {
-      size: A4 landscape;
-    }
     div >>>
       #findings tbody tr:not(.b-table-row-selected) {
         display: none !important;
