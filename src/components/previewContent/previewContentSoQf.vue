@@ -72,7 +72,7 @@
                   v-if="ui.project.show_criteria"
                   label="Inclusion criteria"
                   description="Please enter the study inclusion criteria used in the review"
-                  :isEnabled="false"
+                  :isDisabled="true"
                   criteria="inclusion"
                   :dataTxt="project.inclusion">
                 </criteria>
@@ -85,15 +85,68 @@
                   v-if="ui.project.show_criteria"
                   label="Exclusion criteria"
                   description="Please enter the study exclusion criteria used in the review"
-                  :isEnabled="false"
+                  :isDisabled="true"
                   criteria="exclusion"
                   :dataTxt="project.exclusion">
                 </criteria>
               </b-col>
             </b-row>
           </b-container>
+          <div>
+            <chars-of-studies-table
+              v-if="charsOfStudies.fields.length"
+              :tableData="charsOfStudies"
+              :tableSettings="charsOfStudiesTableSettings">
+            </chars-of-studies-table>
+          </div>
         </b-tab>
-        <b-tab>2</b-tab>
+        <b-tab>
+          <h2>Summary of Qualitative Findings Table</h2>
+          <b-card header-tag="header">
+            <template v-slot:header>
+              <b-container fluid>
+                <b-row v-b-toggle.info-project>
+                  <b-col
+                    cols="12">
+                    <p
+                    class="mb-0 text-left"
+                    >{{ project.name }}</p>
+                  </b-col>
+                </b-row>
+              </b-container>
+            </template>
+            <div id="info-project">
+              <b-row>
+                <b-col cols="12" md="8" class="toDoc">
+                  <h5>Review question</h5>
+                  <p>{{project.review_question}}</p>
+
+                  <h5>Has the review been published?</h5>
+                  <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                  <h5 v-if="project.description">Additional Information</h5>
+                  <p v-if="project.description">{{project.description}}</p>
+                </b-col>
+                <b-col cols="12" md="4" class="toDoc">
+                  <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                  <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                    <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                  </ul>
+
+                  <h5>Corresponding author</h5>
+                  <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+
+                  <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
+                  <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                </b-col>
+              </b-row>
+            </div>
+          </b-card>
+          <table-printing-findings
+            v-if="lists.length"
+            :data="lists">
+          </table-printing-findings>
+        </b-tab>
         <b-tab>
           <content-guidance></content-guidance>
         </b-tab>
@@ -107,12 +160,16 @@ import axios from 'axios'
 import contentGuidance from '../contentGuidance'
 import organizationForm from '../organization/organizationForm'
 import Criteria from '../Criteria'
+import tablePrintFindings from '../project/tablePrintFindings'
+import charsOfStudiesDisplayDataTable from '../charsOfStudies/displayTableData'
 
 export default {
   components: {
     'content-guidance': contentGuidance,
     organizationForm,
-    'criteria': Criteria
+    'criteria': Criteria,
+    'table-printing-findings': tablePrintFindings,
+    'chars-of-studies-table': charsOfStudiesDisplayDataTable
   },
   data () {
     return {
@@ -144,11 +201,32 @@ export default {
         filter: null,
         totalRows: 1,
         filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
+      },
+      charsOfStudies: {
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      },
+      charsOfStudiesTableSettings: {
+        currentPage: 1,
+        perPage: 10,
+        isBusy: false
+      },
+      charsOfStudiesFieldsModal: {
+        nroColumns: 1,
+        fields: [],
+        items: [],
+        selected_item_index: 0
       }
     }
   },
   mounted () {
     this.getProject()
+    this.getListCategories()
+    this.getReferences()
   },
   methods: {
     getProject: function () {
@@ -166,7 +244,7 @@ export default {
           }
           this.ui.project.show_criteria = true
           this.getLists() // summary review
-          // this.getCharacteristics()
+          this.getCharacteristics()
           // this.getMethodological()
         })
         .catch((error) => {
@@ -324,7 +402,104 @@ export default {
           console.log(error)
           // this.printErrors(error)
         })
+    },
+    getListCategories: function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.isoqf_id
+      }
+      axios.get('/api/isoqf_list_categories/', { params })
+        .then((response) => {
+          if (response.data.length) {
+            const options = JSON.parse(JSON.stringify(response.data[0].options))
+            this.list_categories.options = options
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+          // this.printErrors(error)
+        })
+    },
+    getReferences: function (changeTab = true) {
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+        .then((response) => {
+          const data = JSON.parse(JSON.stringify(response.data))
+          this.references = data
+        })
+        .catch((error) => {
+          console.log(error)
+          // this.printErrors(error)
+        })
+    },
+    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
+      let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length) {
+          if (reference.authors.length === 1) {
+            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else if (reference.authors.length === 2) {
+            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else {
+            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          }
+          if (!onlyAuthors) {
+            result = result + reference.title
+          }
+        } else {
+          return 'author(s) not found'
+        }
+      }
+      return result
+    },
+    getCharacteristics: function () {
+      this.charsOfStudiesTableSettings.isBusy = true
+      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+        .then((response) => {
+          if (response.data.length) {
+            this.charsOfStudies = JSON.parse(JSON.stringify(response.data[0]))
+            if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
+              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+
+              const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+              const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              this.charsOfStudies.items = _items
+
+              this.charsOfStudiesFieldsModal.fields = []
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  this.charsOfStudiesFieldsModal.fields.push(f.label)
+                  this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+
+              this.charsOfStudies.fieldsObj.push({'key': 'actions', 'label': ''})
+
+              this.charsOfStudiesFieldsModal.nroColumns = (this.charsOfStudies.fieldsObj.length === 2) ? 1 : this.charsOfStudies.fieldsObj.length - 2
+
+              for (let item of _items) {
+                this.charsOfStudiesFieldsModal.items.push(item)
+              }
+            }
+            this.charsOfStudiesTableSettings.isBusy = false
+          } else {
+            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
+          }
+        })
     }
   }
 }
 </script>
+
+<style scoped>
+  div >>>
+    #tabsContent .nav-link {
+      display: none;
+      padding: 0;
+    }
+    #tabsContent ul {
+      border-bottom: 0px;
+    }
+</style>
