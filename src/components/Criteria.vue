@@ -5,13 +5,15 @@
       :label-for="`${local_criteria}-criteria`"
       :description="ui.description">
       <b-form-textarea
-        :disabled="ui.isEnabled"
+        :disabled="ui.isDisabled"
         :id="`${local_criteria}-criteria`"
         rows="6"
         max-rows="100"
         v-model="local_data"></b-form-textarea>
     </b-form-group>
-    <div class="float-right">
+    <div
+      v-if="!ui.isDisabled"
+      class="float-right">
       <b-button
         :disabled="ui.project.inclusion.loading"
         variant="outline-success"
@@ -35,7 +37,7 @@ import _debounce from 'lodash.debounce'
 export default {
   name: 'Criteria',
   props: {
-    isEnabled: Boolean,
+    isDisabled: Boolean,
     label: String,
     description: String,
     dataTxt: String,
@@ -55,7 +57,7 @@ export default {
   data: function () {
     return {
       ui: {
-        isEnabled: false,
+        isDisabled: false,
         label: '',
         description: '',
         project: {
@@ -97,7 +99,7 @@ export default {
     loadData: function () {
       this.local_data = this.dataTxt
       this.local_criteria = this.criteria
-      this.ui.isEnabled = this.isEnabled
+      this.ui.isDisabled = this.isDisabled
       this.ui.label = this.label
       this.ui.description = this.description
     },
@@ -118,32 +120,34 @@ export default {
           params.exclusion = ''
         }
       }
-      axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
-        .then((response) => {
-          if (type === 'inclusion') {
-            this.ui.project.inclusion.loading = false
-            this.ui.project.inclusion.loading_txt = 'Save'
-            this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
-            this.ui.project.type = 'inclusion'
-            // this.getProject()
-          }
-          if (type === 'exclusion') {
-            this.ui.project.exclusion.loading = false
-            this.ui.project.exclusion.loading_txt = 'Save'
-            this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
-            this.ui.project.type = 'exclusion'
-            // this.getProject()
-          }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-          if (type === 'inclusion') {
-            this.ui.project.inclusion.error.show = true
-          }
-          if (type === 'exclusion') {
-            this.ui.project.exclusion.error.show = true
-          }
-        })
+      if (!this.ui.isDisabled) {
+        axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+          .then((response) => {
+            if (type === 'inclusion') {
+              this.ui.project.inclusion.loading = false
+              this.ui.project.inclusion.loading_txt = 'Save'
+              this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
+              this.ui.project.type = 'inclusion'
+              // this.getProject()
+            }
+            if (type === 'exclusion') {
+              this.ui.project.exclusion.loading = false
+              this.ui.project.exclusion.loading_txt = 'Save'
+              this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
+              this.ui.project.type = 'exclusion'
+              // this.getProject()
+            }
+          })
+          .catch((error) => {
+            this.printErrors(error)
+            if (type === 'inclusion') {
+              this.ui.project.inclusion.error.show = true
+            }
+            if (type === 'exclusion') {
+              this.ui.project.exclusion.error.show = true
+            }
+          })
+      }
     }
   }
 }
