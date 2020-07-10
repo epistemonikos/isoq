@@ -57,6 +57,7 @@
               </organizationForm>
             </b-col>
           </b-row>
+          <back-to-top></back-to-top>
         </b-tab>
         <b-tab>
           <h4 class="mt-5">
@@ -99,12 +100,14 @@
               :tableSettings="charsOfStudiesTableSettings">
             </chars-of-studies-table>
           </div>
+          <back-to-top></back-to-top>
           <div>
             <meth-assessments-table
               v-if="methodologicalTableRefs.fieldsObj.length > 1"
               :tableData="methodologicalTableRefs"
               :tableSettings="methodologicalTableRefsTableSettings"></meth-assessments-table>
           </div>
+          <back-to-top></back-to-top>
         </b-tab>
         <b-tab>
           <h2>Summary of Qualitative Findings Table</h2>
@@ -154,9 +157,11 @@
               :data="lists">
             </table-printing-findings>
           </div>
+          <back-to-top></back-to-top>
         </b-tab>
         <b-tab>
           <content-guidance></content-guidance>
+          <back-to-top></back-to-top>
         </b-tab>
       </b-tabs>
     </b-container>
@@ -171,6 +176,7 @@ import Criteria from '../Criteria'
 import tablePrintFindings from '../project/tablePrintFindings'
 import charsOfStudiesDisplayDataTable from '../charsOfStudies/displayTableData'
 import methAssessmentsDisplayDataTable from '../methAssessments/displayTableData'
+import backToTop from '../backToTop'
 
 export default {
   components: {
@@ -179,7 +185,8 @@ export default {
     'criteria': Criteria,
     'table-printing-findings': tablePrintFindings,
     'chars-of-studies-table': charsOfStudiesDisplayDataTable,
-    'meth-assessments-table': methAssessmentsDisplayDataTable
+    'meth-assessments-table': methAssessmentsDisplayDataTable,
+    'back-to-top': backToTop
   },
   data () {
     return {
@@ -561,5 +568,26 @@ export default {
     }
     #tabsContent ul {
       border-bottom: 0px;
+    }
+    #tabsTitle {
+      border-bottom: 1px solid #bbb;
+    }
+    #tabsTitle a {
+      color: #3d3d3d;
+    }
+    #tabsTitle li:first-child,
+    #tabsTitle li:last-child {
+      margin-left: 0px;
+      margin-right: 0px;
+    }
+    #tabsTitle li {
+      border-top: 2px;
+      border-left: 2px;
+      border-right: 2px;
+      border-color: #bbb;
+      border-style: solid;
+      border-bottom: 0px;
+      margin-left: 5px;
+      margin-right: 5px;
     }
 </style>
