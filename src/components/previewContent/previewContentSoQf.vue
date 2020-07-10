@@ -99,6 +99,12 @@
               :tableSettings="charsOfStudiesTableSettings">
             </chars-of-studies-table>
           </div>
+          <div>
+            <meth-assessments-table
+              v-if="methodologicalTableRefs.fieldsObj.length > 1"
+              :tableData="methodologicalTableRefs"
+              :tableSettings="methodologicalTableRefsTableSettings"></meth-assessments-table>
+          </div>
         </b-tab>
         <b-tab>
           <h2>Summary of Qualitative Findings Table</h2>
@@ -142,10 +148,12 @@
               </b-row>
             </div>
           </b-card>
-          <table-printing-findings
-            v-if="lists.length"
-            :data="lists">
-          </table-printing-findings>
+          <div class="mt-3">
+            <table-printing-findings
+              v-if="lists.length"
+              :data="lists">
+            </table-printing-findings>
+          </div>
         </b-tab>
         <b-tab>
           <content-guidance></content-guidance>
@@ -162,6 +170,7 @@ import organizationForm from '../organization/organizationForm'
 import Criteria from '../Criteria'
 import tablePrintFindings from '../project/tablePrintFindings'
 import charsOfStudiesDisplayDataTable from '../charsOfStudies/displayTableData'
+import methAssessmentsDisplayDataTable from '../methAssessments/displayTableData'
 
 export default {
   components: {
@@ -169,7 +178,8 @@ export default {
     organizationForm,
     'criteria': Criteria,
     'table-printing-findings': tablePrintFindings,
-    'chars-of-studies-table': charsOfStudiesDisplayDataTable
+    'chars-of-studies-table': charsOfStudiesDisplayDataTable,
+    'meth-assessments-table': methAssessmentsDisplayDataTable
   },
   data () {
     return {
@@ -220,6 +230,19 @@ export default {
         fields: [],
         items: [],
         selected_item_index: 0
+      },
+      methodologicalTableRefs: {
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      },
+      methodologicalTableRefsTableSettings: {
+        currentPage: 1,
+        perPage: 10,
+        isBusy: false
       }
     }
   },
@@ -245,7 +268,7 @@ export default {
           this.ui.project.show_criteria = true
           this.getLists() // summary review
           this.getCharacteristics()
-          // this.getMethodological()
+          this.getMethodological()
         })
         .catch((error) => {
           console.log(error)
@@ -486,6 +509,43 @@ export default {
             this.charsOfStudiesTableSettings.isBusy = false
           } else {
             this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
+          }
+        })
+    },
+    getMethodological: function () {
+      this.methodologicalTableRefsTableSettings.isBusy = true
+      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+        .then((response) => {
+          if (response.data.length) {
+            this.methodologicalTableRefs = JSON.parse(JSON.stringify(response.data[0]))
+            if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
+              const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+              const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+
+              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              this.methodologicalTableRefs.items = _items
+
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              // this.methodologicalFieldsModal.fields = []
+
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  // this.methodologicalFieldsModal.fields.push(f.label)
+                  this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+              this.methodologicalTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
+
+              // this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
+
+              // for (let item of _items) {
+              //   this.methodologicalFieldsModal.items.push(item)
+              // }
+
+              this.methodologicalTableRefsTableSettings.isBusy = false
+            }
+          } else {
+            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
     }
