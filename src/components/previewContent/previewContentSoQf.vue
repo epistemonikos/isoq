@@ -266,16 +266,20 @@ export default {
       axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, { params })
         .then((response) => {
           this.project = response.data
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
-            this.project.inclusion = ''
+          if (this.project.sharedToken === this.$route.params.token) {
+            if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+              this.project.inclusion = ''
+            }
+            if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+              this.project.exclusion = ''
+            }
+            this.ui.project.show_criteria = true
+            this.getLists() // summary review
+            this.getCharacteristics()
+            this.getMethodological()
+          } else {
+            this.$router.push({ name: 'MainPage' })
           }
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
-            this.project.exclusion = ''
-          }
-          this.ui.project.show_criteria = true
-          this.getLists() // summary review
-          this.getCharacteristics()
-          this.getMethodological()
         })
         .catch((error) => {
           console.log(error)
