@@ -207,15 +207,15 @@
               <p>Enable this option for share with a user that will no create an account</p>
               <b-form-checkbox
                 switch
-                v-model="tmp_buffer_project.sharedTokenOnOff"
+                v-model="buffer_project.sharedTokenOnOff"
                 :value="true"
                 :unchecked-value="false">Generate a temporary URL</b-form-checkbox>
               <div
-                v-if="tmp_buffer_project.sharedTokenOnOff"
+                v-if="buffer_project.sharedTokenOnOff"
                 class="mt-2">
                 <p>Copy and Share this url</p>
                 <b-form-input
-                  :value="tmp_buffer_project.temporaryUrl"></b-form-input>
+                  :value="buffer_project.temporaryUrl"></b-form-input>
               </div>
             </b-container>
           </b-tab>
@@ -348,17 +348,31 @@ export default {
     this.getUsers()
   },
   watch: {
-    'tmp_buffer_project.sharedTokenOnOff': function () {
-      this.tmp_buffer_project.sharedToken = ''
-      this.tmp_buffer_project.temporaryUrl = ''
-      if (this.tmp_buffer_project.sharedTokenOnOff) {
-        this.tmp_buffer_project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
-        this.tmp_buffer_project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + this.org.projects[this.tmp_buffer_project.index].organization + '/' + this.org.projects[this.tmp_buffer_project.index].id + '/' + this.tmp_buffer_project.sharedToken
+    'buffer_project.sharedTokenOnOff': function () {
+      let project = this.buffer_project
+      let isPublic = false
+      if (Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+        if (project.sharedTokenOnOff) {
+          if (!project.sharedToken.length) {
+            project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
+          }
+          project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + this.org.projects[project.index].organization + '/' + this.org.projects[project.index].id + '/' + project.sharedToken
+          isPublic = true
+        } else {
+          project.sharedToken = ''
+          project.temporaryUrl = ''
+          isPublic = false
+        }
+      } else {
+        project.sharedToken = ''
+        project.temporaryUrl = ''
+        isPublic = false
       }
       const params = {
-        sharedToken: this.tmp_buffer_project.sharedToken
+        sharedToken: project.sharedToken,
+        is_public: isPublic
       }
-      axios.patch(`/api/isoqf_projects/${this.org.projects[this.tmp_buffer_project.index].id}`, params)
+      axios.patch(`/api/isoqf_projects/${this.org.projects[project.index].id}`, params)
         .then((response) => {})
         .catch((error) => {
           console.log(error)
@@ -369,7 +383,8 @@ export default {
     getOrganization: function () {
       axios.get(`/api/organizations/${this.$route.params.id}`)
         .then((response) => {
-          this.org = {...response.data}
+          let data = response.data
+          this.org = data
           this.getProjectsAndLists()
         })
         .catch((error) => {
@@ -447,15 +462,27 @@ export default {
           }
         })
       ]).then(axios.spread((projects, lists) => {
+        let _projects = projects.data
+        for (let project of _projects) {
+          if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+              project.sharedTokenOnOff = true
+            } else {
+              project.sharedTokenOnOff = false
+            }
+          } else {
+            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
+              project.sharedTokenOnOff = true
+            }
+          }
+        }
         if (this.$store.state.user.personal_organization === this.$route.params.id) {
           this.$store.dispatch('usercan', true)
           this.$store.dispatch('isowner', true)
-          this.$set(this.org, 'projects', projects.data)
+          this.$set(this.org, 'projects', _projects)
         } else {
           this.$store.dispatch('isowner', false)
-          let _projectsData = projects.data
-          let _projects = []
-          for (let project of _projectsData) {
+          for (let project of _projects) {
             if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
               project.can_read = []
             }
@@ -472,8 +499,7 @@ export default {
               }
             }
           }
-          _projectsData = _projects
-          this.$set(this.org, 'projects', _projectsData)
+          this.$set(this.org, 'projects', _projects)
         }
         var projectlist = lists.data
 
@@ -677,10 +703,15 @@ export default {
         })
     },
     modalShareOptions: function (index) {
-      this.org.projects[index].sharedTo = {user_views: [], user_edits: []}
-      this.org.projects[index].sharedType = 0
-      this.tmp_buffer_project = this.org.projects[index]
-      this.tmp_buffer_project.index = index
+      this.buffer_project = this.org.projects[index]
+      // project.sharedTo = {user_views: [], user_edits: []}
+      // project.sharedType = 0
+      // console.log('1 modalShareOptions', project, project.sharedToken, project.sharedTokenOnOff)
+      // if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+      //   project.sharedTokenOnOff = false
+      // }
+      // console.log('2 modalShareOptions', project.sharedToken, project.sharedTokenOnOff)
+      this.buffer_project.index = index
       this.usersCanList(index)
       this.$refs['modal-share-options'].show()
     },
@@ -828,11 +859,11 @@ export default {
         })
     },
     unshare: function (_index, userId) {
-      const index = this.tmp_buffer_project.index
+      const index = this.buffer_project.index
       const projectId = this.org.projects[index].id
       axios.post(`/share/project/${projectId}/unshare?user_id=${userId}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
         .then((response) => {
-          this.org.projects[this.tmp_buffer_project.index] = response.data
+          this.org.projects[this.buffer_project.index] = response.data
           this.users_allowed.splice(_index)
         })
         .catch((error) => {
