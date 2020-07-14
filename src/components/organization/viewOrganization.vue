@@ -156,14 +156,16 @@
                 v-if="buffer_project.sharedToError != ''">
                 {{buffer_project.sharedToError}}
               </p>
-              <b-button @click="addEmailForShare">add</b-button>
+              <b-button
+                :disabled="!ui.sharedProject.enabledToShare"
+                @click="addEmailForShare">add</b-button>
               <div
                 class="my-3"
-                v-if="buffer_project.invite_emails.length">
+                v-if="buffer_project.tmp_invite_emails.length">
                 <p class="mb-1 font-weight-light">This project will be shared with:</p>
                 <b-badge
                 class="mx-1"
-                v-for="(email, index) in buffer_project.invite_emails"
+                v-for="(email, index) in buffer_project.tmp_invite_emails"
                 :key="index"
                 variant="dark">
                   {{ email }}
@@ -177,9 +179,9 @@
                   :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
               </b-form-group>
               <b-button
-                :disabled="!buffer_project.invite_emails.length"
+                :disabled="!buffer_project.tmp_invite_emails.length"
                 variant="success"
-                @click="saveSharedProject(tmp_buffer_project.index)">Invite</b-button>
+                @click="saveSharedProject(buffer_project.index)">Invite</b-button>
             </b-container>
           </b-tab>
           <b-tab
@@ -199,6 +201,31 @@
                   <p class="font-weight-light text-center my-3">No users will be access to this project</p>
                 </template>
               </b-table>
+              <div
+                v-if="buffer_project.invite_emails.length">
+                <h3>Pending access</h3>
+                <b-table-simple
+                  v-if="buffer_project.invite_emails.length">
+                  <b-thead>
+                    <b-tr>
+                      <b-th>Email</b-th>
+                      <b-th>Actions</b-th>
+                    </b-tr>
+                  </b-thead>
+                  <b-tbody>
+                    <b-tr v-for="(email, index) of buffer_project.invite_emails" :key="index">
+                      <b-td>{{ email }}</b-td>
+                      <b-td>
+                        <b-button
+                          variant="danger"
+                          @click="unshareInvited(email)">
+                          unshare
+                        </b-button>
+                      </b-td>
+                    </b-tr>
+                  </b-tbody>
+                </b-table-simple>
+              </div>
             </b-container>
           </b-tab>
           <b-tab
@@ -246,6 +273,9 @@ export default {
         dismissCounters: {
           dismisSec: 10,
           dismissCountDown: 0
+        },
+        sharedProject: {
+          enabledToShare: false
         }
       },
       global_status: [
@@ -279,8 +309,13 @@ export default {
         sharedToError: '',
         sharedTokenOnOff: false,
         sharedToken: '',
+        sharedCan: {
+          read: [],
+          write: []
+        },
         temporaryUrl: '',
-        invite_emails: []
+        invite_emails: [],
+        tmp_invite_emails: []
       },
       tmp_buffer_project_list: {
         id: null,
@@ -309,8 +344,13 @@ export default {
         sharedToError: '',
         sharedTokenOnOff: false,
         sharedToken: '',
+        sharedCan: {
+          read: [],
+          write: []
+        },
         temporaryUrl: '',
-        invite_emails: []
+        invite_emails: [],
+        tmp_invite_emails: []
       },
       buffer_project_list: {
         id: null,
@@ -348,6 +388,22 @@ export default {
     this.getUsers()
   },
   watch: {
+    'buffer_project.sharedTo': function () {
+      const project = this.buffer_project
+      let regex = /\S+@\S+\.\S+/
+      let enabledButton = true
+      if (Object.prototype.hasOwnProperty.call(project, 'sharedTo')) {
+        const emails = this.buffer_project.sharedTo.split(',')
+        for (let email of emails) {
+          if (!regex.test(email)) {
+            enabledButton = false
+          }
+        }
+      } else {
+        enabledButton = false
+      }
+      this.ui.sharedProject.enabledToShare = enabledButton
+    },
     'buffer_project.sharedTokenOnOff': function () {
       let project = this.buffer_project
       let isPublic = false
@@ -474,6 +530,9 @@ export default {
             if (Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
               project.sharedTokenOnOff = true
             }
+          }
+          if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
+            project.tmp_invite_emails = []
           }
         }
         if (this.$store.state.user.personal_organization === this.$route.params.id) {
@@ -704,13 +763,6 @@ export default {
     },
     modalShareOptions: function (index) {
       this.buffer_project = this.org.projects[index]
-      // project.sharedTo = {user_views: [], user_edits: []}
-      // project.sharedType = 0
-      // console.log('1 modalShareOptions', project, project.sharedToken, project.sharedTokenOnOff)
-      // if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-      //   project.sharedTokenOnOff = false
-      // }
-      // console.log('2 modalShareOptions', project.sharedToken, project.sharedTokenOnOff)
       this.buffer_project.index = index
       this.usersCanList(index)
       this.$refs['modal-share-options'].show()
@@ -725,19 +777,13 @@ export default {
         })
     },
     addEmailForShare: function () {
-      this.buffer_project.sharedToError = ''
-      let regex = /\S+@\S+\.\S+/
-      if (regex.test(this.buffer_project.sharedTo)) {
-        if (!this.buffer_project.invite_emails.includes(this.buffer_project.sharedTo)) {
-          this.buffer_project.invite_emails.push(this.buffer_project.sharedTo)
-          this.buffer_project.sharedTo = ''
-        }
-      } else {
-        this.buffer_project.sharedToError = 'The email seems to be not valid'
-      }
+      let emails = this.buffer_project.sharedTo.split(',').map((email) => {
+        return email.trim()
+      })
+      this.buffer_project.tmp_invite_emails = emails
     },
     saveSharedProject: function (index) {
-      const sharedEmails = this.buffer_project.invite_emails.join()
+      const sharedEmails = this.buffer_project.tmp_invite_emails.join()
       const projectId = this.org.projects[index].id
       const params = {
         current_user: this.$store.state.user.name,
@@ -747,112 +793,13 @@ export default {
       }
       axios.post(`/share/project/${projectId}`, params)
         .then((response) => {
-          const index = this.tmp_buffer_project.index
-          this.org.projects[index] = response.data[0]
+          let _response = response.data[0]
+          const index = this.buffer_project.index
+          this.org.projects[index] = _response
+          this.buffer_project = _response
           this.buffer_project.sharedTo = ''
-          this.buffer_project.invite_emails = []
+          this.buffer_project.tmp_invite_emails = []
           this.usersCanList(index)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      let requestsGet = []
-      let requestsGetFindings = []
-      for (let list of this.org.projects[index].lists) {
-        requestsGet.push(axios.get(`/api/isoqf_lists/${list.id}`))
-        requestsGetFindings.push(axios.get(`/api/isoqf_findings/?organization=${list.organization}&list_id=${list.id}`))
-      }
-      axios.all(requestsGet)
-        .then(responses => {
-          let references = []
-          let requests = []
-          let requestsAssessments = []
-          let requestsCharacteristics = []
-
-          for (let response of responses) {
-            let _response = response.data
-            for (let reference of _response.references) {
-              references.push(reference)
-            }
-            requestsAssessments.push(axios.get(`/api/isoqf_assessments?project_id=${_response.project_id}`))
-            requestsCharacteristics.push(axios.get(`/api/isoqf_characteristics?project_id=${_response.project_id}`))
-          }
-
-          axios.all(requestsAssessments)
-            .then((responses) => {
-              let requests = []
-              for (let response of responses) {
-                for (let _response of response.data) {
-                  requests.push(axios.patch(`/api/isoqf_assessments/${_response.id}`, params))
-                }
-              }
-              axios.all(requests)
-                .then((responses) => {})
-                .catch((error) => {
-                  console.log(error)
-                })
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-          axios.all(requestsCharacteristics)
-            .then((responses) => {
-              let requests = []
-              for (let response of responses) {
-                for (let _response of response.data) {
-                  requests.push(axios.patch(`/api/isoqf_characteristics/${_response.id}`, params))
-                }
-              }
-              axios.all(requests)
-                .then((responses) => {})
-                .catch((error) => {
-                  console.log(error)
-                })
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-
-          for (let reference of references) {
-            requests.push(axios.patch(`/api/isoqf_references/${reference}`, params))
-          }
-          axios.all(requests)
-            .then(responses => {})
-        })
-      axios.all(requestsGetFindings)
-        .then((responses) => {
-          let requests = []
-          let requestsGet = []
-          for (let response of responses) {
-            let _response = response.data[0]
-            requests.push(axios.patch(`/api/isoqf_findings/${_response.id}`, params))
-            requestsGet.push(axios.get(`/api/isoqf_extracted_data?finding_id=${_response.id}`))
-          }
-
-          axios.all(requests)
-            .then((responses) => {})
-            .catch((error) => {
-              console.log(error)
-            })
-          axios.all(requestsGet)
-            .then((responses) => {
-              let _responses = responses
-              let requests = []
-
-              for (let response of _responses) {
-                for (let extractedDataItem of response.data) {
-                  requests.push(axios.patch(`/api/isoqf_extracted_data/${extractedDataItem.id}`, params))
-                }
-              }
-              axios.all(requests)
-                .then((response) => {})
-                .catch((error) => {
-                  console.log(error)
-                })
-            })
-            .catch((error) => {
-              console.log(error)
-            })
         })
         .catch((error) => {
           console.log(error)
@@ -870,8 +817,21 @@ export default {
           console.log(error)
         })
     },
+    unshareInvited: function (email) {
+      const projectId = this.buffer_project.id
+      axios.post(`/share/project/${projectId}/unshare?email=${email}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
+        .then((response) => {
+          let _response = response.data
+          _response.tmp_invite_emails = []
+          this.org.projects[this.buffer_project.index] = _response
+          this.buffer_project.invite_emails = _response.invite_emails
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     removeSharedEmail: function (index) {
-      this.buffer_project.invite_emails.splice(index, 1)
+      this.buffer_project.tmp_invite_emails.splice(index, 1)
     },
     randomString: function (len, charSet) {
       charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
