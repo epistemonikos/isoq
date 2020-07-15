@@ -385,7 +385,7 @@ export default {
   },
   mounted () {
     this.getOrganization()
-    this.getUsers()
+    // this.getUsers()
   },
   watch: {
     'buffer_project.sharedTo': function () {
@@ -771,15 +771,15 @@ export default {
       this.usersCanList(index)
       this.$refs['modal-share-options'].show()
     },
-    getUsers: function () {
-      axios.get('/users/get_all')
-        .then((response) => {
-          this.users = JSON.parse(JSON.stringify(response.data))
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
+    // getUsers: function () {
+    //   axios.get('/users/get_all')
+    //     .then((response) => {
+    //       this.users = JSON.parse(JSON.stringify(response.data))
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
     addEmailForShare: function () {
       let emails = this.buffer_project.sharedTo.split(',')
         .filter((email) => {
