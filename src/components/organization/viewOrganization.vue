@@ -412,7 +412,7 @@ export default {
           if (!project.sharedToken.length) {
             project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
           }
-          project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + this.org.projects[project.index].organization + '/' + this.org.projects[project.index].id + '/' + project.sharedToken
+          project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + project.organization + '/' + project.id + '/' + project.sharedToken
           isPublic = true
         } else {
           project.sharedToken = ''
@@ -424,15 +424,17 @@ export default {
         project.temporaryUrl = ''
         isPublic = false
       }
-      const params = {
-        sharedToken: project.sharedToken,
-        is_public: isPublic
+      if (Object.prototype.hasOwnProperty.call(project, 'index') && project.index !== null) {
+        const params = {
+          sharedToken: project.sharedToken,
+          is_public: isPublic
+        }
+        axios.patch(`/api/isoqf_projects/${project.id}`, params)
+          .then((response) => {})
+          .catch((error) => {
+            console.log(error)
+          })
       }
-      axios.patch(`/api/isoqf_projects/${this.org.projects[project.index].id}`, params)
-        .then((response) => {})
-        .catch((error) => {
-          console.log(error)
-        })
     }
   },
   methods: {
@@ -527,8 +529,10 @@ export default {
               project.sharedTokenOnOff = false
             }
           } else {
-            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
+            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
               project.sharedTokenOnOff = true
+            } else {
+              project.sharedTokenOnOff = false
             }
           }
           if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
