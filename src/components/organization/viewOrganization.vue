@@ -777,9 +777,12 @@ export default {
         })
     },
     addEmailForShare: function () {
-      let emails = this.buffer_project.sharedTo.split(',').map((email) => {
-        return email.trim()
-      })
+      let emails = this.buffer_project.sharedTo.split(',')
+        .filter((email) => {
+          if (email !== this.$store.state.user.name) {
+            return email.trim()
+          }
+        })
       this.buffer_project.tmp_invite_emails = emails
     },
     saveSharedProject: function (index) {
