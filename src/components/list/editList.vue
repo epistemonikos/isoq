@@ -677,7 +677,7 @@
                             </b-tab>
                             <b-tab>
                               <template slot="title">
-                                <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                                Characteristics of Studies <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
                               </template>
                               <h4>Characteristics of Studies</h4>
                               <p
