@@ -1070,11 +1070,11 @@
                   cols="12">
                   <b-button
                     class="mt-1"
-                    v-b-tooltip.hover title="If you want to categorize your review findings, for example by theme or topic, you can do so by creating review finding categories here."
+                    v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
                     variant="outline-secondary"
                     @click="modalListCategories"
                     block>
-                    Create categories for your review findings
+                    Organise review findings into groups
                   </b-button>
                 </b-col>
                 <b-col
@@ -1191,8 +1191,8 @@
                       :no-caret="false"
                       size="sm">
                       <b-dropdown-item
-                      v-for="category of list_categories.options"
-                      :key="category.text"
+                      v-for="(category, index) of list_categories.options"
+                      :key="index"
                       @click="tableFilter(category.text, 1)">{{ category.text }}</b-dropdown-item>
                     </b-dropdown>
                     <span v-if="ui.project.showFilterOne" class="text-danger" @click="cleanTableFilter">&times;</span>
@@ -1277,7 +1277,7 @@
                     <div v-if="data.item.category_name !== ''">
                       <b-button
                         variant="outline-info"
-                        @click="editModalFindingName(data.index)">Edit category</b-button>
+                        @click="editModalFindingName(data.index)">Edit group</b-button>
                       {{ data.item.category_name }}
                       <span
                         v-if="data.item.category_extra_info !== ''"
@@ -1287,7 +1287,7 @@
                     <div v-else>
                       <b-button
                         variant="info"
-                        @click="editModalFindingName(data.index)">Assign a category</b-button>
+                        @click="editModalFindingName(data.index)">Assign group</b-button>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
@@ -1422,8 +1422,8 @@
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"
-                  label="Select review finding category"
-                  description="You can leave this option blank. You can always assign a finding to a category later.">
+                  label="Select review finding group"
+                  description="You can leave this option blank. You can always assign a finding to a group later.">
                   <b-form-select
                     v-model="editFindingName.category"
                     :options="list_categories.options"></b-form-select>
@@ -1477,8 +1477,8 @@
                 </b-form-group>
                 <b-form-group
                   v-if="list_categories.options.length"
-                  label="Select review finding category"
-                  description="You can leave this option blank. You can always assign a finding to a category later.">
+                  label="Select review finding group"
+                  description="You can leave this option blank. You can always assign a finding to a group later.">
                   <b-form-select
                     v-model="list_categories.selected"
                     :options="list_categories.options"></b-form-select>
@@ -1533,13 +1533,13 @@
                 size="xl"
                 id="modalEditListCategories"
                 ref="modalEditListCategories"
-                title="Review Finding Categories"
+                title="Review Finding Groups"
                 scrollable
                 ok-only
                 ok-title="Close"
                 ok-variant="outline-success">
                 <p class="font-weight-light">
-                  Some reviewers choose to group their review findings into different categories, for example into themes or topics. To do so, add the names of the categories here. After you have created review finding categories you will be prompted to select a category for each finding you add. You can choose not to assign a category to a review finding, or assign it later.
+                  Some reviewers choose to group their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created review finding groups you will be prompted to select a category for each finding you add. You can choose not to assign a category to a review finding, or assign it later.
                 </p>
                 <b-table
                   head-variant="highlight"
@@ -1563,19 +1563,19 @@
                   v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
                   variant="outline-primary"
                   @click="modal_edit_list_categories.new=true">
-                  Add new review finding category
+                  Add new review finding group
                 </b-button>
                 <template
                   v-if="modal_edit_list_categories.new">
                   <b-form-group
                     class="mt-3"
-                    label="Add category name">
+                    label="Add group name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
-                    label="Describe this category for the user viewing this table">
+                    label="Describe this group for the user viewing this table">
                     <b-form-input
                       v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
@@ -1584,13 +1584,13 @@
                   class="mt-3"
                   v-if="modal_edit_list_categories.edit">
                   <b-form-group
-                    label="Edit category name">
+                    label="Edit group name">
                     <b-form-input
                       v-model="modal_edit_list_categories.name"></b-form-input>
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
-                    label="Describe this category for the user viewing this table">
+                    label="Describe this group for the user viewing this table">
                     <b-form-input
                       v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
@@ -1604,7 +1604,7 @@
                 <template
                   class="mt-3"
                   v-if="modal_edit_list_categories.remove">
-                  <p>Confirm you want to remove <b>{{ modal_edit_list_categories.name }}</b> from categories?</p>
+                  <p>Confirm you want to remove <b>{{ modal_edit_list_categories.name }}</b> from groups?</p>
                   <b-button
                     variant="outline-primary"
                     @click="modalCancelCategoryButtons">Cancel</b-button>
@@ -1814,7 +1814,7 @@ export default {
       modal_edit_list_categories: {
         id: null,
         fields: [
-          { key: 'text', label: 'Category name' },
+          { key: 'text', label: 'Name of group' },
           { key: 'actions', label: '' }
         ],
         options: [],
@@ -1841,7 +1841,7 @@ export default {
           },
           {
             key: 'category_name',
-            label: 'Review Finding Categories'
+            label: 'Review Finding Groups'
           },
           {
             key: 'cerqual_option',
