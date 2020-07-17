@@ -158,7 +158,7 @@
                             v-model="buffer_modal_stage_two.methodological_limitations.option"
                             name="methodological-limitations"
                             stacked>
-                            <b-form-radio value="0" @change="propExplanation('No/Very minor concerns regarding methodological limitations because...', 'methodological_limitations')">
+                            <b-form-radio value="0" @change="propExplanation('', 'methodological_limitations')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                             <b-form-radio value="1" @change="propExplanation('Minor concerns regarding methodological limitations because...', 'methodological_limitations')">
@@ -222,7 +222,7 @@
                             v-model="buffer_modal_stage_two.coherence.option"
                             name="coherence"
                             stacked>
-                            <b-form-radio value="0" @change="propExplanation('No/very minor concerns regarding coherence because...', 'coherence')">
+                            <b-form-radio value="0" @change="propExplanation('', 'coherence')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                             <b-form-radio value="1" @change="propExplanation('Minor concerns regarding coherence because...', 'coherence')">
@@ -281,7 +281,7 @@
                             v-model="buffer_modal_stage_two.adequacy.option"
                             name="adequacy"
                             stacked>
-                            <b-form-radio value="0" @change="propExplanation('No or very minor concerns regarding adequacy because...', 'adequacy')">
+                            <b-form-radio value="0" @change="propExplanation('', 'adequacy')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                             <b-form-radio value="1" @change="propExplanation('Minor concerns regarding adequacy because...', 'adequacy')">
@@ -342,7 +342,7 @@
                             v-model="buffer_modal_stage_two.relevance.option"
                             name="relevance"
                             stacked>
-                            <b-form-radio value="0" @change="propExplanation('No or very minor concerns regarding relevance because...', 'relevance')">
+                            <b-form-radio value="0" @change="propExplanation('', 'relevance')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                             <b-form-radio value="1" @change="propExplanation('Minor concerns regarding relevance because...', 'relevance')">
