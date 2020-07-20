@@ -429,7 +429,13 @@
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
                             <template slot="label">
-                              Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.
+                              Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment. <a href="#" @click="(ui.showExample) ? ui.showExample = false : ui.showExample = true ">{{ (ui.showExample) ? 'Hide' : 'Show' }} example</a>
+                              <!-- Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.-->
+                              <div class="mt-2" v-if="ui.showExample">
+                              <p>If concerns about coherence and relevance contribute most to my decision to downgrade to “low confidence” then I will briefly summarise these specific concerns in brackets  e.g.</p>
+                              <p>No/very minor concerns regarding methodological limitations, Moderate concerns regarding coherence <b>(some contradictory opinions expressed in the underlying data but not reflected in finding)</b>, No/Very minor concerns regarding adequacy, and Serious concerns regarding relevance <b>(indirectly relevant because studies are all from high income rather than LMICs)</b></p>
+                              <p>[non bolded text is the minimum required text generated automatically and the bolded text are the details I have added to explain the concern]</p>
+                              </div>
                             </template>
                             <b-form-textarea
                               id="input-cerqual"
@@ -1533,7 +1539,8 @@ export default {
           chars_of_studies: {
             display_warning: true
           }
-        }
+        },
+        showExample: false
       },
       project: {
         inclusion: '',
@@ -3254,6 +3261,10 @@ export default {
   div >>>
     #span-txt {
       font-size: 2rem;
+    }
+  div >>>
+    label b {
+      font-weight: bold;
     }
   @media print {
     @page {
