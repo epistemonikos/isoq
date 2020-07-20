@@ -710,25 +710,25 @@
                             <b-tab title="Methodological limitations">
                               <h5>Methodological limitations</h5>
                               <p>
-                                <b>{{select_options[evidence_profile[0].methodological_limitations.option].text}}</b>
+                                <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
                                 <br>
                                 Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
                               </p>
                               <h5>Coherence</h5>
                               <p>
-                                <b>{{select_options[evidence_profile[0].coherence.option].text}}</b>
+                                <b>{{displaySelectedOption(evidence_profile[0].coherence.option)}}</b>
                                 <br>
                                 Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
                               </p>
                               <h5>Adequacy</h5>
                               <p>
-                                <b>{{select_options[evidence_profile[0].adequacy.option].text}}</b>
+                                <b>{{displaySelectedOption(evidence_profile[0].adequacy.option)}}</b>
                                 <br>
                                 Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
                               </p>
                               <h5>Relevance</h5>
                               <p>
-                                <b>{{select_options[evidence_profile[0].relevance.option].text}}</b>
+                                <b>{{displaySelectedOption(evidence_profile[0].relevance.option)}}</b>
                                 <br>
                                 Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
                               </p>
@@ -874,7 +874,7 @@
                           v-if="data.item.methodological_limitations.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p><b>{{select_options[data.item.methodological_limitations.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
                       <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
@@ -908,7 +908,7 @@
                           v-if="data.item.coherence.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p><b>{{select_options[data.item.coherence.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
                       <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
@@ -942,7 +942,7 @@
                           v-if="data.item.adequacy.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p><b>{{select_options[data.item.adequacy.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
                       <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
@@ -976,7 +976,7 @@
                           v-if="data.item.relevance.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p><b>{{select_options[data.item.relevance.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
                       <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
@@ -999,7 +999,7 @@
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
-                    <div v-if="data.item.cerqual.option !== null">
+                    <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null">
                       <b-button
                         block
                         class="d-print-none mb-3"
@@ -1010,7 +1010,7 @@
                           v-if="data.item.cerqual.notes"
                           icon="comments"></font-awesome-icon>
                       </b-button>
-                      <p><b>{{level_confidence[data.item.cerqual.option].text}}</b></p>
+                      <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
                       <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
@@ -1091,31 +1091,31 @@
                   </template>
                   <template v-slot:cell(methodological-limit)="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
-                      <p><b>{{select_options[data.item.methodological_limitations.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
                       <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
-                      <p><b>{{select_options[data.item.coherence.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
                       <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
-                      <p><b>{{select_options[data.item.adequacy.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
                       <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
-                      <p><b>{{select_options[data.item.relevance.option].text}}</b></p>
+                      <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
                       <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.cerqual.option !== null">
-                      <p><b>{{level_confidence[data.item.cerqual.option].text}}</b></p>
+                      <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
                       <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                     </div>
                   </template>
@@ -1663,7 +1663,7 @@ export default {
       evidence_profile: [
         {
           isoqf_id: 0,
-          cerqual: { explanation: '', option: null },
+          cerqual: { explanation: '', option: 0 },
           name: '',
           title: '',
           notes: '',
@@ -2670,7 +2670,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].methodological_limitations.option].text,
+                            text: this.displaySelectedOption(this.evidence_profile[0].methodological_limitations.option),
                             bold: true,
                             size: 22
                           })
@@ -2692,7 +2692,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].coherence.option].text,
+                            text: this.displaySelectedOption(this.evidence_profile[0].coherence.option),
                             bold: true,
                             size: 22
                           })
@@ -2714,7 +2714,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].adequacy.option].text,
+                            text: this.displaySelectedOption(this.evidence_profile[0].adequacy.option),
                             bold: true,
                             size: 22
                           })
@@ -2736,7 +2736,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.select_options[this.evidence_profile[0].relevance.option].text,
+                            text: this.displaySelectedOption(this.evidence_profile[0].relevance.option),
                             bold: true,
                             size: 22
                           })
@@ -2758,7 +2758,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: this.level_confidence[this.evidence_profile[0].cerqual.option].text,
+                            text: this.displayLevelConfidence(this.evidence_profile[0].cerqual.option),
                             bold: true,
                             size: 22
                           })
@@ -3089,7 +3089,7 @@ export default {
     },
     populateCerqualExplanation () {
       if (this.buffer_modal_stage_two.methodological_limitations.option !== null) {
-        this.buffer_modal_stage_two.cerqual.explanation = this.select_options[this.buffer_modal_stage_two.methodological_limitations.option].text + ' regarding methodological limitations, ' + this.select_options[this.buffer_modal_stage_two.coherence.option].text + ' regarding coherence, ' + this.select_options[this.buffer_modal_stage_two.adequacy.option].text + ' regarding adequacy, and ' + this.select_options[this.buffer_modal_stage_two.relevance.option].text + ' regarding relevance'
+        this.buffer_modal_stage_two.cerqual.explanation = this.displaySelectedOption(this.buffer_modal_stage_two.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.buffer_modal_stage_two.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.buffer_modal_stage_two.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.buffer_modal_stage_two.relevance.option) + ' regarding relevance'
       } else {
         this.buffer_modal_stage_two.cerqual.explanation = ''
       }
@@ -3112,6 +3112,18 @@ export default {
         elPanel.className = 'visible'
         this.showPanel = true
       }
+    },
+    displaySelectedOption: function (option) {
+      if (option >= 0) {
+        return this.select_options[option].text
+      }
+      return ''
+    },
+    displayLevelConfidence: function (option) {
+      if (option !== null) {
+        return this.level_confidence[option].text
+      }
+      return ''
     }
   }
 }
