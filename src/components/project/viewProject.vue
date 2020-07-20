@@ -4127,7 +4127,8 @@ export default {
       axios.get('/api/isoqf_list_categories/', { params })
         .then((response) => {
           if (response.data.length) {
-            const options = JSON.parse(JSON.stringify(response.data[0].options))
+            let options = JSON.parse(JSON.stringify(response.data[0].options))
+            options.sort((a, b) => a.text.localeCompare(b.text))
             this.list_categories.options = options
             this.modal_edit_list_categories.id = response.data[0].id
             this.modal_edit_list_categories.options = options
