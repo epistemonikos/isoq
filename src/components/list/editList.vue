@@ -128,7 +128,7 @@
                 ref="modal-stage-two"
                 :title="$t('Evidence profile') + ' - ' + buffer_modal_stage_two.title"
                 scrollable
-                @ok="saveStageOneAndTwo"
+                @ok="saveStageOneAndTwo(buffer_modal_stage_two.type, $event)"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
@@ -172,7 +172,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.methodological_limitations.option = null"
+                            @click="buffer_modal_stage_two.methodological_limitations.option = null; buffer_modal_stage_two.methodological_limitations.explanation = ''"
                             v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -236,7 +236,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.coherence.option = null"
+                            @click="buffer_modal_stage_two.coherence.option = null; buffer_modal_stage_two.coherence.explanation = ''"
                             v-if="buffer_modal_stage_two.coherence.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -295,7 +295,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.adequacy.option = null"
+                            @click="buffer_modal_stage_two.adequacy.option = null; buffer_modal_stage_two.adequacy.explanation = ''"
                             v-if="buffer_modal_stage_two.adequacy.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -356,7 +356,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.relevance.option = null"
+                            @click="buffer_modal_stage_two.relevance.option = null; buffer_modal_stage_two.relevance.explanation = ''"
                             v-if="buffer_modal_stage_two.relevance.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -417,7 +417,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.cerqual.option = null"
+                            @click="buffer_modal_stage_two.cerqual.option = null; buffer_modal_stage_two.cerqual.explanation = ''"
                             v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -745,7 +745,32 @@
                       </b-col>
                     </b-row>
                   </b-container>
+              </b-modal>
 
+              <b-modal
+                id="modal-warning-same-txt"
+                ref="modal-warning-same-txt"
+                title="Warning"
+                :hide-footer="true">
+                <p>
+                  It looks like you have not finished writing an explanation for your judgement
+                </p>
+                <b-container>
+                  <b-row align-h="between">
+                    <b-col
+                      cols="4">
+                      <b-button
+                        block
+                        @click="closeWarningModalDoItNow('methodological-limitations')">Do it now</b-button>
+                    </b-col>
+                    <b-col
+                      cols="4">
+                      <b-button
+                        block
+                        @click="closeWarningModalDoItLater()">Do it later</b-button>
+                    </b-col>
+                  </b-row>
+                </b-container>
               </b-modal>
 
               <div
@@ -1896,7 +1921,68 @@ export default {
           this.printErrors(error)
         })
     },
-    saveStageOneAndTwo: function () {
+    openWarningModal: function () {
+      this.$refs['modal-warning-same-txt'].show()
+    },
+    closeWarningModalDoItNow: function (type = '') {
+      this.buffer_modal_stage_two.type = type
+      this.$refs['modal-warning-same-txt'].hide()
+    },
+    closeWarningModalDoItLater: function () {
+      this.continueSavingDataModal()
+      this.$refs['modal-warning-same-txt'].hide()
+    },
+    saveStageOneAndTwo: function (type, e) {
+      e.preventDefault()
+      if (this.checkValidationText(type)) {
+        this.openWarningModal()
+      } else {
+        this.continueSavingDataModal()
+      }
+    },
+    checkValidationText: function (type) {
+      switch (type) {
+        case 'methodological-limitations':
+          if (
+            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
+            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
+            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
+          ) {
+            return true
+          }
+          return false
+        case 'coherence':
+          if (
+            this.buffer_modal_stage_two.coherence.explanation === 'Minor concerns regarding coherence because...' ||
+            this.buffer_modal_stage_two.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
+            this.buffer_modal_stage_two.coherence.explanation === 'Serious concerns regarding coherence because...'
+          ) {
+            return true
+          }
+          return false
+        case 'adequacy':
+          if (
+            this.buffer_modal_stage_two.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
+            this.buffer_modal_stage_two.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
+            this.buffer_modal_stage_two.adequacy.explanation === 'Serious concerns regarding adequacy because...'
+          ) {
+            return true
+          }
+          return false
+        case 'relevance':
+          if (
+            this.buffer_modal_stage_two.relevance.explanation === 'Minor concerns regarding relevance because...' ||
+            this.buffer_modal_stage_two.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
+            this.buffer_modal_stage_two.relevance.explanation === 'Serious concerns regarding relevance because...'
+          ) {
+            return true
+          }
+          return false
+        default:
+          return false
+      }
+    },
+    continueSavingDataModal: function () {
       this.evidence_profile_table_settings.isBusy = true
       delete this.buffer_modal_stage_two.type
       let params = {
@@ -1909,6 +1995,7 @@ export default {
           .then((response) => {
             this.getStageOneData()
             this.saveListName()
+            this.$refs['modal-stage-two'].hide()
           })
           .catch((error) => {
             this.printErrors(error)
@@ -1917,6 +2004,7 @@ export default {
         axios.post(`/api/isoqf_findings`, params)
           .then((response) => {
             this.getStageOneData()
+            this.$refs['modal-stage-two'].hide()
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3000,7 +3088,11 @@ export default {
       this.buffer_modal_stage_two[type].explanation = txt
     },
     populateCerqualExplanation () {
-      this.buffer_modal_stage_two.cerqual.explanation = this.select_options[this.buffer_modal_stage_two.methodological_limitations.option].text + ' regarding methodological limitations, ' + this.select_options[this.buffer_modal_stage_two.coherence.option].text + ' regarding coherence, ' + this.select_options[this.buffer_modal_stage_two.adequacy.option].text + ' regarding adequacy, and ' + this.select_options[this.buffer_modal_stage_two.relevance.option].text + ' regarding relevance'
+      if (this.buffer_modal_stage_two.methodological_limitations.option !== null) {
+        this.buffer_modal_stage_two.cerqual.explanation = this.select_options[this.buffer_modal_stage_two.methodological_limitations.option].text + ' regarding methodological limitations, ' + this.select_options[this.buffer_modal_stage_two.coherence.option].text + ' regarding coherence, ' + this.select_options[this.buffer_modal_stage_two.adequacy.option].text + ' regarding adequacy, and ' + this.select_options[this.buffer_modal_stage_two.relevance.option].text + ' regarding relevance'
+      } else {
+        this.buffer_modal_stage_two.cerqual.explanation = ''
+      }
     },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')
