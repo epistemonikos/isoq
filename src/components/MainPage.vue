@@ -4,7 +4,7 @@
       <b-row>
         <b-col cols="12" md="6" lg="3">
           <h2>iSoQ</h2>
-          <p class="slogan">Lorem ipsum dolor sit amet consectetur, adipisicing elit. A fuga tenetur accusantium blanditiis nostrum dicta officia harum repudiandae saepe consectetur id illum, perspiciatis iure nobis qui pariatur eius cupiditate magnam.</p>
+          <p class="slogan">Summarized review findings and assessments of confidence in the evidence from reviews of qualitative research.</p>
         </b-col>
       </b-row>
 
