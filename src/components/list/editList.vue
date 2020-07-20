@@ -875,7 +875,16 @@
                           icon="comments"></font-awesome-icon>
                       </b-button>
                       <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+                      <p v-if="data.item.methodological_limitations.explanation">
+                        Explanation: {{data.item.methodological_limitations.explanation}}
+                        <span
+                          v-if="displayExclamationAlert('methodological-limitations')"
+                          class="text-danger"
+                          v-b-tooltip.hover
+                          title="This explanation is incomplete">
+                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                        </span>
+                      </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -909,7 +918,16 @@
                           icon="comments"></font-awesome-icon>
                       </b-button>
                       <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+                      <p v-if="data.item.coherence.explanation">
+                        Explanation: {{data.item.coherence.explanation}}
+                        <span
+                          v-if="displayExclamationAlert('coherence')"
+                          class="text-danger"
+                          v-b-tooltip.hover
+                          title="This explanation is incomplete">
+                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                        </span>
+                      </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -943,7 +961,16 @@
                           icon="comments"></font-awesome-icon>
                       </b-button>
                       <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+                      <p v-if="data.item.adequacy.explanation">
+                        Explanation: {{data.item.adequacy.explanation}}
+                        <span
+                          v-if="displayExclamationAlert('adequacy')"
+                          class="text-danger"
+                          v-b-tooltip.hover
+                          title="This explanation is incomplete">
+                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                        </span>
+                      </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -977,7 +1004,16 @@
                           icon="comments"></font-awesome-icon>
                       </b-button>
                       <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+                      <p v-if="data.item.relevance.explanation">
+                        Explanation: {{data.item.relevance.explanation}}
+                        <span
+                          v-if="displayExclamationAlert('relevance')"
+                          class="text-danger"
+                          v-b-tooltip.hover
+                          title="This explanation is incomplete">
+                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                        </span>
+                      </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
                           v-b-tooltip.hover
@@ -1934,46 +1970,46 @@ export default {
     },
     saveStageOneAndTwo: function (type, e) {
       e.preventDefault()
-      if (this.checkValidationText(type)) {
+      if (this.checkValidationText(type, this.buffer_modal_stage_two)) {
         this.openWarningModal()
       } else {
         this.continueSavingDataModal()
       }
     },
-    checkValidationText: function (type) {
+    checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
           if (
-            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
-            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
-            this.buffer_modal_stage_two.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
+            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
+            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
+            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
           ) {
             return true
           }
           return false
         case 'coherence':
           if (
-            this.buffer_modal_stage_two.coherence.explanation === 'Minor concerns regarding coherence because...' ||
-            this.buffer_modal_stage_two.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
-            this.buffer_modal_stage_two.coherence.explanation === 'Serious concerns regarding coherence because...'
+            prop.coherence.explanation === 'Minor concerns regarding coherence because...' ||
+            prop.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
+            prop.coherence.explanation === 'Serious concerns regarding coherence because...'
           ) {
             return true
           }
           return false
         case 'adequacy':
           if (
-            this.buffer_modal_stage_two.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
-            this.buffer_modal_stage_two.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
-            this.buffer_modal_stage_two.adequacy.explanation === 'Serious concerns regarding adequacy because...'
+            prop.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
+            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
+            prop.adequacy.explanation === 'Serious concerns regarding adequacy because...'
           ) {
             return true
           }
           return false
         case 'relevance':
           if (
-            this.buffer_modal_stage_two.relevance.explanation === 'Minor concerns regarding relevance because...' ||
-            this.buffer_modal_stage_two.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
-            this.buffer_modal_stage_two.relevance.explanation === 'Serious concerns regarding relevance because...'
+            prop.relevance.explanation === 'Minor concerns regarding relevance because...' ||
+            prop.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
+            prop.relevance.explanation === 'Serious concerns regarding relevance because...'
           ) {
             return true
           }
@@ -3124,6 +3160,32 @@ export default {
         return this.level_confidence[option].text
       }
       return ''
+    },
+    displayExclamationAlert: function (type) {
+      const evidenceProfile = this.evidence_profile[0]
+      switch (type) {
+        case 'methodological-limitations':
+          if (this.checkValidationText(type, evidenceProfile)) {
+            return true
+          }
+          break
+        case 'coherence':
+          if (this.checkValidationText(type, evidenceProfile)) {
+            return true
+          }
+          break
+        case 'adequacy':
+          if (this.checkValidationText(type, evidenceProfile)) {
+            return true
+          }
+          break
+        case 'relevance':
+          if (this.checkValidationText(type, evidenceProfile)) {
+            return true
+          }
+          break
+      }
+      return false
     }
   }
 }
