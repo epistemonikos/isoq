@@ -1319,7 +1319,7 @@
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
                         GRADE-CERQual Assessment
                     </b-button>
-                    <b>{{ data.item.cerqual_explanation }}</b>
+                    <b class="cerqual-explanation">{{ data.item.cerqual_explanation }}</b>
                   </template>
                   <template v-slot:cell(ref_list)="data">
                     <template v-if="mode!=='edit'">
@@ -4665,6 +4665,9 @@ export default {
     }
     .card-header {
       padding: .5rem .5rem 0 .5rem;
+    }
+    b.cerqual-explanation {
+      font-size: 13px;
     }
   @media print {
     div >>>
