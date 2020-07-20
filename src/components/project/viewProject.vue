@@ -1539,7 +1539,7 @@
                 ok-title="Close"
                 ok-variant="outline-success">
                 <p class="font-weight-light">
-                  Some reviewers choose to group their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created review finding groups you will be prompted to select a category for each finding you add. You can choose not to assign a category to a review finding, or assign it later.
+                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
                 </p>
                 <b-table
                   head-variant="highlight"
