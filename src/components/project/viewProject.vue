@@ -1276,6 +1276,7 @@
                   <template v-slot:cell(category_name)="data">
                     <div v-if="data.item.category_name !== ''">
                       <b-button
+                        block
                         variant="outline-info"
                         @click="editModalFindingName(data.index)">Edit group</b-button>
                       {{ data.item.category_name }}
@@ -1287,6 +1288,7 @@
                     <div v-else>
                       <b-button
                         variant="info"
+                        block
                         @click="editModalFindingName(data.index)">Assign group</b-button>
                     </div>
                   </template>
