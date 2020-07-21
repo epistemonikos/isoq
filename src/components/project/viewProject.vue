@@ -1536,37 +1536,30 @@
                 id="modalEditListCategories"
                 ref="modalEditListCategories"
                 title="Review Finding Groups"
-                scrollable
-                ok-only
-                ok-title="Close"
-                ok-variant="outline-success">
+                scrollable>
                 <p class="font-weight-light">
                   Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
                 </p>
-                <b-table
-                  head-variant="highlight"
-                  striped
-                  v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                  :fields="modal_edit_list_categories.fields"
-                  :items="modal_edit_list_categories.options">
-                  <template v-slot:cell(actions)="data">
-                    <b-button
-                      block
-                      variant="outline-success"
-                      @click="editListCategoryName(data.index)">Edit</b-button>
-                    <b-button
-                      block
-                      variant="outline-danger"
-                      class="mt-1"
-                      @click="removeListCategory(data.index)">Remove</b-button>
-                  </template>
-                </b-table>
-                <b-button
-                  v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                  variant="outline-primary"
-                  @click="modal_edit_list_categories.new=true">
-                  Add new review finding group
-                </b-button>
+                <template
+                  v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                  <b-table
+                    head-variant="highlight"
+                    striped
+                    :fields="modal_edit_list_categories.fields"
+                    :items="modal_edit_list_categories.options">
+                    <template v-slot:cell(actions)="data">
+                      <b-button
+                        block
+                        variant="outline-success"
+                        @click="editListCategoryName(data.index)">Edit</b-button>
+                      <b-button
+                        block
+                        variant="outline-danger"
+                        class="mt-1"
+                        @click="removeListCategory(data.index)">Remove</b-button>
+                    </template>
+                  </b-table>
+                </template>
                 <template
                   v-if="modal_edit_list_categories.new">
                   <b-form-group
@@ -1596,34 +1589,54 @@
                     <b-form-input
                       v-model="modal_edit_list_categories.extra_info"></b-form-input>
                   </b-form-group>
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-success"
-                    @click="updateCategoryName(modal_edit_list_categories.index)">Save</b-button>
                 </template>
                 <template
                   class="mt-3"
                   v-if="modal_edit_list_categories.remove">
                   <p>Confirm you want to remove <b>{{ modal_edit_list_categories.name }}</b> from groups?</p>
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-danger"
-                    @click="removeCategory(modal_edit_list_categories.index)">Confirm</b-button>
                 </template>
-                <template v-slot:modal-footer v-if="modal_edit_list_categories.new">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-success"
-                    @click="saveNewCategory">Save</b-button>
+                <template
+                  v-slot:modal-footer>
+                  <div
+                    v-if="modal_edit_list_categories.remove">
+                    <b-button
+                      variant="outline-primary"
+                      @click="modalCancelCategoryButtons">Cancel</b-button>
+                    <b-button
+                      variant="outline-danger"
+                      @click="removeCategory(modal_edit_list_categories.index)">Confirm</b-button>
+                  </div>
+                  <div
+                    v-if="modal_edit_list_categories.new">
+                    <b-button
+                      variant="outline-primary"
+                      @click="modalCancelCategoryButtons">Cancel</b-button>
+                    <b-button
+                      variant="outline-success"
+                      :disabled="modal_edit_list_categories.name === ''"
+                      @click="saveNewCategory">Save</b-button>
+                  </div>
+                  <div
+                    v-if="!modal_edit_list_categories.new">
+                    <b-button
+                      v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                      variant="outline-primary"
+                      @click="modal_edit_list_categories.new=true">
+                      Add new review finding group
+                    </b-button>
+                  </div>
+                  <div
+                    v-if="modal_edit_list_categories.edit">
+                    <b-button
+                      variant="outline-primary"
+                      @click="modalCancelCategoryButtons">Cancel</b-button>
+                    <b-button
+                      variant="outline-success"
+                      :disabled="modal_edit_list_categories.name === ''"
+                      @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
+                  </div>
                 </template>
               </b-modal>
-
               <back-to-top></back-to-top>
             </b-col>
           </b-row>
