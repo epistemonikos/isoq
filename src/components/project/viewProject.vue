@@ -2517,11 +2517,19 @@ export default {
 
             if (this.list_categories.options.length) {
               let categories = []
-              for (let category of this.list_categories.options) {
-                categories.push({'name': category.text, 'value': category.value, 'items': []})
+              for (let list of lists) {
+                if (Object.prototype.hasOwnProperty.call(list, 'category')) {
+                  if (list.category !== null) {
+                    for (let category of this.list_categories.options) {
+                      if (category.value === list.category) {
+                        categories.push({'name': category.text, 'value': category.value, 'items': [], is_category: true})
+                      }
+                    }
+                  }
+                }
               }
 
-              for (let list of _lists) {
+              for (let list of lists) {
                 if (categories.length) {
                   for (let element of categories) {
                     if (element.value === list.category) {
@@ -2549,15 +2557,6 @@ export default {
                   }
                 }
               }
-              newArr.sort(function (a, b) {
-                if (a.sort < b.sort) {
-                  return -1
-                }
-                if (a.sort > b.sort) {
-                  return 1
-                }
-                return 0
-              })
               this.lists_print_version = newArr
             } else {
               let items = []
