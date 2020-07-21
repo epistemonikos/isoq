@@ -2542,9 +2542,11 @@ export default {
               }
               let newArr = []
               for (let cat of categories) {
-                newArr.push({'is_category': true, 'name': cat.name})
-                for (let item of cat.items) {
-                  newArr.push(item)
+                if (cat.items.length) {
+                  newArr.push({'is_category': true, 'name': cat.name})
+                  for (let item of cat.items) {
+                    newArr.push(item)
+                  }
                 }
               }
               newArr.sort(function (a, b) {
