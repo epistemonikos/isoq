@@ -5,14 +5,14 @@
       :label-for="`${local_criteria}-criteria`"
       :description="ui.description">
       <b-form-textarea
-        :disabled="ui.isDisabled"
+        :disabled="!ui.isDisabled"
         :id="`${local_criteria}-criteria`"
         rows="6"
         max-rows="100"
         v-model="local_data"></b-form-textarea>
     </b-form-group>
     <div
-      v-if="!ui.isDisabled"
+      v-if="ui.isDisabled"
       class="float-right">
       <b-button
         :disabled="ui.project.inclusion.loading"
