@@ -12,7 +12,7 @@
             cols="12"
             md="1"
             class="text-right">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$route.params.org_id }}" class="d-print-none">
+            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }}" class="d-print-none">
               <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
               {{ $t('back') }}
             </b-link>
