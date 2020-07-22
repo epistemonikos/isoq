@@ -2,14 +2,13 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>{{ (org.name === 'My frameworks') ? 'My iSoQ' : org.name }}</h2>
-        <p v-if="org.description">{{ org.description }}</p>
+        <h2>My Workspace</h2>
       </b-container>
     </b-container>
     <b-container>
       <div class="my-4">
         <h3>{{ $t("Projects") }}</h3>
-        <b-row align-h="end" v-if="$store.state.user.is_owner">
+        <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
           <b-col cols="12" class="text-right">
             <b-button
               v-b-tooltip.hover
@@ -29,9 +28,9 @@
               bordered
               hover
               head-variant="light"
-              :busy="projectTable.isBusy"
-              :fields="projectTable.fields"
-              :items="org.projects">
+              :busy="ui.projectTable.isBusy"
+              :fields="ui.projectTable.fields"
+              :items="projects">
               <template v-slot:cell(private)="data">
                 <b-badge
                   variant="light"
@@ -42,11 +41,15 @@
                 </b-badge>
               </template>
               <template v-slot:cell(name)="data">
-                <b-link class="link-project" :to="{name: 'viewProject', params: {org_id: org.id, id: data.item.id}}">{{ data.item.name }}</b-link>
+                <b-link
+                  class="link-project"
+                  :to="{name: 'viewProject', params: {org_id: data.item.organization, id: data.item.id}}">
+                  {{ data.item.name }}
+                </b-link>
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
-                  v-if="$store.state.user.is_owner"
+                  v-if="data.item.is_owner"
                   title="Invite"
                   variant="outline-secondary"
                   @click="modalShareOptions(data.index)">
@@ -54,7 +57,7 @@
                     icon="users"></font-awesome-icon>
                 </b-button>
                 <b-button
-                  v-if="$store.state.user.can_write_other_orgs"
+                  v-if="data.item.allow_to_write"
                   title="Edit"
                   variant="outline-success"
                   @click="openModalEditProject(data.item)">
@@ -62,7 +65,7 @@
                     icon="edit"></font-awesome-icon>
                 </b-button>
                 <b-button
-                  v-if="$store.state.user.is_owner"
+                  v-if="data.item.is_owner"
                   title="Remove"
                   variant="outline-danger"
                   @click="modalRemoveProject(data.item)">
@@ -102,7 +105,7 @@
           </b-alert>
         <organizationForm
           :formData="buffer_project"
-          :canWrite="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"></organizationForm>
+          :canWrite="($store.state.user.personal_organization === this.$route.params.id)"></organizationForm>
       </b-modal>
       <b-modal
         size="xl"
@@ -276,6 +279,14 @@ export default {
         },
         sharedProject: {
           enabledToShare: false
+        },
+        projectTable: {
+          fields: [
+            { key: 'private', label: 'Public' },
+            { key: 'name', label: 'Title' },
+            { key: 'actions', label: '' }
+          ],
+          isBusy: true
         }
       },
       global_status: [
@@ -372,19 +383,12 @@ export default {
         plan: '',
         projects: []
       },
-      projectTable: {
-        fields: [
-          { key: 'private', label: 'Public' },
-          { key: 'name', label: 'Title' },
-          { key: 'actions', label: '' }
-        ],
-        isBusy: true
-      },
-      users_allowed: []
+      users_allowed: [],
+      projects: []
     }
   },
   mounted () {
-    this.getOrganization()
+    this.getProjects()
     // this.getUsers()
   },
   watch: {
@@ -438,19 +442,99 @@ export default {
     }
   },
   methods: {
-    getOrganization: function () {
-      axios.get(`/api/organizations/${this.$route.params.id}`)
-        .then((response) => {
-          let data = response.data
-          this.org = data
-          this.getProjectsAndLists()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+    getProjects: function () {
+      let requests = []
+      const excludeOrgs = ['examples', 'episte']
+      this.projects = []
+
+      for (let _org of this.$store.state.user.orgs) {
+        if (!excludeOrgs.includes(_org.id)) {
+          requests.push(axios.get('/api/isoqf_projects', {
+            params: {
+              organization: _org.id
+            }
+          }))
+          // requests.push(axios.get('/api/isoqf_lists', {
+          //   params: {
+          //     organization: _org.id
+          //   }
+          // }))
+        }
+      }
+      axios.all(requests).then(axios.spread((...responses) => {
+        for (let response of responses) {
+          if (response.data.length) {
+            for (let project of response.data) {
+              if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+                project.can_write = []
+              }
+              if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+                project.can_read = []
+              }
+              if (
+                project.organization === this.$store.state.user.personal_organization ||
+                project.can_read.includes(this.$store.state.user.id) ||
+                project.can_write.includes(this.$store.state.user.id)
+              ) {
+                if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+                  if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+                    project.sharedTokenOnOff = true
+                  } else {
+                    project.sharedTokenOnOff = false
+                  }
+                } else {
+                  if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+                    project.sharedTokenOnOff = true
+                  } else {
+                    project.sharedTokenOnOff = false
+                  }
+                }
+                if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
+                  project.tmp_invite_emails = []
+                }
+                project.is_owner = false
+                project.allow_to_write = false
+                project.allow_to_read = false
+                if (project.organization === this.$store.state.user.personal_organization) {
+                  project.is_owner = true
+                  project.allow_to_write = true
+                  project.allow_to_read = true
+                } else {
+                  if (project.organization !== this.$store.state.user.personal_organization) {
+                    project.is_owner = false
+                  }
+                  if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+                    if (project.can_write.includes(this.$store.state.user.id)) {
+                      project.allow_to_write = true
+                    }
+                  } else {
+                    project.can_write = []
+                  }
+                }
+                this.projects.push(project)
+              }
+            }
+          }
+        }
+      })).catch((error) => {
+        console.log(error)
+      })
+      this.ui.projectTable.isBusy = false
+      // axios.get(`/api/organizations/${this.$route.params.id}`)
+      //   .then((response) => {
+      //     let data = response.data
+      //     this.org = data
+      //     if (!Object.prototype.hasOwnProperty.call(this.org, 'projects')) {
+      //       this.projects = []
+      //     }
+      //     this.getProjects()
+      //   })
+      //   .catch((error) => {
+      //     console.log(error)
+      //   })
     },
     AddProject: function () {
-      this.projectTable.isBusy = true
+      this.ui.projectTable.isBusy = true
       this.buffer_project.private = true
       this.buffer_project.is_public = false
       if (this.buffer_project.public_type !== 'private') {
@@ -462,7 +546,7 @@ export default {
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-            this.getProjectsAndLists()
+            this.getProjects()
           })
           .catch((error) => {
             console.log(error)
@@ -472,7 +556,7 @@ export default {
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.$refs['new-project'].hide()
-            this.getProjectsAndLists()
+            this.getProjects()
           })
           .catch((error) => {
             this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
@@ -498,7 +582,7 @@ export default {
             this.$refs['new-project-list'].hide()
             // get project lists
             this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-            this.getProjectsAndLists()
+            this.getProjects()
           })
           .catch((error) => {
             this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
@@ -508,78 +592,82 @@ export default {
       }
     },
     getProjectsAndLists: function () {
-      axios.all([
-        axios.get('/api/isoqf_projects', {
-          params: {
-            organization: this.$route.params.id
-          }
-        }),
-        axios.get('/api/isoqf_lists', {
-          params: {
-            organization: this.$route.params.id
-          }
-        })
-      ]).then(axios.spread((projects, lists) => {
-        let _projects = projects.data
-        for (let project of _projects) {
-          if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-              project.sharedTokenOnOff = true
-            } else {
-              project.sharedTokenOnOff = false
+      let projects = []
+      let lists = []
+      const excludeOrgs = ['examples', 'episte']
+
+      for (let org of this.$store.state.user.orgs) {
+        if (!excludeOrgs.includes(org.id)) {
+          projects.push(axios.get('/api/isoqf_projects', {
+            params: {
+              organization: org.id
             }
-          } else {
-            if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-              project.sharedTokenOnOff = true
-            } else {
-              project.sharedTokenOnOff = false
+          }))
+          lists.push(axios.get('/api/isoqf_lists', {
+            params: {
+              organization: org.id
             }
-          }
-          if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
-            project.tmp_invite_emails = []
-          }
+          }))
         }
-        if (this.$store.state.user.personal_organization === this.$route.params.id) {
-          this.$store.dispatch('usercan', true)
-          this.$store.dispatch('isowner', true)
-          this.$set(this.org, 'projects', _projects)
-        } else {
-          this.$store.dispatch('isowner', false)
+      }
+      axios.all(projects).then(axios.spread((...results) => {
+        for (const result of results) {
+          let _projects = result.data
           for (let project of _projects) {
-            if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
-              project.can_read = []
-            }
-            if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
-              project.can_write = []
-            }
-            if (Object.prototype.hasOwnProperty.call(project, 'can_read') || Object.prototype.hasOwnProperty.call(project, 'can_write')) {
-              if (project.can_read.includes(this.$store.state.user.id) || project.can_write.includes(this.$store.state.user.id)) {
-                this.$store.dispatch('usercan', false)
-                if (project.can_write.includes(this.$store.state.user.id)) {
-                  this.$store.dispatch('usercan', true)
-                }
-                _projects.push(project)
+            if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+                project.sharedTokenOnOff = true
+              } else {
+                project.sharedTokenOnOff = false
+              }
+            } else {
+              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+                project.sharedTokenOnOff = true
+              } else {
+                project.sharedTokenOnOff = false
               }
             }
-          }
-          this.$set(this.org, 'projects', _projects)
-        }
-        var projectlist = lists.data
-
-        projects.data.forEach(function (v, k) {
-          projects.data[k].lists = []
-          // this.$set(projects.data[k], 'list', [])
-          for (const pos in projectlist) {
-            if (projects.data[k].id === projectlist[pos].project_id) {
-              projects.data[k].lists.push(projectlist[pos])
+            if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
+              project.tmp_invite_emails = []
             }
+            project.is_owner = false
+            project.allow_to_write = false
+            project.allow_to_read = false
+            if (project.organization === this.$store.state.user.personal_organization) {
+              project.is_owner = true
+              project.allow_to_write = true
+              project.allow_to_read = true
+            } else {
+              if (project.organization !== this.$store.state.user.personal_organization) {
+                project.is_owner = false
+              }
+              if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+                if (project.can_write.includes(this.$store.state.user.id)) {
+                  project.allow_to_write = true
+                }
+              } else {
+                project.can_write = []
+              }
+            }
+            this.projects.push(project)
           }
-        })
-        this.projectTable.isBusy = false
+        }
+        // var projectlist = lists.data
+
+        // projects.data.forEach(function (v, k) {
+        //   projects.data[k].lists = []
+        //   // this.$set(projects.data[k], 'list', [])
+        //   for (const pos in projectlist) {
+        //     if (projects.data[k].id === projectlist[pos].project_id) {
+        //       projects.data[k].lists.push(projectlist[pos])
+        //     }
+        //   }
+        // })
       }))
+      this.ui.projectTable.isBusy = false
     },
     editProjectList: function (projectPosition, listPosition) {
-      this.buffer_project_list = JSON.parse(JSON.stringify(this.org.projects[projectPosition].lists[listPosition]))
+      this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
       this.$refs['new-project-list'].show()
     },
     cleanProjectList: function () {
@@ -593,9 +681,9 @@ export default {
         .then((response) => {
           this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
           this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-          this.getProjectsAndLists()
+          this.getProjects()
           this.$refs['new-project-list'].hide()
-          this.projectTable.isBusy = true
+          this.ui.projectTable.isBusy = true
         })
         .catch((error) => {
           console.log(error)
@@ -618,8 +706,8 @@ export default {
       this.$refs['modal-remove-project'].show()
     },
     removeProject: function () {
-      this.projectTable.isBusy = true
-      const _projects = JSON.parse(JSON.stringify(this.org.projects))
+      this.ui.projectTable.isBusy = true
+      const _projects = JSON.parse(JSON.stringify(this.projects))
       let _lists = []
       let _charsOfStudies = []
       let _methAssessments = []
@@ -732,8 +820,8 @@ export default {
             .then((response) => {
               this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
               delete this.org.remove_project_id
-              this.getOrganization()
-              this.getProjectsAndLists()
+              this.getProjects()
+              this.getProjects()
             })
             .catch((error) => {
               console.log(error)
@@ -742,13 +830,13 @@ export default {
     },
     usersCanList: function (index) {
       let querys = []
-      if (Object.prototype.hasOwnProperty.call(this.org.projects[index], 'can_read')) {
-        for (let user of this.org.projects[index].can_read) {
+      if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_read')) {
+        for (let user of this.projects[index].can_read) {
           querys.push(axios.get(`/users/${user}`))
         }
       }
-      if (Object.prototype.hasOwnProperty.call(this.org.projects[index], 'can_write')) {
-        for (let user of this.org.projects[index].can_write) {
+      if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_write')) {
+        for (let user of this.projects[index].can_write) {
           querys.push(axios.get(`/users/${user}`))
         }
       }
@@ -766,7 +854,7 @@ export default {
         })
     },
     modalShareOptions: function (index) {
-      this.buffer_project = this.org.projects[index]
+      this.buffer_project = this.projects[index]
       this.buffer_project.index = index
       this.usersCanList(index)
       this.$refs['modal-share-options'].show()
@@ -791,7 +879,7 @@ export default {
     },
     saveSharedProject: function (index) {
       const sharedEmails = this.buffer_project.tmp_invite_emails.join()
-      const projectId = this.org.projects[index].id
+      const projectId = this.projects[index].id
       const params = {
         current_user: this.$store.state.user.name,
         emails: sharedEmails,
@@ -802,7 +890,7 @@ export default {
         .then((response) => {
           let _response = response.data[0]
           const index = this.buffer_project.index
-          this.org.projects[index] = _response
+          this.projects[index] = _response
           this.buffer_project = _response
           this.buffer_project.sharedTo = ''
           this.buffer_project.tmp_invite_emails = []
@@ -814,10 +902,10 @@ export default {
     },
     unshare: function (_index, userId) {
       const index = this.buffer_project.index
-      const projectId = this.org.projects[index].id
+      const projectId = this.projects[index].id
       axios.post(`/share/project/${projectId}/unshare?user_id=${userId}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
         .then((response) => {
-          this.org.projects[this.buffer_project.index] = response.data
+          this.projects[this.buffer_project.index] = response.data
           this.users_allowed.splice(_index)
         })
         .catch((error) => {
@@ -830,7 +918,7 @@ export default {
         .then((response) => {
           let _response = response.data
           _response.tmp_invite_emails = []
-          this.org.projects[this.buffer_project.index] = _response
+          this.projects[this.buffer_project.index] = _response
           this.buffer_project.invite_emails = _response.invite_emails
         })
         .catch((error) => {
