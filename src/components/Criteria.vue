@@ -120,7 +120,7 @@ export default {
           params.exclusion = ''
         }
       }
-      if (!this.ui.isDisabled) {
+      if (this.ui.isDisabled) {
         axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
           .then((response) => {
             if (type === 'inclusion') {
