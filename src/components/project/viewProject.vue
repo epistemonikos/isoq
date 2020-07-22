@@ -6,7 +6,7 @@
           <b-col
             cols="12"
             md="11" class="toDoc">
-            <h2 id="project-title">{{ project.name }}</h2>
+            <h2 id="project-title">{{ project.name }} {{checkPermissions()}}</h2>
           </b-col>
           <b-col
             cols="12"
@@ -105,6 +105,7 @@
                     <b-form-file
                       id="input-ris-file-key"
                       plain
+                      :disabled="!checkPermissions()"
                       @change="loadRefs($event)"></b-form-file>
                     <b-button
                       block
@@ -236,7 +237,7 @@
                       v-if="ui.project.show_criteria"
                       label="Inclusion criteria"
                       description="Please enter the study inclusion criteria used in the review"
-                      :isEnabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                      :isDisabled="checkPermissions()"
                       criteria="inclusion"
                       :dataTxt="project.inclusion">
                     </criteria>
@@ -249,7 +250,7 @@
                       v-if="ui.project.show_criteria"
                       label="Exclusion criteria"
                       description="Please enter the study exclusion criteria used in the review"
-                      :isEnabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                      :isDisabled="checkPermissions()"
                       criteria="exclusion"
                       :dataTxt="project.exclusion">
                     </criteria>
@@ -264,37 +265,37 @@
               <p class="font-weight-light">
                 Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
               </p>
-              <b-row>
+              <b-row
+                v-if="checkPermissions()">
                 <b-col
                   sm="4">
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="charsOfStudies.fields.length <= 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    @click="openModalCharsOfStudies()"
-                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true">
+                    :disabled="(references.length) ? false : true"
+                    v-if="charsOfStudies.fields.length <= 2"
+                    @click="openModalCharsOfStudies()">
                     Create Table
                   </b-button>
                   <b-button
                     :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-primary"
-                    v-if="charsOfStudies.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    v-if="charsOfStudies.fields.length > 2"
                     @click="openModalCharsOfStudiesEdit">
                     Add or Edit column headings
                   </b-button>
                 </b-col>
                 <b-col
                   sm="1">
-                  <p v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)" class="text-center pt-1">OR</p>
+                  <p class="text-center pt-1">OR</p>
                 </b-col>
                 <b-col
                   sm="4">
                   <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-info"
-                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true"
+                    :disabled="(references.length) ? false : true"
                     v-b-modal.import-characteristics-table>
                     Import table
                   </b-button>
@@ -582,22 +583,22 @@
               <p class="font-weight-light">
                 Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
-              <b-row>
+              <b-row
+                v-if="checkPermissions()">
                 <b-col
                   sm="4">
                   <b-button
                     block
                     variant="outline-primary"
-                    v-if="methodologicalTableRefs.fields.length <= 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    @click="openModcontent()"
-                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true">
+                    :disabled="(references.length) ? false : true"
+                    v-if="methodologicalTableRefs.fields.length <= 2"
+                    @click="openModcontent()">
                     Create Table
                   </b-button>
                   <b-button
                     block
                     variant="outline-primary"
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
-                    v-if="methodologicalTableRefs.fields.length > 2 && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                    v-if="methodologicalTableRefs.fields.length > 2"
                     @click="openModcontent(true)">
                     Add or Edit column headings
                   </b-button>
@@ -609,10 +610,9 @@
                 <b-col
                   sm="4">
                   <b-button
-                    v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-info"
-                    :disabled="(references.length) ? (!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)) ? true : false : true"
+                    :disabled="(references.length) ? false : true"
                     v-b-modal.import-methodological-table>
                     Import table
                   </b-button>
@@ -1047,7 +1047,7 @@
           <b-row
             class="mt-2">
             <b-col
-              v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
+              v-if="checkPermissions()"
               cols="12">
               <b-row
                 class="mb-2">
@@ -1158,7 +1158,7 @@
             </b-col>
             <b-col cols="12" class="toDoc">
               <template
-                v-if="mode==='edit' && ($store.state.user.is_owner || $store.state.user.can_write_other_orgs)">
+                v-if="mode==='edit' && checkPermissions()">
                 <b-table
                   :selectable="(mode==='view')?true:false"
                   select-mode="multi"
@@ -4534,6 +4534,19 @@ export default {
     continueToIsoq: function () {
       window.scrollTo({top: 0, behavior: 'smooth'})
       this.tabOpened = 2
+    },
+    checkPermissions: function () {
+      if (this.$store.state.user.personal_organization === this.$route.params.org_id) {
+        return true
+      } else {
+        if (!Object.prototype.hasOwnProperty.call(this.project, 'can_write')) {
+          return false
+        }
+        if (this.project.can_write.includes(this.$store.state.user.id)) {
+          return true
+        }
+      }
+      return false
     }
   }
 }
