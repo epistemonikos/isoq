@@ -19,7 +19,7 @@
           <template v-else>
             <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("Login") }}</b-nav-item>
           </template>
-          <switch-language/>
+          <!-- <switch-language/> -->
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
