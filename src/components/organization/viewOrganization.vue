@@ -200,6 +200,12 @@
                     variant="danger"
                     @click="unshare(data.index, data.item.id)">unshare</b-button>
                 </template>
+                <template v-slot:cell(user_can)="data">
+                  <b-form-select
+                    v-model="data.item.user_can"
+                    :options="[{value: 0, text: 'can read'}, {value: 1, text: 'can write'}]"
+                    @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
+                </template>
                 <template v-slot:empty>
                   <p class="font-weight-light text-center my-3">No users will be access to this project</p>
                 </template>
@@ -847,7 +853,7 @@ export default {
           let usersAllowedCanRead = []
           for (let response of responses) {
             const user = response.data
-            usersAllowedCanRead.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 'read' })
+            usersAllowedCanRead.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 0, 'project_id': this.projects[index].id, 'index': index })
           }
           this.users_allowed.push(...usersAllowedCanRead)
         })
@@ -859,7 +865,7 @@ export default {
           let usersAllowedCanWrite = []
           for (let response of responses) {
             const user = response.data
-            usersAllowedCanWrite.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 'write' })
+            usersAllowedCanWrite.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 1, 'project_id': this.projects[index].id, 'index': index })
           }
           this.users_allowed.push(...usersAllowedCanWrite)
         })
@@ -950,6 +956,22 @@ export default {
         randomString += charSet.substring(randomPoz, randomPoz + 1)
       }
       return randomString
+    },
+    changePermission: function (projectId, userId, option, index) {
+      console.log(projectId, userId, option)
+      const params = {
+        'user_id': userId,
+        'option': option
+      }
+      axios.patch(`/share/project/${projectId}/options-update`, params)
+        .then((response) => {
+          const project = response.data[0]
+          this.projects[index] = project
+          this.buffer_project = project
+          this.buffer_project.index = index
+        }).catch((error) => {
+          console.log(error)
+        })
     }
   }
 }
