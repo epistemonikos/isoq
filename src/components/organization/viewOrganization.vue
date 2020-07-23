@@ -831,6 +831,7 @@ export default {
     usersCanList: function (index) {
       let canRead = []
       let canWrite = []
+      this.users_allowed = []
       if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_read')) {
         for (let user of this.projects[index].can_read) {
           canRead.push(axios.get(`/users/${user}`))
