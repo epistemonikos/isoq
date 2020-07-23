@@ -193,7 +193,7 @@
               <b-table
                 show-empty
                 responsive
-                :fields="['username', 'first_name', 'last_name', 'actions']"
+                :fields="['username', 'first_name', 'last_name', 'user_can', 'actions']"
                 :items="users_allowed">
                 <template v-slot:cell(actions)="data">
                   <b-button
@@ -829,25 +829,38 @@ export default {
         }.bind(this)))
     },
     usersCanList: function (index) {
-      let querys = []
+      let canRead = []
+      let canWrite = []
       if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_read')) {
         for (let user of this.projects[index].can_read) {
-          querys.push(axios.get(`/users/${user}`))
+          canRead.push(axios.get(`/users/${user}`))
         }
       }
       if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_write')) {
         for (let user of this.projects[index].can_write) {
-          querys.push(axios.get(`/users/${user}`))
+          canWrite.push(axios.get(`/users/${user}`))
         }
       }
-      axios.all(querys)
+      axios.all(canRead)
         .then((responses) => {
-          let usersAllowed = []
+          let usersAllowedCanRead = []
           for (let response of responses) {
             const user = response.data
-            usersAllowed.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username })
+            usersAllowedCanRead.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 'read' })
           }
-          this.users_allowed = usersAllowed
+          this.users_allowed.push(...usersAllowedCanRead)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      axios.all(canWrite)
+        .then((responses) => {
+          let usersAllowedCanWrite = []
+          for (let response of responses) {
+            const user = response.data
+            usersAllowedCanWrite.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 'write' })
+          }
+          this.users_allowed.push(...usersAllowedCanWrite)
         })
         .catch((error) => {
           console.log(error)
