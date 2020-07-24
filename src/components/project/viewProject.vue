@@ -6,7 +6,7 @@
           <b-col
             cols="12"
             md="11" class="toDoc">
-            <h2 id="project-title">{{ project.name }} {{checkPermissions()}}</h2>
+            <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
           <b-col
             cols="12"
