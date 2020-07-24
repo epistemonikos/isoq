@@ -2522,7 +2522,10 @@ export default {
                   if (list.category !== null) {
                     for (let category of this.list_categories.options) {
                       if (category.value === list.category) {
-                        categories.push({'name': category.text, 'value': category.value, 'items': [], is_category: true})
+                        const exist = (obj) => obj.value === list.category
+                        if (!categories.some(exist)) {
+                          categories.push({'name': category.text, 'value': category.value, 'items': [], is_category: true})
+                        }
                       }
                     }
                   }
