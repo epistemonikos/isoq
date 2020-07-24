@@ -958,7 +958,6 @@ export default {
       return randomString
     },
     changePermission: function (projectId, userId, option, index) {
-      console.log(projectId, userId, option)
       const params = {
         'user_id': userId,
         'option': option
