@@ -1379,7 +1379,7 @@
                       <template v-else>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ item.isoqf_id }}</p>
+                          <p>{{ item.sort }}</p>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
@@ -2552,11 +2552,14 @@ export default {
                 }
               }
               let newArr = []
+              let cnt = 1
               for (let cat of categories) {
                 if (cat.items.length) {
                   newArr.push({'is_category': true, 'name': cat.name})
                   for (let item of cat.items) {
+                    item.sort = cnt
                     newArr.push(item)
+                    cnt++
                   }
                 }
               }
