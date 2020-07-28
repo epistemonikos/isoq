@@ -38,22 +38,33 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  // store.dispatch('getLogginInfo', {})
-  const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
-  if (nearestWithTitle) document.title = nearestWithTitle.meta.title
+  store.dispatch('getLogginInfo', {})
+  store.state.promise.then(() => {
+    const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
+    if (nearestWithTitle) document.title = nearestWithTitle.meta.title
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (store.getters.isLoggedIn) {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+      if (store.getters.isLoggedIn) {
+        next()
+        return
+      }
+      next({
+        name: 'Login',
+        query: {redirect: to.fullPath}
+      })
+    } else {
       next()
-      return
     }
-    next({
-      name: 'Login',
-      query: {redirect: to.fullPath}
-    })
-  } else {
-    next()
-  }
+  }).catch(() => {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+      next({
+        name: 'Login',
+        query: {redirect: to.fullPath}
+      })
+    } else {
+      next()
+    }
+  })
 })
 
 /* eslint-disable no-new */

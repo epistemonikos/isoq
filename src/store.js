@@ -32,6 +32,9 @@ export const store = new Vuex.Store({
     },
     change_status (state) {
       state.status = ''
+    },
+    save_promise (state, promise) {
+      state.promise = promise
     }
   },
   actions: {
@@ -61,10 +64,13 @@ export const store = new Vuex.Store({
     },
     logout ({commit}) {
       return new Promise((resolve, reject) => {
-        commit('logout')
-        // localStorage.removeItem('token')
-        // delete axios.defaults.headers.common['Authorization']
-        resolve()
+        axios.get('/auth/logout').then((response) => {
+          console.log(response)
+          commit('logout')
+          resolve()
+        }).catch((error) => {
+          reject(error)
+        })
       })
     },
     usercan ({commit}, _bool) {
@@ -75,6 +81,28 @@ export const store = new Vuex.Store({
     },
     changeStatus ({commit}) {
       commit('change_status')
+    },
+    getLogginInfo ({commit}) {
+      if (this.state.status === '') {
+        let promise = new Promise((resolve, reject) => {
+          let instance = axios.create({
+            withCredentials: true
+          })
+          instance.post('/auth/user').then((response) => {
+            if (response.data.status !== 'not_logged') {
+              commit('auth_success', response.data)
+            } else {
+              commit('logout')
+            }
+            resolve()
+          }).catch((error) => {
+            console.log(error)
+            commit('logout')
+            reject(error)
+          })
+        })
+        commit('save_promise', promise)
+      }
     }
   },
   getters: {
