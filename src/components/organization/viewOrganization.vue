@@ -148,7 +148,7 @@
             title="Invite">
             <b-container>
               <b-form-group
-                label="Insert emails separated by commas"
+                label='Insert emails separated by commas and click "add"'
                 label-for="input-emails-invite">
                 <b-input
                   type="email"
@@ -188,8 +188,9 @@
             </b-container>
           </b-tab>
           <b-tab
-            title="Can access">
+            title="Users with access">
             <b-container>
+              <h4>Users with Access</h4>
               <b-table
                 show-empty
                 responsive
@@ -203,16 +204,16 @@
                 <template v-slot:cell(user_can)="data">
                   <b-form-select
                     v-model="data.item.user_can"
-                    :options="[{value: 0, text: 'can read'}, {value: 1, text: 'can write'}]"
+                    :options="[{value: 0, text: 'Can view'}, {value: 1, text: 'Can view and edit'}]"
                     @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
                 </template>
                 <template v-slot:empty>
-                  <p class="font-weight-light text-center my-3">No users will be access to this project</p>
+                  <p class="font-weight-light text-center my-3">No users have access to this project</p>
                 </template>
               </b-table>
               <div
                 v-if="buffer_project.invite_emails.length">
-                <h3>Pending access</h3>
+                <h4>Pending access</h4>
                 <b-table-simple
                   v-if="buffer_project.invite_emails.length">
                   <b-thead>
@@ -238,9 +239,9 @@
             </b-container>
           </b-tab>
           <b-tab
-            title="Temporal sharing">
+            title="Temporary sharing">
             <b-container>
-              <p>Enable this option for share with a user that will no create an account</p>
+              <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.</p>
               <b-form-checkbox
                 switch
                 v-model="buffer_project.sharedTokenOnOff"
@@ -249,7 +250,7 @@
               <div
                 v-if="buffer_project.sharedTokenOnOff"
                 class="mt-2">
-                <p>Copy and Share this url</p>
+                <p>Copy and Share this URL</p>
                 <b-form-input
                   :value="buffer_project.temporaryUrl"></b-form-input>
               </div>
