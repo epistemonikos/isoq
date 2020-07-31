@@ -43,7 +43,7 @@ export default {
 <style scoped>
   div >>>
     #mainPage {
-      background: url('https://isof.epistemonikos.org/assets/images/home_background.jpg');
+      background: url('../assets/a.jpg');
       background-size: cover;
       color: #FFF;
     }
