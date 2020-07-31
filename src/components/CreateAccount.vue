@@ -38,12 +38,13 @@
                   required
                   aria-describedby="input-live-help input-live-feedback"
                   placeholder="Enter a valid email"
-                  v-model="user.username"></b-form-input>
+                  v-model="user.username">
+                </b-form-input>
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation">This username exist!</b-form-text>
+                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address</b-form-text>
                 <b-form-text
-                  id="input-live-help">This will be used for loggin.</b-form-text>
+                  id="input-live-help">Your email address is your username for logging-in to iSoQ.</b-form-text>
               </b-form-group>
               <b-form-group
                 v-if="false"
@@ -64,7 +65,7 @@
                   id="input_password"
                   type="password"
                   required
-                  placeholder="Write an strong password with at least 8 alpha-numeric characters"
+                  placeholder="Write a strong password with at least 8 alpha-numeric characters"
                   v-model="user.password"></b-form-input>
               </b-form-group>
               <b-form-group
@@ -75,7 +76,7 @@
                   id="input_repeat_password"
                   type="password"
                   required
-                  placeholder="Write the same password above"
+                  placeholder="Write the same password as above"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
