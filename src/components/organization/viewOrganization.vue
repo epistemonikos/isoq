@@ -288,7 +288,7 @@ export default {
         },
         projectTable: {
           fields: [
-            { key: 'private', label: 'Public' },
+            { key: 'private', label: 'Privacy' },
             { key: 'name', label: 'Title' },
             { key: 'actions', label: '' }
           ],
