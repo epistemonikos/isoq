@@ -4,15 +4,15 @@
       <b-row>
         <b-col cols="12" md="6" lg="3">
           <h2>iSoQ</h2>
-          <p class="slogan">Summarized review findings and assessments of confidence in the evidence from reviews of qualitative research.</p>
+          <p class="slogan">Summarised review findings and assessments of confidence in the evidence from reviews of qualitative research.</p>
         </b-col>
       </b-row>
 
       <b-row class="py-5">
         <b-col cols="12" md="4" lg="3">
-          <ul class="unstyled-list">
-            <li>Learn more about iSoQ</li>
-            <li>Browse</li>
+          <ul id="main-page-nav" class="unstyled-list">
+            <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
+            <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
           </ul>
         </b-col>
       </b-row>
@@ -57,6 +57,12 @@ export default {
     }
     li {
       font-size: 20px;
+    }
+    li a {
+      color: white;
+    }
+    li a:hover {
+      text-decoration: none;
     }
     .uea {
       font-size: 12px;
