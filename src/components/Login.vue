@@ -21,8 +21,7 @@
                     id="input_email"
                     v-model="username"
                     type="email"
-                    required
-                    placeholder="Enter a valid email"></b-form-input>
+                    required></b-form-input>
                 </b-form-group>
                 <b-form-group
                   id="input_group_password"
@@ -32,8 +31,7 @@
                     id="input_password"
                     v-model="password"
                     type="password"
-                    required
-                    placeholder="Enter your strong password"></b-form-input>
+                    required></b-form-input>
                 </b-form-group>
                 <b-card-text class="text-center text-forgot-create">
                   <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
