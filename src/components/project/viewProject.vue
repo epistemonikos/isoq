@@ -82,14 +82,14 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add Data Needed to Make GRADE-CERQual Assessments</h3>
+              <h3>Add data needed to make GRADE-CERQual assessments</h3>
               <p>
-                To optimize the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
+                To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
             </b-col>
             <b-col
               cols="12">
-              <h4 class="mt-5">STEP 1: Upload the references for your included Studies (required)</h4>
+              <h4 class="mt-5">STEP 1: Upload the <b>references</b> for your included Studies (required)</h4>
               <p class="font-weight-light">
                 You must import only the references for your final list of included studies
               </p>
@@ -225,7 +225,7 @@
               cols="12"
               class="mt-3">
               <h4 class="mt-5">
-                STEP 2: Enter the study inclusion and exclusion criteria used in the review (recommended)
+                STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)
               </h4>
               <b-container>
                 <b-row>
@@ -261,7 +261,7 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">STEP 3: Create or Import your Characteristics of Studies Table (recommended)</h4>
+              <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
               <p class="font-weight-light">
                 Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
               </p>
@@ -388,7 +388,7 @@
                     <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
                   </ul>
                   <b-form-group
-                    label="Number of columnns">
+                    label="Number of columns">
                     <b-form-input
                       id="nro-columns"
                       v-model="charsOfStudiesFieldsModal.nroColumns"
@@ -579,7 +579,7 @@
             <b-col
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">STEP 4: Create or import your Methodological Assessments Table (recommended)</h4>
+              <h4 class="mt-5">STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
               <p class="font-weight-light">
                 Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
@@ -703,7 +703,7 @@
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
                   <b-form-group
-                    label="Number of columnns">
+                    label="Number of columns">
                     <b-form-input
                       id="nro-columns"
                       v-model="methodologicalFieldsModal.nroColumns"
