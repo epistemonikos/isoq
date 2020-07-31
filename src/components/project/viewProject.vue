@@ -490,7 +490,8 @@
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                       v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
                       rows="2"
-                      max-rows="100"></b-form-textarea>
+                      max-rows="100"
+                      placeholder="Enter both your assessment and the explanation for your assessment here"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
 
@@ -516,22 +517,22 @@
                   </p>
                   <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
                   <p
-                    class="font-weight-light text-danger">
-                    The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                    class="text-danger">
+                    <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
                   </p>
                   <b-button
                     variant="info"
                     @click="generateTemplate">
                     Download template
                   </b-button>
-                  <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                  <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
                   <b-form-file
                     id="input-template-chars-file"
                     plain
                     @change="loadTableImportData($event)"></b-form-file>
-                  <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
-                  <p>If it looks right, accept the import by clicking on "Save" button.</p>
-                  <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                  <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
+                  <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
+                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
                   <b-alert
                     variant="info"
                     :show="importDataTable.error !== null">
@@ -805,7 +806,8 @@
                     v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                     v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"
                     rows="2"
-                    max-rows="100"></b-form-textarea>
+                    max-rows="100"
+                    placeholder="Enter both your assessment and the explanation for your assessment here"></b-form-textarea>
                 </b-form-group>
               </b-modal>
 
@@ -856,22 +858,22 @@
                 </p>
                 <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
                 <p
-                  class="font-weight-light text-danger">
-                  The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.
+                  class="text-danger">
+                  <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
                 </p>
                 <b-button
                   variant="info"
                   @click="generateTemplate">
                   Download template
                 </b-button>
-                <h4 class="mt-3">STEP 2: Import the populated template to iSoQ</h4>
+                <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
                 <b-form-file
                   id="input-template-methodological-file"
                   plain
                   @change="loadTableImportData($event)"></b-form-file>
-                <h4 class="mt-3">STEP 3: Below is a preview of the table.</h4>
-                <p>If it looks right, accept the import by clicking on "Save" button.</p>
-                <p>If something doesn’t look right, remove it by clicking "Reject" button and return to Step 2. See help video for support.</p>
+                <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
+                <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
+                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
                 <b-alert
                   variant="info"
                   :show="importDataTable.error !== null">
