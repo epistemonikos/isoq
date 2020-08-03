@@ -503,11 +503,13 @@
                   size="xl"
                   id="import-characteristics-table"
                   ref="import-characteristics-table"
-                  title="Import table"
                   @ok="saveImportedData('isoqf_characteristics')"
                   @cancel="cleanVars('import-characteristics-table')"
                   ok-variant="outline-success"
                   cancel-variant="outline-secondary">
+                  <template v-slot:modal-title>
+                    Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                  </template>
                   <b-alert show variant="danger">
                     <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                   </b-alert>
@@ -844,11 +846,13 @@
                 size="xl"
                 id="import-methodological-table"
                 ref="import-methodological-table"
-                title="Import table"
                 @ok="saveImportedData('isoqf_assessments')"
                 @cancel="cleanVars('import-methodological-table')"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <template v-slot:modal-title>
+                  Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                </template>
                 <b-alert show variant="danger">
                   <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
                 </b-alert>
