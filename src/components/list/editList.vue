@@ -126,12 +126,14 @@
                 size="xl"
                 id="modal-stage-two"
                 ref="modal-stage-two"
-                :title="$t('Evidence profile') + ' - ' + buffer_modal_stage_two.title"
                 scrollable
                 @ok="saveStageOneAndTwo(buffer_modal_stage_two.type, $event)"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <template v-slot:modal-title>
+                  Evidence profile - {{ buffer_modal_stage_two.title }} <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                </template>
                   <b-container>
                     <b-row>
                       <b-col
