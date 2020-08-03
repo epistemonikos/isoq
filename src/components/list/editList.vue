@@ -10,7 +10,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small></h2>
+        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small><span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
       </b-container>
@@ -1398,6 +1398,7 @@
               <a name="extracted-data"></a>
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
+                <font-awesome-icon icon="question-circle"></font-awesome-icon>
                 <span
                   v-if="ui.adequacy.extracted_data.display_warning"
                   class="text-danger"
