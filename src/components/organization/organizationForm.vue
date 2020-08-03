@@ -90,9 +90,11 @@
         v-model="formData.lists_authors"></b-form-input>
     </b-form-group>
     <b-form-group
-      label="Visibility on the iSoQ database"
       label-for="select-project-list-status"
       description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it “private”. You can change these settings at any time.">
+      <template v-slot:label>
+        Visibility on the iSoQ database <font-awesome-icon icon="question-circle"></font-awesome-icon>
+      </template>
       <b-select
         :disabled="!canWrite"
         id="select-project-list-status"
