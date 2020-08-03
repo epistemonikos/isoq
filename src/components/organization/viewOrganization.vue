@@ -50,7 +50,7 @@
               <template v-slot:cell(actions)="data">
                 <b-button
                   v-if="data.item.is_owner"
-                  title="Invite"
+                  title="Share"
                   variant="outline-secondary"
                   @click="modalShareOptions(data.index)">
                   <font-awesome-icon
@@ -141,7 +141,7 @@
         size="xl"
         id="modal-share-options"
         ref="modal-share-options"
-        title="Invite"
+        title="Share"
         scrollable>
         <b-tabs>
           <b-tab
