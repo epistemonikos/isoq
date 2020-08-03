@@ -82,7 +82,7 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add data needed to make GRADE-CERQual assessments</h3>
+              <h3>Add data needed to make GRADE-CERQual assessments <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h3>
               <p>
                 To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
