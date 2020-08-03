@@ -1071,7 +1071,7 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view'"
-                  md="3"
+                  md="4"
                   cols="12">
                   <b-button
                     class="mt-1"
@@ -1127,9 +1127,10 @@
                 </b-col>
                 <b-col
                   v-if="mode!=='view' && lists.length > 1"
-                  md="3"
+                  md="2"
                   cols="12">
                   <b-button
+                    class="mt-1"
                     block
                     variant="outline-secondary"
                     @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
@@ -1141,8 +1142,15 @@
               cols="12"
               class="my-2 d-print-none">
               <b-card
+                id="card-search"
                 bg-variant="light">
                 <b-row>
+                  <b-col
+                    cols="12">
+                    <b-button
+                      class="close mb-1"
+                      @click="toggleSearch(ui.project.displaySearch)">×</b-button>
+                  </b-col>
                   <b-col
                     cols="12">
                     <b-form-group>
@@ -1159,8 +1167,7 @@
                     </b-form-group>
                   </b-col>
                 </b-row>
-                <b-button
-                  @click="toggleSearch(ui.project.displaySearch)">Hide search</b-button>
+
               </b-card>
             </b-col>
             <b-col cols="12" class="toDoc">
@@ -4715,6 +4722,9 @@ export default {
     }
     b.cerqual-explanation {
       font-size: 13px;
+    }
+    #card-search .card-body {
+      padding: .3rem;
     }
   @media print {
     div >>>
