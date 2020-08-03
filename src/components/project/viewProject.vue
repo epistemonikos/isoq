@@ -278,7 +278,6 @@
                     Create Table
                   </b-button>
                   <b-button
-                    :disabled="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
                     block
                     variant="outline-primary"
                     v-if="charsOfStudies.fields.length > 2"
