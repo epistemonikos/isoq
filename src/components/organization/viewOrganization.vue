@@ -141,8 +141,10 @@
         size="xl"
         id="modal-share-options"
         ref="modal-share-options"
-        title="Share"
         scrollable>
+        <template v-slot:modal-title>
+          Share <font-awesome-icon icon="question-circle"></font-awesome-icon>
+        </template>
         <b-tabs>
           <b-tab
             title="Invite">
