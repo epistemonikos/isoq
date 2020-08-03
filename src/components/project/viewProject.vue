@@ -996,7 +996,7 @@
           </b-row>
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
-              <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table</h2>
+              <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table <span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
             </b-col>
           </b-row>
           <b-row>
@@ -1094,7 +1094,6 @@
                     @click="modalSortFindings">Re-order your review findings</b-button>
 
                   <b-modal
-                    title="Re-order your review findings"
                     ref="modal-sort-findings"
                     id="modal-sort-findings"
                     size="xl"
@@ -1103,6 +1102,9 @@
                     cancel-variant="outline-primary"
                     scrollable
                     @ok="saveSortedLists">
+                    <template v-slot:modal-title>
+                      Re-order your review findings <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                    </template>
                     <p class="font-weight-light">
                       Drag and drop findings to re-order them in the iSoQ table
                     </p>
@@ -1159,7 +1161,7 @@
                   </b-col>
                 </b-row>
                 <b-button
-                  @click="toggleSearch(ui.project.displaySearch)">Close</b-button>
+                  @click="toggleSearch(ui.project.displaySearch)">Hide search</b-button>
               </b-card>
             </b-col>
             <b-col cols="12" class="toDoc">
@@ -1437,9 +1439,11 @@
                     :options="list_categories.options"></b-form-select>
                 </b-form-group>
                 <b-form-group
-                  label="Notes"
                   label-for="finding-note"
                   description="Optional space for reviewers to leave notes for each other about this review finding">
+                  <template v-slot:label>
+                    Notes <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                  </template>
                   <b-form-textarea
                     id="finding-note"
                     v-model="editFindingName.notes"
@@ -1541,8 +1545,10 @@
                 size="xl"
                 id="modalEditListCategories"
                 ref="modalEditListCategories"
-                title="Review Finding Groups"
                 scrollable>
+                <template v-slot:modal-title>
+                  Review Finding Groups <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                </template>
                 <p class="font-weight-light">
                   Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
                 </p>
