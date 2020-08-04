@@ -2724,7 +2724,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].methodological_limitations.explanation : '',
+                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? this.evidence_profile[0].methodological_limitations.explanation : '',
                             size: 22
                           })
                         ]
@@ -2746,7 +2746,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].coherence.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].coherence.explanation : '',
+                            text: (this.evidence_profile[0].coherence.explanation.length) ? this.evidence_profile[0].coherence.explanation : '',
                             size: 22
                           })
                         ]
@@ -2768,7 +2768,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].adequacy.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].adequacy.explanation : '',
+                            text: (this.evidence_profile[0].adequacy.explanation.length) ? this.evidence_profile[0].adequacy.explanation : '',
                             size: 22
                           })
                         ]
@@ -2790,7 +2790,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].relevance.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].relevance.explanation : '',
+                            text: (this.evidence_profile[0].relevance.explanation.length) ? this.evidence_profile[0].relevance.explanation : '',
                             size: 22
                           })
                         ]
@@ -2812,7 +2812,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidence_profile[0].cerqual.explanation.length) ? 'Explanation: ' + this.evidence_profile[0].cerqual.explanation : '',
+                            text: (this.evidence_profile[0].cerqual.explanation.length) ? this.evidence_profile[0].cerqual.explanation : '',
                             size: 22
                           })
                         ]
