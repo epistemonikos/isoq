@@ -3159,10 +3159,13 @@ export default {
       }
     },
     displaySelectedOption: function (option) {
-      if (option >= 0) {
+      if (option === null) {
+        return ''
+      } else if (option >= 0) {
         return this.select_options[option].text
+      } else {
+        return ''
       }
-      return ''
     },
     displayLevelConfidence: function (option) {
       if (option !== null) {
