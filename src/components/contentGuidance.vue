@@ -1,5 +1,7 @@
 <template>
   <div>
+    <h2 class="mb-3">Guidance on Applying GRADE-CERQual</h2>
+
     <h3>Introduction to CERQual</h3>
     <p><a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3" target="_blank">https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0688-3</a></p>
     <p>[Lewin S, Booth A, Glenton C, Munthe-Kaas H, Rashidian A, Wainwright M, Bohren MA, Tunçalp Ö, Colvin CJ, Garside R, Carlsen B, Langlois EV, Noyes J. Applying GRADE-CERQual to qualitative evidence synthesis findings: introduction to the series. Implement Sci. 2018 Jan 25;13(Suppl 1):2]</p>
@@ -25,6 +27,19 @@
     <b-alert show variant="info" class="text-center">
     A Portuguese version of the guidance can be <a href="http://www.saude.sp.gov.br/resources/instituto-de-saude/homepage/temas-saude-coletiva/49213001internetinterativo.pdf" target="_blank">found here</a>
     </b-alert>
+
+    <h2 class="mb-3">GRADE-CERQual Webinars</h2>
+
+    <p>
+      The GRADE-CERQual Coordinating Team regularly provide introductory and question and answer webinars. See schedule and <a href="https://www.cerqual.org/upcoming-events/" target="_blank">sign-up here</a>
+    </p>
+    <p>
+      Watch the <a href="https://training.cochrane.org/resource/grade-cerqual-webinar" target="_blank">Cochrane Training GRADE-CERQual Webinar</a> here at your convenience.
+    </p>
+    <p>
+      To hear about upcoming in-person training workshops, join the <a href="https://www.cerqual.org/contact/" target="_blank">GRADE-CERQual Mailing List here</a>
+    </p>
+
   </div>
 </template>
 
