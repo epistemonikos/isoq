@@ -6,9 +6,9 @@
       <b-thead>
         <b-tr>
           <b-th>#</b-th>
-          <b-th>Summarized review finding</b-th>
-          <b-th>GRADE-CERQual Assessment of confidence</b-th>
-          <b-th>Explanation of GRADE-CERQual Assessment</b-th>
+          <b-th>Summarised review finding</b-th>
+          <b-th>GRADE-CERQual assessment of confidence</b-th>
+          <b-th>Explanation of GRADE-CERQual assessment</b-th>
           <b-th>References</b-th>
         </b-tr>
       </b-thead>
