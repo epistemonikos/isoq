@@ -790,11 +790,10 @@
                     Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
                   </p>
                   <b-progress
+                    :value="status_evidence_profile.value"
                     :max="status_evidence_profile.max"
                     :variant="status_evidence_profile.variant"
-                    show-progress
                     class="mb-3">
-                    <b-progress-bar :value="status_evidence_profile.value" :label="`${status_evidence_profile.value}%`"></b-progress-bar>
                   </b-progress>
                 </b-card>
               </div>
