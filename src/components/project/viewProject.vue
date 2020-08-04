@@ -1062,7 +1062,7 @@
                   cols="12">
                   <b-button
                     class="mt-1"
-                    v-b-tooltip.hover title="Copy and paste one summarized review finding at a time into the iSoQ"
+                    v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
                     :variant="(lists.length) ? 'outline-success' : 'success'"
                     @click="modalAddList"
                     block>
@@ -1191,7 +1191,7 @@
                   @filtered="onFiltered"
                   :filter-included-fields="table_settings.filterOn">
                   <template v-slot:head(sort)="data">
-                    <span v-b-tooltip.hover title="Automatic numbering of summarized review findings">{{ data.label }}</span>
+                    <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{ data.label }}</span>
                   </template>
                   <template v-slot:head(name)="data">
                     <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
@@ -1429,7 +1429,7 @@
                 <b-form-group
                   label="Summarised review finding"
                   label-for="finding-name">
-                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
                   <b-form-textarea
                     id="finding-name"
                     v-model="editFindingName.name"
@@ -1461,7 +1461,7 @@
                 size="xl"
                 id="remove-finding"
                 ref="remove-finding"
-                title="Remove summarized review finding"
+                title="Remove summarised review finding"
                 ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
@@ -1486,7 +1486,7 @@
                 <b-form-group
                   label="Summarised review finding"
                   label-for="summarized-review">
-                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
+                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
                   <b-form-textarea
                     id="summarized-review"
                     v-model="summarized_review"

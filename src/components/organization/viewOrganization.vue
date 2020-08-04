@@ -111,18 +111,18 @@
         size="xl"
         id="new-project-list"
         ref="new-project-list"
-        :title="(buffer_project_list.id) ? 'Edit summarized review finding' : 'New summarized review finding'"
+        :title="(buffer_project_list.id) ? 'Edit summarised review finding' : 'New summarised review finding'"
         @ok="AddOrUpdateProjectList"
         @hidden="cleanProjectList"
         ok-title="Save"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <b-form-group
-          label="Summarized review"
+          label="Summarised review"
           label-for="summarized-review">
           <b-form-input
             id="summarized-review"
-            placeholder="Enter a summarized review finding"
+            placeholder="Enter a summarised review finding"
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
