@@ -415,7 +415,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.cerqual.option = null; buffer_modal_stage_two.cerqual.explanation = ''"
+                            @click="buffer_modal_stage_two.cerqual.option = null"
                             v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
