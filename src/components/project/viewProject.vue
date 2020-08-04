@@ -1555,11 +1555,11 @@
                 <template v-slot:modal-title>
                   Review Finding Groups <font-awesome-icon icon="question-circle"></font-awesome-icon>
                 </template>
-                <p class="font-weight-light">
-                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
-                </p>
                 <template
                   v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                  <p class="font-weight-light">
+                    Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                  </p>
                   <b-table
                     head-variant="highlight"
                     striped
@@ -1611,7 +1611,9 @@
                 <template
                   class="mt-3"
                   v-if="modal_edit_list_categories.remove">
-                  <p>Confirm you want to remove <b>{{ modal_edit_list_categories.name }}</b> from groups?</p>
+                  <p>
+                    Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.name }}</b>?
+                  </p>
                 </template>
                 <template
                   v-slot:modal-footer>
