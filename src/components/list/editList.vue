@@ -1613,7 +1613,7 @@ export default {
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         { key: 'references', label: 'References' }
         /*
         {key: 'actions', label: 'Actions'}
@@ -1621,12 +1621,12 @@ export default {
       ],
       evidence_profile_fields_print_version: [
         { key: 'isoqf_id', label: '#' },
-        { key: 'name', label: 'Summarized review finding' },
+        { key: 'name', label: 'Summarised review finding' },
         { key: 'methodological-limit', label: 'Methodological limitations' },
         { key: 'coherence', label: 'Coherence' },
         { key: 'adequacy', label: 'Adequacy' },
         { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'GRADE-CERQual Assessment of confidence' },
+        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         {
           key: 'references',
           label: 'References',
@@ -2065,7 +2065,7 @@ export default {
         'coherence': 'Coherence',
         'adequacy': 'Adequacy',
         'relevance': 'Relevance',
-        'cerqual': 'GRADE-CERQual Assessment of Confidence'
+        'cerqual': 'GRADE-CERQual assessment of confidence'
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
@@ -2653,7 +2653,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'GRADE-CERQual Assessment of confidence',
+                            text: 'GRADE-CERQual assessment of confidence',
                             bold: true,
                             size: 22
                           })

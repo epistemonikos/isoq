@@ -1375,8 +1375,8 @@
                     <b-tr>
                       <b-th>#</b-th>
                       <b-th>Summarised review finding</b-th>
-                      <b-th>GRADE-CERQual Assessment of confidence</b-th>
-                      <b-th>Explanation of GRADE-CERQual Assessment</b-th>
+                      <b-th>GRADE-CERQual assessment of confidence</b-th>
+                      <b-th>Explanation of GRADE-CERQual assessment</b-th>
                       <b-th>References</b-th>
                     </b-tr>
                   </b-thead>
@@ -1878,11 +1878,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'GRADE-CERQual Assessment of confidence'
+            label: 'GRADE-CERQual assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of GRADE-CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual assessment'
           },
           {
             key: 'ref_list',
@@ -1900,11 +1900,11 @@ export default {
           },
           {
             key: 'cerqual_option',
-            label: 'GRADE-CERQual Assessment of confidence'
+            label: 'GRADE-CERQual assessment of confidence'
           },
           {
             key: 'cerqual_explanation',
-            label: 'Explanation of GRADE-CERQual Assessment'
+            label: 'Explanation of GRADE-CERQual assessment'
           },
           {
             key: 'ref_list',
