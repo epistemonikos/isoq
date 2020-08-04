@@ -110,8 +110,7 @@
               class="mt-2"
               @click="changeMode"
               variant="outline-success"
-              block
-              v-b-tooltip.hover title="Click to enter view mode where you can export or print">
+              block>
               Print or Export
             </b-button>
         </b-col>
