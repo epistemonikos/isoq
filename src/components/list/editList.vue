@@ -214,7 +214,7 @@
                             Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
                           </p>
                           <p class="font-weight-light">
-                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesize the data. (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesise the data. (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
                           </p>
                           <p class="font-weight-light">
                             <b><u>Remember</u></b>, coherence is not about the consistency of findings between studies, but is about the fit between the extracted data and the review finding as you have written it.
