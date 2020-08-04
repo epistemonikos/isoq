@@ -63,10 +63,10 @@
               cols="12">
               <organizationForm
                 :formData="project"
-                :canWrite="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"></organizationForm>
+                :canWrite="checkPermissions()"></organizationForm>
             </b-col>
           </b-row>
-          <b-row align-h="end" v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs">
+          <b-row align-h="end" v-if="checkPermissions()">
             <b-col
               cols="6">
               <b-button
@@ -967,7 +967,7 @@
                   md="3"
                   xl="3">
                     <b-button
-                      v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
+                      v-if="checkPermissions()"
                       class="mt-1"
                       @click="modalChangePublicStatus"
                       :variant="(!project.private) ? 'outline-primary' : 'primary'"
@@ -1668,7 +1668,7 @@
         ref="modal-references"
         title="References"
         size="xl"
-        :ok-only="!($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+        :ok-only="!checkPermissions()"
         @ok="getProject"
         @cancel="confirmRemoveAllReferences($event)"
         scrollable
@@ -1721,7 +1721,7 @@
               :items="references">
               <template v-slot:cell(action)="data">
                 <b-button
-                  v-if="($store.state.user.is_owner || $store.state.user.can_write_other_orgs)"
+                  v-if="checkPermissions()"
                   variant="outline-danger"
                   @click="data.toggleDetails">
                   <font-awesome-icon
