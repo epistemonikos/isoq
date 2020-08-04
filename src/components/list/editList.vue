@@ -889,6 +889,7 @@
                       </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
+                          v-if="data.item.methodological_limitations.option !== '0'"
                           v-b-tooltip.hover
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
@@ -932,6 +933,7 @@
                       </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
+                          v-if="data.item.coherence.option !== '0'"
                           v-b-tooltip.hover
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
@@ -975,6 +977,7 @@
                       </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
+                          v-if="data.item.adequacy.option !== '0'"
                           v-b-tooltip.hover
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
@@ -1018,6 +1021,7 @@
                       </p>
                       <p v-else class="text-muted font-weight-light">
                         <span
+                          v-if="data.item.relevance.option !== '0'"
                           v-b-tooltip.hover
                           title="Provide an explanation for your assessment"
                           variant="info">Explanation not yet added</span>
