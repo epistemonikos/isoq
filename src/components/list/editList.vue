@@ -203,7 +203,6 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.methodological_limitations.notes"
-                              :placeholder="$t('Enter a note')"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -267,7 +266,6 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
-                              :placeholder="$t('Enter a note')"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -326,7 +324,6 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
-                              :placeholder="$t('Enter a note')"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -387,7 +384,6 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.relevance.notes"
-                              :placeholder="$t('Enter a note')"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -454,7 +450,6 @@
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"
-                              :placeholder="$t('Enter a note')"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
