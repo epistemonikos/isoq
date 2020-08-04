@@ -1374,7 +1374,7 @@
                   <b-thead>
                     <b-tr>
                       <b-th>#</b-th>
-                      <b-th>Summarized review finding</b-th>
+                      <b-th>Summarised review finding</b-th>
                       <b-th>GRADE-CERQual Assessment of confidence</b-th>
                       <b-th>Explanation of GRADE-CERQual Assessment</b-th>
                       <b-th>References</b-th>
@@ -1421,13 +1421,13 @@
                 size="xl"
                 id="edit-finding-name"
                 ref="edit-finding-name"
-                title="Edit Summarized review finding"
+                title="Edit Summarised review finding"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
                 @ok="updateListName">
                 <b-form-group
-                  label="Summarized review finding"
+                  label="Summarised review finding"
                   label-for="finding-name">
                   <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
@@ -1477,14 +1477,14 @@
                 size="xl"
                 id="add-summarized"
                 ref="add-summarized"
-                title="Add Summarized review finding"
+                title="Add Summarised review finding"
                 :ok-disabled="(summarized_review)?false:true"
                 @ok="createList"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <b-form-group
-                  label="Summarized review finding"
+                  label="Summarised review finding"
                   label-for="summarized-review">
                   <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarized review finding</template>
                   <b-form-textarea
@@ -1870,7 +1870,7 @@ export default {
           },
           {
             key: 'name',
-            label: 'Summarized review finding'
+            label: 'Summarised review finding'
           },
           {
             key: 'category_name',
@@ -1896,7 +1896,7 @@ export default {
           },
           {
             key: 'name',
-            label: 'Summarized review finding'
+            label: 'Summarised review finding'
           },
           {
             key: 'cerqual_option',
@@ -3005,7 +3005,7 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
-                            text: 'Summarized review finding',
+                            text: 'Summarised review finding',
                             size: 22,
                             bold: true
                           })
