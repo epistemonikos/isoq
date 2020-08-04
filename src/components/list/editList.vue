@@ -804,7 +804,7 @@
                   Evidence Profile
                   <span
                     v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
-                    class="text-danger"
+                    class="text-danger d-print-none"
                     v-b-tooltip.hover title="Data are missing.">
                     <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                   </span>
@@ -1217,7 +1217,7 @@
                 {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
                 <span
                   v-if="ui.adequacy.chars_of_studies.display_warning"
-                  class="text-danger"
+                  class="text-danger d-print-none"
                   v-b-tooltip.hover title="The Characteristics of Studies table, or some data within it, are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
@@ -1329,7 +1329,7 @@
                 {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
                 <span
                   v-if="ui.methodological_assessments.display_warning"
-                  class="text-danger"
+                  class="text-danger d-print-none"
                   v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
@@ -1399,10 +1399,10 @@
               <a name="extracted-data"></a>
               <h3 class="toDoc">
                 {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
-                <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                <font-awesome-icon icon="question-circle" class="d-print-none"></font-awesome-icon>
                 <span
                   v-if="ui.adequacy.extracted_data.display_warning"
-                  class="text-danger"
+                  class="text-danger d-print-none"
                   v-b-tooltip.hover title="Some or all of the extracted data for this finding are missing.">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </span>
