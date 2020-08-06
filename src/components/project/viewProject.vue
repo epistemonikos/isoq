@@ -2210,17 +2210,6 @@ export default {
     this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
-    this.$root.$on('bv::collapse::state', (collapseId, isOpen) => {
-      if (collapseId === 'info-project') {
-        this.changeTxtProjectProperties = '+'
-        if (isOpen) {
-          this.changeTxtProjectProperties = '-'
-        }
-        if (!isOpen && this.mode === 'view') {
-          this.$root.$emit('bv::toggle::collapse', 'info-project')
-        }
-      }
-    })
   },
   methods: {
     EpisteRequest: function () {
@@ -2261,7 +2250,6 @@ export default {
       } else {
         this.table_settings.perPage = 5
       }
-      this.$root.$emit('bv::toggle::collapse', 'info-project')
     },
     printiSoQ: function () {
       /*
@@ -4731,6 +4719,10 @@ export default {
       padding: .3rem;
     }
   @media print {
+    div >>>
+      #info-project {
+        display: block !important;
+      }
     div >>>
       #findings tbody tr:not(.b-table-row-selected) {
         display: none !important;
