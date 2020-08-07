@@ -34,7 +34,7 @@
               class="pt-3">
               <b-button
                 block
-                @click="exportToCSV(type)">
+                @click="toCSV(type)">
                 Export to XLS file
               </b-button>
             </b-col>
@@ -46,6 +46,8 @@
 </template>
 
 <script>
+const ExportToCsv = require('export-to-csv').ExportToCsv
+
 export default {
   name: 'bCardFilters',
   props: {
@@ -63,44 +65,62 @@ export default {
     }
   },
   methods: {
-    exportToCSV: function (type) {
-      var csv = 'data:text/csv;charset=utf-8,'
-      const types = ['chars_of_studies', 'meth_assessments', 'extracted_data']
-      let _keys = []
-      var cnt = 1
+    orderKeys: function (obj) {
+      var keys = Object.keys(obj).sort(function keyOrder (k1, k2) {
+        if (k1 < k2) return -1
+        else if (k1 > k2) return +1
+        else return 0
+      })
 
-      if (types.indexOf(type) !== -1) {
-        let _protoCSV = []
-        _protoCSV.push(JSON.parse(JSON.stringify(this.local_fields)))
-        _protoCSV.push(JSON.parse(JSON.stringify(this.local_items)))
-
-        for (let _element in _protoCSV) {
-          if (_element === '0') {
-            cnt = 1
-            for (let element of _protoCSV[_element]) {
-              _keys.push(element.key)
-              csv = csv.concat('"' + element.label + ((cnt < _protoCSV[_element].length) ? '",' : '"' + '\n'))
-              cnt++
-            }
-          } else {
-            for (let index in _protoCSV[_element]) {
-              cnt = 1
-              for (let key of _keys) {
-                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < _keys.length) ? '",' : '"' + '\n'))
-                cnt++
-              }
-            }
-          }
-        }
+      let after = {}
+      for (let i = 0; i < keys.length; i++) {
+        after[keys[i]] = obj[keys[i]]
+        delete obj[keys[i]]
       }
 
-      let encodedUri = encodeURI(csv)
-      let link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', type + '.csv')
-      document.body.appendChild(link)
+      for (let i = 0; i < keys.length; i++) {
+        obj[keys[i]] = after[keys[i]]
+      }
+      return obj
+    },
+    toCSV: function (type) {
+      // var csv = 'data:text/csv;charset=utf-8,'
+      const types = {
+        'chars_of_studies': 'Characteristics of studies',
+        'meth_assessments': 'Methodological assessments',
+        'extracted_data': 'Extracted data'
+      }
+      let _headers = []
+      let headers = JSON.parse(JSON.stringify(this.local_fields))
+      for (let header of headers) {
+        if (header.key !== 'ref_id') {
+          _headers.push('"' + header.label + '"')
+        }
+      }
+      _headers.sort((a, b) => a - b)
 
-      link.click()
+      let items = JSON.parse(JSON.stringify(this.local_items))
+      for (let item of items) {
+        delete item.ref_id
+        delete item.index
+        item = this.orderKeys(item)
+      }
+      // console.log(items)
+      let data = items
+
+      const options = {
+        filename: types[type],
+        fieldSeparator: ',',
+        quoteStrings: '"',
+        decimalSeparator: '.',
+        showLabels: true,
+        useBom: true,
+        headers: _headers
+      }
+
+      const csvExporter = new ExportToCsv(options)
+
+      csvExporter.generateCsv(data)
     }
   }
 }
