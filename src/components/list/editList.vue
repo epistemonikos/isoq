@@ -3269,9 +3269,4 @@ export default {
     label b {
       font-weight: bold;
     }
-  @media print {
-    @page {
-      size: A4 landscape;
-    }
-  }
 </style>
