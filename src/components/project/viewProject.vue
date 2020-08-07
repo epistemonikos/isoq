@@ -3019,7 +3019,7 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
-                            text: 'CERQual Assessment of confidence',
+                            text: 'GRADE-CERQual Assessment of confidence',
                             size: 22,
                             bold: true
                           })
@@ -3041,7 +3041,7 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
-                            text: 'Explanation of CERQual Assessment',
+                            text: 'Explanation of GRADE-CERQual Assessment',
                             size: 22,
                             bold: true
                           })
