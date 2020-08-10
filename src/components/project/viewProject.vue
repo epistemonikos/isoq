@@ -119,7 +119,6 @@
                       Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
                     </p>
                   </b-tab>
-                  <!--
                   <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
@@ -128,55 +127,62 @@
                           You can import individual references from PubMed by pasting the references PMID below. The PMID is the 8-digit identification number appearing at the end of the web address for the article on PubMed. Add one PMID per line below and click Find.
                         </p>
                         <b-form-textarea
-                          v-model="episte_request"
+                          v-model="pubmed_request"
                           placeholder="Ej: 17253524"
                           rows="6"
                           max-rows="100"></b-form-textarea>
                         <b-button
-                          v-if="$store.state.user.is_owner || $store.state.user.can_write_other_orgs"
+                          v-if="checkPermissions()"
                           id="btnEpisteRequest"
                           class="mt-2"
                           block
                           variant="outline-primary"
-                          @click="EpisteRequest">Find</b-button>
+                          @click="PubmedRequest">Find</b-button>
+                        <b-button
+                          v-if="checkPermissions() && pubmed_requested.length"
+                          id="btnEpisteRequestClean"
+                          class="mt-1"
+                          block
+                          variant="outline-secondary"
+                          @click="PubmedRequestClean">Clean</b-button>
                       </b-col>
                       <b-col
                         sm="6">
                         <template
-                          v-if="episte_loading">
+                          v-if="pubmed_loading">
                           <div class="text-center text-danger my-2">
                             <b-spinner class="align-middle"></b-spinner>
                             <strong>Loading...</strong>
                           </div>
                         </template>
                         <template
-                          v-else-if="episte_error">
+                          v-else-if="pubmed_error">
                           <p class="font-weight-light">
                             The reference could not be reached, try again or using other ID
                           </p>
                         </template>
                         <template v-else>
-                          <ul v-if="episte_response.length">
-                            <li v-for="(r, index) in episte_response" :key="index">
+                          <ul v-if="pubmed_requested.length">
+                            <li v-for="(r, index) in pubmed_requested" :key="index">
                               <b-form-checkbox
                                 :id="`checkbox-${index}`"
-                                v-model="episte_selected"
+                                v-model="pubmed_selected"
                                 :name="`checkbox-${index}`"
-                                :value="index">
-                                {{ r.citation }}
+                                :value="index"
+                                :disabled="r.disabled">
+                                {{ r.title }}
                               </b-form-checkbox>
                             </li>
                           </ul>
                           <b-button
-                            v-if="episte_response.length || $store.state.user.is_owner || $store.state.user.can_write_other_orgs"
+                            v-if="pubmed_selected.length && checkPermissions()"
                             variant="outline-success"
                             block
-                            @click="saveReferences('EpisteDB')">Import references</b-button>
+                            @click="importReferences()">Import references</b-button>
                         </template>
                       </b-col>
                     </b-row>
                   </b-tab>
-                  -->
                 </b-tabs>
               </b-card>
               <b-row
@@ -2075,7 +2081,12 @@ export default {
       finding: {},
       showBanner: false,
       sorted_lists: [],
-      changeTxtProjectProperties: '+'
+      changeTxtProjectProperties: '+',
+      pubmed_request: '',
+      pubmed_requested: [],
+      pubmed_selected: [],
+      pubmed_loading: false,
+      pubmed_error: false
     }
   },
   watch: {
@@ -2212,6 +2223,68 @@ export default {
     this.getProject()
   },
   methods: {
+    PubmedRequestClean: function () {
+      document.getElementById('btnEpisteRequest').disabled = false
+      this.pubmed_request = ''
+      this.pubmed_requested = []
+      this.pubmed_selected = []
+      this.pubmed_loading = false
+      this.pubmed_error = false
+    },
+    PubmedRequest: function () {
+      const urlBase = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=abdb2d5a30084a5a7200df1515d45fb36f08&db=pubmed&retmode=json&id='
+      document.getElementById('btnEpisteRequest').disabled = true
+      this.pubmed_loading = true
+      this.pubmed_error = false
+      this.pubmed_response = []
+      const allLines = this.pubmed_request.split(/\r\n|\n/)
+      let requests = []
+      allLines.forEach((line, index) => {
+        requests.push(axios.get(urlBase + line))
+      })
+      axios.all(requests)
+        .then(axios.spread((...responses) => {
+          for (let response of responses) {
+            let uid = response.data.result.uids[0]
+            this.processPubmedData(response.data.result[uid])
+          }
+          this.pubmed_loading = false
+        }))
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    processPubmedData: function (data) {
+      const refTitle = data.title
+      const refDatabase = 'PubMed'
+      let authors = []
+      for (let author of data.authors) {
+        authors.push(author.name)
+      }
+      const refAuthors = authors
+      const refPublicatonYear = data.pubdate.split(' ')[0]
+      const refIssn = data.issn
+      let refDisabled = false
+
+      for (let _reference of this.references) {
+        if (_reference.isbn_issn === data.issn) {
+          refDisabled = true
+        }
+      }
+
+      const reference = {
+        title: refTitle,
+        database: refDatabase,
+        authors: refAuthors,
+        publication_year: refPublicatonYear,
+        isbn_issn: refIssn,
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        disabled: refDisabled
+      }
+
+      this.pubmed_requested.push(reference)
+    },
     EpisteRequest: function () {
       document.getElementById('btnEpisteRequest').disabled = true
       this.episte_loading = true
@@ -2312,6 +2385,26 @@ export default {
         this.pre_references = e.target.result
       }
       reader.readAsText(file)
+    },
+    importReferences: function () {
+      if (this.pubmed_selected.length) {
+        for (let index of this.pubmed_selected) {
+          delete this.pubmed_requested[index].disabled
+          axios.post('/api/isoqf_references', this.pubmed_requested[index])
+            .then((response) => {
+              this.pubmed_requested.splice(index, 1)
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        }
+        this.loadReferences = true
+        this.pubmed_request = ''
+        this.pubmed_requested = []
+        this.pubmed_selected = []
+        this.getReferences(false)
+        document.getElementById('btnEpisteRequest').disabled = false
+      }
     },
     saveReferences: function (from = '') {
       this.loadReferences = true
