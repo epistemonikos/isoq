@@ -10,7 +10,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of CERQual in order to make an overall assessment of confidence">*</small><span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
+        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of GRADE-CERQual in order to make an overall assessment of confidence">*</small><span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
       </b-container>
@@ -198,7 +198,7 @@
                             class="mt-2 font-weight-light"
                             label="Notes"
                             label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on CERQual assessments">
+                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.methodological_limitations.notes"

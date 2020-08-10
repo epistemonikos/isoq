@@ -2,7 +2,7 @@
   <div>
     <b-navbar id="main-navbar" toggleable="lg">
       <b-navbar-brand :to="{name: 'MainPage'}">
-        <p><img :src="iconUrl" alt="GRADE CERQual">
+        <p><img :src="iconUrl" alt="GRADE-CERQual">
         interactive Summary of Qualitative Findings</p>
       </b-navbar-brand>
 

@@ -30,7 +30,7 @@
             @click="tabOpened=2">iSoQf</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying CERQual</b-nav-item>
+            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
