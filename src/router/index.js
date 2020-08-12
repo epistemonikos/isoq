@@ -10,6 +10,7 @@ import ViewProject from '@/components/project/viewProject'
 import Browse from '@/components/Browse'
 import NewPassword from '@/components/NewPassword'
 import previewContentSoQf from '@/components/previewContent/previewContentSoQf'
+import previewWorksheet from '@/components/previewContent/previewContentWorksheet'
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -106,11 +107,19 @@ var routes = [
     }
   },
   {
-    path: '/preview/:org_id/:isoqf_id/:token',
+    path: '/preview/isoq/:org_id/:isoqf_id/:token',
     name: 'previewContentSoQf',
     component: previewContentSoQf,
     meta: {
-      title: 'Preview iSoQ - interactive Summaries of Qualitative Findings'
+      title: 'iSoQ Preview - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/preview/worksheet/:id/:token',
+    name: 'previewWorksheet',
+    component: previewWorksheet,
+    meta: {
+      title: 'Worksheet Preview - interactive Summaries of Qualitative Findings'
     }
   }
 ]
