@@ -4,7 +4,7 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: this.list.organization, id: this.list.project_id, token: this.list.sharedToken }}">
+            <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: project.organization, isoqf_id: project.id, token: project.sharedToken }}">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
               return to ISoQ table
             </b-link>
