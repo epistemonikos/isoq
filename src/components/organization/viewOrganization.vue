@@ -427,7 +427,7 @@ export default {
           if (!project.sharedToken.length) {
             project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
           }
-          project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/' + project.organization + '/' + project.id + '/' + project.sharedToken
+          project.temporaryUrl = 'http://isoqf-test.epistemonikos.org/preview/isoq/' + project.organization + '/' + project.id + '/' + project.sharedToken
           isPublic = true
         } else {
           project.sharedToken = ''
