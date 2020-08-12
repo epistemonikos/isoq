@@ -12,7 +12,7 @@
             cols="12"
             md="1"
             class="text-right">
-            <b-link class="d-print-none">
+            <b-link class="d-print-none" :to="{ name: 'MainPage' }">
               <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
               {{ $t('back') }}
             </b-link>
@@ -372,6 +372,7 @@ export default {
                     if (element.value === list.category) {
                       element.items.push(
                         {
+                          'id': list.id,
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
@@ -407,6 +408,7 @@ export default {
               for (let list of _data) {
                 items.push(
                   {
+                    'id': list.id,
                     'isoqf_id': list.isoqf_id,
                     'name': list.name,
                     'cerqual_option': list.cerqual_option,
