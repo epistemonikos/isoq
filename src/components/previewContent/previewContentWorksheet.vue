@@ -14,6 +14,7 @@
       </b-container>
     </b-container>
     <b-container>
+      <!--
       <b-row
         class="d-print-none justify-content-end mb-2 pt-2">
         <b-col
@@ -39,6 +40,7 @@
             </b-button>
         </b-col>
       </b-row>
+      -->
       <b-row class="mt-4">
         <b-col cols="12">
 
