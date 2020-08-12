@@ -29,7 +29,9 @@
             </b-td>
             <b-td
               style="vertical-align: top;">
-              <p>{{ item.name }}</p>
+              <p>
+                <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
+              </p>
             </b-td>
             <b-td
               style="vertical-align: top;">
