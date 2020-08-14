@@ -4,7 +4,7 @@
       <b-row>
         <b-col cols="12" md="6" lg="3">
           <h2>iSoQ</h2>
-          <p class="slogan">Summarised review findings and assessments of confidence in the evidence from reviews of qualitative research.</p>
+          <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
         </b-col>
       </b-row>
 
@@ -54,6 +54,10 @@ export default {
       font-style: italic;
       font-weight: 200;
       font-size: 26px;
+    }
+    .slogan a {
+      color: #FFF;
+      text-decoration: underline;
     }
     li {
       font-size: 20px;
