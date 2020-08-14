@@ -508,11 +508,7 @@
                   cancel-title="Close"
                   size="xl"
                   id="import-characteristics-table"
-                  ref="import-characteristics-table"
-                  @ok="saveImportedData('isoqf_characteristics')"
-                  @cancel="cleanVars('import-characteristics-table')"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-secondary">
+                  ref="import-characteristics-table">
                   <template v-slot:modal-title>
                     Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
                   </template>
@@ -535,6 +531,7 @@
                   </b-button>
                   <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
                   <b-form-file
+                    ref="import-chars-table-file"
                     id="input-template-chars-file"
                     plain
                     @change="loadTableImportData($event)"></b-form-file>
@@ -546,16 +543,24 @@
                     :show="importDataTable.error !== null">
                     {{ importDataTable.error }}
                   </b-alert>
-                  <b-button
-                    variant="outline-info"
-                    class="mb-2"
-                    v-if="importDataTable.items.length"
-                    @click="cleanVars()">Reject</b-button>
                   <b-table
                     v-if="importDataTable.items.length"
                     responsive
                     :fields="importDataTable.fieldsObj"
                     :items="importDataTable.items"></b-table>
+                  <template v-slot:modal-footer>
+                    <b-button
+                      variant="outline-secondary"
+                      @click="cleanVars('close', 'import-characteristics-table')">Cancel</b-button>
+                    <b-button
+                      variant="outline-info"
+                      :disabled="!importDataTable.items.length"
+                      @click="cleanVars('chars')">Reject</b-button>
+                    <b-button
+                      variant="outline-success"
+                      :disabled="!importDataTable.items.length"
+                      @click="saveImportedData('isoqf_characteristics')">Save</b-button>
+                  </template>
                 </b-modal>
 
                 <b-modal
@@ -853,11 +858,7 @@
                 cancel-title="Close"
                 size="xl"
                 id="import-methodological-table"
-                ref="import-methodological-table"
-                @ok="saveImportedData('isoqf_assessments')"
-                @cancel="cleanVars('import-methodological-table')"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
+                ref="import-methodological-table">
                 <template v-slot:modal-title>
                   Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
                 </template>
@@ -881,6 +882,7 @@
                 <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
                 <b-form-file
                   id="input-template-methodological-file"
+                  ref="import-meth-table-file"
                   plain
                   @change="loadTableImportData($event)"></b-form-file>
                 <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
@@ -891,16 +893,24 @@
                   :show="importDataTable.error !== null">
                   {{ importDataTable.error }}
                 </b-alert>
-                <b-button
-                  variant="outline-info"
-                  class="mb-2"
-                  v-if="importDataTable.items.length"
-                  @click="cleanVars()">Reject</b-button>
                 <b-table
                   v-if="importDataTable.items.length"
                   responsive
                   :fields="importDataTable.fieldsObj"
                   :items="importDataTable.items"></b-table>
+                <template v-slot:modal-footer>
+                    <b-button
+                      variant="outline-secondary"
+                      @click="cleanVars('close', 'import-methodological-table')">Cancel</b-button>
+                    <b-button
+                      variant="outline-info"
+                      :disabled="!importDataTable.items.length"
+                      @click="cleanVars('meth')">Reject</b-button>
+                    <b-button
+                      variant="outline-success"
+                      :disabled="!importDataTable.items.length"
+                      @click="saveImportedData('isoqf_assessments')">Save</b-button>
+                  </template>
               </b-modal>
             </b-col>
           </b-row>
@@ -3847,7 +3857,7 @@ export default {
       }
       this.pre_ImportDataTable = ''
     },
-    cleanVars: function (modal = '') {
+    cleanVars: function (str = '', modal = '') {
       this.importDataTable = {
         error: null,
         fields: [],
@@ -3857,7 +3867,13 @@ export default {
         ]
       }
       this.pre_ImportDataTable = ''
-      if (modal !== '') {
+      if (str === 'chars') {
+        this.$refs['import-chars-table-file'].reset()
+      }
+      if (str === 'meth') {
+        this.$refs['import-meth-table-file'].reset()
+      }
+      if (str === 'close') {
         this.$refs[modal].hide()
       }
     },
