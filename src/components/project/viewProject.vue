@@ -723,7 +723,7 @@
                   <b-form-group
                     v-for="cnt in parseInt(methodologicalFieldsModal.nroColumns)"
                     :key="cnt"
-                    :label="`Columnn #${cnt}`">
+                    :label="`Column #${cnt}`">
                     <b-input-group>
                       <b-form-input
                         :id="`column_${cnt}`"
@@ -760,7 +760,7 @@
                     <b-form-group
                       v-for="(field, index) in methodologicalFieldsModalEdit.fields"
                       :key="index"
-                      :label="`Columnn #${index}`">
+                      :label="`Column #${index}`">
                       <b-input-group
                         v-if="methodologicalFieldsModalEdit.fields.length">
                         <b-form-input
