@@ -497,8 +497,7 @@
                       v-if="field.key !== 'ref_id' && field.key !== 'authors'"
                       v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
                       rows="2"
-                      max-rows="100"
-                      placeholder="Enter both your assessment and the explanation for your assessment here"></b-form-textarea>
+                      max-rows="100"></b-form-textarea>
                   </b-form-group>
                 </b-modal>
 
