@@ -1968,6 +1968,7 @@ export default {
               }
             }
           },
+          { key: 'title', label: 'Title' },
           { key: 'publication_year', label: 'Year' },
           {
             key: 'id',
