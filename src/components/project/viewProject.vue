@@ -3265,11 +3265,13 @@ export default {
       if (categories.length) {
         for (let finding of findings) {
           if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
-            if (Object.prototype.hasOwnProperty.call(_findings, finding.category)) {
-              _findings[finding.category].push(finding)
-            } else {
-              _findings[finding.category] = []
-              _findings[finding.category].push(finding)
+            if (finding.category !== null) {
+              if (Object.prototype.hasOwnProperty.call(_findings, finding.category)) {
+                _findings[finding.category].push(finding)
+              } else {
+                _findings[finding.category] = []
+                _findings[finding.category].push(finding)
+              }
             }
           }
         }
