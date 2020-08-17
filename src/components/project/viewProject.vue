@@ -3305,6 +3305,7 @@ export default {
             }
           }
         }
+        console.log('_findings', _findings)
         return this.generateTableWithCategories(_findings)
       } else {
         return this.generateTableWithoutCategories(findings)
