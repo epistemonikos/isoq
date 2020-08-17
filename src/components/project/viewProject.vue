@@ -96,6 +96,16 @@
               <b-card no-body>
                 <b-tabs id="import-data" card>
                   <b-tab title="File upload" active>
+                    <b-row>
+                      <b-col
+                        cols="11">
+                        <h4>File upload</h4>
+                      </b-col>
+                      <b-col
+                        cols="1">
+                        <p class="text-right"><font-awesome-icon icon="question-circle"></font-awesome-icon></p>
+                      </b-col>
+                    </b-row>
                     <p class="font-weight-light">
                       <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
                     </p>
@@ -120,6 +130,16 @@
                     </p>
                   </b-tab>
                   <b-tab title="Import from PubMed">
+                    <b-row>
+                      <b-col
+                        cols="11">
+                        <h4>Import from PubMed</h4>
+                      </b-col>
+                      <b-col
+                        cols="1">
+                        <p class="text-right"><font-awesome-icon icon="question-circle"></font-awesome-icon></p>
+                      </b-col>
+                    </b-row>
                     <b-row>
                       <b-col
                         sm="6">
@@ -428,12 +448,14 @@
                   id="open-char-of-studies-table-modal-edit"
                   ref="open-char-of-studies-table-modal-edit"
                   scrollable
-                  title="Edit Column Headers"
                   :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
                   @ok="updateCharacteristicsStudiesFields"
                   ok-variant="outline-success"
                   ok-title="Save"
                   cancel-variant="outline-secondary">
+                  <template v-slot:modal-title>
+                    Edit Column Headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                  </template>
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
                   </p>
@@ -752,12 +774,14 @@
                 id="open-methodological-table-modal-edit"
                 ref="open-methodological-table-modal-edit"
                 scrollable
-                title="Edit Columns header"
                 :ok-disabled="(methodologicalFieldsModalEdit.fields.length)?((methodologicalFieldsModalEdit.fields[0].label.length)?false:true):false"
                 @ok="updateMethodologicalFields"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
+                <template v-slot:modal-title>
+                  Edit Column Headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                </template>
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
                   </p>
@@ -1165,11 +1189,17 @@
                 bg-variant="light">
                 <b-row>
                   <b-col
-                    cols="12">
+                    cols="11">
+                    <h4>Search <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
+                  </b-col>
+                  <b-col
+                    cols="1">
                     <b-button
                       class="close mb-1"
                       @click="toggleSearch(ui.project.displaySearch)">×</b-button>
                   </b-col>
+                </b-row>
+                <b-row>
                   <b-col
                     cols="12">
                     <b-form-group>
