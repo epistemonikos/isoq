@@ -72,7 +72,7 @@ export default {
     return {
       public_tables: [],
       table_settings: {
-        fields: [{key: 'name', sortable: true}, 'review_question', 'description', 'authors'],
+        fields: [{key: 'name', sortable: true}, 'review_question', 'authors'],
         per_page: 20,
         per_page_array: [20, 40, 60, 80, 100],
         current_page: 1,
