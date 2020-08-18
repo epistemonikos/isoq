@@ -37,6 +37,20 @@
       <p>The iSoQ tool was developed with funding from the Norwegian Institute of Public Health’s Centre for Informed Health Choices.</p>
 
       <h3>How is the iSoQ tool and its contents licenced?</h3>
+      <ul>
+        <li>
+          The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)
+        </li>
+        <li>
+          The methods content developed specifically for iSoQ (e.g. pop-up and modal texts, tooltips, prompts, examples, help videos) is licenced under a Creative Commons Attribution-Non-Commercial No-Derivatives 4.0 International Licence (CC-BY-NC-ND)
+        </li>
+        <li>
+          Methods content drawn directly from already published GRADE-CERQual papers in the journal Implementation Science are licenced under a Creative Commons Attribution 4.0 International Licence (CC-BY).
+        </li>
+        <li>
+          Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a Creative Commons licence for their work. The default will be CC-BY-NC-ND.
+        </li>
+      </ul>
     </b-container>
   </div>
 </template>
