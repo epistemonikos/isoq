@@ -265,7 +265,8 @@
                       description="Please enter the study inclusion criteria used in the review"
                       :isDisabled="checkPermissions()"
                       criteria="inclusion"
-                      :dataTxt="project.inclusion">
+                      :dataTxt="project.inclusion"
+                      @update-modification="updateModificationTime()">
                     </criteria>
                   </b-col>
                   <b-col
@@ -278,7 +279,8 @@
                       description="Please enter the study exclusion criteria used in the review"
                       :isDisabled="checkPermissions()"
                       criteria="exclusion"
-                      :dataTxt="project.exclusion">
+                      :dataTxt="project.exclusion"
+                      @update-modification="updateModificationTime()">
                     </criteria>
                   </b-col>
                 </b-row>
@@ -2800,6 +2802,7 @@ export default {
               this.createFinding(listId, listName)
               this.summarized_review = ''
               this.list_categories.selected = null
+              this.updateModificationTime()
             })
             .catch((error) => {
               this.printErrors(error)
@@ -3839,6 +3842,7 @@ export default {
         .then((response) => {
           this.msgUpdateProject = 'The project has been updated'
           window.scrollTo({ top: 0, behavior: 'smooth' })
+          this.updateModificationTime()
         })
         .catch((error) => {
           this.msgUpdateProject = error
@@ -4323,6 +4327,7 @@ export default {
         .then((response) => {
           this.updateFinding(this.editFindingName)
           this.getLists()
+          this.updateModificationTime()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -4814,6 +4819,16 @@ export default {
         }
       }
       return false
+    },
+    updateModificationTime: function () {
+      const params = {
+        last_update: Date.now()
+      }
+      axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+        .then((response) => {})
+        .catch((error) => {
+          this.printErrors(error)
+        })
     }
   }
 }

@@ -137,6 +137,7 @@ export default {
               this.ui.project.type = 'exclusion'
               // this.getProject()
             }
+            this.$emit('update-modification')
           })
           .catch((error) => {
             this.printErrors(error)
