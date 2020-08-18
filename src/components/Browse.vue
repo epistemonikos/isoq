@@ -75,7 +75,23 @@ export default {
     return {
       public_tables: [],
       table_settings: {
-        fields: [{key: 'name', sortable: true}, 'review_question', 'authors'],
+        fields: [
+          {
+            key: 'name',
+            sortable: true
+          },
+          'review_question',
+          'authors',
+          {
+            key: 'last_update',
+            label: 'Last Modification',
+            formatter: value => {
+              const _date = new Date(value)
+              const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }
+              return _date.toLocaleDateString(undefined, options)
+            }
+          }
+        ],
         per_page: 20,
         per_page_array: [20, 40, 60, 80, 100],
         current_page: 1,
