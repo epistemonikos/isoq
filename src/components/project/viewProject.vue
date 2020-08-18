@@ -2130,7 +2130,8 @@ export default {
       pubmed_requested: [],
       pubmed_selected: [],
       pubmed_loading: false,
-      pubmed_error: false
+      pubmed_error: false,
+      findings: []
     }
   },
   watch: {
@@ -2660,6 +2661,7 @@ export default {
                   }
                 }
               }
+              this.getFinding(this.$route.params.org_id, list.id)
             }
 
             if (this.list_categories.options.length) {
@@ -2740,6 +2742,23 @@ export default {
           }
           this.table_settings.isBusy = false
           this.table_settings.totalRows = this.lists.length
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    getFinding: function (orgId, listId) {
+      const params = {
+        organization: orgId,
+        list_id: listId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((response) => {
+          if (response.data.length) {
+            if (!this.findings.includes(response.data[0].id)) {
+              this.findings.push(response.data[0].id)
+            }
+          }
         })
         .catch((error) => {
           this.printErrors(error)
@@ -4542,11 +4561,27 @@ export default {
       }
       params.public_type = this.modal_project.public_type
 
-      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
-        .then((response) => {
-          this.modal_project = {}
-          this.getProject()
-        })
+      let lists = JSON.parse(JSON.stringify(this.lists))
+      let _requests = []
+      for (let list of lists) {
+        _requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
+      }
+      let findings = JSON.parse(JSON.stringify(this.findings))
+      for (let index in findings) {
+        _requests.push(axios.patch(`/api/isoqf_findings/${findings[index]}`, params))
+      }
+
+      axios.all(_requests)
+        .then(axios.spread((...responses) => {
+          axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+            .then((response) => {
+              this.modal_project = {}
+              this.getProject()
+            })
+            .catch((error) => {
+              this.printErrors(error)
+            })
+        }))
         .catch((error) => {
           this.printErrors(error)
         })
