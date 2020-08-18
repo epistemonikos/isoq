@@ -409,7 +409,7 @@ export default {
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
-          if (this.project.sharedToken !== this.$route.params.token || this.project.is_public) {
+          if (this.project.sharedToken !== this.$route.params.token || this.project.public_type !== 'private') {
             this.$router.push({ name: 'MainPage' })
           }
         })
