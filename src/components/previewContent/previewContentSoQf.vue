@@ -12,7 +12,7 @@
             cols="12"
             md="1"
             class="text-right">
-            <b-link class="d-print-none" :to="{ name: 'MainPage' }">
+            <b-link class="d-print-none" :to="($route.params.token === 'public') ? { name: 'Browse' } : { name: 'MainPage' }">
               <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
               {{ $t('back') }}
             </b-link>

@@ -4,7 +4,7 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: project.organization, isoqf_id: project.id, token: project.sharedToken }}">
+            <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: project.organization, isoqf_id: project.id, token: $route.params.token }}">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
               return to ISoQ table
             </b-link>
@@ -409,7 +409,7 @@ export default {
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
-          if (this.project.sharedToken !== this.$route.params.token || this.project.public_type !== 'private') {
+          if (this.project.sharedToken !== this.$route.params.token && this.project.public_type === 'private') {
             this.$router.push({ name: 'MainPage' })
           }
         })
