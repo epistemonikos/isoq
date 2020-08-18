@@ -190,7 +190,7 @@
                             <b-form-textarea
                               id="input-ml-explanation"
                               v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                              :placeholder="buffer_modal_stage_two.methodological_limitations.option === '0' ? '' : $t('Enter an explanation')"
+                              :placeholder="buffer_modal_stage_two.methodological_limitations.option === '0' ? '' : ''"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -253,7 +253,7 @@
                             <b-form-textarea
                               id="input-coherence-explanation"
                               v-model="buffer_modal_stage_two.coherence.explanation"
-                              :placeholder="buffer_modal_stage_two.coherence.option === '0' ? '' : $t('Enter an explanation')"
+                              :placeholder="buffer_modal_stage_two.coherence.option === '0' ? '' : ''"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -311,7 +311,7 @@
                             <b-form-textarea
                               id="input-adequacy-explanation"
                               v-model="buffer_modal_stage_two.adequacy.explanation"
-                              :placeholder="buffer_modal_stage_two.adequacy.option === '0' ? '' : $t('Enter an explanation')"
+                              :placeholder="buffer_modal_stage_two.adequacy.option === '0' ? '' : ''"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
@@ -369,7 +369,7 @@
                             <b-form-textarea
                               id="input-relevance-explanation"
                               v-model="buffer_modal_stage_two.relevance.explanation"
-                              :placeholder="buffer_modal_stage_two.relevance.option === '0' ? '' : $t('Enter an explanation')"
+                              :placeholder="buffer_modal_stage_two.relevance.option === '0' ? '' : ''"
                               rows="6"
                               max-rows="100"></b-form-textarea>
                           </b-form-group>
