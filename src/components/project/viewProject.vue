@@ -98,12 +98,8 @@
                   <b-tab title="File upload" active>
                     <b-row>
                       <b-col
-                        cols="11">
-                        <h4>File upload</h4>
-                      </b-col>
-                      <b-col
-                        cols="1">
-                        <p class="text-right"><font-awesome-icon icon="question-circle"></font-awesome-icon></p>
+                        cols="12">
+                        <h4>File upload <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
                       </b-col>
                     </b-row>
                     <p class="font-weight-light">
@@ -132,12 +128,8 @@
                   <b-tab title="Import from PubMed">
                     <b-row>
                       <b-col
-                        cols="11">
-                        <h4>Import from PubMed</h4>
-                      </b-col>
-                      <b-col
-                        cols="1">
-                        <p class="text-right"><font-awesome-icon icon="question-circle"></font-awesome-icon></p>
+                        cols="12">
+                        <h4>Import from PubMed <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
                       </b-col>
                     </b-row>
                     <b-row>
@@ -4835,6 +4827,12 @@ export default {
 </script>
 
 <style scoped>
+  div >>>
+    h2>span>svg,
+    h3>span>svg,
+    h4>span>svg {
+      font-size: 1rem;
+    }
   div >>>
     .nav-fill .nav-item {
       text-transform: uppercase;
