@@ -1,6 +1,6 @@
 <template>
-  <div class="h-100">
-    <b-container id="mainPage" fluid class="pt-5 h-100">
+  <div id="mainContainer" class="vh-100">
+    <b-container id="mainPage" fluid class="pt-5">
       <b-row>
         <b-col cols="12" md="6" lg="3">
           <h2>iSoQ</h2>
@@ -17,9 +17,16 @@
         </b-col>
       </b-row>
 
-      <b-row class="pt-5" align-v="end">
+      <b-row align-v="end">
         <b-col cols="12" md="4">
-          <p class="uea">This project has received funding from the European Union’s Seventh Framework Programme for research, technological development and demonstration under grant agreement n°258583 and from Epistemonikos foundation that currently maintains and further develop the iSoQ.</p>
+          <ul class="list-inline logo-orgs">
+            <li class="list-inline-item">
+              <img src="../assets/logo-niph.png" alt="NIPH">
+            </li>
+            <li class="list-inline-item">
+              <img src="../assets/logo-epistemonikos.png" alt="Epistemonikos Foundation">
+            </li>
+          </ul>
           <p class="uea">iSoQ is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported License</p>
         </b-col>
       </b-row>
@@ -41,12 +48,12 @@ export default {
 </script>
 
 <style scoped>
+  #mainContainer {
+    background: url('../assets/a.jpg');
+    background-size: cover;
+    color: #FFF;
+  }
   div >>>
-    #mainPage {
-      background: url('../assets/a.jpg');
-      background-size: cover;
-      color: #FFF;
-    }
     h2 {
       font-size: 80px;
     }
