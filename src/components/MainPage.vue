@@ -27,7 +27,6 @@
               <img src="../assets/logo-epistemonikos.png" alt="Epistemonikos Foundation">
             </li>
           </ul>
-          <p class="uea">iSoQ is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported License</p>
         </b-col>
       </b-row>
     </b-container>
