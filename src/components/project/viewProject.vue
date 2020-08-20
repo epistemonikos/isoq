@@ -89,7 +89,7 @@
             </b-col>
             <b-col
               cols="12">
-              <h4 class="mt-5">STEP 1: Upload the <b>references</b> for your included Studies (required)</h4>
+              <h4 class="mt-5">STEP 1: Upload the <b>references</b> for your included studies (required)</h4>
               <p class="font-weight-light">
                 You must import only the references for your final list of included studies
               </p>
