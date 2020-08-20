@@ -567,7 +567,7 @@
                   <template v-slot:modal-footer>
                     <b-button
                       variant="outline-secondary"
-                      @click="cleanVars('close', 'import-characteristics-table')">Cancel</b-button>
+                      @click="cleanVars('close', 'modal-chars')">Cancel</b-button>
                     <b-button
                       variant="outline-info"
                       :disabled="!importDataTable.items.length"
@@ -919,7 +919,7 @@
                 <template v-slot:modal-footer>
                     <b-button
                       variant="outline-secondary"
-                      @click="cleanVars('close', 'import-methodological-table')">Cancel</b-button>
+                      @click="cleanVars('close', 'modal-meth')">Cancel</b-button>
                     <b-button
                       variant="outline-info"
                       :disabled="!importDataTable.items.length"
@@ -3905,7 +3905,7 @@ export default {
       }
       this.pre_ImportDataTable = ''
     },
-    cleanVars: function (str = '', modal = '') {
+    cleanVars: function (str = '', modal) {
       this.importDataTable = {
         error: null,
         fields: [],
@@ -3922,7 +3922,8 @@ export default {
         this.$refs['import-meth-table-file'].reset()
       }
       if (str === 'close') {
-        this.$refs[modal].hide()
+        const _modal = (modal === 'modal-chars') ? 'import-characteristics-table' : 'import-methodological-table'
+        this.$refs[_modal].hide()
       }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
@@ -3933,9 +3934,11 @@ export default {
         })
     },
     insertImportedData: function (endpoint = '', params = {}) {
+      const modal = (endpoint === 'isoqf_characteristics') ? 'import-characteristics-table' : 'import-methodological-table'
       axios.post(`/api/${endpoint}/`, params)
         .then((response) => {
           this.getProject()
+          this.$refs[modal].hide()
         })
         .catch((error) => {
           this.printErrors(error)
