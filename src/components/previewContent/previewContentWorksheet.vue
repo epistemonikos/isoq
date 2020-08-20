@@ -134,7 +134,7 @@
 
           <div
             class="mt-5 mb-5"
-            v-if="show.selected.includes('cs')">
+            v-if="show.selected.includes('cs') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
             <a name="characteristics-of-studies"></a>
             <h3 class="toDoc">
               {{ $t('Characteristics of Studies') }}
@@ -169,7 +169,7 @@
 
           <div
             class="mt-5 mb-5"
-            v-if="show.selected.includes('ma')">
+            v-if="show.selected.includes('ma') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
             <a name="methodological-assessments"></a>
             <h3 class="toDoc">
               {{ $t('Methodological Assessments') }}
@@ -191,7 +191,7 @@
 
           <div
             class="mt-3"
-            v-if="show.selected.includes('ed')">
+            v-if="show.selected.includes('ed') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
             <a name="extracted-data"></a>
             <h3 class="toDoc">
               {{ $t('Extracted Data') }}

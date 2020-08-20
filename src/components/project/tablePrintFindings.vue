@@ -29,9 +29,14 @@
             </b-td>
             <b-td
               style="vertical-align: top;">
-              <p>
-                <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
-              </p>
+              <template v-if="local_project.public_type !== 'minimally'">
+                <p>
+                  <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
+                </p>
+              </template>
+              <template v-else>
+                <p>{{ item.name }}</p>
+              </template>
             </b-td>
             <b-td
               style="vertical-align: top;">
@@ -56,7 +61,8 @@
 export default {
   name: 'tablePrintFindings',
   props: {
-    data: Array
+    data: Array,
+    project: Object
   },
   mounted: function () {
     this.loadData()
@@ -69,6 +75,7 @@ export default {
   methods: {
     loadData: function () {
       this.local_data = this.data
+      this.local_project = this.project
     }
   }
 }

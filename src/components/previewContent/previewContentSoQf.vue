@@ -154,7 +154,8 @@
           <div class="mt-3">
             <table-printing-findings
               v-if="lists.length"
-              :data="lists">
+              :data="lists"
+              :project="project">
             </table-printing-findings>
           </div>
           <back-to-top></back-to-top>
