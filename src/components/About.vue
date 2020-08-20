@@ -15,7 +15,7 @@
       </ul>
 
       <h3>What is GRADE-CERQual?</h3>
-      <p>GRADE-CERQual (www.cerqual.org) is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
+      <p><a href="www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
 
       <h3>When in the review process can I use the iSoQ tool?</h3>
       <p>You can begin using this tool once you have finished the study screening process and have a list of included studies that meet the inclusion criteria for your synthesis (systematic review). In the early stages of a systematic review, the iSoQ tool can be used to help organise some of the data that are needed to apply GRADE-CERQual, for example, tables of the characteristics of included studies and of the methodological limitations of the included studies (critical appraisal tables).</p>
@@ -39,16 +39,16 @@
       <h3>How is the iSoQ tool and its contents licenced?</h3>
       <ul>
         <li>
-          The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)
+          The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)</a>
         </li>
         <li>
-          The methods content developed specifically for iSoQ (e.g. pop-up and modal texts, tooltips, prompts, examples, help videos) is licenced under a Creative Commons Attribution-Non-Commercial No-Derivatives 4.0 International Licence (CC-BY-NC-ND)
+          The methods content developed specifically for iSoQ (e.g. pop-up and modal texts, tooltips, prompts, examples, help videos) is licenced under a <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">Creative Commons Attribution-Non-Commercial No-Derivatives 4.0 International Licence (CC-BY-NC-ND)</a>
         </li>
         <li>
-          Methods content drawn directly from already published GRADE-CERQual papers in the journal Implementation Science are licenced under a Creative Commons Attribution 4.0 International Licence (CC-BY).
+          Methods content drawn directly from already published <a href="https://implementationscience.biomedcentral.com/articles/supplements/volume-13-supplement-1" target="_blank">GRADE-CERQual papers in the journal Implementation Science</a> are licenced under a <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International Licence (CC-BY)</a>
         </li>
         <li>
-          Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a Creative Commons licence for their work. The default will be CC-BY-NC-ND.
+          Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a <a href="https://creativecommons.org" target="_blank">Creative Commons</a> licence for their work. The default will be <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC-BY-NC-ND</a>.
         </li>
       </ul>
     </b-container>
