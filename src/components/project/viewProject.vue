@@ -448,7 +448,7 @@
                   ok-title="Save"
                   cancel-variant="outline-secondary">
                   <template v-slot:modal-title>
-                    Edit Column Headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                    <videoHelp txt="Edit column headers" tag="none" urlId="449742512"></videoHelp>
                   </template>
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
@@ -774,7 +774,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <template v-slot:modal-title>
-                  Edit Column Headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                  <videoHelp txt="Edit column headers" tag="none" urlId="449764545"></videoHelp>
                 </template>
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
