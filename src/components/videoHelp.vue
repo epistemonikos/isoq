@@ -1,9 +1,9 @@
 <template>
   <div>
-    <template v-if="tag === 'none'">{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></template>
-    <template v-if="tag === 'h2'"><h2>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2></template>
-    <template v-if="tag === 'h3'"><h3>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h3></template>
-    <template v-if="tag === 'h4'"><h4>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4></template>
+    <template v-if="tag === 'none'">{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></template>
+    <template v-if="tag === 'h2'"><h2>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></h2></template>
+    <template v-if="tag === 'h3'"><h3>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></h3></template>
+    <template v-if="tag === 'h4'"><h4>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></h4></template>
     <b-modal
       title="Help"
       :id="`videoHelp-${urlId}`"
