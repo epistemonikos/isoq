@@ -82,7 +82,7 @@
           <b-row>
             <b-col
               cols="12">
-              <h3>Add data needed to make GRADE-CERQual assessments <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h3>
+              <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
               <p>
                 To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
               </p>
@@ -99,7 +99,7 @@
                     <b-row>
                       <b-col
                         cols="12">
-                        <h4>File upload <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
+                        <videoHelp txt="File upload" tag="h4" urlId="449247762"></videoHelp>
                       </b-col>
                     </b-row>
                     <p class="font-weight-light">
@@ -129,7 +129,7 @@
                     <b-row>
                       <b-col
                         cols="12">
-                        <h4>Import from PubMed <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
+                        <videoHelp txt="Import from PubMed" tag="h4" urlId="449248998"></videoHelp>
                       </b-col>
                     </b-row>
                     <b-row>
@@ -399,7 +399,7 @@
                   ok-variant="outline-success"
                   cancel-variant="outline-secondary">
                   <template v-slot:modal-title>
-                    Column Headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                    <videoHelp txt="Column Headers" tag="none" urlId="449742512"></videoHelp>
                   </template>
                   <p class="font-weight-light">
                     Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
@@ -729,7 +729,7 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <template v-slot:modal-title>
-                  Column headers <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span>
+                  <videoHelp txt="Column Headers" tag="none" urlId="449764545"></videoHelp>
                 </template>
                   <p class="font-weight-light">
                     Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
@@ -1032,7 +1032,7 @@
           </b-row>
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
-              <h2><span v-if="mode==='edit'" class="d-print-none">Interactive </span>Summary of Qualitative Findings Table <span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
+              <videoHelp txt="Interactive Summary of Qualitative Findings Table" tag="h2" urlId="449743080"></videoHelp>
             </b-col>
           </b-row>
           <b-row>
@@ -1829,6 +1829,7 @@ import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
 import backToTop from '../backToTop'
 import Criteria from '../Criteria'
+import videoHelp from '../videoHelp'
 
 export default {
   components: {
@@ -1836,7 +1837,8 @@ export default {
     organizationForm,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
-    'criteria': Criteria
+    'criteria': Criteria,
+    videoHelp
   },
   data () {
     return {

@@ -145,7 +145,7 @@
         ok-title="Close"
         scrollable>
         <template v-slot:modal-title>
-          Share <font-awesome-icon icon="question-circle"></font-awesome-icon>
+          <videoHelp txt="Share" tag="none" urlId="449741356"></videoHelp>
         </template>
         <b-tabs>
           <b-tab
@@ -269,10 +269,12 @@
 <script>
 import axios from 'axios'
 import organizationForm from '../organization/organizationForm'
+import videoHelp from '../videoHelp'
 
 export default {
   components: {
-    'organizationForm': organizationForm
+    'organizationForm': organizationForm,
+    videoHelp
   },
   data () {
     return {
