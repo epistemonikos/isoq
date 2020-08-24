@@ -10,7 +10,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="This is where you will transparently assess the 4 components of GRADE-CERQual in order to make an overall assessment of confidence">*</small><span class="d-print-none"><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h2>
+        <videoHelp txt="GRADE-CERQual Assessment Worksheet" tag="h2-worksheet" urlId="451100482"></videoHelp>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
         <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
       </b-container>
@@ -131,7 +131,11 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary">
                 <template v-slot:modal-title>
-                  Evidence profile - {{ buffer_modal_stage_two.title }} <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                  <videoHelp v-if="buffer_modal_stage_two.type === 'methodological-limitations'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835272"></videoHelp>
+                  <videoHelp v-if="buffer_modal_stage_two.type === 'coherence'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835237"></videoHelp>
+                  <videoHelp v-if="buffer_modal_stage_two.type === 'adequacy'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835188"></videoHelp>
+                  <videoHelp v-if="buffer_modal_stage_two.type === 'relevance'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835406"></videoHelp>
+                  <videoHelp v-if="buffer_modal_stage_two.type === 'cerqual'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835499"></videoHelp>
                 </template>
                   <b-container>
                     <b-row>
@@ -1395,16 +1399,7 @@
               class="mt-3"
               v-if="show.selected.includes('ed')">
               <a name="extracted-data"></a>
-              <h3 class="toDoc">
-                {{ $t('Extracted Data') }} <small v-if="mode==='edit'" class="d-print-none" v-b-tooltip.hover title="Data extracted from each of the contributing studies.">*</small>
-                <font-awesome-icon icon="question-circle" class="d-print-none"></font-awesome-icon>
-                <span
-                  v-if="ui.adequacy.extracted_data.display_warning"
-                  class="text-danger d-print-none"
-                  v-b-tooltip.hover title="Some or all of the extracted data for this finding are missing.">
-                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                </span>
-              </h3>
+              <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
               <p class="d-print-none font-weight-light">
                 It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
               </p>
@@ -1509,6 +1504,7 @@ import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 import editReviewFinding from '../editReviewFinding'
 import backToTop from '../backToTop'
+import videoHelp from '../videoHelp'
 
 export default {
   components: {
@@ -1516,7 +1512,8 @@ export default {
     'bc-action-table': bCardActionTable,
     'edit-review-finding': editReviewFinding,
     'back-to-top': backToTop,
-    draggable
+    draggable,
+    videoHelp
   },
   data () {
     return {

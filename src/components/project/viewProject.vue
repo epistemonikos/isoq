@@ -526,7 +526,7 @@
                   id="import-characteristics-table"
                   ref="import-characteristics-table">
                   <template v-slot:modal-title>
-                    Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                    <videoHelp txt="Import table" tag="none" urlId="450046545"></videoHelp>
                   </template>
                   <b-alert show variant="danger">
                     <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
@@ -878,7 +878,7 @@
                 id="import-methodological-table"
                 ref="import-methodological-table">
                 <template v-slot:modal-title>
-                  Import table <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                  <videoHelp txt="Import table" tag="none" urlId="451099168"></videoHelp>
                 </template>
                 <b-alert show variant="danger">
                   <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
@@ -1596,7 +1596,7 @@
                 ref="modalEditListCategories"
                 scrollable>
                 <template v-slot:modal-title>
-                  Review Finding Groups <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                  <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
                 </template>
                 <p
                   v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
