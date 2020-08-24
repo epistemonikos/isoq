@@ -11,6 +11,7 @@ import Browse from '@/components/Browse'
 import NewPassword from '@/components/NewPassword'
 import previewContentSoQf from '@/components/previewContent/previewContentSoQf'
 import previewWorksheet from '@/components/previewContent/previewContentWorksheet'
+import Help from '@/components/Help'
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -29,6 +30,14 @@ var routes = [
     component: About,
     meta: {
       title: 'About - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: Help,
+    meta: {
+      title: 'Help - interactive Summaries of Qualitative Findings'
     }
   },
   {

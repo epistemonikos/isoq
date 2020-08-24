@@ -12,7 +12,7 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("About") }}</b-nav-item>
           <b-nav-item :to="$i18nRoute({ name: 'Browse'})">{{ $t("Browse") }}</b-nav-item>
-          <b-nav-item>Help</b-nav-item>
+          <b-nav-item :to="{ name: 'Help' }">Help</b-nav-item>
           <template v-if="$store.getters.isLoggedIn">
             <b-nav-item :to="$i18nRoute({ name: 'viewOrganization', params: {id: this.$store.state.user.personal_organization }})">My Workspace</b-nav-item>
             <b-nav-item @click="logout">{{ $t('Logout') }}</b-nav-item>
