@@ -34,7 +34,7 @@
                     required></b-form-input>
                 </b-form-group>
                 <b-card-text class="text-center text-forgot-create">
-                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
+                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link>-->
                 </b-card-text>
                 <div slot="footer" class="text-right">
                   <b-button type="submit" variant="outline-primary">Login</b-button>
