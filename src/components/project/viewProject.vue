@@ -1814,6 +1814,16 @@
             name="modal-radio-status"
           ></b-form-radio-group>
         </b-form-group>
+        <h2>License</h2>
+        <p class="font-weight-light">I would like to publish your work under the following license. More information <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a></p>
+        <b-form-group>
+          <b-form-radio-group
+            id="modal-publish-license"
+            v-model="modal_project.license_type"
+            :options="global_licenses"
+            name="modal-radio-license"
+          ></b-form-radio-group>
+        </b-form-group>
       </b-modal>
     </b-container>
   </div>
@@ -2059,6 +2069,14 @@ export default {
         { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
         { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
         { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
+      ],
+      global_licenses: [
+        { value: 'CC BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
+        { value: 'CC BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -4551,6 +4569,9 @@ export default {
     },
     modalChangePublicStatus: function () {
       this.modal_project = JSON.parse(JSON.stringify(this.project))
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
+        this.modal_project.license_type = 'CC BY-NC-ND'
+      }
       this.$refs['modal-change-status'].show()
     },
     savePublicStatus: function () {
@@ -4562,6 +4583,7 @@ export default {
         params.is_public = true
       }
       params.public_type = this.modal_project.public_type
+      params.license_type = this.modal_project.license_type
 
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _requests = []
@@ -4986,6 +5008,10 @@ export default {
     }
     #card-search .card-body {
       padding: .3rem;
+    }
+  div >>>
+    #modal-publish-license > .custom-control-inline {
+      padding-bottom: 0.6rem;
     }
   @media print {
     div >>>
