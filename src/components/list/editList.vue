@@ -58,6 +58,8 @@
         </b-col>
       </b-row>
       <b-row
+        class="sticky-top"
+        style="background-color: #fff; padding-bottom: 0.3rem"
         v-if="mode==='edit'">
         <b-col
           class="d-print-none"
@@ -782,7 +784,7 @@
               <div
                 v-if="mode==='edit'"
                 class="d-print-none">
-                <b-card>
+                <b-card v-if="false">
                   <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
                   <p v-if="list.cerqual.option !== null">
                     Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
@@ -794,7 +796,24 @@
                     class="mb-3">
                   </b-progress>
                 </b-card>
+
+                <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
+                <p v-if="list.cerqual.option !== null">
+                  Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
+                </p>
+                <b-progress
+                  :value="status_evidence_profile.value"
+                  :max="status_evidence_profile.max"
+                  :variant="status_evidence_profile.variant"
+                  class="mb-3">
+                </b-progress>
               </div>
+              <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
+                <div>
+                  <h5 class="text-info">License type</h5>
+                  <p class="text-info">{{ theLicense(this.project.license_type) }}</p>
+                </div>
+                </template>
 
               <template v-if="evidence_profile.length">
                 <a name="evidence-profile"></a>
@@ -2927,7 +2946,18 @@ export default {
               })
             ]
           }),
-          this.generateTable(JSON.parse(JSON.stringify(this.extracted_data)))
+          this.generateTable(JSON.parse(JSON.stringify(this.extracted_data))),
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.theLicense(this.project.license_type) : '',
+                size: 20,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
+            ]
+          })
         ]
       })
 
@@ -3264,12 +3294,36 @@ export default {
           break
       }
       return false
+    },
+    theLicense: function (license) {
+      const globalLicenses = [
+        { value: 'CC BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
+        { value: 'CC BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+      ]
+
+      if (license) {
+        for (let lic of globalLicenses) {
+          if (lic.value === license) {
+            return lic.text
+          }
+        }
+      }
+
+      return globalLicenses[0].text
     }
   }
 }
 </script>
 
 <style scoped>
+  div >>>
+    .navlink {
+      padding: 0.5rem 0.9rem;
+    }
   div >>>
     a.return {
       font-size: 1.2rem;
