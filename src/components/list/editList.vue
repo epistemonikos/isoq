@@ -4,7 +4,7 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" :to="{ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id }}">
+            <b-link class="return" @click="returnTo()">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
               return to ISoQ table
             </b-link>
@@ -1923,6 +1923,7 @@ export default {
             fields: [],
             items: []
           }
+          this.checkWrittingStatus(this.list)
           this.getProject(this.list.project_id)
           this.getAllReferences()
           this.getStageOneData(fromModal)
@@ -3314,6 +3315,50 @@ export default {
       }
 
       return globalLicenses[0].text
+    },
+    checkWrittingStatus: function (list) {
+      if (Object.prototype.hasOwnProperty.call(list, 'editing')) {
+        if (list.userEditing === this.$store.state.user.id || list.editing === false) {
+          const params = { editing: true, userEditing: this.$store.state.user.id }
+          axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+            .then((response) => {
+              this.mode = 'edit'
+              this.list.editing = true
+              this.list.userEditing = this.$store.state.user.id
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        } else {
+          this.mode = 'view'
+        }
+      } else {
+        const params = { editing: true, userEditing: this.$store.state.user.id }
+        axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+          .then((response) => {
+            this.list.editing = true
+            this.list.userEditing = this.$store.state.user.id
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+    },
+    returnTo: function () {
+      if (this.list.userEditing === this.$store.state.user.id) {
+        const params = { editing: false, userEditing: '' }
+        axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+          .then((response) => {
+            this.list.editing = false
+            this.list.userEditing = ''
+            this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
+      }
     }
   }
 }
