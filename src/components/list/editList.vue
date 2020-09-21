@@ -1,5 +1,14 @@
 <template>
   <div>
+    <b-alert
+      :show="editingUser.show"
+      class="position-fixed fixed-bottom m-0 rounded-0"
+      style="z-index: 2000;"
+      variant="danger"
+      dismissible
+    >
+      The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+    </b-alert>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
         <b-row>
@@ -52,6 +61,7 @@
               @click="changeMode"
               variant="outline-primary"
               v-b-tooltip:editButton.top="'Click to edit'"
+              :disabled="list.editing"
               block>
               Edit
             </b-button>
@@ -1765,7 +1775,10 @@ export default {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
       },
-      showPanel: true
+      showPanel: true,
+      editingUser: {
+        show: false
+      }
     }
   },
   mounted () {
@@ -3330,6 +3343,14 @@ export default {
               console.log(error)
             })
         } else {
+          axios.get(`/users/${list.userEditing}`)
+            .then((response) => {
+              this.editingUser = response.data
+              this.editingUser.show = true
+            })
+            .catch((error) => {
+              this.printErrors(error)
+            })
           this.mode = 'view'
         }
       } else {

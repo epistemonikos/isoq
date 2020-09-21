@@ -1475,6 +1475,11 @@
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
                 @ok="updateListName">
+                <b-alert
+                  :show="editingUser.show"
+                  variant="danger">
+                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+                </b-alert>
                 <b-form-group
                   label="Summarised review finding"
                   label-for="finding-name">
@@ -1519,6 +1524,11 @@
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
                 @ok="confirmRemoveList">
+                <b-alert
+                  :show="editingUser.show"
+                  variant="danger">
+                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+                </b-alert>
                 <p class="text-danger">
                   Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
                 </p>
@@ -1568,6 +1578,11 @@
                 cancel-variant="outline-secondary"
                 size="xl"
                 scrollable>
+                <b-alert
+                  :show="editingUser.show"
+                  variant="danger">
+                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+                </b-alert>
                 <template v-if="references.length">
                   <div
                     class="mt-2">
@@ -2157,7 +2172,10 @@ export default {
       pubmed_selected: [],
       pubmed_loading: false,
       pubmed_error: false,
-      findings: []
+      findings: [],
+      editingUser: {
+        show: false
+      }
     }
   },
   watch: {
@@ -2925,6 +2943,9 @@ export default {
       axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
         .then((response) => {
           this.lists[index].editing = response.data.editing
+          if (response.data.editing) {
+            this.getUserInfo(response.data.userEditing)
+          }
           let list = JSON.parse(JSON.stringify(this.lists[index]))
           const params = {
             organization: this.$route.params.org_id,
@@ -4339,6 +4360,9 @@ export default {
           this.editFindingName.category = response.data.category
           this.editFindingName.notes = response.data.notes
           this.editFindingName.editing = response.data.editing
+          if (response.data.editing) {
+            this.getUserInfo(response.data.userEditing)
+          }
           const params = {
             organization: this.$route.params.org_id,
             list_id: response.data.id
@@ -4394,6 +4418,9 @@ export default {
           this.editFindingName.index = index
           this.editFindingName.name = response.data.name
           this.editFindingName.editing = response.data.editing
+          if (response.data.editing) {
+            this.getUserInfo(response.data.userEditing)
+          }
           const params = {
             organization: this.$route.params.org_id,
             list_id: response.data.id
@@ -4878,6 +4905,16 @@ export default {
       }
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
         .then((response) => {})
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    getUserInfo: function (userId) {
+      axios.get(`/users/${userId}`)
+        .then((response) => {
+          this.editingUser = response.data
+          this.editingUser.show = true
+        })
         .catch((error) => {
           this.printErrors(error)
         })
