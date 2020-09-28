@@ -212,9 +212,11 @@
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
-                            label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
+                            <template slot="label">
+                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
+                            </template>
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.methodological_limitations.notes"
@@ -275,9 +277,11 @@
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
-                            label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
+                            <template slot="label">
+                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
+                            </template>
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.coherence.notes"
@@ -333,9 +337,11 @@
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
-                            label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
+                            <template slot="label">
+                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
+                            </template>
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.adequacy.notes"
@@ -391,8 +397,10 @@
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
-                            label="Notes"
                             label-for="input-ml-notes">
+                            <template slot="label">
+                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
+                            </template>
                             <template slot="description">
                               Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
                             </template>
@@ -459,9 +467,11 @@
                           </b-form-group>
                           <b-form-group
                             class="mt-2 font-weight-light"
-                            label="Notes"
                             label-for="input-ml-notes"
                             description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
+                            <template slot="label">
+                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
+                            </template>
                             <b-form-textarea
                               id="input-ml-notes"
                               v-model="buffer_modal_stage_two.cerqual.notes"

@@ -1139,7 +1139,7 @@
                     scrollable
                     @ok="saveSortedLists">
                     <template v-slot:modal-title>
-                      Re-order your review findings <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                      <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
                     </template>
                     <p class="font-weight-light">
                       Drag and drop findings to re-order them in the iSoQ table
@@ -1184,7 +1184,7 @@
                 <b-row>
                   <b-col
                     cols="11">
-                    <h4>Search <span><font-awesome-icon icon="question-circle"></font-awesome-icon></span></h4>
+                    <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
                   </b-col>
                   <b-col
                     cols="1">
@@ -1504,7 +1504,7 @@
                   label-for="finding-note"
                   description="Optional space for reviewers to leave notes for each other about this review finding">
                   <template v-slot:label>
-                    Notes <font-awesome-icon icon="question-circle"></font-awesome-icon>
+                    <videoHelp txt="Notes" tag="none" urlId="462176506"></videoHelp>
                   </template>
                   <b-form-textarea
                     id="finding-note"
