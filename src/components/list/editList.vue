@@ -828,13 +828,6 @@
                   class="mb-3">
                 </b-progress>
               </div>
-              <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
-                <div>
-                  <h5 class="text-info">License type</h5>
-                  <p class="text-info">{{ theLicense(this.project.license_type) }}</p>
-                  <img :src="licenseUrl" :alt="theLicense(this.project.license_type)">
-                </div>
-              </template>
 
               <template v-if="evidence_profile.length">
                 <a name="evidence-profile"></a>
@@ -1360,9 +1353,7 @@
                 <back-to-top></back-to-top>
               </template>
             </div>
-            <!--</b-tab>-->
-            <!-- Methodological Assessments -->
-            <!--<b-tab :title="$t('Methodological Assessments')">-->
+
             <div
               class="mt-5 mb-5"
               v-if="show.selected.includes('ma')">
@@ -1527,8 +1518,14 @@
               </template>
               -->
             </div>
-            <!--</b-tab>-->
-          <!--</b-tabs>-->
+
+            <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
+              <div class="mt-5">
+                <h5 class="text-info">License type</h5>
+                <p class="text-info">{{ theLicense(this.project.license_type) }}</p>
+                <!-- <img :src="licenseUrl" :alt="theLicense(this.project.license_type)"> -->
+              </div>
+            </template>
         </b-col>
       </b-row>
     </b-container>

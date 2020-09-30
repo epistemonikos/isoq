@@ -1068,6 +1068,11 @@
 
                       <h5 v-if="project.description">Additional Information</h5>
                       <p v-if="project.description">{{project.description}}</p>
+
+                      <template v-if="project.public_type !== 'private'">
+                        <h5>License</h5>
+                        <p>{{ project.license_type }}</p>
+                      </template>
                     </b-col>
                     <b-col cols="12" md="4" class="toDoc">
                       <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
@@ -1840,16 +1845,19 @@
             name="modal-radio-status"
           ></b-form-radio-group>
         </b-form-group>
-        <h2>License</h2>
-        <p class="font-weight-light">I would like to publish your work under the following license. More information <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a></p>
-        <b-form-group>
-          <b-form-radio-group
-            id="modal-publish-license"
-            v-model="modal_project.license_type"
-            :options="global_licenses"
-            name="modal-radio-license"
-          ></b-form-radio-group>
-        </b-form-group>
+        <template v-if="modal_project.public_type !== 'private'">
+          <h5>Choose a license</h5>
+          <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
+          <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
+          <b-form-group>
+            <b-form-radio-group
+              id="modal-publish-license"
+              v-model="modal_project.license_type"
+              :options="global_licenses"
+              name="modal-radio-license"
+            ></b-form-radio-group>
+          </b-form-group>
+        </template>
       </b-modal>
     </b-container>
   </div>
@@ -2102,7 +2110,7 @@ export default {
         { value: 'CC BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
         { value: 'CC BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
         { value: 'CC BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+        { value: 'CC BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -3203,6 +3211,7 @@ export default {
             ]
           }),
           new Paragraph(''),
+          ...this.generateLicense(this.project),
           new Table({
             borders: {
               top: {
@@ -3364,6 +3373,32 @@ export default {
         saveAs(blob, filename)
       })
     },
+    generateLicense: function (project) {
+      let content = []
+      if (project.public_type !== 'private') {
+        content.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'License',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: project.license_type,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph('')
+        )
+      }
+      return content
+    },
     generateTable: function (findings, categories = []) {
       let _findings = {}
       if (categories.length) {
@@ -3379,7 +3414,6 @@ export default {
             }
           }
         }
-        console.log('_findings', _findings)
         return this.generateTableWithCategories(_findings)
       } else {
         return this.generateTableWithoutCategories(findings)
