@@ -1852,7 +1852,7 @@
           <b-form-group>
             <b-form-radio-group
               id="modal-publish-license"
-              v-model="modal_project.license_type"
+              v-model="getLicense"
               :options="global_licenses"
               name="modal-radio-license"
             ></b-form-radio-group>
@@ -2422,13 +2422,7 @@ export default {
       }
     },
     printiSoQ: function () {
-      /*
-      if (!document.getElementsByClassName('b-table-row-selected').length) {
-        this.dismissAlertPrint = true
-      } else {
-      */
       window.print()
-      // }
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
@@ -4664,7 +4658,7 @@ export default {
     modalChangePublicStatus: function () {
       this.modal_project = JSON.parse(JSON.stringify(this.project))
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
-        this.modal_project.license_type = 'CC BY-NC-ND'
+        this.modal_project.license_type = 'CC-BY-NC-ND'
       }
       this.$refs['modal-change-status'].show()
     },
@@ -4672,12 +4666,14 @@ export default {
       let params = {}
       params.private = true
       params.is_public = false
+      params.public_type = this.modal_project.public_type
+      params.license_type = this.modal_project.license_type
       if (this.modal_project.public_type !== 'private') {
         params.private = false
         params.is_public = true
+      } else {
+        params.license_type = ''
       }
-      params.public_type = this.modal_project.public_type
-      params.license_type = this.modal_project.license_type
 
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _requests = []
@@ -4952,6 +4948,24 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    }
+  },
+  computed: {
+    getLicense: {
+      get: function () {
+        if (!Object.prototype.hasOwnProperty.call(this.modal_project, 'license_type')) {
+          return 'CC-BY-NC-ND'
+        } else {
+          if (this.modal_project.license_type === '') {
+            return 'CC-BY-NC-ND'
+          } else {
+            return this.modal_project.license_type
+          }
+        }
+      },
+      set: function (license) {
+        this.modal_project.license_type = license
+      }
     }
   }
 }
