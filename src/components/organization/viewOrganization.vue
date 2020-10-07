@@ -258,7 +258,7 @@
                 switch
                 v-model="buffer_project.sharedTokenOnOff"
                 :value="true"
-                :unchecked-value="false">Generate a temporary URL</b-form-checkbox>
+                :unchecked-value="false">Generate a temporary URL. <span class="text-danger">This link will not expire automatically. You must switch it off manually to disable it.</span></b-form-checkbox>
               <div
                 v-if="buffer_project.sharedTokenOnOff"
                 class="mt-2">
