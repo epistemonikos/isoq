@@ -1302,7 +1302,7 @@
                       <b-row
                         class="mb-3">
                         <b-col
-                          sm="6"
+                          lg="6"
                           cols="12">
                           <b-button
                             block
@@ -1317,8 +1317,8 @@
                           </b-button>
                         </b-col>
                         <b-col
-                          class="mt-1 mt-sm-0"
-                          sm="6"
+                          class="mt-1 mt-lg-0"
+                          lg="6"
                           cols="12">
                           <b-button
                             block
