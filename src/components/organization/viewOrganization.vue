@@ -49,6 +49,14 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                  title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
+                  variant="outline-secondary"
+                  @click="modalShareOptions(data.index, 2)">
+                  <font-awesome-icon
+                    icon="link"></font-awesome-icon>
+                </b-button>
+                <b-button
                   v-if="data.item.is_owner"
                   title="Share"
                   variant="outline-secondary"
@@ -147,10 +155,10 @@
         <template v-slot:modal-title>
           <videoHelp txt="Share" tag="none" urlId="449741356"></videoHelp>
         </template>
-        <b-tabs>
+        <b-tabs v-model="ui.tabIndex">
           <b-tab
             title="Invite">
-            <b-container>
+            <b-container class="pt-3">
               <b-form-group
                 label='Insert emails separated by commas and click "add"'
                 label-for="input-emails-invite">
@@ -193,7 +201,7 @@
           </b-tab>
           <b-tab
             title="Users with access">
-            <b-container>
+            <b-container class="pt-3">
               <h4>Users with Access</h4>
               <b-table
                 show-empty
@@ -244,7 +252,7 @@
           </b-tab>
           <b-tab
             title="Temporary sharing">
-            <b-container>
+            <b-container class="pt-3">
               <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.</p>
               <b-form-checkbox
                 switch
@@ -300,7 +308,8 @@ export default {
             { key: 'actions', label: '' }
           ],
           isBusy: true
-        }
+        },
+        tabIndex: 0
       },
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
@@ -845,7 +854,8 @@ export default {
           console.log(error)
         })
     },
-    modalShareOptions: function (index) {
+    modalShareOptions: function (index, tabIndex = 0) {
+      this.ui.tabIndex = tabIndex
       this.buffer_project = this.projects[index]
       this.buffer_project.index = index
       this.usersCanList(index)
