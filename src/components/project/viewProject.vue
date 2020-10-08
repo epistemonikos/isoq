@@ -1302,7 +1302,7 @@
                       <b-row
                         class="mb-3">
                         <b-col
-                          sm="6"
+                          lg="6"
                           cols="12">
                           <b-button
                             block
@@ -1317,8 +1317,8 @@
                           </b-button>
                         </b-col>
                         <b-col
-                          class="mt-1 mt-sm-0"
-                          sm="6"
+                          class="mt-1 mt-lg-0"
+                          lg="6"
                           cols="12">
                           <b-button
                             block
@@ -1852,7 +1852,7 @@
           <b-form-group>
             <b-form-radio-group
               id="modal-publish-license"
-              v-model="modal_project.license_type"
+              v-model="getLicense"
               :options="global_licenses"
               name="modal-radio-license"
             ></b-form-radio-group>
@@ -2105,12 +2105,12 @@ export default {
         { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       global_licenses: [
-        { value: 'CC BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
+        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -2422,13 +2422,7 @@ export default {
       }
     },
     printiSoQ: function () {
-      /*
-      if (!document.getElementsByClassName('b-table-row-selected').length) {
-        this.dismissAlertPrint = true
-      } else {
-      */
       window.print()
-      // }
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
@@ -4664,7 +4658,7 @@ export default {
     modalChangePublicStatus: function () {
       this.modal_project = JSON.parse(JSON.stringify(this.project))
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
-        this.modal_project.license_type = 'CC BY-NC-ND'
+        this.modal_project.license_type = 'CC-BY-NC-ND'
       }
       this.$refs['modal-change-status'].show()
     },
@@ -4672,12 +4666,14 @@ export default {
       let params = {}
       params.private = true
       params.is_public = false
+      params.public_type = this.modal_project.public_type
+      params.license_type = this.modal_project.license_type
       if (this.modal_project.public_type !== 'private') {
         params.private = false
         params.is_public = true
+      } else {
+        params.license_type = ''
       }
-      params.public_type = this.modal_project.public_type
-      params.license_type = this.modal_project.license_type
 
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _requests = []
@@ -4952,6 +4948,24 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    }
+  },
+  computed: {
+    getLicense: {
+      get: function () {
+        if (!Object.prototype.hasOwnProperty.call(this.modal_project, 'license_type')) {
+          return 'CC-BY-NC-ND'
+        } else {
+          if (this.modal_project.license_type === '') {
+            return 'CC-BY-NC-ND'
+          } else {
+            return this.modal_project.license_type
+          }
+        }
+      },
+      set: function (license) {
+        this.modal_project.license_type = license
+      }
     }
   }
 }
