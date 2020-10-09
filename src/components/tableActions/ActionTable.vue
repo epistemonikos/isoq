@@ -27,7 +27,7 @@
             @click="modalEditTable"
             variant="outline-primary">
               <font-awesome-icon icon="table" />
-              Edit table
+              Edit columns
           </b-button>
         </b-col>
         <b-col
@@ -76,7 +76,7 @@
       id="modal-stage-import-tsv"
       ref="modal-stage-import-tsv"
       scrollable
-      size="lg"
+      size="xl"
       @ok="importTSV"
       @cancel="cleanTSV"
       title="Import data">
@@ -99,6 +99,7 @@
     <!-- end import modal -->
     <!-- modal drop table -->
     <b-modal
+      size="xl"
       id="modal-drop-table"
       title="Drop table"
       ref="modal-drop-table"
@@ -108,12 +109,13 @@
     <!-- end modal drop table-->
     <!-- create study tables -->
     <b-modal
-      title="Add fields"
+      size="xl"
+      title="Add Columns"
       ref="modal-create-fields"
       @ok="saveCreateFields">
       <b-form-group
         id="nro-of-fields"
-        label="Nro of fields"
+        label="Nro of columns"
         label-for="number-of-fields">
         <b-form-input
           id="number-of-fields"
@@ -134,30 +136,33 @@
     <!-- end of create study tables -->
     <!-- modal edit fields -->
     <b-modal
+      size="xl"
       title="Edit fields"
       ref="modal-edit-fields"
       @ok="saveUpdateFields"
       @cancel="cancelModalFields">
-      <b-form-group
-        v-for="(item, index) in modalEditFields"
-        :key="index"
-        :label="`Column #${index}`"
-        :label-for="`field-${index}`">
-        <b-input-group>
-          <b-form-input
-            :id="`field-${index}`"
-            type="text"
-            v-model="item.label"></b-form-input>
-          <b-input-group-append
-            v-if="modalEditFields.length > 1">
-            <b-button
-              @click="removeField(item, index)">
-              <font-awesome-icon
-                icon="trash"></font-awesome-icon>
-            </b-button>
-          </b-input-group-append>
-        </b-input-group>
-      </b-form-group>
+      <draggable v-model="modalEditFields" group="columns" @start="drag=true" @end="drag=false">
+        <b-form-group
+          v-for="(item, index) in modalEditFields"
+          :key="index"
+          :label="`Column #${index}`"
+          :label-for="`field-${index}`">
+          <b-input-group>
+            <b-form-input
+              :id="`field-${index}`"
+              type="text"
+              v-model="item.label"></b-form-input>
+            <b-input-group-append
+              v-if="modalEditFields.length > 1">
+              <b-button
+                @click="removeField(item, index)">
+                <font-awesome-icon
+                  icon="trash"></font-awesome-icon>
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+        </b-form-group>
+      </draggable>
       <b-button
         variant="outline-success"
         @click="addNewColumn">Add column</b-button>
@@ -165,6 +170,7 @@
     <!-- end of modal edit fields -->
     <!-- create study data -->
     <b-modal
+      size="xl"
       title="Add data"
       ref="modal-add-data"
       @ok="saveNewData">
@@ -175,7 +181,8 @@
         :label-for="`data-${index}`">
         <b-form-textarea
           :id="`data-${index}`"
-          row="3"
+          rows="6"
+          max-rows="100"
           v-model="newItem[item.key]"></b-form-textarea>
       </b-form-group>
     </b-modal>
@@ -185,9 +192,13 @@
 
 <script>
 import axios from 'axios'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'ActionTable',
+  components: {
+    draggable
+  },
   props: {
     importUrl: '',
     displayDeleteTable: false,

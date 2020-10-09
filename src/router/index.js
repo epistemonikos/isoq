@@ -5,119 +5,130 @@ import ForgotPassword from '@/components/ForgotPassword'
 import CreateAccount from '@/components/CreateAccount'
 import Organizations from '@/components/Organizations'
 import ViewOrganization from '@/components/organization/viewOrganization'
-import ViewList from '@/components/list/viewList'
 import EditList from '@/components/list/editList'
 import ViewProject from '@/components/project/viewProject'
 import Browse from '@/components/Browse'
+import NewPassword from '@/components/NewPassword'
+import previewContentSoQf from '@/components/previewContent/previewContentSoQf'
+import previewWorksheet from '@/components/previewContent/previewContentWorksheet'
+import Help from '@/components/Help'
 
-import { Trans } from '@/plugins/Translation'
+// import { Trans } from '@/plugins/Translation'
 
 var routes = [
   {
-    path: '/:lang',
-    component: {
-      template: '<router-view></router-view>'
-    },
-    beforeEnter: Trans.routeMiddleware,
-    children: [
-      {
-        path: '',
-        name: 'MainPage',
-        component: MainPage,
-        meta: {
-          title: 'iSoF Qualy'
-        }
-      },
-      {
-        path: '/about',
-        name: 'About',
-        component: About,
-        meta: {
-          title: 'iSoF Qualy - About',
-          requiresAuth: true
-        }
-      },
-      {
-        path: '/login',
-        name: 'Login',
-        component: Login,
-        meta: {
-          title: 'iSoF Qualy - Login'
-        }
-      },
-      {
-        path: '/forgot_password',
-        name: 'ForgotPassword',
-        component: ForgotPassword,
-        meta: {
-          title: 'iSoF Qualy - Forgot password'
-        }
-      },
-      {
-        path: '/create_an_account',
-        name: 'CreateAccount',
-        component: CreateAccount,
-        meta: {
-          title: 'iSoF Qualy - Create an account'
-        }
-      },
-      {
-        path: '/organizations',
-        name: 'Organizations',
-        component: Organizations,
-        meta: {
-          title: 'iSoF Qualy - Organizations',
-          requiresAuth: true
-        }
-      },
-      {
-        path: '/organization/:id',
-        name: 'viewOrganization',
-        component: ViewOrganization,
-        meta: {
-          title: 'iSoF Qualy - Organization'
-        }
-      },
-      {
-        path: '/organization/:org_id/project/:id',
-        name: 'viewProject',
-        component: ViewProject,
-        meta: {
-          requiresAuth: true
-        }
-      },
-      {
-        path: '/list/:id',
-        name: 'viewList',
-        component: ViewList,
-        meta: {
-          title: 'iSoF Qualy - List',
-          requiresAuth: true
-        }
-      },
-      {
-        path: '/list/:id/edit',
-        name: 'editList',
-        component: EditList,
-        meta: {
-          title: 'iSoF Qualy - Edit List',
-          requiresAuth: true
-        }
-      },
-      {
-        path: '/browse',
-        name: 'Browse',
-        component: Browse,
-        meta: {
-          title: 'iSoF Qualy - Browse'
-        }
-      }
-    ]
+    path: '',
+    name: 'MainPage',
+    component: MainPage,
+    meta: {
+      title: 'interactive Summaries of Qualitative Findings'
+    }
   },
   {
-    path: '*',
-    redirect (to) {
-      return Trans.getUserSupportedLang()
+    path: '/about',
+    name: 'About',
+    component: About,
+    meta: {
+      title: 'About - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: Help,
+    meta: {
+      title: 'Help - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: {
+      title: 'Login - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/forgot_password',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
+    meta: {
+      title: 'Forgot password - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/create_an_account',
+    name: 'CreateAccount',
+    component: CreateAccount,
+    meta: {
+      title: 'Create an account - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/browse',
+    name: 'Browse',
+    component: Browse,
+    meta: {
+      title: 'Browse - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/workspace/:id',
+    name: 'viewOrganization',
+    component: ViewOrganization,
+    meta: {
+      title: 'Workspace - interactive Summaries of Qualitative Findings',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/workspaces',
+    name: 'Organizations',
+    component: Organizations,
+    meta: {
+      title: 'Workspaces - interactive Summaries of Qualitative Findings',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/workspace/:org_id/isoqf/:id',
+    name: 'viewProject',
+    component: ViewProject,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/worksheet/:id/edit',
+    name: 'editList',
+    component: EditList,
+    meta: {
+      title: 'Edit iSoQ - interactive Summaries of Qualitative Findings',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/accounts/new_password/:username/:token',
+    name: 'newPassword',
+    component: NewPassword,
+    meta: {
+      title: 'New password - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/preview/isoq/:org_id/:isoqf_id/:token',
+    name: 'previewContentSoQf',
+    component: previewContentSoQf,
+    meta: {
+      title: 'iSoQ Preview - interactive Summaries of Qualitative Findings'
+    }
+  },
+  {
+    path: '/preview/worksheet/:id/:token',
+    name: 'previewWorksheet',
+    component: previewWorksheet,
+    meta: {
+      title: 'Worksheet Preview - interactive Summaries of Qualitative Findings'
     }
   }
 ]

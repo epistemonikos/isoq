@@ -6,6 +6,13 @@
           <b-form @submit.prevent="login">
             <b-card
               header="Login">
+                <b-alert
+                  :show="$store.state.status === 'error'"
+                  variant="warning"
+                  dismissible
+                  @dismissed="changeStatus">
+                    The user or password are wrong or doesn't exist. try again.
+                </b-alert>
                 <b-form-group
                   id="input_group_email"
                   label="Email:"
@@ -14,8 +21,7 @@
                     id="input_email"
                     v-model="username"
                     type="email"
-                    required
-                    placeholder="Enter a valid email"></b-form-input>
+                    required></b-form-input>
                 </b-form-group>
                 <b-form-group
                   id="input_group_password"
@@ -25,11 +31,10 @@
                     id="input_password"
                     v-model="password"
                     type="password"
-                    required
-                    placeholder="Enter your strong password"></b-form-input>
+                    required></b-form-input>
                 </b-form-group>
                 <b-card-text class="text-center text-forgot-create">
-                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
+                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link>-->
                 </b-card-text>
                 <div slot="footer" class="text-right">
                   <b-button type="submit" variant="outline-primary">Login</b-button>
@@ -57,9 +62,15 @@ export default {
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
-          this.$router.push('/')
+          const personalInfo = response.data
+          const basePath = `/workspace/${personalInfo.personal_organization}`
+          const path = { 'path': (this.$route.query.redirect) ? this.$route.query.redirect : basePath }
+          this.$router.push(path)
         })
         .catch((error) => console.log(error))
+    },
+    changeStatus () {
+      this.$store.dispatch('changeStatus')
     }
   }
 }

@@ -1,7 +1,11 @@
 <template>
-  <div class="mt-4">
+  <div>
+    <b-container fluid class="workspace-header">
+      <b-container class="py-5">
+        <h2>Browse public iSoQ tables</h2>
+      </b-container>
+    </b-container>
     <div class="container">
-      <h1>Browse public iSoQf tables</h1>
       <b-row
         class="my-4">
         <b-col
@@ -32,6 +36,8 @@
       </b-row>
       <b-table
         striped
+        bordered
+        head-variant="light"
         :fields="table_settings.fields"
         :items="public_tables"
         :per-page="table_settings.per_page"
@@ -40,6 +46,9 @@
         :sort-by.sync="table_settings.sortBy"
         :sort-desc.sync="table_settings.sortDesc"
         :busy="table_settings.isBusy">
+        <template v-slot:cell(name)="data">
+          <b-link :to="{ name: 'previewContentSoQf', params: { org_id: data.item.organization, isoqf_id: data.item.id, token: 'public' }}">{{data.item.name}}</b-link>
+        </template>
         <!-- spinner -->
         <div slot="table-busy" class="text-center text-primary my-2">
           <b-spinner type="grow" variant="primary" class="align-middle"></b-spinner>
@@ -66,7 +75,23 @@ export default {
     return {
       public_tables: [],
       table_settings: {
-        fields: [{key: 'name', sortable: true}, 'review_question', 'description', 'authors'],
+        fields: [
+          {
+            key: 'name',
+            sortable: true
+          },
+          'review_question',
+          'authors',
+          {
+            key: 'last_update',
+            label: 'Last Modification',
+            formatter: value => {
+              const _date = new Date(value)
+              const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }
+              return _date.toLocaleDateString(undefined, options)
+            }
+          }
+        ],
         per_page: 20,
         per_page_array: [20, 40, 60, 80, 100],
         current_page: 1,

@@ -1,2 +1,67 @@
 @import 'node_modules/bootstrap/scss/bootstrap';
-@import 'node_modules/bootstrap-vue/src/index.scss'
+@import 'node_modules/bootstrap-vue/src/index.scss';
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital@0;1&display=swap');
+
+html, body {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+#main-navbar {
+  color: #a7a9ac;
+  font-size: 16px;
+  box-shadow: 0 5px 3px rgba(0,0,0,.25);
+  .navbar-brand {
+    font-style: italic;
+  }
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+
+.workspace-header {
+  background-color: #EEE;
+}
+
+.btn-info,
+.btn-primary,
+.btn-success,
+.btn-success.disabled {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+
+.btn-info:hover,
+.btn-outline-info:hover,
+.btn-success:hover,
+.btn-outline-success:hover,
+.btn-primary:hover,
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #286090;
+  border-color: #286090;
+}
+
+.btn-outline-info,
+.btn-outline-primary,
+.btn-outline-success {
+  color: #337ab7;
+  border-color: #337ab7;
+}
+
+.btn-info:focus,
+.btn-primary:focus,
+.btn-success:focus {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+  box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
+}
+
+.btn-outline-info:focus,
+.btn-outline-primary:focus,
+.btn-outline-success:focus {
+  box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
+}

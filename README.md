@@ -1,3 +1,6 @@
+# license
+CC BY-NC-SA
+
 # isofq
 
 > iSoF Quali

@@ -38,14 +38,16 @@
                   required
                   aria-describedby="input-live-help input-live-feedback"
                   placeholder="Enter a valid email"
-                  v-model="user.username"></b-form-input>
+                  v-model="user.username">
+                </b-form-input>
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation">This username exist!</b-form-text>
+                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address</b-form-text>
                 <b-form-text
-                  id="input-live-help">This will be used for loggin.</b-form-text>
+                  id="input-live-help">Your email address is your username for logging-in to iSoQ.</b-form-text>
               </b-form-group>
               <b-form-group
+                v-if="false"
                 id="input_group_affiliation"
                 label="Affiliation:"
                 label-for="input_affiliation">
@@ -63,7 +65,7 @@
                   id="input_password"
                   type="password"
                   required
-                  placeholder="Write an strong password with at least 8 alpha-numeric characters"
+                  placeholder="Write a strong password with at least 8 alpha-numeric characters"
                   v-model="user.password"></b-form-input>
               </b-form-group>
               <b-form-group
@@ -74,7 +76,7 @@
                   id="input_repeat_password"
                   type="password"
                   required
-                  placeholder="Write the same password above"
+                  placeholder="Write the same password as above"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
@@ -96,10 +98,10 @@
             v-if="ui.display_join_org_or_create_org"
             header="Your account has been created.">
             <p>
-              As an individual, you will be able to create iSoQf tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
+              As an individual, you will be able to create iSoQ tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
             </p>
             <p>
-              In order to share iSoQf tables with others you need to join an existing organisation or create a new one.
+              In order to share iSoQ tables with others you need to join an existing organisation or create a new one.
             </p>
             <b-row>
               <b-col cols="12" sm="6" class="text-center">
@@ -210,7 +212,7 @@
           <b-card
             v-if="ui.display_end_affiliation"
             header="You are done!">
-            <p>Now, you can create and share iSoQf tables with your organisation.</p>
+            <p>Now, you can create and share iSoQ tables with your organisation.</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
@@ -220,7 +222,7 @@
           <b-card
             v-if="ui.display_end_org_creation"
             header="Many thanks for registering your organisation">
-            <p>You can star using iSoQf right now and move your work to the organisation when created.</p>
+            <p>You can star using iSoQ right now and move your work to the organisation when created.</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
@@ -300,12 +302,18 @@ export default {
         user: this.user,
         organizations: this.organizations
       }
+      if (Object.prototype.hasOwnProperty.call(this.$route.query, 'o') &&
+        Object.prototype.hasOwnProperty.call(this.$route.query, 'p') &&
+        Object.prototype.hasOwnProperty.call(this.$route.query, 'r')) {
+        params.shared = {
+          o: this.$route.query['o'],
+          p: this.$route.query['p'],
+          r: this.$route.query['r']
+        }
+      }
       axios.post('/create_user', params)
         .then((response) => {
           this.login(this.user.username, this.user.password)
-          this.ui.display_create_account = false
-          this.ui.display_join_org_or_create_org = true
-          this.user = response.data
         })
         .catch((error) => {
           console.log(error)
@@ -314,7 +322,14 @@ export default {
     login (username, password) {
       this.$store
         .dispatch('login', {username, password})
-        .then((response) => {})
+        .then((response) => {
+          this.ui.display_create_account = false
+          this.ui.display_join_org_or_create_org = false
+          this.user = response.data
+          let orgPath = {'id': response.data.personal_organization}
+          const path = { 'name': 'viewOrganization', 'params': orgPath }
+          this.$router.push(path)
+        })
         .catch((error) => console.log(error))
     },
     jointToOrg: function () {
