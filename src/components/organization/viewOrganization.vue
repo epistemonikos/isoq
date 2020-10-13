@@ -816,43 +816,35 @@ export default {
         })
     },
     usersCanList: function (index) {
-      let canRead = []
-      let canWrite = []
       this.users_allowed = []
       if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_read')) {
         for (let user of this.projects[index].can_read) {
-          canRead.push(axios.get(`/users/${user}`))
+          axios.get(`/users/${user}`)
+            .then((response) => {
+              const _user = response.data
+              if (_user.status) {
+                _user.user_can = 0
+                _user.project_id = this.projects[index].id
+                _user.index = index
+                this.users_allowed.push(_user)
+              }
+            })
         }
       }
       if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_write')) {
         for (let user of this.projects[index].can_write) {
-          canWrite.push(axios.get(`/users/${user}`))
+          axios.get(`/users/${user}`)
+            .then((response) => {
+              const _user = response.data
+              if (_user.status) {
+                _user.user_can = 1
+                _user.project_id = this.projects[index].id
+                _user.index = index
+                this.users_allowed.push(_user)
+              }
+            })
         }
       }
-      axios.all(canRead)
-        .then((responses) => {
-          let usersAllowedCanRead = []
-          for (let response of responses) {
-            const user = response.data
-            usersAllowedCanRead.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 0, 'project_id': this.projects[index].id, 'index': index })
-          }
-          this.users_allowed.push(...usersAllowedCanRead)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.all(canWrite)
-        .then((responses) => {
-          let usersAllowedCanWrite = []
-          for (let response of responses) {
-            const user = response.data
-            usersAllowedCanWrite.push({ 'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'user_can': 1, 'project_id': this.projects[index].id, 'index': index })
-          }
-          this.users_allowed.push(...usersAllowedCanWrite)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
     },
     modalShareOptions: function (index, tabIndex = 0) {
       this.ui.tabIndex = tabIndex
