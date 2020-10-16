@@ -3745,6 +3745,7 @@ export default {
       this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
     },
     saveCharacteristicsStudiesFields: function () {
+      this.charsOfStudiesTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {}
@@ -3781,8 +3782,7 @@ export default {
       } else {
         axios.post('/api/isoqf_characteristics', params)
           .then((response) => {
-            // this.charsOfStudies = response.data
-            this.getProject()
+            this.getCharacteristics()
           })
           .catch((error) => {
             this.printErrors(error)
@@ -3790,6 +3790,7 @@ export default {
       }
     },
     updateCharacteristicsStudiesFields: function () {
+      this.charsOfStudiesTableSettings.isBusy = true
       let params = {}
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
 
@@ -3810,7 +3811,7 @@ export default {
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
-          this.getProject()
+          this.getCharacteristics()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -4099,6 +4100,7 @@ export default {
       }
     },
     saveMethodologicalFields: function () {
+      this.methodologicalTableRefsTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {}
@@ -4128,7 +4130,7 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
         axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
           .then((response) => {
-            this.getProject()
+            this.getMethodological()
           }).catch((error) => {
             console.log('error: ', error)
           })
@@ -4159,6 +4161,7 @@ export default {
       this.methodologicalFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
     },
     updateMethodologicalFields: function () {
+      this.methodologicalTableRefsTableSettings.isBusy = true
       let params = {}
       let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
 
@@ -4179,7 +4182,7 @@ export default {
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
         .then((response) => {
-          this.getProject()
+          this.getMethodological()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -4313,6 +4316,8 @@ export default {
       this.disableBtnRemoveAllRefs = true
     },
     removeAllReferences: function () {
+      this.loadReferences = true
+      this.$refs['modal-references'].hide()
       let _lists = JSON.parse(JSON.stringify(this.lists))
       const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
       const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
@@ -4361,7 +4366,6 @@ export default {
           this.openModalReferencesSingle(false)
           this.getProject()
           this.resetData()
-          this.$refs['modal-references'].hide()
         })
     },
     getAndDeleteExtractedData: function (requests) {

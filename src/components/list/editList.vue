@@ -61,7 +61,7 @@
               @click="changeMode"
               variant="outline-primary"
               v-b-tooltip:editButton.top="'Click to edit'"
-              :disabled="list.editing"
+              :disabled="list.editing && list.userEditing !== $store.state.user.id"
               block>
               Edit
             </b-button>
@@ -73,7 +73,6 @@
         v-if="mode==='edit'">
         <b-col
           class="d-print-none"
-          sm="10"
           cols="12">
           <b-nav class="mt-2">
             <b-nav-item disabled>Navigate this page:</b-nav-item>
@@ -115,9 +114,13 @@
             </b-nav-item>
           </b-nav>
         </b-col>
+      </b-row>
+      <b-row
+        class="justify-content-end"
+        v-if="mode==='edit'">
         <b-col
           cols="12"
-          sm="2">
+          md="3">
             <b-button
               class="mt-2"
               @click="changeMode"
@@ -801,22 +804,9 @@
                 </b-container>
               </b-modal>
 
-              <div
+              <div id="progress-status"
                 v-if="mode==='edit'"
                 class="d-print-none">
-                <b-card v-if="false">
-                  <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
-                  <p v-if="list.cerqual.option !== null">
-                    Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
-                  </p>
-                  <b-progress
-                    :value="status_evidence_profile.value"
-                    :max="status_evidence_profile.max"
-                    :variant="status_evidence_profile.variant"
-                    class="mb-3">
-                  </b-progress>
-                </b-card>
-
                 <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
                 <p v-if="list.cerqual.option !== null">
                   Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
