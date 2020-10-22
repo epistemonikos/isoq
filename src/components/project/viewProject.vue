@@ -2838,7 +2838,7 @@ export default {
             sort: _sort,
             editing: false
           }
-          axios.post('/api/isoqf_lists/', params)
+          axios.post('/api/isoqf_lists', params)
             .then((response) => {
               const listId = response.data.id
               const listName = response.data.name
@@ -2953,7 +2953,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: list.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               if (response.data.length) {
                 this.finding = JSON.parse(JSON.stringify(response.data[0]))
@@ -4399,7 +4399,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: response.data.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               this.editFindingName.finding_id = response.data[0].id
             })
@@ -4457,7 +4457,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: response.data.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               this.editFindingName.finding_id = response.data[0].id
             })
@@ -4503,7 +4503,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_list_categories/', { params })
+      axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
           if (response.data.length) {
             let options = JSON.parse(JSON.stringify(response.data[0].options))
@@ -4526,7 +4526,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.post('/api/isoqf_list_categories/', params)
+      axios.post('/api/isoqf_list_categories', params)
         .then((response) => {
           this.list_categories.options = response.data.options
           this.list_categories.selected = null
@@ -4569,7 +4569,7 @@ export default {
             this.printErrors(error)
           })
       } else {
-        axios.post('/api/isoqf_list_categories/', params)
+        axios.post('/api/isoqf_list_categories', params)
           .then((response) => {
             this.getListCategories()
             this.getLists()
