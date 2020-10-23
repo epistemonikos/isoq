@@ -2838,7 +2838,7 @@ export default {
             sort: _sort,
             editing: false
           }
-          axios.post('/api/isoqf_lists/', params)
+          axios.post('/api/isoqf_lists', params)
             .then((response) => {
               const listId = response.data.id
               const listName = response.data.name
@@ -2953,7 +2953,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: list.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               if (response.data.length) {
                 this.finding = JSON.parse(JSON.stringify(response.data[0]))
@@ -2983,11 +2983,11 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
         .then((response) => {
-          const selectedReferences = JSON.parse(JSON.stringify(this.selected_references))
+          // const selectedReferences = JSON.parse(JSON.stringify(this.selected_references))
           this.updateFindingReferences(this.selected_references)
-          this.updateInfoDataTables(selectedReferences, 'chars_of_studies')
-          this.updateInfoDataTables(selectedReferences, 'methodological_assessments')
-          this.updateInfoDataTables(selectedReferences, 'extracted_data')
+          // this.updateInfoDataTables(selectedReferences, 'chars_of_studies')
+          // this.updateInfoDataTables(selectedReferences, 'methodological_assessments')
+          // this.updateInfoDataTables(selectedReferences, 'extracted_data')
           this.selected_references = []
           this.selected_list_index = null
           this.getReferences()
@@ -2997,72 +2997,72 @@ export default {
           this.printErrors(error)
         })
     },
-    updateInfoDataTables: function (references, type) {
-      const types = ['chars_of_studies', 'methodological_assessments', 'extracted_data']
-      const objTypes = {
-        'chars_of_studies': 'isoqf_characteristics',
-        'methodological_assessments': 'isoqf_assessments',
-        'extracted_data': 'isoqf_extracted_data'
-      }
+    // updateInfoDataTables: function (references, type) {
+    //   const types = ['chars_of_studies', 'methodological_assessments', 'extracted_data']
+    //   const objTypes = {
+    //     'chars_of_studies': 'isoqf_characteristics',
+    //     'methodological_assessments': 'isoqf_assessments',
+    //     'extracted_data': 'isoqf_extracted_data'
+    //   }
 
-      if (types.includes(type)) {
-        let params = {
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
-        }
-        if (type === 'extracted_data') {
-          params = {
-            organization: this.$route.params.org_id,
-            list_id: this.lists[this.selected_list_index].id
-          }
-        }
-        axios.get(`/api/${objTypes[type]}`, {params})
-          .then((response) => {
-            if (response.data.length) {
-              let tmpData = JSON.parse(JSON.stringify(response.data[0]))
-              let tmpItems = []
-              let tmpReferences = []
+    //   if (types.includes(type)) {
+    //     let params = {
+    //       organization: this.$route.params.org_id,
+    //       project_id: this.$route.params.id
+    //     }
+    //     if (type === 'extracted_data') {
+    //       params = {
+    //         organization: this.$route.params.org_id,
+    //         list_id: this.lists[this.selected_list_index].id
+    //       }
+    //     }
+    //     axios.get(`/api/${objTypes[type]}`, {params})
+    //       .then((response) => {
+    //         if (response.data.length) {
+    //           let tmpData = JSON.parse(JSON.stringify(response.data[0]))
+    //           let tmpItems = []
+    //           let tmpReferences = []
 
-              for (let item of tmpData.items) {
-                if (references.includes(item.ref_id)) {
-                  tmpItems.push(item)
-                  tmpReferences.push(item.ref_id)
-                }
-              }
+    //           for (let item of tmpData.items) {
+    //             if (references.includes(item.ref_id)) {
+    //               tmpItems.push(item)
+    //               tmpReferences.push(item.ref_id)
+    //             }
+    //           }
 
-              for (let index in references) {
-                if (!tmpReferences.includes(references[index])) {
-                  let authors = ''
-                  for (let reference of this.references) {
-                    if (reference.id === references[index]) {
-                      authors = this.parseReference(reference, true, false)
-                    }
-                  }
-                  tmpItems.push({
-                    ref_id: references[index],
-                    authors: authors
-                  })
-                }
-              }
+    //           for (let index in references) {
+    //             if (!tmpReferences.includes(references[index])) {
+    //               let authors = ''
+    //               for (let reference of this.references) {
+    //                 if (reference.id === references[index]) {
+    //                   authors = this.parseReference(reference, true, false)
+    //                 }
+    //               }
+    //               tmpItems.push({
+    //                 ref_id: references[index],
+    //                 authors: authors
+    //               })
+    //             }
+    //           }
 
-              const params = {
-                items: tmpItems
-              }
-              axios.patch(`/api/${objTypes[type]}/${tmpData.id}`, params)
-                .then((response) => {
-                  this.getCharacteristics()
-                  this.getMethodological()
-                })
-                .catch((error) => {
-                  this.printErrors(error)
-                })
-            }
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
+    //           const params = {
+    //             items: tmpItems
+    //           }
+    //           axios.patch(`/api/${objTypes[type]}/${tmpData.id}`, params)
+    //             .then((response) => {
+    //               this.getCharacteristics()
+    //               this.getMethodological()
+    //             })
+    //             .catch((error) => {
+    //               this.printErrors(error)
+    //             })
+    //         }
+    //       })
+    //       .catch((error) => {
+    //         this.printErrors(error)
+    //       })
+    //   }
+    // },
     updateFindingReferences: function (references) {
       const params = {
         'evidence_profile.references': references
@@ -3072,6 +3072,7 @@ export default {
           this.finding = {}
         })
         .catch((error) => {
+          console.log('updateFindingReferences')
           this.printErrors(error)
         })
     },
@@ -4399,7 +4400,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: response.data.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               this.editFindingName.finding_id = response.data[0].id
             })
@@ -4457,7 +4458,7 @@ export default {
             organization: this.$route.params.org_id,
             list_id: response.data.id
           }
-          axios.get('/api/isoqf_findings/', {params})
+          axios.get('/api/isoqf_findings', {params})
             .then((response) => {
               this.editFindingName.finding_id = response.data[0].id
             })
@@ -4503,7 +4504,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_list_categories/', { params })
+      axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
           if (response.data.length) {
             let options = JSON.parse(JSON.stringify(response.data[0].options))
@@ -4526,7 +4527,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.post('/api/isoqf_list_categories/', params)
+      axios.post('/api/isoqf_list_categories', params)
         .then((response) => {
           this.list_categories.options = response.data.options
           this.list_categories.selected = null
@@ -4569,7 +4570,7 @@ export default {
             this.printErrors(error)
           })
       } else {
-        axios.post('/api/isoqf_list_categories/', params)
+        axios.post('/api/isoqf_list_categories', params)
           .then((response) => {
             this.getListCategories()
             this.getLists()
