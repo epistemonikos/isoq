@@ -1045,7 +1045,7 @@
                         cols="11">
                         <p
                         class="mb-0 text-left"
-                        >{{ project.name }}</p>
+                        >See more information</p>
                       </b-col>
                       <b-col
                         cols="1"
