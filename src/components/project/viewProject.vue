@@ -4971,11 +4971,13 @@ export default {
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
             for (let reference of this.references) {
-              for (let item of _items) {
-                if (item.ref_id !== reference.id) {
-                  _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-                }
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
               }
             }
             _items.push(..._itemsChars)
@@ -4993,11 +4995,13 @@ export default {
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
             for (let reference of this.references) {
-              for (let item of _items) {
-                if (item.ref_id !== reference.id) {
-                  _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-                }
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
               }
             }
             _items.push(..._itemsMeth)
