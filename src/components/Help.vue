@@ -25,9 +25,9 @@
         <li><a href="https://vimeo.com/451099168" target="_blank">Importing a methodological assessments table [7:38]</a></li>
         <li><a href="https://vimeo.com/449743080" target="_blank">Overview of the Interactive Summary of Qualitative Findings Table [5:26 min]</a></li>
         <li><a href="https://vimeo.com/451100564" target="_blank">Organising review findings into groups [3:38 min]</a></li>
-        <li><a href="#" target="_blank">Re-ordering review findings (coming soon)</a></li>
-        <li><a href="#" target="_blank">Searching the iSoQ table (coming soon)</a></li>
-        <li><a href="#" target="_blank">Leaving notes about review findings (coming soon)</a></li>
+        <li><a href="https://vimeo.com/462176102" target="_blank">Re-ordering review findings [1:35]</a></li>
+        <li><a href="https://vimeo.com/462176356" target="_blank">Searching the iSoQ table [0:44]</a></li>
+        <li><a href="https://vimeo.com/462176506" target="_blank">Leaving notes about review findings [1:02]</a></li>
         <li><a href="https://vimeo.com/451100482" target="_blank">Overview of the GRADE-CERQual Assessment Worksheet [2:35 min]</a></li>
         <li><a href="https://vimeo.com/450836795" target="_blank">Adding Extracted Data [5:02 min]</a></li>
         <li><a href="https://vimeo.com/450835272" target="_blank">Overview of assessing Methodological Limitations [3:13 min]</a></li>
@@ -35,6 +35,7 @@
         <li><a href="https://vimeo.com/450835188" target="_blank">Overview of assessing Adequacy [2:40 min]</a></li>
         <li><a href="https://vimeo.com/450835406" target="_blank">Overview of assessing Relevance [2:18 min]</a></li>
         <li><a href="https://vimeo.com/450835499" target="_blank">Overview of the Overall Assessment of Confidence [2:33]</a></li>
+        <li><a href="https://vimeo.com/462180668" target="_blank">Leaving notes about GRADE-CERQual assessments [1:33]</a></li>
       </ol>
     </b-container>
   </div>

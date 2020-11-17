@@ -1952,6 +1952,12 @@ export default {
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+            this.project.inclusion = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+            this.project.exclusion = ''
+          }
         })
         .catch((error) => {
           this.printErrors(error)

@@ -538,6 +538,10 @@
                   <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
                   <p
                     class="text-danger">
+                    <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
+                  </p>
+                  <p
+                    class="text-danger">
                     <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
                   </p>
                   <b-button
@@ -890,6 +894,10 @@
                 <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
                 <p
                   class="text-danger">
+                  <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
+                </p>
+                <p
+                  class="text-danger">
                   <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
                 </p>
                 <b-button
@@ -1045,7 +1053,7 @@
                         cols="11">
                         <p
                         class="mb-0 text-left"
-                        >{{ project.name }}</p>
+                        >See more information</p>
                       </b-col>
                       <b-col
                         cols="1"
@@ -2535,6 +2543,7 @@ export default {
             this.references.push(data)
             cnt++
           }
+          this.updateMyDataTables()
           const _references = JSON.parse(JSON.stringify(this.references))
           this.prefetchDataForExtractedDataUpdate(_references)
 
@@ -2554,13 +2563,13 @@ export default {
       let _requestExtractedData = []
 
       for (let list of _lists) {
-        _requestFindings.push(axios.get(`/api/isoqf_findings/?organization=${this.$route.params.org_id}&list_id=${list.id}`))
+        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
       }
       axios.all(_requestFindings)
         .then((responses) => {
           for (let _response of responses) {
             let response = _response.data[0]
-            _requestExtractedData.push(axios.get(`/api/isoqf_extracted_data/?organization=${response.organization}&finding_id=${response.id}`))
+            _requestExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${response.organization}&finding_id=${response.id}`))
           }
           this.updateExtractedDataReferences(_requestExtractedData, references)
         })
@@ -4351,7 +4360,7 @@ export default {
             let getExtractedData = []
             for (let response of responses) {
               let finding = response.data[0]
-              getExtractedData.push(axios.get(`/api/isoqf_extracted_data/?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
+              getExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
             }
             if (getExtractedData.length) {
               this.getAndDeleteExtractedData(getExtractedData)
@@ -4952,6 +4961,58 @@ export default {
         })
         .catch((error) => {
           this.printErrors(error)
+        })
+    },
+    updateMyDataTables: function () {
+      let _itemsChars = []
+      let _itemsMeth = []
+
+      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+              }
+            }
+            _items.push(..._itemsChars)
+            let params = {
+              items: _items
+            }
+            axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
+              .then((response) => {
+                this.getCharacteristics()
+              })
+          }
+        })
+
+      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+              }
+            }
+            _items.push(..._itemsMeth)
+            let params = {
+              items: _items
+            }
+            axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
+              .then((response) => {
+                this.getMethodological()
+              })
+          }
         })
     }
   },
