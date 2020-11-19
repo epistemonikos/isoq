@@ -1839,79 +1839,8 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
         .then((response) => {
-          const selectedReferences = JSON.parse(JSON.stringify(this.list.references))
           this.updateReferencesInFindings()
-          this.updateInfoDataTables(selectedReferences, 'chars_of_studies')
-          this.updateInfoDataTables(selectedReferences, 'methodological_assessments')
-          this.updateInfoDataTables(selectedReferences, 'extracted_data')
         })
-    },
-    updateInfoDataTables: function (references, type) {
-      const types = ['chars_of_studies', 'methodological_assessments', 'extracted_data']
-      const objTypes = {
-        'chars_of_studies': 'isoqf_characteristics',
-        'methodological_assessments': 'isoqf_assessments',
-        'extracted_data': 'isoqf_extracted_data'
-      }
-
-      if (types.includes(type)) {
-        let params = {
-          organization: this.list.organization,
-          project_id: this.list.project_id
-        }
-        if (type === 'extracted_data') {
-          params = {
-            organization: this.list.organization,
-            list_id: this.$route.params.id
-          }
-        }
-        axios.get(`/api/${objTypes[type]}`, {params})
-          .then((response) => {
-            if (response.data.length) {
-              let tmpData = JSON.parse(JSON.stringify(response.data[0]))
-              let tmpItems = []
-              let tmpReferences = []
-
-              for (let item of tmpData.items) {
-                if (references.includes(item.ref_id)) {
-                  tmpItems.push(item)
-                  tmpReferences.push(item.ref_id)
-                }
-              }
-
-              for (let index in references) {
-                if (!tmpReferences.includes(references[index])) {
-                  let authors = ''
-                  for (let reference of this.references) {
-                    if (reference.id === references[index]) {
-                      authors = reference.content
-                    }
-                  }
-                  tmpItems.push({
-                    ref_id: references[index],
-                    authors: authors
-                  })
-                }
-              }
-
-              const params = {
-                items: tmpItems
-              }
-              axios.patch(`/api/${objTypes[type]}/${tmpData.id}`, params)
-                .then((response) => {
-                  this.getCharsOfStudies()
-                  this.getMethAssessments()
-                  this.getExtractedData()
-                })
-                .catch((error) => {
-                  this.printErrors(error)
-                })
-            }
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
     },
     updateReferencesInFindings: function () {
       let params = {
