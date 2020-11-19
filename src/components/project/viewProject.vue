@@ -240,6 +240,7 @@
               </b-row>
             </b-col>
             <b-col
+              v-if="references.length"
               cols="12"
               class="mt-3">
               <h4 class="mt-5">
@@ -279,6 +280,7 @@
               </b-container>
             </b-col>
             <b-col
+              v-if="references.length"
               cols="12"
               class="mt-3">
               <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
@@ -611,6 +613,7 @@
               </b-row>
             </b-col>
             <b-col
+              v-if="references.length"
               cols="12"
               class="mt-3">
               <h4 class="mt-5">STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
