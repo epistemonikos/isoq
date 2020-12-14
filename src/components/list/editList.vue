@@ -1877,6 +1877,32 @@ export default {
           this.printErrors(error)
         })
     },
+    updateMyData: function () {
+      let _extractedData = []
+      axios.get(`/api/isoqf_extracted_data?organization=${this.list.organization}&finding_id=${this.findings.id}`)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _extractedData.push({ref_id: reference.id, authors: reference.content})
+              }
+            }
+            _items.push(..._extractedData)
+            let params = {
+              items: _items
+            }
+            axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, params)
+              .then((response) => {
+                this.getExtractedData()
+              })
+          }
+        })
+    },
     getProject: function (projectId) {
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
@@ -1944,6 +1970,7 @@ export default {
               this.buffer_modal_stage_two.title = title
               this.buffer_modal_stage_two.type = type
             }
+            this.updateMyData()
           }
           this.getStatus()
           this.getExtractedData()
