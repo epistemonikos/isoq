@@ -2372,10 +2372,11 @@ export default {
       const refAuthors = authors
       const refPublicatonYear = data.pubdate.split(' ')[0]
       const refIssn = data.issn
+      const refUid = data.uid
       let refDisabled = false
 
       for (let _reference of this.references) {
-        if (_reference.isbn_issn === data.issn) {
+        if (_reference.uid === data.uid) {
           refDisabled = true
         }
       }
@@ -2388,7 +2389,8 @@ export default {
         isbn_issn: refIssn,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
-        disabled: refDisabled
+        disabled: refDisabled,
+        uid: refUid
       }
 
       this.pubmed_requested.push(reference)
