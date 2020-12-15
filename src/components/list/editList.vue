@@ -523,6 +523,57 @@
                                 :finding="findings">
                               </edit-review-finding>
                             </b-tab>
+                            <b-tab title="Extracted data">
+                              <h4>Extracted data</h4>
+                              <b-table
+                                class="table-small-font extracted-data"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                                :items="extracted_data.items">
+                                <template v-slot:cell(column_0)="data">
+                                  <template
+                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-form-group>
+                                      <b-form-textarea
+                                        rows="6"
+                                        max-rows="100"
+                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                    </b-form-group>
+                                  </template>
+                                  <template
+                                    v-else>
+                                    {{ data.item.column_0 }}
+                                  </template>
+                                </template>
+                                <template v-slot:cell(actions)="data">
+                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-button
+                                      block
+                                      variant="success"
+                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      Save
+                                    </b-button>
+                                    <b-button
+                                      block
+                                      variant="outline-secondary"
+                                      @click="cancelExtractedDataInPlace">
+                                      Cancel
+                                    </b-button>
+                                  </template>
+                                  <template v-else>
+                                    <b-button
+                                      variant="outline-success"
+                                      @click="editExtractedDataInPlace(data.index)">
+                                      <font-awesome-icon
+                                        icon="edit"
+                                        :title="$t('Edit')" />
+                                    </b-button>
+                                  </template>
+                                </template>
+                              </b-table>
+                            </b-tab>
                           </b-tabs>
                         </div>
 
