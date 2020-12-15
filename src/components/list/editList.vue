@@ -13,7 +13,9 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" @click="returnTo()">
+            <!-- disabled for v1 -->
+            <!--<b-link class="return" @click="returnTo()">-->
+            <b-link class="return" :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}}">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
               return to ISoQ table
             </b-link>
@@ -1864,7 +1866,7 @@ export default {
             fields: [],
             items: []
           }
-          this.checkWrittingStatus(this.list)
+          // this.checkWrittingStatus(this.list) // disabled for the v1
           this.getProject(this.list.project_id)
           this.getAllReferences()
           this.getStageOneData(fromModal)
