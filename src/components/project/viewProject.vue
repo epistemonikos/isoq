@@ -2376,8 +2376,10 @@ export default {
       let refDisabled = false
 
       for (let _reference of this.references) {
-        if (_reference.uid === data.uid) {
-          refDisabled = true
+        if (Object.prototype.hasOwnProperty.call(_reference, 'uid') && Object.prototype.hasOwnProperty.call(data, 'uid')) {
+          if (_reference.uid === data.uid) {
+            refDisabled = true
+          }
         }
       }
 
