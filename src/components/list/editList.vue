@@ -202,6 +202,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns you have in your own words."
                             label-for="input-ml-explanation">
@@ -267,6 +268,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.coherence.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-coherence-explanation">
@@ -327,6 +329,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.adequacy.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-adequacy-explanation">
@@ -389,6 +392,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.relevance.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate."
                             label-for="input-relevance-explanation"
@@ -451,6 +455,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-4 font-weight-light"
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
