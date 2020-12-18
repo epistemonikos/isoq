@@ -49,6 +49,13 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  title="Duplicate"
+                  variant="outline-secondary"
+                  @click="generateACopyOfAProject(data.index)">
+                  <font-awesome-icon
+                    icon="copy"></font-awesome-icon>
+                </b-button>
+                <b-button
                   v-if="data.item.is_owner && (data.item.sharedToken.length)"
                   title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
                   variant="outline-secondary"
@@ -934,6 +941,157 @@ export default {
           this.buffer_project.index = index
         }).catch((error) => {
           console.log(error)
+        })
+    },
+    generateACopyOfAProject: function (index) {
+      const project = JSON.parse(JSON.stringify(this.projects[index]))
+      const originalProjectId = project.id
+      delete project.id
+      delete project._id
+      project.name = '(Copy) ' + project.name
+      project.sharedCan = {read: [], write: []}
+      project.temporaryUrl = ''
+      project.invite_emails = []
+      project.tmp_invite_emails = []
+      axios.post('/api/isoqf_projects', project)
+        .then((response) => {
+          this.generateCopyOfReferences(originalProjectId, response.data.id)
+          this.generateCopyOfLists(originalProjectId, response.data.id)
+          this.generateCopyOf('isoqf_assessments', originalProjectId, response.data.id)
+          this.generateCopyOf('isoqf_characteristics', originalProjectId, response.data.id)
+          this.getProjects()
+        })
+    },
+    generateCopyOfLists: function (originalProjectId, projectId) {
+      const params = {
+        project_id: originalProjectId,
+        organization: this.$route.params.id
+      }
+      axios.get('/api/isoqf_lists', {params})
+        .then((response) => {
+          for (let list of response.data) {
+            const originalListId = list.id
+            delete list.id
+            delete list._id
+            list.project_id = projectId
+            axios.post('/api/isoqf_lists', list)
+              .then((response) => {
+                this.generateCopyOfFindings(originalListId, response.data.id)
+                this.replaceReferences(response.data)
+              })
+          }
+        })
+    },
+    generateCopyOfReferences: function (originalProjectId, projectId) {
+      const params = {
+        organization: this.$route.params.id,
+        project_id: originalProjectId
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          let newReferences = []
+          for (let reference of response.data) {
+            reference.oldId = reference.id
+            reference.project_id = projectId
+            delete reference.id
+            delete reference._id
+            newReferences.push(reference)
+          }
+          if (newReferences.length) {
+            let postReferences = []
+            for (let reference of newReferences) {
+              postReferences.push(axios.post('/api/isoqf_references', reference))
+            }
+            axios.all(postReferences)
+              .then((response) => {})
+          }
+        })
+    },
+    generateCopyOfFindings: function (originalListId, listId) {
+      const params = {
+        organization: this.$route.params.id,
+        list_id: originalListId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((response) => {
+          for (let finding of response.data) {
+            let originalFindingId = finding.id
+            delete finding.id
+            delete finding._id
+            finding.list_id = listId
+            axios.post('/api/isoqf_findings', finding)
+              .then((response) => {
+                this.generateCopyOf('isoqf_extracted_data', originalFindingId, response.data.id)
+              })
+          }
+        })
+    },
+    replaceReferences: function (data) {
+      const params = {
+        organization: this.$route.params.id,
+        project_id: data.project_id
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          if (data.references.length) {
+            for (let reference of response.data) {
+              for (let cnt in data.references) {
+                if (reference.oldId === data.references[cnt]) {
+                  data.references[cnt] = reference.id
+                }
+              }
+            }
+            axios.patch(`/api/isoqf_lists/${data.id}`, {references: data.references})
+              .then((response) => {})
+          }
+        })
+    },
+    generateCopyOf: function (table, originalId, id) {
+      let params = {
+        organization: this.$route.params.id,
+        project_id: originalId
+      }
+      if (table === 'isoqf_extracted_data') {
+        params = {
+          organization: this.$route.params.id,
+          finding_id: originalId
+        }
+      }
+      axios.get(`/api/${table}`, {params})
+        .then((response) => {
+          for (let data of response.data) {
+            delete data.id
+            delete data._id
+            if (table === 'isoqf_extracted_data') {
+              data.finding_id = id
+            } else {
+              data.project_id = id
+            }
+            axios.post(`/api/${table}`, data)
+              .then((response) => {
+                this.replaceReferencesTable(table, response.data)
+              })
+          }
+        })
+    },
+    replaceReferencesTable: function (table, data) {
+      const params = {
+        organization: this.$route.params.id,
+        project_id: data.project_id
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          if (data.items.length) {
+            for (let reference of response.data) {
+              for (let cnt in data.items) {
+                if (reference.oldId === data.items[cnt].ref_id) {
+                  data.items[cnt].ref_id = reference.id
+                }
+              }
+            }
+            axios.patch(`/api/${table}/${data.id}`, {items: data.items})
+              .then((response) => {})
+          }
         })
     }
   }
