@@ -20,6 +20,14 @@
         <b-row
           class="mt-3">
           <b-col
+            v-if="(ui.copy.project || ui.copy.lists || ui.copy.references || ui.copy.findings || ui.copy.replaceReferences || ui.copy.copyOf || ui.copy.referencesTable)">
+            <b-alert
+              show
+              variant="warning">
+              <p class="text-center">The project is still copying information, please dont change or refresh this page until this warning dissapear</p>
+            </b-alert>
+          </b-col>
+          <b-col
             cols="12">
             <b-table
               id="organizations"
@@ -316,7 +324,16 @@ export default {
           ],
           isBusy: true
         },
-        tabIndex: 0
+        tabIndex: 0,
+        copy: {
+          project: false,
+          lists: false,
+          references: false,
+          findings: false,
+          replaceReferences: false,
+          copyOf: false,
+          referencesTable: false
+        }
       },
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
@@ -944,6 +961,7 @@ export default {
         })
     },
     generateACopyOfAProject: function (index) {
+      this.ui.copy.project = true
       const project = JSON.parse(JSON.stringify(this.projects[index]))
       const originalProjectId = project.id
       delete project.id
@@ -960,9 +978,11 @@ export default {
           this.generateCopyOf('isoqf_assessments', originalProjectId, response.data.id)
           this.generateCopyOf('isoqf_characteristics', originalProjectId, response.data.id)
           this.getProjects()
+          this.ui.copy.project = false
         })
     },
     generateCopyOfLists: function (originalProjectId, projectId) {
+      this.ui.copy.lists = true
       const params = {
         project_id: originalProjectId,
         organization: this.$route.params.id
@@ -978,11 +998,13 @@ export default {
               .then((response) => {
                 this.generateCopyOfFindings(originalListId, response.data.id)
                 this.replaceReferences(response.data)
+                this.ui.copy.lists = false
               })
           }
         })
     },
     generateCopyOfReferences: function (originalProjectId, projectId) {
+      this.ui.copy.references = true
       const params = {
         organization: this.$route.params.id,
         project_id: originalProjectId
@@ -1003,11 +1025,14 @@ export default {
               postReferences.push(axios.post('/api/isoqf_references', reference))
             }
             axios.all(postReferences)
-              .then((response) => {})
+              .then((response) => {
+                this.ui.copy.references = false
+              })
           }
         })
     },
     generateCopyOfFindings: function (originalListId, listId) {
+      this.ui.copy.findings = true
       const params = {
         organization: this.$route.params.id,
         list_id: originalListId
@@ -1022,11 +1047,13 @@ export default {
             axios.post('/api/isoqf_findings', finding)
               .then((response) => {
                 this.generateCopyOf('isoqf_extracted_data', originalFindingId, response.data.id)
+                this.ui.copy.findings = false
               })
           }
         })
     },
     replaceReferences: function (data) {
+      this.ui.copy.replaceReferences = true
       const params = {
         organization: this.$route.params.id,
         project_id: data.project_id
@@ -1042,11 +1069,14 @@ export default {
               }
             }
             axios.patch(`/api/isoqf_lists/${data.id}`, {references: data.references})
-              .then((response) => {})
+              .then((response) => {
+                this.ui.copy.replaceReferences = false
+              })
           }
         })
     },
     generateCopyOf: function (table, originalId, id) {
+      this.ui.copy.copyOf = true
       let params = {
         organization: this.$route.params.id,
         project_id: originalId
@@ -1070,11 +1100,13 @@ export default {
             axios.post(`/api/${table}`, data)
               .then((response) => {
                 this.replaceReferencesTable(table, response.data)
+                this.ui.copy.copyOf = false
               })
           }
         })
     },
     replaceReferencesTable: function (table, data) {
+      this.ui.copy.referencesTable = true
       const params = {
         organization: this.$route.params.id,
         project_id: data.project_id
@@ -1090,7 +1122,9 @@ export default {
               }
             }
             axios.patch(`/api/${table}/${data.id}`, {items: data.items})
-              .then((response) => {})
+              .then((response) => {
+                this.ui.copy.referencesTable = false
+              })
           }
         })
     }
