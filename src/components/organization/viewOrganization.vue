@@ -24,7 +24,7 @@
             <b-alert
               show
               variant="warning">
-              <p class="text-center">The project is still copying information, please dont change or refresh this page until this warning dissapear</p>
+              <p class="text-center">The project is still copying information, please dont change or refresh this page until this warning dissapears</p>
             </b-alert>
           </b-col>
           <b-col
@@ -57,6 +57,7 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  v-if="data.item.is_owner || data.item.allow_to_write"
                   title="Duplicate"
                   variant="outline-secondary"
                   @click="generateACopyOfAProject(data.index)">
