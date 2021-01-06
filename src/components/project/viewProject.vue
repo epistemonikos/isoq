@@ -2245,8 +2245,7 @@ export default {
               items.push(obj)
             }
           } else {
-            // 'send a message'
-            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,) and should have at least one column.'
+            this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
           }
         }
       })
