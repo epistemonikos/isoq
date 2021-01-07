@@ -468,7 +468,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_list_categories/', { params })
+      axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
           if (response.data.length) {
             const options = JSON.parse(JSON.stringify(response.data[0].options))
