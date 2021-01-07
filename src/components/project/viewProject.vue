@@ -1877,7 +1877,7 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
-import parser from '../../plugins/parser'
+// import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import contentGuidance from '../contentGuidance'
 import { saveAs } from 'file-saver'
@@ -1885,6 +1885,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Tabl
 import backToTop from '../backToTop'
 import Criteria from '../Criteria'
 import videoHelp from '../videoHelp'
+import Papa from 'papaparse'
 
 export default {
   components: {
@@ -2199,57 +2200,53 @@ export default {
   },
   watch: {
     pre_ImportDataTable: function (data) {
-      const allLines = data.split(/\r\n|\n/)
       let fields = []
       let items = []
-
-      allLines.forEach((line, index) => {
-        if (line !== '') {
-          let contents = parser.parse(line)[0]
-          // contents = contents[0]
-          if (contents.length > 2) {
-            this.importDataTable.error = null
-            let columnFieldNro = 0
-            let columnItemNro = 0
-            if (index === 0) {
-              for (let cnt in contents) {
+      const csvData = Papa.parse(data, { skipEmptyLines: true })
+      this.importDataTable.error = null
+      if (csvData.data.length) {
+        if (csvData.data[0].length < 3) {
+          this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
+        } else {
+          for (let cnt in csvData.data) {
+            if (parseInt(cnt) === 0) {
+              let cntI = 0
+              for (let i in csvData.data[cnt]) {
                 let obj = {}
-                if (parseInt(cnt) === 0) {
+                if (parseInt(i) === 0) {
                   obj.key = 'ref_id'
                 }
-                if (parseInt(cnt) === 1) {
+                if (parseInt(i) === 1) {
                   obj.key = 'authors'
                 }
-                if (parseInt(cnt) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
-                  obj.key = 'column_' + columnFieldNro
-                  columnFieldNro++
+                if (parseInt(i) > 1) {
+                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
+                  obj.key = 'column_' + cntI
+                  cntI++
                 }
-                obj.label = contents[cnt]
+                obj.label = csvData.data[cnt][i]
                 fields.push(obj)
               }
             } else {
+              let cntI = 0
               let obj = {}
-              for (let cnt in contents) {
-                if (parseInt(cnt) === 0) {
-                  obj.ref_id = contents[cnt]
+              for (let i in csvData.data[cnt]) {
+                if (parseInt(i) === 0) {
+                  obj.reference_id = csvData.data[cnt][i]
                 }
-                if (parseInt(cnt) === 1) {
-                  obj.authors = contents[cnt]
+                if (parseInt(i) === 1) {
+                  obj.authors = csvData.data[cnt][i]
                 }
-                if (parseInt(cnt) > 1) {
-                  obj[`column_${columnItemNro}`] = contents[cnt]
-                  columnItemNro++
+                if (parseInt(i) > 1) {
+                  obj[`column_${cntI}`] = csvData.data[cnt][i]
+                  cntI++
                 }
               }
               items.push(obj)
             }
-          } else {
-            this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
           }
         }
-      })
-
+      }
       this.importDataTable.fields = fields
       this.importDataTable.items = items
     },
