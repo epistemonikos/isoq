@@ -22,9 +22,10 @@
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="tabOpened=0">Project properties</b-nav-item>
-          <b-nav-item
+          <!-- <b-nav-item
+            disabled
             :active="(tabOpened === 1) ? true : false"
-            @click="tabOpened=1">My Data</b-nav-item>
+            @click="tabOpened=1">My Data</b-nav-item> -->
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
             @click="tabOpened=2">iSoQf</b-nav-item>
