@@ -288,8 +288,8 @@
       </b-modal>
       <b-modal
         id="clone-modal"
-        title="Clone a project"
-        ok-title="Clone"
+        title="Duplicate a project"
+        ok-title="Duplicate"
         cancel-title="Close"
         @ok="startCloning"
         @cancel="closeCloneModal"
@@ -297,7 +297,15 @@
         :ok-disabled="((this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) || this.ui.copy.showWarning)"
         no-close-on-backdrop
         no-close-on-esc>
-        <p v-if="modalCloneIndex != null">Click on the "Clone" button to start to cloning the project <b>{{buffer_project.name}}</b></p>
+        <template v-if="modalCloneIndex != null">
+          <p>
+            Click on the "duplicate" button to start making a copy of the project "<b>{{buffer_project.name}}</b>".
+            <br>
+            The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
+            <br>
+            Use the "share" button to share the duplicated project.
+          </p>
+        </template>
         <template v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
           <div
             class="text-center">
@@ -307,7 +315,7 @@
           </div>
         </template>
         <template v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
-          <p class="text-center text-success">Now you can close this modal</p>
+          <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
         </template>
       </b-modal>
     </b-container>
