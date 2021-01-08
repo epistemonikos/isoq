@@ -1146,8 +1146,14 @@
                       </b-button>
                       <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
                       <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
+<<<<<<< HEAD
                       <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
                         Explanation not yet added
+=======
+                      <p v-else class="text-muted font-weight-light">
+                        <span
+                          v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">Explanation not yet added</span>
+>>>>>>> 68e239eed97a27ab3a4f55c5b3d54448815b68f5
                       </p>
                     </div>
                     <div v-else>
