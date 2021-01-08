@@ -800,26 +800,34 @@
                               <h5>Methodological limitations</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].methodological_limitations.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Coherence</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].coherence.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].coherence.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Adequacy</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].adequacy.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].adequacy.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Relevance</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].relevance.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].relevance.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                             </b-tab>
                             <b-tab title="Review finding">
