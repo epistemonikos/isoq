@@ -73,7 +73,7 @@
                     icon="link"></font-awesome-icon>
                 </b-button>
                 <b-button
-                  v-if="data.item.is_owner"
+                  v-if="data.item.is_owner || data.item.allow_to_write"
                   title="Share"
                   variant="outline-secondary"
                   @click="modalShareOptions(data.index)">
