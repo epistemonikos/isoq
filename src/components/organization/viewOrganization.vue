@@ -38,7 +38,9 @@
               head-variant="light"
               :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields"
-              :items="projects">
+              :items="projects"
+              sort-by="last_update"
+              :sort-desc="true">
               <template v-slot:cell(private)="data">
                 <b-badge
                   variant="light"
