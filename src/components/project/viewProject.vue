@@ -4634,7 +4634,28 @@ export default {
       let findings = JSON.parse(JSON.stringify(this.findings))
       for (let index in findings) {
         _requests.push(axios.patch(`/api/isoqf_findings/${findings[index]}`, params))
+        axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${findings[index]}`)
+          .then((response) => {
+            if (response.data.length) {
+              _requests.push(axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, { is_public: params.is_public }))
+            }
+          })
       }
+
+      let otherParams = {}
+      otherParams.is_public = false
+      if (this.modal_project.public_type !== 'private') {
+        otherParams.is_public = true
+      }
+
+      let references = JSON.parse(JSON.stringify(this.references))
+      for (let ref of references) {
+        _requests.push(axios.patch(`/api/isoqf_references/${ref.id}`, otherParams))
+      }
+      let characteristicTable = JSON.parse(JSON.stringify(this.charsOfStudies))
+      _requests.push(axios.patch(`/api/isoqf_characteristics/${characteristicTable.id}`, otherParams))
+      let methodologicalTable = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      _requests.push(axios.patch(`/api/isoqf_assessments/${methodologicalTable.id}`, otherParams))
 
       axios.all(_requests)
         .then(axios.spread((...responses) => {
