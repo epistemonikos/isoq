@@ -1148,9 +1148,7 @@
                       <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light">
                         <span
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
+                          v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">Explanation not yet added</span>
                       </p>
                     </div>
                     <div v-else>
