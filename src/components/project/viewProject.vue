@@ -1394,6 +1394,9 @@
                       block
                       :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
                       :to="{name: 'editList', params: {id: data.item.id}}">
+                        <font-awesome-icon
+                          v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+                          icon="comments"></font-awesome-icon>
                         <span v-if="data.item.cerqual_explanation===''">Complete</span>
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
                         GRADE-CERQual Assessment
@@ -1877,7 +1880,7 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
-import parser from '../../plugins/parser'
+// import parser from '../../plugins/parser'
 import organizationForm from '../organization/organizationForm'
 import contentGuidance from '../contentGuidance'
 import { saveAs } from 'file-saver'
@@ -1885,6 +1888,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Tabl
 import backToTop from '../backToTop'
 import Criteria from '../Criteria'
 import videoHelp from '../videoHelp'
+import Papa from 'papaparse'
 
 export default {
   components: {
@@ -2199,58 +2203,53 @@ export default {
   },
   watch: {
     pre_ImportDataTable: function (data) {
-      const allLines = data.split(/\r\n|\n/)
       let fields = []
       let items = []
-
-      allLines.forEach((line, index) => {
-        if (line !== '') {
-          let contents = parser.parse(line)[0]
-          // contents = contents[0]
-          if (contents.length > 2) {
-            this.importDataTable.error = null
-            let columnFieldNro = 0
-            let columnItemNro = 0
-            if (index === 0) {
-              for (let cnt in contents) {
+      const csvData = Papa.parse(data, { skipEmptyLines: true })
+      this.importDataTable.error = null
+      if (csvData.data.length) {
+        if (csvData.data[0].length < 3) {
+          this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
+        } else {
+          for (let cnt in csvData.data) {
+            if (parseInt(cnt) === 0) {
+              let cntI = 0
+              for (let i in csvData.data[cnt]) {
                 let obj = {}
-                if (parseInt(cnt) === 0) {
+                if (parseInt(i) === 0) {
                   obj.key = 'ref_id'
                 }
-                if (parseInt(cnt) === 1) {
+                if (parseInt(i) === 1) {
                   obj.key = 'authors'
                 }
-                if (parseInt(cnt) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + columnFieldNro, 'label': contents[cnt] })
-                  obj.key = 'column_' + columnFieldNro
-                  columnFieldNro++
+                if (parseInt(i) > 1) {
+                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
+                  obj.key = 'column_' + cntI
+                  cntI++
                 }
-                obj.label = contents[cnt]
+                obj.label = csvData.data[cnt][i]
                 fields.push(obj)
               }
             } else {
+              let cntI = 0
               let obj = {}
-              for (let cnt in contents) {
-                if (parseInt(cnt) === 0) {
-                  obj.ref_id = contents[cnt]
+              for (let i in csvData.data[cnt]) {
+                if (parseInt(i) === 0) {
+                  obj.reference_id = csvData.data[cnt][i]
                 }
-                if (parseInt(cnt) === 1) {
-                  obj.authors = contents[cnt]
+                if (parseInt(i) === 1) {
+                  obj.authors = csvData.data[cnt][i]
                 }
-                if (parseInt(cnt) > 1) {
-                  obj[`column_${columnItemNro}`] = contents[cnt]
-                  columnItemNro++
+                if (parseInt(i) > 1) {
+                  obj[`column_${cntI}`] = csvData.data[cnt][i]
+                  cntI++
                 }
               }
               items.push(obj)
             }
-          } else {
-            // 'send a message'
-            this.importDataTable.error = 'Your data could be wrong formatted. Check that your file is a CSV separated by commas (,) and should have at least one column.'
           }
         }
-      })
-
+      }
       this.importDataTable.fields = fields
       this.importDataTable.items = items
     },
@@ -4635,7 +4634,28 @@ export default {
       let findings = JSON.parse(JSON.stringify(this.findings))
       for (let index in findings) {
         _requests.push(axios.patch(`/api/isoqf_findings/${findings[index]}`, params))
+        axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${findings[index]}`)
+          .then((response) => {
+            if (response.data.length) {
+              _requests.push(axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, { is_public: params.is_public }))
+            }
+          })
       }
+
+      let otherParams = {}
+      otherParams.is_public = false
+      if (this.modal_project.public_type !== 'private') {
+        otherParams.is_public = true
+      }
+
+      let references = JSON.parse(JSON.stringify(this.references))
+      for (let ref of references) {
+        _requests.push(axios.patch(`/api/isoqf_references/${ref.id}`, otherParams))
+      }
+      let characteristicTable = JSON.parse(JSON.stringify(this.charsOfStudies))
+      _requests.push(axios.patch(`/api/isoqf_characteristics/${characteristicTable.id}`, otherParams))
+      let methodologicalTable = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      _requests.push(axios.patch(`/api/isoqf_assessments/${methodologicalTable.id}`, otherParams))
 
       axios.all(_requests)
         .then(axios.spread((...responses) => {

@@ -22,9 +22,10 @@
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="tabOpened=0">Project properties</b-nav-item>
-          <b-nav-item
+          <!-- <b-nav-item
+            disabled
             :active="(tabOpened === 1) ? true : false"
-            @click="tabOpened=1">My Data</b-nav-item>
+            @click="tabOpened=1">My Data</b-nav-item> -->
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
             @click="tabOpened=2">iSoQf</b-nav-item>
@@ -148,6 +149,11 @@
                   <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
                   <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
                 </b-col>
+                <b-col
+                  cols="12">
+                  <h5 v-if="project.license_type">Licensed under</h5>
+                  <p v-if="project.license_type">{{getLicense(project.license_type)}}</p>
+                </b-col>
               </b-row>
             </div>
           </b-card>
@@ -194,7 +200,15 @@ export default {
       tabOpened: 2,
       ui: {
         project: {
-          show_criteria: false
+          show_criteria: false,
+          global_licenses: [
+            { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+            { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
+            { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+            { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+            { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+            { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+          ]
         }
       },
       project: {
@@ -260,6 +274,15 @@ export default {
     this.getReferences()
   },
   methods: {
+    getLicense: function (license) {
+      const licenses = this.ui.project.global_licenses
+      for (let lic of licenses) {
+        if (lic.value === license) {
+          return lic.text
+        }
+      }
+      return ''
+    },
     getProject: function () {
       const params = {
         organization: this.$route.params.org_id
@@ -445,7 +468,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_list_categories/', { params })
+      axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
           if (response.data.length) {
             const options = JSON.parse(JSON.stringify(response.data[0].options))

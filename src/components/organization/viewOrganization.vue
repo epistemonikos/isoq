@@ -19,6 +19,14 @@
         </b-row>
         <b-row
           class="mt-3">
+          <!-- <b-col
+            v-if="(ui.copy.project || ui.copy.lists || ui.copy.references || ui.copy.findings || ui.copy.replaceReferences || ui.copy.copyOf || ui.copy.referencesTable)">
+            <b-alert
+              show
+              variant="warning">
+              <p class="text-center">The project is still copying information, please dont change or refresh this page until this warning dissapears</p>
+            </b-alert>
+          </b-col> -->
           <b-col
             cols="12">
             <b-table
@@ -30,7 +38,9 @@
               head-variant="light"
               :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields"
-              :items="projects">
+              :items="projects"
+              sort-by="last_update"
+              :sort-desc="true">
               <template v-slot:cell(private)="data">
                 <b-badge
                   variant="light"
@@ -49,6 +59,14 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <b-button
+                  v-if="data.item.is_owner || data.item.allow_to_write"
+                  title="Duplicate"
+                  variant="outline-secondary"
+                  @click="openCloneModal(data.index)">
+                  <font-awesome-icon
+                    icon="copy"></font-awesome-icon>
+                </b-button>
+                <b-button
                   v-if="data.item.is_owner && (data.item.sharedToken.length)"
                   title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
                   variant="outline-secondary"
@@ -57,7 +75,7 @@
                     icon="link"></font-awesome-icon>
                 </b-button>
                 <b-button
-                  v-if="data.item.is_owner"
+                  v-if="data.item.is_owner || data.item.allow_to_write"
                   title="Share"
                   variant="outline-secondary"
                   @click="modalShareOptions(data.index)">
@@ -270,6 +288,38 @@
           </b-tab>
         </b-tabs>
       </b-modal>
+      <b-modal
+        id="clone-modal"
+        title="Duplicate a project"
+        ok-title="Duplicate"
+        cancel-title="Close"
+        @ok="startCloning"
+        @cancel="closeCloneModal"
+        :cancel-disabled="this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable"
+        :ok-disabled="((this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) || this.ui.copy.showWarning)"
+        no-close-on-backdrop
+        no-close-on-esc>
+        <template v-if="modalCloneIndex != null">
+          <p>
+            Click on the "duplicate" button to start making a copy of the project "<b>{{buffer_project.name}}</b>".
+            <br>
+            The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
+            <br>
+            Use the "share" button to share the duplicated project.
+          </p>
+        </template>
+        <template v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
+          <div
+            class="text-center">
+            <b-spinner
+              class="text-center"
+              label="Loading..." variant="secondary"></b-spinner>
+          </div>
+        </template>
+        <template v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
+          <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
+        </template>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -309,7 +359,18 @@ export default {
           ],
           isBusy: true
         },
-        tabIndex: 0
+        tabIndex: 0,
+        copy: {
+          project: false,
+          lists: false,
+          references: false,
+          findings: false,
+          replaceReferences: false,
+          copyOf: false,
+          referencesTable: false,
+          showWarning: null,
+          disableCloneModalBtn: false
+        }
       },
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
@@ -406,7 +467,8 @@ export default {
         projects: []
       },
       users_allowed: [],
-      projects: []
+      projects: [],
+      modalCloneIndex: null
     }
   },
   mounted () {
@@ -935,6 +997,212 @@ export default {
         }).catch((error) => {
           console.log(error)
         })
+    },
+    generateACopyOfAProject: function (index) {
+      this.ui.copy.project = true
+      const project = JSON.parse(JSON.stringify(this.projects[index]))
+      const originalProjectId = project.id
+      delete project.id
+      delete project._id
+      project.name = '(Copy) ' + project.name
+      project.sharedCan = {read: [], write: []}
+      project.temporaryUrl = ''
+      project.invite_emails = []
+      project.tmp_invite_emails = []
+      project.is_owner = true
+      project.organization = this.$route.params.id
+      axios.post('/api/isoqf_projects', project)
+        .then((response) => {
+          this.generateCopyOfReferences(originalProjectId, response.data.id)
+          this.generateCopyOfLists(originalProjectId, response.data.id)
+          this.generateCopyOf('isoqf_assessments', originalProjectId, response.data.id)
+          this.generateCopyOf('isoqf_characteristics', originalProjectId, response.data.id)
+          this.getProjects()
+          this.ui.copy.project = false
+        })
+    },
+    generateCopyOfLists: function (originalProjectId, projectId) {
+      this.ui.copy.lists = true
+      const params = {
+        project_id: originalProjectId,
+        organization: this.$route.params.id
+      }
+      axios.get('/api/isoqf_lists', {params})
+        .then((response) => {
+          if (response.data.length < 1) {
+            this.ui.copy.lists = false
+          }
+          for (let list of response.data) {
+            const originalListId = list.id
+            delete list.id
+            delete list._id
+            list.project_id = projectId
+            axios.post('/api/isoqf_lists', list)
+              .then((response) => {
+                this.generateCopyOfFindings(originalListId, response.data.id)
+                this.replaceReferences(response.data)
+                this.ui.copy.lists = false
+              })
+          }
+        })
+    },
+    generateCopyOfReferences: function (originalProjectId, projectId) {
+      this.ui.copy.references = true
+      const params = {
+        organization: this.$route.params.id,
+        project_id: originalProjectId
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          let newReferences = []
+          if (response.data.length < 1) {
+            this.ui.copy.references = false
+          }
+          for (let reference of response.data) {
+            reference.oldId = reference.id
+            reference.project_id = projectId
+            delete reference.id
+            delete reference._id
+            newReferences.push(reference)
+          }
+          if (newReferences.length) {
+            let postReferences = []
+            for (let reference of newReferences) {
+              postReferences.push(axios.post('/api/isoqf_references', reference))
+            }
+            axios.all(postReferences)
+              .then((response) => {
+                this.ui.copy.references = false
+              })
+          }
+        })
+    },
+    generateCopyOfFindings: function (originalListId, listId) {
+      this.ui.copy.findings = true
+      const params = {
+        organization: this.$route.params.id,
+        list_id: originalListId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((response) => {
+          if (response.data.length < 1) {
+            this.ui.copy.findings = false
+          }
+          for (let finding of response.data) {
+            let originalFindingId = finding.id
+            delete finding.id
+            delete finding._id
+            finding.list_id = listId
+            axios.post('/api/isoqf_findings', finding)
+              .then((response) => {
+                this.generateCopyOf('isoqf_extracted_data', originalFindingId, response.data.id)
+                this.ui.copy.findings = false
+              })
+          }
+        })
+    },
+    replaceReferences: function (data) {
+      this.ui.copy.replaceReferences = true
+      const params = {
+        organization: this.$route.params.id,
+        project_id: data.project_id
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          if (response.data.length < 1) {
+            this.ui.copy.replaceReferences = false
+          }
+          if (data.references.length) {
+            for (let reference of response.data) {
+              for (let cnt in data.references) {
+                if (reference.oldId === data.references[cnt]) {
+                  data.references[cnt] = reference.id
+                }
+              }
+            }
+            axios.patch(`/api/isoqf_lists/${data.id}`, {references: data.references})
+              .then((response) => {
+                this.ui.copy.replaceReferences = false
+              })
+          }
+        })
+    },
+    generateCopyOf: function (table, originalId, id) {
+      this.ui.copy.copyOf = true
+      let params = {
+        organization: this.$route.params.id,
+        project_id: originalId
+      }
+      if (table === 'isoqf_extracted_data') {
+        params = {
+          organization: this.$route.params.id,
+          finding_id: originalId
+        }
+      }
+      axios.get(`/api/${table}`, {params})
+        .then((response) => {
+          if (response.data.length < 1) {
+            this.ui.copy.copyOf = false
+          }
+          for (let data of response.data) {
+            delete data.id
+            delete data._id
+            if (table === 'isoqf_extracted_data') {
+              data.finding_id = id
+            } else {
+              data.project_id = id
+            }
+            axios.post(`/api/${table}`, data)
+              .then((response) => {
+                this.replaceReferencesTable(table, response.data)
+                this.ui.copy.copyOf = false
+              })
+          }
+        })
+    },
+    replaceReferencesTable: function (table, data) {
+      this.ui.copy.referencesTable = true
+      const params = {
+        organization: this.$route.params.id,
+        project_id: data.project_id
+      }
+      axios.get('/api/isoqf_references', {params})
+        .then((response) => {
+          if (data.items.length) {
+            for (let reference of response.data) {
+              for (let cnt in data.items) {
+                if (reference.oldId === data.items[cnt].ref_id) {
+                  data.items[cnt].ref_id = reference.id
+                }
+              }
+            }
+            axios.patch(`/api/${table}/${data.id}`, {items: data.items})
+              .then((response) => {
+                this.ui.copy.referencesTable = false
+              })
+          }
+        })
+    },
+    openCloneModal: function (index) {
+      this.buffer_project = this.projects[index]
+      this.modalCloneIndex = index
+      this.$bvModal.show('clone-modal')
+    },
+    startCloning: function (event) {
+      event.preventDefault()
+      this.ui.copy.showWarning = true
+      this.ui.copy.disableCloneModalBtn = true
+
+      if (this.modalCloneIndex >= 0) {
+        this.generateACopyOfAProject(this.modalCloneIndex)
+      }
+    },
+    closeCloneModal: function () {
+      this.ui.copy.showWarning = null
+      this.modalCloneIndex = null
+      this.ui.copy.disableCloneModalBtn = false
+      this.buffer_project = this.tmp_buffer_project
+      this.$bvModal.hide('clone-modal')
     }
   }
 }

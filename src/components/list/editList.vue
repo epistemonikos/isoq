@@ -13,7 +13,9 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" @click="returnTo()">
+            <!-- disabled for v1 -->
+            <!--<b-link class="return" @click="returnTo()">-->
+            <b-link class="return" :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}}">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
               return to ISoQ table
             </b-link>
@@ -200,6 +202,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns you have in your own words."
                             label-for="input-ml-explanation">
@@ -265,6 +268,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.coherence.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-coherence-explanation">
@@ -325,6 +329,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.adequacy.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words."
                             label-for="input-adequacy-explanation">
@@ -387,6 +392,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.relevance.option !== null"
                             class="mt-4 font-weight-light"
                             label="Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate."
                             label-for="input-relevance-explanation"
@@ -449,6 +455,7 @@
                             clear my selection
                           </a>
                           <b-form-group
+                            v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-4 font-weight-light"
                             label-for="input-cerqual"
                             description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
@@ -515,6 +522,57 @@
                                 :list="list"
                                 :finding="findings">
                               </edit-review-finding>
+                            </b-tab>
+                            <b-tab title="Extracted data">
+                              <h4>Extracted data</h4>
+                              <b-table
+                                class="table-small-font extracted-data"
+                                responsive
+                                head-variant="light"
+                                outlined
+                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
+                                :items="extracted_data.items">
+                                <template v-slot:cell(column_0)="data">
+                                  <template
+                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-form-group>
+                                      <b-form-textarea
+                                        rows="6"
+                                        max-rows="100"
+                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
+                                    </b-form-group>
+                                  </template>
+                                  <template
+                                    v-else>
+                                    {{ data.item.column_0 }}
+                                  </template>
+                                </template>
+                                <template v-slot:cell(actions)="data">
+                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
+                                    <b-button
+                                      block
+                                      variant="success"
+                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      Save
+                                    </b-button>
+                                    <b-button
+                                      block
+                                      variant="outline-secondary"
+                                      @click="cancelExtractedDataInPlace">
+                                      Cancel
+                                    </b-button>
+                                  </template>
+                                  <template v-else>
+                                    <b-button
+                                      variant="outline-success"
+                                      @click="editExtractedDataInPlace(data.index)">
+                                      <font-awesome-icon
+                                        icon="edit"
+                                        :title="$t('Edit')" />
+                                    </b-button>
+                                  </template>
+                                </template>
+                              </b-table>
                             </b-tab>
                           </b-tabs>
                         </div>
@@ -742,26 +800,34 @@
                               <h5>Methodological limitations</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].methodological_limitations.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Coherence</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].coherence.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].coherence.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Adequacy</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].adequacy.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].adequacy.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                               <h5>Relevance</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].relevance.option)}}</b>
-                                <br>
-                                Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                <template v-if="parseInt(evidence_profile[0].relevance.option) > 0">
+                                  <br>
+                                  Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
+                                </template>
                               </p>
                             </b-tab>
                             <b-tab title="Review finding">
@@ -1080,11 +1146,8 @@
                       </b-button>
                       <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
                       <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
-                      <p v-else class="text-muted font-weight-light">
-                        <span
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
+                      <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
+                        Explanation not yet added
                       </p>
                     </div>
                     <div v-else>
@@ -1864,7 +1927,7 @@ export default {
             fields: [],
             items: []
           }
-          this.checkWrittingStatus(this.list)
+          // this.checkWrittingStatus(this.list) // disabled for the v1
           this.getProject(this.list.project_id)
           this.getAllReferences()
           this.getStageOneData(fromModal)
@@ -2536,6 +2599,19 @@ export default {
             ]
           }),
           new Paragraph(''),
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            heading: HeadingLevel.HEADING_1,
+            children: [
+              new TextRun({
+                text: 'Evidence Profile',
+                bold: true,
+                size: 24,
+                color: '000000'
+              })
+            ]
+          }),
+          new Paragraph(''),
           new Table({
             borders: {
               top: {
@@ -3104,43 +3180,6 @@ export default {
         )
       }
       return arr
-    },
-    generateAndDownload: function (element, filename) {
-      const preHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + filename + '</title></head><body>'
-      const postHtml = '</body></html>'
-
-      let objs = document.getElementsByClassName(element)
-      let content = ''
-      for (let o of objs) {
-        content = content + o.innerHTML + ' '
-      }
-
-      var html = preHtml + content + postHtml
-
-      const blob = new Blob(['\ufeff', html], {
-        type: 'application/msword'
-      })
-
-      // Specify link url
-      var url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html)
-
-      // Specify file name
-      filename = filename ? filename + '.doc' : 'document.doc'
-
-      // Create download link element
-      var downloadLink = document.createElement('a')
-
-      document.body.appendChild(downloadLink)
-
-      if (navigator.msSaveOrOpenBlob) {
-        navigator.msSaveOrOpenBlob(blob, filename)
-      } else {
-        downloadLink.href = url
-        downloadLink.download = filename
-        downloadLink.click()
-      }
-
-      document.body.removeChild(downloadLink)
     },
     printErrors: function (error) {
       if (error.response) {
