@@ -559,7 +559,7 @@
                     @change="loadTableImportData($event)"></b-form-file>
                   <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
                   <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
+                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-450046545`'>See help video</a> for support.</p>
                   <b-alert
                     variant="info"
                     :show="importDataTable.error !== null">
@@ -916,7 +916,7 @@
                   @change="loadTableImportData($event)"></b-form-file>
                 <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
                 <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
+                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-451099168`'>See help video</a> for support.</p>
                 <b-alert
                   variant="info"
                   :show="importDataTable.error !== null">
