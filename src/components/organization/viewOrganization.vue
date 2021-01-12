@@ -540,6 +540,7 @@ export default {
         }
       }
       axios.all(requests).then(axios.spread((...responses) => {
+        let _projects = []
         for (let response of responses) {
           if (response.data.length) {
             for (let project of response.data) {
@@ -548,6 +549,9 @@ export default {
               }
               if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
                 project.can_read = []
+              }
+              if (!Object.prototype.hasOwnProperty.call(project, 'created_at')) {
+                project.created_at = 0
               }
               if (
                 project.organization === this.$store.state.user.personal_organization ||
@@ -589,11 +593,13 @@ export default {
                     project.can_write = []
                   }
                 }
-                this.projects.push(project)
+                _projects.push(project)
               }
             }
           }
         }
+        const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
+        this.projects.push(...finalList)
       })).catch((error) => {
         console.log(error)
       })
