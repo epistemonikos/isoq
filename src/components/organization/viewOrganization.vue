@@ -39,7 +39,7 @@
               :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields"
               :items="projects"
-              sort-by="last_update"
+              sort-by="created_at"
               :sort-desc="true">
               <template v-slot:cell(private)="data">
                 <b-badge
@@ -618,6 +618,7 @@ export default {
             console.log(error)
           })
       } else {
+        this.buffer_project.created_at = Date.now()
         axios.post('/api/isoqf_projects', this.buffer_project)
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
