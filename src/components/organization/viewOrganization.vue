@@ -1018,6 +1018,7 @@ export default {
       project.tmp_invite_emails = []
       project.is_owner = true
       project.organization = this.$route.params.id
+      project.created_at = Date.now()
       axios.post('/api/isoqf_projects', project)
         .then((response) => {
           this.generateCopyOfReferences(originalProjectId, response.data.id)
