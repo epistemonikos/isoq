@@ -80,8 +80,6 @@ export default {
             key: 'name',
             sortable: true
           },
-          'review_question',
-          'authors',
           {
             key: 'last_update',
             label: 'Last Modification',
