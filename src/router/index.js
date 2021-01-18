@@ -1,17 +1,17 @@
-import MainPage from '@/components/MainPage'
-import About from '@/components/About'
-import Login from '@/components/Login'
-import ForgotPassword from '@/components/ForgotPassword'
-import CreateAccount from '@/components/CreateAccount'
-import Organizations from '@/components/Organizations'
-import ViewOrganization from '@/components/organization/viewOrganization'
-import EditList from '@/components/list/editList'
-import ViewProject from '@/components/project/viewProject'
-import Browse from '@/components/Browse'
-import NewPassword from '@/components/NewPassword'
-import previewContentSoQf from '@/components/previewContent/previewContentSoQf'
-import previewWorksheet from '@/components/previewContent/previewContentWorksheet'
-import Help from '@/components/Help'
+const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
+const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
+const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
+const ForgotPassword = () => import(/* webpackChunkName: "forgotpassword" */ '@/components/ForgotPassword')
+const CreateAccount = () => import(/* webpackChunkName: "createaccount" */ '@/components/CreateAccount')
+const Organizations = () => import(/* webpackChunkName: "organizations" */ '@/components/Organizations')
+const ViewOrganization = () => import(/* webpackChunkName: "vieworganization" */ '@/components/organization/viewOrganization')
+const EditList = () => import(/* webpackChunkName: "editlist" */ '@/components/list/editList')
+const ViewProject = () => import(/* webpackChunkName: "viewproject" */ '@/components/project/viewProject')
+const Browse = () => import(/* webpackChunkName: "browse" */ '@/components/Browse')
+const NewPassword = () => import(/* webpackChunkName: "newpassword" */ '@/components/NewPassword')
+const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf" */ '@/components/previewContent/previewContentSoQf')
+const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
+const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 
 // import { Trans } from '@/plugins/Translation'
 
