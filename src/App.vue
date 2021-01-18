@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import Menu from './components/Menu'
+const Menu = () => import(/* webpackChunkName: "menu" */ '@/components/Menu')
 
 export default {
   name: 'App',

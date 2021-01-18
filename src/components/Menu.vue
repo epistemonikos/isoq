@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import SwitchLanguage from './LanguageSelector'
+const SwitchLanguage = () => import(/* webpackChunkName: "switchlang" */ './LanguageSelector')
 
 export default {
   data () {

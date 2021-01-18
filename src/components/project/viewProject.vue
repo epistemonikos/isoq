@@ -1881,14 +1881,15 @@
 import axios from 'axios'
 import draggable from 'vuedraggable'
 // import parser from '../../plugins/parser'
-import organizationForm from '../organization/organizationForm'
-import contentGuidance from '../contentGuidance'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
-import backToTop from '../backToTop'
-import Criteria from '../Criteria'
-import videoHelp from '../videoHelp'
 import Papa from 'papaparse'
+
+const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm')
+const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance')
+const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop')
+const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   components: {
