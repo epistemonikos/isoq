@@ -2236,7 +2236,7 @@ export default {
               let obj = {}
               for (let i in csvData.data[cnt]) {
                 if (parseInt(i) === 0) {
-                  obj.reference_id = csvData.data[cnt][i]
+                  obj.ref_id = csvData.data[cnt][i]
                 }
                 if (parseInt(i) === 1) {
                   obj.authors = csvData.data[cnt][i]
