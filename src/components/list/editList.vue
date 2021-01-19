@@ -63,7 +63,6 @@
               @click="changeMode"
               variant="outline-primary"
               v-b-tooltip:editButton.top="'Click to edit'"
-              :disabled="list.editing && list.userEditing !== $store.state.user.id"
               block>
               Edit
             </b-button>
