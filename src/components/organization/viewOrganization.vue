@@ -39,7 +39,7 @@
               :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields"
               :items="projects"
-              sort-by="last_update"
+              sort-by="created_at"
               :sort-desc="true">
               <template v-slot:cell(private)="data">
                 <b-badge
@@ -326,8 +326,8 @@
 
 <script>
 import axios from 'axios'
-import organizationForm from '../organization/organizationForm'
-import videoHelp from '../videoHelp'
+const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
   components: {
@@ -540,6 +540,7 @@ export default {
         }
       }
       axios.all(requests).then(axios.spread((...responses) => {
+        let _projects = []
         for (let response of responses) {
           if (response.data.length) {
             for (let project of response.data) {
@@ -548,6 +549,9 @@ export default {
               }
               if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
                 project.can_read = []
+              }
+              if (!Object.prototype.hasOwnProperty.call(project, 'created_at')) {
+                project.created_at = 0
               }
               if (
                 project.organization === this.$store.state.user.personal_organization ||
@@ -589,11 +593,13 @@ export default {
                     project.can_write = []
                   }
                 }
-                this.projects.push(project)
+                _projects.push(project)
               }
             }
           }
         }
+        const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
+        this.projects.push(...finalList)
       })).catch((error) => {
         console.log(error)
       })
@@ -618,6 +624,7 @@ export default {
             console.log(error)
           })
       } else {
+        this.buffer_project.created_at = Date.now()
         axios.post('/api/isoqf_projects', this.buffer_project)
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
@@ -1011,6 +1018,7 @@ export default {
       project.tmp_invite_emails = []
       project.is_owner = true
       project.organization = this.$route.params.id
+      project.created_at = Date.now()
       axios.post('/api/isoqf_projects', project)
         .then((response) => {
           this.generateCopyOfReferences(originalProjectId, response.data.id)

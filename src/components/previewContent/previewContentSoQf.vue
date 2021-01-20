@@ -177,13 +177,14 @@
 
 <script>
 import axios from 'axios'
-import contentGuidance from '../contentGuidance'
-import organizationForm from '../organization/organizationForm'
-import Criteria from '../Criteria'
-import tablePrintFindings from '../project/tablePrintFindings'
-import charsOfStudiesDisplayDataTable from '../charsOfStudies/displayTableData'
-import methAssessmentsDisplayDataTable from '../methAssessments/displayTableData'
-import backToTop from '../backToTop'
+
+const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
+const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
+const Criteria = () => import(/* webpackChunkName: "criteria" */'../Criteria')
+const tablePrintFindings = () => import(/* webpackChunkName: "tableprintfindings" */'../project/tablePrintFindings')
+const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')
+const methAssessmentsDisplayDataTable = () => import(/* webpackChunkName: "methassessmentssisplaysatatable" */'../methAssessments/displayTableData')
+const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
   components: {

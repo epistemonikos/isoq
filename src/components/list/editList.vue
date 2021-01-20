@@ -63,7 +63,6 @@
               @click="changeMode"
               variant="outline-primary"
               v-b-tooltip:editButton.top="'Click to edit'"
-              :disabled="list.editing && list.userEditing !== $store.state.user.id"
               block>
               Edit
             </b-button>
@@ -1587,14 +1586,14 @@
 
 <script>
 import axios from 'axios'
-import bCardFilters from '../tableActions/Filters'
-import bCardActionTable from '../tableActions/ActionTable'
 import draggable from 'vuedraggable'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
-import editReviewFinding from '../editReviewFinding'
-import backToTop from '../backToTop'
-import videoHelp from '../videoHelp'
+const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
+const bCardActionTable = () => import(/* webpackChunkName: "backtotop" */'../tableActions/ActionTable')
+const editReviewFinding = () => import(/* webpackChunkName: "backtotop" */'../editReviewFinding')
+const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
   components: {

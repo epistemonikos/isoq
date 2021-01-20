@@ -559,7 +559,7 @@
                     @change="loadTableImportData($event)"></b-form-file>
                   <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
                   <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
+                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-450046545`'>See help video</a> for support.</p>
                   <b-alert
                     variant="info"
                     :show="importDataTable.error !== null">
@@ -916,7 +916,7 @@
                   @change="loadTableImportData($event)"></b-form-file>
                 <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
                 <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. See help video for support.</p>
+                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-451099168`'>See help video</a> for support.</p>
                 <b-alert
                   variant="info"
                   :show="importDataTable.error !== null">
@@ -1318,7 +1318,6 @@
                           <b-button
                             block
                             v-if="mode==='edit'"
-                            :disabled="data.item.editing"
                             variant="outline-success"
                             @click="editModalFindingName(data.index)">
                             <font-awesome-icon
@@ -1334,7 +1333,6 @@
                           <b-button
                             block
                             v-if="mode==='edit'"
-                            :disabled="data.item.editing"
                             variant="outline-danger"
                             @click="removeModalFinding(data.index)">
                             Remove
@@ -1353,7 +1351,6 @@
                       <b-button
                         block
                         variant="outline-info"
-                        :disabled="data.item.editing"
                         @click="editModalFindingName(data.index)">Edit group</b-button>
                       {{ data.item.category_name }}
                       <span
@@ -1365,7 +1362,6 @@
                       <b-button
                         variant="info"
                         block
-                        :disabled="data.item.editing"
                         @click="editModalFindingName(data.index)">Assign group</b-button>
                     </div>
                   </template>
@@ -1373,7 +1369,7 @@
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
                       class="d-print-none mb-3"
-                      :disabled="(data.item.references.length) ? (data.item.editing) ? true : false : true"
+                      :disabled="(data.item.references.length) ? false : true"
                       block
                       :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
                       :to="{name: 'editList', params: {id: data.item.id}}">
@@ -1390,7 +1386,7 @@
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
                       class="d-print-none mb-3"
-                      :disabled="(data.item.references.length) ? (data.item.editing) ? true : false : true"
+                      :disabled="(data.item.references.length) ? false : true"
                       block
                       :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
                       :to="{name: 'editList', params: {id: data.item.id}}">
@@ -1412,7 +1408,6 @@
                         block
                         class="mb-3 d-print-none"
                         :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                        :disabled="data.item.editing"
                         @click="openModalReferences(data.index, data.item.isoqf_id)">
                         <span v-if="data.item.references.length">View or edit references</span>
                         <span v-else>Select references</span>
@@ -1489,7 +1484,6 @@
                 id="edit-finding-name"
                 ref="edit-finding-name"
                 title="Edit Summarised review finding"
-                :ok-disabled="editFindingName.editing"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
@@ -1504,7 +1498,6 @@
                   label-for="finding-name">
                   <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
                   <b-form-textarea
-                    :disabled="editFindingName.editing"
                     id="finding-name"
                     v-model="editFindingName.name"
                     rows="6"
@@ -1515,7 +1508,6 @@
                   label="Select review finding group"
                   description="You can leave this option blank. You can always assign a finding to a group later.">
                   <b-form-select
-                    :disabled="editFindingName.editing"
                     v-model="editFindingName.category"
                     :options="list_categories.options"></b-form-select>
                 </b-form-group>
@@ -1527,7 +1519,6 @@
                   </template>
                   <b-form-textarea
                     id="finding-note"
-                    :disabled="editFindingName.editing"
                     v-model="editFindingName.notes"
                     rows="6"
                     max-rows="100"></b-form-textarea>
@@ -1538,7 +1529,6 @@
                 id="remove-finding"
                 ref="remove-finding"
                 title="Remove summarised review finding"
-                :ok-disabled="editFindingName.editing"
                 ok-title="Confirm"
                 ok-variant="outline-danger"
                 cancel-variant="outline-secondary"
@@ -1591,7 +1581,7 @@
                 ref="modal-references-list"
                 title="References"
                 @ok="saveReferencesList"
-                :ok-disabled="(selected_list_index === null) ? false : (lists[selected_list_index].editing) ? true : false"
+                :ok-disabled="(selected_list_index === null) ? true : false"
                 ok-title="Save"
                 ok-variant="outline-success"
                 cancel-variant="outline-secondary"
@@ -1881,14 +1871,15 @@
 import axios from 'axios'
 import draggable from 'vuedraggable'
 // import parser from '../../plugins/parser'
-import organizationForm from '../organization/organizationForm'
-import contentGuidance from '../contentGuidance'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
-import backToTop from '../backToTop'
-import Criteria from '../Criteria'
-import videoHelp from '../videoHelp'
 import Papa from 'papaparse'
+
+const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm')
+const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance')
+const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop')
+const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   components: {
@@ -2235,7 +2226,7 @@ export default {
               let obj = {}
               for (let i in csvData.data[cnt]) {
                 if (parseInt(i) === 0) {
-                  obj.reference_id = csvData.data[cnt][i]
+                  obj.ref_id = csvData.data[cnt][i]
                 }
                 if (parseInt(i) === 1) {
                   obj.authors = csvData.data[cnt][i]
@@ -2960,10 +2951,10 @@ export default {
       this.selected_list_index = index
       axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
         .then((response) => {
-          this.lists[index].editing = response.data.editing
-          if (response.data.editing) {
-            this.getUserInfo(response.data.userEditing)
-          }
+          // this.lists[index].editing = response.data.editing
+          // if (response.data.editing) {
+          //   this.getUserInfo(response.data.userEditing)
+          // }
           let list = JSON.parse(JSON.stringify(this.lists[index]))
           const params = {
             organization: this.$route.params.org_id,
@@ -4338,10 +4329,10 @@ export default {
           this.editFindingName.name = response.data.name
           this.editFindingName.category = response.data.category
           this.editFindingName.notes = response.data.notes
-          this.editFindingName.editing = response.data.editing
-          if (response.data.editing) {
-            this.getUserInfo(response.data.userEditing)
-          }
+          // this.editFindingName.editing = response.data.editing
+          // if (response.data.editing) {
+          //   this.getUserInfo(response.data.userEditing)
+          // }
           const params = {
             organization: this.$route.params.org_id,
             list_id: response.data.id
@@ -4396,10 +4387,10 @@ export default {
         .then((response) => {
           this.editFindingName.index = index
           this.editFindingName.name = response.data.name
-          this.editFindingName.editing = response.data.editing
-          if (response.data.editing) {
-            this.getUserInfo(response.data.userEditing)
-          }
+          // this.editFindingName.editing = response.data.editing
+          // if (response.data.editing) {
+          //   this.getUserInfo(response.data.userEditing)
+          // }
           const params = {
             organization: this.$route.params.org_id,
             list_id: response.data.id
