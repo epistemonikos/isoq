@@ -624,7 +624,9 @@ export default {
             console.log(error)
           })
       } else {
-        this.buffer_project.created_at = Date.now()
+        const _date = Date.now()
+        this.buffer_project.created_at = _date
+        this.buffer_project.last_update = _date
         axios.post('/api/isoqf_projects', this.buffer_project)
           .then((response) => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
