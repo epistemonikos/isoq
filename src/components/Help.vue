@@ -13,7 +13,8 @@
       <p>To feedback to us your experience of using iSoQ (positive or negative!) or ideas of useful additional features or how to make it more user-friendly, please use <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank">the following form</a></p>
 
       <h3>Help Resources: Videos</h3>
-      <ol>
+      <ol start="0">
+        <li><a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video - The Essentials [8:58 min]</a></li>
         <li><a href="https://vimeo.com/449741356" target="_blank">Sharing an iSoQ project [1:45 min]</a></li>
         <li><a href="#" target="_blank">Visibility Settings on the iSoQ Database (coming soon)</a></li>
         <li><a href="https://vimeo.com/449265292" target="_blank">Overview of the My Data page [1:30 min]</a></li>
