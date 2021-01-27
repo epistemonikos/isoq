@@ -7,7 +7,7 @@
     </b-container>
     <b-container class="pt-5">
       <h3>Urgent help needed?</h3>
-      <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues contact simon.lewin[at]fhi.no</p>
+      <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues contact isoq@epistemonikos.org</p>
 
       <h3>You’ve got feedback to share?</h3>
       <p>To feedback to us your experience of using iSoQ (positive or negative!) or ideas of useful additional features or how to make it more user-friendly, please use <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank">the following form</a></p>
