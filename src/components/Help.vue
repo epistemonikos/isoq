@@ -37,6 +37,12 @@
         <li><a href="https://vimeo.com/450835499" target="_blank">Overview of the Overall Assessment of Confidence [2:33]</a></li>
         <li><a href="https://vimeo.com/462180668" target="_blank">Leaving notes about GRADE-CERQual assessments [1:33]</a></li>
       </ol>
+
+      <h3>GRADE-CERQual Webinars</h3>
+      <ul>
+        <li><a href="https://training.cochrane.org/resource/grade-cerqual-webinar" target="_blank">Access the Cochrane Training Webinar on GRADE-CERQual</a></li>
+        <li><a href="https://www.cerqual.org/upcoming-events/" target="_blank">Information on upcoming live GRADE-CERQual webinars</a></li>
+      </ul>
     </b-container>
   </div>
 </template>
