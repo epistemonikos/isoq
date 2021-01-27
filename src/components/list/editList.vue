@@ -522,8 +522,17 @@
                                 :finding="findings">
                               </edit-review-finding>
                             </b-tab>
-                            <b-tab title="Extracted data">
+                            <b-tab>
+                              <template slot="title">
+                                Extracted Data <font-awesome-icon v-if="ui.methodological_assessments.extracted_data.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
+                              </template>
                               <h4>Extracted data</h4>
+                              <p
+                                v-if="ui.methodological_assessments.extracted_data.display_warning"
+                                class="text-danger">
+                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+                                Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
+                              </p>
                               <b-table
                                 class="table-small-font extracted-data"
                                 responsive
@@ -912,7 +921,7 @@
                   <template v-slot:head(methodological-limit)="data">
                     <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
                     <span
-                      v-if="ui.methodological_assessments.display_warning"
+                      v-if="ui.methodological_assessments.display_warning || ui.methodological_assessments.extracted_data.display_warning"
                       class="text-danger"
                       v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
                       <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
@@ -1609,7 +1618,10 @@ export default {
       licenseUrl: require('../../assets/by-88x31.png'),
       ui: {
         methodological_assessments: {
-          display_warning: true
+          display_warning: true,
+          extracted_data: {
+            display_warning: true
+          }
         },
         coherence: {
           display_warning: true
@@ -2496,9 +2508,11 @@ export default {
             }
 
             this.ui.coherence.display_warning = true
+            this.ui.methodological_assessments.extracted_data.display_warning = true
             this.ui.adequacy.extracted_data.display_warning = true
             if (!haveContent) {
               this.ui.coherence.display_warning = false
+              this.ui.methodological_assessments.extracted_data.display_warning = false
               this.ui.adequacy.extracted_data.display_warning = false
             }
             this.extracted_data.items = _items
