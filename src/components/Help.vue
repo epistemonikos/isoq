@@ -16,7 +16,7 @@
       <ol start="0">
         <li><a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video - The Essentials [8:58 min]</a></li>
         <li><a href="https://vimeo.com/449741356" target="_blank">Sharing an iSoQ project [1:45 min]</a></li>
-        <li><a href="#" target="_blank">Visibility Settings on the iSoQ Database (coming soon)</a></li>
+        <li><a href="https://vimeo.com/504176899" target="_blank">Visibility Settings on the iSoQ Database [3:19]</a></li>
         <li><a href="https://vimeo.com/449265292" target="_blank">Overview of the My Data page [1:30 min]</a></li>
         <li><a href="https://vimeo.com/449247762" target="_blank">Importing references for included studies [1:12 min]</a></li>
         <li><a href="https://vimeo.com/449248998" target="_blank">Importing references from PubMed [1:08 min]</a></li>

@@ -1833,11 +1833,13 @@
         ref="modal-change-status"
         scrollable
         size="xl"
-        title="Publish to the iSoQ Database"
         ok-title="Save"
         ok-variant="outline-success"
         @ok="savePublicStatus"
         cancel-variant="outline-secondary">
+        <template v-slot:modal-title>
+          <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
+        </template>
         <p class="font-weight-light">
           By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
         </p>
