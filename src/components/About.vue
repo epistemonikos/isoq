@@ -12,10 +12,11 @@
         <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
         <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
         <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
+        <li>Watch the <a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video</a> for an overview</li>
       </ul>
 
       <h3>What is GRADE-CERQual?</h3>
-      <p><a href="www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
+      <p><a href="https://www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
 
       <h3>When in the review process can I use the iSoQ tool?</h3>
       <p>You can begin using this tool once you have finished the study screening process and have a list of included studies that meet the inclusion criteria for your synthesis (systematic review). In the early stages of a systematic review, the iSoQ tool can be used to help organise some of the data that are needed to apply GRADE-CERQual, for example, tables of the characteristics of included studies and of the methodological limitations of the included studies (critical appraisal tables).</p>

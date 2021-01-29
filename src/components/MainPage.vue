@@ -3,7 +3,7 @@
     <b-container id="mainPage" fluid class="pt-5">
       <b-row>
         <b-col cols="12" md="6" lg="3">
-          <h2>iSoQ</h2>
+          <h2>iSoQ <span>Beta version</span></h2>
           <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
         </b-col>
       </b-row>
@@ -55,6 +55,9 @@ export default {
   div >>>
     h2 {
       font-size: 80px;
+    }
+    h2>span {
+      font-size: 1rem;
     }
     .slogan {
       font-style: italic;

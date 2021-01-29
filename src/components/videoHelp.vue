@@ -26,7 +26,7 @@
       <b-embed
         type="iframe"
         aspect="16by9"
-        :src="`https://player.vimeo.com/video/${urlId}?title=0&byline=0&portrait=0`"
+        :src="`https://player.vimeo.com/video/${urlId.split('-')[0]}?title=0&byline=0&portrait=0`"
         allowfullscreen
       ></b-embed>
     </b-modal>
