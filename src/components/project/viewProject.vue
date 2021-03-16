@@ -3874,8 +3874,9 @@ export default {
     },
     generateTemplate: function () {
       // const _references = JSON.parse(JSON.stringify(this.references))
+      const BOM = "\uFEFF";
       const _refs = JSON.parse(JSON.stringify(this.refs))
-      let csvContent = 'data:text/csv;charset=utf-8,'
+      let csvContent = 'data:text/csv;charset=utf-8,'+BOM
       csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
 
       for (let ref of _refs) {
@@ -4666,7 +4667,8 @@ export default {
         })
     },
     exportTableToCSV: function (type) {
-      var csv = 'data:text/csv;charset=utf-8,'
+      const BOM = "\uFEFF";
+      var csv = 'data:text/csv;charset=utf-8,'+BOM
       const _types = ['chars_of_studies', 'meth_assessments']
       let _protoCSV = []
       let _keys = []
