@@ -3745,9 +3745,12 @@ export default {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
             delete item[field.key]
+            item[field.key] = ''
           }
         }
       }
+
+      params.items = _items
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
@@ -3995,10 +3998,27 @@ export default {
       let params = {}
       let cnt = 0
       let items = []
+      let _keys = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let keys = []
+      for (let k of _keys) {
+        keys.push(k.key)
+      }
 
       for (let item of _items) {
         if (cnt === index) {
-          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+          let obj = {}
+          for (let k in keys) {
+            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
+              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
+                obj[keys[k]] = item[keys[k]]
+              } else {
+                obj[keys[k]] = ''
+              }
+            } else {
+              obj[keys[k]] = ''
+            }
+          }
+          items.push(obj)
         } else {
           items.push(item)
         }
@@ -4214,10 +4234,27 @@ export default {
       let params = {}
       let cnt = 0
       let items = []
+      let _keys = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+      let keys = []
+      for (let k of _keys) {
+        keys.push(k.key)
+      }
 
       for (let item of _items) {
         if (cnt === index) {
-          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+          let obj = {}
+          for (let k in keys) {
+            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
+              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
+                obj[keys[k]] = item[keys[k]]
+              } else {
+                obj[keys[k]] = ''
+              }
+            } else {
+              obj[keys[k]] = ''
+            }
+          }
+          items.push(obj)
         } else {
           items.push(item)
         }
@@ -4688,19 +4725,19 @@ export default {
             break
         }
 
-        for (let _element in _protoCSV) {
-          if (_element === '0') {
+        for (let i in _protoCSV) {
+          if (i === '0') {
             cnt = 1
-            for (let element of _protoCSV[_element]) {
+            for (let element of _protoCSV[i]) {
               _keys.push(element.key)
-              csv = csv.concat('"' + element.label + ((cnt < _protoCSV[_element].length) ? '",' : '"' + '\n'))
+              csv = csv.concat('"' + element.label + ((cnt < _protoCSV[i].length) ? '",' : '"' + '\n'))
               cnt++
             }
           } else {
-            for (let index in _protoCSV[_element]) {
+            for (let index in _protoCSV[i]) {
               cnt = 1
               for (let key of _keys) {
-                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < Object.keys(_protoCSV[_element][index]).length) ? '",' : '"' + '\n'))
+                csv = csv.concat('"' + _protoCSV[i][index][key] + ((cnt < Object.keys(_protoCSV[i][index]).length) ? '",' : '"' + '\n'))
                 cnt++
               }
             }
