@@ -89,29 +89,33 @@ export default {
       return obj
     },
     toCSV: function (type) {
-      // var csv = 'data:text/csv;charset=utf-8,'
       const types = {
         'chars_of_studies': 'Characteristics of studies',
         'meth_assessments': 'Methodological assessments',
         'extracted_data': 'Extracted data'
       }
-      let _headers = []
-      let headers = JSON.parse(JSON.stringify(this.local_fields))
-      for (let header of headers) {
-        if (header.key !== 'ref_id') {
-          _headers.push('"' + header.label + '"')
+      let _fields = JSON.parse(JSON.stringify(this.local_fields))
+      const _items = JSON.parse(JSON.stringify(this.local_items))
+      let fields = []
+      let keys = []
+      for (let f of _fields) {
+        if (f.key !== 'ref_id') {
+          fields.push('"'+f.label+'"')
+          keys.push(f.key)
         }
       }
-      _headers.sort((a, b) => a - b)
-
-      let items = JSON.parse(JSON.stringify(this.local_items))
-      for (let item of items) {
-        delete item.ref_id
-        delete item.index
-        item = this.orderKeys(item)
+      let items = []
+      for (let i of _items) {
+        let item = {}
+        for (let k in keys) {
+          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
+            item[keys[k]] = i[keys[k]]
+          } else {
+            item[keys[k]] = ''
+          }
+        }
+        items.push(item)
       }
-      // console.log(items)
-      let data = items
 
       const options = {
         filename: types[type],
@@ -120,12 +124,12 @@ export default {
         decimalSeparator: '.',
         showLabels: true,
         useBom: true,
-        headers: _headers
+        headers: fields
       }
 
       const csvExporter = new ExportToCsv(options)
 
-      csvExporter.generateCsv(data)
+      csvExporter.generateCsv(items)
     }
   }
 }
