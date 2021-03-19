@@ -1021,6 +1021,8 @@ export default {
       project.is_owner = true
       project.organization = this.$route.params.id
       project.created_at = Date.now()
+      project.can_write = []
+      project.can_read = []
       axios.post('/api/isoqf_projects', project)
         .then((response) => {
           this.generateCopyOfReferences(originalProject, response.data)
