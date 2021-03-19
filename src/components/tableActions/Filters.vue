@@ -64,6 +64,11 @@ export default {
       local_items: this.items
     }
   },
+  watch: {
+    items: function () {
+      this.local_items = this.items
+    }
+  },
   methods: {
     orderKeys: function (obj) {
       var keys = Object.keys(obj).sort(function keyOrder (k1, k2) {
