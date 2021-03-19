@@ -1876,6 +1876,7 @@ import draggable from 'vuedraggable'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
 import Papa from 'papaparse'
+const ExportCSV = require('export-to-csv').ExportToCsv
 
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance')
@@ -3745,9 +3746,12 @@ export default {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
             delete item[field.key]
+            item[field.key] = ''
           }
         }
       }
+
+      params.items = _items
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
@@ -3874,8 +3878,9 @@ export default {
     },
     generateTemplate: function () {
       // const _references = JSON.parse(JSON.stringify(this.references))
+      const BOM = '\uFEFF'
       const _refs = JSON.parse(JSON.stringify(this.refs))
-      let csvContent = 'data:text/csv;charset=utf-8,'
+      let csvContent = 'data:text/csv;charset=utf-8,' + BOM
       csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
 
       for (let ref of _refs) {
@@ -3994,10 +3999,27 @@ export default {
       let params = {}
       let cnt = 0
       let items = []
+      let _keys = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let keys = []
+      for (let k of _keys) {
+        keys.push(k.key)
+      }
 
       for (let item of _items) {
         if (cnt === index) {
-          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+          let obj = {}
+          for (let k in keys) {
+            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
+              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
+                obj[keys[k]] = item[keys[k]]
+              } else {
+                obj[keys[k]] = ''
+              }
+            } else {
+              obj[keys[k]] = ''
+            }
+          }
+          items.push(obj)
         } else {
           items.push(item)
         }
@@ -4213,10 +4235,27 @@ export default {
       let params = {}
       let cnt = 0
       let items = []
+      let _keys = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+      let keys = []
+      for (let k of _keys) {
+        keys.push(k.key)
+      }
 
       for (let item of _items) {
         if (cnt === index) {
-          items.push({'ref_id': item.ref_id, 'authors': item.authors})
+          let obj = {}
+          for (let k in keys) {
+            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
+              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
+                obj[keys[k]] = item[keys[k]]
+              } else {
+                obj[keys[k]] = ''
+              }
+            } else {
+              obj[keys[k]] = ''
+            }
+          }
+          items.push(obj)
         } else {
           items.push(item)
         }
@@ -4666,53 +4705,59 @@ export default {
         })
     },
     exportTableToCSV: function (type) {
-      var csv = 'data:text/csv;charset=utf-8,'
       const _types = ['chars_of_studies', 'meth_assessments']
-      let _protoCSV = []
-      let _keys = []
-      var cnt = 1
+      let _headers = []
+      let headers = []
+      let _items = []
+      let items = []
 
       if (_types.indexOf(type) !== -1) {
         switch (type) {
           case 'chars_of_studies':
-            _protoCSV.push(JSON.parse(JSON.stringify(this.charsOfStudies.fields)))
-            _protoCSV.push(JSON.parse(JSON.stringify(this.charsOfStudies.items)))
+            _headers = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+            _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
             break
           case 'meth_assessments':
-            _protoCSV.push(JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields)))
-            _protoCSV.push(JSON.parse(JSON.stringify(this.methodologicalTableRefs.items)))
+            _headers = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+            _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
             break
           default:
+            _headers = []
+            _items = []
             break
         }
 
-        for (let _element in _protoCSV) {
-          if (_element === '0') {
-            cnt = 1
-            for (let element of _protoCSV[_element]) {
-              _keys.push(element.key)
-              csv = csv.concat('"' + element.label + ((cnt < _protoCSV[_element].length) ? '",' : '"' + '\n'))
-              cnt++
-            }
-          } else {
-            for (let index in _protoCSV[_element]) {
-              cnt = 1
-              for (let key of _keys) {
-                csv = csv.concat('"' + _protoCSV[_element][index][key] + ((cnt < Object.keys(_protoCSV[_element][index]).length) ? '",' : '"' + '\n'))
-                cnt++
-              }
-            }
+        let keys = []
+        for (let f of _headers) {
+          if (f.key !== 'ref_id' && f.key !== 'id') {
+            headers.push('"' + f.label + '"')
+            keys.push(f.key)
           }
         }
+
+        for (let i of _items) {
+          let item = {}
+          for (let k in keys) {
+            if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
+              item[keys[k]] = i[keys[k]]
+            } else {
+              item[keys[k]] = ''
+            }
+          }
+          items.push(item)
+        }
       }
-
-      let encodedUri = encodeURI(csv)
-      let link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', type + '.csv')
-      document.body.appendChild(link)
-
-      link.click()
+      const options = {
+        filename: type,
+        fieldSeparator: ',',
+        quoteStrings: '"',
+        decimalSeparator: '.',
+        showLabels: true,
+        useBom: true,
+        headers: headers
+      }
+      const csvExporter = new ExportCSV(options)
+      csvExporter.generateCsv(items)
     },
     updateLists: function (deletedCategoryValue) {
       let _lists = JSON.parse(JSON.stringify(this.lists))

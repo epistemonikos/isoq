@@ -2467,6 +2467,7 @@ export default {
             this.extracted_data.fields.push({key: 'actions', label: ''})
             let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
             this.extracted_data.fieldsObj = []
+            this.mode_print_fieldsObj = []
             for (let field of _fields) {
               if (field.key !== 'ref_id') {
                 this.extracted_data.fieldsObj.push(field)
