@@ -100,7 +100,7 @@ export default {
       let keys = []
       for (let f of _fields) {
         if (f.key !== 'ref_id') {
-          fields.push('"'+f.label+'"')
+          fields.push('"' + f.label + '"')
           keys.push(f.key)
         }
       }
