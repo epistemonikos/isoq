@@ -945,6 +945,7 @@ export default {
         .then((response) => {
           let _response = response.data[0]
           const index = this.buffer_project.index
+          _response.index = index
           this.projects[index] = _response
           this.buffer_project = _response
           this.buffer_project.sharedTo = ''
