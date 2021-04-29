@@ -1141,7 +1141,7 @@
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
-                    <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null">
+                    <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null && data.item.cerqual.option !== null">
                       <b-button
                         block
                         class="d-print-none mb-3"
@@ -1153,7 +1153,7 @@
                           icon="comments"></font-awesome-icon>
                       </b-button>
                       <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-                      <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
+                      <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
                         Explanation not yet added
                       </p>

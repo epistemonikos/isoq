@@ -616,7 +616,7 @@ export default {
       if (this.buffer_project.id) {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
-          .then((response) => {
+          .then(() => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.getProjects()
           })
@@ -628,7 +628,7 @@ export default {
         this.buffer_project.created_at = _date
         this.buffer_project.last_update = _date
         axios.post('/api/isoqf_projects', this.buffer_project)
-          .then((response) => {
+          .then(() => {
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.$refs['new-project'].hide()
             this.getProjects()
@@ -1024,6 +1024,8 @@ export default {
       project.created_at = Date.now()
       project.can_write = []
       project.can_read = []
+      project.private = true
+      project.is_public = false
       axios.post('/api/isoqf_projects', project)
         .then((response) => {
           this.generateCopyOfReferences(originalProject, response.data)
@@ -1032,6 +1034,20 @@ export default {
           this.generateCopyOf('isoqf_characteristics', originalProject, response.data)
           this.getProjects()
           this.ui.copy.project = false
+        })
+        .catch((error) => {
+          if (error.response) {
+            // Request made and server responded
+            console.log(error.response.data)
+            console.log(error.response.status)
+            console.log(error.response.headers)
+          } else if (error.request) {
+            // The request was made but no response was received
+            console.log('Request', error.request)
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.log('Error', error.message)
+          }
         })
     },
     generateCopyOfLists: function (originalProject, project) {
