@@ -432,21 +432,21 @@
                             v-model="buffer_modal_stage_two.cerqual.option"
                             name="cerqual"
                             stacked>
-                            <b-form-radio value="0">
+                            <b-form-radio value="0" @change="propExplanation(cerqualExplanation, 'cerqual')">
                               High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1">
+                            <b-form-radio value="1" @change="propExplanation(cerqualExplanation, 'cerqual')">
                               Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2">
+                            <b-form-radio value="2" @change="propExplanation(cerqualExplanation, 'cerqual')">
                               Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3">
+                            <b-form-radio value="3" @change="propExplanation(cerqualExplanation, 'cerqual')">
                               Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.cerqual.option = null"
+                            @click="buffer_modal_stage_two.cerqual.option = null; buffer_modal_stage_two.cerqual.explanation = ''"
                             v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -1857,6 +1857,18 @@ export default {
   mounted () {
     this.getList()
   },
+  computed: {
+    cerqualExplanation: function () {
+      if (this.buffer_modal_stage_two.methodological_limitations.option &&
+        this.buffer_modal_stage_two.coherence.option &&
+        this.buffer_modal_stage_two.adequacy.option &&
+        this.buffer_modal_stage_two.relevance.option) {
+        return this.displaySelectedOption(this.buffer_modal_stage_two.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.buffer_modal_stage_two.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.buffer_modal_stage_two.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.buffer_modal_stage_two.relevance.option) + ' regarding relevance'
+      } else {
+        return ''
+      }
+    }
+  },
   methods: {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
@@ -2203,7 +2215,6 @@ export default {
       }
       this.buffer_modal_stage_two.type = type
       this.buffer_modal_stage_two.title = titles[type]
-      if (type === 'cerqual') { this.populateCerqualExplanation() }
       this.showPanel = true
       this.$refs['modal-stage-two'].show()
     },
@@ -3255,13 +3266,6 @@ export default {
     },
     propExplanation: function (txt, type) {
       this.buffer_modal_stage_two[type].explanation = txt
-    },
-    populateCerqualExplanation () {
-      if (this.buffer_modal_stage_two.methodological_limitations.option !== null) {
-        this.buffer_modal_stage_two.cerqual.explanation = this.displaySelectedOption(this.buffer_modal_stage_two.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.buffer_modal_stage_two.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.buffer_modal_stage_two.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.buffer_modal_stage_two.relevance.option) + ' regarding relevance'
-      } else {
-        this.buffer_modal_stage_two.cerqual.explanation = ''
-      }
     },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')

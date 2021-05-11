@@ -1397,7 +1397,7 @@
                         <span v-if="data.item.cerqual_explanation!=''">Edit</span>
                         GRADE-CERQual Assessment
                     </b-button>
-                    <b class="cerqual-explanation">{{ data.item.cerqual_explanation }}</b>
+                    <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
                   </template>
                   <template v-slot:cell(ref_list)="data">
                     <template v-if="mode!=='edit'">
@@ -1467,7 +1467,12 @@
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ item.cerqual_explanation }}</p>
+                          <template v-if="item.cerqual_option !== ''">
+                            <p>{{ item.cerqual_explanation }}</p>
+                          </template>
+                          <template v-else>
+                            <p>&nbsp;</p>
+                          </template>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
