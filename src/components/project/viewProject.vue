@@ -1003,7 +1003,7 @@
                     <b-button
                       class="mt-1"
                       @click="changeMode"
-                      variant="outline-primary"
+                      variant="primary"
                       block>
                       <font-awesome-icon icon="edit"></font-awesome-icon>
                       Edit
