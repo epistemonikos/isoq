@@ -50,6 +50,27 @@ html, body {
   color: #337ab7;
   border-color: #337ab7;
 }
+.btn-outline-success:not(:disabled):not(.disabled):active,
+.btn-outline-success:not(:disabled):not(.disabled).active,
+.show > .btn-outline-success.dropdown-toggle {
+  color: #fff;
+  border-color: #337ab7;
+  background-color: #286090;
+}
+
+.btn-outline-success:not(:disabled):not(.disabled):active:focus,
+.btn-outline-success:not(:disabled):not(.disabled).active:focus,
+.show > .btn-outline-success.dropdown-toggle:focus {
+  -webkit-box-shadow: 0 0 0 .2rem #28609040;
+  box-shadow: 0 0 0 .2rem #28609040;
+}
+
+.btn-outline-info:active,
+.btn-outline-primary:active,
+.btn-outline-success:active {
+  color: #337ab7;
+  border-color: #337ab7;
+}
 
 .btn-info:focus,
 .btn-primary:focus,
