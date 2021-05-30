@@ -2469,19 +2469,19 @@ export default {
         organization: this.list.organization,
         finding_id: this.findings.id
       }
-
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
-          this.extracted_data = {id: null, fields: [], items: []}
+          let localData = {id: null, fields: [], items: []}
           if (response.data.length) {
+            localData = response.data[0]
             this.extracted_data = response.data[0]
-            this.extracted_data.fields.push({key: 'actions', label: ''})
-            let _fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
-            this.extracted_data.fieldsObj = []
+            localData.fields.push({key: 'actions', label: ''})
+            let _fields = JSON.parse(JSON.stringify(localData.fields))
+            localData.fieldsObj = []
             this.mode_print_fieldsObj = []
             for (let field of _fields) {
               if (field.key !== 'ref_id') {
-                this.extracted_data.fieldsObj.push(field)
+                localData.fieldsObj.push(field)
                 if (field.key !== 'actions') {
                   this.mode_print_fieldsObj.push(field)
                 }
@@ -2490,7 +2490,7 @@ export default {
 
             const _references = this.list.references
             let _items = []
-            let extractedDataItems = JSON.parse(JSON.stringify(this.extracted_data.items))
+            let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
             extractedDataItems.sort(function (a, b) {
               if (a.authors < b.authors) {
                 return -1
@@ -2500,12 +2500,12 @@ export default {
               }
               return 0
             })
-            this.extracted_data.original_items = extractedDataItems
+            localData.original_items = JSON.parse(JSON.stringify(localData.items))
             let haveContent = 0
-            for (let reference of _references) {
+            for (let i in _references) {
               let index = 0
               for (let item of extractedDataItems) {
-                if (item.ref_id === reference) {
+                if (item.ref_id === _references[i]) {
                   _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
                   for (let i in item) {
                     if (item[i] !== 'ref_id' && item[i] !== 'authors') {
