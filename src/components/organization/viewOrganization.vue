@@ -62,7 +62,7 @@
                   v-if="data.item.is_owner || data.item.allow_to_write"
                   title="Duplicate"
                   variant="outline-secondary"
-                  @click="openCloneModal(data.index)">
+                  @click="openCloneModal(data.item.id)">
                   <font-awesome-icon
                     icon="copy"></font-awesome-icon>
                 </b-button>
@@ -299,7 +299,7 @@
         :ok-disabled="((this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) || this.ui.copy.showWarning)"
         no-close-on-backdrop
         no-close-on-esc>
-        <template v-if="modalCloneIndex != null">
+        <template v-if="modalCloneId != null">
           <p>
             Click on the "duplicate" button to start making a copy of the project "<b>{{buffer_project.name}}</b>".
             <br>
@@ -468,7 +468,8 @@ export default {
       },
       users_allowed: [],
       projects: [],
-      modalCloneIndex: null
+      modalCloneId: null,
+      modalCloneNewId: null
     }
   },
   mounted () {
@@ -1008,31 +1009,28 @@ export default {
           console.log(error)
         })
     },
-    generateACopyOfAProject: function (index) {
+    generateACopyOfAProject: function () {
       this.ui.copy.project = true
-      let project = JSON.parse(JSON.stringify(this.projects[index]))
-      const originalProject = JSON.parse(JSON.stringify(this.projects[index]))
-      delete project.id
-      delete project._id
-      project.name = '(Copy of) ' + project.name
-      project.sharedCan = {read: [], write: []}
-      project.temporaryUrl = ''
-      project.invite_emails = []
-      project.tmp_invite_emails = []
-      project.is_owner = true
-      project.organization = this.$route.params.id
-      project.created_at = Date.now()
-      project.can_write = []
-      project.can_read = []
-      project.private = true
-      project.is_public = false
-      axios.post('/api/isoqf_projects', project)
+      let newProject = JSON.parse(JSON.stringify(this.buffer_project))
+      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+      delete newProject.id
+      delete newProject._id
+      newProject.name = '(Copy of) ' + newProject.name
+      newProject.sharedCan = {read: [], write: []}
+      newProject.temporaryUrl = ''
+      newProject.invite_emails = []
+      newProject.tmp_invite_emails = []
+      newProject.is_owner = true
+      newProject.organization = this.$route.params.id
+      newProject.created_at = Date.now()
+      newProject.can_write = []
+      newProject.can_read = []
+      newProject.private = true
+      newProject.is_public = false
+      axios.post('/api/isoqf_projects', newProject)
         .then((response) => {
+          this.modalCloneNewId = response.data.id
           this.generateCopyOfReferences(originalProject, response.data)
-          this.generateCopyOfLists(originalProject, response.data)
-          this.generateCopyOf('isoqf_assessments', originalProject, response.data)
-          this.generateCopyOf('isoqf_characteristics', originalProject, response.data)
-          this.getProjects()
           this.ui.copy.project = false
         })
         .catch((error) => {
@@ -1050,7 +1048,7 @@ export default {
           }
         })
     },
-    generateCopyOfLists: function (originalProject, project) {
+    generateCopyOfLists: function (originalProject, newProject) {
       this.ui.copy.lists = true
       const params = {
         project_id: originalProject.id,
@@ -1066,8 +1064,14 @@ export default {
             const originalList = JSON.parse(JSON.stringify(list))
             delete modifiedList.id
             delete modifiedList._id
-            modifiedList.project_id = project.id
+            modifiedList.project_id = newProject.id
             modifiedList.organization = this.$route.params.id
+            for (let reference of this.buffer_project.references) {
+              let i = modifiedList.references.indexOf(reference.oldId)
+              if (i !== -1) {
+                modifiedList.references[i] = reference.id
+              }
+            }
             axios.post('/api/isoqf_lists', modifiedList)
               .then((response) => {
                 this.generateCopyOfFindings(originalList, response.data)
@@ -1104,13 +1108,23 @@ export default {
               postReferences.push(axios.post('/api/isoqf_references', reference))
             }
             axios.all(postReferences)
+              .then((responses) => {
+                this.buffer_project.references = []
+                for (let response of responses) {
+                  this.buffer_project.references.push(response.data)
+                }
+              })
               .then(() => {
                 this.ui.copy.references = false
+                this.generateCopyOfLists(originalProject, project)
+                this.generateCopyOf('isoqf_assessments', originalProject, project)
+                this.generateCopyOf('isoqf_characteristics', originalProject, project)
+                this.getProjects()
               })
           }
         })
     },
-    generateCopyOfFindings: function (originalList, list) {
+    generateCopyOfFindings: function (originalList, newList) {
       this.ui.copy.findings = true
       const params = {
         organization: originalList.organization,
@@ -1127,7 +1141,7 @@ export default {
             delete modifiedFinding.id
             delete modifiedFinding._id
             modifiedFinding.organization = this.$route.params.id
-            modifiedFinding.list_id = list.id
+            modifiedFinding.list_id = newList.id
             axios.post('/api/isoqf_findings', modifiedFinding)
               .then((response) => {
                 this.generateCopyOf('isoqf_extracted_data', originalFinding, response.data)
@@ -1136,27 +1150,26 @@ export default {
           }
         })
     },
-    replaceReferences: function (data) {
+    replaceReferences: function (newList) {
       this.ui.copy.replaceReferences = true
       const params = {
-        organization: this.$route.params.id,
-        project_id: data.project_id
+        organization: newList.organization,
+        project_id: this.modalCloneId// newList.project_id
       }
       axios.get('/api/isoqf_references', {params})
         .then((response) => {
           if (response.data.length < 1) {
             this.ui.copy.replaceReferences = false
           }
-          if (data.references.length) {
+          if (newList.references.length) {
             for (let reference of response.data) {
-              for (let cnt in data.references) {
-                if (reference.oldId === data.references[cnt]) {
-                  data.references[cnt] = reference.id
-                }
+              let index = newList.references.indexOf(reference.oldId)
+              if (index !== -1) {
+                newList.references[index] = reference.id
               }
             }
-            axios.patch(`/api/isoqf_lists/${data.id}`, {references: data.references})
-              .then((response) => {
+            axios.patch(`/api/isoqf_lists/${newList.id}`, {references: newList.references})
+              .then(() => {
                 this.ui.copy.replaceReferences = false
               })
           }
@@ -1179,6 +1192,7 @@ export default {
           if (response.data.length < 1) {
             this.ui.copy.copyOf = false
           }
+          let q = []
           for (let data of response.data) {
             let modifiedData = JSON.parse(JSON.stringify(data))
             delete modifiedData.id
@@ -1186,43 +1200,57 @@ export default {
             modifiedData.organization = this.$route.params.id
             if (table === 'isoqf_extracted_data') {
               modifiedData.finding_id = project.id
+              modifiedData.list_id = project.list_id
             } else {
               modifiedData.project_id = project.id
             }
-            axios.post(`/api/${table}`, modifiedData)
-              .then((response) => {
-                this.replaceReferencesTable(table, response.data)
-                this.ui.copy.copyOf = false
-              })
+            q.push(axios.post(`/api/${table}`, modifiedData))
           }
+          axios.all(q)
+            .then((responses) => {
+              for (let response of responses) {
+                this.replaceReferencesTable(table, response.data)
+              }
+            })
+            .then(() => {
+              this.ui.copy.copyOf = false
+            })
         })
     },
     replaceReferencesTable: function (table, data) {
       this.ui.copy.referencesTable = true
-      const params = {
+      let params = {
         organization: data.organization,
         project_id: data.project_id
+      }
+      if (table === 'isoqf_extracted_data') {
+        params.project_id = this.modalCloneNewId
       }
       axios.get('/api/isoqf_references', {params})
         .then((response) => {
           if (data.items.length) {
             for (let reference of response.data) {
-              for (let cnt in data.items) {
-                if (reference.oldId === data.items[cnt].ref_id) {
-                  data.items[cnt].ref_id = reference.id
+              for (let item of data.items) {
+                if (reference.oldId === item.ref_id) {
+                  item.ref_id = reference.id
                 }
               }
             }
             axios.patch(`/api/${table}/${data.id}`, {items: data.items})
-              .then((response) => {
+              .then(() => {
                 this.ui.copy.referencesTable = false
               })
           }
         })
     },
-    openCloneModal: function (index) {
-      this.buffer_project = this.projects[index]
-      this.modalCloneIndex = index
+    openCloneModal: function (id) {
+      this.buffer_project = {}
+      for (let p of this.projects) {
+        if (p.id === id) {
+          this.buffer_project = p
+        }
+      }
+      this.modalCloneId = id
       this.$bvModal.show('clone-modal')
     },
     startCloning: function (event) {
@@ -1230,13 +1258,14 @@ export default {
       this.ui.copy.showWarning = true
       this.ui.copy.disableCloneModalBtn = true
 
-      if (this.modalCloneIndex >= 0) {
-        this.generateACopyOfAProject(this.modalCloneIndex)
+      if (this.modalCloneId !== null || this.modalCloneId !== '') {
+        this.generateACopyOfAProject(this.modalCloneId)
       }
     },
     closeCloneModal: function () {
       this.ui.copy.showWarning = null
-      this.modalCloneIndex = null
+      this.modalCloneId = null
+      this.modalCloneNewId = null
       this.ui.copy.disableCloneModalBtn = false
       this.buffer_project = this.tmp_buffer_project
       this.$bvModal.hide('clone-modal')
