@@ -19,21 +19,12 @@
         </b-row>
         <b-row
           class="mt-3">
-          <!-- <b-col
-            v-if="(ui.copy.project || ui.copy.lists || ui.copy.references || ui.copy.findings || ui.copy.replaceReferences || ui.copy.copyOf || ui.copy.referencesTable)">
-            <b-alert
-              show
-              variant="warning">
-              <p class="text-center">The project is still copying information, please dont change or refresh this page until this warning dissapears</p>
-            </b-alert>
-          </b-col> -->
           <b-col
             cols="12">
             <b-table
               id="organizations"
               responsive
               striped
-              bordered
               hover
               head-variant="light"
               :busy="ui.projectTable.isBusy"
@@ -70,7 +61,7 @@
                   v-if="data.item.is_owner && (data.item.sharedToken.length)"
                   title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
                   variant="outline-secondary"
-                  @click="modalShareOptions(data.index, 2)">
+                  @click="modalShareOptions(data.item.id, 2)">
                   <font-awesome-icon
                     icon="link"></font-awesome-icon>
                 </b-button>
@@ -78,7 +69,7 @@
                   v-if="data.item.is_owner || data.item.allow_to_write"
                   title="Share"
                   variant="outline-secondary"
-                  @click="modalShareOptions(data.index)">
+                  @click="modalShareOptions(data.item.id)">
                   <font-awesome-icon
                     icon="users"></font-awesome-icon>
                 </b-button>
@@ -214,7 +205,7 @@
               <b-button
                 :disabled="!buffer_project.tmp_invite_emails.length"
                 variant="success"
-                @click="saveSharedProject(buffer_project.index)">Invite</b-button>
+                @click="saveSharedProject(buffer_project.id)">Invite</b-button>
             </b-container>
           </b-tab>
           <b-tab
@@ -512,13 +503,13 @@ export default {
         project.temporaryUrl = ''
         isPublic = false
       }
-      if (Object.prototype.hasOwnProperty.call(project, 'index') && project.index !== null) {
+      if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
         const params = {
           sharedToken: project.sharedToken,
           is_public: isPublic
         }
         axios.patch(`/api/isoqf_projects/${project.id}`, params)
-          .then((response) => {})
+          .then(() => {})
           .catch((error) => {
             console.log(error)
           })
@@ -887,42 +878,48 @@ export default {
           console.log(error)
         })
     },
-    usersCanList: function (index) {
+    usersCanList: function (id) {
       this.users_allowed = []
-      if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_read')) {
-        for (let user of this.projects[index].can_read) {
+      let _project = JSON.parse(JSON.stringify(this.buffer_project))
+      if (Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
+        for (let user of _project.can_read) {
           axios.get(`/users/${user}`)
             .then((response) => {
               const _user = response.data
               if (_user.status) {
                 _user.user_can = 0
-                _user.project_id = this.projects[index].id
-                _user.index = index
+                _user.project_id = _project.id
+                // _user.index = index
                 this.users_allowed.push(_user)
               }
             })
         }
       }
-      if (Object.prototype.hasOwnProperty.call(this.projects[index], 'can_write')) {
-        for (let user of this.projects[index].can_write) {
+      if (Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
+        for (let user of _project.can_write) {
           axios.get(`/users/${user}`)
             .then((response) => {
               const _user = response.data
               if (_user.status) {
                 _user.user_can = 1
-                _user.project_id = this.projects[index].id
-                _user.index = index
+                _user.project_id = _project.id
+                // _user.index = index
                 this.users_allowed.push(_user)
               }
             })
         }
       }
     },
-    modalShareOptions: function (index, tabIndex = 0) {
+    modalShareOptions: function (id, tabIndex = 0) {
       this.ui.tabIndex = tabIndex
-      this.buffer_project = this.projects[index]
-      this.buffer_project.index = index
-      this.usersCanList(index)
+      this.buffer_project = {}
+      for (let p of this.projects) {
+        if (p.id === id) {
+          this.buffer_project = p
+        }
+      }
+      // this.buffer_project.index = index
+      this.usersCanList(id)
       this.$refs['modal-share-options'].show()
     },
     addEmailForShare: function () {
@@ -933,9 +930,9 @@ export default {
         }
       })
     },
-    saveSharedProject: function (index) {
+    saveSharedProject: function (id) {
       const sharedEmails = this.buffer_project.tmp_invite_emails.join()
-      const projectId = this.projects[index].id
+      const projectId = this.buffer_project.id
       const params = {
         current_user: this.$store.state.user.name,
         emails: sharedEmails,
@@ -943,26 +940,27 @@ export default {
         org: this.$route.params.id
       }
       axios.post(`/share/project/${projectId}`, params)
-        .then((response) => {
-          let _response = response.data[0]
-          const index = this.buffer_project.index
-          _response.index = index
-          this.projects[index] = _response
-          this.buffer_project = _response
+        .then(() => {
+          // const _response = response.data[0]
+          // const index = this.buffer_project.index
+          // _response.index = index
+          // this.projects[index] = _response
+          // this.buffer_project = _response
           this.buffer_project.sharedTo = ''
           this.buffer_project.tmp_invite_emails = []
-          this.usersCanList(index)
+          this.usersCanList(id)
+          this.getProjects()
         })
         .catch((error) => {
           console.log(error)
         })
     },
     unshare: function (_index, userId) {
-      const index = this.buffer_project.index
-      const projectId = this.projects[index].id
+      const projectId = this.buffer_project.id
       axios.post(`/share/project/${projectId}/unshare?user_id=${userId}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
         .then((response) => {
-          this.projects[this.buffer_project.index] = response.data
+          // this.projects[this.buffer_project.index] = response.data
+          this.getProjects()
           this.users_allowed.splice(_index)
         })
         .catch((error) => {
@@ -1002,9 +1000,9 @@ export default {
       axios.patch(`/share/project/${projectId}/options-update`, params)
         .then((response) => {
           const project = response.data[0]
-          this.projects[index] = project
+          // this.projects[index] = project
           this.buffer_project = project
-          this.buffer_project.index = index
+          this.getProjects()
         }).catch((error) => {
           console.log(error)
         })
@@ -1290,6 +1288,14 @@ export default {
   div >>>
     table#organizations thead th:last-child {
       width: 20%;
+    }
+  div >>>
+    table#organizations tbody tr td button {
+      display: none;
+    }
+  div >>>
+    table#organizations tbody tr:hover td button {
+      display: inline;
     }
   div >>>
     table#organizations tbody td:last-child {
