@@ -871,8 +871,8 @@ export default {
     },
     processRequests: function (requests) {
       axios.all(requests)
-        .then((...responses) => {
-          console.log(responses)
+        .then(() => {
+          // console.log(responses)
         })
         .catch((error) => {
           console.log(error)
