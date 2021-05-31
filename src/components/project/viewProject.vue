@@ -1456,7 +1456,16 @@
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ item.name }}</p>
+                          <template v-if="checkPermissions('can_read')">
+                            <b-link
+                              v-if="item.references.length"
+                              :to="{name: 'editList', params: {id: item.id}}">
+                              {{ item.name }}
+                            </b-link>
+                          </template>
+                          <template v-else>
+                            <p>{{ item.name }}</p>
+                          </template>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
@@ -2663,13 +2672,14 @@ export default {
             d.isoqf_id = cnt
             cnt++
           }
-          this.lists = data
-          let _lists = data
 
-          if (this.lists.length) {
-            let lists = JSON.parse(JSON.stringify(this.lists))
-            this.lastId = parseInt(lists.slice(-1)[0].isoqf_id) + 1
-            for (let list of this.lists) {
+          // let _lists = data
+
+          if (data.length) {
+            // let lists = JSON.parse(JSON.stringify(data))
+            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
+
+            for (let list of data) {
               if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
                 list.status = 'unfinished'
                 list.explanation = 'without_explanation'
@@ -2723,7 +2733,7 @@ export default {
 
             if (this.list_categories.options.length) {
               let categories = []
-              for (let list of lists) {
+              for (let list of data) {
                 if (Object.prototype.hasOwnProperty.call(list, 'category')) {
                   if (list.category !== null) {
                     for (let category of this.list_categories.options) {
@@ -2738,7 +2748,7 @@ export default {
                 }
               }
 
-              for (let list of lists) {
+              for (let list of data) {
                 if (categories.length) {
                   for (let element of categories) {
                     if (element.value === list.category) {
@@ -2771,34 +2781,35 @@ export default {
               }
               this.lists_print_version = newArr
             } else {
-              let items = []
-              for (let list of _lists) {
-                items.push(
-                  {
-                    'isoqf_id': list.isoqf_id,
-                    'name': list.name,
-                    'cerqual_option': list.cerqual_option,
-                    'cerqual_explanation': list.cerqual_explanation,
-                    'ref_list': list.ref_list,
-                    'sort': list.sort,
-                    'notes': list.notes
-                  }
-                )
-              }
-              items.sort(function (a, b) {
-                if (a.sort < b.sort) {
-                  return -1
-                }
-                if (a.sort > b.sort) {
-                  return 1
-                }
-                return 0
-              })
-              this.lists_print_version = items
+              // let items = []
+              // for (let list of _lists) {
+              //   items.push(
+              //     {
+              //       'isoqf_id': list.isoqf_id,
+              //       'name': list.name,
+              //       'cerqual_option': list.cerqual_option,
+              //       'cerqual_explanation': list.cerqual_explanation,
+              //       'ref_list': list.ref_list,
+              //       'sort': list.sort,
+              //       'notes': list.notes
+              //     }
+              //   )
+              // }
+              // items.sort(function (a, b) {
+              //   if (a.sort < b.sort) {
+              //     return -1
+              //   }
+              //   if (a.sort > b.sort) {
+              //     return 1
+              //   }
+              //   return 0
+              // })
+              this.lists_print_version = data
             }
           }
+          this.lists = data
           this.table_settings.isBusy = false
-          this.table_settings.totalRows = this.lists.length
+          this.table_settings.totalRows = data.length
         })
         .catch((error) => {
           this.printErrors(error)
@@ -4928,14 +4939,14 @@ export default {
       window.scrollTo({top: 0, behavior: 'smooth'})
       this.tabOpened = 2
     },
-    checkPermissions: function () {
+    checkPermissions: function (type = 'can_write') {
       if (this.$store.state.user.personal_organization === this.$route.params.org_id) {
         return true
       } else {
-        if (!Object.prototype.hasOwnProperty.call(this.project, 'can_write')) {
+        if (!Object.prototype.hasOwnProperty.call(this.project, type)) {
           return false
         }
-        if (this.project.can_write.includes(this.$store.state.user.id)) {
+        if (this.project[type].includes(this.$store.state.user.id)) {
           return true
         }
       }
