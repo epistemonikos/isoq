@@ -4,18 +4,15 @@
       <b-container class="pt-5">
         <b-row align-h="end">
           <b-col
-            cols="12"
-            md="11" class="toDoc">
-            <h2 id="project-title">{{ project.name }}</h2>
+            class="text-right">
+            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }}" class="d-print-none return">
+              <font-awesome-icon icon="long-arrow-alt-left" title="return to My Workspace" />
+              return to My Workspace
+            </b-link>
           </b-col>
           <b-col
-            cols="12"
-            md="1"
-            class="text-right">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }}" class="d-print-none">
-              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
-              {{ $t('back') }}
-            </b-link>
+            cols="12" class="toDoc">
+            <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
         </b-row>
         <b-nav id="tabsTitle" tabs fill class="pt-5">
@@ -5039,6 +5036,9 @@ export default {
 </script>
 
 <style scoped>
+  .return {
+    font-size: 1.2rem;
+  }
   div >>>
     h2>span>svg,
     h3>span>svg,
@@ -5059,9 +5059,21 @@ export default {
     #chars-of-studies-table thead th:first-child {
       width: 25%;
     }
+    #chars-of-studies-table tbody tr td button {
+      display: none;
+    }
+    #chars-of-studies-table tbody tr:hover td button {
+      display: inline;
+    }
   div >>>
     #methodological-table thead th:first-child {
       width: 25%;
+    }
+    #methodological-table tbody tr td button {
+      display: none;
+    }
+    #methodological-table tbody tr:hover td button {
+      display: inline;
     }
   div >>>
     #extracted-data-table thead th:first-child {
