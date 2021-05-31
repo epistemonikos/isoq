@@ -28,7 +28,7 @@
     </b-container>
     <b-container>
       <b-row
-        v-if="mode==='view'"
+        v-if="mode==='view' && checkPermissions(list.organization)"
         class="d-print-none justify-content-end mb-2 pt-2">
         <b-col
           v-if="mode==='view'"
@@ -118,7 +118,7 @@
       </b-row>
       <b-row
         class="justify-content-end"
-        v-if="mode==='edit'">
+        v-if="mode==='edit' && checkPermissions(list.organization)">
         <b-col
           cols="12"
           md="3">
@@ -966,16 +966,18 @@
                   </template>
                   <template v-slot:cell(methodological-limit)="data">
                     <div v-if="data.item.methodological_limitations.option !== null">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'methodological-limitations')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.methodological_limitations.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none mb-3"
+                          variant="outline-info"
+                          @click="editStageTwo(data.item, 'methodological-limitations')">
+                          Edit
+                          <font-awesome-icon
+                            v-if="data.item.methodological_limitations.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                       <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
                       <p v-if="data.item.methodological_limitations.explanation">
                         Explanation: {{data.item.methodological_limitations.explanation}}
@@ -996,30 +998,34 @@
                       </p>
                     </div>
                     <div v-else>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="info"
-                        @click="editStageTwo(data.item, 'methodological-limitations')">
-                        Assessment not completed
-                        <font-awesome-icon
-                          v-if="data.item.methodological_limitations.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none"
+                          variant="info"
+                          @click="editStageTwo(data.item, 'methodological-limitations')">
+                          Assessment not completed
+                          <font-awesome-icon
+                            v-if="data.item.methodological_limitations.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                     </div>
                   </template>
                   <template v-slot:cell(coherence)="data">
                     <div v-if="data.item.coherence.option !== null">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'coherence')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.coherence.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none mb-3"
+                          variant="outline-info"
+                          @click="editStageTwo(data.item, 'coherence')">
+                          Edit
+                          <font-awesome-icon
+                            v-if="data.item.coherence.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                       <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
                       <p v-if="data.item.coherence.explanation">
                         Explanation: {{data.item.coherence.explanation}}
@@ -1040,30 +1046,34 @@
                       </p>
                     </div>
                     <div v-else>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="info"
-                        @click="editStageTwo(data.item, 'coherence')">
-                        Assessment not completed
-                        <font-awesome-icon
-                          v-if="data.item.coherence.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none"
+                          variant="info"
+                          @click="editStageTwo(data.item, 'coherence')">
+                          Assessment not completed
+                          <font-awesome-icon
+                            v-if="data.item.coherence.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                     </div>
                   </template>
                   <template v-slot:cell(adequacy)="data">
                     <div v-if="data.item.adequacy.option !== null">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'adequacy')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.adequacy.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none mb-3"
+                          variant="outline-info"
+                          @click="editStageTwo(data.item, 'adequacy')">
+                          Edit
+                          <font-awesome-icon
+                            v-if="data.item.adequacy.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                       <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
                       <p v-if="data.item.adequacy.explanation">
                         Explanation: {{data.item.adequacy.explanation}}
@@ -1084,30 +1094,34 @@
                       </p>
                     </div>
                     <div v-else>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="info"
-                        @click="editStageTwo(data.item, 'adequacy')">
-                        Assessment not completed
-                        <font-awesome-icon
-                          v-if="data.item.adequacy.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none"
+                          variant="info"
+                          @click="editStageTwo(data.item, 'adequacy')">
+                          Assessment not completed
+                          <font-awesome-icon
+                            v-if="data.item.adequacy.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                     </div>
                   </template>
                   <template v-slot:cell(relevance)="data">
                     <div v-if="data.item.relevance.option !== null">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'relevance')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.relevance.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none mb-3"
+                          variant="outline-info"
+                          @click="editStageTwo(data.item, 'relevance')">
+                          Edit
+                          <font-awesome-icon
+                            v-if="data.item.relevance.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                       <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
                       <p v-if="data.item.relevance.explanation">
                         Explanation: {{data.item.relevance.explanation}}
@@ -1128,30 +1142,34 @@
                       </p>
                     </div>
                     <div v-else>
-                      <b-button
-                        block
-                        class="d-print-none"
-                        variant="info"
-                        @click="editStageTwo(data.item, 'relevance')">
-                        Assessment not completed
-                        <font-awesome-icon
-                          v-if="data.item.relevance.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none"
+                          variant="info"
+                          @click="editStageTwo(data.item, 'relevance')">
+                          Assessment not completed
+                          <font-awesome-icon
+                            v-if="data.item.relevance.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual)="data">
                     <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null && data.item.cerqual.option !== null">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="editStageTwo(data.item, 'cerqual')">
-                        Edit
-                        <font-awesome-icon
-                          v-if="data.item.cerqual.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          block
+                          class="d-print-none mb-3"
+                          variant="outline-info"
+                          @click="editStageTwo(data.item, 'cerqual')">
+                          Edit
+                          <font-awesome-icon
+                            v-if="data.item.cerqual.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                       <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
                       <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
                       <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
@@ -1159,27 +1177,31 @@
                       </p>
                     </div>
                     <div v-else>
-                      <b-button
-                        v-if="data.item.methodological_limitations.option && data.item.coherence.option && data.item.adequacy.option && data.item.relevance.option"
-                        block
-                        class="d-print-none"
-                        variant="info"
-                        @click="editStageTwo(data.item, 'cerqual')">
-                        Assessment not completed
-                        <font-awesome-icon
-                          v-if="data.item.cerqual.notes"
-                          icon="comments"></font-awesome-icon>
-                      </b-button>
+                      <template v-if="checkPermissions(list.organization)">
+                        <b-button
+                          v-if="data.item.methodological_limitations.option && data.item.coherence.option && data.item.adequacy.option && data.item.relevance.option"
+                          block
+                          class="d-print-none"
+                          variant="info"
+                          @click="editStageTwo(data.item, 'cerqual')">
+                          Assessment not completed
+                          <font-awesome-icon
+                            v-if="data.item.cerqual.notes"
+                            icon="comments"></font-awesome-icon>
+                        </b-button>
+                      </template>
                     </div>
                   </template>
                   <template v-slot:cell(references)="data">
-                    <b-button
-                      block
-                      class="d-print-none mb-3"
-                      variant="outline-info"
-                      @click="openModalReferences">
-                      View or Edit references
-                    </b-button>
+                    <template v-if="checkPermissions(list.organization)">
+                      <b-button
+                        block
+                        class="d-print-none mb-3"
+                        variant="outline-info"
+                        @click="openModalReferences">
+                        View or Edit references
+                      </b-button>
+                    </template>
                     There are <b>{{ data.item.references.length }}</b> references.
                   </template>
                   <template v-slot:table-busy>
@@ -1325,7 +1347,7 @@
               </p>
               <template v-if="characteristics_studies.fields.length">
                 <bc-filters
-                  v-if="mode==='edit' && characteristics_studies.items.length"
+                  v-if="mode==='edit' && characteristics_studies.items.length && checkPermissions(list.organization)"
                   class="d-print-none"
                   idname="chars-of-studies-filter"
                   :tableSettings="characteristics_studies_table_settings"
@@ -1431,7 +1453,7 @@
               <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
               <template v-if="meth_assessments.fields.length">
                 <bc-filters
-                  v-if="mode==='edit' && meth_assessments.items.length"
+                  v-if="mode==='edit' && meth_assessments.items.length && checkPermissions(list.organization)"
                   class="d-print-none"
                   idname="meth-assessments-filter"
                   :tableSettings="methodological_assessments_table_settings"
@@ -1516,7 +1538,7 @@
                   :items="extracted_data.items"
                   :current-page="extracted_data_table_settings.currentPage">
                   <template
-                    v-if="mode==='edit'"
+                    v-if="mode==='edit' && checkPermissions(list.organization)"
                     v-slot:cell(actions)="data">
                     <b-button
                       class="d-print-none"
@@ -1870,6 +1892,18 @@ export default {
     }
   },
   methods: {
+    checkPermissions: function (organizationId, type = 'can_write') {
+      if (this.$store.state.user.personal_organization === organizationId) {
+        return true
+      }
+      if (!Object.prototype.hasOwnProperty.call(this.project, type)) {
+        return false
+      }
+      if (this.project[type].includes(this.$store.state.user.id)) {
+        return true
+      }
+      return false
+    },
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
@@ -2203,7 +2237,6 @@ export default {
       }
     },
     editStageTwo: function (data, type) {
-
       let theData = JSON.parse(JSON.stringify(data))
       this.buffer_modal_stage_one.name = theData.name
       this.buffer_modal_stage_two = {...theData}
