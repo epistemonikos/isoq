@@ -61,7 +61,7 @@
             <b-button
               id="editButton"
               @click="changeMode"
-              variant="outline-primary"
+              variant="primary"
               v-b-tooltip:editButton.top="'Click to edit'"
               block>
               Edit
@@ -1506,7 +1506,7 @@
                   :items="extracted_data.items">
                 </bc-filters>
                 <b-table
-                  class="toDoc"
+                  class="toDoc extracted-data-table"
                   :id="(mode==='view') ? 'extracted-view' : 'extracted'"
                   responsive
                   head-variant="light"
@@ -3484,4 +3484,10 @@ export default {
     label b {
       font-weight: bold;
     }
+  .extracted-data-table tbody tr td:last-child button {
+    display: none;
+  }
+  .extracted-data-table tbody tr:hover td:last-child button {
+    display: inline;
+  }
 </style>
