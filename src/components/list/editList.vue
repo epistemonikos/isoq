@@ -866,7 +866,7 @@
                       cols="4">
                       <b-button
                         block
-                        @click="closeWarningModalDoItNow('methodological-limitations')">Do it now</b-button>
+                        @click="closeWarningModalDoItNow(buffer_modal_stage_two.type)">Do it now</b-button>
                     </b-col>
                     <b-col
                       cols="4">
@@ -2203,6 +2203,7 @@ export default {
       }
     },
     editStageTwo: function (data, type) {
+
       let theData = JSON.parse(JSON.stringify(data))
       this.buffer_modal_stage_one.name = theData.name
       this.buffer_modal_stage_two = {...theData}
