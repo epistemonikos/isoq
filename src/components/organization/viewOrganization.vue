@@ -1289,14 +1289,14 @@ export default {
     table#organizations thead th:last-child {
       width: 20%;
     }
-  div >>>
+  /* div >>>
     table#organizations tbody tr td button {
       display: none;
     }
   div >>>
     table#organizations tbody tr:hover td button {
       display: inline;
-    }
+    } */
   div >>>
     table#organizations tbody td:last-child {
       text-align: right;
