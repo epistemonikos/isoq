@@ -5070,22 +5070,22 @@ export default {
     #chars-of-studies-table thead th:first-child {
       width: 25%;
     }
-    #chars-of-studies-table tbody tr td button {
+    /* #chars-of-studies-table tbody tr td button {
       display: none;
     }
     #chars-of-studies-table tbody tr:hover td button {
       display: inline;
-    }
+    } */
   div >>>
     #methodological-table thead th:first-child {
       width: 25%;
     }
-    #methodological-table tbody tr td button {
+    /* #methodological-table tbody tr td button {
       display: none;
     }
     #methodological-table tbody tr:hover td button {
       display: inline;
-    }
+    } */
   div >>>
     #extracted-data-table thead th:first-child {
       width: 25%;

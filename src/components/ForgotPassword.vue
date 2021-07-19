@@ -27,7 +27,7 @@
                 </b-form-invalid-feedback>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
+                <router-link :to="{name: 'Login'}">login</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link> -->
               </b-card-text>
               <div slot="footer" class="text-right">
                 <b-button

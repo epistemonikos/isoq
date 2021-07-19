@@ -460,7 +460,8 @@ export default {
       users_allowed: [],
       projects: [],
       modalCloneId: null,
-      modalCloneNewId: null
+      modalCloneNewId: null,
+      newReferences: []
     }
   },
   mounted () {
@@ -1110,6 +1111,7 @@ export default {
                 this.buffer_project.references = []
                 for (let response of responses) {
                   this.buffer_project.references.push(response.data)
+                  this.newReferences.push(response.data)
                 }
               })
               .then(() => {
@@ -1140,6 +1142,17 @@ export default {
             delete modifiedFinding._id
             modifiedFinding.organization = this.$route.params.id
             modifiedFinding.list_id = newList.id
+            if (Object.prototype.hasOwnProperty.call(modifiedFinding, 'evidence_profile')) {
+              if (Object.prototype.hasOwnProperty.call(modifiedFinding.evidence_profile, 'references')) {
+                for (let nr of this.newReferences) {
+                  for (let ref in modifiedFinding.evidence_profile.references) {
+                    if (nr.oldId === modifiedFinding.evidence_profile.references[ref]) {
+                      modifiedFinding.evidence_profile.references[ref] = nr.id
+                    }
+                  }
+                }
+              }
+            }
             axios.post('/api/isoqf_findings', modifiedFinding)
               .then((response) => {
                 this.generateCopyOf('isoqf_extracted_data', originalFinding, response.data)
@@ -1289,14 +1302,14 @@ export default {
     table#organizations thead th:last-child {
       width: 20%;
     }
-  div >>>
+  /* div >>>
     table#organizations tbody tr td button {
       display: none;
     }
   div >>>
     table#organizations tbody tr:hover td button {
       display: inline;
-    }
+    } */
   div >>>
     table#organizations tbody td:last-child {
       text-align: right;

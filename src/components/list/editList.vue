@@ -3518,10 +3518,10 @@ export default {
     label b {
       font-weight: bold;
     }
-  .extracted-data-table tbody tr td:last-child button {
+  /* .extracted-data-table tbody tr td:last-child button {
     display: none;
   }
   .extracted-data-table tbody tr:hover td:last-child button {
     display: inline;
-  }
+  } */
 </style>
