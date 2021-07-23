@@ -1488,6 +1488,60 @@
                     </b-tr>
                   </b-tbody>
                 </b-table-simple>
+
+                <b-table-simple>
+                  <b-thead>
+                    <b-tr>
+                      <b-th>Finding</b-th>
+                      <b-th>Methodological limitations</b-th>
+                      <b-th>Coherence</b-th>
+                      <b-th>Adequacy</b-th>
+                      <b-th>Relevance</b-th>
+                      <b-th>Grade-CERQual assessment of confidence</b-th>
+                      <b-th>References</b-th>
+                    </b-tr>
+                  </b-thead>
+                  <b-tbody>
+                    <b-tr v-for="(item, index) of this.lists" :key="index">
+                      <b-td>
+                        <p>{{item.name}}</p>
+                      </b-td>
+                      <b-td>
+                        <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
+                        <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
+                        <template v-if="item.evidence_profile.coherence.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
+                        <template v-if="item.evidence_profile.adequacy.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
+                        <template v-if="item.evidence_profile.relevance.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
+                        <template v-if="item.evidence_profile.cerqual.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <p class="references">{{returnRefWithNames(item.references)}}</p>
+                      </b-td>
+                    </b-tr>
+                  </b-tbody>
+                </b-table-simple>
               </template>
               <!-- eopv -->
               <b-modal
@@ -2035,16 +2089,18 @@ export default {
       },
       summarized_review: '',
       select_options: [
-        { value: 0, text: 'No/Minor concerns' },
+        { value: 0, text: 'No/Very minor concerns' },
         { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderated concerns' },
-        { value: 3, text: 'Serious concerns' }
+        { value: 2, text: 'Moderate concerns' },
+        { value: 3, text: 'Serious concerns' },
+        { value: null, text: 'Undefined' }
       ],
       cerqual_confidence: [
         { value: 0, text: 'High confidence' },
         { value: 1, text: 'Moderate confidence' },
         { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' }
+        { value: 3, text: 'Very low confidence' },
+        { value: null, text: 'Undefined' }
       ],
       pre_references: '',
       references: [],
@@ -2335,6 +2391,36 @@ export default {
     this.getProject()
   },
   methods: {
+    returnRefWithNames: function (array) {
+      let authorsList = []
+      for (const i in array) {
+        for (const r of this.references) {
+          if (r.id === array[i]) {
+            authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
+            // authors = this.getAuthorsFormat(r.authors, r.publication_year) + '; ' + authors
+          }
+        }
+      }
+      authorsList.sort()
+      let authors = ''
+      for (let x in authorsList) {
+        authors = authors + authorsList[x] + '; '
+      }
+      return authors
+    },
+    displaySelectedOption: function (option, type = '') {
+      if (option === null) {
+        return ''
+      } else if (option >= 0) {
+        if (type === 'cerqual') {
+          return this.cerqual_confidence[option].text
+        } else {
+          return this.select_options[option].text
+        }
+      } else {
+        return ''
+      }
+    },
     PubmedRequestClean: function () {
       document.getElementById('btnEpisteRequest').disabled = false
       this.pubmed_request = ''
@@ -2463,30 +2549,6 @@ export default {
         }
       }
       return result
-    },
-    displayReferences: function (value, key, references) {
-      let _references = []
-      for (let reference of value) {
-        let obj = this.references.find(o => o.id === reference)
-        let ref = this.parseReference(obj)
-        _references.push(ref)
-      }
-      if (_references.length) {
-        let result = ''
-        for (let ref of _references) {
-          result = result + ref + '\r\n'
-        }
-        return result
-      }
-      // return _references
-    },
-    getConfidence: function (value, key, item) {
-      if (Object.prototype.hasOwnProperty.call(item, 'cerqual')) {
-        if (Object.prototype.hasOwnProperty.call(item.cerqual, 'option') && item.cerqual.option != null) {
-          return this.cerqual_confidence[item.cerqual.option].text
-        }
-      }
-      return ''
     },
     loadRefs: function (event) {
       const file = event.target.files[0]
@@ -5131,7 +5193,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings-print .references {
+    table .references {
       font-size: 12px;
     }
   div >>>
