@@ -1458,7 +1458,7 @@
                           style="vertical-align: top;">
                           <template v-if="checkPermissions('can_read')">
                             <b-link
-                              v-if="item.references.length"
+                              v-if="item.ref_list.length"
                               :to="{name: 'editList', params: {id: item.id}}">
                               {{ item.name }}
                             </b-link>
