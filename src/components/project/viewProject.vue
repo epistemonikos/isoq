@@ -1507,33 +1507,43 @@
                         <p>{{item.name}}</p>
                       </b-td>
                       <b-td>
-                        <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
-                        <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                          <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
+                          <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
+                          </template>
                         </template>
                       </b-td>
                       <b-td>
-                        <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
-                        <template v-if="item.evidence_profile.coherence.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                          <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
+                          <template v-if="item.evidence_profile.coherence.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
+                          </template>
+                          </template>
+                      </b-td>
+                      <b-td>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                          <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
+                          <template v-if="item.evidence_profile.adequacy.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
+                          </template>
                         </template>
                       </b-td>
                       <b-td>
-                        <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
-                        <template v-if="item.evidence_profile.adequacy.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                          <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
+                          <template v-if="item.evidence_profile.relevance.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
+                          </template>
                         </template>
                       </b-td>
                       <b-td>
-                        <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
-                        <template v-if="item.evidence_profile.relevance.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
-                        </template>
-                      </b-td>
-                      <b-td>
-                        <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
-                        <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                          <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
+                          <template v-if="item.evidence_profile.cerqual.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                          </template>
                         </template>
                       </b-td>
                       <b-td>
