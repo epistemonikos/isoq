@@ -1040,7 +1040,7 @@
           </b-row>
           <b-row class="mb-3">
             <b-col cols="12" class="toDoc">
-              <videoHelp txt="Interactive Summary of Qualitative Findings Table" tag="h2" urlId="449743080"></videoHelp>
+              <videoHelp :txt="(mode==='edit'?'Interactive ':'') + 'Summary of Qualitative Findings Table'" tag="h2" urlId="449743080"></videoHelp>
             </b-col>
           </b-row>
           <b-row>
