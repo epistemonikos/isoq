@@ -14,9 +14,8 @@
           <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
         </span>
       </h3>
-
     </template>
-    <template v-if="tag === 'h4'"><h4>{{txt}} <span v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></h4></template>
+    <template v-if="tag === 'h4'"><h4>{{txt}} <span class="d-print-none" v-b-modal="`videoHelp-${urlId}`"><font-awesome-icon b-v-tooltip.hover title="Help video" icon="question-circle"></font-awesome-icon></span></h4></template>
     <b-modal
       title="Help video"
       :id="`videoHelp-${urlId}`"
