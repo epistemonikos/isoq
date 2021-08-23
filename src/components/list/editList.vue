@@ -2540,7 +2540,12 @@ export default {
               let index = 0
               for (let item of extractedDataItems) {
                 if (item.ref_id === _references[i]) {
-                  _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
+                  _items.push({
+                    ref_id: item.ref_id,
+                    authors: item.authors,
+                    column_0: item.column_0,
+                    index: index
+                  })
                   for (let i in item) {
                     if (item[i] !== 'ref_id' && item[i] !== 'authors') {
                       if (item[i] === '') {
@@ -2573,8 +2578,12 @@ export default {
       let _originalItems = JSON.parse(JSON.stringify(this.extracted_data.original_items))
 
       for (let index in _originalItems) {
-        if (_item.index === parseInt(index)) {
-          _originalItems[index] = { 'authors': _item.authors, 'column_0': _item.column_0, 'ref_id': _item.ref_id }
+        if (_item.ref_id === _originalItems[index].ref_id) {
+          _originalItems[index] = {
+            'authors': _item.authors,
+            'column_0': _item.column_0,
+            'ref_id': _item.ref_id
+          }
         }
       }
 
