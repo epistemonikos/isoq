@@ -1265,7 +1265,7 @@
                       :key="index"
                       @click="tableFilter(category.text, 1)">{{ category.text }}</b-dropdown-item>
                     </b-dropdown>
-                    <span v-if="ui.project.showFilterOne" class="text-danger" @click="cleanTableFilter">&times;</span>
+                    <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(cerqual_option)="data">
                     <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
@@ -1283,7 +1283,7 @@
                       <b-dropdown-item @click="tableFilter('completed', 2)">Assessments completed</b-dropdown-item>
                       <b-dropdown-item @click="tableFilter('unfinished', 2)">Assessments not completed</b-dropdown-item>
                     </b-dropdown>
-                    <span v-if="ui.project.showFilterTwo" class="text-danger" @click="cleanTableFilter">&times;</span>
+                    <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(cerqual_explanation)="data">
                     <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
@@ -1296,7 +1296,7 @@
                       <b-dropdown-item @click="tableFilter('with_explanation', 3)">Completed</b-dropdown-item>
                       <b-dropdown-item @click="tableFilter('without_explanation', 3)">Not completed</b-dropdown-item>
                     </b-dropdown>
-                    <span v-if="ui.project.showFilterThree" class="text-danger" @click="cleanTableFilter">&times;</span>
+                    <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
                   <template v-slot:head(ref_list)="data">
                     <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
@@ -5185,6 +5185,10 @@ export default {
   div >>>
     #findings.table thead th:last-child {
       width: 5%;
+    }
+  div >>>
+    .text-danger.remove-opt {
+      cursor: pointer;
     }
   div >>>
     #findings-print.table thead th {
