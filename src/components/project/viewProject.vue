@@ -1584,6 +1584,8 @@
                   description="You can leave this option blank. You can always assign a finding to a group later.">
                   <b-form-select
                     v-model="editFindingName.category"
+                    value-field="id"
+                    text-field="text"
                     :options="list_categories.options"></b-form-select>
                 </b-form-group>
                 <b-form-group
@@ -1646,6 +1648,8 @@
                   description="You can leave this option blank. You can always assign a finding to a group later.">
                   <b-form-select
                     v-model="list_categories.selected"
+                    value-field="id"
+                    text-field="text"
                     :options="list_categories.options"></b-form-select>
                 </b-form-group>
               </b-modal>
@@ -2778,7 +2782,7 @@ export default {
                 list.category_extra_info = ''
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
-                    if (list.category === category.value) {
+                    if (list.category === category.id) {
                       list.category_name = category.text
                       list.category_extra_info = category.extra_info
                     }
