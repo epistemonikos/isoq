@@ -1316,7 +1316,7 @@
                             block
                             v-if="mode==='edit'"
                             variant="outline-success"
-                            @click="editModalFindingName(data.index)">
+                            @click="editModalFindingName(data)">
                             <font-awesome-icon
                               v-if=(data.item.notes.length)
                               icon="comments"></font-awesome-icon>
@@ -1348,7 +1348,7 @@
                       <b-button
                         block
                         variant="outline-info"
-                        @click="editModalFindingName(data.index)">Edit group</b-button>
+                        @click="editModalFindingName(data)">Edit group</b-button>
                       {{ data.item.category_name }}
                       <span
                         v-if="data.item.category_extra_info !== ''"
@@ -1359,7 +1359,7 @@
                       <b-button
                         variant="info"
                         block
-                        @click="editModalFindingName(data.index)">Assign group</b-button>
+                        @click="editModalFindingName(data)">Assign group</b-button>
                     </div>
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
@@ -1729,7 +1729,7 @@
                         block
                         variant="outline-danger"
                         class="mt-1"
-                        @click="removeListCategory(data.index)">Remove</b-button>
+                        @click="removeListCategory(data)">Remove</b-button>
                     </template>
                   </b-table>
                 </template>
@@ -1739,7 +1739,7 @@
                     class="mt-3"
                     label="Add group name">
                     <b-form-input
-                      v-model="modal_edit_list_categories.name"></b-form-input>
+                      v-model="modal_edit_list_categories.text"></b-form-input>
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
@@ -1754,7 +1754,7 @@
                   <b-form-group
                     label="Edit group name">
                     <b-form-input
-                      v-model="modal_edit_list_categories.name"></b-form-input>
+                      v-model="modal_edit_list_categories.text"></b-form-input>
                   </b-form-group>
                   <b-form-group
                     class="mt-3"
@@ -1767,7 +1767,7 @@
                   class="mt-3"
                   v-if="modal_edit_list_categories.remove">
                   <p>
-                    Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.name }}</b>?
+                    Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
                   </p>
                 </template>
                 <template
@@ -1779,7 +1779,7 @@
                       @click="modalCancelCategoryButtons">Cancel</b-button>
                     <b-button
                       variant="outline-danger"
-                      @click="removeCategory(modal_edit_list_categories.index)">Confirm</b-button>
+                      @click="removeCategory()">Confirm</b-button>
                   </div>
                   <div
                     v-if="modal_edit_list_categories.new">
@@ -1788,7 +1788,7 @@
                       @click="modalCancelCategoryButtons">Cancel</b-button>
                     <b-button
                       variant="outline-success"
-                      :disabled="modal_edit_list_categories.name === ''"
+                      :disabled="modal_edit_list_categories.text === ''"
                       @click="saveNewCategory">Save</b-button>
                   </div>
                   <div
@@ -1807,7 +1807,7 @@
                       @click="modalCancelCategoryButtons">Cancel</b-button>
                     <b-button
                       variant="outline-success"
-                      :disabled="modal_edit_list_categories.name === ''"
+                      :disabled="modal_edit_list_categories.text === ''"
                       @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
                   </div>
                 </template>
@@ -2031,7 +2031,7 @@ export default {
         new: false,
         edit: false,
         remove: false,
-        name: '',
+        text: '',
         extra_info: '',
         index: null
       },
@@ -4447,45 +4447,59 @@ export default {
           })
       }
     },
-    editModalFindingName: function (index) {
-      const list = this.lists[index]
-      axios.get(`/api/isoqf_lists/${list.id}`)
+    editModalFindingName: function (data) {
+      // const list = this.lists[index]
+      this.editFindingName.index = data.index
+      this.editFindingName.id = data.item.id
+      this.editFindingName.name = data.item.name
+      this.editFindingName.category = data.item.category
+      this.editFindingName.notes = data.item.notes
+      // axios.get(`/api/isoqf_lists/${id}`)
+      //   .then((response) => {
+      //     this.editFindingName.index = index
+      //     this.editFindingName.name = response.data.name
+      //     this.editFindingName.category = response.data.category
+      //     this.editFindingName.notes = response.data.notes
+      //     // this.editFindingName.editing = response.data.editing
+      //     // if (response.data.editing) {
+      //     //   this.getUserInfo(response.data.userEditing)
+      //     // }
+      //   })
+      //   .catch((error) => {
+      //     console.log(error)
+      //   })
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: data.item.id
+      }
+      axios.get('/api/isoqf_findings', {params})
         .then((response) => {
-          this.editFindingName.index = index
-          this.editFindingName.name = response.data.name
-          this.editFindingName.category = response.data.category
-          this.editFindingName.notes = response.data.notes
-          // this.editFindingName.editing = response.data.editing
-          // if (response.data.editing) {
-          //   this.getUserInfo(response.data.userEditing)
-          // }
-          const params = {
-            organization: this.$route.params.org_id,
-            list_id: response.data.id
-          }
-          axios.get('/api/isoqf_findings', {params})
-            .then((response) => {
-              this.editFindingName.finding_id = response.data[0].id
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-          this.$refs['edit-finding-name'].show()
+          this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
+      this.$refs['edit-finding-name'].show()
     },
     updateListName: function () {
       this.table_settings.isBusy = true
       let _lists = JSON.parse(JSON.stringify(this.lists))
-      const index = this.editFindingName.index
-      _lists[index].name = this.editFindingName.name
-      _lists[index].category = this.editFindingName.category
-      _lists[index].notes = this.editFindingName.notes
+      let _item = {}
+      for (let item of _lists) {
+        if (item.id === this.editFindingName.id) {
+          _item = item
+          _item.name = this.editFindingName.name
+          _item.category = this.editFindingName.category
+          _item.notes = this.editFindingName.notes
+        }
+      }
+      // const index = this.editFindingName.index
+      // _lists[index].name = this.editFindingName.name
+      // _lists[index].category = this.editFindingName.category
+      // _lists[index].notes = this.editFindingName.notes
 
-      axios.patch(`/api/isoqf_lists/${_lists[index].id}`, _lists[index])
-        .then((response) => {
+      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, _item)
+        .then(() => {
           this.updateFinding(this.editFindingName)
           this.getLists()
           this.updateModificationTime()
@@ -4502,7 +4516,7 @@ export default {
         'evidence_profile.notes': finding.notes
       }
       axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
-        .then((response) => {})
+        .then(() => {})
         .catch((error) => {
           this.printErrors(error)
         })
@@ -4570,10 +4584,10 @@ export default {
       axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
           if (response.data.length) {
-            let options = JSON.parse(JSON.stringify(response.data[0].options))
+            let options = JSON.parse(JSON.stringify(response.data))
             options.sort((a, b) => a.text.localeCompare(b.text))
             this.list_categories.options = options
-            this.modal_edit_list_categories.id = response.data[0].id
+            // this.modal_edit_list_categories.id = response.data[0].id
             this.modal_edit_list_categories.options = options
           }
         })
@@ -4582,17 +4596,15 @@ export default {
         })
     },
     saveListCategoryName: function () {
-      const options = [
-        { value: 0, text: this.list_category.name, extra_info: this.list_category.extra_info }
-      ]
       const params = {
-        options: options,
+        text: this.list_category.name,
+        extra_info: this.list_category.extra_info,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.post('/api/isoqf_list_categories', params)
         .then((response) => {
-          this.list_categories.options = response.data.options
+          this.list_categories.options = response.data
           this.list_categories.selected = null
           this.list_categories.skip = false
         })
@@ -4605,110 +4617,83 @@ export default {
       this.$refs['modalEditListCategories'].show()
     },
     saveNewCategory: function () {
-      const objID = this.modal_edit_list_categories.id
-      let _options = JSON.parse(JSON.stringify(this.list_categories.options))
-      if (_options.length) {
-        const newValue = (_options[_options.length - 1].value !== null) ? parseInt(_options[_options.length - 1].value) + 1 : 0
-        _options.push({ value: newValue, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info })
-      } else {
-        _options = [
-          { value: 0, text: this.modal_edit_list_categories.name, extra_info: this.modal_edit_list_categories.extra_info }
-        ]
-      }
       const params = {
-        options: _options,
+        text: this.modal_edit_list_categories.text,
+        extra_info: this.modal_edit_list_categories.extra_info,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      if (objID) {
-        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
-          .then((response) => {
-            this.getListCategories()
-            this.getLists()
-            this.modal_edit_list_categories.new = false
-            this.modal_edit_list_categories.name = ''
-            this.modal_edit_list_categories.extra_info = ''
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      } else {
-        axios.post('/api/isoqf_list_categories', params)
-          .then((response) => {
-            this.getListCategories()
-            this.getLists()
-            this.modal_edit_list_categories.new = false
-            this.modal_edit_list_categories.name = ''
-            this.modal_edit_list_categories.extra_info = ''
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
+
+      axios.post('/api/isoqf_list_categories', params)
+        .then(() => {
+          this.getListCategories()
+          this.getLists()
+          this.modal_edit_list_categories.new = false
+          this.modal_edit_list_categories.text = ''
+          this.modal_edit_list_categories.extra_info = ''
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
     },
     editListCategoryName: function (index) {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
-      this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.text = _options[index].text
       this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.edit = true
       this.modal_edit_list_categories.index = index
+      this.modal_edit_list_categories.id = _options[index].id
     },
-    updateCategoryName: function (index) {
+    updateCategoryName: function () {
       const objID = this.modal_edit_list_categories.id
-      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
-
-      _options[index].text = this.modal_edit_list_categories.name
-      _options[index].extra_info = this.modal_edit_list_categories.extra_info
 
       if (objID) {
         const params = {
-          options: _options,
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
+          text: this.modal_edit_list_categories.text,
+          extra_info: this.modal_edit_list_categories.extra_info
         }
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
           .then((response) => {
             this.getListCategories()
             this.getLists()
             this.modal_edit_list_categories.edit = false
-            this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.text = ''
             this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
+            this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
             this.printErrors(error)
           })
       }
     },
-    removeListCategory: function (index) {
+    removeListCategory: function (data) {
+      const index = data.index
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
 
-      this.modal_edit_list_categories.name = _options[index].text
+      this.modal_edit_list_categories.text = _options[index].text
       this.modal_edit_list_categories.extra_info = _options[index].extra_info
       this.modal_edit_list_categories.remove = true
       this.modal_edit_list_categories.index = index
+      this.modal_edit_list_categories.id = data.item.id
     },
     removeCategory: function () {
       const objID = this.modal_edit_list_categories.id
-      const index = this.modal_edit_list_categories.index
-      const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
-      const deletedItem = _options.splice(index, 1)
+      // const index = this.modal_edit_list_categories.index
+      // const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+      // const deletedItem = _options.splice(index, 1)
 
       if (objID) {
-        const params = {
-          options: _options,
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
-        }
-        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
-          .then((response) => {
+        axios.delete(`/api/isoqf_list_categories/${objID}`)
+          .then(() => {
             this.getListCategories()
-            this.updateLists(deletedItem)
+            // this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
-            this.modal_edit_list_categories.name = ''
+            this.modal_edit_list_categories.text = ''
             this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
+            this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
             this.printErrors(error)
@@ -4719,9 +4704,10 @@ export default {
       this.modal_edit_list_categories.new = false
       this.modal_edit_list_categories.edit = false
       this.modal_edit_list_categories.remove = false
-      this.modal_edit_list_categories.name = ''
+      this.modal_edit_list_categories.text = ''
       this.modal_edit_list_categories.extra_info = ''
       this.modal_edit_list_categories.index = null
+      this.modal_edit_list_categories.id = null
     },
     modalChangePublicStatus: function () {
       this.modal_project = JSON.parse(JSON.stringify(this.project))
