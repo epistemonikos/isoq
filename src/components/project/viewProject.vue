@@ -1344,7 +1344,8 @@
                     </span>
                   </template>
                   <template v-slot:cell(category_name)="data">
-                    <div v-if="data.item.category_name !== ''">
+                    <!-- <pre>{{data.item}}</pre> -->
+                    <template v-if="data.item.category !== null">
                       <b-button
                         block
                         variant="outline-info"
@@ -1354,13 +1355,13 @@
                         v-if="data.item.category_extra_info !== ''"
                         v-b-tooltip.hover
                         :title="data.item.category_extra_info">*</span>
-                    </div>
-                    <div v-else>
+                    </template>
+                    <template v-else>
                       <b-button
                         variant="info"
                         block
                         @click="editModalFindingName(data)">Assign group</b-button>
-                    </div>
+                    </template>
                   </template>
                   <template v-slot:cell(cerqual_option)="data">
                     <b-button
@@ -4590,9 +4591,14 @@ export default {
           if (response.data.length) {
             let options = JSON.parse(JSON.stringify(response.data))
             options.sort((a, b) => a.text.localeCompare(b.text))
+            let _options = JSON.parse(JSON.stringify(options))
+            options.splice(0, 0, {id: null, text: 'Assign group'})
             this.list_categories.options = options
             // this.modal_edit_list_categories.id = response.data[0].id
-            this.modal_edit_list_categories.options = options
+            this.modal_edit_list_categories.options = _options
+          } else {
+            this.list_categories.options = []
+            this.modal_edit_list_categories.options = []
           }
         })
         .catch((error) => {
@@ -4684,15 +4690,15 @@ export default {
     },
     removeCategory: function () {
       const objID = this.modal_edit_list_categories.id
-      // const index = this.modal_edit_list_categories.index
-      // const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
-      // const deletedItem = _options.splice(index, 1)
+      const index = this.modal_edit_list_categories.index
+      const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+      const deletedItem = _options.splice(index, 1)
 
       if (objID) {
         axios.delete(`/api/isoqf_list_categories/${objID}`)
           .then(() => {
             this.getListCategories()
-            // this.updateLists(deletedItem)
+            this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.text = ''
             this.modal_edit_list_categories.extra_info = ''
@@ -4838,13 +4844,13 @@ export default {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _request = []
       for (let list of _lists) {
-        if (list.category === deletedCategoryValue[0].value) {
+        if (list.category === deletedCategoryValue[0].id) {
           list.category = null
           _request.push(axios.patch(`/api/isoqf_lists/${list.id}`, list))
         }
       }
       axios.all(_request)
-        .then(axios.spread((...response) => {
+        .then(axios.spread(() => {
           this.getLists()
         }))
     },
