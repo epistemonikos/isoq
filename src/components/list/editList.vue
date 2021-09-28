@@ -560,7 +560,7 @@
                                     <b-button
                                       block
                                       variant="success"
-                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      @click="updateContentExtractedDataItem(data.item.ref_id)">
                                       Save
                                     </b-button>
                                     <b-button
@@ -625,7 +625,7 @@
                                 <b-button
                                   block
                                   variant="success"
-                                  @click="updateContentExtractedDataItem(data.item.index)">
+                                  @click="updateContentExtractedDataItem(data.item.ref_id)">
                                   Save
                                 </b-button>
                                 <b-button
@@ -689,7 +689,7 @@
                                     <b-button
                                       block
                                       variant="success"
-                                      @click="updateContentExtractedDataItem(data.item.index)">
+                                      @click="updateContentExtractedDataItem(data.item.ref_id)">
                                       Save
                                     </b-button>
                                     <b-button
@@ -2546,12 +2546,12 @@ export default {
                     column_0: item.column_0,
                     index: index
                   })
-                  for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                      if (item[i] === '') {
-                        haveContent++
-                      }
+                  if (Object.prototype.hasOwnProperty.call(item, 'column_0')) {
+                    if (item.column_0 === '') {
+                      haveContent++
                     }
+                  } else {
+                    haveContent++
                   }
                 }
                 index++
@@ -3276,30 +3276,24 @@ export default {
       this.showEditExtractedDataInPlace.display = false
       this.showEditExtractedDataInPlace.item = {}
     },
-    updateContentExtractedDataItem: function (index = 0) {
-      const _items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      const _index = parseInt(index)
-      let _originals = JSON.parse(JSON.stringify(this.extracted_data.original_items))
-      if (_index !== -1) {
-        let item = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
-        _originals[_index] = item
-      }
+    updateContentExtractedDataItem: function (refId) {
+      let _items = JSON.parse(JSON.stringify(this.extracted_data.items))
 
-      for (let index in _originals) {
-        for (let item of _items) {
-          if (item.index === index) {
-            _originals[index] = { 'authors': item.authors, 'column_0': item.column_0, 'ref_id': item.ref_id }
+      if (refId.length) {
+        for (let i = 0; i < _items.length; i++) {
+          if (_items[i].ref_id === refId) {
+            _items[i] = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
           }
         }
-        index++
       }
+
       const params = {
         organization: this.list.organization,
         finding_id: this.findings.id,
-        items: _originals
+        items: _items
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getExtractedData()
           this.showEditExtractedDataInPlace.display = false
         })
