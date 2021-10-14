@@ -3490,6 +3490,7 @@ export default {
             ]
           }),
           // cerqual table - evidence profile table
+          new Paragraph(''),
           new Table({
             borders: {
               top: {
@@ -3535,7 +3536,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '14%',
+                      size: '5%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3554,7 +3555,7 @@ export default {
                   new TableCell({
                     verticalAlign: VerticalAlign.CENTER,
                     width: {
-                      size: '14%',
+                      size: '20%',
                       type: WidthType.PERCENTAGE
                     },
                     shading: {
@@ -3576,7 +3577,7 @@ export default {
                   new TableCell({
                     verticalAlign: VerticalAlign.CENTER,
                     width: {
-                      size: '14%',
+                      size: '15%',
                       type: WidthType.PERCENTAGE
                     },
                     shading: {
@@ -3601,7 +3602,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '14%',
+                      size: '15%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3623,7 +3624,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '14%',
+                      size: '15%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3645,7 +3646,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '14%',
+                      size: '15%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3667,7 +3668,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '14%',
+                      size: '15%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3747,6 +3748,34 @@ export default {
               }),
               this.generateTableCell({
                 width_size: '15%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT
+              })
+            ]
+          })
+        } else {
+          return new TableRow({
+            children: [
+              this.generateTableCell({
+                width_size: '5%', text: finding.name, font_size: 22, align: AlignmentType.LEFT
+              }),
+              new TableCell({
+                columnSpan: 5,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: '',
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              }),
+              this.generateTableCell({
+                width_size: '15%',
+                text: this.returnRefWithNames(finding.references),
+                font_size: 16,
+                align: AlignmentType.LEFT
               })
             ]
           })
