@@ -1,6 +1,6 @@
 <template>
-  <div class="clearfix">
-    <span @click="toTop">&uarr; Back to top</span>
+  <div class="clearfix my-2">
+    <span class="back-to-top" @click="toTop">&uarr; Back to top</span>
   </div>
 </template>
 
@@ -17,3 +17,9 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.back-to-top {
+  cursor: pointer;
+}
+</style>
