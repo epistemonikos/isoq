@@ -12,6 +12,7 @@ const NewPassword = () => import(/* webpackChunkName: "newpassword" */ '@/compon
 const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf" */ '@/components/previewContent/previewContentSoQf')
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
+const fixCats = () => import(/* webpackChunkName: "fixCats" */ '@/components/fixCategories')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -94,6 +95,14 @@ var routes = [
     path: '/workspace/:org_id/isoqf/:id',
     name: 'viewProject',
     component: ViewProject,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/workspace/:org_id/isoqf/:id/fixCats',
+    name: 'fixCats',
+    component: fixCats,
     meta: {
       requiresAuth: true
     }
