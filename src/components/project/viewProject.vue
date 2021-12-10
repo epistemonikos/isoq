@@ -1165,7 +1165,6 @@
                           class="flex-column align-items-start"
                           style="cursor: move">
                           <div
-                            v-if="item.category >= 0"
                             class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">{{ item.name }}</h5>
                           </div>
@@ -1303,7 +1302,7 @@
                   </template>
                   <!-- data -->
                   <template v-slot:cell(sort)="data">
-                    {{ data.item.isoqf_id }}
+                    {{data.index + 1}}
                   </template>
                   <template v-slot:cell(name)="data">
                     <span v-if="mode === 'edit'">
@@ -1453,16 +1452,25 @@
                       <template v-else>
                         <b-td
                           style="vertical-align: top;">
-                          <p>{{ item.sort }}</p>
+                          <template v-if="list_categories.options.length">
+                          <p>{{item.cnt}}</p>
+                          </template>
+                          <template v-else>
+                          {{index+1}}
+                          </template>
                         </b-td>
                         <b-td
                           style="vertical-align: top;">
                           <template v-if="checkPermissions('can_read')">
+                          <template v-if="item.ref_list.length">
                             <b-link
-                              v-if="item.ref_list.length"
                               :to="{name: 'editList', params: {id: item.id}}">
                               {{ item.name }}
                             </b-link>
+                          </template>
+                          <template v-else>
+                          {{ item.name }}
+                          </template>
                           </template>
                           <template v-else>
                             <p>{{ item.name }}</p>
@@ -1489,10 +1497,13 @@
                     </b-tr>
                   </b-tbody>
                 </b-table-simple>
+                <back-to-top></back-to-top>
 
+                <h3>Evidence profile table</h3>
                 <b-table-simple>
                   <b-thead>
                     <b-tr>
+                      <b-th>#</b-th>
                       <b-th>Finding</b-th>
                       <b-th>Methodological limitations</b-th>
                       <b-th>Coherence</b-th>
@@ -1503,7 +1514,24 @@
                     </b-tr>
                   </b-thead>
                   <b-tbody>
-                    <b-tr v-for="(item, index) of this.lists" :key="index">
+                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index">
+                      <template v-if="item.is_category">
+                        <b-td
+                          colspan="8"
+                          class="text-center text-uppercase font-weight-bolder"
+                          style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                          {{ item.name }}
+                        </b-td>
+                      </template>
+                      <template v-else>
+                      <b-td>
+                        <template v-if="list_categories.options.length">
+                        <p>{{item.cnt}}</p>
+                        </template>
+                        <template v-else>
+                        {{index+1}}
+                        </template>
+                      </b-td>
                       <b-td>
                         <p>{{item.name}}</p>
                       </b-td>
@@ -1550,6 +1578,7 @@
                       <b-td>
                         <p class="references">{{returnRefWithNames(item.references)}}</p>
                       </b-td>
+                      </template>
                     </b-tr>
                   </b-tbody>
                 </b-table-simple>
@@ -1954,7 +1983,7 @@ import axios from 'axios'
 import draggable from 'vuedraggable'
 // import parser from '../../plugins/parser'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 import Papa from 'papaparse'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
@@ -2722,7 +2751,7 @@ export default {
             this.project.exclusion = ''
           }
           this.ui.project.show_criteria = true
-          this.getLists2() // summary review
+          this.getLists() // summary review
           this.getCharacteristics()
           this.getMethodological()
         })
@@ -2730,7 +2759,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getLists2: function () {
+    getLists: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -2739,8 +2768,8 @@ export default {
         .then((response) => {
           let data = JSON.parse(JSON.stringify(response.data))
           data.sort(function (a, b) {
-            if (a.id < b.id) { return -1 }
-            if (a.id > b.id) { return 1 }
+            if (a.sort < b.sort) { return -1 }
+            if (a.sort > b.sort) { return 1 }
             return 0
           })
           if (data.length) {
@@ -2819,165 +2848,30 @@ export default {
                           'cerqual_explanation': list.cerqual_explanation,
                           'ref_list': list.ref_list,
                           'sort': list.sort,
-                          'notes': list.notes
+                          'notes': list.notes,
+                          'evidence_profile': list.evidence_profile,
+                          'references': list.references,
+                          'cnt': 0
                         }
                       )
                     }
                   }
                 }
               }
-              console.log('Categories', categories)
               let _items = []
+              let cnt = 1
               for (const cat of categories) {
                 if (cat.items.length) {
                   _items.push(cat)
                   for (const _item of cat.items) {
+                    _item.cnt = cnt
                     _items.push(_item)
+                    cnt++
                   }
                 }
               }
 
               this.lists_print_version = _items
-            } else {
-              this.lists_print_version = data
-            }
-          }
-          this.lists = data
-          this.table_settings.isBusy = false
-          this.table_settings.totalRows = data.length
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    getLists: function () { // related to summary review of a finding
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-      axios.get('/api/isoqf_lists', { params })
-        .then((response) => {
-          let data = JSON.parse(JSON.stringify(response.data))
-          data.sort(function (a, b) {
-            if (a.sort < b.sort) { return -1 }
-            if (a.sort > b.sort) { return 1 }
-            return 0
-          })
-          let cnt = 1
-          for (let d of data) {
-            d.sort = cnt
-            d.isoqf_id = cnt
-            cnt++
-          }
-
-          // let _lists = data
-
-          if (data.length) {
-            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
-
-            for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                if (list.evidence_profile.cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (list.evidence_profile.cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
-                list.references = []
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
-                list.notes = ''
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
-                list.category = null
-              } else {
-                list.category_name = ''
-                list.category_extra_info = ''
-                if (this.list_categories.options.length) {
-                  for (let category of this.list_categories.options) {
-                    if (list.category === category.id) {
-                      list.category_name = category.text
-                      list.category_extra_info = category.extra_info
-                    }
-                  }
-                }
-              }
-              list.cerqual_option = ''
-              if (list.cerqual.option != null) {
-                list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
-              }
-              list.cerqual_explanation = list.cerqual.explanation
-              list.ref_list = ''
-              list.raw_ref = []
-              for (let r of this.references) {
-                for (let ref of list.references) {
-                  if (ref === r.id) {
-                    list.ref_list = list.ref_list + this.parseReference(r, true)
-                    list.raw_ref.push(r)
-                  }
-                }
-              }
-              this.getFinding(this.$route.params.org_id, list.id)
-            }
-
-            if (this.list_categories.options.length) {
-              let categories = []
-              for (let list of data) {
-                if (Object.prototype.hasOwnProperty.call(list, 'category')) {
-                  if (list.category !== null) {
-                    for (let category of this.list_categories.options) {
-                      if (category.id === list.category) {
-                        const exist = (obj) => obj.id === list.category
-                        if (!categories.some(exist)) {
-                          categories.push({'name': category.text, 'value': category.id, 'items': [], is_category: true})
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              categories.push({'name': 'Uncategorised findings', 'value': null, 'items': [], is_category: true})
-
-              for (let list of data) {
-                if (categories.length) {
-                  for (let category of categories) {
-                    if (category.value === list.category) {
-                      category.items.push(
-                        {
-                          'isoqf_id': list.isoqf_id,
-                          'name': list.name,
-                          'cerqual_option': list.cerqual_option,
-                          'cerqual_explanation': list.cerqual_explanation,
-                          'ref_list': list.ref_list,
-                          'sort': list.sort,
-                          'notes': list.notes
-                        }
-                      )
-                    }
-                  }
-                }
-              }
-              let newArr = []
-              let cnt = 1
-
-              for (let cat of categories) {
-                if (cat.items.length) {
-                  newArr.push({'is_category': true, 'name': cat.name})
-                  for (let item of cat.items) {
-                    item.sort = cnt
-                    newArr.push(item)
-                    cnt++
-                  }
-                }
-              }
-              this.lists_print_version = newArr
             } else {
               this.lists_print_version = data
             }
@@ -3018,41 +2912,41 @@ export default {
       if (_lists.length) {
         _sort = parseInt(_lists.slice(-1)[0].sort) + 1
       }
-      let querys = []
-      for (let list of _lists) {
-        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort, 'isoqf_id': list.isoqf_id}))
+      // let querys = []
+      // for (let list of _lists) {
+      //   querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort, 'isoqf_id': list.isoqf_id}))
+      // }
+      // axios.all(querys)
+      //   .then((responses) => {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        name: this.summarized_review,
+        isoqf_id: this.lastId,
+        cerqual: { option: null, explanation: '' },
+        references: [],
+        category: this.list_categories.selected,
+        sort: _sort,
+        editing: false
       }
-      axios.all(querys)
-        .then((responses) => {
-          const params = {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            name: this.summarized_review,
-            isoqf_id: this.lastId,
-            cerqual: { option: null, explanation: '' },
-            references: [],
-            category: this.list_categories.selected,
-            sort: _sort,
-            editing: false
-          }
-          axios.post('/api/isoqf_lists', params)
-            .then((response) => {
-              const listId = response.data.id
-              const listName = response.data.name
+      axios.post('/api/isoqf_lists', params)
+        .then((response) => {
+          const listId = response.data.id
+          const listName = response.data.name
 
-              this.getLists2()
-              this.createFinding(listId, listName)
-              this.summarized_review = ''
-              this.list_categories.selected = null
-              this.updateModificationTime()
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
+          this.getLists()
+          this.createFinding(listId, listName)
+          this.summarized_review = ''
+          this.list_categories.selected = null
+          this.updateModificationTime()
         })
         .catch((error) => {
           this.printErrors(error)
         })
+        // })
+        // .catch((error) => {
+        //   this.printErrors(error)
+        // })
     },
     createFinding: function (listId, listName) {
       const params = {
@@ -3185,7 +3079,7 @@ export default {
           this.selected_references = []
           this.selected_list_index = null
           this.getReferences()
-          this.getLists2()
+          this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3486,10 +3380,35 @@ export default {
                   })
                 ]
               }),
-              ...this.generateTable(this.lists, this.list_categories.options)
+              ...this.generateFindingsTableContent()
+            ]
+          })
+        ]
+      })
+
+      doc.addSection({
+        size: {
+          orientation: PageOrientation.LANDSCAPE
+        },
+        margins: {
+          top: 720,
+          right: 720,
+          bottom: 720,
+          left: 720
+        },
+        children: [
+          new Paragraph({
+            heading: HeadingLevel.HEADING_3,
+            children: [
+              new TextRun({
+                text: 'Evidence Profile',
+                bold: true,
+                size: 32,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
             ]
           }),
-          // cerqual table - evidence profile table
           new Paragraph(''),
           new Table({
             borders: {
@@ -3544,6 +3463,28 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
+                            text: '#',
+                            size: 22,
+                            bold: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    verticalAlign: VerticalAlign.CENTER,
+                    shading: {
+                      fill: '#DDDDDD'
+                    },
+                    width: {
+                      size: '40%',
+                      type: WidthType.PERCENTAGE
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
                             text: 'Finding',
                             size: 22,
                             bold: true
@@ -3555,7 +3496,7 @@ export default {
                   new TableCell({
                     verticalAlign: VerticalAlign.CENTER,
                     width: {
-                      size: '20%',
+                      size: '10%',
                       type: WidthType.PERCENTAGE
                     },
                     shading: {
@@ -3577,7 +3518,7 @@ export default {
                   new TableCell({
                     verticalAlign: VerticalAlign.CENTER,
                     width: {
-                      size: '15%',
+                      size: '10%',
                       type: WidthType.PERCENTAGE
                     },
                     shading: {
@@ -3602,7 +3543,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '15%',
+                      size: '10%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3624,7 +3565,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '15%',
+                      size: '10%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3646,7 +3587,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '15%',
+                      size: '10%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3668,7 +3609,7 @@ export default {
                       fill: '#DDDDDD'
                     },
                     width: {
-                      size: '15%',
+                      size: '5%',
                       type: WidthType.PERCENTAGE
                     },
                     children: [
@@ -3686,12 +3627,11 @@ export default {
                   })
                 ]
               }),
-              ...this.generateEvidenceProfileTable(this.lists, this.list_categories.options)
+              ...this.generateEvidenceProfileTable2(this.lists)
             ]
           })
         ]
       })
-
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
       })
@@ -3722,99 +3662,17 @@ export default {
       }
       return content
     },
-    generateEvidenceProfileTable: function (findings, categories = []) {
-      return findings.map((finding) => {
-        if (Object.prototype.hasOwnProperty.call(finding, 'evidence_profile')) {
-          return new TableRow({
-            tableHeader: true,
-            children: [
-              this.generateTableCell({
-                width_size: '5%', text: finding.name, font_size: 22, align: AlignmentType.CENTER
-              }),
-              this.generateTableCell({
-                width_size: '20%', text: this.displaySelectedOption(finding.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '15%', text: this.displaySelectedOption(finding.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
-              }),
-              this.generateTableCell({
-                width_size: '15%', text: this.displaySelectedOption(finding.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '15%', text: this.displaySelectedOption(finding.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '15%', text: this.displaySelectedOption(finding.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '15%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT
-              })
-            ]
-          })
-        } else {
-          return new TableRow({
-            children: [
-              this.generateTableCell({
-                width_size: '5%', text: finding.name, font_size: 22, align: AlignmentType.LEFT
-              }),
-              new TableCell({
-                columnSpan: 5,
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: '',
-                        size: 22
-                      })
-                    ]
-                  })
-                ]
-              }),
-              this.generateTableCell({
-                width_size: '15%',
-                text: this.returnRefWithNames(finding.references),
-                font_size: 16,
-                align: AlignmentType.LEFT
-              })
-            ]
-          })
-        }
-      })
-    },
-    generateTable: function (findings, categories = []) {
-      let _findings = {'uncategorised': []}
-      if (categories.length) {
-        for (let finding of findings) {
-          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
-            if (finding.category !== null) {
-              if (Object.prototype.hasOwnProperty.call(_findings, finding.category.toString())) {
-                _findings[finding.category].push(finding)
-              } else {
-                _findings[finding.category] = []
-                _findings[finding.category].push(finding)
-              }
-            } else {
-              _findings['uncategorised'].push(finding)
-            }
-          }
-        }
-        return this.generateTableWithCategories(_findings)
-      } else {
-        return this.generateTableWithoutCategories(findings)
-      }
-    },
-    generateTableWithCategories: function (findings) {
+    generateEvidenceProfileTableWithCategories: function (findings) {
       let content = []
       for (const position in findings) {
         let rowTitle = 'Uncategorised findings'
-        for (const cat of this.list_categories.options) {
+        for (const category of this.list_categories.options) {
           if (findings[position].length) {
             if (findings[position][0].category === null) {
               break
             }
-            if (findings[position][0].category === cat.id) {
-              rowTitle = cat.text
+            if (findings[position][0].category === category.id) {
+              rowTitle = category.text
             }
           }
         }
@@ -3840,10 +3698,227 @@ export default {
               ]
             })
           )
-          content.push(...this.generateTableWithoutCategories(findings[position]))
+          content.push(...this.generateEvidenceProfileTableWithoutCategories(findings[position]))
         }
       }
       return content
+    },
+    generateEvidenceProfileTable: function (findings) {
+      let categories = JSON.parse(JSON.stringify(this.list_categories.options)).filter((category) => { return category.id !== null })
+      categories.sort(function (a, b) {
+        if (a.text < b.text) { return -1 }
+        if (a.text > b.text) { return 1 }
+        return 0
+      })
+
+      let _findings = {}
+      for (let category of categories) {
+        _findings[category.id] = []
+      }
+      if (categories.length) {
+        _findings['uncategorised'] = []
+        for (let finding of findings) {
+          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
+            if (finding.category !== null) {
+              if (Object.prototype.hasOwnProperty.call(_findings, finding.category.toString())) {
+                _findings[finding.category].push(finding)
+              } else {
+                _findings[finding.category] = []
+                _findings[finding.category].push(finding)
+              }
+            } else {
+              _findings['uncategorised'].push(finding)
+            }
+          }
+        }
+        return this.generateEvidenceProfileTableWithCategories(_findings)
+      } else {
+        return this.generateEvidenceProfileTableWithoutCategories(findings)
+      }
+    },
+    generateEvidenceProfileTableWithoutCategories: function (findings) {
+      return findings.map((finding) => {
+        if (Object.prototype.hasOwnProperty.call(finding, 'evidence_profile')) {
+          return new TableRow({
+            tableHeader: true,
+            children: [
+              this.generateTableCell({
+                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.CENTER
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT
+              })
+            ]
+          })
+        } else {
+          return new TableRow({
+            children: [
+              this.generateTableCell({
+                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT
+              }),
+              new TableCell({
+                columnSpan: 5,
+                width_size: '40%',
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: '',
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              }),
+              this.generateTableCell({
+                width_size: '10%',
+                text: this.returnRefWithNames(finding.references),
+                font_size: 16,
+                align: AlignmentType.LEFT
+              })
+            ]
+          })
+        }
+      })
+    },
+    generateEvidenceProfileTable2: function () {
+      const items = this.lists_print_version
+      return items.map((item, index) => {
+        if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
+          return new TableRow({
+            children: [
+              new TableCell({
+                columnSpan: 8,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: item.name.toUpperCase(),
+                        bold: true,
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        } else {
+          if (Object.prototype.hasOwnProperty.call(item, 'evidence_profile')) {
+            return new TableRow({
+              tableHeader: true,
+              children: [
+                this.generateTableCell({
+                  width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                }),
+                this.generateTableCell({
+                  width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                }),
+                this.generateTableCell({
+                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+                }),
+                this.generateTableCell({
+                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                })
+              ]
+            })
+          } else {
+            return new TableRow({
+              children: [
+                this.generateTableCell({
+                  width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT
+                }),
+                new TableCell({
+                  columnSpan: 5,
+                  width_size: '40%',
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      children: [
+                        new TextRun({
+                          text: '',
+                          size: 22
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                this.generateTableCell({
+                  width_size: '10%',
+                  text: this.returnRefWithNames(item.references),
+                  font_size: 16,
+                  align: AlignmentType.LEFT
+                })
+              ]
+            })
+          }
+        }
+      })
+    },
+    generateFindingsTableContent: function () {
+      const items = this.lists_print_version
+      return items.map((item, index) => {
+        if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
+          return new TableRow({
+            children: [
+              new TableCell({
+                columnSpan: 5,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: item.name.toUpperCase(),
+                        bold: true,
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        } else {
+          return new TableRow({
+            children: [
+              this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
+            ]
+          })
+        }
+      })
     },
     generateTableWithoutCategories: function (findings) {
       return findings.map((finding) => {
@@ -4878,7 +4953,7 @@ export default {
       axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, _item)
         .then(() => {
           this.updateFinding(this.editFindingName)
-          this.getLists2()
+          this.getLists()
           this.updateModificationTime()
         })
         .catch((error) => {
@@ -4931,7 +5006,7 @@ export default {
       axios.delete(`/api/isoqf_lists/${_list.id}`)
         .then((response) => {
           this.confirmRemoveFinding(this.editFindingName.finding_id)
-          this.getLists2()
+          this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -5009,7 +5084,7 @@ export default {
       axios.post('/api/isoqf_list_categories', params)
         .then(() => {
           this.getListCategories()
-          this.getLists2()
+          this.getLists()
           this.modal_edit_list_categories.new = false
           this.modal_edit_list_categories.text = ''
           this.modal_edit_list_categories.extra_info = ''
@@ -5038,7 +5113,7 @@ export default {
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
           .then((response) => {
             this.getListCategories()
-            this.getLists2()
+            this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.text = ''
             this.modal_edit_list_categories.extra_info = ''
@@ -5223,7 +5298,7 @@ export default {
       }
       axios.all(_request)
         .then(axios.spread(() => {
-          this.getLists2()
+          this.getLists()
         }))
     },
     modalSortFindings: function () {
@@ -5252,7 +5327,7 @@ export default {
 
       axios.all(requests)
         .then(axios.spread((response) => {
-          this.getLists2()
+          this.getLists()
         }))
         .catch((error) => {
           this.printErrors(error)
@@ -5318,7 +5393,7 @@ export default {
         .then((response) => {
           axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
             .then((response) => {
-              this.getLists2()
+              this.getLists()
             })
             .catch((error) => {
               this.printErrors(error)
