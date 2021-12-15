@@ -1357,6 +1357,7 @@
                     </template>
                     <template v-else>
                       <b-button
+                        v-if="mode==='edit' && data.item.references.length"
                         variant="info"
                         block
                         @click="editModalFindingName(data)">Assign group</b-button>
@@ -1536,42 +1537,52 @@
                         <p>{{item.name}}</p>
                       </b-td>
                       <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
                           <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
                           <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
                             <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
                           </template>
+                          </template>
                         </template>
                       </b-td>
                       <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
                           <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
                           <template v-if="item.evidence_profile.coherence.explanation!==''">
                             <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
                           </template>
                           </template>
+                          </template>
                       </b-td>
                       <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
                           <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
                           <template v-if="item.evidence_profile.adequacy.explanation!==''">
                             <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
                           </template>
-                        </template>
-                      </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
-                          <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
-                          <template v-if="item.evidence_profile.relevance.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
                           </template>
                         </template>
                       </b-td>
                       <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile')">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
+                          <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
+                          <template v-if="item.evidence_profile.relevance.explanation!==''">
+                            <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
+                          </template>
+                          </template>
+                        </template>
+                      </b-td>
+                      <b-td>
+                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
                           <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
                           <template v-if="item.evidence_profile.cerqual.explanation!==''">
                             <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                          </template>
                           </template>
                         </template>
                       </b-td>
@@ -3822,35 +3833,65 @@ export default {
           })
         } else {
           if (Object.prototype.hasOwnProperty.call(item, 'evidence_profile')) {
-            return new TableRow({
-              tableHeader: true,
-              children: [
-                this.generateTableCell({
-                  width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
-                }),
-                this.generateTableCell({
-                  width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
-                }),
-                this.generateTableCell({
-                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
-                }),
-                this.generateTableCell({
-                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
-                }),
-                this.generateTableCell({
-                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
-                }),
-                this.generateTableCell({
-                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
-                }),
-                this.generateTableCell({
-                  width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
-                }),
-                this.generateTableCell({
-                  width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
-                })
-              ]
-            })
+            if (item.evidence_profile === undefined) {
+              return new TableRow({
+                children: [
+                  this.generateTableCell({
+                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell({
+                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                  }),
+                  new TableCell({
+                    columnSpan: 5,
+                    width_size: '40%',
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: '',
+                            size: 22
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  this.generateTableCell({
+                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                  })
+                ]
+              })
+            } else {
+              return new TableRow({
+                children: [
+                  this.generateTableCell({
+                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell({
+                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell({
+                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+                  }),
+                  this.generateTableCell({
+                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell({
+                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+                  }),
+                  this.generateTableCell({
+                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
+                  }),
+                  this.generateTableCell({
+                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
+                  }),
+                  this.generateTableCell({
+                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                  })
+                ]
+              })
+            }
           } else {
             return new TableRow({
               children: [
