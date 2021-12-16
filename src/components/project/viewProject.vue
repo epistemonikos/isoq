@@ -1464,10 +1464,9 @@
                           style="vertical-align: top;">
                           <template v-if="checkPermissions('can_read')">
                           <template v-if="item.ref_list.length">
-                            <b-link
-                              :to="{name: 'editList', params: {id: item.id}}">
+                            <p>
                               {{ item.name }}
-                            </b-link>
+                            </p>
                           </template>
                           <template v-else>
                           {{ item.name }}
@@ -5689,6 +5688,10 @@ export default {
   div >>>
     #findings-print.table thead th:last-child {
       width: 15%;
+    }
+  div >>>
+    table#findings-print tbody tr td a {
+      color: #000;
     }
   div >>>
     table .references {
