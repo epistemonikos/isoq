@@ -1274,10 +1274,10 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="tableFilter('High confidence', 2)">High confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('Moderate confidence', 2)">Moderate confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('Low confidence', 2)">Low confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('Very low confidence', 2)">Very low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('hc', 2)">High confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('mc', 2)">Moderate confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('lc', 2)">Low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('vc', 2)">Very low confidence</b-dropdown-item>
                       <b-dropdown-divider></b-dropdown-divider>
                       <b-dropdown-item @click="tableFilter('completed', 2)">Assessments completed</b-dropdown-item>
                       <b-dropdown-item @click="tableFilter('unfinished', 2)">Assessments not completed</b-dropdown-item>
@@ -2139,7 +2139,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'cerqual_option', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
+        filterOn: ['isoqf_id', 'name', 'filter_cerqual', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
       },
       summarized_review: '',
       select_options: [
@@ -2150,10 +2150,10 @@ export default {
         { value: null, text: 'Undefined' }
       ],
       cerqual_confidence: [
-        { value: 0, text: 'High confidence' },
-        { value: 1, text: 'Moderate confidence' },
-        { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' },
+        { value: 'hc', text: 'High confidence' },
+        { value: 'mc', text: 'Moderate confidence' },
+        { value: 'lc', text: 'Low confidence' },
+        { value: 'vc', text: 'Very low confidence' },
         { value: null, text: 'Undefined' }
       ],
       pre_references: '',
@@ -2822,6 +2822,24 @@ export default {
               if (list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
+              list.filter_cerqual = ''
+              switch (list.cerqual_option) {
+                case 'High confidence':
+                  list.filter_cerqual = 'hc'
+                  break
+                case 'Moderate confidence':
+                  list.filter_cerqual = 'mc'
+                  break
+                case 'Low confidence':
+                  list.filter_cerqual = 'lc'
+                  break
+                case 'Very low confidence':
+                  list.filter_cerqual = 'vc'
+                  break
+                default:
+                  list.filter_cerqual = ''
+                  break
+              }
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
               list.raw_ref = []
@@ -2855,6 +2873,7 @@ export default {
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
+                          'filter_cerqual': list.filter_cerqual,
                           'cerqual_explanation': list.cerqual_explanation,
                           'ref_list': list.ref_list,
                           'sort': list.sort,
