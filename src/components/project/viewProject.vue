@@ -5080,7 +5080,7 @@ export default {
             let options = JSON.parse(JSON.stringify(response.data))
             options.sort((a, b) => a.text.localeCompare(b.text))
             let _options = JSON.parse(JSON.stringify(options))
-            options.splice(0, 0, {id: null, text: 'Assign group'})
+            options.splice(0, 0, {id: null, text: 'No group'})
             this.list_categories.options = options
             // this.modal_edit_list_categories.id = response.data[0].id
             this.modal_edit_list_categories.options = _options
