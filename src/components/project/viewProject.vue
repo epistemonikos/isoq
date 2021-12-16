@@ -1500,7 +1500,7 @@
                 </b-table-simple>
                 <back-to-top></back-to-top>
 
-                <h3>Evidence profile table</h3>
+                <h3>Evidence Profile Table</h3>
                 <b-table-simple>
                   <b-thead>
                     <b-tr>
@@ -3412,7 +3412,7 @@ export default {
             heading: HeadingLevel.HEADING_3,
             children: [
               new TextRun({
-                text: 'Evidence Profile',
+                text: 'Evidence Profile Table',
                 bold: true,
                 size: 32,
                 font: { name: 'Times New Roman' },
