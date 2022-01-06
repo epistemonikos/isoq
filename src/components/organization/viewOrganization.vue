@@ -1030,6 +1030,7 @@ export default {
         .then((response) => {
           this.modalCloneNewId = response.data.id
           this.generateCopyOfReferences(originalProject, response.data)
+          this.generateCopyOfCategories(originalProject)
           this.ui.copy.project = false
         })
         .catch((error) => {
@@ -1075,9 +1076,32 @@ export default {
               .then((response) => {
                 this.generateCopyOfFindings(originalList, response.data)
                 this.replaceReferences(response.data)
+                this.replaceCategory(response.data)
                 this.ui.copy.lists = false
               })
           }
+        })
+    },
+    generateCopyOfCategories: function (originalProject) {
+      const params = {
+        project_id: originalProject.id,
+        organization: originalProject.organization
+      }
+      axios.get('/api/isoqf_list_categories', {params})
+        .then((response) => {
+          for (let category of response.data) {
+            let modifiedCategory = JSON.parse(JSON.stringify(category))
+            // const originalCategory = JSON.parse(JSON.stringify(category))
+            modifiedCategory.oldId = modifiedCategory.id
+            delete modifiedCategory.id
+            delete modifiedCategory._id
+            modifiedCategory.project_id = this.modalCloneNewId
+            modifiedCategory.organization = this.$route.params.id
+            axios.post('/api/isoqf_list_categories', modifiedCategory)
+          }
+        })
+        .catch((error) => {
+          console.log(error)
         })
     },
     generateCopyOfReferences: function (originalProject, project) {
@@ -1161,6 +1185,20 @@ export default {
           }
         })
     },
+    replaceCategory: function (newList) {
+      const params = {
+        organization: newList.organization,
+        project_id: newList.project_id
+      }
+      axios.get('/api/isoqf_list_categories', params)
+        .then((response) => {
+          for (let category of response.data) {
+            if (category.oldId === newList.category) {
+              axios.patch('/api/isoqf_lists/' + newList.id, {category: category.id})
+            }
+          }
+        })
+    },
     replaceReferences: function (newList) {
       this.ui.copy.replaceReferences = true
       const params = {
@@ -1183,6 +1221,8 @@ export default {
               .then(() => {
                 this.ui.copy.replaceReferences = false
               })
+          } else {
+            this.ui.copy.replaceReferences = false
           }
         })
     },
