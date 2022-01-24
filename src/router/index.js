@@ -100,7 +100,7 @@ var routes = [
     }
   },
   {
-    path: '/workspace/:org_id/isoqf/:id/fixCats',
+    path: '/workspace/:org_id/fixCats',
     name: 'fixCats',
     component: fixCats,
     meta: {
