@@ -5,7 +5,7 @@
         <h2>Help</h2>
       </b-container>
     </b-container>
-    <b-container class="pt-5">
+    <b-container class="py-5">
       <h3>Urgent help needed?</h3>
       <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues contact isoq@epistemonikos.org</p>
 
