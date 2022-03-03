@@ -52,6 +52,9 @@
           Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a <a href="https://creativecommons.org" target="_blank">Creative Commons</a> licence for their work. The default will be <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC-BY-NC-ND</a>.
         </li>
       </ul>
+
+      <h3>How do I cite iSoQ?</h3>
+      <p>Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org</p>
     </b-container>
   </div>
 </template>

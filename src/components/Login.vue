@@ -3,11 +3,6 @@
     <b-container>
       <b-row>
         <b-col class="mt-4" cols="12" md="6" offset-md="3">
-          <b-alert show>
-            iSoQ is currently being tested on real reviews. If you would like to use this beta version on your own review, please contact us to request an account (isoq@epistemonikos.org). If you already have an account, just login.
-          </b-alert>
-        </b-col>
-        <b-col class="mt-4" cols="12" md="6" offset-md="3">
           <b-form @submit.prevent="login">
             <b-card
               header="Login">
@@ -39,7 +34,7 @@
                     required></b-form-input>
                 </b-form-group>
                 <b-card-text class="text-center text-forgot-create">
-                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link>-->
+                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
                 </b-card-text>
                 <div slot="footer" class="text-right">
                   <b-button type="submit" variant="outline-primary">Login</b-button>
