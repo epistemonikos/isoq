@@ -99,14 +99,14 @@ var routes = [
       requiresAuth: true
     }
   },
-  {
-    path: '/workspace/:org_id/fixCats',
-    name: 'fixCats',
-    component: fixCats,
-    meta: {
-      requiresAuth: true
-    }
-  },
+  //{
+  //  path: '/workspace/:org_id/fixCats',
+  //  name: 'fixCats',
+  //  component: fixCats,
+  //  meta: {
+  //    requiresAuth: true
+  //  }
+  //},
   {
     path: '/worksheet/:id/edit',
     name: 'editList',
