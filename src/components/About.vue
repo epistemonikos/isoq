@@ -34,6 +34,11 @@
       <h3>Can iSoQ tables be made public for anyone to see?</h3>
       <p>iSoQ includes a "publish" function, meaning you can publish some or all of your completed Interactive Summary of Qualitative Findings Table to the iSoQ database. It is up to you to decide if and when to publish to the iSoQ database and to ensure you are not infringing any copyright issues (for example you may have to abide by an embargo period or wait for a manuscript to be published). The database will become a repository for iSoQ tables.</p>
 
+      <h3>Is iSoQ compatible with Mac?</h3>
+      <p>
+        iSoQ can be used on a Mac but has not been extensively tested with Mac. We are aware of one common issue for Mac users and that is with the “import table” function in the My Data section. When our Excel template is downloaded and opened in Excel for Mac, columns A and B are merged instead of separate. This causes import failure and serious malfunctioning in the software. We therefore recommend Mac users work on the template in either Google docs, Open Office or LibreOffice. Be sure to save the file as a “comma-separated values” (CSV). We welcome feedback from Mac users so we can continue to improve your experience with iSoQ.
+      </p>
+
       <h3>How was the iSoQ tool funded?</h3>
       <p>The iSoQ tool was developed with funding from the Norwegian Institute of Public Health’s Centre for Informed Health Choices.</p>
 
@@ -54,7 +59,7 @@
       </ul>
 
       <h3>How do I cite iSoQ?</h3>
-      <p>Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Beta Version accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org</p>
+      <p>Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org</p>
     </b-container>
   </div>
 </template>

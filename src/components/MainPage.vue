@@ -3,7 +3,7 @@
     <b-container id="mainPage" fluid class="pt-5">
       <b-row>
         <b-col cols="12" md="6" lg="3">
-          <h2>iSoQ <span>Beta version</span></h2>
+          <h2>iSoQ <span>Version 1.0</span></h2>
           <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
         </b-col>
       </b-row>
