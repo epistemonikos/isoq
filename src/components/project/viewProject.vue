@@ -1512,7 +1512,7 @@
                       <b-th>Coherence</b-th>
                       <b-th>Adequacy</b-th>
                       <b-th>Relevance</b-th>
-                      <b-th>Grade-CERQual assessment of confidence</b-th>
+                      <b-th>GRADE-CERQual assessment of confidence</b-th>
                       <b-th>References</b-th>
                     </b-tr>
                   </b-thead>
@@ -3627,7 +3627,7 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
-                            text: 'Grade-CERQual assessment of confidence',
+                            text: 'GRADE-CERQual assessment of confidence',
                             size: 22,
                             bold: true
                           })
