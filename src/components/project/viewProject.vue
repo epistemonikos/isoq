@@ -899,6 +899,9 @@
                   class="text-danger">
                   <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
                 </p>
+                <p class="text-danger">
+                  <b>Mac users: we are aware of compatibility issues and recommend you work on the table template in either Google drive, Open Office or LibreOffice.</b>
+                </p>
                 <p
                   class="text-danger">
                   <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
