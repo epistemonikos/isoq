@@ -804,7 +804,7 @@
 
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <b-tabs content-class="mt-3">
-                            <b-tab title="Methodological limitations">
+                            <b-tab title="Component assessments">
                               <h5>Methodological limitations</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
