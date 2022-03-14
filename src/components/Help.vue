@@ -12,6 +12,9 @@
       <h3>You’ve got feedback to share?</h3>
       <p>To feedback to us your experience of using iSoQ (positive or negative!) or ideas of useful additional features or how to make it more user-friendly, please use <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank">the following form</a></p>
 
+      <h3>iSoQ drop-in support webinars</h3>
+      <p>Visit the <a href="https://www.cerqual.org/upcoming-events/" target="_blank">Upcoming Events</a> page on the GRADE-CERQual website to sign-up.</p>
+
       <h3>Help Resources: Videos</h3>
       <ol start="0">
         <li><a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video - The Essentials [8:58 min]</a></li>
