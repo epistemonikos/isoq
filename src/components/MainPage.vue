@@ -13,6 +13,7 @@
           <ul id="main-page-nav" class="unstyled-list">
             <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
             <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
+            <li><b-link href="https://vimeo.com/687899560" target="_blank">Watch a short video</b-link></li>
           </ul>
         </b-col>
       </b-row>
