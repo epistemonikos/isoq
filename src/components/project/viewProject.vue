@@ -4581,6 +4581,10 @@ export default {
         })
     },
     removeItemCharOfStudies: function (index, id) {
+      this.removeReferenceCharsOfStudies = {
+        id: null,
+        findings: []
+      }
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceCharsOfStudies.id = id
@@ -4811,6 +4815,10 @@ export default {
         })
     },
     removeItemMethodological: function (index, id) {
+      this.removeReferenceMethodological = {
+        id: null,
+        findings: []
+      }
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceMethodological.id = id
