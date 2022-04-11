@@ -3884,7 +3884,10 @@ export default {
                     ]
                   }),
                   this.generateTableCell({
-                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                    width_size: '5%',
+                    text: this.returnRefWithNames(item.references),
+                    font_size: 16,
+                    align: AlignmentType.LEFT
                   })
                 ]
               })
@@ -3892,28 +3895,59 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '5%',
+                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '40%',
+                    text: item.name,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell(
+                    {
+                      width_size: '10%',
+                      text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
+                      explanation: (item.evidence_profile.methodological_limitations.option.length) ? item.evidence_profile.methodological_limitations.explanation : '',
+                      font_size: 22,
+                      align: AlignmentType.LEFT
+                    }
+                  ),
+                  this.generateTableCell({
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.coherence.option),
+                    explanation: (item.evidence_profile.coherence.explanation.length) ? item.evidence_profile.coherence.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
+                    explanation: (item.evidence_profile.adequacy.explanation.length) ? item.evidence_profile.adequacy.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.relevance.option),
+                    explanation: (item.evidence_profile.relevance.explanation.length) ? item.evidence_profile.relevance.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.cerqual.option),
+                    explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                    width_size: '5%',
+                    text: this.returnRefWithNames(item.references),
+                    font_size: 16,
+                    align: AlignmentType.LEFT
                   })
                 ]
               })
@@ -4008,7 +4042,8 @@ export default {
           type: WidthType.PERCENTAGE
         },
         children: [
-          this.generateParagraph(content)
+          this.generateParagraph(content),
+          ...(this.generateParagraphExplanation(content))
         ]
       })
     },
@@ -4020,7 +4055,8 @@ export default {
         },
         alignment: content.alignment,
         children: [
-          this.generateText(content)
+          this.generateText(content),
+
         ]
       })
     },
@@ -4029,6 +4065,39 @@ export default {
         text: content.text,
         size: content.font_size
       })
+    },
+    generateParagraphExplanation: function (content) {
+      let paragraph = []
+      if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
+        paragraph.push(
+          new Paragraph('')
+        )
+        paragraph.push(
+          new Paragraph({
+            children: [
+              ...(this.generateExplanationText(content))
+            ]
+          })
+        )
+      }
+      return paragraph
+    },
+    generateExplanationText: function (content) {
+      let text = []
+      text.push(
+        new TextRun({
+          text: 'Explanation: ',
+          size: content.font_size,
+          bold: true
+        })
+      )
+      text.push(
+        new TextRun({
+          text: content.explanation,
+          size: content.font_size
+        })
+      )
+      return text
     },
     generateAuthorInfo: function () {
       let data = ''
