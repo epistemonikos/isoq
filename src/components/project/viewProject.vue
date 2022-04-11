@@ -2385,61 +2385,63 @@ export default {
       let base = { authors: [], user_definable: [] }
 
       allLines.forEach((line) => {
-        const _line = line.split('  - ')
-        const key = _line[0]
-        const content = _line[1]
+        const _line = line.split('  -')
+        if (_line.length > 1) {
+          const key = _line[0]
+          const content = _line[1].trimStart()
 
-        if (key === 'TY') {
-          base['type'] = content
-        }
-        if (titleTags.includes(key)) {
-          base['title'] = content
-        }
-        if (authorTags.includes(key)) {
-          base['authors'].push(content)
-        }
-        if (key === 'AB') {
-          base['abstract'] = content
-        }
-        if (key === 'VL') {
-          base['volume_number'] = content
-        }
-        if (key === 'SP') {
-          base['start_page'] = content
-        }
-        if (key === 'EP') {
-          base['end_page'] = content
-        }
-        if (key === 'IN') {
-          base['issue_number'] = content
-        }
-        if (key === 'SN') {
-          base['isbn_issn'] = content
-        }
-        if (key === 'PY') {
-          base['publication_year'] = content
-        }
-        if (key === 'DA') {
-          base['date'] = content
-        }
-        if (key === 'DA') {
-          base['date'] = content
-        }
-        if (key === 'DB') {
-          base['database'] = content
-        }
-        if (key === 'UR') {
-          base['url'] = content
-        }
-        if (key === 'DO') {
-          base['doi'] = content
-        }
-        if (userDefinable.includes(key)) {
-          base['user_definable'].push(content)
-        }
-        if (key === 'ER') {
-          this.fileReferences.push(base)
-          base = { authors: [], user_definable: [] }
+          if (key === 'TY') {
+            base['type'] = content
+          }
+          if (titleTags.includes(key)) {
+            base['title'] = content
+          }
+          if (authorTags.includes(key)) {
+            base['authors'].push(content)
+          }
+          if (key === 'AB') {
+            base['abstract'] = content
+          }
+          if (key === 'VL') {
+            base['volume_number'] = content
+          }
+          if (key === 'SP') {
+            base['start_page'] = content
+          }
+          if (key === 'EP') {
+            base['end_page'] = content
+          }
+          if (key === 'IN') {
+            base['issue_number'] = content
+          }
+          if (key === 'SN') {
+            base['isbn_issn'] = content
+          }
+          if (key === 'PY') {
+            base['publication_year'] = content
+          }
+          if (key === 'DA') {
+            base['date'] = content
+          }
+          if (key === 'DA') {
+            base['date'] = content
+          }
+          if (key === 'DB') {
+            base['database'] = content
+          }
+          if (key === 'UR') {
+            base['url'] = content
+          }
+          if (key === 'DO') {
+            base['doi'] = content
+          }
+          if (userDefinable.includes(key)) {
+            base['user_definable'].push(content)
+          }
+          if (key === 'ER') {
+            this.fileReferences.push(base)
+            base = { authors: [], user_definable: [] }
+          }
         }
       })
     }
