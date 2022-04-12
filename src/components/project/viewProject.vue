@@ -4064,8 +4064,7 @@ export default {
         },
         alignment: content.alignment,
         children: [
-          this.generateText(content),
-
+          this.generateText(content)
         ]
       })
     },
