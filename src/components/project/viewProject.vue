@@ -1758,11 +1758,14 @@
                 <template v-slot:modal-title>
                   <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
                 </template>
-                <p
-                  v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                  class="font-weight-light">
-                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
-                </p>
+                <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                  <p class="font-weight-light">
+                    Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                  </p>
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
+                </template>
                 <template
                   v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                   <b-table
@@ -1785,6 +1788,9 @@
                 </template>
                 <template
                   v-if="modal_edit_list_categories.new">
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
                   <b-form-group
                     class="mt-3"
                     label="Add group name">
@@ -1801,6 +1807,9 @@
                 <template
                   class="mt-3"
                   v-if="modal_edit_list_categories.edit">
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
                   <b-form-group
                     label="Edit group name">
                     <b-form-input
@@ -2385,61 +2394,63 @@ export default {
       let base = { authors: [], user_definable: [] }
 
       allLines.forEach((line) => {
-        const _line = line.split('  - ')
-        const key = _line[0]
-        const content = _line[1]
+        const _line = line.split('  -')
+        if (_line.length > 1) {
+          const key = _line[0]
+          const content = _line[1].trimStart()
 
-        if (key === 'TY') {
-          base['type'] = content
-        }
-        if (titleTags.includes(key)) {
-          base['title'] = content
-        }
-        if (authorTags.includes(key)) {
-          base['authors'].push(content)
-        }
-        if (key === 'AB') {
-          base['abstract'] = content
-        }
-        if (key === 'VL') {
-          base['volume_number'] = content
-        }
-        if (key === 'SP') {
-          base['start_page'] = content
-        }
-        if (key === 'EP') {
-          base['end_page'] = content
-        }
-        if (key === 'IN') {
-          base['issue_number'] = content
-        }
-        if (key === 'SN') {
-          base['isbn_issn'] = content
-        }
-        if (key === 'PY') {
-          base['publication_year'] = content
-        }
-        if (key === 'DA') {
-          base['date'] = content
-        }
-        if (key === 'DA') {
-          base['date'] = content
-        }
-        if (key === 'DB') {
-          base['database'] = content
-        }
-        if (key === 'UR') {
-          base['url'] = content
-        }
-        if (key === 'DO') {
-          base['doi'] = content
-        }
-        if (userDefinable.includes(key)) {
-          base['user_definable'].push(content)
-        }
-        if (key === 'ER') {
-          this.fileReferences.push(base)
-          base = { authors: [], user_definable: [] }
+          if (key === 'TY') {
+            base['type'] = content
+          }
+          if (titleTags.includes(key)) {
+            base['title'] = content
+          }
+          if (authorTags.includes(key)) {
+            base['authors'].push(content)
+          }
+          if (key === 'AB') {
+            base['abstract'] = content
+          }
+          if (key === 'VL') {
+            base['volume_number'] = content
+          }
+          if (key === 'SP') {
+            base['start_page'] = content
+          }
+          if (key === 'EP') {
+            base['end_page'] = content
+          }
+          if (key === 'IN') {
+            base['issue_number'] = content
+          }
+          if (key === 'SN') {
+            base['isbn_issn'] = content
+          }
+          if (key === 'PY') {
+            base['publication_year'] = content
+          }
+          if (key === 'DA') {
+            base['date'] = content
+          }
+          if (key === 'DA') {
+            base['date'] = content
+          }
+          if (key === 'DB') {
+            base['database'] = content
+          }
+          if (key === 'UR') {
+            base['url'] = content
+          }
+          if (key === 'DO') {
+            base['doi'] = content
+          }
+          if (userDefinable.includes(key)) {
+            base['user_definable'].push(content)
+          }
+          if (key === 'ER') {
+            this.fileReferences.push(base)
+            base = { authors: [], user_definable: [] }
+          }
         }
       })
     }
@@ -3882,7 +3893,10 @@ export default {
                     ]
                   }),
                   this.generateTableCell({
-                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                    width_size: '5%',
+                    text: this.returnRefWithNames(item.references),
+                    font_size: 16,
+                    align: AlignmentType.LEFT
                   })
                 ]
               })
@@ -3890,28 +3904,59 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '5%',
+                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '40%',
+                    text: item.name,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
+                  }),
+                  this.generateTableCell(
+                    {
+                      width_size: '10%',
+                      text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
+                      explanation: (item.evidence_profile.methodological_limitations.option.length) ? item.evidence_profile.methodological_limitations.explanation : '',
+                      font_size: 22,
+                      align: AlignmentType.LEFT
+                    }
+                  ),
+                  this.generateTableCell({
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.coherence.option),
+                    explanation: (item.evidence_profile.coherence.explanation.length) ? item.evidence_profile.coherence.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
+                    explanation: (item.evidence_profile.adequacy.explanation.length) ? item.evidence_profile.adequacy.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.relevance.option),
+                    explanation: (item.evidence_profile.relevance.explanation.length) ? item.evidence_profile.relevance.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+                    width_size: '10%',
+                    text: this.displaySelectedOption(item.evidence_profile.cerqual.option),
+                    explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
+                    font_size: 22,
+                    align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '10%', text: this.displaySelectedOption(item.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '5%', text: this.returnRefWithNames(item.references), font_size: 16, align: AlignmentType.LEFT
+                    width_size: '5%',
+                    text: this.returnRefWithNames(item.references),
+                    font_size: 16,
+                    align: AlignmentType.LEFT
                   })
                 ]
               })
@@ -4006,7 +4051,8 @@ export default {
           type: WidthType.PERCENTAGE
         },
         children: [
-          this.generateParagraph(content)
+          this.generateParagraph(content),
+          ...(this.generateParagraphExplanation(content))
         ]
       })
     },
@@ -4018,7 +4064,8 @@ export default {
         },
         alignment: content.alignment,
         children: [
-          this.generateText(content)
+          this.generateText(content),
+
         ]
       })
     },
@@ -4027,6 +4074,39 @@ export default {
         text: content.text,
         size: content.font_size
       })
+    },
+    generateParagraphExplanation: function (content) {
+      let paragraph = []
+      if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
+        paragraph.push(
+          new Paragraph('')
+        )
+        paragraph.push(
+          new Paragraph({
+            children: [
+              ...(this.generateExplanationText(content))
+            ]
+          })
+        )
+      }
+      return paragraph
+    },
+    generateExplanationText: function (content) {
+      let text = []
+      text.push(
+        new TextRun({
+          text: 'Explanation: ',
+          size: content.font_size,
+          bold: true
+        })
+      )
+      text.push(
+        new TextRun({
+          text: content.explanation,
+          size: content.font_size
+        })
+      )
+      return text
     },
     generateAuthorInfo: function () {
       let data = ''
@@ -4581,6 +4661,10 @@ export default {
         })
     },
     removeItemCharOfStudies: function (index, id) {
+      this.removeReferenceCharsOfStudies = {
+        id: null,
+        findings: []
+      }
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceCharsOfStudies.id = id
@@ -4811,6 +4895,10 @@ export default {
         })
     },
     removeItemMethodological: function (index, id) {
+      this.removeReferenceMethodological = {
+        id: null,
+        findings: []
+      }
       let lists = JSON.parse(JSON.stringify(this.lists))
 
       this.removeReferenceMethodological.id = id
