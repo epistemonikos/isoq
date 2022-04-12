@@ -1758,11 +1758,14 @@
                 <template v-slot:modal-title>
                   <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
                 </template>
-                <p
-                  v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                  class="font-weight-light">
-                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
-                </p>
+                <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                  <p class="font-weight-light">
+                    Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                  </p>
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
+                </template>
                 <template
                   v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                   <b-table
@@ -1785,6 +1788,9 @@
                 </template>
                 <template
                   v-if="modal_edit_list_categories.new">
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
                   <b-form-group
                     class="mt-3"
                     label="Add group name">
@@ -1801,6 +1807,9 @@
                 <template
                   class="mt-3"
                   v-if="modal_edit_list_categories.edit">
+                  <p class="text-danger">
+                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  </p>
                   <b-form-group
                     label="Edit group name">
                     <b-form-input
