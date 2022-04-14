@@ -2426,8 +2426,9 @@ export default {
           if (key === 'SN') {
             base['isbn_issn'] = content
           }
-          if (key === 'PY') {
-            base['publication_year'] = content
+          if (['PY', 'Y1'].includes(key)) {
+            base['publication_year'] = content.split('/')[0]
+            base['real_date'] = content
           }
           if (key === 'DA') {
             base['date'] = content
