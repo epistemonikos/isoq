@@ -1537,6 +1537,9 @@
                   :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                   :items="extracted_data.items"
                   :current-page="extracted_data_table_settings.currentPage">
+                  <template v-slot:cell(authors)="data">
+                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                  </template>
                   <template
                     v-if="mode==='edit' && checkPermissions(list.organization)"
                     v-slot:cell(actions)="data">
@@ -1892,6 +1895,13 @@ export default {
     }
   },
   methods: {
+    getReferenceInfo: function (ref_id) {
+      for (let ref of this.refsWithTitle) {
+        if (ref.id === ref_id) {
+          return ref.content
+        }
+      }
+    },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true

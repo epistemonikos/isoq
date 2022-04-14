@@ -344,6 +344,10 @@
                     :per-page="charsOfStudiesTableSettings.perPage"
                     :busy="charsOfStudiesTableSettings.isBusy">
                     <template
+                      v-slot:cell(authors)="data">
+                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                    </template>
+                    <template
                       v-slot:cell(actions)="data"
                       v-if="charsOfStudies.fields.length > 2">
                       <b-button
@@ -680,6 +684,10 @@
                     :fields="methodologicalTableRefs.fieldsObj"
                     :items="methodologicalTableRefs.items"
                     :busy="methodologicalTableRefsTableSettings.isBusy">
+                    <template
+                      v-slot:cell(authors)="data">
+                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                    </template>
                     <template
                       v-slot:cell(actions)="data"
                       v-if="methodologicalTableRefs.fields.length > 2">
@@ -2463,6 +2471,13 @@ export default {
     this.getProject()
   },
   methods: {
+    getReferenceInfo: function (ref_id) {
+      for (let ref of this.refs) {
+        if (ref.id === ref_id) {
+          return ref.content
+        }
+      }
+    },
     returnRefWithNames: function (array) {
       let authorsList = []
       for (const i in array) {
