@@ -1895,9 +1895,9 @@ export default {
     }
   },
   methods: {
-    getReferenceInfo: function (ref_id) {
+    getReferenceInfo: function (refId) {
       for (let ref of this.refsWithTitle) {
-        if (ref.id === ref_id) {
+        if (ref.id === refId) {
           return ref.content
         }
       }
