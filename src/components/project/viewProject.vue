@@ -344,6 +344,10 @@
                     :per-page="charsOfStudiesTableSettings.perPage"
                     :busy="charsOfStudiesTableSettings.isBusy">
                     <template
+                      v-slot:cell(authors)="data">
+                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                    </template>
+                    <template
                       v-slot:cell(actions)="data"
                       v-if="charsOfStudies.fields.length > 2">
                       <b-button
@@ -680,6 +684,10 @@
                     :fields="methodologicalTableRefs.fieldsObj"
                     :items="methodologicalTableRefs.items"
                     :busy="methodologicalTableRefsTableSettings.isBusy">
+                    <template
+                      v-slot:cell(authors)="data">
+                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                    </template>
                     <template
                       v-slot:cell(actions)="data"
                       v-if="methodologicalTableRefs.fields.length > 2">
@@ -2426,8 +2434,9 @@ export default {
           if (key === 'SN') {
             base['isbn_issn'] = content
           }
-          if (key === 'PY') {
-            base['publication_year'] = content
+          if (['PY', 'Y1'].includes(key)) {
+            base['publication_year'] = content.split('/')[0]
+            base['real_date'] = content
           }
           if (key === 'DA') {
             base['date'] = content
@@ -2462,6 +2471,13 @@ export default {
     this.getProject()
   },
   methods: {
+    getReferenceInfo: function (refId) {
+      for (let ref of this.refs) {
+        if (ref.id === refId) {
+          return ref.content
+        }
+      }
+    },
     returnRefWithNames: function (array) {
       let authorsList = []
       for (const i in array) {
