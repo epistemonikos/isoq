@@ -1518,7 +1518,7 @@
                   <b-thead>
                     <b-tr>
                       <b-th>#</b-th>
-                      <b-th>Finding</b-th>
+                      <b-th>Summarised review finding</b-th>
                       <b-th>Methodological limitations</b-th>
                       <b-th>Coherence</b-th>
                       <b-th>Adequacy</b-th>
@@ -3547,7 +3547,7 @@ export default {
                         alignment: AlignmentType.CENTER,
                         children: [
                           new TextRun({
-                            text: 'Finding',
+                            text: 'Summarised review finding',
                             size: 22,
                             bold: true
                           })
