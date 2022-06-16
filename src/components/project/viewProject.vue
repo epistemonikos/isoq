@@ -3963,7 +3963,7 @@ export default {
                   }),
                   this.generateTableCell({
                     width_size: '10%',
-                    text: this.displaySelectedOption(item.evidence_profile.cerqual.option),
+                    text: this.displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual'),
                     explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
