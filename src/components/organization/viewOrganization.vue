@@ -66,7 +66,7 @@
                     icon="link"></font-awesome-icon>
                 </b-button>
                 <b-button
-                  v-if="data.item.is_owner || data.item.allow_to_write"
+                  v-if="data.item.is_owner"
                   title="Share"
                   variant="outline-secondary"
                   @click="modalShareOptions(data.item.id)">
@@ -942,11 +942,6 @@ export default {
       }
       axios.post(`/share/project/${projectId}`, params)
         .then(() => {
-          // const _response = response.data[0]
-          // const index = this.buffer_project.index
-          // _response.index = index
-          // this.projects[index] = _response
-          // this.buffer_project = _response
           this.buffer_project.sharedTo = ''
           this.buffer_project.tmp_invite_emails = []
           this.usersCanList(id)

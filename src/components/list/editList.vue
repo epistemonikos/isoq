@@ -804,7 +804,7 @@
 
                         <div v-if="buffer_modal_stage_two.type === 'cerqual'">
                           <b-tabs content-class="mt-3">
-                            <b-tab title="Methodological limitations">
+                            <b-tab title="Component assessments">
                               <h5>Methodological limitations</h5>
                               <p>
                                 <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
@@ -1537,6 +1537,9 @@
                   :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                   :items="extracted_data.items"
                   :current-page="extracted_data_table_settings.currentPage">
+                  <template v-slot:cell(authors)="data">
+                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                  </template>
                   <template
                     v-if="mode==='edit' && checkPermissions(list.organization)"
                     v-slot:cell(actions)="data">
@@ -1892,6 +1895,13 @@ export default {
     }
   },
   methods: {
+    getReferenceInfo: function (refId) {
+      for (let ref of this.refsWithTitle) {
+        if (ref.id === refId) {
+          return ref.content
+        }
+      }
+    },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true

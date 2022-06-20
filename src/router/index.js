@@ -22,7 +22,7 @@ var routes = [
     name: 'MainPage',
     component: MainPage,
     meta: {
-      title: 'interactive Summaries of Qualitative Findings'
+      title: 'Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -30,7 +30,7 @@ var routes = [
     name: 'About',
     component: About,
     meta: {
-      title: 'About - interactive Summaries of Qualitative Findings'
+      title: 'About - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -38,7 +38,7 @@ var routes = [
     name: 'Help',
     component: Help,
     meta: {
-      title: 'Help - interactive Summaries of Qualitative Findings'
+      title: 'Help - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -46,7 +46,7 @@ var routes = [
     name: 'Login',
     component: Login,
     meta: {
-      title: 'Login - interactive Summaries of Qualitative Findings'
+      title: 'Login - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -54,7 +54,7 @@ var routes = [
     name: 'ForgotPassword',
     component: ForgotPassword,
     meta: {
-      title: 'Forgot password - interactive Summaries of Qualitative Findings'
+      title: 'Forgot password - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -62,7 +62,7 @@ var routes = [
     name: 'CreateAccount',
     component: CreateAccount,
     meta: {
-      title: 'Create an account - interactive Summaries of Qualitative Findings'
+      title: 'Create an account - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -70,7 +70,7 @@ var routes = [
     name: 'Browse',
     component: Browse,
     meta: {
-      title: 'Browse - interactive Summaries of Qualitative Findings'
+      title: 'Browse - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -78,7 +78,7 @@ var routes = [
     name: 'viewOrganization',
     component: ViewOrganization,
     meta: {
-      title: 'Workspace - interactive Summaries of Qualitative Findings',
+      title: 'Workspace - Interactive Summary of Qualitative Findings',
       requiresAuth: true
     }
   },
@@ -87,7 +87,7 @@ var routes = [
     name: 'Organizations',
     component: Organizations,
     meta: {
-      title: 'Workspaces - interactive Summaries of Qualitative Findings',
+      title: 'Workspaces - Interactive Summary of Qualitative Findings',
       requiresAuth: true
     }
   },
@@ -112,7 +112,7 @@ var routes = [
     name: 'editList',
     component: EditList,
     meta: {
-      title: 'Edit iSoQ - interactive Summaries of Qualitative Findings',
+      title: 'Edit iSoQ - Interactive Summary of Qualitative Findings',
       requiresAuth: true
     }
   },
@@ -121,7 +121,7 @@ var routes = [
     name: 'newPassword',
     component: NewPassword,
     meta: {
-      title: 'New password - interactive Summaries of Qualitative Findings'
+      title: 'New password - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -129,7 +129,7 @@ var routes = [
     name: 'previewContentSoQf',
     component: previewContentSoQf,
     meta: {
-      title: 'iSoQ Preview - interactive Summaries of Qualitative Findings'
+      title: 'iSoQ Preview - Interactive Summary of Qualitative Findings'
     }
   },
   {
@@ -137,7 +137,7 @@ var routes = [
     name: 'previewWorksheet',
     component: previewWorksheet,
     meta: {
-      title: 'Worksheet Preview - interactive Summaries of Qualitative Findings'
+      title: 'Worksheet Preview - Interactive Summary of Qualitative Findings'
     }
   }
 ]
