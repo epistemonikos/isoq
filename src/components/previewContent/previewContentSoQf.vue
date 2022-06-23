@@ -198,6 +198,7 @@ export default {
   },
   data () {
     return {
+      name: 'previewContentSoqf',
       tabOpened: 2,
       ui: {
         project: {
@@ -266,7 +267,8 @@ export default {
         currentPage: 1,
         perPage: 10,
         isBusy: false
-      }
+      },
+      findings: []
     }
   },
   mounted () {
@@ -288,7 +290,7 @@ export default {
       const params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, { params })
+      axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, {params})
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
@@ -311,30 +313,176 @@ export default {
           // this.printErrors(error)
         })
     },
-    getLists: function () { // related to summary review of a finding
+    // getLists2: function () { // related to summary review of a finding
+    //   const params = {
+    //     organization: this.$route.params.org_id,
+    //     project_id: this.$route.params.isoqf_id
+    //   }
+    //   axios.get('/api/isoqf_lists', { params })
+    //     .then((response) => {
+    //       let data = JSON.parse(JSON.stringify(response.data))
+    //       data.sort(function (a, b) {
+    //         if (a.sort < b.sort) { return -1 }
+    //         if (a.sort > b.sort) { return 1 }
+    //         return 0
+    //       })
+    //       let cnt = 1
+    //       for (let d of data) {
+    //         d.sort = cnt
+    //         d.isoqf_id = cnt
+    //         cnt++
+    //       }
+    //       let _data = data
+
+    //       if (_data.length) {
+    //         // let lists = JSON.parse(JSON.stringify(this.lists))
+    //         for (let list of _data) {
+    //           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+    //             list.status = 'unfinished'
+    //             list.explanation = 'without_explanation'
+    //           } else {
+    //             list.status = 'completed'
+    //             list.explanation = 'with_explanation'
+    //             if (list.evidence_profile.cerqual.option === null) {
+    //               list.status = 'unfinished'
+    //             }
+    //             if (list.evidence_profile.cerqual.explanation === '') {
+    //               list.explanation = 'without_explanation'
+    //             }
+    //           }
+    //           if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
+    //             list.references = []
+    //           }
+    //           if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
+    //             list.notes = ''
+    //           }
+    //           if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
+    //             list.category = null
+    //           } else {
+    //             list.category_name = ''
+    //             list.category_extra_info = ''
+    //             if (this.list_categories.options.length) {
+    //               for (let category of this.list_categories.options) {
+    //                 if (list.category === category.value) {
+    //                   list.category_name = category.text
+    //                   list.category_extra_info = category.extra_info
+    //                 }
+    //               }
+    //             }
+    //           }
+    //           list.cerqual_option = ''
+    //           if (list.cerqual.option != null) {
+    //             list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+    //           }
+    //           list.cerqual_explanation = list.cerqual.explanation
+    //           list.ref_list = ''
+    //           list.raw_ref = []
+    //           for (let r of this.references) {
+    //             for (let ref of list.references) {
+    //               if (ref === r.id) {
+    //                 list.ref_list = list.ref_list + this.parseReference(r, true)
+    //                 list.raw_ref.push(r)
+    //               }
+    //             }
+    //           }
+    //         }
+
+    //         if (this.list_categories.options.length) {
+    //           let categories = []
+    //           for (let category of this.list_categories.options) {
+    //             categories.push({'name': category.text, 'value': category.value, 'items': []})
+    //           }
+
+    //           for (let list of _data) {
+    //             if (categories.length) {
+    //               for (let element of categories) {
+    //                 if (element.value === list.category) {
+    //                   element.items.push(
+    //                     {
+    //                       'id': list.id,
+    //                       'isoqf_id': list.isoqf_id,
+    //                       'name': list.name,
+    //                       'cerqual_option': list.cerqual_option,
+    //                       'cerqual_explanation': list.cerqual_explanation,
+    //                       'ref_list': list.ref_list,
+    //                       'sort': list.sort,
+    //                       'notes': list.notes
+    //                     }
+    //                   )
+    //                 }
+    //               }
+    //             }
+    //           }
+    //           let newArr = []
+    //           for (let cat of categories) {
+    //             newArr.push({'is_category': true, 'name': cat.name})
+    //             for (let item of cat.items) {
+    //               newArr.push(item)
+    //             }
+    //           }
+    //           newArr.sort(function (a, b) {
+    //             if (a.sort < b.sort) {
+    //               return -1
+    //             }
+    //             if (a.sort > b.sort) {
+    //               return 1
+    //             }
+    //             return 0
+    //           })
+    //           this.lists = newArr
+    //         } else {
+    //           let items = []
+    //           for (let list of _data) {
+    //             items.push(
+    //               {
+    //                 'id': list.id,
+    //                 'isoqf_id': list.isoqf_id,
+    //                 'name': list.name,
+    //                 'cerqual_option': list.cerqual_option,
+    //                 'cerqual_explanation': list.cerqual_explanation,
+    //                 'ref_list': list.ref_list,
+    //                 'sort': list.sort,
+    //                 'notes': list.notes
+    //               }
+    //             )
+    //           }
+    //           items.sort(function (a, b) {
+    //             if (a.sort < b.sort) {
+    //               return -1
+    //             }
+    //             if (a.sort > b.sort) {
+    //               return 1
+    //             }
+    //             return 0
+    //           })
+    //           this.lists = items
+    //         }
+    //       }
+    //       this.table_settings.isBusy = false
+    //       this.table_settings.totalRows = _data.length
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //       // this.printErrors(error)
+    //     })
+    // },
+    getLists: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
       axios.get('/api/isoqf_lists', { params })
         .then((response) => {
+          console.log(response.data)
           let data = JSON.parse(JSON.stringify(response.data))
           data.sort(function (a, b) {
             if (a.sort < b.sort) { return -1 }
             if (a.sort > b.sort) { return 1 }
             return 0
           })
-          let cnt = 1
-          for (let d of data) {
-            d.sort = cnt
-            d.isoqf_id = cnt
-            cnt++
-          }
-          let _data = data
-
-          if (_data.length) {
-            // let lists = JSON.parse(JSON.stringify(this.lists))
-            for (let list of _data) {
+          if (data.length) {
+            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
+            for (let list of data) {
               if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
                 list.status = 'unfinished'
                 list.explanation = 'without_explanation'
@@ -361,7 +509,7 @@ export default {
                 list.category_extra_info = ''
                 if (this.list_categories.options.length) {
                   for (let category of this.list_categories.options) {
-                    if (list.category === category.value) {
+                    if (list.category === category.id) {
                       list.category_name = category.text
                       list.category_extra_info = category.extra_info
                     }
@@ -371,6 +519,24 @@ export default {
               list.cerqual_option = ''
               if (list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+              }
+              list.filter_cerqual = ''
+              switch (list.cerqual_option) {
+                case 'High confidence':
+                  list.filter_cerqual = 'hc'
+                  break
+                case 'Moderate confidence':
+                  list.filter_cerqual = 'mc'
+                  break
+                case 'Low confidence':
+                  list.filter_cerqual = 'lc'
+                  break
+                case 'Very low confidence':
+                  list.filter_cerqual = 'vc'
+                  break
+                default:
+                  list.filter_cerqual = ''
+                  break
               }
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
@@ -383,85 +549,83 @@ export default {
                   }
                 }
               }
+              this.getFinding(this.$route.params.org_id, list.id)
             }
 
             if (this.list_categories.options.length) {
               let categories = []
-              for (let category of this.list_categories.options) {
-                categories.push({'name': category.text, 'value': category.value, 'items': []})
-              }
 
-              for (let list of _data) {
+              for (let category of this.list_categories.options) {
+                if (category.id !== null) {
+                  categories.push({'name': category.text, 'value': category.id, 'items': [], is_category: true})
+                }
+              }
+              categories.push({'name': 'Uncategorised findings', 'value': null, 'items': [], is_category: true})
+
+              for (let list of data) {
                 if (categories.length) {
-                  for (let element of categories) {
-                    if (element.value === list.category) {
-                      element.items.push(
+                  for (let category of categories) {
+                    if (category.value === list.category) {
+                      category.items.push(
                         {
-                          'id': list.id,
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
+                          'filter_cerqual': list.filter_cerqual,
                           'cerqual_explanation': list.cerqual_explanation,
                           'ref_list': list.ref_list,
                           'sort': list.sort,
-                          'notes': list.notes
+                          'notes': list.notes,
+                          'evidence_profile': list.evidence_profile,
+                          'references': list.references,
+                          'cnt': 0
                         }
                       )
                     }
                   }
                 }
               }
-              let newArr = []
-              for (let cat of categories) {
-                newArr.push({'is_category': true, 'name': cat.name})
-                for (let item of cat.items) {
-                  newArr.push(item)
-                }
-              }
-              newArr.sort(function (a, b) {
-                if (a.sort < b.sort) {
-                  return -1
-                }
-                if (a.sort > b.sort) {
-                  return 1
-                }
-                return 0
-              })
-              this.lists = newArr
-            } else {
-              let items = []
-              for (let list of _data) {
-                items.push(
-                  {
-                    'id': list.id,
-                    'isoqf_id': list.isoqf_id,
-                    'name': list.name,
-                    'cerqual_option': list.cerqual_option,
-                    'cerqual_explanation': list.cerqual_explanation,
-                    'ref_list': list.ref_list,
-                    'sort': list.sort,
-                    'notes': list.notes
+              let _items = []
+              let cnt = 1
+              for (const cat of categories) {
+                if (cat.items.length) {
+                  _items.push(cat)
+                  for (const _item of cat.items) {
+                    _item.cnt = cnt
+                    _items.push(_item)
+                    cnt++
                   }
-                )
+                }
               }
-              items.sort(function (a, b) {
-                if (a.sort < b.sort) {
-                  return -1
-                }
-                if (a.sort > b.sort) {
-                  return 1
-                }
-                return 0
-              })
-              this.lists = items
+
+              this.lists_print_version = _items
+            } else {
+              this.lists_print_version = data
             }
           }
+          this.lists = data
           this.table_settings.isBusy = false
-          this.table_settings.totalRows = _data.length
+          this.table_settings.totalRows = data.length
         })
         .catch((error) => {
           console.log(error)
-          // this.printErrors(error)
+        })
+    },
+    getFinding: function (orgId, listId) {
+      const params = {
+        organization: orgId,
+        list_id: listId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((response) => {
+          if (response.data.length) {
+            if (!this.findings.includes(response.data[0].id)) {
+              this.findings.push(response.data[0].id)
+            }
+          }
+        })
+        .catch((error) => {
+          this.printErrors(error)
         })
     },
     getListCategories: function () {
