@@ -473,7 +473,6 @@ export default {
       }
       axios.get('/api/isoqf_lists', { params })
         .then((response) => {
-          console.log(response.data)
           let data = JSON.parse(JSON.stringify(response.data))
           data.sort(function (a, b) {
             if (a.sort < b.sort) { return -1 }
