@@ -2006,6 +2006,23 @@
             ></b-form-radio-group>
           </b-form-group>
         </template>
+        <template #modal-footer>
+          <div class="w-100">
+            <b-button
+              variant="outline-success"
+              class="float-right ml-3"
+              @click="savePublicStatus">
+              <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
+              Save
+            </b-button>
+            <b-button
+              variant="outline-secondary"
+              class="float-right"
+              @click="$refs['modal-change-status'].hide()">
+              Close
+            </b-button>
+          </div>
+        </template>
       </b-modal>
     </b-container>
   </div>
@@ -2079,6 +2096,9 @@ export default {
           showFilterTwo: false,
           showFilterThree: false,
           show_criteria: false
+        },
+        publish: {
+          showLoader: false
         }
       },
       modal_project: {},
@@ -2650,7 +2670,7 @@ export default {
         for (let index of this.pubmed_selected) {
           delete this.pubmed_requested[index].disabled
           axios.post('/api/isoqf_references', this.pubmed_requested[index])
-            .then((response) => {
+            .then(() => {
               this.pubmed_requested.splice(index, 1)
             })
             .catch((error) => {
@@ -2771,7 +2791,7 @@ export default {
               }
               if (patchExtractedData.length) {
                 axios.all(patchExtractedData)
-                  .then((responses) => {})
+                  .then(() => {})
                   .catch((error) => {
                     this.printErrors(error)
                   })
@@ -2974,12 +2994,10 @@ export default {
       if (_lists.length) {
         _sort = parseInt(_lists.slice(-1)[0].sort) + 1
       }
-      // let querys = []
-      // for (let list of _lists) {
-      //   querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'sort': list.sort, 'isoqf_id': list.isoqf_id}))
-      // }
-      // axios.all(querys)
-      //   .then((responses) => {
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
@@ -2989,7 +3007,8 @@ export default {
         references: [],
         category: this.list_categories.selected,
         sort: _sort,
-        editing: false
+        editing: false,
+        is_public: isPublic
       }
       axios.post('/api/isoqf_lists', params)
         .then((response) => {
@@ -3005,12 +3024,12 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-        // })
-        // .catch((error) => {
-        //   this.printErrors(error)
-        // })
     },
     createFinding: function (listId, listName) {
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
       const params = {
         organization: this.$route.params.org_id,
         list_id: listId,
@@ -3041,7 +3060,8 @@ export default {
           },
           references: []
         },
-        references: []
+        references: [],
+        is_public: isPublic
       }
       axios.post('/api/isoqf_findings', params)
         .then((response) => {
@@ -3097,11 +3117,7 @@ export default {
     openModalReferences: function (index, isoqfId) {
       this.selected_list_index = index
       axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
-        .then((response) => {
-          // this.lists[index].editing = response.data.editing
-          // if (response.data.editing) {
-          //   this.getUserInfo(response.data.userEditing)
-          // }
+        .then(() => {
           let list = JSON.parse(JSON.stringify(this.lists[index]))
           const params = {
             organization: this.$route.params.org_id,
@@ -3136,7 +3152,7 @@ export default {
         references: this.selected_references
       }
       axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
-        .then((response) => {
+        .then(() => {
           this.updateFindingReferences(this.selected_references)
           this.selected_references = []
           this.selected_list_index = null
@@ -3152,11 +3168,10 @@ export default {
         'evidence_profile.references': references
       }
       axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.finding = {}
         })
         .catch((error) => {
-          console.log('updateFindingReferences')
           this.printErrors(error)
         })
     },
@@ -4256,11 +4271,11 @@ export default {
 
       if (requests.length) {
         axios.all(requests)
-          .then(axios.spread(function (response) {}))
+          .then(axios.spread())
       }
 
       axios.delete(`/api/isoqf_references/${refId}`)
-        .then((response) => {
+        .then(() => {
           this.getReferences(false)
           this.openModalReferencesSingle(false)
           this.getProject()
@@ -4410,6 +4425,12 @@ export default {
         params.items.push(objItem)
       }
 
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      params.is_public = isPublic
+
       if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
         axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
           .then((response) => {
@@ -4449,6 +4470,12 @@ export default {
       }
 
       params.items = _items
+
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      params.is_public = isPublic
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
@@ -4561,7 +4588,7 @@ export default {
         project.is_public = true
       }
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
-        .then((response) => {
+        .then(() => {
           this.msgUpdateProject = 'The project has been updated'
           window.scrollTo({ top: 0, behavior: 'smooth' })
           this.updateModificationTime()
@@ -4659,7 +4686,7 @@ export default {
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
       axios.delete(`/api/${endpoint}/${id}`)
-        .then((response) => {
+        .then(() => {
           this.pre_ImportDataTable = ''
           this.insertImportedData(endpoint, params)
         })
@@ -4667,7 +4694,7 @@ export default {
     insertImportedData: function (endpoint = '', params = {}) {
       const modal = (endpoint === 'isoqf_characteristics') ? 'import-characteristics-table' : 'import-methodological-table'
       axios.post(`/api/${endpoint}/`, params)
-        .then((response) => {
+        .then(() => {
           this.getProject()
           this.$refs[modal].hide()
         })
@@ -4730,7 +4757,7 @@ export default {
       params.items = items
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getCharacteristics()
         })
         .catch((error) => {
@@ -4780,6 +4807,12 @@ export default {
       params.project_id = this.$route.params.id
       params.nro_of_fields = fields.length
 
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      params.is_public = isPublic
+
       for (let r of references) {
         let objItem = {}
         for (let cnt in fields) {
@@ -4792,15 +4825,14 @@ export default {
 
       if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
         axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-          .then((response) => {
+          .then(() => {
             this.getMethodological()
           }).catch((error) => {
             console.log('error: ', error)
           })
       } else {
         axios.post('/api/isoqf_assessments', params)
-          .then((response) => {
-            // this.charsOfStudies = response.data
+          .then(() => {
             this.getProject()
           })
           .catch((error) => {
@@ -4833,6 +4865,12 @@ export default {
 
       params.fields = fields
 
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      params.is_public = isPublic
+
       let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
       for (let item of _items) {
@@ -4844,7 +4882,7 @@ export default {
       }
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getMethodological()
         })
         .catch((error) => {
@@ -4902,7 +4940,7 @@ export default {
       params.items = this.methodologicalFieldsModal.items
 
       axios.patch(`/api/isoqf_assessments/${id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getProject()
         })
         .catch((error) => {
@@ -4970,7 +5008,7 @@ export default {
       params.items = items
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getMethodological()
         })
         .catch((error) => {
@@ -5023,7 +5061,7 @@ export default {
         _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
         list.references = []
         axios.patch(`/api/isoqf_lists/${list.id}`, list)
-          .then((response) => {})
+          .then(() => {})
           .catch((error) => {
             this.printErrors(error)
           })
@@ -5045,7 +5083,7 @@ export default {
           })
       }
       axios.all(requests)
-        .then((responses) => {
+        .then(() => {
           this.getReferences()
           this.openModalReferencesSingle(false)
           this.getProject()
@@ -5068,26 +5106,12 @@ export default {
       }
     },
     editModalFindingName: function (data) {
-      // const list = this.lists[index]
       this.editFindingName.index = data.index
       this.editFindingName.id = data.item.id
       this.editFindingName.name = data.item.name
       this.editFindingName.category = data.item.category
       this.editFindingName.notes = data.item.notes
-      // axios.get(`/api/isoqf_lists/${id}`)
-      //   .then((response) => {
-      //     this.editFindingName.index = index
-      //     this.editFindingName.name = response.data.name
-      //     this.editFindingName.category = response.data.category
-      //     this.editFindingName.notes = response.data.notes
-      //     // this.editFindingName.editing = response.data.editing
-      //     // if (response.data.editing) {
-      //     //   this.getUserInfo(response.data.userEditing)
-      //     // }
-      //   })
-      //   .catch((error) => {
-      //     console.log(error)
-      //   })
+
       const params = {
         organization: this.$route.params.org_id,
         list_id: data.item.id
@@ -5105,6 +5129,10 @@ export default {
       this.table_settings.isBusy = true
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _item = {}
+      _item.is_public = false
+      if (this.project.is_public) {
+        _item.is_public = true
+      }
       for (let item of _lists) {
         if (item.id === this.editFindingName.id) {
           _item = item
@@ -5113,10 +5141,6 @@ export default {
           _item.notes = this.editFindingName.notes
         }
       }
-      // const index = this.editFindingName.index
-      // _lists[index].name = this.editFindingName.name
-      // _lists[index].category = this.editFindingName.category
-      // _lists[index].notes = this.editFindingName.notes
 
       axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, _item)
         .then(() => {
@@ -5129,9 +5153,14 @@ export default {
         })
     },
     updateFinding: function (finding) {
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
       const params = {
         name: finding.name,
         notes: finding.notes,
+        is_public: isPublic,
         'evidence_profile.name': finding.name,
         'evidence_profile.notes': finding.notes
       }
@@ -5147,10 +5176,6 @@ export default {
         .then((response) => {
           this.editFindingName.index = index
           this.editFindingName.name = response.data.name
-          // this.editFindingName.editing = response.data.editing
-          // if (response.data.editing) {
-          //   this.getUserInfo(response.data.userEditing)
-          // }
           const params = {
             organization: this.$route.params.org_id,
             list_id: response.data.id
@@ -5172,7 +5197,7 @@ export default {
       const index = this.editFindingName.index
       const _list = JSON.parse(JSON.stringify(this.lists[index]))
       axios.delete(`/api/isoqf_lists/${_list.id}`)
-        .then((response) => {
+        .then(() => {
           this.confirmRemoveFinding(this.editFindingName.finding_id)
           this.getLists()
         })
@@ -5182,7 +5207,7 @@ export default {
     },
     confirmRemoveFinding: function (findingID) {
       axios.delete(`/api/isoqf_findings/${findingID}`)
-        .then((response) => {
+        .then(() => {
           this.deleteExtractedData(findingID)
         })
         .catch((error) => {
@@ -5209,7 +5234,6 @@ export default {
             let _options = JSON.parse(JSON.stringify(options))
             options.splice(0, 0, {id: null, text: 'No group'})
             this.list_categories.options = options
-            // this.modal_edit_list_categories.id = response.data[0].id
             this.modal_edit_list_categories.options = _options
           } else {
             this.list_categories.options = []
@@ -5279,7 +5303,7 @@ export default {
           extra_info: this.modal_edit_list_categories.extra_info
         }
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
-          .then((response) => {
+          .then(() => {
             this.getListCategories()
             this.getLists()
             this.modal_edit_list_categories.edit = false
@@ -5341,7 +5365,9 @@ export default {
       }
       this.$refs['modal-change-status'].show()
     },
-    savePublicStatus: function () {
+    savePublicStatus: function (event) {
+      event.preventDefault()
+      this.ui.publish.showLoader = true
       let params = {}
       params.private = true
       params.is_public = false
@@ -5386,11 +5412,13 @@ export default {
       _requests.push(axios.patch(`/api/isoqf_assessments/${methodologicalTable.id}`, otherParams))
 
       axios.all(_requests)
-        .then(axios.spread((...responses) => {
+        .then(axios.spread(() => {
           axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
-            .then((response) => {
+            .then(() => {
               this.modal_project = {}
               this.getProject()
+              this.ui.publish.showLoader = false
+              this.$refs['modal-change-status'].hide()
             })
             .catch((error) => {
               this.printErrors(error)
@@ -5494,7 +5522,7 @@ export default {
       }
 
       axios.all(requests)
-        .then(axios.spread((response) => {
+        .then(axios.spread(() => {
           this.getLists()
         }))
         .catch((error) => {
@@ -5547,7 +5575,7 @@ export default {
       }
 
       axios.post('/api/isoqf_extracted_data', params)
-        .then((response) => {})
+        .then()
         .catch((error) => {
           this.printErrors(error)
         })
@@ -5560,7 +5588,7 @@ export default {
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
           axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
-            .then((response) => {
+            .then(() => {
               this.getLists()
             })
             .catch((error) => {
@@ -5640,7 +5668,7 @@ export default {
         last_update: Date.now()
       }
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
-        .then((response) => {})
+        .then()
         .catch((error) => {
           this.printErrors(error)
         })
@@ -5677,7 +5705,7 @@ export default {
               items: _items
             }
             axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
-              .then((response) => {
+              .then(() => {
                 this.getCharacteristics()
               })
           }
@@ -5701,7 +5729,7 @@ export default {
               items: _items
             }
             axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
-              .then((response) => {
+              .then(() => {
                 this.getMethodological()
               })
           }
