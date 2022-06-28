@@ -4,22 +4,11 @@
       :item="item"
       :projects="projects"
       @getProjects="getProjects"></clone-project-btn>
-    <!-- <b-button
-      v-if="item.is_owner && (item.sharedToken.length)"
-      title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
-      variant="outline-secondary"
-      @click="modalShareOptions(item.id, 2)">
-      <font-awesome-icon
-        icon="link"></font-awesome-icon>
-    </b-button>
-    <b-button
-      v-if="item.is_owner"
-      title="Share"
-      variant="outline-secondary"
-      @click="modalShareOptions(item.id)">
-      <font-awesome-icon
-        icon="users"></font-awesome-icon>
-    </b-button>
+    <share-project
+      :item="item"
+      :projects="projects"
+      @getProjects="getProjects"></share-project>
+    <!--
     <b-button
       v-if="item.allow_to_write"
       title="Edit"
@@ -41,6 +30,7 @@
 
 <script>
 import cloneProjectBtn from './cloneProject'
+import shareProjectBtn from './shareProject'
 
 export default {
   name: 'actionButtons',
@@ -57,7 +47,8 @@ export default {
     }
   },
   components: {
-    'clone-project-btn': cloneProjectBtn
+    'clone-project-btn': cloneProjectBtn,
+    'share-project': shareProjectBtn
   }
 }
 </script>

@@ -23,6 +23,7 @@
     "jquery": "3.5.0",
     "lodash.debounce": "4.0.8",
     "papaparse": "^5.3.0",
+    "uuid": "^8.3.2",
     "vue": "^2.6.11",
     "vue-i18n": "8.11.2",
     "vue-router": "3.0.1",
