@@ -10,11 +10,9 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
           <b-col cols="12" class="text-right">
-            <b-button
-              v-b-tooltip.hover
-              title="Create a new Interactive Summary of Qualitative Findings Table"
-              variant="success"
-              @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
+            <edit-project
+              :projects="projects"
+              @getProjects="getProjects"></edit-project>
           </b-col>
         </b-row>
         <b-row
@@ -84,17 +82,6 @@
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
-      <b-modal
-        id="modal-remove-project"
-        ref="modal-remove-project"
-        title="Delete project"
-        @ok="removeProject"
-        @cancel="cleanProject"
-        ok-title="Remove"
-        ok-variant="outline-danger"
-        cancel-variant="outline-secondary">
-        <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
-      </b-modal>
     </b-container>
   </div>
 </template>
@@ -102,9 +89,11 @@
 <script>
 import axios from 'axios'
 import actionBtns from './actionButtons.vue'
+import editProject from './editProject'
 
 export default {
   components: {
+    'edit-project': editProject,
     'action-btns': actionBtns
   },
   data () {
@@ -316,9 +305,6 @@ export default {
       })
       this.ui.projectTable.isBusy = false
     },
-    countDownChanged (dismissCountDown) {
-      this.ui.dismissCounters.dismissCountDown = dismissCountDown
-    },
     ModalAddList: function (idProject) {
       this.buffer_project_list.project_id = idProject
       this.$refs['new-project-list'].show()
@@ -342,79 +328,76 @@ export default {
           })
       }
     },
-    getProjectsAndLists: function () {
-      let projects = []
-      let lists = []
-      const excludeOrgs = ['examples', 'episte']
+    // getProjectsAndLists: function () {
+    //   let projects = []
+    //   let lists = []
+    //   const excludeOrgs = ['examples', 'episte']
 
-      for (let org of this.$store.state.user.orgs) {
-        if (!excludeOrgs.includes(org.id)) {
-          projects.push(axios.get('/api/isoqf_projects', {
-            params: {
-              organization: org.id
-            }
-          }))
-          lists.push(axios.get('/api/isoqf_lists', {
-            params: {
-              organization: org.id
-            }
-          }))
-        }
-      }
-      axios.all(projects).then(axios.spread((...results) => {
-        for (const result of results) {
-          let _projects = result.data
-          for (let project of _projects) {
-            if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            } else {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            }
-            if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
-              project.tmp_invite_emails = []
-            }
-            project.is_owner = false
-            project.allow_to_write = false
-            project.allow_to_read = false
-            if (project.organization === this.$store.state.user.personal_organization) {
-              project.is_owner = true
-              project.allow_to_write = true
-              project.allow_to_read = true
-            } else {
-              if (project.organization !== this.$store.state.user.personal_organization) {
-                project.is_owner = false
-              }
-              if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
-                if (project.can_write.includes(this.$store.state.user.id)) {
-                  project.allow_to_write = true
-                }
-              } else {
-                project.can_write = []
-              }
-            }
-            this.projects.push(project)
-          }
-        }
-      }))
-      this.ui.projectTable.isBusy = false
-    },
-    editProjectList: function (projectPosition, listPosition) {
-      this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
-      this.$refs['new-project-list'].show()
-    },
+    //   for (let org of this.$store.state.user.orgs) {
+    //     if (!excludeOrgs.includes(org.id)) {
+    //       projects.push(axios.get('/api/isoqf_projects', {
+    //         params: {
+    //           organization: org.id
+    //         }
+    //       }))
+    //       lists.push(axios.get('/api/isoqf_lists', {
+    //         params: {
+    //           organization: org.id
+    //         }
+    //       }))
+    //     }
+    //   }
+    //   axios.all(projects).then(axios.spread((...results) => {
+    //     for (const result of results) {
+    //       let _projects = result.data
+    //       for (let project of _projects) {
+    //         if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+    //           if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+    //             project.sharedTokenOnOff = true
+    //           } else {
+    //             project.sharedTokenOnOff = false
+    //           }
+    //         } else {
+    //           if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+    //             project.sharedTokenOnOff = true
+    //           } else {
+    //             project.sharedTokenOnOff = false
+    //           }
+    //         }
+    //         if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
+    //           project.tmp_invite_emails = []
+    //         }
+    //         project.is_owner = false
+    //         project.allow_to_write = false
+    //         project.allow_to_read = false
+    //         if (project.organization === this.$store.state.user.personal_organization) {
+    //           project.is_owner = true
+    //           project.allow_to_write = true
+    //           project.allow_to_read = true
+    //         } else {
+    //           if (project.organization !== this.$store.state.user.personal_organization) {
+    //             project.is_owner = false
+    //           }
+    //           if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+    //             if (project.can_write.includes(this.$store.state.user.id)) {
+    //               project.allow_to_write = true
+    //             }
+    //           } else {
+    //             project.can_write = []
+    //           }
+    //         }
+    //         this.projects.push(project)
+    //       }
+    //     }
+    //   }))
+    //   this.ui.projectTable.isBusy = false
+    // },
+    // editProjectList: function (projectPosition, listPosition) {
+    //   this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
+    //   this.$refs['new-project-list'].show()
+    // },
     cleanProjectList: function () {
       this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-    },
-    cleanProject: function () {
-      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
     updateProjectList: function () {
       axios.patch(`/api/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
@@ -424,132 +407,6 @@ export default {
           this.getProjects()
           this.$refs['new-project-list'].hide()
           this.ui.projectTable.isBusy = true
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    openModalNewFindingTable: function () {
-      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-      this.$refs['new-project'].show()
-    },
-    modalRemoveProject: function (project) {
-      this.buffer_project = JSON.parse(JSON.stringify(project))
-      this.$refs['modal-remove-project'].show()
-    },
-    removeProject: function () {
-      this.ui.projectTable.isBusy = true
-      const params = {
-        organization: this.$route.params.id,
-        project_id: this.buffer_project.id
-      }
-      axios.get('/api/isoqf_lists', { params })
-        .then((response) => {
-          let requestsLists = []
-          const lists = response.data
-          for (let list of lists) {
-            this.getFindings(list.id)
-            requestsLists.push(axios.delete(`/api/isoqf_lists/${list.id}`))
-          }
-          this.processRequests(requestsLists)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_list_categories', { params })
-        .then((response) => {
-          let requestsCategories = []
-          const categories = response.data
-          for (let category of categories) {
-            requestsCategories.push(axios.delete(`/api/isoqf_list_categories/${category.id}`))
-          }
-          this.processRequests(requestsCategories)
-        })
-      axios.get('/api/isoqf_references', { params })
-        .then((response) => {
-          let referencesRequests = []
-          const references = response.data
-          for (let reference of references) {
-            referencesRequests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-          }
-          this.processRequests(referencesRequests)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_assessments', { params })
-        .then((response) => {
-          let requestsAssessments = []
-          const methAssessments = response.data
-          for (let methAssessment of methAssessments) {
-            requestsAssessments.push(axios.delete(`/api/isoqf_assessments/${methAssessment.id}`))
-          }
-          this.processRequests(requestsAssessments)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_characteristics', { params })
-        .then((response) => {
-          let requestsCharacteristics = []
-          const charOfStudies = response.data
-          for (let charOfStudy of charOfStudies) {
-            requestsCharacteristics.push(axios.delete(`/api/isoqf_characteristics/${charOfStudy.id}`))
-          }
-          this.processRequests(requestsCharacteristics)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_projects/${this.buffer_project.id}`)
-        .then((response) => {
-          this.getProjects()
-          this.ui.projectTable.isBusy = false
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    getFindings: function (id) {
-      const params = {
-        organization: this.$route.params.id,
-        list_id: id
-      }
-      axios.get('/api/isoqf_findings', { params })
-        .then((response) => {
-          if (response.data.length) {
-            let requestsFindings = []
-            const findings = response.data
-            for (let finding of findings) {
-              this.getExtractedData(finding.id)
-              requestsFindings.push(axios.delete(`/api/isoqf_findings/${finding.id}`))
-            }
-            this.processRequests(requestsFindings)
-          }
-        })
-    },
-    getExtractedData: function (id) {
-      const params = {
-        organization: this.$route.params.id,
-        finding_id: id
-      }
-      axios.get('/api/isoqf_extracted_data', { params })
-        .then((response) => {
-          let requestsExtractedData = []
-          const extractedData = response.data
-          for (let data of extractedData) {
-            requestsExtractedData.push(axios.delete(`/api/isoqf_extracted_data/${data.id}`))
-          }
-          this.processRequests(requestsExtractedData)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    processRequests: function (requests) {
-      axios.all(requests)
-        .then(() => {
-          // console.log(responses)
         })
         .catch((error) => {
           console.log(error)

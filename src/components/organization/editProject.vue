@@ -1,13 +1,21 @@
 <template>
   <div>
+    <template v-if="item.allow_to_write">
     <b-button
-      v-if="item.allow_to_write"
       title="Edit"
       variant="outline-success"
       @click="openModalEditProject(item)">
       <font-awesome-icon
         icon="edit"></font-awesome-icon>
     </b-button>
+    </template>
+    <template v-else>
+      <b-button
+        v-b-tooltip.hover
+        title="Create a new Interactive Summary of Qualitative Findings Table"
+        variant="success"
+        @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
+    </template>
 
     <b-modal
         id="new-project"
@@ -42,7 +50,12 @@ const organizationForm = () => import(/* webpackChunkName: "organizationform" */
 export default {
   name: 'editProject',
   props: {
-    item: Object,
+    item: {
+      type: Object,
+      default () {
+        return {}
+      }
+    },
     projects: Array
   },
   data () {
@@ -161,9 +174,16 @@ export default {
           })
       }
     },
+    openModalNewFindingTable: function () {
+      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+      this.$refs['new-project'].show()
+    },
     openModalEditProject: function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
       this.$refs['new-project'].show()
+    },
+    countDownChanged (dismissCountDown) {
+      this.ui.dismissCounters.dismissCountDown = dismissCountDown
     },
     closeModalProject: function () {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
