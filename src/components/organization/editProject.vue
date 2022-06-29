@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline">
     <template v-if="item.allow_to_write">
     <b-button
       title="Edit"

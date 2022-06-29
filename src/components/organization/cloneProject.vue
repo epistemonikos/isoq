@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline">
     <b-button
       v-if="item.is_owner || item.allow_to_write"
       title="Duplicate"

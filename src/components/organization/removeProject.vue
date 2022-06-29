@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline">
     <b-button
       v-if="item.is_owner"
       title="Remove"

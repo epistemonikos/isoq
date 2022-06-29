@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline">
     <b-button
       v-if="item.is_owner && (item.sharedToken.length)"
       title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"

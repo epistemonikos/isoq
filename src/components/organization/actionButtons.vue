@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-inline">
     <clone-project-btn
       :item="item"
       :projects="projects"
