@@ -12,15 +12,10 @@
       :item="item"
       :projects="projects"
       @getProjects="getProjects"></edit-project>
-    <!--
-    <b-button
-      v-if="item.is_owner"
-      title="Remove"
-      variant="outline-danger"
-      @click="modalRemoveProject(item)">
-      <font-awesome-icon
-        icon="trash"></font-awesome-icon>
-    </b-button> -->
+    <remove-project
+      :item="item"
+      :projects="projects"
+      @getProjects="getProjects"></remove-project>
   </div>
 </template>
 
@@ -28,6 +23,7 @@
 import cloneProjectBtn from './cloneProject'
 import shareProjectBtn from './shareProject'
 import editProject from './editProject'
+import removeProject from './removeProject'
 
 export default {
   name: 'actionButtons',
@@ -46,7 +42,8 @@ export default {
   components: {
     'clone-project-btn': cloneProjectBtn,
     'share-project': shareProjectBtn,
-    'edit-project': editProject
+    'edit-project': editProject,
+    'remove-project': removeProject
   }
 }
 </script>
