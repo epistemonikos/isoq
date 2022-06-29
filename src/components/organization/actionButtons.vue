@@ -8,15 +8,11 @@
       :item="item"
       :projects="projects"
       @getProjects="getProjects"></share-project>
+    <edit-project
+      :item="item"
+      :projects="projects"
+      @getProjects="getProjects"></edit-project>
     <!--
-    <b-button
-      v-if="item.allow_to_write"
-      title="Edit"
-      variant="outline-success"
-      @click="openModalEditProject(item)">
-      <font-awesome-icon
-        icon="edit"></font-awesome-icon>
-    </b-button>
     <b-button
       v-if="item.is_owner"
       title="Remove"
@@ -31,6 +27,7 @@
 <script>
 import cloneProjectBtn from './cloneProject'
 import shareProjectBtn from './shareProject'
+import editProject from './editProject'
 
 export default {
   name: 'actionButtons',
@@ -48,7 +45,8 @@ export default {
   },
   components: {
     'clone-project-btn': cloneProjectBtn,
-    'share-project': shareProjectBtn
+    'share-project': shareProjectBtn,
+    'edit-project': editProject
   }
 }
 </script>
