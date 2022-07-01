@@ -513,6 +513,10 @@
                                 outlined
                                 :fields="meth_assessments.fieldsObj"
                                 :items="meth_assessments.items">
+                                <template
+                                  v-slot:cell(authors)="data">
+                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                                </template>
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
@@ -540,6 +544,10 @@
                                 outlined
                                 :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                                 :items="extracted_data.items">
+                                <template
+                                  v-slot:cell(authors)="data">
+                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                                </template>
                                 <template v-slot:cell(column_0)="data">
                                   <template
                                     v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
@@ -605,6 +613,10 @@
                             outlined
                             :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                             :items="extracted_data.items">
+                            <template
+                              v-slot:cell(authors)="data">
+                              <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                            </template>
                             <template v-slot:cell(column_0)="data">
                               <template
                                 v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
@@ -668,6 +680,10 @@
                                 outlined
                                 :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
                                 :items="extracted_data.items">
+                                <template
+                                  v-slot:cell(authors)="data">
+                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                                </template>
                                 <template v-slot:cell(column_0)="data">
                                   <template
                                     v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
@@ -729,6 +745,10 @@
                                 outlined
                                 :fields="characteristics_studies.fieldsObj"
                                 :items="characteristics_studies.items">
+                                <template
+                                  v-slot:cell(authors)="data">
+                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                                </template>
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
@@ -790,6 +810,10 @@
                                 outlined
                                 :fields="characteristics_studies.fieldsObj"
                                 :items="characteristics_studies.items">
+                                <template
+                                  v-slot:cell(authors)="data">
+                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                                </template>
                               </b-table>
                             </b-tab>
                             <b-tab title="Review Finding">
@@ -1365,6 +1389,10 @@
                   :filter="characteristics_studies_table_settings.filter"
                   class="toDoc">
                   <template
+                    v-slot:cell(authors)="data">
+                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                  </template>
+                  <template
                     v-if="characteristics_studies.tableTop.length"
                     v-slot:thead-top>
                     <b-tr>
@@ -1470,6 +1498,10 @@
                   :fields="meth_assessments.fieldsObj"
                   :items="meth_assessments.items"
                   :filter="methodological_assessments_table_settings.filter">
+                  <template
+                    v-slot:cell(authors)="data">
+                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+                  </template>
                   <template v-slot:cell(actions)="row">
                     <font-awesome-icon icon="trash" @click="openModalRemoveDataMethAssessments(row)" :title="$t('Remove')" />
                     <font-awesome-icon icon="edit" @click="openModalEditDataMethAssessments(row)" :title="$t('Edit')" />
