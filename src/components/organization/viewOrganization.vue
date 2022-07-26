@@ -12,7 +12,8 @@
           <b-col cols="12" class="text-right">
             <edit-project
               :projects="projects"
-              @getProjects="getProjects"></edit-project>
+              @getProjects="getProjects"
+              :newProject="true"></edit-project>
           </b-col>
         </b-row>
         <b-row

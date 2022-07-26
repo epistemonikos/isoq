@@ -11,7 +11,8 @@
     <edit-project
       :item="item"
       :projects="projects"
-      @getProjects="getProjects"></edit-project>
+      @getProjects="getProjects"
+      :newProject="false"></edit-project>
     <remove-project
       :item="item"
       :projects="projects"

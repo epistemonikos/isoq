@@ -9,12 +9,12 @@
         icon="edit"></font-awesome-icon>
     </b-button>
     </template>
-    <template v-else>
-      <b-button
-        v-b-tooltip.hover
-        title="Create a new Interactive Summary of Qualitative Findings Table"
-        variant="success"
-        @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
+    <template v-if="newProject">
+    <b-button
+      v-b-tooltip.hover
+      title="Create a new Interactive Summary of Qualitative Findings Table"
+      variant="success"
+      @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
     </template>
 
     <b-modal
@@ -56,7 +56,8 @@ export default {
         return {}
       }
     },
-    projects: Array
+    projects: Array,
+    newProject: true
   },
   data () {
     return {
