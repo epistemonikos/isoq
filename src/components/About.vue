@@ -12,7 +12,7 @@
         <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
         <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
         <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
-        <li>Watch the <a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video</a> for an overview</li>
+        <li>In March 2022 we launched the software with a webinar <a href="https://vimeo.com/737300971" target="_blank">presentation</a> and <a href="https://vimeo.com/738892529" target="_blank">live demo</a> of the software.</li>
       </ul>
 
       <h3>What is GRADE-CERQual?</h3>
