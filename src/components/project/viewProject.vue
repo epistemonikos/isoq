@@ -38,42 +38,10 @@
         fill
         v-model="tabOpened">
         <b-tab>
-          <b-row>
-            <b-col
-              cols="12">
-              <b-alert
-                :show="msgUpdateProject !==null && msgUpdateProject.length"
-                dismissible
-                variant="info"
-                @dismissed="dismissAlertProject">
-                {{ msgUpdateProject }}
-              </b-alert>
-            </b-col>
-            <b-col
-              cols="12"
-              class="mb-2">
-              <h2>Project properties</h2>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col
-              cols="12">
-              <organizationForm
-                :formData="project"
-                :canWrite="checkPermissions()"></organizationForm>
-            </b-col>
-          </b-row>
-          <b-row align-h="end" v-if="checkPermissions()">
-            <b-col
-              cols="6">
-              <b-button
-                block
-                variant="outline-success"
-                @click="updateProjectInfo">
-                Save
-              </b-button>
-            </b-col>
-          </b-row>
+          <projectProperties
+            :project="project"
+            :checkPermissions="checkPermissions()"
+            @updateModificationTime="updateModificationTime"></projectProperties>
         </b-tab>
         <b-tab>
           <b-row>
@@ -2037,7 +2005,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Tabl
 import Papa from 'papaparse'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm')
+const projectProperties = () => import('@/components/project/projectProperties')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop')
 const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria')
@@ -2046,7 +2014,7 @@ const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp
 export default {
   components: {
     draggable,
-    organizationForm,
+    projectProperties,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
     'criteria': Criteria,
@@ -4578,27 +4546,6 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    updateProjectInfo: function () {
-      let project = JSON.parse(JSON.stringify(this.project))
-      project.private = true
-      project.is_public = false
-      if (project.public_type !== 'private') {
-        project.private = false
-        project.is_public = true
-      }
-      axios.patch(`/api/isoqf_projects/${project.id}`, project)
-        .then(() => {
-          this.msgUpdateProject = 'The project has been updated'
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-          this.updateModificationTime()
-        })
-        .catch((error) => {
-          this.msgUpdateProject = error
-        })
-    },
-    dismissAlertProject: function () {
-      this.msgUpdateProject = null
     },
     generateTemplate: function () {
       // const _references = JSON.parse(JSON.stringify(this.references))
