@@ -12,8 +12,8 @@
         <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
         <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
         <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
-        <li>Watch the <a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video</a> for an overview</li>
       </ul>
+      <p>In March 2022 we launched the software with a webinar <a href="https://vimeo.com/737300971" target="_blank">presentation</a> and <a href="https://vimeo.com/738892529" target="_blank">live demo</a> of the software.</p>
 
       <h3>What is GRADE-CERQual?</h3>
       <p><a href="https://www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
