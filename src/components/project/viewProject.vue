@@ -47,6 +47,7 @@
           <myData
             :checkPermissions="checkPermissions()"
             :references="references"
+            :refs="refs"
             :ui="ui"
             :project="project"
             :charsOfStudies="charsOfStudies"
@@ -61,11 +62,16 @@
             :lists="lists"
             :episte_response="episte_response"
             :loadReferences="loadReferences"
+            :charsOfStudiesTableSettingsisBusy="false"
+            :txtAuthorYear="txtAuthorYear"
             @getReferences="getReferences"
             @updateMyDataTables="updateMyDataTables"
             @restoreEpisteResponse="restoreEpisteResponse"
             @changeLoadReferencesStatus="changeLoadReferencesStatus"
-            @openModalReferencesSingle="openModalReferencesSingle"></myData>
+            @openModalReferencesSingle="openModalReferencesSingle"
+            @updateModificationTime="updateModificationTime"
+            @getAuthorsFormat="retrieveAuthorsFormat"
+            @getCharacteristics="getCharacteristics"></myData>
         </b-tab>
         <b-tab
           :disabled="(references.length) ? false : true">
@@ -1362,11 +1368,6 @@ export default {
           { key: 'authors', label: 'Author(s), Year' }
         ]
       },
-      charsOfStudiesTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
       tabOpened: 1,
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
@@ -1449,7 +1450,9 @@ export default {
       findings: [],
       editingUser: {
         show: false
-      }
+      },
+      charsOfStudiesTableSettingsisBusy: false,
+      txtAuthorYear: ''
     }
   },
   watch: {
@@ -1545,13 +1548,6 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    getReferenceInfo: function (refId) {
-      for (let ref of this.refs) {
-        if (ref.id === refId) {
-          return ref.content
-        }
-      }
     },
     returnRefWithNames: function (array) {
       let authorsList = []
@@ -3166,34 +3162,9 @@ export default {
           this.printErrors(error)
         })
     },
-    openModalCharsOfStudies: function () {
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let editFields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of fields) {
-        if (!excluded.includes(field.key)) {
-          editFields.push(field.label)
-        }
-      }
-      this.charsOfStudiesFieldsModal.fields = editFields
-      this.$refs['open-char-of-studies-table-modal'].show()
-    },
-    openModalCharsOfStudiesEdit: function () {
-      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let fields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      this.charsOfStudiesFieldsModalEdit.fields = fields
-      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
-      this.$refs['open-char-of-studies-table-modal-edit'].show()
-    },
     getCharacteristics: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
+      // this.charsOfStudiesTableSettings.isBusy = true
+      this.charsOfStudiesTableSettingsisBusy = true
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
@@ -3223,7 +3194,8 @@ export default {
                 this.charsOfStudiesFieldsModal.items.push(item)
               }
             }
-            this.charsOfStudiesTableSettings.isBusy = false
+            // this.charsOfStudiesTableSettings.isBusy = false
+            this.charsOfStudiesTableSettingsisBusy = false
           } else {
             this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
@@ -3290,7 +3262,8 @@ export default {
       }
       if (this.importDataTable.fields.length && this.importDataTable.items.length) {
         if (endpoint === 'isoqf_characteristics') {
-          this.charsOfStudiesTableSettings.isBusy = true
+          // this.charsOfStudiesTableSettings.isBusy = true
+          this.charsOfStudiesTableSettingsisBusy = true
           if (this.charsOfStudies.items.length) {
             this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
           } else {
@@ -4184,6 +4157,9 @@ export default {
     },
     changeLoadReferencesStatus: function (status) {
       this.loadReferences = status
+    },
+    retrieveAuthorsFormat: function (author, year) {
+      this.txtAuthorYear = this.getAuthorsFormat(author, year)
     }
   },
   computed: {

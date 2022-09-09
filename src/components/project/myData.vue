@@ -920,7 +920,10 @@ export default {
     lists: Array,
     episte_response: Array,
     loadReferences: Boolean,
-    references: Array
+    references: Array,
+    refs: Array,
+    charsOfStudiesTableSettingsisBusy: Boolean,
+    txtAuthorYear: String
   },
   components: {
     videoHelp,
@@ -937,7 +940,12 @@ export default {
       pubmed_loading: false,
       pubmed_error: false,
       pubmed_selected: [],
-      msgUploadReferences: ''
+      msgUploadReferences: '',
+      charsOfStudiesTableSettings: {
+        currentPage: 1,
+        perPage: 10,
+        isBusy: false || this.charsOfStudiesTableSettingsisBusy
+      }
     }
   },
   methods: {
@@ -1117,7 +1125,9 @@ export default {
           objItem['column_' + cnt] = ''
         }
         objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        this.$emit('getAuthorsFormat', r.authors, r.publication_year)
+        // objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        objItem.authors = this.txtAuthorYear
         params.items.push(objItem)
       }
 
@@ -1137,7 +1147,8 @@ export default {
       } else {
         axios.post('/api/isoqf_characteristics', params)
           .then((response) => {
-            this.getCharacteristics()
+            // this.getCharacteristics()
+            this.$emit('getCharacteristics')
           })
           .catch((error) => {
             this.printErrors(error)
@@ -1175,7 +1186,8 @@ export default {
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
-          this.getCharacteristics()
+          // this.getCharacteristics()
+          this.$emit('getCharacteristics')
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1274,7 +1286,8 @@ export default {
 
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then(() => {
-          this.getCharacteristics()
+          // this.getCharacteristics()
+          this.$emit('getCharacteristics')
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1310,7 +1323,9 @@ export default {
           objItem['column_' + cnt] = ''
         }
         objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        this.$emit('getAuthorsFormat', r.authors, r.publication_year)
+        // objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
+        objItem.authors = this.txtAuthorYear
         params.items.push(objItem)
       }
 
@@ -1512,6 +1527,42 @@ export default {
     emitOpenModalReferencesSingle: function () {
       this.$emit('openModalReferencesSingle', true)
     },
+    updateModificationTime: function () {
+      this.$emit('updateModificationTime')
+    },
+    openModalCharsOfStudies: function () {
+      let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let editFields = []
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of fields) {
+        if (!excluded.includes(field.key)) {
+          editFields.push(field.label)
+        }
+      }
+      this.charsOfStudiesFieldsModal.fields = editFields
+      this.$refs['open-char-of-studies-table-modal'].show()
+    },
+    openModalCharsOfStudiesEdit: function () {
+      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+      let fields = []
+      const excluded = ['ref_id', 'authors', 'actions']
+      for (let field of _fields) {
+        if (!excluded.includes(field.key)) {
+          fields.push(field)
+        }
+      }
+
+      this.charsOfStudiesFieldsModalEdit.fields = fields
+      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
+      this.$refs['open-char-of-studies-table-modal-edit'].show()
+    },
+    getReferenceInfo: function (refId) {
+      for (let ref of this.refs) {
+        if (ref.id === refId) {
+          return ref.content
+        }
+      }
+    },
     printErrors: function (error) {
       if (error.response) {
         // The request was made and the server responded with a status code
@@ -1603,6 +1654,9 @@ export default {
           }
         }
       })
+    },
+    charsOfStudiesTableSettingsisBusy: function () {
+      this.charsOfStudiesTableSettings.isBusy = this.charsOfStudiesTableSettingsisBusy
     }
   }
 }
