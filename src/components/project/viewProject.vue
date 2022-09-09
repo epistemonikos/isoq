@@ -45,7 +45,27 @@
         </b-tab>
         <b-tab>
           <myData
-            :checkPermissions="checkPermissions()"></myData>
+            :checkPermissions="checkPermissions()"
+            :references="references"
+            :ui="ui"
+            :project="project"
+            :charsOfStudies="charsOfStudies"
+            :charsOfStudiesFieldsModal="charsOfStudiesFieldsModal"
+            :charsOfStudiesFieldsModalEdit="charsOfStudiesFieldsModalEdit"
+            :importDataTable="importDataTable"
+            :removeReferenceCharsOfStudies="removeReferenceCharsOfStudies"
+            :methodologicalTableRefs="methodologicalTableRefs"
+            :methodologicalFieldsModal="methodologicalFieldsModal"
+            :methodologicalFieldsModalEdit="methodologicalFieldsModalEdit"
+            :removeReferenceMethodological="removeReferenceMethodological"
+            :lists="lists"
+            :episte_response="episte_response"
+            :loadReferences="loadReferences"
+            @getReferences="getReferences"
+            @updateMyDataTables="updateMyDataTables"
+            @restoreEpisteResponse="restoreEpisteResponse"
+            @changeLoadReferencesStatus="changeLoadReferencesStatus"
+            @openModalReferencesSingle="openModalReferencesSingle"></myData>
         </b-tab>
         <b-tab
           :disabled="(references.length) ? false : true">
@@ -1119,6 +1139,7 @@ const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop')
 const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
+const myData = () => import(/* webpackChunkName: "videohelp" */ './myData')
 
 export default {
   components: {
@@ -1127,7 +1148,8 @@ export default {
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
     'criteria': Criteria,
-    videoHelp
+    videoHelp,
+    myData
   },
   data () {
     return {
@@ -1320,7 +1342,6 @@ export default {
       selected_references: [],
       lastId: 1,
       mode: 'edit',
-      msgUploadReferences: '',
       charsOfStudiesFieldsModal: {
         nroColumns: 1,
         fields: [],
@@ -1425,9 +1446,6 @@ export default {
       changeTxtProjectProperties: '+',
       pubmed_request: '',
       pubmed_requested: [],
-      pubmed_selected: [],
-      pubmed_loading: false,
-      pubmed_error: false,
       findings: [],
       editingUser: {
         show: false
@@ -1494,6 +1512,40 @@ export default {
     this.getProject()
   },
   methods: {
+    getReferences: function (changeTab = true) {
+      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          const data = JSON.parse(JSON.stringify(response.data))
+          let _references = data
+          this.references = data
+          let _refs = []
+          for (let reference of _references) {
+            let content = this.parseReference(reference)
+            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+              _refs.push({'id': reference.id, 'content': content})
+            }
+          }
+
+          this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
+          if (changeTab) {
+            if (this.references.length) {
+              this.$nextTick(() => {
+                if (this.$route.hash) {
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-Applying-CERQual']
+                  this.tabOpened = tabs.indexOf(this.$route.hash)
+                } else {
+                  this.tabOpened = 2
+                }
+              })
+            }
+          }
+          this.loadReferences = false
+          this.updateMyDataTables()
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
     getReferenceInfo: function (refId) {
       for (let ref of this.refs) {
         if (ref.id === refId) {
@@ -1530,41 +1582,6 @@ export default {
       } else {
         return ''
       }
-    },
-    processPubmedData: function (data) {
-      const refTitle = data.title
-      const refDatabase = 'PubMed'
-      let authors = []
-      for (let author of data.authors) {
-        authors.push(author.name)
-      }
-      const refAuthors = authors
-      const refPublicatonYear = data.pubdate.split(' ')[0]
-      const refIssn = data.issn
-      const refUid = data.uid
-      let refDisabled = false
-
-      for (let _reference of this.references) {
-        if (Object.prototype.hasOwnProperty.call(_reference, 'uid') && Object.prototype.hasOwnProperty.call(data, 'uid')) {
-          if (_reference.uid === data.uid) {
-            refDisabled = true
-          }
-        }
-      }
-
-      const reference = {
-        title: refTitle,
-        database: refDatabase,
-        authors: refAuthors,
-        publication_year: refPublicatonYear,
-        isbn_issn: refIssn,
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        disabled: refDisabled,
-        uid: refUid
-      }
-
-      this.pubmed_requested.push(reference)
     },
     EpisteRequest: function () {
       document.getElementById('btnEpisteRequest').disabled = true
@@ -1628,69 +1645,6 @@ export default {
         }
       }
       return result
-    },
-    prefetchDataForExtractedDataUpdate: function (references) {
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      let _requestFindings = []
-      let _requestExtractedData = []
-
-      for (let list of _lists) {
-        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
-      }
-      axios.all(_requestFindings)
-        .then((responses) => {
-          for (let _response of responses) {
-            let response = _response.data[0]
-            _requestExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${response.organization}&finding_id=${response.id}`))
-          }
-          this.updateExtractedDataReferences(_requestExtractedData, references)
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    updateExtractedDataReferences: function (querys = [], references = []) {
-      if (references.length) {
-        if (querys.length) {
-          axios.all(querys)
-            .then((responses) => {
-              let item = {}
-              let _items = []
-              let patchExtractedData = []
-              for (let reference of references) {
-                item = {
-                  'ref_id': reference.id,
-                  'authors': this.parseReference(reference, true),
-                  'column_0': ''
-                }
-                _items.push(item)
-              }
-              for (let _response of responses) {
-                let response = _response.data[0]
-                for (let _item of _items) {
-                  for (let item of response.items) {
-                    if (item.ref_id === _item.ref_id) {
-                      if (item.column_0.length) {
-                        _item.column_0 = item.column_0
-                      }
-                    }
-                  }
-                }
-                const params = {
-                  items: _items
-                }
-                patchExtractedData.push(axios.patch(`/api/isoqf_extracted_data/${response.id}`, params))
-              }
-              if (patchExtractedData.length) {
-                axios.all(patchExtractedData)
-                  .then(() => {})
-                  .catch((error) => {
-                    this.printErrors(error)
-                  })
-              }
-            })
-        }
-      }
     },
     getProject: function () {
       const params = {
@@ -3238,111 +3192,6 @@ export default {
       this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
       this.$refs['open-char-of-studies-table-modal-edit'].show()
     },
-    charsOfStudiesNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      if (_fields.length) {
-        for (let field of _fields) {
-          if (!excluded.includes(field.key)) {
-            fields.push(field)
-          }
-        }
-        this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
-      }
-
-      this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
-    },
-    saveCharacteristicsStudiesFields: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-      params.items = []
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.nro_of_fields = fields.length
-
-      for (let r of references) {
-        let objItem = {}
-        for (let cnt in fields) {
-          objItem['column_' + cnt] = ''
-        }
-        objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
-        params.items.push(objItem)
-      }
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
-        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-          .then((response) => {
-            this.getProject()
-          }).catch((error) => {
-            console.log('error: ', error)
-          })
-      } else {
-        axios.post('/api/isoqf_characteristics', params)
-          .then((response) => {
-            this.getCharacteristics()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
-    updateCharacteristicsStudiesFields: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
-      let params = {}
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-            item[field.key] = ''
-          }
-        }
-      }
-
-      params.items = _items
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
-          this.getCharacteristics()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
@@ -3423,39 +3272,6 @@ export default {
       this.charsOfStudiesFieldsModal.items = items
       this.charsOfStudiesFieldsModal.selected_item_index = index
       this.$refs['edit-chars-of-studies-data'].show()
-    },
-    saveDataCharsOfStudies: function () {
-      let params = {}
-      let characteristicId = this.charsOfStudies.id
-      params.items = this.charsOfStudiesFieldsModal.items
-
-      axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
-        .then((response) => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    generateTemplate: function () {
-      // const _references = JSON.parse(JSON.stringify(this.references))
-      const BOM = '\uFEFF'
-      const _refs = JSON.parse(JSON.stringify(this.refs))
-      let csvContent = 'data:text/csv;charset=utf-8,' + BOM
-      csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
-
-      for (let ref of _refs) {
-        // csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
-        csvContent += ref.id + ',' + '"' + ref.content.split(';')[0] + '"' + '\r\n'
-      }
-
-      let encodedUri = encodeURI(csvContent)
-      let link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', 'my_data.csv')
-      document.body.appendChild(link)
-
-      link.click()
     },
     loadTableImportData: function (event) {
       const file = event.target.files[0]
@@ -3558,55 +3374,6 @@ export default {
       }
       this.$refs['removeContentModalCharsOfStudies'].show()
     },
-    removeDataFromLists: function () {
-      const index = this.removeReferenceCharsOfStudies.index
-      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-      let params = {}
-      let cnt = 0
-      let items = []
-      let _keys = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let keys = []
-      for (let k of _keys) {
-        keys.push(k.key)
-      }
-
-      for (let item of _items) {
-        if (cnt === index) {
-          let obj = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-        cnt++
-      }
-
-      params.items = items
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then(() => {
-          this.getCharacteristics()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    cleanRemoveContentCharsOfStudies: function () {
-      this.removeReferenceCharsOfStudies = {
-        id: null,
-        findings: []
-      }
-    },
     openModcontent: function (edit = false) {
       let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
       let fields = []
@@ -3625,106 +3392,6 @@ export default {
         this.methodologicalFieldsModal.fields = fields
         this.$refs['open-methodological-table-modal'].show()
       }
-    },
-    saveMethodologicalFields: function () {
-      this.methodologicalTableRefsTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-      params.items = []
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.nro_of_fields = fields.length
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      for (let r of references) {
-        let objItem = {}
-        for (let cnt in fields) {
-          objItem['column_' + cnt] = ''
-        }
-        objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
-        params.items.push(objItem)
-      }
-
-      if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
-        axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-          .then(() => {
-            this.getMethodological()
-          }).catch((error) => {
-            console.log('error: ', error)
-          })
-      } else {
-        axios.post('/api/isoqf_assessments', params)
-          .then(() => {
-            this.getProject()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
-    methodologicalNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      this.methodologicalFieldsModalEdit.nroColumns = fields.length + 1
-      column = parseInt(this.methodologicalFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
-      this.methodologicalFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
-    },
-    updateMethodologicalFields: function () {
-      this.methodologicalTableRefsTableSettings.isBusy = true
-      let params = {}
-      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-          }
-        }
-      }
-
-      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then(() => {
-          this.getMethodological()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
     },
     deleteFieldFromMethodological: function (index) {
       let params = {}
@@ -3771,19 +3438,6 @@ export default {
       this.methodologicalFieldsModal.selected_item_index = index
       this.$refs['edit-methodological-data'].show()
     },
-    saveDataMethodological: function () {
-      let params = {}
-      const id = this.methodologicalTableRefs.id
-      params.items = this.methodologicalFieldsModal.items
-
-      axios.patch(`/api/isoqf_assessments/${id}`, params)
-        .then(() => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     removeItemMethodological: function (index, id) {
       this.removeReferenceMethodological = {
         id: null,
@@ -3808,49 +3462,6 @@ export default {
         id: null,
         findings: []
       }
-    },
-    removeDataContentMethodological: function () {
-      const index = this.removeReferenceMethodological.index
-      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-      let params = {}
-      let cnt = 0
-      let items = []
-      let _keys = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-      let keys = []
-      for (let k of _keys) {
-        keys.push(k.key)
-      }
-
-      for (let item of _items) {
-        if (cnt === index) {
-          let obj = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-        cnt++
-      }
-
-      params.items = items
-
-      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then(() => {
-          this.getMethodological()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
     },
     findRelatedFindings: function (refId = null) {
       if (refId) {
@@ -4483,10 +4094,6 @@ export default {
       this.ui.project.showFilterThree = false
       this.table_settings.filter = ''
     },
-    continueToIsoq: function () {
-      window.scrollTo({top: 0, behavior: 'smooth'})
-      this.tabOpened = 2
-    },
     checkPermissions: function (type = 'can_write') {
       if (this.$store.state.user.personal_organization === this.$route.params.org_id) {
         return true
@@ -4519,6 +4126,64 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    updateMyDataTables: function () {
+      let _itemsChars = []
+      let _itemsMeth = []
+
+      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+              }
+            }
+            _items.push(..._itemsChars)
+            let params = {
+              items: _items
+            }
+            axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
+              .then(() => {
+                this.getCharacteristics()
+              })
+          }
+        })
+
+      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+              }
+            }
+            _items.push(..._itemsMeth)
+            let params = {
+              items: _items
+            }
+            axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
+              .then(() => {
+                this.getMethodological()
+              })
+          }
+        })
+    },
+    restoreEpisteResponse: function () {
+      this.episte_response = []
+    },
+    changeLoadReferencesStatus: function (status) {
+      this.loadReferences = status
     }
   },
   computed: {
