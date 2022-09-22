@@ -898,6 +898,7 @@
 
 <script>
 import axios from 'axios'
+import draggable from 'vuedraggable'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 const criteria = () => import('../Criteria.vue')
 const backToTop = () => import('../backToTop.vue')
@@ -912,7 +913,6 @@ export default {
     charsOfStudiesFieldsModal: Object,
     charsOfStudiesFieldsModalEdit: Object,
     importDataTable: Object,
-    removeReferenceCharsOfStudies: Object,
     methodologicalTableRefs: Object,
     methodologicalFieldsModal: Object,
     methodologicalFieldsModalEdit: Object,
@@ -922,13 +922,14 @@ export default {
     loadReferences: Boolean,
     references: Array,
     refs: Array,
-    charsOfStudiesTableSettingsisBusy: Boolean,
+    // charsOfStudiesTableSettingsisBusy: Boolean,
     txtAuthorYear: String
   },
   components: {
     videoHelp,
     criteria,
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    draggable
   },
   data () {
     return {
@@ -944,7 +945,11 @@ export default {
       charsOfStudiesTableSettings: {
         currentPage: 1,
         perPage: 10,
-        isBusy: false || this.charsOfStudiesTableSettingsisBusy
+        isBusy: false // || this.charsOfStudiesTableSettingsisBusy
+      },
+      removeReferenceCharsOfStudies: {
+        id: null,
+        findings: []
       }
     }
   },
@@ -1140,7 +1145,8 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
         axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
           .then((response) => {
-            this.getProject()
+            // this.getProject()
+            this.$emit('getProject')
           }).catch((error) => {
             console.log('error: ', error)
           })
@@ -1217,7 +1223,8 @@ export default {
 
       axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
         .then((response) => {
-          this.getProject()
+          // this.getProject()
+          this.$emit('getProject')
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1339,7 +1346,8 @@ export default {
       } else {
         axios.post('/api/isoqf_assessments', params)
           .then(() => {
-            this.getProject()
+            // this.getProject()
+            this.$emit('getProject')
           })
           .catch((error) => {
             this.printErrors(error)
@@ -1402,7 +1410,8 @@ export default {
 
       axios.patch(`/api/isoqf_assessments/${id}`, params)
         .then(() => {
-          this.getProject()
+          // this.getProject()
+          this.$emit('getProject')
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1580,6 +1589,147 @@ export default {
         console.log('Error', error.message)
       }
       console.log(error.config)
+    },
+    removeItemCharOfStudies: function (index, id) {
+      this.removeReferenceCharsOfStudies = {
+        id: null,
+        findings: []
+      }
+      let lists = JSON.parse(JSON.stringify(this.lists))
+
+      this.removeReferenceCharsOfStudies.id = id
+      this.removeReferenceCharsOfStudies.index = index
+
+      for (let list of lists) {
+        for (let ref of list.references) {
+          if (id === ref) {
+            this.removeReferenceCharsOfStudies.findings.push(list.isoqf_id)
+          }
+        }
+      }
+      this.$refs['removeContentModalCharsOfStudies'].show()
+    },
+    deleteFieldFromCharsSudiesEdit: function (index) {
+      let params = {}
+      const _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
+      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+
+      let removedField = _fields.splice(index, 1)[0]
+
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
+          delete item[removedField.key]
+        }
+      }
+
+      params.fields = _fields
+      params.items = _items
+
+      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        .then((response) => {
+          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          const excluded = ['ref_id', 'authors', 'actions']
+          let editFields = []
+          for (let field of _fields) {
+            if (!excluded.includes(field.key)) {
+              editFields.push(field)
+            }
+          }
+
+          this.charsOfStudiesFieldsModalEdit.fields = editFields
+          this.charsOfStudiesFieldsModalEdit.nroColumns = editFields.length
+          // this.getProject()
+          this.$emit('getProject')
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    loadTableImportData: function (event) {
+      const file = event.target.files[0]
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        // this.pre_ImportDataTable = e.target.result
+        this.$emit('preImportDataTable', e.target.result)
+      }
+      reader.readAsText(file)
+    },
+    saveImportedData: function (endpoint = '') {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        fields: this.importDataTable.fields,
+        items: this.importDataTable.items
+      }
+      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
+        if (endpoint === 'isoqf_characteristics') {
+          this.charsOfStudiesTableSettings.isBusy = true
+          // this.charsOfStudiesTableSettingsisBusy = true
+          // this.$emit('charsOfStudiesTableSettingsStatus', true)
+          if (this.charsOfStudies.items.length) {
+            this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
+        }
+        if (endpoint === 'isoqf_assessments') {
+          this.methodologicalTableRefsTableSettings.isBusy = true
+          if (this.methodologicalTableRefs.items.length) {
+            this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
+          } else {
+            this.insertImportedData(endpoint, params)
+          }
+        }
+      }
+      this.$emit('cleanImportDataTableObj')
+      this.$emit('cleanImportDataTable')
+    },
+    cleanImportedData: function (id = '', endpoint = '', params = {}) {
+      axios.delete(`/api/${endpoint}/${id}`)
+        .then(() => {
+          this.insertImportedData(endpoint, params)
+          this.$emit('cleanImportDataTable')
+        })
+    },
+    insertImportedData: function (endpoint = '', params = {}) {
+      const modal = (endpoint === 'isoqf_characteristics') ? 'import-characteristics-table' : 'import-methodological-table'
+      axios.post(`/api/${endpoint}/`, params)
+        .then(() => {
+          // this.getProject()
+          this.$refs[modal].hide()
+          this.charsOfStudiesTableSettings.isBusy = false
+          this.$emit('getProject')
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    cleanVars: function (str = '', modal) {
+      // this.importDataTable = {
+      //   error: null,
+      //   fields: [],
+      //   items: [],
+      //   fieldsObj: [
+      //     { key: 'authors', label: 'Author(s), Year' }
+      //   ]
+      // }
+      this.$emit('cleanImportDataTableObj')
+      // this.pre_ImportDataTable = ''
+      this.$emit('preImportDataTable')
+
+      if (str === 'chars') {
+        this.$refs['import-chars-table-file'].reset()
+      }
+      if (str === 'meth') {
+        this.$refs['import-meth-table-file'].reset()
+      }
+      if (str === 'close') {
+        const _modal = (modal === 'modal-chars') ? 'import-characteristics-table' : 'import-methodological-table'
+        this.$refs[_modal].hide()
+      }
     }
   },
   watch: {
@@ -1654,10 +1804,10 @@ export default {
           }
         }
       })
-    },
-    charsOfStudiesTableSettingsisBusy: function () {
-      this.charsOfStudiesTableSettings.isBusy = this.charsOfStudiesTableSettingsisBusy
     }
+    // charsOfStudiesTableSettingsisBusy: function () {
+    //   this.charsOfStudiesTableSettings.isBusy = this.charsOfStudiesTableSettingsisBusy
+    // }
   }
 }
 </script>
