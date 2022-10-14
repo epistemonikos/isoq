@@ -15,7 +15,14 @@
           <b-nav-item :to="{ name: 'Help' }">Help</b-nav-item>
           <template v-if="$store.getters.isLoggedIn">
             <b-nav-item :to="$i18nRoute({ name: 'viewOrganization', params: {id: this.$store.state.user.personal_organization }})">My Workspace</b-nav-item>
-            <b-nav-item @click="logout">{{ $t('Logout') }}</b-nav-item>
+            <b-nav-item-dropdown right>
+              <!-- Using 'button-content' slot -->
+              <template #button-content>
+                {{username}}
+              </template>
+              <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">Change pasword</b-dropdown-item>
+              <b-dropdown-item @click="logout">{{ $t('Logout') }}</b-dropdown-item>
+            </b-nav-item-dropdown>
           </template>
           <template v-else>
             <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("Login") }}</b-nav-item>
@@ -37,6 +44,17 @@ export default {
     }
   },
   components: { SwitchLanguage },
+  computed: {
+    username: function () {
+      if (this.$store.state.user.first_name.length) {
+        return this.$store.state.user.first_name
+      }
+      if (this.$store.state.user.name.length) {
+        return this.$store.state.user.name
+      }
+      return 'User'
+    }
+  },
   methods: {
     logout: function () {
       this.$store.dispatch('logout')
