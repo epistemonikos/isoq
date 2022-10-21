@@ -89,6 +89,14 @@
                   <font-awesome-icon
                     icon="trash"></font-awesome-icon>
                 </b-button>
+                <b-button
+                  v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
+                  title="Leave"
+                  variant="outline-success"
+                  @click="openModalLeaveProject(data.item)">
+                  <font-awesome-icon
+                    icon="sign-out-alt"></font-awesome-icon>
+                </b-button>
               </template>
               <template v-slot:table-busy>
                 <div class="text-center text-danger my-2">
@@ -311,6 +319,15 @@
           <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
         </template>
       </b-modal>
+      <b-modal
+        ref="unlink-project"
+        id="unlink-project"
+        title="Leave project"
+        @ok="leaveProject"
+        @cancel="cancelLeaveProject"
+        ok-title="Leave">
+        <p>Leave the project <b>{{buffer_project.name}}</b></p>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -321,6 +338,7 @@ const organizationForm = () => import(/* webpackChunkName: "organizationform" */
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
+  name: 'viewOrganization',
   components: {
     'organizationForm': organizationForm,
     videoHelp
@@ -577,6 +595,11 @@ export default {
                 } else {
                   if (project.organization !== this.$store.state.user.personal_organization) {
                     project.is_owner = false
+                  }
+                  if (Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+                    if (project.can_read.includes(this.$store.state.user.id)) {
+                      project.allow_to_read = true
+                    }
                   }
                   if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
                     if (project.can_write.includes(this.$store.state.user.id)) {
@@ -954,10 +977,11 @@ export default {
     unshare: function (_index, userId) {
       const projectId = this.buffer_project.id
       axios.post(`/share/project/${projectId}/unshare?user_id=${userId}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
-        .then((response) => {
-          // this.projects[this.buffer_project.index] = response.data
+        .then(() => {
           this.getProjects()
-          this.users_allowed.splice(_index)
+          if (_index !== null) {
+            this.users_allowed.splice(_index)
+          }
         })
         .catch((error) => {
           console.log(error)
@@ -1315,6 +1339,31 @@ export default {
       this.ui.copy.disableCloneModalBtn = false
       this.buffer_project = this.tmp_buffer_project
       this.$bvModal.hide('clone-modal')
+    },
+    openModalLeaveProject: function (data) {
+      this.buffer_project = {}
+      for (let p of this.projects) {
+        if (p.id === data.id) {
+          this.buffer_project = p
+        }
+      }
+      this.$bvModal.show('unlink-project')
+    },
+    leaveProject: function () {
+      const userId = this.$store.state.user.id
+      axios.post(`/project/${this.buffer_project.id}/unsubscribe?userId=${userId}`)
+        .then((r) => {
+          this.getProjects()
+        })
+        .catch((e) => {
+          console.log(e)
+        })
+
+      this.$bvModal.hide('unlink-project')
+    },
+    cancelLeaveProject: function () {
+      this.buffer_project = this.tmp_buffer_project
+      this.$bvModal.hide('unlink-project')
     }
   }
 }
