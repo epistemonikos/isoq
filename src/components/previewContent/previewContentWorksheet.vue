@@ -14,7 +14,6 @@
       </b-container>
     </b-container>
     <b-container>
-      <!--
       <b-row
         class="d-print-none justify-content-end mb-2 pt-2">
         <b-col
@@ -40,7 +39,6 @@
             </b-button>
         </b-col>
       </b-row>
-      -->
       <b-row class="mt-4">
         <b-col cols="12">
 
@@ -702,7 +700,9 @@ export default {
         return result
       }
     },
-    print: function () {},
+    print: function () {
+      window.print()
+    },
     printErrors: function (error) {
       if (error.response) {
         // The request was made and the server responded with a status code
