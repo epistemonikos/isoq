@@ -324,7 +324,7 @@
       id="assessments-print"
       responsive striped caption-top
       :fields="evidenceProfileFieldsPrintVersion"
-      :items="evidence_profile"
+      :items="evidenceProfile"
       :filter="evidenceProfileTableSettings.filter">
       <template v-slot:head(isoqf_id)="data">
         {{data.label}}
