@@ -895,119 +895,15 @@
                 @openModalStageTwo="openModalStageTwo"
               ></evidence-profile-table>
 
-            <div
-              class="mt-5 mb-5"
-              v-if="show.selected.includes('cs')">
-              <a name="characteristics-of-studies"></a>
-              <h3 class="toDoc">
-                {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
-                <span
-                  v-if="ui.adequacy.chars_of_studies.display_warning"
-                  class="text-danger d-print-none"
-                  v-b-tooltip.hover title="The Characteristics of Studies table, or some data within it, are missing.">
-                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                </span>
-              </h3>
-              <p class="d-print-none font-weight-light">
-                To add data or make changes to this table do so in the
-                <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>
-                section of iSoQ
-              </p>
-              <template v-if="characteristics_studies.fields.length">
-                <bc-filters
-                  v-if="mode==='edit' && characteristics_studies.items.length && checkPermissions(list.organization)"
-                  class="d-print-none"
-                  idname="chars-of-studies-filter"
-                  :tableSettings="characteristics_studies_table_settings"
-                  type="chars_of_studies"
-                  :fields="characteristics_studies.fields"
-                  :items="characteristics_studies.items">
-                </bc-filters>
-                <b-table
-                  id="characteristics"
-                  responsive
-                  head-variant="light"
-                  outlined
-                  :fields="characteristics_studies.fieldsObj"
-                  :items="characteristics_studies.items"
-                  :filter="characteristics_studies_table_settings.filter"
-                  class="toDoc">
-                  <template
-                    v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                  </template>
-                  <template
-                    v-if="characteristics_studies.tableTop.length"
-                    v-slot:thead-top>
-                    <b-tr>
-                      <b-th></b-th>
-                      <b-th
-                        v-for="(value, index) of characteristics_studies.tableTop"
-                        :key="index"
-                        :colspan="value.colspan"
-                        class="text-center">
-                        {{ value.label }}
-                      </b-th>
-                    </b-tr>
-                  </template>
-                  <template v-slot:cell(actions)="row">
-                    <font-awesome-icon
-                      @click="modalDeleteCharsOfStudiesItemData(row)"
-                      icon="trash"
-                      title="Remove"/>
-                    <font-awesome-icon
-                      @click="openModalCharsOfStudiesditData(row)"
-                      icon="edit"
-                      title="Edit" />
-                  </template>
-                </b-table>
-
-                <b-modal
-                  size="xl"
-                  title="Edit data"
-                  ref="modal-stage-three-edit-data"
-                  @ok="saveCharsOfStudiesEditedData">
-                  <b-form-group
-                    v-for="(field, index) in buffer_characteristics_studies.fields"
-                    :key="index"
-                    :label="`${field.label}`"
-                    :label-for="`data-${index}`">
-                    <b-form-input
-                      :id="`data-${index}`"
-                      v-if="field.key === 'ref_id' || field.key === 'authors'"
-                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                      v-model="modal_stage_three_data[field.key]"></b-form-input>
-                    <b-form-textarea
-                      :id="`data-${index}`"
-                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="modal_stage_three_data[field.key]"
-                      rows="6"
-                      max-rows="100"></b-form-textarea>
-                    <b-form-textarea
-                      :id="`data-${index}`"
-                      rows="6"
-                      max-rows="100"
-                      v-model="modal_stage_three_data[field.key]"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-                <b-modal
-                  title="Remove data content"
-                  @ok="removeCharsOfStudiesItemData"
-                  ref="modal-stage-three-remove-data"
-                  scrollable
-                  size="xl">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                  <b-table
-                    responsive
-                    :fields="buffer_modal_stage_three.fields"
-                    :items="buffer_modal_stage_three.data"
-                    class="mb-5">
-                  </b-table>
-                </b-modal>
-
-                <back-to-top></back-to-top>
-              </template>
-            </div>
+            <table-chars-of-studies
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :charsOfStudies="characteristics_studies"
+              :refsWithTitle="refsWithTitle"
+              :bufferCharsOfStudies="buffer_characteristics_studies"></table-chars-of-studies>
 
             <div
               class="mt-5 mb-5"
@@ -1205,6 +1101,7 @@ const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
+const editListCharsOfStudies = () => import('./editListCharsOfStudies.vue')
 
 export default {
   components: {
@@ -1216,7 +1113,8 @@ export default {
     videoHelp,
     'edit-header-list': editHeaderList,
     'edit-list-actions-buttons': editListActionButtons,
-    'evidence-profile-table': editListEvidenceProfile
+    'evidence-profile-table': editListEvidenceProfile,
+    'table-chars-of-studies': editListCharsOfStudies
   },
   data () {
     return {
@@ -1260,14 +1158,6 @@ export default {
         perPage: 10,
         pageOptions: [10, 50, 100],
         isBusy: false
-      },
-      characteristics_studies_table_settings: {
-        filter: '',
-        totalRows: 1,
-        currentPage: 1,
-        perPage: 10,
-        pageOptions: [10, 50, 100],
-        last_column: 0
       },
       methodological_assessments_table_settings: {
         filter: '',
@@ -1328,10 +1218,6 @@ export default {
         adequacy: {option: null, explanation: '', notes: '', title: ''},
         relevance: {option: null, explanation: '', notes: '', title: ''},
         cerqual: {option: null, explanation: '', notes: '', title: ''}
-      },
-      buffer_modal_stage_three: {
-        fields: [],
-        data: []
       },
       buffer_extracted_data: {
         fields: [],
@@ -1395,7 +1281,6 @@ export default {
         items: []
       },
       buffer_characteristics_studies: {},
-      modal_stage_three_data: {},
       modal_meth_assessments_data: {},
       buffer_modal_meth_assessments_fields: {},
       extracted_data: {
@@ -1860,66 +1745,6 @@ export default {
               fields: []
             }
           }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalCharsOfStudiesditData: function (row) {
-      let item = JSON.parse(JSON.stringify(row))
-      let index = item.index
-      let data = item.item
-
-      this.modal_stage_three_data = data
-      this.characteristics_studies.data_index = index
-      this.$refs['modal-stage-three-edit-data'].show()
-    },
-    saveCharsOfStudiesEditedData: function () {
-      let CharsOfStudiesData = {}
-      let index = this.characteristics_studies.data_index
-
-      CharsOfStudiesData.items = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      delete CharsOfStudiesData.items[index]
-      CharsOfStudiesData.items[index] = this.modal_stage_three_data
-      CharsOfStudiesData.organization = this.characteristics_studies.organization
-      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
-
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
-        .then((response) => {
-          this.modal_stage_three_data = {}
-          delete this.characteristics_studies.data_index
-          this.getCharsOfStudies()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    modalDeleteCharsOfStudiesItemData: function (row) {
-      let item = JSON.parse(JSON.stringify(row))
-      let index = item.index
-      let fields = JSON.parse(JSON.stringify(this.characteristics_studies.fields))
-
-      fields.splice(fields.length - 1, 1)
-      this.buffer_modal_stage_three = {fields: [], data: []}
-      this.buffer_modal_stage_three.fields = fields
-      this.buffer_modal_stage_three.data.push(row.item)
-      this.characteristics_studies.data_index = index
-      this.$refs['modal-stage-three-remove-data'].show()
-    },
-    removeCharsOfStudiesItemData: function () {
-      let data = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      let CharsOfStudiesData = {}
-
-      data.splice(this.characteristics_studies.data_index, 1)
-      CharsOfStudiesData.items = data
-      CharsOfStudiesData.organization = this.characteristics_studies.organization
-      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
-
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
-        .then((response) => {
-          this.modal_stage_three_data = {}
-          delete this.characteristics_studies.data_index
-          this.getCharsOfStudies()
         })
         .catch((error) => {
           this.printErrors(error)
