@@ -74,8 +74,7 @@ export default {
     list: Object,
     permission: Boolean,
     charsOfStudies: Object,
-    refsWithTitle: Array,
-    bufferCharsOfStudies: Object
+    refsWithTitle: Array
   },
   components: {
     'back-to-top': backToTop,

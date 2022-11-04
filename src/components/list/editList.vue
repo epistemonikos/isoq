@@ -902,84 +902,16 @@
               :list="list"
               :permission="checkPermissions(list.organization)"
               :charsOfStudies="characteristics_studies"
-              :refsWithTitle="refsWithTitle"
-              :bufferCharsOfStudies="buffer_characteristics_studies"></table-chars-of-studies>
+              :refsWithTitle="refsWithTitle"></table-chars-of-studies>
 
-            <div
-              class="mt-5 mb-5"
-              v-if="show.selected.includes('ma')">
-              <a name="methodological-assessments"></a>
-              <h3 class="toDoc">
-                {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
-                <span
-                  v-if="ui.methodological_assessments.display_warning"
-                  class="text-danger d-print-none"
-                  v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
-                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                </span>
-              </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
-              <template v-if="meth_assessments.fields.length">
-                <bc-filters
-                  v-if="mode==='edit' && meth_assessments.items.length && checkPermissions(list.organization)"
-                  class="d-print-none"
-                  idname="meth-assessments-filter"
-                  :tableSettings="methodological_assessments_table_settings"
-                  type="meth_assessments"
-                  :fields="meth_assessments.fields"
-                  :items="meth_assessments.items">
-                </bc-filters>
-                <b-table
-                  class="toDoc"
-                  id="methodological"
-                  responsive
-                  head-variant="light"
-                  outlined
-                  :fields="meth_assessments.fieldsObj"
-                  :items="meth_assessments.items"
-                  :filter="methodological_assessments_table_settings.filter">
-                  <template
-                    v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                  </template>
-                  <template v-slot:cell(actions)="row">
-                    <font-awesome-icon icon="trash" @click="openModalRemoveDataMethAssessments(row)" :title="$t('Remove')" />
-                    <font-awesome-icon icon="edit" @click="openModalEditDataMethAssessments(row)" :title="$t('Edit')" />
-                  </template>
-                </b-table>
-
-                <b-modal
-                  size="xl"
-                  ref="modal-edit-data-stage-four"
-                  title="Edit data"
-                  @ok="saveUpdateDataMethAssessments">
-                  <b-form-group
-                    v-for="(field, index) in buffer_modal_meth_assessments_fields"
-                    :key="index"
-                    :label="`${field.label}`"
-                    :label-for="`column-${index}`">
-                    <b-form-textarea
-                      :id="`column-${index}`"
-                      v-model="modal_meth_assessments_data[field.key]"
-                      rows="6"
-                      max-rows="100"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-                <b-modal
-                  @ok="removeDataMethAssessments"
-                  ref="modal-remove-data-stage-four"
-                  title="Remove data content"
-                  scrollable
-                  size="xl">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                  <b-table
-                    :fields="buffer_meth_assessments_remove_item.fields"
-                    :items="buffer_meth_assessments_remove_item.items"></b-table>
-                </b-modal>
-                <!-- end of -->
-                <back-to-top></back-to-top>
-              </template>
-            </div>
+            <table-meth-assessments
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :methAssessments="meth_assessments"
+              :refsWithTitle="refsWithTitle"></table-meth-assessments>
 
             <div
               class="mt-3"
@@ -1102,6 +1034,7 @@ const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./e
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
 const editListCharsOfStudies = () => import('./editListCharsOfStudies.vue')
+const editListMethAssessments = () => import('./editListMethAssessments.vue')
 
 export default {
   components: {
@@ -1114,7 +1047,8 @@ export default {
     'edit-header-list': editHeaderList,
     'edit-list-actions-buttons': editListActionButtons,
     'evidence-profile-table': editListEvidenceProfile,
-    'table-chars-of-studies': editListCharsOfStudies
+    'table-chars-of-studies': editListCharsOfStudies,
+    'table-meth-assessments': editListMethAssessments
   },
   data () {
     return {
@@ -1158,13 +1092,6 @@ export default {
         perPage: 10,
         pageOptions: [10, 50, 100],
         isBusy: false
-      },
-      methodological_assessments_table_settings: {
-        filter: '',
-        totalRows: 1,
-        currentPage: 1,
-        perPage: 10,
-        pageOptions: [10, 50, 100]
       },
       extracted_data_table_settings: {
         filter: '',
