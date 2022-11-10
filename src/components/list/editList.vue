@@ -1484,7 +1484,7 @@ export default {
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
-          .then((response) => {
+          .then(() => {
             this.getStageOneData()
             this.saveListName()
             this.$refs['modal-stage-two'].hide()
@@ -1634,56 +1634,6 @@ export default {
           } else {
             this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
           }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalEditDataMethAssessments: function (row) {
-      let tmpFields = JSON.parse(JSON.stringify(this.meth_assessments.fields))
-      let tmpData = JSON.parse(JSON.stringify(this.meth_assessments.items))
-
-      tmpFields.splice(tmpFields.length - 1, 1)
-      this.buffer_modal_meth_assessments_fields = tmpFields
-      this.modal_meth_assessments_data = tmpData.splice(row.index, 1)[0]
-      this.buffer_meth_assessments.key_item = row.index
-      this.$refs['modal-edit-data-stage-four'].show()
-    },
-    saveUpdateDataMethAssessments: function () {
-      let tmpData = JSON.parse(JSON.stringify(this.modal_meth_assessments_data))
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      tmpMethAssessments.items[this.buffer_meth_assessments.key_item] = tmpData
-      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
-        .then((response) => {
-          delete this.buffer_meth_assessments.key_item
-          this.$refs['modal-edit-data-stage-four'].hide()
-          this.modal_meth_assessments_data = {}
-          this.getMethAssessments()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalRemoveDataMethAssessments: function (row) {
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      this.buffer_meth_assessments_remove_item.fields = tmpMethAssessments.fields
-      this.buffer_meth_assessments_remove_item.items = []
-      this.buffer_meth_assessments_remove_item.items.push(tmpMethAssessments.items[row.index])
-      this.buffer_meth_assessments_remove_item.key_item = row.index
-      this.$refs['modal-remove-data-stage-four'].show()
-    },
-    removeDataMethAssessments: function () {
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      tmpMethAssessments.items.splice(this.buffer_meth_assessments_remove_item.key_item, 1)
-      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
-        .then((response) => {
-          this.buffer_meth_assessments_remove_item = {fields: [], items: []}
-          this.getMethAssessments()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1875,42 +1825,6 @@ export default {
 
       this.licenseUrl = require('../../assets/' + globalLicenses[0].image)
       return globalLicenses[0].text
-    },
-    checkWrittingStatus: function (list) {
-      if (Object.prototype.hasOwnProperty.call(list, 'editing')) {
-        if (list.userEditing === this.$store.state.user.id || list.editing === false) {
-          const params = { editing: true, userEditing: this.$store.state.user.id }
-          axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-            .then((response) => {
-              this.mode = 'edit'
-              this.list.editing = true
-              this.list.userEditing = this.$store.state.user.id
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        } else {
-          axios.get(`/users/${list.userEditing}`)
-            .then((response) => {
-              this.editingUser = response.data
-              this.editingUser.show = true
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-          this.mode = 'view'
-        }
-      } else {
-        const params = { editing: true, userEditing: this.$store.state.user.id }
-        axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-          .then((response) => {
-            this.list.editing = true
-            this.list.userEditing = this.$store.state.user.id
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      }
     },
     returnTo: function () {
       if (this.list.userEditing === this.$store.state.user.id) {
