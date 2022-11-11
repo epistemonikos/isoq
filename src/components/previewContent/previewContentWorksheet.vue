@@ -41,173 +41,55 @@
       </b-row>
       <b-row class="mt-4">
         <b-col cols="12">
-
-          <template v-if="evidence_profile.length">
-            <a name="evidence-profile"></a>
-            <h3 class="mt-4">Evidence Profile</h3>
-            <b-table
-              class="toDoc"
-              id="assessments-print"
-              responsive striped caption-top
-              :fields="evidence_profile_fields_print_version"
-              :items="evidence_profile"
-              :filter="evidence_profile_table_settings.filter">
-              <template v-slot:head(isoqf_id)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(name)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(methodological-limit)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(coherence)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(adequacy)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(relevance)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(cerqual)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:head(references)="data">
-                {{data.label}}
-              </template>
-              <template v-slot:cell(isoqf_id)="data">
-                {{data.item.isoqf_id}}
-              </template>
-              <template v-slot:cell(finding)="data">
-                {{data.item.name}}
-              </template>
-              <template v-slot:cell(methodological-limit)="data">
-                <div v-if="data.item.methodological_limitations.option !== null">
-                  <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-                  <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
-                </div>
-              </template>
-              <template v-slot:cell(coherence)="data">
-                <div v-if="data.item.coherence.option !== null">
-                  <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-                  <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
-                </div>
-              </template>
-              <template v-slot:cell(adequacy)="data">
-                <div v-if="data.item.adequacy.option !== null">
-                  <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-                  <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
-                </div>
-              </template>
-              <template v-slot:cell(relevance)="data">
-                <div v-if="data.item.relevance.option !== null">
-                  <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-                  <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
-                </div>
-              </template>
-              <template v-slot:cell(cerqual)="data">
-                <div v-if="data.item.cerqual.option !== null">
-                  <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-                  <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
-                </div>
-              </template>
-              <template v-slot:cell(references)="data">
-                <p
-                  class="reference-txt">
-                  {{data.value}}
-                </p>
-              </template>
-            </b-table>
-
-            <back-to-top></back-to-top>
-          </template>
-          <template v-else>
-            <div class="text-center my-5">
-              <p>
-                {{ $t('No evidence profile has been created') }}
-              </p>
-            </div>
-          </template>
+          <evidence-profile
+            :evidenceProfile="evidence_profile"
+            :ui="ui"
+            :evidenceProfileTableSettings="evidence_profile_table_settings"
+            :references="references"
+            mode="view"
+            :list="list"
+            :refsWithTitle="[]"
+            :project="{}"
+            :permission="true"
+            :selectOptions="select_options"
+            :levelConfidence="level_confidence"></evidence-profile>
 
           <div
-            class="mt-5 mb-5"
-            v-if="show.selected.includes('cs') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
-            <a name="characteristics-of-studies"></a>
-            <h3 class="toDoc">
-              {{ $t('Characteristics of Studies') }}
-            </h3>
-            <template v-if="characteristics_studies.fields.length">
-              <b-table
-                id="characteristics"
-                responsive
-                head-variant="light"
-                outlined
-                :fields="characteristics_studies.fieldsObj"
-                :items="characteristics_studies.items"
-                :filter="characteristics_studies_table_settings.filter"
-                class="toDoc">
-                <template
-                  v-if="characteristics_studies.tableTop.length"
-                  v-slot:thead-top>
-                  <b-tr>
-                    <b-th
-                      v-for="(value, index) of characteristics_studies.tableTop"
-                      :key="index"
-                      :colspan="value.colspan"
-                      class="text-center">
-                      {{ value.label }}
-                    </b-th>
-                  </b-tr>
-                </template>
-              </b-table>
-              <back-to-top></back-to-top>
-            </template>
+            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+            <chars-of-studies
+              :ui="ui"
+              :show="show"
+              :mode="'view'"
+              :list="list"
+              :permission="true"
+              :charsOfStudies="characteristics_studies"
+              :refsWithTitle="[]"
+              ></chars-of-studies>
           </div>
 
           <div
-            class="mt-5 mb-5"
-            v-if="show.selected.includes('ma') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
-            <a name="methodological-assessments"></a>
-            <h3 class="toDoc">
-              {{ $t('Methodological Assessments') }}
-            </h3>
-            <template v-if="meth_assessments.fields.length">
-              <b-table
-                class="toDoc"
-                id="methodological"
-                responsive
-                head-variant="light"
-                outlined
-                :fields="meth_assessments.fieldsObj"
-                :items="meth_assessments.items"
-                :filter="methodological_assessments_table_settings.filter">
-              </b-table>
-              <back-to-top></back-to-top>
-            </template>
+            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+            <methodological-assessments
+              :ui="ui"
+              :show="show"
+              :mode="'view'"
+              :list="list"
+              :permission="true"
+              :methAssessments="meth_assessments"
+              :refsWithTitle="[]"></methodological-assessments>
           </div>
 
           <div
-            class="mt-3"
-            v-if="show.selected.includes('ed') && ((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
-            <a name="extracted-data"></a>
-            <h3 class="toDoc">
-              {{ $t('Extracted Data') }}
-            </h3>
-            <template v-if="extracted_data.fields.length">
-              <b-table
-                class="toDoc"
-                id="extracted"
-                responsive
-                head-variant="light"
-                outlined
-                :filter="extracted_data_table_settings.filter"
-                :fields="extracted_data.fieldsObj"
-                :items="extracted_data.items"
-                :current-page="extracted_data_table_settings.currentPage">
-              </b-table>
-              <back-to-top></back-to-top>
-            </template>
+            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+            <extracted-data
+              :ui="ui"
+              :show="show"
+              :mode="'view'"
+              :list="list"
+              :permission="true"
+              :extractedData="extracted_data"
+              :modePrintFieldObject="mode_print_fieldsObj"
+              :refsWithTitle="[]"></extracted-data>
           </div>
         </b-col>
       </b-row>
@@ -220,10 +102,18 @@ import axios from 'axios'
 import backToTop from '../backToTop'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
+import evidenceProfile from '../list/editListEvidenceProfile.vue'
+import charsOfStudies from '../list/editListCharsOfStudies.vue'
+import methAssessments from '../list/editListMethAssessments.vue'
+import extractedData from '../list/editListExtractedData.vue'
 
 export default {
   components: {
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    'evidence-profile': evidenceProfile,
+    'chars-of-studies': charsOfStudies,
+    'methodological-assessments': methAssessments,
+    'extracted-data': extractedData
   },
   data () {
     return {
@@ -265,7 +155,7 @@ export default {
           fields: [],
           items: []
         },
-        cerqual: {},
+        cerqual: { option: null },
         references: []
       },
       evidence_profile: [
@@ -360,7 +250,16 @@ export default {
         ]
       },
       references: [],
-      mode_print_fieldsObj: [],
+      mode_print_fieldsObj: [
+        {
+          key: 'authors',
+          label: 'Author(s), Year'
+        },
+        {
+          key: 'column_0',
+          label: 'Extracted data supporting the review finding'
+        }
+      ],
       select_options: [
         { value: 0, text: 'No/Very minor concerns' },
         { value: 1, text: 'Minor concerns' },
