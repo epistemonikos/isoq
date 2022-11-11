@@ -138,10 +138,10 @@ export default {
       }
     },
     openModalExtractedDataEditDataItem: function (data) {
-      this.extracted_data.edit_index_item = data.index
-      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
+      this.extractedData.edit_index_item = data.index
+      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extractedData.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
-      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
+      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extractedData.items[data.index]))
       this.$refs['modal-extracted-data-data'].show()
     },
     openModalExtractedDataRemoveDataItem: function (data) {
@@ -149,12 +149,12 @@ export default {
       this.$refs['modal-extracted-data-remove-data-item'].show()
     },
     extractedDataRemoveDataItem: function () {
-      let items = JSON.parse(JSON.stringify(this.extracted_data.items))
+      let items = JSON.parse(JSON.stringify(this.extractedData.items))
       const item = items[this.buffer_extracted_data.remove_index_item]
       let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
       items[this.buffer_extracted_data.remove_index_item] = newItem
 
-      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
+      axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, {items: items})
         .then(() => {
           this.$emit('getExtractedData')
           delete this.buffer_extracted_data.remove_index_item
@@ -165,7 +165,7 @@ export default {
     },
     saveDataExtractedData: function () {
       let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
-      let _originalItems = JSON.parse(JSON.stringify(this.extracted_data.original_items))
+      let _originalItems = JSON.parse(JSON.stringify(this.extractedData.original_items))
 
       for (let index in _originalItems) {
         if (_item.ref_id === _originalItems[index].ref_id) {
@@ -182,7 +182,7 @@ export default {
         list_id: this.$route.params.id,
         items: _originalItems
       }
-      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
+      axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
         .then(() => {
           this.$emit('getExtractedData')
           this.buffer_extracted_data = {fields: [], items: [], id: null}
