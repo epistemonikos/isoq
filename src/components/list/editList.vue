@@ -902,7 +902,8 @@
               :list="list"
               :permission="checkPermissions(list.organization)"
               :charsOfStudies="characteristics_studies"
-              :refsWithTitle="refsWithTitle"></table-chars-of-studies>
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-chars-of-studies>
 
             <table-meth-assessments
               :ui="ui"
@@ -911,7 +912,8 @@
               :list="list"
               :permission="checkPermissions(list.organization)"
               :methAssessments="meth_assessments"
-              :refsWithTitle="refsWithTitle"></table-meth-assessments>
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-meth-assessments>
 
             <table-extracted-data
               :ui="ui"
@@ -922,6 +924,7 @@
               :extractedData="extracted_data"
               :modePrintFieldObject="mode_print_fieldsObj"
               :refsWithTitle="refsWithTitle"
+              :showParagraph="true"
               @printErrors="printErrors"
               @getExtractedData="getExtractedData"></table-extracted-data>
 

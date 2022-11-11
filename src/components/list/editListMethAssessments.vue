@@ -12,7 +12,7 @@
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
+    <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
     <template v-if="methAssessments.fields.length">
       <bc-filters
         v-if="mode==='edit' && methAssessments.items.length && permission"
@@ -57,7 +57,11 @@ export default {
     list: Object,
     permission: Boolean,
     methAssessments: Object,
-    refsWithTitle: Array
+    refsWithTitle: Array,
+    showParagraph: {
+      type: Boolean,
+      default: false
+    }
   },
   components: {
     'back-to-top': backToTop,

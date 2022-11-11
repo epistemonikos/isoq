@@ -3,8 +3,13 @@
     class="mt-3"
     v-if="show.selected.includes('ed')">
     <a name="extracted-data"></a>
-    <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
-    <p class="d-print-none font-weight-light">
+    <template v-if="showParagraph">
+      <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
+    </template>
+    <template v-else>
+      <h3>Extracted data</h3>
+    </template>
+    <p v-if="showParagraph" class="d-print-none font-weight-light">
       It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
     </p>
     <template v-if="extractedData.fields.length">
@@ -105,7 +110,11 @@ export default {
     permission: Boolean,
     extractedData: Object,
     modePrintFieldObject: Array,
-    refsWithTitle: Array
+    refsWithTitle: Array,
+    showParagraph: {
+      type: Boolean,
+      default: false
+    }
   },
   components: {
     'back-to-top': backToTop,
