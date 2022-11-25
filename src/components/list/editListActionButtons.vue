@@ -61,7 +61,8 @@ export default {
     list: Object,
     characteristicStudies: Object,
     methodologicalAssessments: Object,
-    extractedData: Object
+    extractedData: Object,
+    license: String
   },
   methods: {
     changeMode: function () {
@@ -524,7 +525,7 @@ export default {
             heading: HeadingLevel.HEADING_2,
             children: [
               new TextRun({
-                text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.theLicense(this.project.license_type) : '',
+                text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.license : '',
                 size: 20,
                 font: { name: 'Times New Roman' },
                 color: '000000'

@@ -27,6 +27,7 @@
         :characteristicStudies="characteristics_studies"
         :methodologicalAssessments="meth_assessments"
         :extractedData="extracted_data"
+        :license="theLicense(this.project.license_type)"
         @changeMode="changeMode"
         ></edit-list-actions-buttons>
       <b-row
