@@ -467,253 +467,254 @@ export default {
           })
         ]
       })
-
-      doc.addSection({
-        size: {
-          orientation: PageOrientation.LANDSCAPE
-        },
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_3,
-            children: [
-              new TextRun({
-                text: 'Evidence Profile Table',
-                bold: true,
-                size: 32,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Table({
-            borders: {
-              top: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
+      if (this.$route.name === 'viewProject' || (this.$route.name === 'previewContentSoQf' && this.project.public_type !== 'minimally')) {
+        doc.addSection({
+          size: {
+            orientation: PageOrientation.LANDSCAPE
+          },
+          margins: {
+            top: 720,
+            right: 720,
+            bottom: 720,
+            left: 720
+          },
+          children: [
+            new Paragraph({
+              heading: HeadingLevel.HEADING_3,
+              children: [
+                new TextRun({
+                  text: 'Evidence Profile Table',
+                  bold: true,
+                  size: 32,
+                  font: { name: 'Times New Roman' },
+                  color: '000000'
+                })
+              ]
+            }),
+            new Paragraph(''),
+            new Table({
+              borders: {
+                top: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.SINGLE
+                },
+                bottom: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.SINGLE
+                },
+                left: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.SINGLE
+                },
+                right: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.SINGLE
+                },
+                insideHorizontal: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.SINGLE
+                },
+                insideVertical: {
+                  style: BorderStyle.NONE
+                }
               },
-              bottom: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
+              width: {
+                size: '100%',
+                type: WidthType.PERCENTAGE
               },
-              left: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              right: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideHorizontal: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideVertical: {
-                style: BorderStyle.NONE
-              }
-            },
-            width: {
-              size: '100%',
-              type: WidthType.PERCENTAGE
-            },
-            rows: [
-              new TableRow({
-                tableHeader: true,
-                children: [
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '5%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: '#',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '40%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'Summarised review finding',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'Methodological limitations',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'Coherence',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'Adequacy',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'Relevance',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'GRADE-CERQual assessment of confidence',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#DDDDDD'
-                    },
-                    width: {
-                      size: '5%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: 'References',
-                            size: 22,
-                            bold: true
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              ...this.generateEvidenceProfileTable2(this.lists)
-            ]
-          })
-        ]
-      })
+              rows: [
+                new TableRow({
+                  tableHeader: true,
+                  children: [
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '5%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: '#',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '40%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Summarised review finding',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      width: {
+                        size: '10%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Methodological limitations',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      width: {
+                        size: '10%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Coherence',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '10%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Adequacy',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '10%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Relevance',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '10%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'GRADE-CERQual assessment of confidence',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: '5%',
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'References',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                ...this.generateEvidenceProfileTable2(this.lists)
+              ]
+            })
+          ]
+        })
+      }
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
       })
