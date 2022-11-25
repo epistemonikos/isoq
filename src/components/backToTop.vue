@@ -1,5 +1,5 @@
 <template>
-  <div class="clearfix my-2">
+  <div class="clearfix my-2 d-print-none">
     <span class="back-to-top" @click="toTop">&uarr; Back to top</span>
   </div>
 </template>
