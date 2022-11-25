@@ -18,7 +18,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5">
+        <b-nav id="tabsTitle" tabs fill class="pt-5 d-print-none">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="tabOpened=0">Project properties</b-nav-item>
@@ -111,6 +111,22 @@
           <back-to-top></back-to-top>
         </b-tab>
         <b-tab>
+          <b-container fluid>
+            <action-buttons
+              :mode="'view'"
+              :preview="true"
+              :project="project"
+              :permissions="true"
+              :ui="ui"
+              :lists="lists"
+              :findings="findings"
+              :references="references"
+              :charsOfStudies="charsOfStudies"
+              :methodologicalTableRefs="methodologicalTableRefs"
+              :listsPrintVersion="lists"
+              :selectOptions="select_options"
+              :cerqualConfidence="cerqual_confidence"></action-buttons>
+          </b-container>
           <h2>Summary of Qualitative Findings Table</h2>
           <b-card header-tag="header">
             <template v-slot:header>
@@ -185,6 +201,7 @@ const tablePrintFindings = () => import(/* webpackChunkName: "tableprintfindings
 const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')
 const methAssessmentsDisplayDataTable = () => import(/* webpackChunkName: "methassessmentssisplaysatatable" */'../methAssessments/displayTableData')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
+const actionButtons = () => import(/* webpackChunkName: "actionButtonsProject" */'../project/actionButtons.vue')
 
 export default {
   components: {
@@ -194,7 +211,8 @@ export default {
     'table-printing-findings': tablePrintFindings,
     'chars-of-studies-table': charsOfStudiesDisplayDataTable,
     'meth-assessments-table': methAssessmentsDisplayDataTable,
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    'action-buttons': actionButtons
   },
   data () {
     return {
@@ -222,6 +240,13 @@ export default {
         selected: null
       },
       references: [],
+      select_options: [
+        { value: 0, text: 'No/Very minor concerns' },
+        { value: 1, text: 'Minor concerns' },
+        { value: 2, text: 'Moderate concerns' },
+        { value: 3, text: 'Serious concerns' },
+        { value: null, text: 'Undefined' }
+      ],
       cerqual_confidence: [
         { value: 0, text: 'High confidence' },
         { value: 1, text: 'Moderate confidence' },
@@ -277,6 +302,9 @@ export default {
     this.getReferences()
   },
   methods: {
+    printDoc: function () {
+      window.print()
+    },
     getLicense: function (license) {
       const licenses = this.ui.project.global_licenses
       for (let lic of licenses) {

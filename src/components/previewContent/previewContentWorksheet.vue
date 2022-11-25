@@ -1012,7 +1012,24 @@ export default {
               })
             ]
           }),
-          new Paragraph(''),
+          ...this.showOtherTables(
+            this.project.public_type,
+            this.characteristics_studies,
+            this.meth_assessments,
+            this.extracted_data
+          )
+        ]
+      })
+
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, filename)
+      })
+    },
+    showOtherTables: function (publicType, charsOfStudies, methAssessments, extractedData) {
+      let content = []
+      if (publicType === 'fully') {
+        content.push(new Paragraph(''))
+        content.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -1021,9 +1038,13 @@ export default {
                 bold: true
               })
             ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.characteristics_studies))),
-          new Paragraph(''),
+          })
+        )
+        content.push(
+          this.generateTable(JSON.parse(JSON.stringify(charsOfStudies)))
+        )
+        content.push(new Paragraph(''))
+        content.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -1032,9 +1053,13 @@ export default {
                 bold: true
               })
             ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.meth_assessments))),
-          new Paragraph(''),
+          })
+        )
+        content.push(
+          this.generateTable(JSON.parse(JSON.stringify(methAssessments)))
+        )
+        content.push(new Paragraph(''))
+        content.push(
           new Paragraph({
             children: [
               new TextRun({
@@ -1043,14 +1068,13 @@ export default {
                 bold: true
               })
             ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.extracted_data)))
-        ]
-      })
-
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, filename)
-      })
+          })
+        )
+        content.push(
+          this.generateTable(JSON.parse(JSON.stringify(extractedData)))
+        )
+      }
+      return content
     },
     generateReferences: function () {
       const allReferences = JSON.parse(JSON.stringify(this.references))

@@ -35,7 +35,7 @@
               </b-button>
           </b-col>
           <b-col
-            v-if="mode==='view'"
+            v-if="mode==='view' && !preview"
             cols="12"
             md="3"
             xl="3">
@@ -146,6 +146,10 @@ export default {
   name: 'actionButtons',
   props: {
     mode: String,
+    preview: {
+      type: Boolean,
+      default: false
+    },
     project: Object,
     permissions: Boolean,
     ui: Object,
