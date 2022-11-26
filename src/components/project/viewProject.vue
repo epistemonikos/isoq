@@ -2307,7 +2307,32 @@ export default {
             base['type'] = content
           }
           if (titleTags.includes(key)) {
-            base['title'] = content
+            switch (key) {
+              case 'TI':
+                base['title'] = content
+                break
+              case 'T1':
+                if (base['title'].length) {
+                  base['title_1'] = content
+                } else {
+                  base['title'] = content
+                }
+                break
+              case 'T2':
+                if (base['title'].length) {
+                  base['title_2'] = content
+                } else {
+                  base['title'] = content
+                }
+                break
+              case 'T3':
+                if (base['title'].length) {
+                  base['title_3'] = content
+                } else {
+                  base['title'] = content
+                }
+                break
+            }
           }
           if (authorTags.includes(key)) {
             base['authors'].push(content)
