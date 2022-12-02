@@ -18,16 +18,16 @@
         <b-nav id="tabsTitle" tabs fill class="pt-5">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
-            @click="tabOpened=0">Project properties</b-nav-item>
+            @click="clickTab(0)">Project properties</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 1) ? true : false"
-            @click="tabOpened=1">My Data</b-nav-item>
+            @click="clickTab(1)">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
-            @click="tabOpened=2">iSoQ</b-nav-item>
+            @click="clickTab(2)">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
+            @click="clickTab(3)">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
@@ -2392,6 +2392,25 @@ export default {
     this.getProject()
   },
   methods: {
+    clickTab: function (option) {
+      this.tabOpened = option
+      let theHash = ''
+      switch (option) {
+        case 0:
+          theHash = 'Project-Property'
+          break
+        case 1:
+          theHash = 'My-Data'
+          break
+        case 2:
+          theHash = 'iSoQ'
+          break
+        case 3:
+          theHash = 'Guidance-on-applying-GRADE-CERQual'
+          break
+      }
+      this.$router.push({hash: `${theHash}`})
+    },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
     },
@@ -2989,7 +3008,7 @@ export default {
             if (this.references.length) {
               this.$nextTick(() => {
                 if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-Applying-CERQual']
+                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-applying-GRADE-CERQual']
                   this.tabOpened = tabs.indexOf(this.$route.hash)
                 } else {
                   this.tabOpened = 2
