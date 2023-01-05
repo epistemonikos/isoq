@@ -2295,7 +2295,7 @@ export default {
       const titleTags = ['TI', 'T1', 'T2', 'T3']
       const authorTags = ['AU', 'A1', 'A2', 'A3', 'A4']
       const userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
-      let base = { authors: [], user_definable: [] }
+      let base = { title: '', authors: [], user_definable: [] }
 
       allLines.forEach((line) => {
         const _line = line.split('  -')
@@ -2312,6 +2312,7 @@ export default {
                 base['title'] = content
                 break
               case 'T1':
+                console.log('title', base)
                 if (base['title'].length) {
                   base['title_1'] = content
                 } else {
@@ -2379,7 +2380,7 @@ export default {
           }
           if (key === 'ER') {
             this.fileReferences.push(base)
-            base = { authors: [], user_definable: [] }
+            base = { title: '', authors: [], user_definable: [] }
           }
         }
       })
