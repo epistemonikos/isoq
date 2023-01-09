@@ -2881,6 +2881,10 @@ export default {
             } else {
               this.lists_print_version = data
             }
+
+            for (let items of this.lists_print_version) {
+              this.printableItems.push(items.id)
+            }
           }
           this.lists = data
           this.table_settings.isBusy = false
