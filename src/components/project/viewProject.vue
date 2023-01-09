@@ -1396,7 +1396,7 @@
                     </b-tr>
                   </b-thead>
                   <b-tbody>
-                    <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id) && printableItems.length > 0}">
+                    <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
                       <b-td class="d-print-none">
                         <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
                       </b-td>
@@ -1472,7 +1472,7 @@
                     </b-tr>
                   </b-thead>
                   <b-tbody>
-                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id) && printableItems.length > 0}">
+                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
                       <template v-if="item.is_category">
                         <b-td
                           colspan="8"
