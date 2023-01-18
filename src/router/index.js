@@ -3,6 +3,7 @@ const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
 const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
 const ForgotPassword = () => import(/* webpackChunkName: "forgotpassword" */ '@/components/ForgotPassword')
 const CreateAccount = () => import(/* webpackChunkName: "createaccount" */ '@/components/CreateAccount')
+const Profile = () => import(/* webpackChunkName: "profile" */ '@/components/profile/viewProfile')
 const Organizations = () => import(/* webpackChunkName: "organizations" */ '@/components/Organizations')
 const ViewOrganization = () => import(/* webpackChunkName: "vieworganization" */ '@/components/organization/viewOrganization')
 const EditList = () => import(/* webpackChunkName: "editlist" */ '@/components/list/editList')
@@ -71,6 +72,14 @@ var routes = [
     component: Browse,
     meta: {
       title: 'Browse - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
+    meta: {
+      title: 'Profile - Interactive Summary of Qualitative Findings'
     }
   },
   {

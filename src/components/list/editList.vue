@@ -9,65 +9,27 @@
     >
       The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
     </b-alert>
-    <b-container fluid class="workspace-header">
-      <b-container class="py-5">
-        <b-row>
-          <b-col cols="12" class="text-right d-print-none">
-            <!-- disabled for v1 -->
-            <!--<b-link class="return" @click="returnTo()">-->
-            <b-link class="return" :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}}">
-              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
-              return to ISoQ table
-            </b-link>
-          </b-col>
-        </b-row>
-        <videoHelp txt="GRADE-CERQual Assessment Worksheet" tag="h2-worksheet" urlId="451100482"></videoHelp>
-        <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{list.name}}</span></h3>
-        <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
-      </b-container>
-    </b-container>
+    <edit-header-list
+      :organizationId="list.organization"
+      :projectId="list.project_id"
+      :name="list.name"
+      :mode="mode"></edit-header-list>
     <b-container>
-      <b-row
-        v-if="mode==='view' && checkPermissions(list.organization)"
-        class="d-print-none justify-content-end mb-2 pt-2">
-        <b-col
-          v-if="mode==='view'"
-          cols="12"
-          sm="2">
-            <b-button
-              id="exportButton"
-              variant="outline-secondary"
-              block
-              @click="exportToWord()">
-              Export to MS-Word
-            </b-button>
-        </b-col>
-        <b-col
-          v-if="mode==='view'"
-          cols="12"
-          sm="2">
-            <b-button
-              id="printButton"
-              @click="print"
-              variant="outline-info"
-              block>
-              Print or save as PDF
-            </b-button>
-        </b-col>
-        <b-col
-          v-if="mode==='view'"
-          cols="12"
-          sm="2">
-            <b-button
-              id="editButton"
-              @click="changeMode"
-              variant="primary"
-              v-b-tooltip:editButton.top="'Click to edit'"
-              block>
-              Edit
-            </b-button>
-        </b-col>
-      </b-row>
+      <edit-list-actions-buttons
+        :mode="mode"
+        :permission="checkPermissions(list.organization)"
+        :project="project"
+        :evidenceProfile="evidence_profile"
+        :selectOptions="select_options"
+        :levelConfidence="level_confidence"
+        :references="references"
+        :list="list"
+        :characteristicStudies="characteristics_studies"
+        :methodologicalAssessments="meth_assessments"
+        :extractedData="extracted_data"
+        :license="theLicense(this.project.license_type)"
+        @changeMode="changeMode"
+        ></edit-list-actions-buttons>
       <b-row
         class="sticky-top"
         style="background-color: #fff; padding-bottom: 0.3rem"
@@ -917,725 +879,55 @@
                 </b-progress>
               </div>
 
-              <template v-if="evidence_profile.length">
-                <a name="evidence-profile"></a>
-                <h3 class="mt-4">
-                  Evidence Profile
-                  <span
-                    v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
-                    class="text-danger d-print-none"
-                    v-b-tooltip.hover title="Data are missing.">
-                    <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                  </span>
-                </h3>
-                <b-table
-                  class="d-print-none"
-                  v-if="mode==='edit'"
-                  id="assessments"
-                  responsive
-                  bordered
-                  head-variant="light"
-                  :fields="evidence_profile_fields"
-                  :items="evidence_profile"
-                  :filter="evidence_profile_table_settings.filter"
-                  :busy="evidence_profile_table_settings.isBusy">
-                  <template v-slot:head(isoqf_id)="data">
-                    <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{data.label}}</span>
-                  </template>
-                  <template v-slot:head(methodological-limit)="data">
-                    <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
-                    <span
-                      v-if="ui.methodological_assessments.display_warning || ui.methodological_assessments.extracted_data.display_warning"
-                      class="text-danger"
-                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                    </span>
-                  </template>
-                  <template v-slot:head(coherence)="data">
-                    <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
-                    <span
-                      v-if="ui.coherence.display_warning"
-                      class="text-danger"
-                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                    </span>
-                  </template>
-                  <template v-slot:head(adequacy)="data">
-                    <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
-                    <span
-                      v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
-                      class="text-danger"
-                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                    </span>
-                  </template>
-                  <template v-slot:head(relevance)="data">
-                    <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
-                    <span
-                      v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
-                      class="text-danger"
-                      v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-                      <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                    </span>
-                  </template>
-                  <template v-slot:head(cerqual)="data">
-                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
-                  </template>
-                  <template v-slot:head(references)="data">
-                    <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
-                  </template>
-                  <!-- content -->
-                  <template v-slot:cell(isoqf_id)="data">
-                    {{data.item.isoqf_id}}
-                  </template>
-                  <template v-slot:cell(methodological-limit)="data">
-                    <div v-if="data.item.methodological_limitations.option !== null">
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none mb-3"
-                          variant="outline-info"
-                          @click="editStageTwo(data.item, 'methodological-limitations')">
-                          Edit
-                          <font-awesome-icon
-                            v-if="data.item.methodological_limitations.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                      <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-                      <p v-if="data.item.methodological_limitations.explanation">
-                        Explanation: {{data.item.methodological_limitations.explanation}}
-                        <span
-                          v-if="displayExclamationAlert('methodological-limitations')"
-                          class="text-danger"
-                          v-b-tooltip.hover
-                          title="This explanation is incomplete">
-                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                        </span>
-                      </p>
-                      <p v-else class="text-muted font-weight-light">
-                        <span
-                          v-if="data.item.methodological_limitations.option !== '0'"
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
-                      </p>
-                    </div>
-                    <div v-else>
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none"
-                          variant="info"
-                          @click="editStageTwo(data.item, 'methodological-limitations')">
-                          Assessment not completed
-                          <font-awesome-icon
-                            v-if="data.item.methodological_limitations.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                    </div>
-                  </template>
-                  <template v-slot:cell(coherence)="data">
-                    <div v-if="data.item.coherence.option !== null">
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none mb-3"
-                          variant="outline-info"
-                          @click="editStageTwo(data.item, 'coherence')">
-                          Edit
-                          <font-awesome-icon
-                            v-if="data.item.coherence.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                      <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-                      <p v-if="data.item.coherence.explanation">
-                        Explanation: {{data.item.coherence.explanation}}
-                        <span
-                          v-if="displayExclamationAlert('coherence')"
-                          class="text-danger"
-                          v-b-tooltip.hover
-                          title="This explanation is incomplete">
-                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                        </span>
-                      </p>
-                      <p v-else class="text-muted font-weight-light">
-                        <span
-                          v-if="data.item.coherence.option !== '0'"
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
-                      </p>
-                    </div>
-                    <div v-else>
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none"
-                          variant="info"
-                          @click="editStageTwo(data.item, 'coherence')">
-                          Assessment not completed
-                          <font-awesome-icon
-                            v-if="data.item.coherence.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                    </div>
-                  </template>
-                  <template v-slot:cell(adequacy)="data">
-                    <div v-if="data.item.adequacy.option !== null">
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none mb-3"
-                          variant="outline-info"
-                          @click="editStageTwo(data.item, 'adequacy')">
-                          Edit
-                          <font-awesome-icon
-                            v-if="data.item.adequacy.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                      <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-                      <p v-if="data.item.adequacy.explanation">
-                        Explanation: {{data.item.adequacy.explanation}}
-                        <span
-                          v-if="displayExclamationAlert('adequacy')"
-                          class="text-danger"
-                          v-b-tooltip.hover
-                          title="This explanation is incomplete">
-                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                        </span>
-                      </p>
-                      <p v-else class="text-muted font-weight-light">
-                        <span
-                          v-if="data.item.adequacy.option !== '0'"
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
-                      </p>
-                    </div>
-                    <div v-else>
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none"
-                          variant="info"
-                          @click="editStageTwo(data.item, 'adequacy')">
-                          Assessment not completed
-                          <font-awesome-icon
-                            v-if="data.item.adequacy.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                    </div>
-                  </template>
-                  <template v-slot:cell(relevance)="data">
-                    <div v-if="data.item.relevance.option !== null">
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none mb-3"
-                          variant="outline-info"
-                          @click="editStageTwo(data.item, 'relevance')">
-                          Edit
-                          <font-awesome-icon
-                            v-if="data.item.relevance.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                      <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-                      <p v-if="data.item.relevance.explanation">
-                        Explanation: {{data.item.relevance.explanation}}
-                        <span
-                          v-if="displayExclamationAlert('relevance')"
-                          class="text-danger"
-                          v-b-tooltip.hover
-                          title="This explanation is incomplete">
-                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                        </span>
-                      </p>
-                      <p v-else class="text-muted font-weight-light">
-                        <span
-                          v-if="data.item.relevance.option !== '0'"
-                          v-b-tooltip.hover
-                          title="Provide an explanation for your assessment"
-                          variant="info">Explanation not yet added</span>
-                      </p>
-                    </div>
-                    <div v-else>
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none"
-                          variant="info"
-                          @click="editStageTwo(data.item, 'relevance')">
-                          Assessment not completed
-                          <font-awesome-icon
-                            v-if="data.item.relevance.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                    </div>
-                  </template>
-                  <template v-slot:cell(cerqual)="data">
-                    <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null && data.item.cerqual.option !== null">
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          block
-                          class="d-print-none mb-3"
-                          variant="outline-info"
-                          @click="editStageTwo(data.item, 'cerqual')">
-                          Edit
-                          <font-awesome-icon
-                            v-if="data.item.cerqual.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                      <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-                      <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
-                      <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
-                        Explanation not yet added
-                      </p>
-                    </div>
-                    <div v-else>
-                      <template v-if="checkPermissions(list.organization)">
-                        <b-button
-                          v-if="data.item.methodological_limitations.option && data.item.coherence.option && data.item.adequacy.option && data.item.relevance.option"
-                          block
-                          class="d-print-none"
-                          variant="info"
-                          @click="editStageTwo(data.item, 'cerqual')">
-                          Assessment not completed
-                          <font-awesome-icon
-                            v-if="data.item.cerqual.notes"
-                            icon="comments"></font-awesome-icon>
-                        </b-button>
-                      </template>
-                    </div>
-                  </template>
-                  <template v-slot:cell(references)="data">
-                    <template v-if="checkPermissions(list.organization)">
-                      <b-button
-                        block
-                        class="d-print-none mb-3"
-                        variant="outline-info"
-                        @click="openModalReferences">
-                        View or Edit references
-                      </b-button>
-                    </template>
-                    There are <b>{{ data.item.references.length }}</b> references.
-                  </template>
-                  <template v-slot:table-busy>
-                    <div class="text-center text-danger my-2">
-                      <b-spinner class="align-middle"></b-spinner>
-                      <strong>Loading...</strong>
-                    </div>
-                  </template>
-                </b-table>
-                <!-- display table in print mode -->
-                <b-table
-                  class="toDoc"
-                  v-if="mode==='view'"
-                  id="assessments-print"
-                  responsive striped caption-top
-                  :fields="evidence_profile_fields_print_version"
-                  :items="evidence_profile"
-                  :filter="evidence_profile_table_settings.filter">
-                  <template v-slot:head(isoqf_id)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(name)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(methodological-limit)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(coherence)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(adequacy)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(relevance)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(cerqual)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:head(references)="data">
-                    {{data.label}}
-                  </template>
-                  <template v-slot:cell(isoqf_id)="data">
-                    {{data.item.isoqf_id}}
-                  </template>
-                  <template v-slot:cell(finding)="data">
-                    {{data.item.name}}
-                  </template>
-                  <template v-slot:cell(methodological-limit)="data">
-                    <div v-if="data.item.methodological_limitations.option !== null">
-                      <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-                      <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
-                    </div>
-                  </template>
-                  <template v-slot:cell(coherence)="data">
-                    <div v-if="data.item.coherence.option !== null">
-                      <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-                      <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
-                    </div>
-                  </template>
-                  <template v-slot:cell(adequacy)="data">
-                    <div v-if="data.item.adequacy.option !== null">
-                      <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-                      <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
-                    </div>
-                  </template>
-                  <template v-slot:cell(relevance)="data">
-                    <div v-if="data.item.relevance.option !== null">
-                      <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-                      <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
-                    </div>
-                  </template>
-                  <template v-slot:cell(cerqual)="data">
-                    <div v-if="data.item.cerqual.option !== null">
-                      <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-                      <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
-                    </div>
-                  </template>
-                  <template v-slot:cell(references)="data">
-                    <p
-                      class="reference-txt">
-                      {{data.value}}
-                    </p>
-                  </template>
-                </b-table>
+              <evidence-profile-table
+                :evidenceProfile="evidence_profile"
+                :ui="ui"
+                :evidenceProfileTableSettings="evidence_profile_table_settings"
+                :references="references"
+                :mode="mode"
+                :list="list"
+                :refsWithTitle="refsWithTitle"
+                :project="project"
+                :permission="checkPermissions(list.organization)"
+                :selectOptions="select_options"
+                :levelConfidence="level_confidence"
+                @bufferModalStageOne="bufferModalStageOne"
+                @bufferModalStageTwo="bufferModalStageTwo"
+                @openModalStageTwo="openModalStageTwo"
+              ></evidence-profile-table>
 
-                <back-to-top></back-to-top>
+            <table-chars-of-studies
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :charsOfStudies="characteristics_studies"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-chars-of-studies>
 
-                <b-modal
-                  id="modalReferences"
-                  ref="modalReferences"
-                  title="References"
-                  size="xl"
-                  scrollable
-                  @ok="saveReferencesList">
-                  <b-alert
-                    v-if="list.cerqual.option"
-                    show
-                    variant="danger">
-                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
-                  </b-alert>
-                  <b-table
-                    striped
-                    responsive
-                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
-                    :items="refsWithTitle">
-                    <template v-slot:cell(checkbox)="data">
-                      <b-form-checkbox
-                        :id="`checkbox-${data.index}`"
-                        v-model="list.references"
-                        :name="`checkbox-${data.index}`"
-                        :value="data.item.id">
-                      </b-form-checkbox>
-                    </template>
-                  </b-table>
-                </b-modal>
-              </template>
-              <template v-else>
-                <div class="text-center my-5">
-                  <p>
-                    {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-stage-two>{{ $t('add a evidence profile') }}</b-link>
-                  </p>
-                </div>
-              </template>
+            <table-meth-assessments
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :methAssessments="meth_assessments"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-meth-assessments>
 
-            <div
-              class="mt-5 mb-5"
-              v-if="show.selected.includes('cs')">
-              <a name="characteristics-of-studies"></a>
-              <h3 class="toDoc">
-                {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
-                <span
-                  v-if="ui.adequacy.chars_of_studies.display_warning"
-                  class="text-danger d-print-none"
-                  v-b-tooltip.hover title="The Characteristics of Studies table, or some data within it, are missing.">
-                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                </span>
-              </h3>
-              <p class="d-print-none font-weight-light">
-                To add data or make changes to this table do so in the
-                <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>
-                section of iSoQ
-              </p>
-              <template v-if="characteristics_studies.fields.length">
-                <bc-filters
-                  v-if="mode==='edit' && characteristics_studies.items.length && checkPermissions(list.organization)"
-                  class="d-print-none"
-                  idname="chars-of-studies-filter"
-                  :tableSettings="characteristics_studies_table_settings"
-                  type="chars_of_studies"
-                  :fields="characteristics_studies.fields"
-                  :items="characteristics_studies.items">
-                </bc-filters>
-                <b-table
-                  id="characteristics"
-                  responsive
-                  head-variant="light"
-                  outlined
-                  :fields="characteristics_studies.fieldsObj"
-                  :items="characteristics_studies.items"
-                  :filter="characteristics_studies_table_settings.filter"
-                  class="toDoc">
-                  <template
-                    v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                  </template>
-                  <template
-                    v-if="characteristics_studies.tableTop.length"
-                    v-slot:thead-top>
-                    <b-tr>
-                      <b-th></b-th>
-                      <b-th
-                        v-for="(value, index) of characteristics_studies.tableTop"
-                        :key="index"
-                        :colspan="value.colspan"
-                        class="text-center">
-                        {{ value.label }}
-                      </b-th>
-                    </b-tr>
-                  </template>
-                  <template v-slot:cell(actions)="row">
-                    <font-awesome-icon
-                      @click="modalDeleteCharsOfStudiesItemData(row)"
-                      icon="trash"
-                      title="Remove"/>
-                    <font-awesome-icon
-                      @click="openModalCharsOfStudiesditData(row)"
-                      icon="edit"
-                      title="Edit" />
-                  </template>
-                </b-table>
-
-                <b-modal
-                  size="xl"
-                  title="Edit data"
-                  ref="modal-stage-three-edit-data"
-                  @ok="saveCharsOfStudiesEditedData">
-                  <b-form-group
-                    v-for="(field, index) in buffer_characteristics_studies.fields"
-                    :key="index"
-                    :label="`${field.label}`"
-                    :label-for="`data-${index}`">
-                    <b-form-input
-                      :id="`data-${index}`"
-                      v-if="field.key === 'ref_id' || field.key === 'authors'"
-                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                      v-model="modal_stage_three_data[field.key]"></b-form-input>
-                    <b-form-textarea
-                      :id="`data-${index}`"
-                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="modal_stage_three_data[field.key]"
-                      rows="6"
-                      max-rows="100"></b-form-textarea>
-                    <b-form-textarea
-                      :id="`data-${index}`"
-                      rows="6"
-                      max-rows="100"
-                      v-model="modal_stage_three_data[field.key]"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-                <b-modal
-                  title="Remove data content"
-                  @ok="removeCharsOfStudiesItemData"
-                  ref="modal-stage-three-remove-data"
-                  scrollable
-                  size="xl">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                  <b-table
-                    responsive
-                    :fields="buffer_modal_stage_three.fields"
-                    :items="buffer_modal_stage_three.data"
-                    class="mb-5">
-                  </b-table>
-                </b-modal>
-
-                <back-to-top></back-to-top>
-              </template>
-            </div>
-
-            <div
-              class="mt-5 mb-5"
-              v-if="show.selected.includes('ma')">
-              <a name="methodological-assessments"></a>
-              <h3 class="toDoc">
-                {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
-                <span
-                  v-if="ui.methodological_assessments.display_warning"
-                  class="text-danger d-print-none"
-                  v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
-                  <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                </span>
-              </h3>
-              <p class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ</p>
-              <template v-if="meth_assessments.fields.length">
-                <bc-filters
-                  v-if="mode==='edit' && meth_assessments.items.length && checkPermissions(list.organization)"
-                  class="d-print-none"
-                  idname="meth-assessments-filter"
-                  :tableSettings="methodological_assessments_table_settings"
-                  type="meth_assessments"
-                  :fields="meth_assessments.fields"
-                  :items="meth_assessments.items">
-                </bc-filters>
-                <b-table
-                  class="toDoc"
-                  id="methodological"
-                  responsive
-                  head-variant="light"
-                  outlined
-                  :fields="meth_assessments.fieldsObj"
-                  :items="meth_assessments.items"
-                  :filter="methodological_assessments_table_settings.filter">
-                  <template
-                    v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                  </template>
-                  <template v-slot:cell(actions)="row">
-                    <font-awesome-icon icon="trash" @click="openModalRemoveDataMethAssessments(row)" :title="$t('Remove')" />
-                    <font-awesome-icon icon="edit" @click="openModalEditDataMethAssessments(row)" :title="$t('Edit')" />
-                  </template>
-                </b-table>
-
-                <b-modal
-                  size="xl"
-                  ref="modal-edit-data-stage-four"
-                  title="Edit data"
-                  @ok="saveUpdateDataMethAssessments">
-                  <b-form-group
-                    v-for="(field, index) in buffer_modal_meth_assessments_fields"
-                    :key="index"
-                    :label="`${field.label}`"
-                    :label-for="`column-${index}`">
-                    <b-form-textarea
-                      :id="`column-${index}`"
-                      v-model="modal_meth_assessments_data[field.key]"
-                      rows="6"
-                      max-rows="100"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-                <b-modal
-                  @ok="removeDataMethAssessments"
-                  ref="modal-remove-data-stage-four"
-                  title="Remove data content"
-                  scrollable
-                  size="xl">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                  <b-table
-                    :fields="buffer_meth_assessments_remove_item.fields"
-                    :items="buffer_meth_assessments_remove_item.items"></b-table>
-                </b-modal>
-                <!-- end of -->
-                <back-to-top></back-to-top>
-              </template>
-            </div>
-
-            <div
-              class="mt-3"
-              v-if="show.selected.includes('ed')">
-              <a name="extracted-data"></a>
-              <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
-              <p class="d-print-none font-weight-light">
-                It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
-              </p>
-              <template v-if="extracted_data.fields.length">
-                <bc-filters
-                  v-if="mode==='edit'"
-                  class="d-print-none"
-                  idname="extracted-data-filter"
-                  :tableSettings="extracted_data_table_settings"
-                  type="extracted_data"
-                  :fields="mode_print_fieldsObj"
-                  :items="extracted_data.items">
-                </bc-filters>
-                <b-table
-                  class="toDoc extracted-data-table"
-                  :id="(mode==='view') ? 'extracted-view' : 'extracted'"
-                  responsive
-                  head-variant="light"
-                  outlined
-                  :filter="extracted_data_table_settings.filter"
-                  :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                  :items="extracted_data.items"
-                  :current-page="extracted_data_table_settings.currentPage">
-                  <template v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                  </template>
-                  <template
-                    v-if="mode==='edit' && checkPermissions(list.organization)"
-                    v-slot:cell(actions)="data">
-                    <b-button
-                      class="d-print-none"
-                      @click="openModalExtractedDataEditDataItem(data)"
-                      variant="outline-success">
-                      <font-awesome-icon
-                        icon="edit"
-                        :title="$t('Edit')" />
-                    </b-button>
-                    <b-button
-                      class="d-print-none"
-                      @click="openModalExtractedDataRemoveDataItem(data)"
-                      variant="outline-danger">
-                      <font-awesome-icon
-                        icon="trash"
-                        :title="$t('Remove')" />
-                    </b-button>
-                  </template>
-                </b-table>
-                <b-modal
-                  id="modal-extracted-data-remove-data-item"
-                  ref="modal-extracted-data-remove-data-item"
-                  title="Remove data content"
-                  @ok="extractedDataRemoveDataItem"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-secondary">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                </b-modal>
-                <b-modal
-                  size="xl"
-                  title="Edit data"
-                  id="modal-extracted-data-data"
-                  ref="modal-extracted-data-data"
-                  @ok="saveDataExtractedData"
-                  cancel-variant="outline-secondary"
-                  ok-variant="outline-success"
-                  ok-title="Save">
-                  <b-form-group
-                    v-for="(field, index) in buffer_extracted_data.fields"
-                    :key="index"
-                    :id="`label-field-${index}`"
-                    :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : ''"
-                    :label-for="`input-field-${index}`">
-                    <b-form-textarea
-                      :id="`input-field-${index}`"
-                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="buffer_extracted_data_items[field.key]"
-                      rows="6"
-                      max-rows="100"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-
-                <back-to-top></back-to-top>
-              </template>
-              <!--
-              <template v-else>
-                <p class="d-print-none font-weight-light">
-                  To create or make changes to the column headings for this table, do so in the <b-link :to="`/organization/${list.organization}/project/${list.project_id}#My-Data`">My Data</b-link> section of iSoQ, once your headings are created you will be able to add the Extracted Data here.
-                </p>
-              </template>
-              -->
-            </div>
+            <table-extracted-data
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :extractedData="extracted_data"
+              :modePrintFieldObject="mode_print_fieldsObj"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"
+              @printErrors="printErrors"
+              @getExtractedData="getExtractedData"></table-extracted-data>
 
             <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
               <div class="mt-5">
@@ -1653,13 +945,17 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
-import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 const bCardActionTable = () => import(/* webpackChunkName: "backtotop" */'../tableActions/ActionTable')
 const editReviewFinding = () => import(/* webpackChunkName: "backtotop" */'../editReviewFinding')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
+const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
+const editListActionButtons = () => import('./editListActionButtons.vue')
+const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
+const editListCharsOfStudies = () => import('./editListCharsOfStudies.vue')
+const editListMethAssessments = () => import('./editListMethAssessments.vue')
+const editListExtractedData = () => import('./editListExtractedData.vue')
 
 export default {
   components: {
@@ -1668,7 +964,13 @@ export default {
     'edit-review-finding': editReviewFinding,
     'back-to-top': backToTop,
     draggable,
-    videoHelp
+    videoHelp,
+    'edit-header-list': editHeaderList,
+    'edit-list-actions-buttons': editListActionButtons,
+    'evidence-profile-table': editListEvidenceProfile,
+    'table-chars-of-studies': editListCharsOfStudies,
+    'table-meth-assessments': editListMethAssessments,
+    'table-extracted-data': editListExtractedData
   },
   data () {
     return {
@@ -1713,28 +1015,6 @@ export default {
         pageOptions: [10, 50, 100],
         isBusy: false
       },
-      characteristics_studies_table_settings: {
-        filter: '',
-        totalRows: 1,
-        currentPage: 1,
-        perPage: 10,
-        pageOptions: [10, 50, 100],
-        last_column: 0
-      },
-      methodological_assessments_table_settings: {
-        filter: '',
-        totalRows: 1,
-        currentPage: 1,
-        perPage: 10,
-        pageOptions: [10, 50, 100]
-      },
-      extracted_data_table_settings: {
-        filter: '',
-        totalRows: 1,
-        currentPage: 1,
-        perPage: 10,
-        pageOptions: [10, 50, 100]
-      },
       show: {
         selected: ['cs', 'ma', 'ed'],
         options: [
@@ -1761,42 +1041,6 @@ export default {
       ],
       /** selectors **/
       /** tables fields **/
-      evidence_profile_fields: [
-        { key: 'isoqf_id', label: '#' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
-        { key: 'references', label: 'References' }
-        /*
-        {key: 'actions', label: 'Actions'}
-        */
-      ],
-      evidence_profile_fields_print_version: [
-        { key: 'isoqf_id', label: '#' },
-        { key: 'name', label: 'Summarised review finding' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
-        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
-        {
-          key: 'references',
-          label: 'References',
-          formatter: value => {
-            let references = ''
-            for (let item of value) {
-              for (let reference of this.references) {
-                if (item === reference.id) {
-                  references = references.concat(reference.content)
-                }
-              }
-            }
-            return references
-          }
-        }
-      ],
       /** tables fields **/
       initial_modal_stage_one: {
         id: null,
@@ -1817,16 +1061,6 @@ export default {
         relevance: {option: null, explanation: '', notes: '', title: ''},
         cerqual: {option: null, explanation: '', notes: '', title: ''}
       },
-      buffer_modal_stage_three: {
-        fields: [],
-        data: []
-      },
-      buffer_extracted_data: {
-        fields: [],
-        items: [],
-        id: null
-      },
-      buffer_extracted_data_items: {},
       list: {
         id: '',
         title: '',
@@ -1883,7 +1117,6 @@ export default {
         items: []
       },
       buffer_characteristics_studies: {},
-      modal_stage_three_data: {},
       modal_meth_assessments_data: {},
       buffer_modal_meth_assessments_fields: {},
       extracted_data: {
@@ -1949,9 +1182,6 @@ export default {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-    print: function () {
-      window.print()
-    },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
@@ -1973,9 +1203,6 @@ export default {
         return result
       }
     },
-    openModalReferences: function () {
-      this.$refs['modalReferences'].show()
-    },
     getAllReferences: function () {
       axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
@@ -1992,16 +1219,6 @@ export default {
         })
         .catch((error) => {
           this.printErrors(error)
-        })
-    },
-    saveReferencesList: function () {
-      this.evidence_profile_table_settings.isBusy = true
-      const params = {
-        references: this.list.references
-      }
-      axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
-        .then((response) => {
-          this.updateReferencesInFindings()
         })
     },
     updateReferencesInFindings: function () {
@@ -2059,7 +1276,7 @@ export default {
               items: _items
             }
             axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, params)
-              .then((response) => {
+              .then(() => {
                 this.getExtractedData()
               })
           }
@@ -2168,6 +1385,18 @@ export default {
         this.status_evidence_profile.variant = 'success'
       }
     },
+    bufferModalStageOne: function (name) {
+      this.buffer_modal_stage_one.name = name
+    },
+    bufferModalStageTwo: function (data, type, title) {
+      this.buffer_modal_stage_two = data
+      this.buffer_modal_stage_two.type = type
+      this.buffer_modal_stage_two.title = title
+    },
+    openModalStageTwo: function () {
+      this.showPanel = true
+      this.$refs['modal-stage-two'].show()
+    },
     saveListName: function () {
       let params = {
         cerqual: this.buffer_modal_stage_two.cerqual,
@@ -2259,7 +1488,7 @@ export default {
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
-          .then((response) => {
+          .then(() => {
             this.getStageOneData()
             this.saveListName()
             this.$refs['modal-stage-two'].hide()
@@ -2277,22 +1506,6 @@ export default {
             this.printErrors(error)
           })
       }
-    },
-    editStageTwo: function (data, type) {
-      let theData = JSON.parse(JSON.stringify(data))
-      this.buffer_modal_stage_one.name = theData.name
-      this.buffer_modal_stage_two = {...theData}
-      const titles = {
-        'methodological-limitations': 'Methodological limitations',
-        'coherence': 'Coherence',
-        'adequacy': 'Adequacy',
-        'relevance': 'Relevance',
-        'cerqual': 'GRADE-CERQual assessment of confidence'
-      }
-      this.buffer_modal_stage_two.type = type
-      this.buffer_modal_stage_two.title = titles[type]
-      this.showPanel = true
-      this.$refs['modal-stage-two'].show()
     },
     getCharsOfStudies: function () {
       let params = {
@@ -2373,66 +1586,6 @@ export default {
           this.printErrors(error)
         })
     },
-    openModalCharsOfStudiesditData: function (row) {
-      let item = JSON.parse(JSON.stringify(row))
-      let index = item.index
-      let data = item.item
-
-      this.modal_stage_three_data = data
-      this.characteristics_studies.data_index = index
-      this.$refs['modal-stage-three-edit-data'].show()
-    },
-    saveCharsOfStudiesEditedData: function () {
-      let CharsOfStudiesData = {}
-      let index = this.characteristics_studies.data_index
-
-      CharsOfStudiesData.items = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      delete CharsOfStudiesData.items[index]
-      CharsOfStudiesData.items[index] = this.modal_stage_three_data
-      CharsOfStudiesData.organization = this.characteristics_studies.organization
-      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
-
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
-        .then((response) => {
-          this.modal_stage_three_data = {}
-          delete this.characteristics_studies.data_index
-          this.getCharsOfStudies()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    modalDeleteCharsOfStudiesItemData: function (row) {
-      let item = JSON.parse(JSON.stringify(row))
-      let index = item.index
-      let fields = JSON.parse(JSON.stringify(this.characteristics_studies.fields))
-
-      fields.splice(fields.length - 1, 1)
-      this.buffer_modal_stage_three = {fields: [], data: []}
-      this.buffer_modal_stage_three.fields = fields
-      this.buffer_modal_stage_three.data.push(row.item)
-      this.characteristics_studies.data_index = index
-      this.$refs['modal-stage-three-remove-data'].show()
-    },
-    removeCharsOfStudiesItemData: function () {
-      let data = JSON.parse(JSON.stringify(this.characteristics_studies.items))
-      let CharsOfStudiesData = {}
-
-      data.splice(this.characteristics_studies.data_index, 1)
-      CharsOfStudiesData.items = data
-      CharsOfStudiesData.organization = this.characteristics_studies.organization
-      CharsOfStudiesData.list_id = this.characteristics_studies.list_id
-
-      axios.patch(`/api/isoqf_characteristics/${this.characteristics_studies.id}`, CharsOfStudiesData)
-        .then((response) => {
-          this.modal_stage_three_data = {}
-          delete this.characteristics_studies.data_index
-          this.getCharsOfStudies()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     getMethAssessments: function () {
       let params = {
         organization: this.list.organization,
@@ -2485,56 +1638,6 @@ export default {
           } else {
             this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
           }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalEditDataMethAssessments: function (row) {
-      let tmpFields = JSON.parse(JSON.stringify(this.meth_assessments.fields))
-      let tmpData = JSON.parse(JSON.stringify(this.meth_assessments.items))
-
-      tmpFields.splice(tmpFields.length - 1, 1)
-      this.buffer_modal_meth_assessments_fields = tmpFields
-      this.modal_meth_assessments_data = tmpData.splice(row.index, 1)[0]
-      this.buffer_meth_assessments.key_item = row.index
-      this.$refs['modal-edit-data-stage-four'].show()
-    },
-    saveUpdateDataMethAssessments: function () {
-      let tmpData = JSON.parse(JSON.stringify(this.modal_meth_assessments_data))
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      tmpMethAssessments.items[this.buffer_meth_assessments.key_item] = tmpData
-      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
-        .then((response) => {
-          delete this.buffer_meth_assessments.key_item
-          this.$refs['modal-edit-data-stage-four'].hide()
-          this.modal_meth_assessments_data = {}
-          this.getMethAssessments()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalRemoveDataMethAssessments: function (row) {
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      this.buffer_meth_assessments_remove_item.fields = tmpMethAssessments.fields
-      this.buffer_meth_assessments_remove_item.items = []
-      this.buffer_meth_assessments_remove_item.items.push(tmpMethAssessments.items[row.index])
-      this.buffer_meth_assessments_remove_item.key_item = row.index
-      this.$refs['modal-remove-data-stage-four'].show()
-    },
-    removeDataMethAssessments: function () {
-      let tmpMethAssessments = JSON.parse(JSON.stringify(this.meth_assessments))
-
-      tmpMethAssessments.fields.splice(tmpMethAssessments.fields.length - 1, 1)
-      tmpMethAssessments.items.splice(this.buffer_meth_assessments_remove_item.key_item, 1)
-      axios.patch(`/api/isoqf_assessments/${this.meth_assessments.id}`, tmpMethAssessments)
-        .then((response) => {
-          this.buffer_meth_assessments_remove_item = {fields: [], items: []}
-          this.getMethAssessments()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -2614,682 +1717,6 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    saveDataExtractedData: function () {
-      let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
-      let _originalItems = JSON.parse(JSON.stringify(this.extracted_data.original_items))
-
-      for (let index in _originalItems) {
-        if (_item.ref_id === _originalItems[index].ref_id) {
-          _originalItems[index] = {
-            'authors': _item.authors,
-            'column_0': _item.column_0,
-            'ref_id': _item.ref_id
-          }
-        }
-      }
-
-      let params = {
-        organization: this.list.organization,
-        list_id: this.$route.params.id,
-        items: _originalItems
-      }
-      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
-        .then((response) => {
-          this.getExtractedData()
-          this.buffer_extracted_data = {fields: [], items: [], id: null}
-          this.buffer_extracted_data_items = {}
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalExtractedDataRemoveDataItem: function (data) {
-      this.buffer_extracted_data.remove_index_item = data.index
-      this.$refs['modal-extracted-data-remove-data-item'].show()
-    },
-    extractedDataRemoveDataItem: function () {
-      let items = JSON.parse(JSON.stringify(this.extracted_data.items))
-      const item = items[this.buffer_extracted_data.remove_index_item]
-      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
-      items[this.buffer_extracted_data.remove_index_item] = newItem
-
-      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, {items: items})
-        .then((response) => {
-          this.getExtractedData()
-          delete this.buffer_extracted_data.remove_index_item
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalExtractedDataEditDataItem: function (data) {
-      this.extracted_data.edit_index_item = data.index
-      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extracted_data.fields))
-      this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
-      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extracted_data.items[data.index]))
-      this.$refs['modal-extracted-data-data'].show()
-    },
-    exportToWord: function () {
-      const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
-      const doc = new Document()
-
-      doc.addSection({
-        size: {
-          orientation: PageOrientation.LANDSCAPE
-        },
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: this.project.name,
-                size: 24,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-            children: [
-              new TextRun({
-                text: 'GRADE-CERQual Assessment Worksheet',
-                bold: true,
-                size: 28,
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            alignment: AlignmentType.LEFT,
-            heading: HeadingLevel.HEADING_1,
-            children: [
-              new TextRun({
-                text: 'Evidence Profile',
-                bold: true,
-                size: 24,
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Table({
-            borders: {
-              top: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              bottom: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              left: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              right: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideHorizontal: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideVertical: {
-                style: BorderStyle.NONE
-              }
-            },
-            width: {
-              size: '100%',
-              type: WidthType.PERCENTAGE
-            },
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '2%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: '#',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '28%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Summarized Review Finding',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Methodological limitations',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Coherence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Adequacy',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Relevance',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'GRADE-CERQual assessment of confidence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'References',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidence_profile[0].isoqf_id,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidence_profile[0].name,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].methodological_limitations.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? this.evidence_profile[0].methodological_limitations.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].coherence.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].coherence.explanation.length) ? this.evidence_profile[0].coherence.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].adequacy.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].adequacy.explanation.length) ? this.evidence_profile[0].adequacy.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].relevance.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].relevance.explanation.length) ? this.evidence_profile[0].relevance.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displayLevelConfidence(this.evidence_profile[0].cerqual.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].cerqual.explanation.length) ? this.evidence_profile[0].cerqual.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      ...this.generateReferences()
-                    ]
-                  })
-                ]
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Characteristics of Studies',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.characteristics_studies))),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Methodological Assessments',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.meth_assessments))),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Extracted Data',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.extracted_data))),
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.theLicense(this.project.license_type) : '',
-                size: 20,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          })
-        ]
-      })
-
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, filename)
-      })
-    },
-    generateTable: function (data) {
-      return new Table({
-        borders: {
-          top: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.SINGLE
-          },
-          bottom: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.SINGLE
-          },
-          left: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.SINGLE
-          },
-          right: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.SINGLE
-          },
-          insideHorizontal: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.SINGLE
-          },
-          insideVertical: {
-            style: BorderStyle.NONE
-          }
-        },
-        width: {
-          size: '100%',
-          type: WidthType.PERCENTAGE
-        },
-        rows: [
-          this.generateHeaderRow(JSON.parse(JSON.stringify(data.fields))),
-          ...this.generateBodyRow(JSON.parse(JSON.stringify(data.items)))
-        ]
-      })
-    },
-    generateHeaderRow: function (data) {
-      return new TableRow({
-        tableHeader: true,
-        children: [
-          ...this.generateCell(data)
-        ]
-      })
-    },
-    generateBodyRow: function (data) {
-      return data.map((item) => {
-        return new TableRow({
-          children: [
-            ...this.prepareBodyCell(item)
-          ]
-        })
-      })
-    },
-    generateCell: function (data) {
-      let headers = []
-      for (let d of data) {
-        if (d.key !== 'ref_id' && d.key !== 'actions') {
-          headers.push(d)
-        }
-      }
-      const length = headers.length
-      const size = 100 / length
-      return headers.map((content) => {
-        return new TableCell({
-          verticalAlign: VerticalAlign.CENTER,
-          width: {
-            size: size.toString() + '%',
-            type: WidthType.PERCENTAGE
-          },
-          children: [
-            this.generateParagraph(content, true)
-          ]
-        })
-      })
-    },
-    prepareBodyCell: function (data) {
-      if (Object.prototype.hasOwnProperty.call(data, 'index')) {
-        delete data.index
-      }
-      let arr = []
-      const keys = Object.keys(data)
-      let numbers = []
-      for (let key of keys) {
-        if (key !== 'ref_id' && key !== 'authors') {
-          const newKey = parseInt(key.split('_')[1])
-          numbers.push(newKey)
-        }
-      }
-      const len = numbers.sort((a, b) => { return a - b }).slice(-1)[0]
-      if (len !== undefined) {
-        if (len) {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          for (var cnt = 0; cnt <= len; cnt++) {
-            if (Object.prototype.hasOwnProperty.call(data, 'column_' + cnt.toString())) {
-              arr.push(this.generateBodyCell(data['column_' + cnt.toString()], false, 20))
-            }
-          }
-        } else {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          arr.push(this.generateBodyCell(data['column_0'], false, 20))
-        }
-      } else {
-        arr.push(this.generateBodyCell(data.authors, true, 20))
-        arr.push(this.generateBodyCell(' ', false, 20))
-      }
-      return arr
-    },
-    generateBodyCell: function (data, isBold, size) {
-      return new TableCell({
-        children: [
-          this.generateParagraph(data, isBold, size)
-        ]
-      })
-    },
-    generateParagraph: function (data, isBold, size) {
-      return new Paragraph({
-        children: [
-          this.generateText(data, isBold, size)
-        ]
-      })
-    },
-    generateText: function (data, isBold = false, size = 20) {
-      if (Object.prototype.hasOwnProperty.call(data, 'label')) {
-        return new TextRun({
-          text: data.label,
-          bold: isBold,
-          size: size
-        })
-      } else {
-        return new TextRun({
-          text: data,
-          bold: isBold,
-          size: size
-        })
-      }
-    },
-    generateReferences: function () {
-      const allReferences = JSON.parse(JSON.stringify(this.references))
-      const listReferences = JSON.parse(JSON.stringify(this.list.references))
-      let epReferences = []
-      for (let reference of allReferences) {
-        if (listReferences.indexOf(reference.id) !== -1) {
-          epReferences.push(reference.content)
-        }
-      }
-      let arr = []
-      for (let epr of epReferences) {
-        arr.push(new Paragraph({
-          children: [
-            new TextRun({
-              text: epr,
-              size: 16
-            })
-          ]
-        })
-        )
-      }
-      return arr
     },
     printErrors: function (error) {
       if (error.response) {
@@ -3374,38 +1801,6 @@ export default {
         return ''
       }
     },
-    displayLevelConfidence: function (option) {
-      if (option !== null) {
-        return this.level_confidence[option].text
-      }
-      return ''
-    },
-    displayExclamationAlert: function (type) {
-      const evidenceProfile = this.evidence_profile[0]
-      switch (type) {
-        case 'methodological-limitations':
-          if (this.checkValidationText(type, evidenceProfile)) {
-            return true
-          }
-          break
-        case 'coherence':
-          if (this.checkValidationText(type, evidenceProfile)) {
-            return true
-          }
-          break
-        case 'adequacy':
-          if (this.checkValidationText(type, evidenceProfile)) {
-            return true
-          }
-          break
-        case 'relevance':
-          if (this.checkValidationText(type, evidenceProfile)) {
-            return true
-          }
-          break
-      }
-      return false
-    },
     theLicense: function (license) {
       const globalLicenses = [
         {
@@ -3434,42 +1829,6 @@ export default {
 
       this.licenseUrl = require('../../assets/' + globalLicenses[0].image)
       return globalLicenses[0].text
-    },
-    checkWrittingStatus: function (list) {
-      if (Object.prototype.hasOwnProperty.call(list, 'editing')) {
-        if (list.userEditing === this.$store.state.user.id || list.editing === false) {
-          const params = { editing: true, userEditing: this.$store.state.user.id }
-          axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-            .then((response) => {
-              this.mode = 'edit'
-              this.list.editing = true
-              this.list.userEditing = this.$store.state.user.id
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        } else {
-          axios.get(`/users/${list.userEditing}`)
-            .then((response) => {
-              this.editingUser = response.data
-              this.editingUser.show = true
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-          this.mode = 'view'
-        }
-      } else {
-        const params = { editing: true, userEditing: this.$store.state.user.id }
-        axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-          .then((response) => {
-            this.list.editing = true
-            this.list.userEditing = this.$store.state.user.id
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      }
     },
     returnTo: function () {
       if (this.list.userEditing === this.$store.state.user.id) {

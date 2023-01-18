@@ -18,7 +18,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5">
+        <b-nav id="tabsTitle" tabs fill class="pt-5 d-print-none">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="tabOpened=0">Project properties</b-nav-item>
@@ -111,6 +111,22 @@
           <back-to-top></back-to-top>
         </b-tab>
         <b-tab>
+          <b-container fluid>
+            <action-buttons
+              :mode="'view'"
+              :preview="true"
+              :project="project"
+              :permissions="true"
+              :ui="ui"
+              :lists="lists"
+              :findings="findings"
+              :references="references"
+              :charsOfStudies="charsOfStudies"
+              :methodologicalTableRefs="methodologicalTableRefs"
+              :listsPrintVersion="lists"
+              :selectOptions="select_options"
+              :cerqualConfidence="cerqual_confidence"></action-buttons>
+          </b-container>
           <h2>Summary of Qualitative Findings Table</h2>
           <b-card header-tag="header">
             <template v-slot:header>
@@ -185,6 +201,7 @@ const tablePrintFindings = () => import(/* webpackChunkName: "tableprintfindings
 const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')
 const methAssessmentsDisplayDataTable = () => import(/* webpackChunkName: "methassessmentssisplaysatatable" */'../methAssessments/displayTableData')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
+const actionButtons = () => import(/* webpackChunkName: "actionButtonsProject" */'../project/actionButtons.vue')
 
 export default {
   components: {
@@ -194,7 +211,8 @@ export default {
     'table-printing-findings': tablePrintFindings,
     'chars-of-studies-table': charsOfStudiesDisplayDataTable,
     'meth-assessments-table': methAssessmentsDisplayDataTable,
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    'action-buttons': actionButtons
   },
   data () {
     return {
@@ -222,6 +240,13 @@ export default {
         selected: null
       },
       references: [],
+      select_options: [
+        { value: 0, text: 'No/Very minor concerns' },
+        { value: 1, text: 'Minor concerns' },
+        { value: 2, text: 'Moderate concerns' },
+        { value: 3, text: 'Serious concerns' },
+        { value: null, text: 'Undefined' }
+      ],
       cerqual_confidence: [
         { value: 0, text: 'High confidence' },
         { value: 1, text: 'Moderate confidence' },
@@ -277,6 +302,9 @@ export default {
     this.getReferences()
   },
   methods: {
+    printDoc: function () {
+      window.print()
+    },
     getLicense: function (license) {
       const licenses = this.ui.project.global_licenses
       for (let lic of licenses) {
@@ -313,159 +341,6 @@ export default {
           // this.printErrors(error)
         })
     },
-    // getLists2: function () { // related to summary review of a finding
-    //   const params = {
-    //     organization: this.$route.params.org_id,
-    //     project_id: this.$route.params.isoqf_id
-    //   }
-    //   axios.get('/api/isoqf_lists', { params })
-    //     .then((response) => {
-    //       let data = JSON.parse(JSON.stringify(response.data))
-    //       data.sort(function (a, b) {
-    //         if (a.sort < b.sort) { return -1 }
-    //         if (a.sort > b.sort) { return 1 }
-    //         return 0
-    //       })
-    //       let cnt = 1
-    //       for (let d of data) {
-    //         d.sort = cnt
-    //         d.isoqf_id = cnt
-    //         cnt++
-    //       }
-    //       let _data = data
-
-    //       if (_data.length) {
-    //         // let lists = JSON.parse(JSON.stringify(this.lists))
-    //         for (let list of _data) {
-    //           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-    //             list.status = 'unfinished'
-    //             list.explanation = 'without_explanation'
-    //           } else {
-    //             list.status = 'completed'
-    //             list.explanation = 'with_explanation'
-    //             if (list.evidence_profile.cerqual.option === null) {
-    //               list.status = 'unfinished'
-    //             }
-    //             if (list.evidence_profile.cerqual.explanation === '') {
-    //               list.explanation = 'without_explanation'
-    //             }
-    //           }
-    //           if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
-    //             list.references = []
-    //           }
-    //           if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
-    //             list.notes = ''
-    //           }
-    //           if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
-    //             list.category = null
-    //           } else {
-    //             list.category_name = ''
-    //             list.category_extra_info = ''
-    //             if (this.list_categories.options.length) {
-    //               for (let category of this.list_categories.options) {
-    //                 if (list.category === category.value) {
-    //                   list.category_name = category.text
-    //                   list.category_extra_info = category.extra_info
-    //                 }
-    //               }
-    //             }
-    //           }
-    //           list.cerqual_option = ''
-    //           if (list.cerqual.option != null) {
-    //             list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
-    //           }
-    //           list.cerqual_explanation = list.cerqual.explanation
-    //           list.ref_list = ''
-    //           list.raw_ref = []
-    //           for (let r of this.references) {
-    //             for (let ref of list.references) {
-    //               if (ref === r.id) {
-    //                 list.ref_list = list.ref_list + this.parseReference(r, true)
-    //                 list.raw_ref.push(r)
-    //               }
-    //             }
-    //           }
-    //         }
-
-    //         if (this.list_categories.options.length) {
-    //           let categories = []
-    //           for (let category of this.list_categories.options) {
-    //             categories.push({'name': category.text, 'value': category.value, 'items': []})
-    //           }
-
-    //           for (let list of _data) {
-    //             if (categories.length) {
-    //               for (let element of categories) {
-    //                 if (element.value === list.category) {
-    //                   element.items.push(
-    //                     {
-    //                       'id': list.id,
-    //                       'isoqf_id': list.isoqf_id,
-    //                       'name': list.name,
-    //                       'cerqual_option': list.cerqual_option,
-    //                       'cerqual_explanation': list.cerqual_explanation,
-    //                       'ref_list': list.ref_list,
-    //                       'sort': list.sort,
-    //                       'notes': list.notes
-    //                     }
-    //                   )
-    //                 }
-    //               }
-    //             }
-    //           }
-    //           let newArr = []
-    //           for (let cat of categories) {
-    //             newArr.push({'is_category': true, 'name': cat.name})
-    //             for (let item of cat.items) {
-    //               newArr.push(item)
-    //             }
-    //           }
-    //           newArr.sort(function (a, b) {
-    //             if (a.sort < b.sort) {
-    //               return -1
-    //             }
-    //             if (a.sort > b.sort) {
-    //               return 1
-    //             }
-    //             return 0
-    //           })
-    //           this.lists = newArr
-    //         } else {
-    //           let items = []
-    //           for (let list of _data) {
-    //             items.push(
-    //               {
-    //                 'id': list.id,
-    //                 'isoqf_id': list.isoqf_id,
-    //                 'name': list.name,
-    //                 'cerqual_option': list.cerqual_option,
-    //                 'cerqual_explanation': list.cerqual_explanation,
-    //                 'ref_list': list.ref_list,
-    //                 'sort': list.sort,
-    //                 'notes': list.notes
-    //               }
-    //             )
-    //           }
-    //           items.sort(function (a, b) {
-    //             if (a.sort < b.sort) {
-    //               return -1
-    //             }
-    //             if (a.sort > b.sort) {
-    //               return 1
-    //             }
-    //             return 0
-    //           })
-    //           this.lists = items
-    //         }
-    //       }
-    //       this.table_settings.isBusy = false
-    //       this.table_settings.totalRows = _data.length
-    //     })
-    //     .catch((error) => {
-    //       console.log(error)
-    //       // this.printErrors(error)
-    //     })
-    // },
     getLists: function () {
       const params = {
         organization: this.$route.params.org_id,

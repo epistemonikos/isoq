@@ -33,16 +33,15 @@
                 label-for="input_email">
                 <b-form-input
                   id="input_email"
-                  type="email"
                   :state="ui.username_validation"
                   required
                   aria-describedby="input-live-help input-live-feedback"
                   placeholder="Enter a valid email"
-                  v-model="user.username">
+                  v-model.trim="user.username">
                 </b-form-input>
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address</b-form-text>
+                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address or the email is wrong formatted</b-form-text>
                 <b-form-text
                   id="input-live-help">Your email address is your username for logging-in to iSoQ.</b-form-text>
               </b-form-group>
@@ -280,7 +279,7 @@ export default {
     }
   },
   watch: {
-    'user.username': function (email) {
+    'user.username': function () {
       this.checkEmail()
     },
     'user.password': function () {
@@ -297,6 +296,14 @@ export default {
     this.checkEmail = _debounce(this.checkEmailExist, 500)
   },
   methods: {
+    validEmail: function (email) {
+      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      if (re.test(email)) {
+        this.ui.username_validation = true
+      } else {
+        this.ui.username_validation = false
+      }
+    },
     createAccount: function () {
       let params = {
         user: this.user,
@@ -364,10 +371,18 @@ export default {
         })
     },
     checkEmailExist: function () {
-      axios.get(`/users/check_email?email=${this.user.username}`)
+      const email = this.user.username.trim()
+      axios.get(`/users/check_email?email=${email}`)
         .then((response) => {
           if (response.data.error === false) {
             this.ui.username_validation = true
+          } else {
+            this.ui.username_validation = false
+          }
+        })
+        .then(() => {
+          if (this.ui.username_validation) {
+            this.validEmail(email)
           } else {
             this.ui.username_validation = false
           }
