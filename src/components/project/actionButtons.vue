@@ -160,7 +160,8 @@ export default {
     methodologicalTableRefs: Object,
     listsPrintVersion: Array,
     selectOptions: Array,
-    cerqualConfidence: Array
+    cerqualConfidence: Array,
+    printableItems: Array
   },
   components: {
     videoHelp
@@ -915,36 +916,38 @@ export default {
     generateFindingsTableContent: function () {
       const items = this.listsPrintVersion
       return items.map((item, index) => {
-        if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
-          return new TableRow({
-            children: [
-              new TableCell({
-                columnSpan: 5,
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: item.name.toUpperCase(),
-                        bold: true,
-                        size: 22
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          })
-        } else {
-          return new TableRow({
-            children: [
-              this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
-            ]
-          })
+        if (this.printableItems.includes(item.id)) {
+          if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
+            return new TableRow({
+              children: [
+                new TableCell({
+                  columnSpan: 5,
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      children: [
+                        new TextRun({
+                          text: item.name.toUpperCase(),
+                          bold: true,
+                          size: 22
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          } else {
+            return new TableRow({
+              children: [
+                this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
+                this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
+                this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+                this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+                this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
+              ]
+            })
+          }
         }
       })
     },

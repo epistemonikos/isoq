@@ -125,7 +125,8 @@
               :methodologicalTableRefs="methodologicalTableRefs"
               :listsPrintVersion="lists"
               :selectOptions="select_options"
-              :cerqualConfidence="cerqual_confidence"></action-buttons>
+              :cerqualConfidence="cerqual_confidence"
+              :printableItems="printableItems"></action-buttons>
           </b-container>
           <h2>Summary of Qualitative Findings Table</h2>
           <b-card header-tag="header">
@@ -293,7 +294,8 @@ export default {
         perPage: 10,
         isBusy: false
       },
-      findings: []
+      findings: [],
+      printableItems: []
     }
   },
   mounted () {
