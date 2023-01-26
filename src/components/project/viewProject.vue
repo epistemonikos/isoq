@@ -985,6 +985,7 @@
             :listsPrintVersion="lists_print_version"
             :selectOptions="select_options"
             :cerqualConfidence="cerqual_confidence"
+            :printableItems="printableItems"
             @uiPublishShowLoader="uiShowLoaders"
             @getProject="getProject"
             @changeMode="changeMode"
