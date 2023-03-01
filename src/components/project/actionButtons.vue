@@ -160,7 +160,8 @@ export default {
     methodologicalTableRefs: Object,
     listsPrintVersion: Array,
     selectOptions: Array,
-    cerqualConfidence: Array
+    cerqualConfidence: Array,
+    printableItems: Array
   },
   components: {
     videoHelp
@@ -913,8 +914,8 @@ export default {
       })
     },
     generateFindingsTableContent: function () {
-      const items = this.listsPrintVersion
-      return items.map((item, index) => {
+      const filteredItems = this.filteredPrintedData()
+      return filteredItems.map((item, index) => {
         if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
           return new TableRow({
             children: [
@@ -1011,8 +1012,16 @@ export default {
       )
       return text
     },
-    generateEvidenceProfileTable2: function () {
+    filteredPrintedData: function () {
       const items = this.listsPrintVersion
+      return items.filter((item) => {
+        if (this.printableItems.includes(item.id)) {
+          return item
+        }
+      })
+    },
+    generateEvidenceProfileTable2: function () {
+      const items = this.filteredPrintedData()
       return items.map((item, index) => {
         if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
           return new TableRow({

@@ -985,6 +985,7 @@
             :listsPrintVersion="lists_print_version"
             :selectOptions="select_options"
             :cerqualConfidence="cerqual_confidence"
+            :printableItems="printableItems"
             @uiPublishShowLoader="uiShowLoaders"
             @getProject="getProject"
             @changeMode="changeMode"
@@ -1387,6 +1388,7 @@
                   ref="findings-print">
                   <b-thead>
                     <b-tr>
+                      <b-th class="d-print-none">Printable?</b-th>
                       <b-th>#</b-th>
                       <b-th>Summarised review finding</b-th>
                       <b-th>GRADE-CERQual assessment of confidence</b-th>
@@ -1395,7 +1397,10 @@
                     </b-tr>
                   </b-thead>
                   <b-tbody>
-                    <b-tr v-for="(item, index) of lists_print_version" :key="index">
+                    <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
+                      <b-td class="d-print-none">
+                        <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
+                      </b-td>
                       <template v-if="item.is_category">
                         <b-td
                           colspan="5"
@@ -1468,7 +1473,7 @@
                     </b-tr>
                   </b-thead>
                   <b-tbody>
-                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index">
+                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
                       <template v-if="item.is_category">
                         <b-td
                           colspan="8"
@@ -2232,7 +2237,8 @@ export default {
       findings: [],
       editingUser: {
         show: false
-      }
+      },
+      printableItems: []
     }
   },
   watch: {
@@ -2875,6 +2881,10 @@ export default {
               this.lists_print_version = _items
             } else {
               this.lists_print_version = data
+            }
+
+            for (let items of this.lists_print_version) {
+              this.printableItems.push(items.id)
             }
           }
           this.lists = data
@@ -4778,7 +4788,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings-print.table thead th:nth-child(2) {
+    #findings-print.table thead th:nth-child(3) {
       width: 35%;
     }
   div >>>
