@@ -2837,10 +2837,10 @@ export default {
 
               for (let category of this.list_categories.options) {
                 if (category.id !== null) {
-                  categories.push({'name': category.text, 'value': category.id, 'items': [], is_category: true})
+                  categories.push({'name': category.text, 'id': category.id, 'value': category.id, 'items': [], is_category: true})
                 }
               }
-              categories.push({'name': 'Uncategorised findings', 'value': null, 'items': [], is_category: true})
+              categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
 
               for (let list of data) {
                 if (categories.length) {
@@ -2848,6 +2848,7 @@ export default {
                     if (category.value === list.category) {
                       category.items.push(
                         {
+                          'id': list.id,
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
