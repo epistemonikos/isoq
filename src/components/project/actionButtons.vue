@@ -139,7 +139,7 @@
 <script>
 import axios from 'axios'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
@@ -345,27 +345,27 @@ export default {
                 top: {
                   size: 1,
                   color: '000000',
-                  style: BorderStyle.SINGLE
+                  style: BorderStyle.NONE
                 },
                 bottom: {
                   size: 1,
                   color: '000000',
-                  style: BorderStyle.SINGLE
+                  style: BorderStyle.NONE
                 },
                 left: {
                   size: 1,
                   color: '000000',
-                  style: BorderStyle.SINGLE
+                  style: BorderStyle.NONE
                 },
                 right: {
                   size: 1,
                   color: '000000',
-                  style: BorderStyle.SINGLE
+                  style: BorderStyle.NONE
                 },
                 insideHorizontal: {
                   size: 1,
                   color: '000000',
-                  style: BorderStyle.SINGLE
+                  style: BorderStyle.NONE
                 },
                 insideVertical: {
                   style: BorderStyle.NONE
@@ -378,6 +378,10 @@ export default {
               rows: [
                 new TableRow({
                   tableHeader: true,
+                  height: {
+                    height: 1444,
+                    rule: HeightRule.EXACT
+                  },
                   children: [
                     new TableCell({
                       verticalAlign: VerticalAlign.CENTER,
@@ -576,27 +580,27 @@ export default {
           top: {
             size: 1,
             color: '000000',
-            style: BorderStyle.SINGLE
+            style: BorderStyle.NONE
           },
           bottom: {
             size: 1,
             color: '000000',
-            style: BorderStyle.SINGLE
+            style: BorderStyle.NONE
           },
           left: {
             size: 1,
             color: '000000',
-            style: BorderStyle.SINGLE
+            style: BorderStyle.NONE
           },
           right: {
             size: 1,
             color: '000000',
-            style: BorderStyle.SINGLE
+            style: BorderStyle.NONE
           },
           insideHorizontal: {
             size: 1,
             color: '000000',
-            style: BorderStyle.SINGLE
+            style: BorderStyle.NONE
           },
           insideVertical: {
             style: BorderStyle.NONE
@@ -609,6 +613,10 @@ export default {
         rows: [
           new TableRow({
             tableHeader: true,
+            height: {
+              height: 1444,
+              rule: HeightRule.EXACT
+            },
             children: [
               new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
