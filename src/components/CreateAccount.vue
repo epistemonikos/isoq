@@ -79,6 +79,7 @@
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
               <div id="tyc">
+                <b-alert :show="showWarning" variant="warning">{{ this.showWarningMsg }}</b-alert>
                 <b-form-checkbox
                     id="tyc-check"
                     v-model="tycCheckStatus"
@@ -260,6 +261,8 @@ export default {
   data () {
     return {
       tycCheckStatus: 'not_accepted',
+      showWarning: false,
+      showWarningMsg: '',
       ui: {
         username_validation: null,
         password_validation: false,
@@ -324,6 +327,8 @@ export default {
       }
     },
     createAccount: function () {
+      this.showWarning = false
+      this.showWarningMsg = ''
       let params = {
         user: this.user,
         organizations: this.organizations
@@ -339,7 +344,12 @@ export default {
       }
       axios.post('/create_user', params)
         .then((response) => {
-          this.login(this.user.username, this.user.password)
+          if (response.data.tyc !== false) {
+            this.login(this.user.username, this.user.password)
+          } else {
+            this.showWarning = response.data.tyc
+            this.showWarningMsg = response.data.msg
+          }
         })
         .catch((error) => {
           console.log(error)
