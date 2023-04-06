@@ -78,6 +78,17 @@
                   placeholder="Write the same password as above"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
+              <div id="tyc">
+                <b-form-checkbox
+                    id="tyc-check"
+                    v-model="tycCheckStatus"
+                    name="tyc-check"
+                    value="accepted"
+                    unchecked-value="not_accepted"
+                  >
+                  I read and accepts the terms and conditions
+                </b-form-checkbox>
+              </div>
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
               </b-card-text>
@@ -86,7 +97,7 @@
                 class="text-right">
                 <b-button
                   variant="outline-primary"
-                  :disabled="!(ui.username_validation && ui.password_validation)"
+                  :disabled="!(ui.username_validation && ui.password_validation && tycCheckStatus !=='not_accepted' )"
                   @click="createAccount">Create account</b-button>
               </div>
             </b-card>
@@ -241,6 +252,7 @@ import _debounce from 'lodash.debounce'
 export default {
   data () {
     return {
+      tycCheckStatus: 'not_accepted',
       ui: {
         username_validation: null,
         password_validation: false,
