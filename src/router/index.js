@@ -13,6 +13,7 @@ const NewPassword = () => import(/* webpackChunkName: "newpassword" */ '@/compon
 const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf" */ '@/components/previewContent/previewContentSoQf')
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
+const removeAccount = () => import('@/components/removeAccount')
 // const fixCats = () => import(/* webpackChunkName: "fixCats" */ '@/components/fixCategories')
 
 // import { Trans } from '@/plugins/Translation'
@@ -147,6 +148,14 @@ var routes = [
     component: previewWorksheet,
     meta: {
       title: 'Worksheet Preview - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    name: 'RemoveAccount',
+    path: '/profile/remove_account/:organization_id',
+    component: removeAccount,
+    meta: {
+      title: 'Remove Account - Interactive Summary of Qualitative Findings'
     }
   }
 ]

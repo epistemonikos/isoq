@@ -21,6 +21,7 @@
                 {{username}}
               </template>
               <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">Change pasword</b-dropdown-item>
+              <b-dropdown-item :to="$i18nRoute({ name: 'RemoveAccount'})">Remove account</b-dropdown-item>
               <b-dropdown-item @click="logout">{{ $t('Logout') }}</b-dropdown-item>
             </b-nav-item-dropdown>
           </template>

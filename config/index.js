@@ -12,37 +12,42 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/auth': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/users': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/share': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/create_user': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        logLevel: 'debug'
+      },
+      '/delete_account': {
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/organizations': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       },
       '/project': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         logLevel: 'debug'
       }
