@@ -28,6 +28,7 @@
               <img src="../assets/logo-epistemonikos.png" alt="Epistemonikos Foundation">
             </li>
           </ul>
+          <p class="credit">Image by Sarah Rosenbaum, Norway</p>
         </b-col>
       </b-row>
     </b-container>
@@ -81,4 +82,7 @@ export default {
     .uea {
       font-size: 12px;
     }
+  .credit {
+    font-size: 0.75rem;
+  }
 </style>
