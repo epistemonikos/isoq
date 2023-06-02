@@ -1388,7 +1388,7 @@
                   ref="findings-print">
                   <b-thead>
                     <b-tr>
-                      <b-th class="d-print-none">Printable?</b-th>
+                      <!-- <b-th class="d-print-none">Printable?</b-th> -->
                       <b-th>#</b-th>
                       <b-th>Summarised review finding</b-th>
                       <b-th>GRADE-CERQual assessment of confidence</b-th>
@@ -1398,9 +1398,9 @@
                   </b-thead>
                   <b-tbody>
                     <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                      <b-td class="d-print-none">
+                      <!-- <b-td class="d-print-none">
                         <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
-                      </b-td>
+                      </b-td> -->
                       <template v-if="item.is_category">
                         <b-td
                           colspan="5"
