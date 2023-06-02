@@ -451,7 +451,8 @@ export default {
     project: Object,
     permission: Boolean,
     selectOptions: Array,
-    levelConfidence: Array
+    levelConfidence: Array,
+    findings: Object
   },
   components: {
     'back-to-top': backToTop
@@ -495,13 +496,27 @@ export default {
   },
   methods: {
     saveReferencesList: function () {
-      this.evidence_profile_table_settings.isBusy = true
+      this.evidenceProfileTableSettings.isBusy = true
       const params = {
         references: this.list.references
       }
       axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
         .then(() => {
           this.updateReferencesInFindings()
+        })
+    },
+    updateReferencesInFindings: function () {
+      let params = {
+        'evidence_profile.references': this.list.references
+      }
+      axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
+        .then((response) => {
+          this.$emit('update-list-data')
+          // this.getList()
+        })
+        .catch((error) => {
+          this.$emit('printErrors', error)
+          // this.printErrors(error)
         })
     },
     displaySelectedOption: function (option) {

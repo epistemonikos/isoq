@@ -891,9 +891,12 @@
                 :permission="checkPermissions(list.organization)"
                 :selectOptions="select_options"
                 :levelConfidence="level_confidence"
+                :findings="findings"
+                @update-list-data="getList"
                 @bufferModalStageOne="bufferModalStageOne"
                 @bufferModalStageTwo="bufferModalStageTwo"
                 @openModalStageTwo="openModalStageTwo"
+                @printErrors="printErrors"
               ></evidence-profile-table>
 
             <table-chars-of-studies
@@ -1216,18 +1219,6 @@ export default {
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
           this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    updateReferencesInFindings: function () {
-      let params = {
-        'evidence_profile.references': this.list.references
-      }
-      axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
-        .then((response) => {
-          this.getList()
         })
         .catch((error) => {
           this.printErrors(error)
