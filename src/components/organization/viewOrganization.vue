@@ -943,6 +943,9 @@ export default {
         }
       }
       // this.buffer_project.index = index
+      if (Object.prototype.hasOwnProperty.call('sharedTo', this.buffer_project)) {
+        this.buffer_project.sharedTo = ''
+      }
       this.usersCanList(id)
       this.$refs['modal-share-options'].show()
     },
