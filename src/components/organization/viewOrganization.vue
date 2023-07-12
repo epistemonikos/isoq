@@ -943,7 +943,7 @@ export default {
         }
       }
       // this.buffer_project.index = index
-      if (Object.prototype.hasOwnProperty.call('sharedTo', this.buffer_project)) {
+      if (Object.prototype.hasOwnProperty.call(this.buffer_project, 'sharedTo')) {
         this.buffer_project.sharedTo = ''
       }
       this.usersCanList(id)
