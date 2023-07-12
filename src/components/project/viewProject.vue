@@ -2416,7 +2416,7 @@ export default {
           theHash = 'Guidance-on-applying-GRADE-CERQual'
           break
       }
-      this.$router.push({hash: `${theHash}`})
+      this.$router.push({query: {tab: `${theHash}`}})
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
@@ -3019,9 +3019,9 @@ export default {
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
-                if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-applying-GRADE-CERQual']
-                  this.tabOpened = tabs.indexOf(this.$route.hash)
+                if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
+                  const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
                 } else {
                   this.tabOpened = 2
                 }
