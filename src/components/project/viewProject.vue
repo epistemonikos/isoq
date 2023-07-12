@@ -4477,6 +4477,7 @@ export default {
     saveSortedLists: function () {
       let cnt = 1
       let requests = []
+      this.table_settings.isBusy = true
       for (let list of this.sorted_lists) {
         list.isoqf_id = cnt
         list.sort = cnt
