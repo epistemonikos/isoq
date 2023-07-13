@@ -1260,6 +1260,7 @@
                     {{data.index + 1}}
                   </template>
                   <template v-slot:cell(name)="data">
+                    <a :id="`a-${data.item.id}`"></a>
                     <span v-if="mode === 'edit'">
                       <b-row
                         class="mb-3">
@@ -1298,7 +1299,6 @@
                     </span>
                   </template>
                   <template v-slot:cell(category_name)="data">
-                    <!-- <pre>{{data.item}}</pre> -->
                     <template v-if="data.item.category !== null">
                       <b-button
                         block
@@ -2747,7 +2747,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getLists: function () {
+    getLists: function (id = null) {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -2891,6 +2891,9 @@ export default {
           this.lists = data
           this.table_settings.isBusy = false
           this.table_settings.totalRows = data.length
+          if (id) {
+            this.$router.push({hash: `a-${id}`})
+          }
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3078,16 +3081,17 @@ export default {
     saveReferencesList: function () {
       this.loadReferences = true
       this.table_settings.isBusy = true
+      const index = this.selected_list_index
       const params = {
         references: this.selected_references
       }
-      axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
+      axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
         .then(() => {
           this.updateFindingReferences(this.selected_references)
           this.selected_references = []
           this.selected_list_index = null
           this.getReferences()
-          this.getLists()
+          this.getLists(this.lists[index].id)
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3110,7 +3114,6 @@ export default {
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
     },
-
     generateEvidenceProfileTableWithCategories: function (findings) {
       let content = []
       for (const position in findings) {
@@ -3246,7 +3249,6 @@ export default {
         }
       })
     },
-
     confirmRemoveReferenceById: function (refId) {
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
@@ -4390,7 +4392,6 @@ export default {
       this.modal_edit_list_categories.index = null
       this.modal_edit_list_categories.id = null
     },
-
     exportTableToCSV: function (type) {
       const _types = ['chars_of_studies', 'meth_assessments']
       let _headers = []
