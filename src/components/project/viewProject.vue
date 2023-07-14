@@ -2894,6 +2894,9 @@ export default {
           if (id) {
             this.$router.push({hash: `a-${id}`})
           }
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
+            this.$router.push({hash: `${this.$route.query.hash}`})
+          }
         })
         .catch((error) => {
           this.printErrors(error)
