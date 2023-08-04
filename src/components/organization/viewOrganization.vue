@@ -943,6 +943,9 @@ export default {
         }
       }
       // this.buffer_project.index = index
+      if (Object.prototype.hasOwnProperty.call(this.buffer_project, 'sharedTo')) {
+        this.buffer_project.sharedTo = ''
+      }
       this.usersCanList(id)
       this.$refs['modal-share-options'].show()
     },
@@ -1029,28 +1032,31 @@ export default {
     },
     generateACopyOfAProject: function () {
       this.ui.copy.project = true
-      let newProject = JSON.parse(JSON.stringify(this.buffer_project))
-      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+      let bufferProject = JSON.parse(JSON.stringify(this.buffer_project))
+      bufferProject.sharedTo = ''
+      bufferProject.name = '(Copy of) ' + bufferProject.name
+      bufferProject.sharedCan = {read: [], write: []}
+      bufferProject.temporaryUrl = ''
+      bufferProject.invite_emails = []
+      bufferProject.tmp_invite_emails = []
+      bufferProject.is_owner = true
+      bufferProject.organization = this.$route.params.id
+      bufferProject.created_at = Date.now()
+      bufferProject.can_write = []
+      bufferProject.can_read = []
+      bufferProject.private = true
+      bufferProject.is_public = false
+      let newProject = bufferProject
+      const originalProject = bufferProject
       delete newProject.id
       delete newProject._id
-      newProject.name = '(Copy of) ' + newProject.name
-      newProject.sharedCan = {read: [], write: []}
-      newProject.temporaryUrl = ''
-      newProject.invite_emails = []
-      newProject.tmp_invite_emails = []
-      newProject.is_owner = true
-      newProject.organization = this.$route.params.id
-      newProject.created_at = Date.now()
-      newProject.can_write = []
-      newProject.can_read = []
-      newProject.private = true
-      newProject.is_public = false
       axios.post('/api/isoqf_projects', newProject)
         .then((response) => {
           this.modalCloneNewId = response.data.id
           this.generateCopyOfReferences(originalProject, response.data)
           this.generateCopyOfCategories(originalProject)
           this.ui.copy.project = false
+          this.getProjects()
         })
         .catch((error) => {
           if (error.response) {
