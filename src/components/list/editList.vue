@@ -13,7 +13,8 @@
       :organizationId="list.organization"
       :projectId="list.project_id"
       :name="list.name"
-      :mode="mode"></edit-header-list>
+      :mode="mode"
+      :list="list"></edit-header-list>
     <b-container>
       <edit-list-actions-buttons
         :mode="mode"
