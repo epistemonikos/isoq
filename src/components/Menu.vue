@@ -3,7 +3,9 @@
     <b-navbar id="main-navbar" toggleable="lg">
       <b-navbar-brand :to="{name: 'MainPage'}">
         <p><img :src="iconUrl" alt="GRADE-CERQual">
-        <span class="subtitle mt-2">interactive Summary of Qualitative Findings</span></p>
+        <span class="subtitle mt-2 d-none d-sm-block">interactive Summary of Qualitative Findings</span>
+        <span class="subtitle mt-2 d-block d-sm-none">iSoF</span>
+      </p>
       </b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
@@ -69,5 +71,7 @@ export default {
 <style scoped>
  span.subtitle {
    position: absolute;
+   top: 0.7rem;
+   left: 13.5rem;
  }
 </style>
