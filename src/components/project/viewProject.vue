@@ -185,7 +185,7 @@
                             </li>
                           </ul>
                           <template v-if="pubmedErrorImported.length">
-                            <p>The followings PubMed IDs has been fail!</p>
+                            <p>The following PubMed IDs are invalid</p>
                             <ul v-for="(id, index) in pubmedErrorImported" :key="index">
                               <li>{{ id }}</li>
                             </ul>
@@ -2513,7 +2513,11 @@ export default {
                   if (rsp.data.result.uids.length) {
                     const uid = rsp.data.result.uids[0]
                     const data = rsp.data.result[uid]
-                    this.processPubmedData(data)
+                    if (Object.prototype.hasOwnProperty.call(data, 'error')) {
+                      this.pubmedErrorImported.push(line)
+                    } else {
+                      this.processPubmedData(data)
+                    }
                   } else {
                     this.pubmedErrorImported.push(line)
                   }
@@ -2521,12 +2525,14 @@ export default {
               }
             }
           })
+          .then(() => {
+            if (index === data.length - 1) {
+              this.pubmed_loading = false
+            }
+          })
           .catch((error) => {
             console.log(error)
           })
-        if (index === data.length - 1) {
-          this.pubmed_loading = false
-        }
       })
     },
     processPubmedData: function (data) {
