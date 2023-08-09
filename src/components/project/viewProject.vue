@@ -149,7 +149,7 @@
                           variant="outline-primary"
                           @click="PubmedRequest">Find</b-button>
                         <b-button
-                          v-if="checkPermissions() && pubmed_requested.length"
+                          v-if="checkPermissions() && (pubmed_requested.length || pubmedErrorImported.length)"
                           id="btnEpisteRequestClean"
                           class="mt-1"
                           block
@@ -2509,9 +2509,15 @@ export default {
               if (Object.prototype.hasOwnProperty.call(rsp.data, 'error')) {
                 this.pubmedErrorImported.push(line)
               } else {
-                const uid = rsp.data.result.uids[0]
-                const data = rsp.data.result[uid]
-                this.processPubmedData(data)
+                if (Object.prototype.hasOwnProperty.call(rsp.data.result, 'uids')) {
+                  if (rsp.data.result.uids.length) {
+                    const uid = rsp.data.result.uids[0]
+                    const data = rsp.data.result[uid]
+                    this.processPubmedData(data)
+                  } else {
+                    this.pubmedErrorImported.push(line)
+                  }
+                }
               }
             }
           })
