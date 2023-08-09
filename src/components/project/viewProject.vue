@@ -65,7 +65,8 @@
           </b-row>
           <b-row align-h="end" v-if="checkPermissions()">
             <b-col
-              cols="6">
+              cols="6"
+              class="mb-3">
               <b-button
                 block
                 variant="outline-success"
