@@ -141,7 +141,7 @@
                           rows="6"
                           max-rows="100"></b-form-textarea>
                         <b-button
-                          v-if="checkPermissions()"
+                          v-if="checkPermissions() && !btnSearchPubMed && pubmed_request.length"
                           id="btnEpisteRequest"
                           class="mt-2"
                           block
@@ -183,6 +183,12 @@
                               </b-form-checkbox>
                             </li>
                           </ul>
+                          <template v-if="pubmedErrorImported.length">
+                            <p>The followings PubMed IDs has been fail!</p>
+                            <ul v-for="(id, index) in pubmedErrorImported" :key="index">
+                              <li>{{ id }}</li>
+                            </ul>
+                          </template>
                           <b-button
                             v-if="pubmed_selected.length && checkPermissions()"
                             variant="outline-success"
@@ -2234,6 +2240,8 @@ export default {
       pubmed_selected: [],
       pubmed_loading: false,
       pubmed_error: false,
+      pubmedErrorImported: [],
+      btnSearchPubMed: false,
       findings: [],
       editingUser: {
         show: false
@@ -2466,35 +2474,53 @@ export default {
       }
     },
     PubmedRequestClean: function () {
-      document.getElementById('btnEpisteRequest').disabled = false
+      // document.getElementById('btnEpisteRequest').disabled = false
+      this.btnSearchPubMed = false
       this.pubmed_request = ''
       this.pubmed_requested = []
       this.pubmed_selected = []
+      this.pubmedErrorImported = []
       this.pubmed_loading = false
       this.pubmed_error = false
     },
-    PubmedRequest: function () {
+    apiPubMed: async function (id) {
       const urlBase = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=abdb2d5a30084a5a7200df1515d45fb36f08&db=pubmed&retmode=json&id='
-      document.getElementById('btnEpisteRequest').disabled = true
+      try {
+        const response = await axios.get(urlBase + id)
+        return response
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    PubmedRequest: function () {
+      // document.getElementById('btnEpisteRequest').disabled = true
+      this.btnSearchPubMed = true
       this.pubmed_loading = true
       this.pubmed_error = false
       this.pubmed_response = []
+      this.pubmedErrorImported = []
       const allLines = this.pubmed_request.split(/\r\n|\n/)
-      let requests = []
-      allLines.forEach((line, index) => {
-        requests.push(axios.get(urlBase + line))
-      })
-      axios.all(requests)
-        .then(axios.spread((...responses) => {
-          for (let response of responses) {
-            let uid = response.data.result.uids[0]
-            this.processPubmedData(response.data.result[uid])
-          }
+      allLines.forEach((line, index, data) => {
+        const response = this.apiPubMed(line)
+        response
+          .then((rsp) => {
+            if (rsp.status === 200) {
+              if (Object.prototype.hasOwnProperty.call(rsp.data, 'error')) {
+                this.pubmedErrorImported.push(line)
+              } else {
+                const uid = rsp.data.result.uids[0]
+                const data = rsp.data.result[uid]
+                this.processPubmedData(data)
+              }
+            }
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+        if (index === data.length - 1) {
           this.pubmed_loading = false
-        }))
-        .catch((error) => {
-          console.log(error)
-        })
+        }
+      })
     },
     processPubmedData: function (data) {
       const refTitle = data.title
@@ -2532,7 +2558,8 @@ export default {
       this.pubmed_requested.push(reference)
     },
     EpisteRequest: function () {
-      document.getElementById('btnEpisteRequest').disabled = true
+      // document.getElementById('btnEpisteRequest').disabled = true
+      this.btnSearchPubMed = true
       this.episte_loading = true
       this.episte_error = false
       this.episte_response = []
@@ -2551,12 +2578,14 @@ export default {
             obj.citation = response.data.citation
             obj.content = response.data.content
             this.episte_response.push(obj)
-            document.getElementById('btnEpisteRequest').disabled = false
+            // document.getElementById('btnEpisteRequest').disabled = false
+            this.btnSearchPubMed = false
             this.episte_loading = false
           }).catch((error) => {
             this.episte_loading = false
             this.episte_error = true
-            document.getElementById('btnEpisteRequest').disabled = false
+            // document.getElementById('btnEpisteRequest').disabled = false
+            this.btnSearchPubMed = false
             this.printErrors(error)
           })
       })
@@ -2606,8 +2635,10 @@ export default {
         this.pubmed_request = ''
         this.pubmed_requested = []
         this.pubmed_selected = []
+        this.pubmedErrorImported = []
         this.getReferences(false)
-        document.getElementById('btnEpisteRequest').disabled = false
+        // document.getElementById('btnEpisteRequest').disabled = false
+        this.btnSearchPubMed = false
       }
     },
     saveReferences: function (from = '') {
