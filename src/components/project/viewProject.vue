@@ -172,18 +172,21 @@
                           </p>
                         </template>
                         <template v-else>
-                          <ul v-if="pubmed_requested.length">
-                            <li v-for="(r, index) in pubmed_requested" :key="index">
-                              <b-form-checkbox
-                                :id="`checkbox-${index}`"
-                                v-model="pubmed_selected"
-                                :name="`checkbox-${index}`"
-                                :value="index"
-                                :disabled="r.disabled">
-                                {{ r.title }}
-                              </b-form-checkbox>
-                            </li>
-                          </ul>
+                          <template v-if="pubmed_requested.length">
+                            <h3>Select the references to import</h3>
+                            <ul>
+                              <li v-for="(r, index) in pubmed_requested" :key="index">
+                                <b-form-checkbox
+                                  :id="`checkbox-${index}`"
+                                  v-model="pubmed_selected"
+                                  :name="`checkbox-${index}`"
+                                  :value="index"
+                                  :disabled="r.disabled">
+                                  {{ r.title }}
+                                </b-form-checkbox>
+                              </li>
+                            </ul>
+                          </template>
                           <template v-if="pubmedErrorImported.length">
                             <p>The following PubMed IDs are invalid</p>
                             <ul v-for="(id, index) in pubmedErrorImported" :key="index">
@@ -2502,37 +2505,39 @@ export default {
       this.pubmedErrorImported = []
       const allLines = this.pubmed_request.split(/\r\n|\n/)
       allLines.forEach((line, index, data) => {
-        const response = this.apiPubMed(line)
-        response
-          .then((rsp) => {
-            if (rsp.status === 200) {
-              if (Object.prototype.hasOwnProperty.call(rsp.data, 'error')) {
-                this.pubmedErrorImported.push(line)
-              } else {
-                if (Object.prototype.hasOwnProperty.call(rsp.data.result, 'uids')) {
-                  if (rsp.data.result.uids.length) {
-                    const uid = rsp.data.result.uids[0]
-                    const data = rsp.data.result[uid]
-                    if (Object.prototype.hasOwnProperty.call(data, 'error')) {
-                      this.pubmedErrorImported.push(line)
+        if (!isNaN(line) && line.length === 8) {
+          const response = this.apiPubMed(line)
+          response
+            .then((rsp) => {
+              if (rsp.status === 200) {
+                if (Object.prototype.hasOwnProperty.call(rsp.data, 'error') || Object.prototype.hasOwnProperty.call(rsp.data, 'esummaryresult')) {
+                  this.pubmedErrorImported.push(line)
+                } else {
+                  if (Object.prototype.hasOwnProperty.call(rsp.data.result, 'uids')) {
+                    if (rsp.data.result.uids.length) {
+                      const uid = rsp.data.result.uids[0]
+                      const data = rsp.data.result[uid]
+                      if (Object.prototype.hasOwnProperty.call(data, 'error')) {
+                        this.pubmedErrorImported.push(line)
+                      } else {
+                        this.processPubmedData(data)
+                      }
                     } else {
-                      this.processPubmedData(data)
+                      this.pubmedErrorImported.push(line)
                     }
-                  } else {
-                    this.pubmedErrorImported.push(line)
                   }
                 }
               }
-            }
-          })
-          .then(() => {
-            if (index === data.length - 1) {
+            })
+            .then(() => {
               this.pubmed_loading = false
-            }
-          })
-          .catch((error) => {
-            console.log(error)
-          })
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        } else {
+          this.pubmedErrorImported.push(line)
+        }
       })
     },
     processPubmedData: function (data) {
