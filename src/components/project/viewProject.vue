@@ -173,7 +173,7 @@
                         </template>
                         <template v-else>
                           <template v-if="pubmed_requested.length">
-                            <h4>Select the references to import</h4>
+                            <p>Select the references to import</p>
                             <ul>
                               <li v-for="(r, index) in pubmed_requested" :key="index">
                                 <b-form-checkbox
