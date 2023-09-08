@@ -4843,7 +4843,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings-print.table thead th:nth-child(3) {
+    #findings-print.table thead th:nth-child(2) {
       width: 35%;
     }
   div >>>
