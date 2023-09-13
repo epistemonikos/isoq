@@ -65,7 +65,8 @@
           </b-row>
           <b-row align-h="end" v-if="checkPermissions()">
             <b-col
-              cols="6">
+              cols="6"
+              class="mb-3">
               <b-button
                 block
                 variant="outline-success"
@@ -141,14 +142,14 @@
                           rows="6"
                           max-rows="100"></b-form-textarea>
                         <b-button
-                          v-if="checkPermissions()"
+                          v-if="checkPermissions() && !btnSearchPubMed && pubmed_request.length"
                           id="btnEpisteRequest"
                           class="mt-2"
                           block
                           variant="outline-primary"
                           @click="PubmedRequest">Find</b-button>
                         <b-button
-                          v-if="checkPermissions() && pubmed_requested.length"
+                          v-if="checkPermissions() && (pubmed_requested.length || pubmedErrorImported.length)"
                           id="btnEpisteRequestClean"
                           class="mt-1"
                           block
@@ -171,18 +172,27 @@
                           </p>
                         </template>
                         <template v-else>
-                          <ul v-if="pubmed_requested.length">
-                            <li v-for="(r, index) in pubmed_requested" :key="index">
-                              <b-form-checkbox
-                                :id="`checkbox-${index}`"
-                                v-model="pubmed_selected"
-                                :name="`checkbox-${index}`"
-                                :value="index"
-                                :disabled="r.disabled">
-                                {{ r.title }}
-                              </b-form-checkbox>
-                            </li>
-                          </ul>
+                          <template v-if="pubmed_requested.length">
+                            <p>Select the references to import</p>
+                            <ul>
+                              <li v-for="(r, index) in pubmed_requested" :key="index">
+                                <b-form-checkbox
+                                  :id="`checkbox-${index}`"
+                                  v-model="pubmed_selected"
+                                  :name="`checkbox-${index}`"
+                                  :value="index"
+                                  :disabled="r.disabled">
+                                  {{ r.title }}
+                                </b-form-checkbox>
+                              </li>
+                            </ul>
+                          </template>
+                          <template v-if="pubmedErrorImported.length">
+                            <p>The following PubMed IDs are invalid</p>
+                            <ul v-for="(id, index) in pubmedErrorImported" :key="index">
+                              <li>{{ id }}</li>
+                            </ul>
+                          </template>
                           <b-button
                             v-if="pubmed_selected.length && checkPermissions()"
                             variant="outline-success"
@@ -1260,6 +1270,7 @@
                     {{data.index + 1}}
                   </template>
                   <template v-slot:cell(name)="data">
+                    <a :id="`a-${data.item.id}`"></a>
                     <span v-if="mode === 'edit'">
                       <b-row
                         class="mb-3">
@@ -1298,7 +1309,6 @@
                     </span>
                   </template>
                   <template v-slot:cell(category_name)="data">
-                    <!-- <pre>{{data.item}}</pre> -->
                     <template v-if="data.item.category !== null">
                       <b-button
                         block
@@ -2234,6 +2244,8 @@ export default {
       pubmed_selected: [],
       pubmed_loading: false,
       pubmed_error: false,
+      pubmedErrorImported: [],
+      btnSearchPubMed: false,
       findings: [],
       editingUser: {
         show: false
@@ -2416,7 +2428,7 @@ export default {
           theHash = 'Guidance-on-applying-GRADE-CERQual'
           break
       }
-      this.$router.push({hash: `${theHash}`})
+      this.$router.push({query: {tab: `${theHash}`}})
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
@@ -2466,35 +2478,67 @@ export default {
       }
     },
     PubmedRequestClean: function () {
-      document.getElementById('btnEpisteRequest').disabled = false
+      // document.getElementById('btnEpisteRequest').disabled = false
+      this.btnSearchPubMed = false
       this.pubmed_request = ''
       this.pubmed_requested = []
       this.pubmed_selected = []
+      this.pubmedErrorImported = []
       this.pubmed_loading = false
       this.pubmed_error = false
     },
-    PubmedRequest: function () {
+    apiPubMed: async function (id) {
       const urlBase = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=abdb2d5a30084a5a7200df1515d45fb36f08&db=pubmed&retmode=json&id='
-      document.getElementById('btnEpisteRequest').disabled = true
+      try {
+        const response = await axios.get(urlBase + id)
+        return response
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    PubmedRequest: function () {
+      // document.getElementById('btnEpisteRequest').disabled = true
+      this.btnSearchPubMed = true
       this.pubmed_loading = true
       this.pubmed_error = false
       this.pubmed_response = []
+      this.pubmedErrorImported = []
       const allLines = this.pubmed_request.split(/\r\n|\n/)
-      let requests = []
-      allLines.forEach((line, index) => {
-        requests.push(axios.get(urlBase + line))
+      allLines.forEach((line, index, data) => {
+        if (!isNaN(line) && line.length === 8) {
+          const response = this.apiPubMed(line)
+          response
+            .then((rsp) => {
+              if (rsp.status === 200) {
+                if (Object.prototype.hasOwnProperty.call(rsp.data, 'error') || Object.prototype.hasOwnProperty.call(rsp.data, 'esummaryresult')) {
+                  this.pubmedErrorImported.push(line)
+                } else {
+                  if (Object.prototype.hasOwnProperty.call(rsp.data.result, 'uids')) {
+                    if (rsp.data.result.uids.length) {
+                      const uid = rsp.data.result.uids[0]
+                      const data = rsp.data.result[uid]
+                      if (Object.prototype.hasOwnProperty.call(data, 'error')) {
+                        this.pubmedErrorImported.push(line)
+                      } else {
+                        this.processPubmedData(data)
+                      }
+                    } else {
+                      this.pubmedErrorImported.push(line)
+                    }
+                  }
+                }
+              }
+            })
+            .then(() => {
+              this.pubmed_loading = false
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        } else {
+          this.pubmedErrorImported.push(line)
+        }
       })
-      axios.all(requests)
-        .then(axios.spread((...responses) => {
-          for (let response of responses) {
-            let uid = response.data.result.uids[0]
-            this.processPubmedData(response.data.result[uid])
-          }
-          this.pubmed_loading = false
-        }))
-        .catch((error) => {
-          console.log(error)
-        })
     },
     processPubmedData: function (data) {
       const refTitle = data.title
@@ -2532,7 +2576,8 @@ export default {
       this.pubmed_requested.push(reference)
     },
     EpisteRequest: function () {
-      document.getElementById('btnEpisteRequest').disabled = true
+      // document.getElementById('btnEpisteRequest').disabled = true
+      this.btnSearchPubMed = true
       this.episte_loading = true
       this.episte_error = false
       this.episte_response = []
@@ -2551,12 +2596,14 @@ export default {
             obj.citation = response.data.citation
             obj.content = response.data.content
             this.episte_response.push(obj)
-            document.getElementById('btnEpisteRequest').disabled = false
+            // document.getElementById('btnEpisteRequest').disabled = false
+            this.btnSearchPubMed = false
             this.episte_loading = false
           }).catch((error) => {
             this.episte_loading = false
             this.episte_error = true
-            document.getElementById('btnEpisteRequest').disabled = false
+            // document.getElementById('btnEpisteRequest').disabled = false
+            this.btnSearchPubMed = false
             this.printErrors(error)
           })
       })
@@ -2606,8 +2653,10 @@ export default {
         this.pubmed_request = ''
         this.pubmed_requested = []
         this.pubmed_selected = []
+        this.pubmedErrorImported = []
         this.getReferences(false)
-        document.getElementById('btnEpisteRequest').disabled = false
+        // document.getElementById('btnEpisteRequest').disabled = false
+        this.btnSearchPubMed = false
       }
     },
     saveReferences: function (from = '') {
@@ -2747,7 +2796,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getLists: function () {
+    getLists: function (id = null) {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -2891,6 +2940,12 @@ export default {
           this.lists = data
           this.table_settings.isBusy = false
           this.table_settings.totalRows = data.length
+          if (id) {
+            this.$router.push({hash: `a-${id}`})
+          }
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
+            this.$router.push({hash: `${this.$route.query.hash}`})
+          }
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3019,9 +3074,9 @@ export default {
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
-                if (this.$route.hash) {
-                  const tabs = ['#Project-Property', '#My-Data', '#iSoQ', '#Guidance-on-applying-GRADE-CERQual']
-                  this.tabOpened = tabs.indexOf(this.$route.hash)
+                if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
+                  const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
                 } else {
                   this.tabOpened = 2
                 }
@@ -3078,16 +3133,17 @@ export default {
     saveReferencesList: function () {
       this.loadReferences = true
       this.table_settings.isBusy = true
+      const index = this.selected_list_index
       const params = {
         references: this.selected_references
       }
-      axios.patch(`/api/isoqf_lists/${this.lists[this.selected_list_index].id}`, params)
+      axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
         .then(() => {
           this.updateFindingReferences(this.selected_references)
           this.selected_references = []
           this.selected_list_index = null
           this.getReferences()
-          this.getLists()
+          this.getLists(this.lists[index].id)
         })
         .catch((error) => {
           this.printErrors(error)
@@ -3110,7 +3166,6 @@ export default {
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
     },
-
     generateEvidenceProfileTableWithCategories: function (findings) {
       let content = []
       for (const position in findings) {
@@ -3246,7 +3301,6 @@ export default {
         }
       })
     },
-
     confirmRemoveReferenceById: function (refId) {
       let lists = JSON.parse(JSON.stringify(this.lists))
       let _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
@@ -4390,7 +4444,6 @@ export default {
       this.modal_edit_list_categories.index = null
       this.modal_edit_list_categories.id = null
     },
-
     exportTableToCSV: function (type) {
       const _types = ['chars_of_studies', 'meth_assessments']
       let _headers = []
@@ -4477,6 +4530,7 @@ export default {
     saveSortedLists: function () {
       let cnt = 1
       let requests = []
+      this.table_settings.isBusy = true
       for (let list of this.sorted_lists) {
         list.isoqf_id = cnt
         list.sort = cnt
@@ -4789,7 +4843,7 @@ export default {
       width: 15%;
     }
   div >>>
-    #findings-print.table thead th:nth-child(3) {
+    #findings-print.table thead th:nth-child(2) {
       width: 35%;
     }
   div >>>

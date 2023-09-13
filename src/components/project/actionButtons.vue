@@ -87,7 +87,10 @@
       ok-title="Save"
       ok-variant="outline-success"
       @ok="savePublicStatus"
-      cancel-variant="outline-secondary">
+      cancel-variant="outline-secondary"
+      hide-header-close
+      no-close-on-backdrop
+      no-close-on-esc>
       <template v-slot:modal-title>
         <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
       </template>
@@ -125,6 +128,7 @@
             Save
           </b-button>
           <b-button
+            v-show="!ui.publish.showLoader"
             variant="outline-secondary"
             class="float-right"
             @click="$refs['modal-change-status'].hide()">
