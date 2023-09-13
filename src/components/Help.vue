@@ -7,8 +7,8 @@
     </b-container>
     <b-container class="py-5">
       <h3>You need help?</h3>
-      <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues, please report your issues using <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank">this form</a>.</p>
-      <p>If you cannot access the form email us at isoq [at] epistemonikos.org</p>
+      <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues, please report your issues using <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank">this form</a>.
+        <br>If you cannot access the form email us at isoq [at] epistemonikos.org</p>
 
       <h3>You’ve got feedback to share?</h3>
       <p>To feedback to us your experience of using iSoQ (positive or negative!) or ideas of useful additional features or how to make it more user-friendly, please use <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank">the following form</a></p>
