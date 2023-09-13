@@ -949,6 +949,7 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
+import { parseReference, printErrors } from '@/utils/tools'
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 const bCardActionTable = () => import(/* webpackChunkName: "backtotop" */'../tableActions/ActionTable')
 const editReviewFinding = () => import(/* webpackChunkName: "backtotop" */'../editReviewFinding')
@@ -1186,27 +1187,6 @@ export default {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = 'no autho(s)'
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-        }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
-      } else {
-        return result
-      }
-    },
     getAllReferences: function () {
       axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
@@ -1214,15 +1194,15 @@ export default {
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
-            _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+            _refs.push({'id': reference.id, 'content': parseReference(reference, true)})
+            _refsWithTitles.push({'id': reference.id, 'content': parseReference(reference, false)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
           this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getList: function (fromModal = false) {
@@ -1245,7 +1225,7 @@ export default {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateMyData: function () {
@@ -1286,7 +1266,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     renderReference: function (reference) {
@@ -1318,7 +1298,7 @@ export default {
           this.evidence_profile = [Object.assign({}, this.evidence_profile, { references: authors })]
         }))
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getStageOneData: function (fromModal = false) {
@@ -1347,7 +1327,7 @@ export default {
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         }).catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getStatus: function () {
@@ -1406,7 +1386,7 @@ export default {
           this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     openWarningModal: function () {
@@ -1486,7 +1466,7 @@ export default {
             this.$refs['modal-stage-two'].hide()
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       } else {
         axios.post(`/api/isoqf_findings`, params)
@@ -1495,7 +1475,7 @@ export default {
             this.$refs['modal-stage-two'].hide()
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
     },
@@ -1575,7 +1555,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getMethAssessments: function () {
@@ -1632,7 +1612,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getExtractedData: function () {
@@ -1707,26 +1687,8 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
-    },
-    printErrors: function (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        console.log(error.request)
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message)
-      }
-      console.log(error.config)
     },
     editExtractedDataInPlace: function (index) {
       const _item = JSON.parse(JSON.stringify(this.extracted_data.items[index]))
@@ -1759,7 +1721,7 @@ export default {
           this.showEditExtractedDataInPlace.display = false
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     propExplanation: function (txt, type) {

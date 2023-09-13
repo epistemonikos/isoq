@@ -106,6 +106,7 @@ import evidenceProfile from '../list/editListEvidenceProfile.vue'
 import charsOfStudies from '../list/editListCharsOfStudies.vue'
 import methAssessments from '../list/editListMethAssessments.vue'
 import extractedData from '../list/editListExtractedData.vue'
+import { parseReference, printErrors } from '@/utils/tools'
 
 export default {
   components: {
@@ -299,7 +300,7 @@ export default {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getProject: function (projectId) {
@@ -311,7 +312,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getAllReferences: function () {
@@ -321,15 +322,15 @@ export default {
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
-            _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+            _refs.push({'id': reference.id, 'content': parseReference(reference, true)})
+            _refsWithTitles.push({'id': reference.id, 'content': parseReference(reference, false)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
           this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getStageOneData: function (fromModal = false) {
@@ -357,7 +358,7 @@ export default {
           this.getExtractedData()
           this.evidence_profile_table_settings.isBusy = false
         }).catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getExtractedData: function () {
@@ -424,7 +425,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getCharsOfStudies: function () {
@@ -503,7 +504,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getMethAssessments: function () {
@@ -560,7 +561,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     displaySelectedOption: function (option) {
@@ -578,47 +579,8 @@ export default {
       }
       return ''
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = 'no autho(s)'
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-        }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
-      } else {
-        return result
-      }
-    },
     print: function () {
       window.print()
-    },
-    printErrors: function (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        console.log(error.request)
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message)
-      }
-      console.log(error.config)
     },
     exportToWord: function () {
       const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'

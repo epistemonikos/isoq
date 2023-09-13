@@ -1938,6 +1938,7 @@ import draggable from 'vuedraggable'
 // import parser from '../../plugins/parser'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Papa from 'papaparse'
+import { parseReference, printErrors } from '../../utils/tools'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm')
@@ -2627,55 +2628,9 @@ export default {
             this.episte_error = true
             // document.getElementById('btnEpisteRequest').disabled = false
             this.btnSearchPubMed = false
-            this.printErrors(error)
+            printErrors(error)
           })
       })
-    },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      const authors = reference.authors.map((author) => {
-        let lastName = author.split(',')[0] // 'Hahn'
-        let initials = author.split(',')[1].trim() // 'Robert A.'
-        let fullName = initials.split(' ') // ['Robert', 'A.']
-        const fname = fullName[0].slice(0, 1)
-        const sname = fullName[1] || ''
-
-        return `${lastName}, ${fname}. ${sname}` // Hahn, R. A.
-      })
-      if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
-        switch (reference.type) {
-          case 'BOOK':
-            // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
-            result = authors.join(', ') + `(${reference.publication_year}). ${reference.title}. ${reference.publisher}`
-            break
-          case 'CHAP':
-            // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
-            result = authors.join(', ') + `(${reference.publication_year}). ${reference.title} (pp. ${reference.start_page}). ${reference.publisher}`
-            break
-          case 'JOUR':
-            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              if (reference.authors.length) {
-                const authors = reference.authors.map((author) => author.split(',')[0])
-                if (authors.length === 1) {
-                  result = authors[0] + ' ' + reference.publication_year + semicolon
-                } else if (authors.length === 2) {
-                  result = authors[0] + ' & ' + authors[1] + ' ' + reference.publication_year + semicolon
-                } else {
-                  result = authors[0] + ' et al. ' + reference.publication_year + semicolon
-                }
-                if (!onlyAuthors) {
-                  result = result + reference.title
-                }
-              } else {
-                return 'author(s) not found'
-              }
-            }
-            break
-        }
-        return result
-      }
-      // return result
     },
     loadRefs: function (event) {
       const file = event.target.files[0]
@@ -2776,7 +2731,7 @@ export default {
           this.updateExtractedDataReferences(_requestExtractedData, references)
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateExtractedDataReferences: function (querys = [], references = []) {
@@ -2790,7 +2745,7 @@ export default {
               for (let reference of references) {
                 item = {
                   'ref_id': reference.id,
-                  'authors': this.parseReference(reference, true),
+                  'authors': parseReference(reference, true),
                   'column_0': ''
                 }
                 _items.push(item)
@@ -2815,7 +2770,7 @@ export default {
                 axios.all(patchExtractedData)
                   .then(() => {})
                   .catch((error) => {
-                    this.printErrors(error)
+                    printErrors(error)
                   })
               }
             })
@@ -2841,7 +2796,7 @@ export default {
           this.getMethodological()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getLists: function (id = null) {
@@ -2921,7 +2876,7 @@ export default {
               for (let r of this.references) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
-                    list.ref_list = list.ref_list + this.parseReference(r, true)
+                    list.ref_list = list.ref_list + parseReference(r, true)
                     list.raw_ref.push(r)
                   }
                 }
@@ -2996,7 +2951,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getFinding: function (orgId, listId) {
@@ -3013,7 +2968,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     modalAddList: function () {
@@ -3055,7 +3010,7 @@ export default {
           this.updateModificationTime()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     createFinding: function (listId, listName) {
@@ -3101,7 +3056,7 @@ export default {
           this.createExtractedData(response.data.id)
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getReferences: function (changeTab = true) {
@@ -3112,7 +3067,7 @@ export default {
           this.references = data
           let _refs = []
           for (let reference of _references) {
-            let content = this.parseReference(reference)
+            let content = parseReference(reference)
             if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
               _refs.push({'id': reference.id, 'content': content})
             }
@@ -3135,7 +3090,7 @@ export default {
           this.updateMyDataTables()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     openModalReferencesSingle: function (showModal) {
@@ -3163,7 +3118,7 @@ export default {
               }
             })
             .catch((error) => {
-              this.printErrors(error)
+              printErrors(error)
             })
 
           this.getReferences()
@@ -3175,7 +3130,7 @@ export default {
           this.$refs['modal-references-list'].show()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     saveReferencesList: function () {
@@ -3194,7 +3149,7 @@ export default {
           this.getLists(this.lists[index].id)
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateFindingReferences: function (references) {
@@ -3206,7 +3161,7 @@ export default {
           this.finding = {}
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     onFiltered (filteredItems) {
@@ -3485,7 +3440,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     openModalCharsOfStudies: function () {
@@ -3578,7 +3533,7 @@ export default {
             this.getCharacteristics()
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
     },
@@ -3616,7 +3571,7 @@ export default {
           this.getCharacteristics()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getCharacteristics: function () {
@@ -3710,7 +3665,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateProjectInfo: function () {
@@ -3742,7 +3697,7 @@ export default {
       csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
 
       for (let ref of _refs) {
-        // csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
+        // csvContent += ref.id + ',' + '"' + parseReference(ref, true, false) + '"' + '\r\n'
         csvContent += ref.id + ',' + '"' + ref.content.split(';')[0] + '"' + '\r\n'
       }
 
@@ -3833,7 +3788,7 @@ export default {
           this.$refs[modal].hide()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     removeItemCharOfStudies: function (index, id) {
@@ -3895,7 +3850,7 @@ export default {
           this.getCharacteristics()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     cleanRemoveContentCharsOfStudies: function () {
@@ -3970,7 +3925,7 @@ export default {
             this.getProject()
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
     },
@@ -4020,7 +3975,7 @@ export default {
           this.getMethodological()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     deleteFieldFromMethodological: function (index) {
@@ -4058,7 +4013,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     addDataMethodological: function (index = 0) {
@@ -4078,7 +4033,7 @@ export default {
           this.getProject()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     removeItemMethodological: function (index, id) {
@@ -4146,7 +4101,7 @@ export default {
           this.getMethodological()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     findRelatedFindings: function (refId = null) {
@@ -4197,7 +4152,7 @@ export default {
         axios.patch(`/api/isoqf_lists/${list.id}`, list)
           .then(() => {})
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
       if (_requestFindings.length) {
@@ -4213,7 +4168,7 @@ export default {
             }
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
       axios.all(requests)
@@ -4233,7 +4188,7 @@ export default {
               axios.patch(`/api/isoqf_extracted_data/${data.id}`, { items: [] })
                 .then((response) => {})
                 .catch((error) => {
-                  this.printErrors(error)
+                  printErrors(error)
                 })
             }
           })
@@ -4255,7 +4210,7 @@ export default {
           this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
       this.$refs['edit-finding-name'].show()
     },
@@ -4283,7 +4238,7 @@ export default {
           this.updateModificationTime()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateFinding: function (finding) {
@@ -4301,7 +4256,7 @@ export default {
       axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {})
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     removeModalFinding: function (index) {
@@ -4319,7 +4274,7 @@ export default {
               this.editFindingName.finding_id = response.data[0].id
             })
             .catch((error) => {
-              this.printErrors(error)
+              printErrors(error)
             })
           this.$refs['remove-finding'].show()
         })
@@ -4336,7 +4291,7 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     confirmRemoveFinding: function (findingID) {
@@ -4345,7 +4300,7 @@ export default {
           this.deleteExtractedData(findingID)
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     resetData: function () {
@@ -4375,7 +4330,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     saveListCategoryName: function () {
@@ -4392,7 +4347,7 @@ export default {
           this.list_categories.skip = false
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     modalListCategories: function () {
@@ -4416,7 +4371,7 @@ export default {
           this.modal_edit_list_categories.extra_info = ''
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     editListCategoryName: function (index) {
@@ -4447,7 +4402,7 @@ export default {
             this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
     },
@@ -4479,7 +4434,7 @@ export default {
             this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
-            this.printErrors(error)
+            printErrors(error)
           })
       }
     },
@@ -4591,7 +4546,7 @@ export default {
           this.getLists()
         }))
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getCategoryName: function (id) {
@@ -4603,24 +4558,6 @@ export default {
         }
       }
       return _category
-    },
-    printErrors: function (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        console.log(error.request)
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message)
-      }
-      console.log(error.config)
     },
     createExtractedData: function (findingID) {
       const _references = JSON.parse(JSON.stringify(this.references))
@@ -4636,13 +4573,13 @@ export default {
       }
 
       for (let reference of _references) {
-        params.items.push({ 'ref_id': reference.id, 'authors': this.parseReference(reference, true), 'column_0': '' })
+        params.items.push({ 'ref_id': reference.id, 'authors': parseReference(reference, true), 'column_0': '' })
       }
 
       axios.post('/api/isoqf_extracted_data', params)
         .then()
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     deleteExtractedData: function (findingID) {
@@ -4657,11 +4594,11 @@ export default {
               this.getLists()
             })
             .catch((error) => {
-              this.printErrors(error)
+              printErrors(error)
             })
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     countDownChanged (dismissCountDown) {
@@ -4735,7 +4672,7 @@ export default {
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
         .then()
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     getUserInfo: function (userId) {
@@ -4745,7 +4682,7 @@ export default {
           this.editingUser.show = true
         })
         .catch((error) => {
-          this.printErrors(error)
+          printErrors(error)
         })
     },
     updateMyDataTables: function () {
@@ -4762,7 +4699,7 @@ export default {
             }
             for (let reference of this.references) {
               if (!_itemsChecks.includes(reference.id)) {
-                _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+                _itemsChars.push({ref_id: reference.id, authors: parseReference(reference, true, false)})
               }
             }
             _items.push(..._itemsChars)
@@ -4786,7 +4723,7 @@ export default {
             }
             for (let reference of this.references) {
               if (!_itemsChecks.includes(reference.id)) {
-                _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+                _itemsMeth.push({ref_id: reference.id, authors: parseReference(reference, true, false)})
               }
             }
             _items.push(..._itemsMeth)
