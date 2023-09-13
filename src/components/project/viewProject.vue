@@ -2129,6 +2129,9 @@ export default {
           { key: 'title', label: 'Title' },
           { key: 'publication_year', label: 'Year' },
           {
+            key: 'type', label: 'Type'
+          },
+          {
             key: 'id',
             label: 'Related to finding(s)',
             formatter: value => {
@@ -2330,7 +2333,6 @@ export default {
                 base['title'] = content
                 break
               case 'T1':
-                console.log('title', base)
                 if (base['title'].length) {
                   base['title_1'] = content
                 } else {
@@ -2359,27 +2361,11 @@ export default {
           if (key === 'AB') {
             base['abstract'] = content
           }
-          if (key === 'VL') {
-            base['volume_number'] = content
+          if (key === 'AD') {
+            base['author_address'] = content
           }
-          if (key === 'SP') {
-            base['start_page'] = content
-          }
-          if (key === 'EP') {
-            base['end_page'] = content
-          }
-          if (key === 'IN') {
-            base['issue_number'] = content
-          }
-          if (key === 'SN') {
-            base['isbn_issn'] = content
-          }
-          if (['PY', 'Y1'].includes(key)) {
-            base['publication_year'] = content.split('/')[0]
-            base['real_date'] = content
-          }
-          if (key === 'DA') {
-            base['date'] = content
+          if (key === 'CY') {
+            base['place_published'] = content
           }
           if (key === 'DA') {
             base['date'] = content
@@ -2387,18 +2373,55 @@ export default {
           if (key === 'DB') {
             base['database'] = content
           }
-          if (key === 'UR') {
-            base['url'] = content
-          }
           if (key === 'DO') {
             base['doi'] = content
           }
-          if (userDefinable.includes(key)) {
-            base['user_definable'].push(content)
+          if (key === 'EP') {
+            base['end_page'] = content
+          }
+          if (key === 'ED') {
+            base['editor'] = content
+          }
+          if (key === 'ET') {
+            base['edition'] = content
           }
           if (key === 'ER') {
             this.fileReferences.push(base)
             base = { title: '', authors: [], user_definable: [] }
+          }
+          if (key === 'IN') {
+            base['issue_number'] = content
+          }
+          if (key === 'LA') {
+            base['language'] = content
+          }
+          if (key === 'PB') {
+            base['publisher'] = content
+          }
+          if (key === 'SP') {
+            base['start_page'] = content
+          }
+          if (key === 'ST') {
+            base['short_title'] = content
+          }
+          if (key === 'SN') {
+            base['isbn_issn'] = content
+          }
+          if (key === 'SE') {
+            base['section'] = content
+          }
+          if (['PY', 'Y1'].includes(key)) {
+            base['publication_year'] = content.split('/')[0]
+            base['real_date'] = content
+          }
+          if (key === 'UR') {
+            base['url'] = content
+          }
+          if (userDefinable.includes(key)) {
+            base['user_definable'].push(content)
+          }
+          if (key === 'VL') {
+            base['volume_number'] = content
           }
         }
       })
@@ -2611,23 +2634,48 @@ export default {
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else if (reference.authors.length === 2) {
-            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else {
-            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-          }
-          if (!onlyAuthors) {
-            result = result + reference.title
-          }
-        } else {
-          return 'author(s) not found'
+      const authors = reference.authors.map((author) => {
+        let lastName = author.split(',')[0] // 'Hahn'
+        let initials = author.split(',')[1].trim() // 'Robert A.'
+        let fullName = initials.split(' ') // ['Robert', 'A.']
+        const fname = fullName[0].slice(0, 1)
+        const sname = fullName[1] || ''
+
+        return `${lastName}, ${fname}. ${sname}` // Hahn, R. A.
+      })
+      if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
+        switch (reference.type) {
+          case 'BOOK':
+            // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
+            result = authors.join(', ') + `(${reference.publication_year}). ${reference.title}. ${reference.publisher}`
+            break
+          case 'CHAP':
+            // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
+            result = authors.join(', ') + `(${reference.publication_year}). ${reference.title} (pp. ${reference.start_page}). ${reference.publisher}`
+            break
+          case 'JOUR':
+            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+              if (reference.authors.length) {
+                const authors = reference.authors.map((author) => author.split(',')[0])
+                if (authors.length === 1) {
+                  result = authors[0] + ' ' + reference.publication_year + semicolon
+                } else if (authors.length === 2) {
+                  result = authors[0] + ' & ' + authors[1] + ' ' + reference.publication_year + semicolon
+                } else {
+                  result = authors[0] + ' et al. ' + reference.publication_year + semicolon
+                }
+                if (!onlyAuthors) {
+                  result = result + reference.title
+                }
+              } else {
+                return 'author(s) not found'
+              }
+            }
+            break
         }
+        return result
       }
-      return result
+      // return result
     },
     loadRefs: function (event) {
       const file = event.target.files[0]
