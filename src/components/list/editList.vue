@@ -1188,18 +1188,25 @@ export default {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
     getAllReferences: function () {
+      console.log('getAllReferences')
       axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
           let _references = response.data
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': parseReference(reference, true)})
-            _refsWithTitles.push({'id': reference.id, 'content': parseReference(reference, false)})
+            let refId = reference.id
+            let refContent = parseReference(reference, true)
+            _refs.push({'id': refId, 'content': refContent})
+            let refWithTitle = {'id': refId, 'content': parseReference(reference, false)}
+            _refsWithTitles.push(refWithTitle)
           }
 
-          this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
-          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
+          let sortFn = (a, b) => a.content.localeCompare(b.content)
+          this.references = _refs.sort(sortFn)
+          this.refsWithTitle = _refsWithTitles.sort(sortFn)
+          console.log('references', this.references)
+          console.log('refswithtitle', this.refsWithTitle)
         })
         .catch((error) => {
           printErrors(error)
