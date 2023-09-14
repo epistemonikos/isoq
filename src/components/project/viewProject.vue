@@ -4216,22 +4216,22 @@ export default {
     },
     updateListName: function () {
       this.table_settings.isBusy = true
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      let _item = {}
-      _item.is_public = false
+      let findingName = JSON.parse(JSON.stringify(this.lists))
+      let findingNameToEdit = {}
+      findingNameToEdit.is_public = false
       if (this.project.is_public) {
-        _item.is_public = true
+        findingNameToEdit.is_public = true
       }
-      for (let item of _lists) {
-        if (item.id === this.editFindingName.id) {
-          _item = item
-          _item.name = this.editFindingName.name
-          _item.category = this.editFindingName.category
-          _item.notes = this.editFindingName.notes
+      for (let findingNameItem of findingName) {
+        if (findingNameItem.id === this.editFindingName.id) {
+          findingNameToEdit = findingNameItem
+          findingNameToEdit.name = this.editFindingName.name
+          findingNameToEdit.category = this.editFindingName.category
+          findingNameToEdit.notes = this.editFindingName.notes
         }
       }
 
-      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, _item)
+      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, findingNameToEdit)
         .then(() => {
           this.updateFinding(this.editFindingName)
           this.getLists()
@@ -4686,17 +4686,17 @@ export default {
         })
     },
     updateMyDataTables: function () {
-      let _itemsChars = []
-      let _itemsMeth = []
-
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
             let _itemsChecks = []
+            // Check which references are already in the items array
             for (let item of _items) {
               _itemsChecks.push(item.ref_id)
             }
+            // Add the missing references to the items array
+            let _itemsChars = []
             for (let reference of this.references) {
               if (!_itemsChecks.includes(reference.id)) {
                 _itemsChars.push({ref_id: reference.id, authors: parseReference(reference, true, false)})
@@ -4718,10 +4718,14 @@ export default {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
             let _itemsChecks = []
+            let _itemsMeth = []
+            // loop through items to get the ids
             for (let item of _items) {
               _itemsChecks.push(item.ref_id)
             }
+            // loop through the references
             for (let reference of this.references) {
+              // if the reference id is not in the items, add it to the items
               if (!_itemsChecks.includes(reference.id)) {
                 _itemsMeth.push({ref_id: reference.id, authors: parseReference(reference, true, false)})
               }
