@@ -4062,29 +4062,34 @@ export default {
       }
     },
     removeDataContentMethodological: function () {
+      // Get the index of the reference to remove from the methodological table
       const index = this.removeReferenceMethodological.index
-      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-      let params = {}
+
+      // Get a copy of the items and fields of the methodological table
+      let methTableRefsItems = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+      let methTableRefsFields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+
+      // Set up the items and fields for the new methodological table
       let cnt = 0
       let items = []
-      let _keys = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-      let keys = []
-      for (let k of _keys) {
-        keys.push(k.key)
+      let fields = []
+      for (let k of methTableRefsFields) {
+        fields.push(k.key)
       }
 
-      for (let item of _items) {
+      // Create the new methodological table, leaving out the item to remove
+      for (let item of methTableRefsItems) {
         if (cnt === index) {
           let obj = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
+          for (let k in fields) {
+            if (Object.prototype.hasOwnProperty.call(item, fields[k])) {
+              if (fields[k] === 'ref_id' || fields[k] === 'authors') {
+                obj[fields[k]] = item[fields[k]]
               } else {
-                obj[keys[k]] = ''
+                obj[fields[k]] = ''
               }
             } else {
-              obj[keys[k]] = ''
+              obj[fields[k]] = ''
             }
           }
           items.push(obj)
@@ -4094,6 +4099,8 @@ export default {
         cnt++
       }
 
+      // Update the methodological table
+      let params = {}
       params.items = items
 
       axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
