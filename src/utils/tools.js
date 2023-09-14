@@ -1,21 +1,26 @@
-const parseReference = (reference, onlyAuthors = false, hasSemicolon = true) => {
-  let result = ''
-  const semicolon = hasSemicolon ? '; ' : ''
-  const authors = reference.authors.map((author) => {
+const getAuthors = (reference) => {
+  return reference.authors.map((author) => {
     let lastName = author.split(',')[0] // 'Hahn'
     let initials = author.split(',')[1].trim() // 'Robert A.'
     let fullName = initials.split(' ') // ['Robert', 'A.']
     const fname = `${fullName[0].charAt(0)}.` || ''
     const sname = fullName.length > 1 ? `${fullName[1].charAt(0)}.` : ''
 
-    return `${lastName}, ${fname} ${sname}` // Hahn, R. A.
+    return `${lastName}, ${fname} ${sname}`
   })
+}
+
+const parseReference = (reference, onlyAuthors = false, hasSemicolon = true) => {
+  let result = ''
+  const semicolon = hasSemicolon ? '; ' : ''
+  const authors = getAuthors(reference)
 
   if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
+    let editor = (reference.editor) ? `(${reference.editor})` : ''
     switch (reference.type) {
       case 'BOOK':
         // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
-        result = `${authors.join(', ')} (${reference.publication_year}). ${reference.title}. ${reference.publisher}`
+        result = `${authors.join(', ')} (${reference.publication_year}). ${reference.title} ${editor}. ${reference.publisher}`
         break
       case 'CHAP':
         // Author, A. A. (Year of publication). Title of work: Capital letter also for subtitle. Publisher Name. DOI (if available)
