@@ -1296,7 +1296,7 @@
                             block
                             v-if="mode==='edit'"
                             variant="outline-danger"
-                            @click="removeModalFinding(data.index)">
+                            @click="removeModalFinding(data)">
                             Remove
                           </b-button>
                         </b-col>
@@ -1371,7 +1371,7 @@
                         block
                         class="mb-3 d-print-none"
                         :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                        @click="openModalReferences(data.index, data.item.isoqf_id)">
+                        @click="openModalReferences(data)">
                         <span v-if="data.item.references.length">View or edit references</span>
                         <span v-else>Select references</span>
                       </b-button>
@@ -3099,7 +3099,8 @@ export default {
         this.$refs['modal-references'].show()
       }
     },
-    openModalReferences: function (index, isoqfId) {
+    openModalReferences: function (data) {
+      const index = this.lists.findIndex((item) => item.id === data.item.id)
       this.selected_list_index = index
       axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
         .then(() => {
@@ -4256,7 +4257,8 @@ export default {
           this.printErrors(error)
         })
     },
-    removeModalFinding: function (index) {
+    removeModalFinding: function (data) {
+      const index = this.lists.findIndex((item) => item.id === data.item.id)
       const list = this.lists[index]
       axios.get(`/api/isoqf_lists/${list.id}`)
         .then((response) => {
