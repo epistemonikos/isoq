@@ -38,43 +38,11 @@
         fill
         v-model="tabOpened">
         <b-tab>
-          <b-row>
-            <b-col
-              cols="12">
-              <b-alert
-                :show="msgUpdateProject !==null && msgUpdateProject.length"
-                dismissible
-                variant="info"
-                @dismissed="dismissAlertProject">
-                {{ msgUpdateProject }}
-              </b-alert>
-            </b-col>
-            <b-col
-              cols="12"
-              class="mb-2">
-              <h2>Project properties</h2>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col
-              cols="12">
-              <organizationForm
-                :formData="project"
-                :canWrite="checkPermissions()"></organizationForm>
-            </b-col>
-          </b-row>
-          <b-row align-h="end" v-if="checkPermissions()">
-            <b-col
-              cols="6"
-              class="mb-3">
-              <b-button
-                block
-                variant="outline-success"
-                @click="updateProjectInfo">
-                Save
-              </b-button>
-            </b-col>
-          </b-row>
+          <propertiesProject
+            :project="project"
+            @update-modification="updateModificationTime()"
+            :canWrite="checkPermissions()">
+          </propertiesProject>
         </b-tab>
         <b-tab>
           <b-row>
@@ -1946,6 +1914,7 @@ const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop
 const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 const actionButtons = () => import(/* webpackChunkName: 'actionButtons' */'./actionButtons.vue')
+const propertiesProject = () => import(/* webpackChunkName: "propertiesProject" */ './propertiesProject')
 
 export default {
   components: {
@@ -1955,7 +1924,8 @@ export default {
     'back-to-top': backToTop,
     'criteria': Criteria,
     videoHelp,
-    'action-buttons': actionButtons
+    'action-buttons': actionButtons,
+    propertiesProject
   },
   data () {
     return {
@@ -2180,7 +2150,6 @@ export default {
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
       ],
-      msgUpdateProject: null,
       pre_ImportDataTable: '',
       importDataTable: {
         error: null,
@@ -3664,27 +3633,6 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    updateProjectInfo: function () {
-      let project = JSON.parse(JSON.stringify(this.project))
-      project.private = true
-      project.is_public = false
-      if (project.public_type !== 'private') {
-        project.private = false
-        project.is_public = true
-      }
-      axios.patch(`/api/isoqf_projects/${project.id}`, project)
-        .then(() => {
-          this.msgUpdateProject = 'The project has been updated'
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-          this.updateModificationTime()
-        })
-        .catch((error) => {
-          this.msgUpdateProject = error
-        })
-    },
-    dismissAlertProject: function () {
-      this.msgUpdateProject = null
     },
     generateTemplate: function () {
       // const _references = JSON.parse(JSON.stringify(this.references))
