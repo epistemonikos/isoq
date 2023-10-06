@@ -1090,6 +1090,7 @@ export default {
     },
     generateACopyOfAProject: function () {
       this.ui.copy.project = true
+      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
       let bufferProject = JSON.parse(JSON.stringify(this.buffer_project))
       bufferProject.sharedTo = ''
       bufferProject.name = '(Copy of) ' + bufferProject.name
@@ -1105,7 +1106,6 @@ export default {
       bufferProject.private = true
       bufferProject.is_public = false
       let newProject = bufferProject
-      const originalProject = bufferProject
       delete newProject.id
       delete newProject._id
       axios.post('/api/isoqf_projects', newProject)
