@@ -1195,7 +1195,7 @@
                       <b-dropdown-item
                       v-for="(category, index) of list_categories.options"
                       :key="index"
-                      @click="tableFilter(category.text, 1)">{{ category.text }}</b-dropdown-item>
+                      @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text }}</b-dropdown-item>
                     </b-dropdown>
                     <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
@@ -1207,13 +1207,13 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="tableFilter('hc', 2)">High confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('mc', 2)">Moderate confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('lc', 2)">Low confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('vc', 2)">Very low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">High confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">Moderate confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">Low confidence</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">Very low confidence</b-dropdown-item>
                       <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-item @click="tableFilter('completed', 2)">Assessments completed</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('unfinished', 2)">Assessments not completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">Assessments completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">Assessments not completed</b-dropdown-item>
                     </b-dropdown>
                     <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
@@ -1225,8 +1225,8 @@
                       class="finding-filter"
                       :no-caret="false"
                       size="sm">
-                      <b-dropdown-item @click="tableFilter('with_explanation', 3)">Completed</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('without_explanation', 3)">Not completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">Completed</b-dropdown-item>
+                      <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">Not completed</b-dropdown-item>
                     </b-dropdown>
                     <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
                   </template>
@@ -4604,6 +4604,9 @@ export default {
           break
       }
       window.scrollTo({ top: 600, behavior: 'smooth' })
+    },
+    isFilterActive: function (val) {
+      return val === this.table_settings.filter
     },
     cleanTableFilter () {
       this.ui.project.showFilterOne = false
