@@ -42,6 +42,7 @@
                 </b-badge>
               </template>
               <template v-slot:cell(name)="data">
+                <a :id="`p-${data.item.id}`"></a>
                 <b-link
                   class="link-project"
                   :to="{name: 'viewProject', params: {org_id: data.item.organization, id: data.item.id}}">
@@ -544,7 +545,7 @@ export default {
         console.log(error)
       }
     },
-    getProjects: function () {
+    getProjects: function (id = null) {
       let requests = []
       const excludeOrgs = ['examples', 'episte']
       this.projects = []
@@ -572,6 +573,9 @@ export default {
         }
         const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
         this.projects.push(...finalList)
+        if (id) {
+          this.$router.push({hash: `p-${id}`})
+        }
       })).catch((error) => {
         console.log(error)
       })
@@ -649,8 +653,8 @@ export default {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
           .then(() => {
+            this.getProjects(this.buffer_project.id)
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-            this.getProjects()
           })
           .catch((error) => {
             console.log(error)

@@ -1238,7 +1238,7 @@
                     {{data.index + 1}}
                   </template>
                   <template v-slot:cell(name)="data">
-                    <a :id="`a-${data.item.id}`"></a>
+                    <a :id="`p-${data.item.id}`"></a>
                     <span v-if="mode === 'edit'">
                       <b-row
                         class="mb-3">
@@ -2910,7 +2910,7 @@ export default {
           this.table_settings.isBusy = false
           this.table_settings.totalRows = data.length
           if (id) {
-            this.$router.push({hash: `a-${id}`})
+            this.$router.push({hash: `p-${id}`})
           }
           if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
             this.$router.push({hash: `${this.$route.query.hash}`})
@@ -4153,6 +4153,7 @@ export default {
       axios.get('/api/isoqf_findings', {params})
         .then((response) => {
           this.editFindingName.finding_id = response.data[0].id
+          this.$router.push({hash: `p-${this.editFindingName.id}`})
         })
         .catch((error) => {
           this.printErrors(error)
