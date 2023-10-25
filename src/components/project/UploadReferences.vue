@@ -236,7 +236,6 @@ export default {
             this.localReferences.push(data)
             cnt++
           }
-          // this.updateMyDataTables()
           this.$emit('CallUpdateMyDataTables')
           const _references = JSON.parse(JSON.stringify(this.localReferences))
           this.prefetchDataForExtractedDataUpdate(_references)
@@ -244,7 +243,7 @@ export default {
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
-          this.episteResponse = []
+          this.$emit('CallEpisteReponse', [])
           this.$emit('CallGetReferences', false)
           this.$refs['file-input'].reset()
         })
@@ -259,41 +258,40 @@ export default {
       this.pubmed_response = []
       this.pubmedErrorImported = []
       const allLines = this.pubmed_request.split(/\r\n|\n/)
-      allLines.forEach((line, index, data) => {
+      this.processPubMedRequest(allLines)
+    },
+    processPubMedRequest: async function (allLines = []) {
+      for (const line of allLines) {
         if (!isNaN(line) && line.length === 8) {
-          const response = this.apiPubMed(line)
-          response
-            .then((rsp) => {
-              if (rsp.status === 200) {
-                if (Object.prototype.hasOwnProperty.call(rsp.data, 'error') || Object.prototype.hasOwnProperty.call(rsp.data, 'esummaryresult')) {
-                  this.pubmedErrorImported.push(line)
-                } else {
-                  if (Object.prototype.hasOwnProperty.call(rsp.data.result, 'uids')) {
-                    if (rsp.data.result.uids.length) {
-                      const uid = rsp.data.result.uids[0]
-                      const data = rsp.data.result[uid]
-                      if (Object.prototype.hasOwnProperty.call(data, 'error')) {
-                        this.pubmedErrorImported.push(line)
-                      } else {
-                        this.processPubmedData(data)
-                      }
-                    } else {
+          try {
+            const response = await this.apiPubMed(line)
+            if (response.status === 200) {
+              if (Object.prototype.hasOwnProperty.call(response.data, 'error') || Object.prototype.hasOwnProperty.call(response.data, 'esummaryresult')) {
+                this.pubmedErrorImported.push(line)
+              } else {
+                if (Object.prototype.hasOwnProperty.call(response.data.result, 'uids')) {
+                  if (response.data.result.uids.length) {
+                    const uid = response.data.result.uids[0]
+                    const data = response.data.result[uid]
+                    if (Object.prototype.hasOwnProperty.call(data, 'error')) {
                       this.pubmedErrorImported.push(line)
+                    } else {
+                      this.processPubmedData(data)
                     }
+                  } else {
+                    this.pubmedErrorImported.push(line)
                   }
                 }
               }
-            })
-            .then(() => {
-              this.pubmed_loading = false
-            })
-            .catch((error) => {
-              console.log(error)
-            })
+            }
+          } catch (error) {
+            console.log(error)
+          }
         } else {
           this.pubmedErrorImported.push(line)
         }
-      })
+      }
+      this.pubmed_loading = false
     },
     PubmedRequestClean: function () {
       this.btnSearchPubMed = false
@@ -303,6 +301,15 @@ export default {
       this.pubmedErrorImported = []
       this.pubmed_loading = false
       this.pubmed_error = false
+    },
+    apiPubMed: async function (id) {
+      const urlBase = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=abdb2d5a30084a5a7200df1515d45fb36f08&db=pubmed&retmode=json&id='
+      try {
+        const response = await axios.get(urlBase + id)
+        return response
+      } catch (error) {
+        console.log(error)
+      }
     },
     processPubmedData: function (data) {
       const refTitle = data.title
