@@ -71,41 +71,11 @@
               v-if="references.length"
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">
-                STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)
-              </h4>
-              <b-container>
-                <b-row>
-                  <b-col
-                    cols="12"
-                    md="6"
-                    class="pl-0">
-                    <criteria
-                      v-if="ui.project.show_criteria"
-                      label="Inclusion criteria"
-                      description="Please enter the study inclusion criteria used in the review"
-                      :isDisabled="checkPermissions()"
-                      criteria="inclusion"
-                      :dataTxt="project.inclusion"
-                      @update-modification="updateModificationTime()">
-                    </criteria>
-                  </b-col>
-                  <b-col
-                    cols="12"
-                    md="6"
-                    class="pr-0">
-                    <criteria
-                      v-if="ui.project.show_criteria"
-                      label="Exclusion criteria"
-                      description="Please enter the study exclusion criteria used in the review"
-                      :isDisabled="checkPermissions()"
-                      criteria="exclusion"
-                      :dataTxt="project.exclusion"
-                      @update-modification="updateModificationTime()">
-                    </criteria>
-                  </b-col>
-                </b-row>
-              </b-container>
+              <InclusionExclusioCriteria
+                :checkPermissions="checkPermissions()"
+                :project="project"
+                :ui="ui"
+                @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
             </b-col>
             <b-col
               v-if="references.length"
@@ -1764,11 +1734,11 @@ const ExportCSV = require('export-to-csv').ExportToCsv
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
-const Criteria = () => import(/* webpackChunkName: "criteria" */ '../Criteria.vue')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp.vue')
 const actionButtons = () => import(/* webpackChunkName: 'actionButtons' */'./actionButtons.vue')
 const propertiesProject = () => import(/* webpackChunkName: "propertiesProject" */ './propertiesProject.vue')
 const UploadReferences = () => import(/* webpackChunkName: "uploadReferences" */ './UploadReferences.vue')
+const InclusionExclusioCriteria = () => import(/* webpackChunkName: "inclusionExclusionCriteria" */ './InclusionExclusionCriteria.vue')
 
 export default {
   components: {
@@ -1776,11 +1746,11 @@ export default {
     organizationForm,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
-    'criteria': Criteria,
     videoHelp,
     'action-buttons': actionButtons,
     propertiesProject,
-    UploadReferences
+    UploadReferences,
+    InclusionExclusioCriteria
   },
   data () {
     return {
