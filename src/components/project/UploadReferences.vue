@@ -64,7 +64,7 @@
                 @click="PubmedRequest">Find</b-button>
               <b-button
                 v-if="checkPermissions && (pubmed_requested.length || pubmedErrorImported.length)"
-                id="btnEpisteRequestClean"
+                :disabled="btnCleanDisabled"
                 class="mt-1"
                 block
                 variant="outline-secondary"
@@ -88,7 +88,7 @@
               <template v-else>
                 <template v-if="pubmed_requested.length">
                   <p>Select the references to import</p>
-                  <ul>
+                  <ul class="list-unstyled">
                     <li v-for="(r, index) in pubmed_requested" :key="index">
                       <b-form-checkbox
                         :id="`checkbox-${index}`"
@@ -186,7 +186,8 @@ export default {
       pubmed_error: false,
       pubmedErrorImported: [],
       btnSearchPubMed: false,
-      localReferences: []
+      localReferences: [],
+      btnCleanDisabled: true
     }
   },
   methods: {
@@ -221,14 +222,13 @@ export default {
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
         ref.project_id = this.$route.params.id
-        let newPromise = axios({
+        axiosArray.push = axios({
           method: 'POST',
           url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
           data: ref
         })
-        axiosArray.push(newPromise)
       }
-      axios.all(axiosArray)
+      Promise.all(axiosArray)
         .then((responses) => {
           let cnt = 0
           for (let response of responses) {
@@ -262,24 +262,26 @@ export default {
     },
     processPubMedRequest: async function (allLines = []) {
       for (const line of allLines) {
-        if (!isNaN(line) && line.length === 8) {
+        const pubMedId = line.trim()
+        if (pubMedId === '') continue
+        if (!isNaN(pubMedId) && pubMedId.length >= 7) {
           try {
-            const response = await this.apiPubMed(line)
+            const response = await this.apiPubMed(pubMedId)
             if (response.status === 200) {
               if (Object.prototype.hasOwnProperty.call(response.data, 'error') || Object.prototype.hasOwnProperty.call(response.data, 'esummaryresult')) {
-                this.pubmedErrorImported.push(line)
+                this.pubmedErrorImported.push(pubMedId)
               } else {
                 if (Object.prototype.hasOwnProperty.call(response.data.result, 'uids')) {
                   if (response.data.result.uids.length) {
                     const uid = response.data.result.uids[0]
                     const data = response.data.result[uid]
                     if (Object.prototype.hasOwnProperty.call(data, 'error')) {
-                      this.pubmedErrorImported.push(line)
+                      this.pubmedErrorImported.push(pubMedId)
                     } else {
                       this.processPubmedData(data)
                     }
                   } else {
-                    this.pubmedErrorImported.push(line)
+                    this.pubmedErrorImported.push(pubMedId)
                   }
                 }
               }
@@ -288,10 +290,11 @@ export default {
             console.log(error)
           }
         } else {
-          this.pubmedErrorImported.push(line)
+          this.pubmedErrorImported.push(pubMedId)
         }
       }
       this.pubmed_loading = false
+      this.btnCleanDisabled = false
     },
     PubmedRequestClean: function () {
       this.btnSearchPubMed = false
@@ -347,25 +350,33 @@ export default {
       this.pubmed_requested.push(reference)
     },
     importReferences: function () {
-      if (this.pubmed_selected.length) {
-        for (let index of this.pubmed_selected) {
-          delete this.pubmed_requested[index].disabled
-          axios.post('/api/isoqf_references', this.pubmed_requested[index])
-            .then(() => {
-              this.pubmed_requested.splice(index, 1)
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        }
-        this.$emit('statusLoadReferences', true)
-        this.pubmed_request = ''
-        this.pubmed_requested = []
-        this.pubmed_selected = []
-        this.pubmedErrorImported = []
-        this.$emit('CallGetReferences', false)
-        this.btnSearchPubMed = false
+      if (!this.pubmed_selected.length) return
+      this.$emit('statusLoadReferences', true)
+
+      let axiosRequest = []
+      for (let index of this.pubmed_selected) {
+        delete this.pubmed_requested[index].disabled
+        axiosRequest.push = axios({
+          method: 'POST',
+          url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
+          data: this.pubmed_requested[index]
+        })
       }
+      Promise.all(axiosRequest)
+        .then((responses) => {
+          this.pubmed_request = ''
+          this.pubmed_requested = []
+          this.pubmed_selected = []
+          this.pubmedErrorImported = []
+          this.btnSearchPubMed = false
+        })
+        .catch((error) => {
+          console.log('error', error)
+        })
+        .finally(() => {
+          // this.$emit('statusLoadReferences', false)
+          this.$emit('CallGetReferences', false)
+        })
     },
     openModalReferencesSingle: function () {
       this.$emit('openModalReferencesSingle', true)
