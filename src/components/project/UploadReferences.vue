@@ -264,7 +264,8 @@ export default {
     references: Array,
     episteResponse: Array,
     lists: Array,
-    charsOfStudies: Object
+    charsOfStudies: Object,
+    methodologicalTableRefs: Object
   },
   components: {
     videoHelp
@@ -617,16 +618,16 @@ export default {
       this.$refs['modal-references'].hide()
       let _lists = JSON.parse(JSON.stringify(this.lists))
       const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      // const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
       const _references = JSON.parse(JSON.stringify(this.references))
       let requests = []
 
       if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
         requests.push(axios.delete(`/api/isoqf_characteristics/${_charsOfStudies.id}`))
       }
-      // if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-      //   requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
-      // }
+      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+        requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
+      }
       for (let reference of _references) {
         requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
       }

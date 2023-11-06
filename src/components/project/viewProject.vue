@@ -62,6 +62,7 @@
                 :episteResponse="episte_response"
                 :lists="lists"
                 :charsOfStudies="charsOfStudies"
+                :methodologicalTableRefs="methodologicalTableRefs"
                 @CallEpisteReponse="CallEpisteReponse"
                 @CallGetReferences="CallGetReferences"
                 @statusLoadReferences="statusLoadReferences"
