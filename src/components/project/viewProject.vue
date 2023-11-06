@@ -61,11 +61,11 @@
                 :references="references"
                 :episteResponse="episte_response"
                 :lists="lists"
+                :charsOfStudies="charsOfStudies"
                 @CallEpisteReponse="CallEpisteReponse"
-                @CallUpdateMyDataTables="updateMyDataTables"
                 @CallGetReferences="CallGetReferences"
                 @statusLoadReferences="statusLoadReferences"
-                @openModalReferencesSingle="openModalReferencesSingle"></UploadReferences>
+                @CallGetProject="getProject"></UploadReferences>
             </b-col>
             <b-col
               v-if="references.length"
@@ -81,341 +81,21 @@
               v-if="references.length"
               cols="12"
               class="mt-3">
-              <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
-              <p class="font-weight-light">
-                Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
-              </p>
-              <b-row
-                v-if="checkPermissions()">
-                <b-col
-                  sm="4">
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    :disabled="(references.length) ? false : true"
-                    v-if="charsOfStudies.fields.length <= 2"
-                    @click="openModalCharsOfStudies()">
-                    Create Table
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="charsOfStudies.fields.length > 2"
-                    @click="openModalCharsOfStudiesEdit">
-                    Add or Edit column headings
-                  </b-button>
-                </b-col>
-                <b-col
-                  sm="1">
-                  <p class="text-center pt-1">OR</p>
-                </b-col>
-                <b-col
-                  sm="4">
-                  <b-button
-                    block
-                    variant="outline-info"
-                    :disabled="(references.length) ? false : true"
-                    v-b-modal.import-characteristics-table>
-                    Import table
-                  </b-button>
-                </b-col>
-                <b-col
-                  sm="3"
-                  v-if="charsOfStudies.fields.length > 2">
-                  <b-button
-                    variant="outline-secondary"
-                    block
-                    @click="exportTableToCSV('chars_of_studies')">
-                    Export to XLS file
-                  </b-button>
-                </b-col>
-              </b-row>
-              <b-row>
-                <b-col
-                  cols="12">
-                  <b-table
-                    sort-by="authors"
-                    responsive
-                    id="chars-of-studies-table"
-                    class="table-content-refs mt-3"
-                    v-if="charsOfStudies.fieldsObj.length > 1"
-                    :fields="charsOfStudies.fieldsObj"
-                    :items="charsOfStudies.items"
-                    :current-page="charsOfStudiesTableSettings.currentPage"
-                    :per-page="charsOfStudiesTableSettings.perPage"
-                    :busy="charsOfStudiesTableSettings.isBusy">
-                    <template
-                      v-slot:cell(authors)="data">
-                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                    </template>
-                    <template
-                      v-slot:cell(actions)="data"
-                      v-if="charsOfStudies.fields.length > 2">
-                      <b-button
-                        block
-                        variant="outline-success"
-                        @click="addDataCharsOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index)">
-                        <font-awesome-icon
-                          icon="edit"></font-awesome-icon>
-                      </b-button>
-                      <b-button
-                        block
-                        variant="outline-danger"
-                        @click="removeItemCharOfStudies((charsOfStudiesTableSettings.currentPage > 1) ? (charsOfStudiesTableSettings.perPage * (charsOfStudiesTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                        <font-awesome-icon
-                          icon="trash"></font-awesome-icon>
-                      </b-button>
-                    </template>
-                    <template v-slot:table-busy>
-                      <div class="text-center text-danger my-2">
-                        <b-spinner class="align-middle"></b-spinner>
-                        <strong>Loading...</strong>
-                      </div>
-                    </template>
-                  </b-table>
-                </b-col>
-
-                <b-col
-                  cols="12">
-                  <b-pagination
-                    v-if="charsOfStudies.items.length && charsOfStudies.items.length > charsOfStudiesTableSettings.perPage"
-                    align="center"
-                    v-model="charsOfStudiesTableSettings.currentPage"
-                    :total-rows="charsOfStudies.items.length"
-                    :per-page="charsOfStudiesTableSettings.perPage"
-                    aria-controls="chars-of-studies-table">
-                  </b-pagination>
-                </b-col>
-
-                <b-col
-                  cols="12">
-                  <back-to-top></back-to-top>
-                </b-col>
-
-                <b-modal
-                  size="xl"
-                  id="open-char-of-studies-table-modal"
-                  ref="open-char-of-studies-table-modal"
-                  scrollable
-                  :ok-disabled="(charsOfStudiesFieldsModal.fields[0])?false:true"
-                  @ok="saveCharacteristicsStudiesFields"
-                  ok-title="Save"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-secondary">
-                  <template v-slot:modal-title>
-                    <videoHelp txt="Column Headers" tag="none" urlId="449742512"></videoHelp>
-                  </template>
-                  <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                  </p>
-                  <ul class="font-weight-light text-danger">
-                    <li>Do not add columns for author or year (these will be added automatically)</li>
-                    <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
-                  </ul>
-                  <b-form-group
-                    label="Number of columns">
-                    <b-form-input
-                      id="nro-columns"
-                      v-model="charsOfStudiesFieldsModal.nroColumns"
-                      type="number" min="1"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    v-for="cnt in parseInt(charsOfStudiesFieldsModal.nroColumns)"
-                    :key="cnt"
-                    :label="`Column #${cnt}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="charsOfStudiesFieldsModal.fields[cnt - 1]"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="charsOfStudies.id">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromCharsSudies(cnt - 1)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-                </b-modal>
-
-                <b-modal
-                  size="xl"
-                  id="open-char-of-studies-table-modal-edit"
-                  ref="open-char-of-studies-table-modal-edit"
-                  scrollable
-                  :ok-disabled="(charsOfStudiesFieldsModalEdit.fields.length)?((charsOfStudiesFieldsModalEdit.fields[0].label)?false:true):false"
-                  @ok="updateCharacteristicsStudiesFields"
-                  ok-variant="outline-success"
-                  ok-title="Save"
-                  cancel-variant="outline-secondary">
-                  <template v-slot:modal-title>
-                    <videoHelp txt="Edit column headers" tag="none" urlId="449742512"></videoHelp>
-                  </template>
-                  <p class="font-weight-light">
-                    Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
-                  </p>
-                  <draggable v-model="charsOfStudiesFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
-                    <b-form-group
-                      v-for="(field, index) in charsOfStudiesFieldsModalEdit.fields"
-                      :key="index"
-                      :label="`Column #${index}`">
-                      <b-input-group>
-                        <b-form-input
-                          :id="`column_${index}`"
-                          v-model="field.label"
-                          type="text"></b-form-input>
-                        <b-input-group-append>
-                          <b-button
-                            v-if="charsOfStudiesFieldsModalEdit.fields.length > 1"
-                            :id="`drag-button-chars-${index}`"
-                            variant="outline-secondary"
-                            v-b-tooltip
-                            title="Drag to sort">
-                            <font-awesome-icon
-                              icon="arrows-alt"></font-awesome-icon>
-                          </b-button>
-                          <b-button
-                            variant="outline-danger"
-                            @click="deleteFieldFromCharsSudiesEdit(index)">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                          </b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </draggable>
-                  <b-button
-                    class="mb-2"
-                    @click="charsOfStudiesNewColumn"
-                    variant="outline-success">
-                    Add new column
-                  </b-button>
-                </b-modal>
-
-                <b-modal
-                  size="xl"
-                  ref="edit-chars-of-studies-data"
-                  title="Edit data"
-                  scrollable
-                  @ok="saveDataCharsOfStudies"
-                  ok-title="Save"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-secondary">
-                  <b-form-group
-                    v-for="field of charsOfStudies.fields"
-                    :key="field.id"
-                    :label="field.label">
-                    <b-form-input
-                      :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                      v-if="field.key === 'ref_id' || field.key === 'authors'"
-                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]">
-                    </b-form-input>
-                    <b-form-textarea
-                      v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                      v-model="charsOfStudiesFieldsModal.items[charsOfStudiesFieldsModal.selected_item_index][field.key]"
-                      rows="2"
-                      max-rows="100"></b-form-textarea>
-                  </b-form-group>
-                </b-modal>
-
-                <b-modal
-                  :no-close-on-backdrop="true"
-                  :no-close-on-esc="true"
-                  ok-title="Save"
-                  cancel-title="Close"
-                  size="xl"
-                  id="import-characteristics-table"
-                  ref="import-characteristics-table">
-                  <template v-slot:modal-title>
-                    <videoHelp txt="Import table" tag="none" urlId="450046545"></videoHelp>
-                  </template>
-                  <b-alert show variant="danger">
-                    <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
-                  </b-alert>
-                  <p
-                  class="font-weight-light">
-                    To upload a table, follow these steps:
-                  </p>
-                  <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
-                  <p
-                    class="text-danger">
-                    <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
-                  </p>
-                  <p class="text-danger">
-                    <b>If you have problems with the template this may be due to the version of Excel you are using or your settings. We recommend you work on the table in Google Sheets (Gdrive)</b>
-                  </p>
-                  <p
-                    class="text-danger">
-                    <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
-                  </p>
-                  <b-button
-                    variant="info"
-                    @click="generateTemplate">
-                    Download template
-                  </b-button>
-                  <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
-                  <b-form-file
-                    ref="import-chars-table-file"
-                    id="input-template-chars-file"
-                    plain
-                    @change="loadTableImportData($event)"></b-form-file>
-                  <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
-                  <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                  <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-450046545`'>See help video</a> for support.</p>
-                  <b-alert
-                    variant="info"
-                    :show="importDataTable.error !== null">
-                    {{ importDataTable.error }}
-                  </b-alert>
-                  <b-table
-                    v-if="importDataTable.items.length"
-                    responsive
-                    :fields="importDataTable.fieldsObj"
-                    :items="importDataTable.items"></b-table>
-                  <template v-slot:modal-footer>
-                    <b-button
-                      variant="outline-secondary"
-                      @click="cleanVars('close', 'modal-chars')">Cancel</b-button>
-                    <b-button
-                      variant="outline-info"
-                      :disabled="!importDataTable.items.length"
-                      @click="cleanVars('chars')">Reject</b-button>
-                    <b-button
-                      variant="outline-success"
-                      :disabled="!importDataTable.items.length"
-                      @click="saveImportedData('isoqf_characteristics')">Save</b-button>
-                  </template>
-                </b-modal>
-
-                <b-modal
-                  size="xl"
-                  id="removeContentModalCharsOfStudies"
-                  ref="removeContentModalCharsOfStudies"
-                  title="Remove content"
-                  ok-title="Confirm"
-                  ok-variant="outline-danger"
-                  cancel-variant="outline-success"
-                  @cancel="cleanRemoveContentCharsOfStudies"
-                  @ok="removeDataFromLists">
-                  <p>Are you sure you want to delete all the content for this row?</p>
-                  <p
-                    v-if="removeReferenceCharsOfStudies.findings.length === 0">
-                    <b>No findings will be affected</b>
-                  </p>
-                  <p
-                    v-if="removeReferenceCharsOfStudies.findings.length">
-                    <b>Findings that will be affected</b>
-                    <ul>
-                      <li v-for="(finding, index) in removeReferenceCharsOfStudies.findings" :key="index">
-                        {{ `finding # ${finding}`}}
-                      </li>
-                    </ul>
-                  </p>
-                </b-modal>
-              </b-row>
+              <CharacteristicsOfStudiesTable
+                :checkPermissions="checkPermissions()"
+                :project="project"
+                :ui="ui"
+                :references="references"
+                :refs="refs"
+                :lists="lists"
+                @insert-imported-data="insertImportedData"
+                @clean-imported-data="cleanImportedData"
+                @get-project="getProject"
+                @generate-template="generateTemplate"
+                @get-authors-format="getAuthorsFormat"
+                @print-errors="printErrors"
+                @fill-charsOfStudies="fillCharsOfStudies"
+                ></CharacteristicsOfStudiesTable>
             </b-col>
             <b-col
               v-if="references.length"
@@ -1634,90 +1314,6 @@
           <content-guidance></content-guidance>
         </b-tab>
       </b-tabs>
-      <b-modal
-        id="modal-references"
-        ref="modal-references"
-        title="References"
-        size="xl"
-        :ok-only="!checkPermissions()"
-        @ok="getProject"
-        @cancel="confirmRemoveAllReferences($event)"
-        scrollable
-        ok-variant="outline-success"
-        ok-title="Close"
-        cancel-variant="outline-danger"
-        cancel-title="Remove all references"
-        :cancel-disabled="disableBtnRemoveAllRefs">
-        <template v-if="appearMsgRemoveReferences">
-          <b-row>
-            <b-col
-              cols="12">
-              <p>This action will remove all the references</p>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col
-              cols="6">
-              <b-button
-                block
-                @click="removeAllReferences"
-                variant="outline-danger">
-                Continue
-              </b-button>
-            </b-col>
-            <b-col
-              cols="6">
-              <b-button
-                block
-                @click="appearMsgRemoveReferences = false"
-                variant="outline-success">
-                Cancel
-              </b-button>
-            </b-col>
-          </b-row>
-        </template>
-        <template v-else>
-          <div
-            class="mt-2"
-            v-if="references.length">
-            <p>Below are the references you have uploaded.</p>
-            <b-table
-              sort-by="authors"
-              responsive
-              hover
-              bordered
-              borderless
-              striped
-              :fields="fields_references_table"
-              :items="references">
-              <template v-slot:cell(action)="data">
-                <b-button
-                  v-if="checkPermissions()"
-                  variant="outline-danger"
-                  @click="data.toggleDetails">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
-                </b-button>
-              </template>
-              <template v-slot:row-details="data">
-                <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
-                  <p>{{ findRelatedFindings(data.item.id) }}</p>
-                  <p>Are you sure you want to delete this reference?</p>
-                  <b-button
-                    block
-                    variant="outline-success"
-                    @click="data.toggleDetails">No</b-button>
-                  <b-button
-                    block
-                    variant="outline-danger"
-                    @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
-                </b-card>
-              </template>
-            </b-table>
-          </div>
-        </template>
-      </b-modal>
 
     </b-container>
   </div>
@@ -1750,7 +1346,8 @@ export default {
     'action-buttons': actionButtons,
     propertiesProject,
     UploadReferences,
-    InclusionExclusioCriteria
+    InclusionExclusioCriteria,
+    CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue')
   },
   data () {
     return {
@@ -1903,59 +1500,11 @@ export default {
       refs: [],
       loadReferences: true,
       fileReferences: [],
-      fields_references_table:
-        [
-          {
-            key: 'authors',
-            label: 'Author(s)',
-            formatter: value => {
-              if (value.length < 1) {
-                return 'no author(s)'
-              } else if (value.length === 1) {
-                return value[0].split(',')[0]
-              } else if (value.length === 2) {
-                return value[0].split(',')[0] + ' & ' + value[1].split(',')[0]
-              } else {
-                return value[0].split(',')[0] + ' et al.'
-              }
-            }
-          },
-          { key: 'title', label: 'Title' },
-          { key: 'publication_year', label: 'Year' },
-          {
-            key: 'id',
-            label: 'Related to finding(s)',
-            formatter: value => {
-              let findings = []
-              for (let list of this.lists) {
-                for (let ref of list.raw_ref) {
-                  if (ref.id === value) {
-                    findings.push(`#${list.isoqf_id}`)
-                  }
-                }
-              }
-              return findings.join(', ')
-            }
-          },
-          { key: 'action', label: '' }
-        ],
       selected_list_index: null,
       selected_references: [],
       lastId: 1,
       mode: 'edit',
       msgUploadReferences: '',
-      charsOfStudiesFieldsModal: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
-      charsOfStudiesFieldsModalEdit: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
       charsOfStudies: {
         fields: [],
         items: [],
@@ -2094,16 +1643,24 @@ export default {
     }
   },
   mounted () {
+    console.log('mounted')
     this.getListCategories()
     this.getReferences()
     this.openModalReferencesSingle(false)
     this.getProject()
   },
   methods: {
+    fillCharsOfStudies: function (data, dataModal = {}) {
+      this.charsOfStudies = data
+      if (Object.keys(dataModal).length > 0) {
+        this.charsOfStudiesFieldsModal = dataModal
+      }
+    },
     CallEpisteReponse: function (status) {
       this.episte_response = status
     },
     CallGetReferences: function (status) {
+      console.log('call get references', status)
       this.getReferences(status)
     },
     statusLoadReferences: function (status) {
@@ -2235,7 +1792,7 @@ export default {
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
         .then((response) => {
-          this.project = response.data
+          this.project = JSON.parse(JSON.stringify(response.data))
           if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
             this.project.inclusion = ''
           }
@@ -2243,8 +1800,9 @@ export default {
             this.project.exclusion = ''
           }
           this.ui.project.show_criteria = true
+          console.log('get project')
           this.getLists() // summary review
-          this.getCharacteristics()
+          // this.getCharacteristics()
           this.getMethodological()
         })
         .catch((error) => {
@@ -2512,10 +2070,17 @@ export default {
         })
     },
     getReferences: function (changeTab = true) {
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.get(`/api/isoqf_references`, { params })
         .then((response) => {
           const data = JSON.parse(JSON.stringify(response.data))
           let _references = data
+          for (const d of data) {
+            d._showDetails = false
+          }
           this.references = data
           let _refs = []
           for (let reference of _references) {
@@ -2539,7 +2104,8 @@ export default {
             }
           }
           this.loadReferences = false
-          this.updateMyDataTables()
+          // this.updateMyDataTables()
+          console.log('get references')
         })
         .catch((error) => {
           this.printErrors(error)
@@ -2757,72 +2323,6 @@ export default {
         }
       })
     },
-    confirmRemoveReferenceById: function (refId) {
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      let _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      let _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      let objs = []
-
-      for (let list of lists) {
-        let obj = {id: null, references: []}
-        for (let rr of list.raw_ref) {
-          if (rr.id !== refId) {
-            obj.references.push(rr.id)
-          }
-          if (rr.id === refId) {
-            obj.id = list.id
-            objs.push(obj)
-          }
-        }
-      }
-      let requests = []
-
-      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
-        if (_charsOfStudies.items.length) {
-          let items = []
-
-          for (let item of _charsOfStudies.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
-            }
-          }
-          _charsOfStudies.items = items
-
-          requests.push(axios.patch(`/api/isoqf_characteristics/${_charsOfStudies.id}`, _charsOfStudies))
-        }
-      }
-
-      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-        if (_assessments.items.length) {
-          let items = []
-
-          for (let item of _assessments.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
-            }
-          }
-          _assessments.items = items
-
-          requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
-        }
-      }
-
-      for (let o of objs) {
-        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
-      }
-
-      if (requests.length) {
-        axios.all(requests)
-          .then(axios.spread())
-      }
-
-      axios.delete(`/api/isoqf_references/${refId}`)
-        .then(() => {
-          this.getReferences(false)
-          this.openModalReferencesSingle(false)
-          this.getProject()
-        })
-    },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       if (authors.length) {
         const nroAuthors = authors.length
@@ -2836,233 +2336,6 @@ export default {
       } else {
         return 'author(s) not found'
       }
-    },
-    deleteFieldFromCharsSudies: function (index) {
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-
-      fields.splice(index, 1)
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
-          this.getProject()
-        }).catch((error) => {
-          console.log('error: ', error)
-        })
-    },
-    deleteFieldFromCharsSudiesEdit: function (index) {
-      let params = {}
-      const _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
-      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-
-      let removedField = _fields.splice(index, 1)[0]
-
-      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      for (let item of _items) {
-        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
-          delete item[removedField.key]
-        }
-      }
-
-      params.fields = _fields
-      params.items = _items
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
-          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
-          const excluded = ['ref_id', 'authors', 'actions']
-          let editFields = []
-          for (let field of _fields) {
-            if (!excluded.includes(field.key)) {
-              editFields.push(field)
-            }
-          }
-
-          this.charsOfStudiesFieldsModalEdit.fields = editFields
-          this.charsOfStudiesFieldsModalEdit.nroColumns = editFields.length
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalCharsOfStudies: function () {
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let editFields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of fields) {
-        if (!excluded.includes(field.key)) {
-          editFields.push(field.label)
-        }
-      }
-      this.charsOfStudiesFieldsModal.fields = editFields
-      this.$refs['open-char-of-studies-table-modal'].show()
-    },
-    openModalCharsOfStudiesEdit: function () {
-      let _fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let fields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      this.charsOfStudiesFieldsModalEdit.fields = fields
-      this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length
-      this.$refs['open-char-of-studies-table-modal-edit'].show()
-    },
-    charsOfStudiesNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      if (_fields.length) {
-        for (let field of _fields) {
-          if (!excluded.includes(field.key)) {
-            fields.push(field)
-          }
-        }
-        this.charsOfStudiesFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(this.charsOfStudiesFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
-      }
-
-      this.charsOfStudiesFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
-    },
-    saveCharacteristicsStudiesFields: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-      params.items = []
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.nro_of_fields = fields.length
-
-      for (let r of references) {
-        let objItem = {}
-        for (let cnt in fields) {
-          objItem['column_' + cnt] = ''
-        }
-        objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
-        params.items.push(objItem)
-      }
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
-        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-          .then((response) => {
-            this.getProject()
-          }).catch((error) => {
-            console.log('error: ', error)
-          })
-      } else {
-        axios.post('/api/isoqf_characteristics', params)
-          .then((response) => {
-            this.getCharacteristics()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
-    updateCharacteristicsStudiesFields: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
-      let params = {}
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-            item[field.key] = ''
-          }
-        }
-      }
-
-      params.items = _items
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
-          this.getCharacteristics()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    getCharacteristics: function () {
-      this.charsOfStudiesTableSettings.isBusy = true
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          if (response.data.length) {
-            this.charsOfStudies = response.data[0]
-            if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
-              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-
-              const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-              const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
-              this.charsOfStudies.items = _items
-
-              this.charsOfStudiesFieldsModal.fields = []
-              for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  this.charsOfStudiesFieldsModal.fields.push(f.label)
-                  this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
-                }
-              }
-
-              this.charsOfStudies.fieldsObj.push({'key': 'actions', 'label': ''})
-
-              this.charsOfStudiesFieldsModal.nroColumns = (this.charsOfStudies.fieldsObj.length === 2) ? 1 : this.charsOfStudies.fieldsObj.length - 2
-
-              for (let item of _items) {
-                this.charsOfStudiesFieldsModal.items.push(item)
-              }
-            }
-            this.charsOfStudiesTableSettings.isBusy = false
-          } else {
-            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
-          }
-        })
     },
     getMethodological: function () {
       this.methodologicalTableRefsTableSettings.isBusy = true
@@ -3099,26 +2372,6 @@ export default {
           } else {
             this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
-        })
-    },
-    addDataCharsOfStudies: function (index = 0) {
-      let items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-
-      this.charsOfStudiesFieldsModal.items = items
-      this.charsOfStudiesFieldsModal.selected_item_index = index
-      this.$refs['edit-chars-of-studies-data'].show()
-    },
-    saveDataCharsOfStudies: function () {
-      let params = {}
-      let characteristicId = this.charsOfStudies.id
-      params.items = this.charsOfStudiesFieldsModal.items
-
-      axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
-        .then((response) => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
         })
     },
     generateTemplate: function () {
@@ -3206,6 +2459,7 @@ export default {
       }
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
+      console.log('cleanImportedData', id, endpoint, params)
       axios.delete(`/api/${endpoint}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
@@ -3213,83 +2467,14 @@ export default {
         })
     },
     insertImportedData: function (endpoint = '', params = {}) {
-      const modal = (endpoint === 'isoqf_characteristics') ? 'import-characteristics-table' : 'import-methodological-table'
+      console.log('insertImportedData', endpoint, params)
       axios.post(`/api/${endpoint}/`, params)
         .then(() => {
           this.getProject()
-          this.$refs[modal].hide()
         })
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    removeItemCharOfStudies: function (index, id) {
-      this.removeReferenceCharsOfStudies = {
-        id: null,
-        findings: []
-      }
-      let lists = JSON.parse(JSON.stringify(this.lists))
-
-      this.removeReferenceCharsOfStudies.id = id
-      this.removeReferenceCharsOfStudies.index = index
-
-      for (let list of lists) {
-        for (let ref of list.references) {
-          if (id === ref) {
-            this.removeReferenceCharsOfStudies.findings.push(list.isoqf_id)
-          }
-        }
-      }
-      this.$refs['removeContentModalCharsOfStudies'].show()
-    },
-    removeDataFromLists: function () {
-      const index = this.removeReferenceCharsOfStudies.index
-      let _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-      let params = {}
-      let cnt = 0
-      let items = []
-      let _keys = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-      let keys = []
-      for (let k of _keys) {
-        keys.push(k.key)
-      }
-
-      for (let item of _items) {
-        if (cnt === index) {
-          let obj = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-        cnt++
-      }
-
-      params.items = items
-
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then(() => {
-          this.getCharacteristics()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    cleanRemoveContentCharsOfStudies: function () {
-      this.removeReferenceCharsOfStudies = {
-        id: null,
-        findings: []
-      }
     },
     openModcontent: function (edit = false) {
       let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
@@ -3536,96 +2721,6 @@ export default {
           this.printErrors(error)
         })
     },
-    findRelatedFindings: function (refId = null) {
-      if (refId) {
-        let findings = []
-        for (let list of this.lists) {
-          for (let ref of list.raw_ref) {
-            if (ref.id === refId) {
-              findings.push(`#${list.isoqf_id}`)
-            }
-          }
-        }
-        if (findings.length) {
-          return 'The findings affected are: ' + findings.join(', ')
-        } else {
-          return 'No findings will be affected.'
-        }
-      }
-    },
-    confirmRemoveAllReferences: function (event) {
-      event.preventDefault()
-      this.appearMsgRemoveReferences = true
-      this.disableBtnRemoveAllRefs = true
-    },
-    removeAllReferences: function () {
-      this.loadReferences = true
-      this.$refs['modal-references'].hide()
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      const _references = JSON.parse(JSON.stringify(this.references))
-      let requests = []
-
-      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
-        requests.push(axios.delete(`/api/isoqf_characteristics/${_charsOfStudies.id}`))
-      }
-      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-        requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
-      }
-      for (let reference of _references) {
-        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-      }
-
-      let _requestFindings = []
-      for (let list of _lists) {
-        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
-        list.references = []
-        axios.patch(`/api/isoqf_lists/${list.id}`, list)
-          .then(() => {})
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-      if (_requestFindings.length) {
-        axios.all(_requestFindings)
-          .then((responses) => {
-            let getExtractedData = []
-            for (let response of responses) {
-              let finding = response.data[0]
-              getExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
-            }
-            if (getExtractedData.length) {
-              this.getAndDeleteExtractedData(getExtractedData)
-            }
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-      axios.all(requests)
-        .then(() => {
-          this.getReferences()
-          this.openModalReferencesSingle(false)
-          this.getProject()
-          this.resetData()
-        })
-    },
-    getAndDeleteExtractedData: function (requests) {
-      if (requests.length) {
-        axios.all(requests)
-          .then((responses) => {
-            for (let response of responses) {
-              let data = response.data[0]
-              axios.patch(`/api/isoqf_extracted_data/${data.id}`, { items: [] })
-                .then((response) => {})
-                .catch((error) => {
-                  this.printErrors(error)
-                })
-            }
-          })
-      }
-    },
     editModalFindingName: function (data) {
       this.editFindingName.index = data.index
       this.editFindingName.id = data.item.id
@@ -3735,13 +2830,6 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    resetData: function () {
-      this.charsOfStudiesFieldsModal.nroColumns = 1
-      this.charsOfStudiesFieldsModal.selected_item_index = 0
-      this.charsOfStudiesFieldsModalEditnroColumns = 1
-      this.charsOfStudiesFieldsModalEditfields = []
-      this.charsOfStudiesFieldsModalEditmainFields = []
     },
     getListCategories: function () {
       const params = {
@@ -4138,59 +3226,60 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
-    },
-    updateMyDataTables: function () {
-      let _itemsChars = []
-      let _itemsMeth = []
-
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-            let _items = response.data[0].items
-            let _itemsChecks = []
-            for (let item of _items) {
-              _itemsChecks.push(item.ref_id)
-            }
-            for (let reference of this.references) {
-              if (!_itemsChecks.includes(reference.id)) {
-                _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-              }
-            }
-            _items.push(..._itemsChars)
-            let params = {
-              items: _items
-            }
-            axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
-              .then(() => {
-                this.getCharacteristics()
-              })
-          }
-        })
-
-      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-            let _items = response.data[0].items
-            let _itemsChecks = []
-            for (let item of _items) {
-              _itemsChecks.push(item.ref_id)
-            }
-            for (let reference of this.references) {
-              if (!_itemsChecks.includes(reference.id)) {
-                _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-              }
-            }
-            _items.push(..._itemsMeth)
-            let params = {
-              items: _items
-            }
-            axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
-              .then(() => {
-                this.getMethodological()
-              })
-          }
-        })
     }
+    // updateMyDataTables: function () {
+    //   let _itemsChars = []
+    //   let _itemsMeth = []
+
+    //   axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+    //     .then((response) => {
+    //       if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+    //         let _items = response.data[0].items
+    //         let _itemsChecks = []
+    //         for (let item of _items) {
+    //           _itemsChecks.push(item.ref_id)
+    //         }
+    //         for (let reference of this.references) {
+    //           if (!_itemsChecks.includes(reference.id)) {
+    //             _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+    //           }
+    //         }
+    //         _items.push(..._itemsChars)
+    //         let params = {
+    //           items: _items
+    //         }
+    //         axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
+    //           .then(() => {
+    //             console.log('updateMyDataTables', 'getChars')
+    //             // this.getCharacteristics()
+    //           })
+    //       }
+    //     })
+
+    //   axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+    //     .then((response) => {
+    //       if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+    //         let _items = response.data[0].items
+    //         let _itemsChecks = []
+    //         for (let item of _items) {
+    //           _itemsChecks.push(item.ref_id)
+    //         }
+    //         for (let reference of this.references) {
+    //           if (!_itemsChecks.includes(reference.id)) {
+    //             _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
+    //           }
+    //         }
+    //         _items.push(..._itemsMeth)
+    //         let params = {
+    //           items: _items
+    //         }
+    //         axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
+    //           .then(() => {
+    //             this.getMethodological()
+    //           })
+    //       }
+    //     })
+    // }
   },
   computed: {
     title: function () {
