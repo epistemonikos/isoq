@@ -157,6 +157,99 @@
         </b-card>
       </b-col>
     </b-row>
+
+    <b-modal
+      id="modal-references"
+      ref="modal-references"
+      title="References"
+      size="xl"
+      :ok-only="!checkPermissions"
+      @ok="getProject"
+      @cancel="confirmRemoveAllReferences($event)"
+      scrollable
+      ok-variant="outline-success"
+      ok-title="Close"
+      cancel-variant="outline-danger"
+      cancel-title="Remove all references"
+      :cancel-disabled="disableBtnRemoveAllRefs">
+      <template v-if="appearMsgRemoveReferences">
+        <b-row>
+          <b-col
+            cols="12">
+            <p>This action will remove all the references</p>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col
+            cols="6">
+            <b-button
+              block
+              @click="removeAllReferences"
+              variant="outline-danger">
+              Continue
+            </b-button>
+          </b-col>
+          <b-col
+            cols="6">
+            <b-button
+              block
+              @click="appearMsgRemoveReferences = false"
+              variant="outline-success">
+              Cancel
+            </b-button>
+          </b-col>
+        </b-row>
+      </template>
+      <template v-else>
+        <div
+          class="mt-2"
+          v-if="references.length">
+          <p>Below are the references you have uploaded.</p>
+          <b-table
+            sort-by="authors"
+            responsive
+            hover
+            bordered
+            borderless
+            striped
+            :fields="fields_references_table"
+            :items="references">
+            <template v-slot:cell(action)="data">
+              <b-button
+                v-if="checkPermissions"
+                variant="outline-danger"
+                @click="data.toggleDetails">
+                <font-awesome-icon
+                  icon="trash"></font-awesome-icon>
+              </b-button>
+            </template>
+            <template v-slot:row-details="data">
+              <b-card>
+                <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
+                <p>{{ findRelatedFindings(data.item.id) }}</p>
+                <p>Are you sure you want to delete this reference?</p>
+                <div>
+                  <b-row align-h="center">
+                    <b-col cols="3">
+                      <b-button
+                        block
+                        variant="outline-success"
+                        @click="data.toggleDetails">No</b-button>
+                    </b-col>
+                    <b-col cols="3">
+                      <b-button
+                        block
+                        variant="outline-danger"
+                        @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-card>
+            </template>
+          </b-table>
+        </div>
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -170,7 +263,8 @@ export default {
     loadReferences: Boolean,
     references: Array,
     episteResponse: Array,
-    lists: Array
+    lists: Array,
+    charsOfStudies: Object
   },
   components: {
     videoHelp
@@ -187,10 +281,51 @@ export default {
       pubmedErrorImported: [],
       btnSearchPubMed: false,
       localReferences: [],
-      btnCleanDisabled: true
+      btnCleanDisabled: true,
+      disableBtnRemoveAllRefs: false,
+      appearMsgRemoveReferences: false,
+      fields_references_table:
+        [
+          {
+            key: 'authors',
+            label: 'Author(s)',
+            formatter: value => {
+              if (value.length < 1) {
+                return 'no author(s)'
+              } else if (value.length === 1) {
+                return value[0].split(',')[0]
+              } else if (value.length === 2) {
+                return value[0].split(',')[0] + ' & ' + value[1].split(',')[0]
+              } else {
+                return value[0].split(',')[0] + ' et al.'
+              }
+            }
+          },
+          { key: 'title', label: 'Title' },
+          { key: 'publication_year', label: 'Year' },
+          {
+            key: 'id',
+            label: 'Related to finding(s)',
+            formatter: value => {
+              let findings = []
+              for (let list of this.lists) {
+                for (let ref of list.raw_ref) {
+                  if (ref.id === value) {
+                    findings.push(`#${list.isoqf_id}`)
+                  }
+                }
+              }
+              return findings.join(', ')
+            }
+          },
+          { key: 'action', label: '' }
+        ]
     }
   },
   methods: {
+    getProject: function () {
+      this.$emit('CallGetProject')
+    },
     loadRefs: function (event) {
       const file = event.target.files[0]
       const reader = new FileReader()
@@ -378,9 +513,9 @@ export default {
           this.$emit('CallGetReferences', false)
         })
     },
-    openModalReferencesSingle: function () {
-      this.$emit('openModalReferencesSingle', true)
-    },
+    // openModalReferencesSingle: function () {
+    //   this.$emit('openModalReferencesSingle', true)
+    // },
     prefetchDataForExtractedDataUpdate: function (references) {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _requestFindings = []
@@ -389,7 +524,7 @@ export default {
       for (let list of _lists) {
         _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
       }
-      axios.all(_requestFindings)
+      Promise.all(_requestFindings)
         .then((responses) => {
           for (let _response of responses) {
             let response = _response.data[0]
@@ -404,7 +539,7 @@ export default {
     updateExtractedDataReferences: function (querys = [], references = []) {
       if (references.length) {
         if (querys.length) {
-          axios.all(querys)
+          Promise.all(querys)
             .then((responses) => {
               let item = {}
               let _items = []
@@ -434,7 +569,7 @@ export default {
                 patchExtractedData.push(axios.patch(`/api/isoqf_extracted_data/${response.id}`, params))
               }
               if (patchExtractedData.length) {
-                axios.all(patchExtractedData)
+                Promise.all(patchExtractedData)
                   .then(() => {})
                   .catch((error) => {
                     this.printErrors(error)
@@ -442,6 +577,167 @@ export default {
               }
             })
         }
+      }
+    },
+    openModalReferencesSingle: function (showModal) {
+      if (showModal) {
+        // this.getReferences(false)
+        // this.$emit('CallGetReferences', false)
+        this.msgUploadReferences = ''
+        this.appearMsgRemoveReferences = false
+        this.disableBtnRemoveAllRefs = false
+        this.$refs['modal-references'].show()
+      }
+    },
+    findRelatedFindings: function (refId = null) {
+      if (!refId) return
+
+      let findings = []
+      for (const list of this.lists) {
+        for (const ref of list.raw_ref) {
+          if (ref.id === refId) {
+            findings.push(`#${list.isoqf_id}`)
+          }
+        }
+      }
+      if (findings.length) {
+        return 'The findings affected are: ' + findings.join(', ')
+      } else {
+        return 'No findings will be affected.'
+      }
+    },
+    confirmRemoveAllReferences: function (event) {
+      event.preventDefault()
+      this.appearMsgRemoveReferences = true
+      this.disableBtnRemoveAllRefs = true
+    },
+    removeAllReferences: function () {
+      // this.loadReferences = true
+      this.$emit('loadReferences', true)
+      this.$refs['modal-references'].hide()
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+      // const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+      const _references = JSON.parse(JSON.stringify(this.references))
+      let requests = []
+
+      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
+        requests.push(axios.delete(`/api/isoqf_characteristics/${_charsOfStudies.id}`))
+      }
+      // if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+      //   requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
+      // }
+      for (let reference of _references) {
+        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
+      }
+
+      let _requestFindings = []
+      for (let list of _lists) {
+        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
+        list.references = []
+        axios.patch(`/api/isoqf_lists/${list.id}`, list)
+          .then(() => {})
+          .catch((error) => {
+            this.printErrors(error)
+          })
+      }
+      if (_requestFindings.length) {
+        Promise.all(_requestFindings)
+          .then((responses) => {
+            let getExtractedData = []
+            for (let response of responses) {
+              let finding = response.data[0]
+              getExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
+            }
+            if (getExtractedData.length) {
+              this.getAndDeleteExtractedData(getExtractedData)
+            }
+          })
+          .catch((error) => {
+            this.printErrors(error)
+          })
+      }
+      Promise.all(requests)
+        .then(() => {
+          this.$emit('CallGetReferences')
+          // this.openModalReferencesSingle(false)
+          this.$emit('CallGetProject')
+          this.resetData()
+        })
+    },
+    resetData: function () {
+      // this.charsOfStudiesFieldsModal.nroColumns = 1
+      // this.charsOfStudiesFieldsModal.selected_item_index = 0
+      // this.charsOfStudiesFieldsModalEditnroColumns = 1
+      // this.charsOfStudiesFieldsModalEditfields = []
+      // this.charsOfStudiesFieldsModalEditmainFields = []
+    },
+    confirmRemoveReferenceById: function (refId) {
+      if (!refId) return
+      const lists = JSON.parse(JSON.stringify(this.lists))
+      const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+      let objs = []
+      let requests = []
+
+      for (const list of lists) {
+        let obj = {id: null, references: []}
+        for (const rr of list.raw_ref) {
+          if (rr.id !== refId) {
+            obj.references.push(rr.id)
+          }
+          if (rr.id === refId) {
+            obj.id = list.id
+            objs.push(obj)
+          }
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
+        if (charsOfStudies.items.length) {
+          let items = []
+
+          for (const item of charsOfStudies.items) {
+            if (item.ref_id !== refId) {
+              items.push(item)
+            }
+          }
+          charsOfStudies.items = items
+
+          requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
+        }
+      }
+
+      for (let o of objs) {
+        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
+      }
+
+      if (requests.length) {
+        Promise.all(requests)
+      }
+
+      axios.delete(`/api/isoqf_references/${refId}`)
+        .then(() => {
+          console.log('confirmRemoveReferenceById ==> CallGetReferences(false)')
+          this.$emit('CallGetReferences', false)
+          console.log('confirmRemoveReferenceById ==> openModalReferencesSingle(false)')
+          this.openModalReferencesSingle(false)
+          console.log('confirmRemoveReferenceById ==> CallGetProject')
+          this.$emit('CallGetProject')
+        })
+    },
+    getAndDeleteExtractedData: function (requests) {
+      if (requests.length) {
+        axios.all(requests)
+          .then((responses) => {
+            for (let response of responses) {
+              let data = response.data[0]
+              axios.patch(`/api/isoqf_extracted_data/${data.id}`, { items: [] })
+                .then((response) => {})
+                .catch((error) => {
+                  this.printErrors(error)
+                })
+            }
+          })
       }
     }
   },
