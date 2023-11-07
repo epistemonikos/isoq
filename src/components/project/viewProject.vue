@@ -82,21 +82,23 @@
               v-if="references.length"
               cols="12"
               class="mt-3">
-              <CharacteristicsOfStudiesTable
+              <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+              <p class="font-weight-light">
+                Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+              </p>
+
+              <crudTables
+                type="isoqf_characteristics"
                 :checkPermissions="checkPermissions()"
                 :project="project"
                 :ui="ui"
                 :references="references"
                 :refs="refs"
                 :lists="lists"
-                @insert-imported-data="insertImportedData"
-                @clean-imported-data="cleanImportedData"
                 @get-project="getProject"
-                @generate-template="generateTemplate"
-                @get-authors-format="getAuthorsFormat"
                 @print-errors="printErrors"
-                @fill-charsOfStudies="fillCharsOfStudies"
-                ></CharacteristicsOfStudiesTable>
+                @updateDataTable="updateDataTable"
+              ></crudTables>
             </b-col>
             <b-col
               v-if="references.length"
@@ -106,334 +108,20 @@
               <p class="font-weight-light">
                 Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
               </p>
-              <b-row
-                v-if="checkPermissions()">
-                <b-col
-                  sm="4">
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    :disabled="(references.length) ? false : true"
-                    v-if="methodologicalTableRefs.fields.length <= 2"
-                    @click="openModcontent()">
-                    Create Table
-                  </b-button>
-                  <b-button
-                    block
-                    variant="outline-primary"
-                    v-if="methodologicalTableRefs.fields.length > 2"
-                    @click="openModcontent(true)">
-                    Add or Edit column headings
-                  </b-button>
-                </b-col>
-                <b-col
-                  sm="1">
-                  <p class="text-center pt-1">OR</p>
-                </b-col>
-                <b-col
-                  sm="4">
-                  <b-button
-                    block
-                    variant="outline-info"
-                    :disabled="(references.length) ? false : true"
-                    v-b-modal.import-methodological-table>
-                    Import table
-                  </b-button>
-                </b-col>
-                <b-col
-                  sm="3"
-                  v-if="methodologicalTableRefs.fields.length > 2">
-                  <b-button
-                    variant="outline-secondary"
-                    block
-                    @click="exportTableToCSV('meth_assessments')">
-                    Export to XLS file
-                  </b-button>
-                </b-col>
-              </b-row>
 
-              <b-row>
-                <b-col
-                  cols="12">
-                  <b-table
-                    sort-by="authors"
-                    responsive
-                    id="methodological-table"
-                    v-if="methodologicalTableRefs.fieldsObj.length > 1"
-                    class="table-content-refs mt-3"
-                    :per-page="methodologicalTableRefsTableSettings.perPage"
-                    :current-page="methodologicalTableRefsTableSettings.currentPage"
-                    :fields="methodologicalTableRefs.fieldsObj"
-                    :items="methodologicalTableRefs.items"
-                    :busy="methodologicalTableRefsTableSettings.isBusy">
-                    <template
-                      v-slot:cell(authors)="data">
-                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                    </template>
-                    <template
-                      v-slot:cell(actions)="data"
-                      v-if="methodologicalTableRefs.fields.length > 2">
-                      <b-button
-                        block
-                        variant="outline-success"
-                        @click="addDataMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index)">
-                        <font-awesome-icon
-                          icon="edit"></font-awesome-icon>
-                      </b-button>
-                      <b-button
-                        block
-                        variant="outline-danger"
-                        @click="removeItemMethodological((methodologicalTableRefsTableSettings.currentPage > 1) ? (methodologicalTableRefsTableSettings.perPage * (methodologicalTableRefsTableSettings.currentPage - 1)) + data.index : data.index, data.item.ref_id)">
-                        <font-awesome-icon
-                          icon="trash"></font-awesome-icon>
-                      </b-button>
-                    </template>
-                    <template v-slot:table-busy>
-                      <div class="text-center text-danger my-2">
-                        <b-spinner class="align-middle"></b-spinner>
-                        <strong>Loading...</strong>
-                      </div>
-                    </template>
-                  </b-table>
-                </b-col>
+              <crudTables
+                type="isoqf_assessments"
+                :checkPermissions="checkPermissions()"
+                :project="project"
+                :ui="ui"
+                :references="references"
+                :refs="refs"
+                :lists="lists"
+                @get-project="getProject"
+                @print-errors="printErrors"
+                @updateDataTable="updateDataTable"
+                ></crudTables>
 
-                <b-col
-                  cols="12">
-                  <b-pagination
-                    v-if="methodologicalTableRefs.items.length && methodologicalTableRefs.items.length > methodologicalTableRefsTableSettings.perPage"
-                    align="center"
-                    v-model="methodologicalTableRefsTableSettings.currentPage"
-                    :total-rows="methodologicalTableRefs.items.length"
-                    :per-page="methodologicalTableRefsTableSettings.perPage"
-                    aria-controls="chars-of-studies-table">
-                  </b-pagination>
-                </b-col>
-
-                <b-col
-                  cols="12">
-                  <back-to-top></back-to-top>
-                </b-col>
-              </b-row>
-
-              <b-modal
-                size="xl"
-                id="open-methodological-table-modal"
-                ref="open-methodological-table-modal"
-                scrollable
-                :ok-disabled="(methodologicalFieldsModal.fields.length)?((methodologicalFieldsModal.fields[0].length)?false:true):true"
-                @ok="saveMethodologicalFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <template v-slot:modal-title>
-                  <videoHelp txt="Column Headers" tag="none" urlId="449764545"></videoHelp>
-                </template>
-                  <p class="font-weight-light">
-                    Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
-                  </p>
-                  <b-form-group
-                    label="Number of columns">
-                    <b-form-input
-                      id="nro-columns"
-                      v-model="methodologicalFieldsModal.nroColumns"
-                      type="number" min="1" max="10"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    v-for="cnt in parseInt(methodologicalFieldsModal.nroColumns)"
-                    :key="cnt"
-                    :label="`Column #${cnt}`">
-                    <b-input-group>
-                      <b-form-input
-                        :id="`column_${cnt}`"
-                        v-model="methodologicalFieldsModal.fields[cnt - 1]"
-                        type="text"></b-form-input>
-                      <b-input-group-append
-                        v-if="methodologicalTableRefs.id">
-                        <b-button
-                          variant="outline-danger"
-                          @click="deleteFieldFromMethodological(index)">
-                          <font-awesome-icon
-                            icon="trash"></font-awesome-icon>
-                        </b-button>
-                      </b-input-group-append>
-                    </b-input-group>
-                  </b-form-group>
-              </b-modal>
-
-              <b-modal
-                size="xl"
-                id="open-methodological-table-modal-edit"
-                ref="open-methodological-table-modal-edit"
-                scrollable
-                :ok-disabled="(methodologicalFieldsModalEdit.fields.length)?((methodologicalFieldsModalEdit.fields[0].label.length)?false:true):false"
-                @ok="updateMethodologicalFields"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <template v-slot:modal-title>
-                  <videoHelp txt="Edit column headers" tag="none" urlId="449764545"></videoHelp>
-                </template>
-                  <p class="font-weight-light">
-                    Column headings correspond to the quality assessment criteria of the appraisal tool you used - e.g CASP - was there a clear statement of the aims of the research? (column 1), is a qualitative methodology appropriate? (column 2), etc
-                  </p>
-                  <draggable v-model="methodologicalFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
-                    <b-form-group
-                      v-for="(field, index) in methodologicalFieldsModalEdit.fields"
-                      :key="index"
-                      :label="`Column #${index}`">
-                      <b-input-group
-                        v-if="methodologicalFieldsModalEdit.fields.length">
-                        <b-form-input
-                          :id="`column_${index}`"
-                          v-model="field.label"
-                          type="text"></b-form-input>
-                        <b-input-group-append>
-                          <b-button
-                            v-if="methodologicalFieldsModalEdit.fields.length > 1"
-                            :id="`drag-button-meth-${index}`"
-                            variant="outline-secondary"
-                            v-b-tooltip
-                            title="Drag to sort">
-                            <font-awesome-icon
-                              icon="arrows-alt"></font-awesome-icon>
-                          </b-button>
-                          <b-button
-                            variant="outline-danger"
-                            @click="deleteFieldFromMethodological(index)">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                          </b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </draggable>
-                  <b-button
-                    class="mb-2"
-                    @click="methodologicalNewColumn"
-                    variant="outline-success">
-                    Add new column
-                  </b-button>
-              </b-modal>
-
-              <b-modal
-                size="xl"
-                ref="edit-methodological-data"
-                title="Edit data"
-                scrollable
-                @ok="saveDataMethodological"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-form-group
-                  v-for="field of methodologicalTableRefs.fields"
-                  :key="field.id"
-                  :label="field.label">
-                  <b-form-input
-                    :disabled="(field.key === 'ref_id' || field.key === 'authors') ? true : false"
-                    v-if="field.key === 'ref_id' || field.key === 'authors'"
-                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"></b-form-input>
-                  <b-form-textarea
-                    v-if="field.key !== 'ref_id' && field.key !== 'authors'"
-                    v-model="methodologicalFieldsModal.items[methodologicalFieldsModal.selected_item_index][field.key]"
-                    rows="2"
-                    max-rows="100"
-                    placeholder="Enter both your assessment and the explanation for your assessment here"></b-form-textarea>
-                </b-form-group>
-              </b-modal>
-
-              <b-modal
-                size="xl"
-                ref="removeReferenceModalMethodological"
-                title="Remove content"
-                ok-title="Confirm"
-                ok-variant="outline-danger"
-                cancel-variant="outline-success"
-                @cancel="cleanRemoveReferenceMethodological"
-                @ok="removeDataContentMethodological">
-                <p>Are you sure you want to delete all the content for this row?</p>
-                <p
-                  v-if="removeReferenceMethodological.findings.length === 0">
-                  <b>No findings will be affected</b>
-                </p>
-                <p
-                  v-if="removeReferenceMethodological.findings.length">
-                  <b>Findings that will be affected</b>
-                  <ul>
-                    <li v-for="(finding, index) in removeReferenceMethodological.findings" :key="index">
-                      {{ `finding # ${finding}`}}
-                    </li>
-                  </ul>
-                </p>
-              </b-modal>
-
-              <b-modal
-                :no-close-on-backdrop="true"
-                :no-close-on-esc="true"
-                ok-title="Save"
-                cancel-title="Close"
-                size="xl"
-                id="import-methodological-table"
-                ref="import-methodological-table">
-                <template v-slot:modal-title>
-                  <videoHelp txt="Import table" tag="none" urlId="451099168"></videoHelp>
-                </template>
-                <b-alert show variant="danger">
-                  <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
-                </b-alert>
-                <p
-                  class="font-weight-light">
-                  To upload a table, follow these steps:
-                </p>
-                <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
-                <p
-                  class="text-danger">
-                  <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
-                </p>
-                <p class="text-danger">
-                  <b>If you have problems with the template this may be due to the version of Excel you are using or your settings. We recommend you work on the table in Google Sheets (Gdrive)</b>
-                </p>
-                <p
-                  class="text-danger">
-                  <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
-                </p>
-                <b-button
-                  variant="info"
-                  @click="generateTemplate">
-                  Download template
-                </b-button>
-                <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
-                <b-form-file
-                  id="input-template-methodological-file"
-                  ref="import-meth-table-file"
-                  plain
-                  @change="loadTableImportData($event)"></b-form-file>
-                <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
-                <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-                <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-451099168`'>See help video</a> for support.</p>
-                <b-alert
-                  variant="info"
-                  :show="importDataTable.error !== null">
-                  {{ importDataTable.error }}
-                </b-alert>
-                <b-table
-                  v-if="importDataTable.items.length"
-                  responsive
-                  :fields="importDataTable.fieldsObj"
-                  :items="importDataTable.items"></b-table>
-                <template v-slot:modal-footer>
-                    <b-button
-                      variant="outline-secondary"
-                      @click="cleanVars('close', 'modal-meth')">Cancel</b-button>
-                    <b-button
-                      variant="outline-info"
-                      :disabled="!importDataTable.items.length"
-                      @click="cleanVars('meth')">Reject</b-button>
-                    <b-button
-                      variant="outline-success"
-                      :disabled="!importDataTable.items.length"
-                      @click="saveImportedData('isoqf_assessments')">Save</b-button>
-                  </template>
-              </b-modal>
             </b-col>
           </b-row>
           <b-row
@@ -1323,10 +1011,7 @@
 <script>
 import axios from 'axios'
 import draggable from 'vuedraggable'
-// import parser from '../../plugins/parser'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
-import Papa from 'papaparse'
-const ExportCSV = require('export-to-csv').ExportToCsv
 
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
@@ -1348,7 +1033,8 @@ export default {
     propertiesProject,
     UploadReferences,
     InclusionExclusioCriteria,
-    CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue')
+    CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
+    crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue')
   },
   data () {
     return {
@@ -1514,29 +1200,11 @@ export default {
           { key: 'authors', label: 'Author(s), Year' }
         ]
       },
-      charsOfStudiesTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
       tabOpened: 1,
       yes_or_no: [
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
       ],
-      pre_ImportDataTable: '',
-      importDataTable: {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      },
-      removeReferenceCharsOfStudies: {
-        id: null,
-        findings: []
-      },
       methodologicalTableRefs: {
         fields: [],
         items: [],
@@ -1559,10 +1227,6 @@ export default {
       methodologicalFieldsModalEdit: {
         nroColumns: 1,
         fields: []
-      },
-      removeReferenceMethodological: {
-        id: null,
-        findings: []
       },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
@@ -1590,59 +1254,6 @@ export default {
       printableItems: []
     }
   },
-  watch: {
-    pre_ImportDataTable: function (data) {
-      let fields = []
-      let items = []
-      const csvData = Papa.parse(data, { skipEmptyLines: true })
-      this.importDataTable.error = null
-      if (csvData.data.length) {
-        if (csvData.data[0].length < 3) {
-          this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
-        } else {
-          for (let cnt in csvData.data) {
-            if (parseInt(cnt) === 0) {
-              let cntI = 0
-              for (let i in csvData.data[cnt]) {
-                let obj = {}
-                if (parseInt(i) === 0) {
-                  obj.key = 'ref_id'
-                }
-                if (parseInt(i) === 1) {
-                  obj.key = 'authors'
-                }
-                if (parseInt(i) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
-                  obj.key = 'column_' + cntI
-                  cntI++
-                }
-                obj.label = csvData.data[cnt][i]
-                fields.push(obj)
-              }
-            } else {
-              let cntI = 0
-              let obj = {}
-              for (let i in csvData.data[cnt]) {
-                if (parseInt(i) === 0) {
-                  obj.ref_id = csvData.data[cnt][i]
-                }
-                if (parseInt(i) === 1) {
-                  obj.authors = csvData.data[cnt][i]
-                }
-                if (parseInt(i) > 1) {
-                  obj[`column_${cntI}`] = csvData.data[cnt][i]
-                  cntI++
-                }
-              }
-              items.push(obj)
-            }
-          }
-        }
-      }
-      this.importDataTable.fields = fields
-      this.importDataTable.items = items
-    }
-  },
   mounted () {
     console.log('mounted')
     this.getListCategories()
@@ -1651,10 +1262,11 @@ export default {
     this.getProject()
   },
   methods: {
-    fillCharsOfStudies: function (data, dataModal = {}) {
-      this.charsOfStudies = data
-      if (Object.keys(dataModal).length > 0) {
-        this.charsOfStudiesFieldsModal = dataModal
+    updateDataTable: function (data, type) {
+      if (type === 'isoqf_assessments') {
+        this.methodologicalTableRefs = data
+      } else {
+        this.charsOfStudies = data
       }
     },
     CallEpisteReponse: function (status) {
@@ -1688,13 +1300,6 @@ export default {
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
-    },
-    getReferenceInfo: function (refId) {
-      for (let ref of this.refs) {
-        if (ref.id === refId) {
-          return ref.content
-        }
-      }
     },
     changeMode: function (mode) {
       this.mode = mode
@@ -1732,39 +1337,6 @@ export default {
       } else {
         return ''
       }
-    },
-    EpisteRequest: function () {
-      // document.getElementById('btnEpisteRequest').disabled = true
-      this.btnSearchPubMed = true
-      this.episte_loading = true
-      this.episte_error = false
-      this.episte_response = []
-      const allLines = this.episte_request.split(/\r\n|\n/)
-      allLines.forEach((line, index) => {
-        const instance = axios.create({
-          withCredentials: true,
-          headers: {
-            'Authorization': 'Token token="bcd43ca4789d1d52b28a288828d738c2"'
-          }
-        })
-
-        instance.get(`https://api.epistemonikos.org/v1/documents/${line}?show=relations`)
-          .then((response) => {
-            let obj = {}
-            obj.citation = response.data.citation
-            obj.content = response.data.content
-            this.episte_response.push(obj)
-            // document.getElementById('btnEpisteRequest').disabled = false
-            this.btnSearchPubMed = false
-            this.episte_loading = false
-          }).catch((error) => {
-            this.episte_loading = false
-            this.episte_error = true
-            // document.getElementById('btnEpisteRequest').disabled = false
-            this.btnSearchPubMed = false
-            this.printErrors(error)
-          })
-      })
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
@@ -2375,108 +1947,6 @@ export default {
           }
         })
     },
-    generateTemplate: function () {
-      // const _references = JSON.parse(JSON.stringify(this.references))
-      const BOM = '\uFEFF'
-      const _refs = JSON.parse(JSON.stringify(this.refs))
-      let csvContent = 'data:text/csv;charset=utf-8,' + BOM
-      csvContent += '"Reference ID","Author(s), Year"' + '\r\n'
-
-      for (let ref of _refs) {
-        // csvContent += ref.id + ',' + '"' + this.parseReference(ref, true, false) + '"' + '\r\n'
-        csvContent += ref.id + ',' + '"' + ref.content.split(';')[0] + '"' + '\r\n'
-      }
-
-      let encodedUri = encodeURI(csvContent)
-      let link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
-      link.setAttribute('download', 'my_data.csv')
-      document.body.appendChild(link)
-
-      link.click()
-    },
-    loadTableImportData: function (event) {
-      const file = event.target.files[0]
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.pre_ImportDataTable = e.target.result
-      }
-      reader.readAsText(file)
-    },
-    saveImportedData: function (endpoint = '') {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        fields: this.importDataTable.fields,
-        items: this.importDataTable.items
-      }
-      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
-        if (endpoint === 'isoqf_characteristics') {
-          this.charsOfStudiesTableSettings.isBusy = true
-          if (this.charsOfStudies.items.length) {
-            this.cleanImportedData(this.charsOfStudies.id, endpoint, params)
-          } else {
-            this.insertImportedData(endpoint, params)
-          }
-        }
-        if (endpoint === 'isoqf_assessments') {
-          this.methodologicalTableRefsTableSettings.isBusy = true
-          if (this.methodologicalTableRefs.items.length) {
-            this.cleanImportedData(this.methodologicalTableRefs.id, endpoint, params)
-          } else {
-            this.insertImportedData(endpoint, params)
-          }
-        }
-      }
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-    },
-    cleanVars: function (str = '', modal) {
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-      if (str === 'chars') {
-        this.$refs['import-chars-table-file'].reset()
-      }
-      if (str === 'meth') {
-        this.$refs['import-meth-table-file'].reset()
-      }
-      if (str === 'close') {
-        const _modal = (modal === 'modal-chars') ? 'import-characteristics-table' : 'import-methodological-table'
-        this.$refs[_modal].hide()
-      }
-    },
-    cleanImportedData: function (id = '', endpoint = '', params = {}) {
-      console.log('cleanImportedData', id, endpoint, params)
-      axios.delete(`/api/${endpoint}/${id}`)
-        .then(() => {
-          this.pre_ImportDataTable = ''
-          this.insertImportedData(endpoint, params)
-        })
-    },
-    insertImportedData: function (endpoint = '', params = {}) {
-      console.log('insertImportedData', endpoint, params)
-      axios.post(`/api/${endpoint}/`, params)
-        .then(() => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     openModcontent: function (edit = false) {
       let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
       let fields = []
@@ -2495,232 +1965,6 @@ export default {
         this.methodologicalFieldsModal.fields = fields
         this.$refs['open-methodological-table-modal'].show()
       }
-    },
-    saveMethodologicalFields: function () {
-      this.methodologicalTableRefsTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
-      let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
-      params.items = []
-
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
-      }
-      params.organization = this.$route.params.org_id
-      params.project_id = this.$route.params.id
-      params.nro_of_fields = fields.length
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      for (let r of references) {
-        let objItem = {}
-        for (let cnt in fields) {
-          objItem['column_' + cnt] = ''
-        }
-        objItem.ref_id = r.id
-        objItem.authors = this.getAuthorsFormat(r.authors, r.publication_year)
-        params.items.push(objItem)
-      }
-
-      if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'id')) {
-        axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-          .then(() => {
-            this.getMethodological()
-          }).catch((error) => {
-            console.log('error: ', error)
-          })
-      } else {
-        axios.post('/api/isoqf_assessments', params)
-          .then(() => {
-            this.getProject()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
-    methodologicalNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      this.methodologicalFieldsModalEdit.nroColumns = fields.length + 1
-      column = parseInt(this.methodologicalFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
-      this.methodologicalFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
-    },
-    updateMethodologicalFields: function () {
-      this.methodologicalTableRefsTableSettings.isBusy = true
-      let params = {}
-      let fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      params.is_public = isPublic
-
-      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-          }
-        }
-      }
-
-      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then(() => {
-          this.getMethodological()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    deleteFieldFromMethodological: function (index) {
-      let params = {}
-      const _fields = JSON.parse(JSON.stringify(this.methodologicalFieldsModalEdit.fields))
-      const _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-
-      let removedField = _fields.splice(index, 1)[0]
-
-      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      for (let item of _items) {
-        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
-          delete item[removedField.key]
-        }
-      }
-
-      params.fields = _fields
-      params.items = _items
-
-      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then((response) => {
-          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
-          const excluded = ['ref_id', 'authors', 'actions']
-          let editFields = []
-          for (let field of _fields) {
-            if (!excluded.includes(field.key)) {
-              editFields.push(field)
-            }
-          }
-
-          this.methodologicalFieldsModalEdit.fields = editFields
-          this.methodologicalFieldsModalEdit.nroColumns = editFields.length
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    addDataMethodological: function (index = 0) {
-      let items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-
-      this.methodologicalFieldsModal.items = items
-      this.methodologicalFieldsModal.selected_item_index = index
-      this.$refs['edit-methodological-data'].show()
-    },
-    saveDataMethodological: function () {
-      let params = {}
-      const id = this.methodologicalTableRefs.id
-      params.items = this.methodologicalFieldsModal.items
-
-      axios.patch(`/api/isoqf_assessments/${id}`, params)
-        .then(() => {
-          this.getProject()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    removeItemMethodological: function (index, id) {
-      this.removeReferenceMethodological = {
-        id: null,
-        findings: []
-      }
-      let lists = JSON.parse(JSON.stringify(this.lists))
-
-      this.removeReferenceMethodological.id = id
-      this.removeReferenceMethodological.index = index
-
-      for (let list of lists) {
-        for (let ref of list.references) {
-          if (id === ref) {
-            this.removeReferenceMethodological.findings.push(list.isoqf_id)
-          }
-        }
-      }
-      this.$refs['removeReferenceModalMethodological'].show()
-    },
-    cleanRemoveReferenceMethodological: function () {
-      this.removeReferenceMethodological = {
-        id: null,
-        findings: []
-      }
-    },
-    removeDataContentMethodological: function () {
-      const index = this.removeReferenceMethodological.index
-      let _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-      let params = {}
-      let cnt = 0
-      let items = []
-      let _keys = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-      let keys = []
-      for (let k of _keys) {
-        keys.push(k.key)
-      }
-
-      for (let item of _items) {
-        if (cnt === index) {
-          let obj = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-        cnt++
-      }
-
-      params.items = items
-
-      axios.patch(`/api/isoqf_assessments/${this.methodologicalTableRefs.id}`, params)
-        .then(() => {
-          this.getMethodological()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
     },
     editModalFindingName: function (data) {
       this.editFindingName.index = data.index
@@ -2969,61 +2213,6 @@ export default {
       this.modal_edit_list_categories.index = null
       this.modal_edit_list_categories.id = null
     },
-    exportTableToCSV: function (type) {
-      const _types = ['chars_of_studies', 'meth_assessments']
-      let _headers = []
-      let headers = []
-      let _items = []
-      let items = []
-
-      if (_types.indexOf(type) !== -1) {
-        switch (type) {
-          case 'chars_of_studies':
-            _headers = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-            _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
-            break
-          case 'meth_assessments':
-            _headers = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-            _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-            break
-          default:
-            _headers = []
-            _items = []
-            break
-        }
-
-        let keys = []
-        for (let f of _headers) {
-          if (f.key !== 'ref_id' && f.key !== 'id') {
-            headers.push('"' + f.label + '"')
-            keys.push(f.key)
-          }
-        }
-
-        for (let i of _items) {
-          let item = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-              item[keys[k]] = i[keys[k]]
-            } else {
-              item[keys[k]] = ''
-            }
-          }
-          items.push(item)
-        }
-      }
-      const options = {
-        filename: type,
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
-    },
     updateLists: function (deletedCategoryValue) {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _request = []
@@ -3228,59 +2417,6 @@ export default {
           this.printErrors(error)
         })
     }
-    // updateMyDataTables: function () {
-    //   let _itemsChars = []
-    //   let _itemsMeth = []
-
-    //   axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-    //     .then((response) => {
-    //       if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-    //         let _items = response.data[0].items
-    //         let _itemsChecks = []
-    //         for (let item of _items) {
-    //           _itemsChecks.push(item.ref_id)
-    //         }
-    //         for (let reference of this.references) {
-    //           if (!_itemsChecks.includes(reference.id)) {
-    //             _itemsChars.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-    //           }
-    //         }
-    //         _items.push(..._itemsChars)
-    //         let params = {
-    //           items: _items
-    //         }
-    //         axios.patch(`/api/isoqf_characteristics/${response.data[0].id}`, params)
-    //           .then(() => {
-    //             console.log('updateMyDataTables', 'getChars')
-    //             // this.getCharacteristics()
-    //           })
-    //       }
-    //     })
-
-    //   axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-    //     .then((response) => {
-    //       if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-    //         let _items = response.data[0].items
-    //         let _itemsChecks = []
-    //         for (let item of _items) {
-    //           _itemsChecks.push(item.ref_id)
-    //         }
-    //         for (let reference of this.references) {
-    //           if (!_itemsChecks.includes(reference.id)) {
-    //             _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-    //           }
-    //         }
-    //         _items.push(..._itemsMeth)
-    //         let params = {
-    //           items: _items
-    //         }
-    //         axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
-    //           .then(() => {
-    //             this.getMethodological()
-    //           })
-    //       }
-    //     })
-    // }
   },
   computed: {
     title: function () {
