@@ -677,6 +677,7 @@ export default {
       if (!refId) return
       const lists = JSON.parse(JSON.stringify(this.lists))
       const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
       let objs = []
       let requests = []
 
@@ -708,6 +709,21 @@ export default {
         }
       }
 
+      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+        if (_assessments.items.length) {
+          let items = []
+
+          for (const item of _assessments.items) {
+            if (item.ref_id !== refId) {
+              items.push(item)
+            }
+          }
+          _assessments.items = items
+
+          requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
+        }
+      }
+
       for (let o of objs) {
         requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
       }
@@ -718,11 +734,8 @@ export default {
 
       axios.delete(`/api/isoqf_references/${refId}`)
         .then(() => {
-          console.log('confirmRemoveReferenceById ==> CallGetReferences(false)')
           this.$emit('CallGetReferences', false)
-          console.log('confirmRemoveReferenceById ==> openModalReferencesSingle(false)')
           this.openModalReferencesSingle(false)
-          console.log('confirmRemoveReferenceById ==> CallGetProject')
           this.$emit('CallGetProject')
         })
     },
