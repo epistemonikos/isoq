@@ -863,7 +863,7 @@ export default {
       const csvExporter = new ExportCSV(options)
       csvExporter.generateCsv(items)
     },
-    saveImportedData: function (endpoint = '') {
+    saveImportedData: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
@@ -874,7 +874,7 @@ export default {
         if (this.dataTable.items.length) {
           this.cleanImportedData(this.dataTable.id, this.type, params)
         } else {
-          this.insertImportedData(endpoint, params)
+          this.insertImportedData(params)
         }
       }
       this.importDataTable = {
@@ -898,11 +898,12 @@ export default {
           this.$emit('print-errors', error)
         })
     },
-    insertImportedData: function (endpoint = '', params = {}) {
-      if (!endpoint) return
-      axios.post(`/api/${endpoint}/`, params)
+    insertImportedData: function (params = {}) {
+      if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
+        return
+      }
+      axios.post(`/api/${this.type}/`, params)
         .then(() => {
-          // this.$emit('get-project')
           this.getData()
           this.$refs[`import-table-${this.type}`].hide()
         })
