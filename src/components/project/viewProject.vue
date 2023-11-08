@@ -1255,7 +1255,6 @@ export default {
     }
   },
   mounted () {
-    console.log('mounted')
     this.getListCategories()
     this.getReferences()
     this.openModalReferencesSingle(false)
@@ -1273,7 +1272,6 @@ export default {
       this.episte_response = status
     },
     CallGetReferences: function (status) {
-      console.log('call get references', status)
       this.getReferences(status)
     },
     statusLoadReferences: function (status) {
@@ -1373,7 +1371,6 @@ export default {
             this.project.exclusion = ''
           }
           this.ui.project.show_criteria = true
-          console.log('get project')
           this.getLists() // summary review
           // this.getCharacteristics()
           this.getMethodological()
@@ -1677,8 +1674,6 @@ export default {
             }
           }
           this.loadReferences = false
-          // this.updateMyDataTables()
-          console.log('get references')
         })
         .catch((error) => {
           this.printErrors(error)
