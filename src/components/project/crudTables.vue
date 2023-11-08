@@ -492,7 +492,6 @@ export default {
   methods: {
     getData: function () {
       this.dataTableSettings.isBusy = true
-      console.log('getData')
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -572,7 +571,6 @@ export default {
       this.$refs['open-dataTable-modal-edit'].show()
     },
     saveDataTableFields: function () {
-      console.log('saveDataTableFields')
       this.dataTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
@@ -619,7 +617,7 @@ export default {
             this.$emit('get-project')
             this.dataTableSettings.isBusy = false
           }).catch((error) => {
-            console.log('error: ', error)
+            this.$emit('print-errors', error)
           })
       } else {
         axios.post(`/api/${this.type}`, params)
@@ -946,31 +944,10 @@ export default {
             }
             axios.patch(`/api/${this.type}/${charId}`, params)
               .then(() => {
-                console.log('patched')
                 this.getData()
               })
           }
         })
-
-      // axios.get(`/api/isoqf_assessments`, {params})
-      //   .then((response) => {
-      //     if (!response.data.length) {
-      //       return
-      //     }
-      //     const responseDataM = JSON.parse(JSON.stringify(response.data[0]))
-      //     const methId = responseDataM.id
-
-      //     if (responseDataM.items.length) {
-      //       let _items = this.processItems(responseDataM.items)
-      //       let params = {
-      //         items: _items
-      //       }
-      //       axios.patch(`/api/isoqf_assessments/${methId}`, params)
-      //         .then(() => {
-      //           this.getData()
-      //         })
-      //     }
-      //   })
     },
     processItems: function (dataItems) {
       let items = JSON.parse(JSON.stringify(dataItems))
