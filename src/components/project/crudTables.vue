@@ -815,6 +815,9 @@ export default {
     },
     loadTableImportData: function (event) {
       const file = event.target.files[0]
+      if (!file) {
+        return
+      }
       const reader = new FileReader()
       reader.onload = (e) => {
         this.pre_ImportDataTable = e.target.result
