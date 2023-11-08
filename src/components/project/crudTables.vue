@@ -330,7 +330,7 @@
         <template v-slot:modal-footer>
           <b-button
             variant="outline-secondary"
-            @click="cleanVars()">Close</b-button>
+            @click="cleanVars(true)">Close</b-button>
           <b-button
             variant="outline-info"
             :disabled="!importDataTable.items.length"
@@ -824,7 +824,7 @@ export default {
       }
       reader.readAsText(file)
     },
-    cleanVars: function () {
+    cleanVars: function (isCancel = false) {
       this.importDataTable = {
         error: null,
         fields: [],
@@ -835,7 +835,9 @@ export default {
       }
       this.pre_ImportDataTable = ''
       this.$refs['import-file'].reset()
-      this.$refs[`import-table-${this.type}`].hide()
+      if (isCancel) {
+        this.$refs[`import-table-${this.type}`].hide()
+      }
     },
     openModalImportTable: function () {
       this.$refs[`import-table-${this.type}`].show()
