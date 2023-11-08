@@ -1379,152 +1379,26 @@ export default {
           this.printErrors(error)
         })
     },
-    getLists: function (id = null) {
+    getLists: function (id = null, resort = false) {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.get('/api/isoqf_lists', { params })
         .then((response) => {
-          let data = JSON.parse(JSON.stringify(response.data))
-          data.sort(function (a, b) {
-            if (a.sort < b.sort) { return -1 }
-            if (a.sort > b.sort) { return 1 }
-            return 0
-          })
-          if (data.length) {
-            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
-            for (let list of data) {
-              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
-                list.status = 'unfinished'
-                list.explanation = 'without_explanation'
-              } else {
-                list.status = 'completed'
-                list.explanation = 'with_explanation'
-                if (list.evidence_profile.cerqual.option === null) {
-                  list.status = 'unfinished'
-                }
-                if (list.evidence_profile.cerqual.explanation === '') {
-                  list.explanation = 'without_explanation'
-                }
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
-                list.references = []
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
-                list.notes = ''
-              }
-              if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
-                list.category = null
-              } else {
-                list.category_name = ''
-                list.category_extra_info = ''
-                if (this.list_categories.options.length) {
-                  for (let category of this.list_categories.options) {
-                    if (list.category === category.id) {
-                      list.category_name = category.text
-                      list.category_extra_info = category.extra_info
-                    }
-                  }
-                }
-              }
-              list.cerqual_option = ''
-              if (list.cerqual.option != null) {
-                list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
-              }
-              list.filter_cerqual = ''
-              switch (list.cerqual_option) {
-                case 'High confidence':
-                  list.filter_cerqual = 'hc'
-                  break
-                case 'Moderate confidence':
-                  list.filter_cerqual = 'mc'
-                  break
-                case 'Low confidence':
-                  list.filter_cerqual = 'lc'
-                  break
-                case 'Very low confidence':
-                  list.filter_cerqual = 'vc'
-                  break
-                default:
-                  list.filter_cerqual = ''
-                  break
-              }
-              list.cerqual_explanation = list.cerqual.explanation
-              list.ref_list = ''
-              list.raw_ref = []
-              for (let r of this.references) {
-                for (let ref of list.references) {
-                  if (ref === r.id) {
-                    list.ref_list = list.ref_list + this.parseReference(r, true)
-                    list.raw_ref.push(r)
-                  }
-                }
-              }
-              this.getFinding(this.$route.params.org_id, list.id)
-            }
-
-            if (this.list_categories.options.length) {
-              let categories = []
-
-              for (let category of this.list_categories.options) {
-                if (category.id !== null) {
-                  categories.push({'name': category.text, 'id': category.id, 'value': category.id, 'items': [], is_category: true})
-                }
-              }
-              categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
-
-              for (let list of data) {
-                if (categories.length) {
-                  for (let category of categories) {
-                    if (category.value === list.category) {
-                      category.items.push(
-                        {
-                          'id': list.id,
-                          'isoqf_id': list.isoqf_id,
-                          'name': list.name,
-                          'cerqual_option': list.cerqual_option,
-                          'filter_cerqual': list.filter_cerqual,
-                          'cerqual_explanation': list.cerqual_explanation,
-                          'ref_list': list.ref_list,
-                          'sort': list.sort,
-                          'notes': list.notes,
-                          'evidence_profile': list.evidence_profile,
-                          'references': list.references,
-                          'cnt': 0
-                        }
-                      )
-                    }
-                  }
-                }
-              }
-              let _items = []
-              let cnt = 1
-              for (const cat of categories) {
-                if (cat.items.length) {
-                  _items.push(cat)
-                  for (const _item of cat.items) {
-                    _item.cnt = cnt
-                    _items.push(_item)
-                    cnt++
-                  }
-                }
-              }
-
-              this.lists_print_version = _items
-            } else {
-              this.lists_print_version = data
-            }
-
-            for (let items of this.lists_print_version) {
-              this.printableItems.push(items.id)
-            }
-          }
-          this.lists = data
-          this.table_settings.isBusy = false
-          this.table_settings.totalRows = data.length
+          this.lists = this.processLists(response)
+          this.table_settings.totalRows = this.lists.length
           if (id) {
             this.$router.push({hash: `a-${id}`})
+          }
+          if (resort) {
+            let cnt = 1
+            for (const list of this.lists) {
+              this.updateFindingSort(list.id, cnt)
+              cnt++
+            }
+          } else {
+            this.table_settings.isBusy = false
           }
           if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
             this.$router.push({hash: `${this.$route.query.hash}`})
@@ -1533,6 +1407,143 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    processLists: function (response) {
+      let data = JSON.parse(JSON.stringify(response.data))
+      data.sort(function (a, b) {
+        if (a.sort < b.sort) { return -1 }
+        if (a.sort > b.sort) { return 1 }
+        return 0
+      })
+      if (data.length) {
+        this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
+        for (let list of data) {
+          if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+            list.status = 'unfinished'
+            list.explanation = 'without_explanation'
+          } else {
+            list.status = 'completed'
+            list.explanation = 'with_explanation'
+            if (list.evidence_profile.cerqual.option === null) {
+              list.status = 'unfinished'
+            }
+            if (list.evidence_profile.cerqual.explanation === '') {
+              list.explanation = 'without_explanation'
+            }
+          }
+          if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
+            list.references = []
+          }
+          if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
+            list.notes = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
+            list.category = null
+          } else {
+            list.category_name = ''
+            list.category_extra_info = ''
+            if (this.list_categories.options.length) {
+              for (let category of this.list_categories.options) {
+                if (list.category === category.id) {
+                  list.category_name = category.text
+                  list.category_extra_info = category.extra_info
+                }
+              }
+            }
+          }
+          list.cerqual_option = ''
+          if (list.cerqual.option != null) {
+            list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+          }
+          list.filter_cerqual = ''
+          switch (list.cerqual_option) {
+            case 'High confidence':
+              list.filter_cerqual = 'hc'
+              break
+            case 'Moderate confidence':
+              list.filter_cerqual = 'mc'
+              break
+            case 'Low confidence':
+              list.filter_cerqual = 'lc'
+              break
+            case 'Very low confidence':
+              list.filter_cerqual = 'vc'
+              break
+            default:
+              list.filter_cerqual = ''
+              break
+          }
+          list.cerqual_explanation = list.cerqual.explanation
+          list.ref_list = ''
+          list.raw_ref = []
+          for (let r of this.references) {
+            for (let ref of list.references) {
+              if (ref === r.id) {
+                list.ref_list = list.ref_list + this.parseReference(r, true)
+                list.raw_ref.push(r)
+              }
+            }
+          }
+          this.getFinding(this.$route.params.org_id, list.id)
+        }
+
+        if (this.list_categories.options.length) {
+          let categories = []
+
+          for (let category of this.list_categories.options) {
+            if (category.id !== null) {
+              categories.push({'name': category.text, 'id': category.id, 'value': category.id, 'items': [], is_category: true})
+            }
+          }
+          categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
+
+          for (let list of data) {
+            if (categories.length) {
+              for (let category of categories) {
+                if (category.value === list.category) {
+                  category.items.push(
+                    {
+                      'id': list.id,
+                      'isoqf_id': list.isoqf_id,
+                      'name': list.name,
+                      'cerqual_option': list.cerqual_option,
+                      'filter_cerqual': list.filter_cerqual,
+                      'cerqual_explanation': list.cerqual_explanation,
+                      'ref_list': list.ref_list,
+                      'sort': list.sort,
+                      'notes': list.notes,
+                      'evidence_profile': list.evidence_profile,
+                      'references': list.references,
+                      'cnt': 0
+                    }
+                  )
+                }
+              }
+            }
+          }
+          let _items = []
+          let cnt = 1
+          for (const cat of categories) {
+            if (cat.items.length) {
+              _items.push(cat)
+              for (const _item of cat.items) {
+                _item.cnt = cnt
+                _items.push(_item)
+                cnt++
+              }
+            }
+          }
+
+          this.lists_print_version = _items
+        } else {
+          this.lists_print_version = data
+        }
+
+        for (let items of this.lists_print_version) {
+          this.printableItems.push(items.id)
+        }
+      }
+      return data
     },
     getFinding: function (orgId, listId) {
       const params = {
@@ -2051,23 +2062,26 @@ export default {
         })
     },
     confirmRemoveList: function () {
+      this.table_settings.isBusy = true
       const index = this.editFindingName.index
       const _list = JSON.parse(JSON.stringify(this.lists[index]))
       axios.delete(`/api/isoqf_lists/${_list.id}`)
         .then(() => {
-          this.confirmRemoveFinding(this.editFindingName.finding_id)
-          this.getLists()
+          this.confirmRemoveFinding()
         })
         .catch((error) => {
+          this.table_settings.isBusy = false
           this.printErrors(error)
         })
     },
-    confirmRemoveFinding: function (findingID) {
-      axios.delete(`/api/isoqf_findings/${findingID}`)
+    confirmRemoveFinding: function () {
+      const findingId = this.editFindingName.finding_id
+      axios.delete(`/api/isoqf_findings/${findingId}`)
         .then(() => {
-          this.deleteExtractedData(findingID)
+          this.deleteExtractedData(findingId)
         })
         .catch((error) => {
+          this.table_settings.isBusy = false
           this.printErrors(error)
         })
     },
@@ -2241,18 +2255,48 @@ export default {
       let requests = []
       this.table_settings.isBusy = true
       for (let list of this.sorted_lists) {
-        list.isoqf_id = cnt
-        list.sort = cnt
-        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, {'isoqf_id': cnt, 'sort': cnt}))
+        const params = {
+          'isoqf_id': cnt,
+          'sort': cnt
+        }
+        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
         cnt++
       }
 
-      axios.all(requests)
-        .then(axios.spread(() => {
-          this.getLists()
-        }))
+      Promise.all(requests)
+        .then((responses) => {
+          for (const response of responses) {
+            this.updateFindingSort(response.data.id, response.data.$set.sort)
+          }
+        })
         .catch((error) => {
+          this.table_settings.isBusy = false
           this.printErrors(error)
+        })
+    },
+    updateFindingSort: function (listId, sort, getList = true) {
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: listId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((reponse) => {
+          const findingId = reponse.data[0].id
+          const params = {
+            'isoqf_id': sort,
+            'evidence_profile.isoqf_id': sort
+          }
+          axios.patch(`/api/isoqf_findings/${findingId}`, params)
+            .then(() => {
+              if (getList) {
+                this.table_settings.isBusy = true
+                this.getLists()
+              }
+            })
+            .catch((error) => {
+              this.table_settings.isBusy = false
+              this.printErrors(error)
+            })
         })
     },
     getCategoryName: function (id) {
@@ -2315,13 +2359,15 @@ export default {
         .then((response) => {
           axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
             .then(() => {
-              this.getLists()
+              this.getLists(null, true)
             })
             .catch((error) => {
+              this.table_settings.isBusy = false
               this.printErrors(error)
             })
         })
         .catch((error) => {
+          this.table_settings.isBusy = false
           this.printErrors(error)
         })
     },
