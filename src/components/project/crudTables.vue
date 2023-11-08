@@ -486,7 +486,6 @@ export default {
       this.importDataTable.items = items
     },
     references () {
-      console.log('watch references')
       this.updateMyDataTables()
     }
   },
@@ -676,16 +675,31 @@ export default {
       let column = '0'
       const excluded = ['ref_id', 'authors', 'actions']
       if (_fields.length) {
-        for (let field of _fields) {
+        for (const field of _fields) {
           if (!excluded.includes(field.key)) {
             fields.push(field)
           }
         }
+        // sort fields by key
+        fields.sort((a, b) => {
+          if (a.key < b.key) {
+            return -1
+          }
+          if (a.key > b.key) {
+            return 1
+          }
+          return 0
+        })
         this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(this.dataTableFieldsModalEdit.fields[ fields.length - 1 ].key.split('_')[1]) + 1
+        column = parseInt(fields[ fields.length - 1 ].key.split('_')[1]) + 1
       }
 
-      this.dataTableFieldsModalEdit.fields.push({'key': 'column_' + column.toString(), 'label': ''})
+      this.dataTableFieldsModalEdit.fields.push(
+        {
+          'key': `column_${column.toString()}`,
+          'label': ''
+        }
+      )
     },
     getReferenceInfo: function (refId) {
       for (let ref of this.refs) {
