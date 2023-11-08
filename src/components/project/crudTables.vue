@@ -884,7 +884,7 @@ export default {
       }
       if (this.importDataTable.fields.length && this.importDataTable.items.length) {
         if (this.dataTable.items.length) {
-          this.cleanImportedData(this.dataTable.id, this.type, params)
+          this.cleanImportedData(this.dataTable.id, params)
         } else {
           this.insertImportedData(params)
         }
@@ -899,12 +899,11 @@ export default {
       }
       this.pre_ImportDataTable = ''
     },
-    cleanImportedData: function (id = '', endpoint = '', params = {}) {
-      if (!endpoint) return
-      axios.delete(`/api/${endpoint}/${id}`)
+    cleanImportedData: function (id = '', params = {}) {
+      axios.delete(`/api/${this.type}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
-          this.insertImportedData(endpoint, params)
+          this.insertImportedData(params)
         })
         .catch((error) => {
           this.$emit('print-errors', error)
