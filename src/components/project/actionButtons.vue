@@ -565,7 +565,7 @@ export default {
                     })
                   ]
                 }),
-                ...this.generateEvidenceProfileTable2(this.lists)
+                ...this.generateEvidenceProfileTable2()
               ]
             })
           ]
@@ -1154,7 +1154,16 @@ export default {
             return new TableRow({
               children: [
                 this.generateTableCell({
-                  width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT
+                  width_size: '40%',
+                  text: item.cnt,
+                  font_size: 22,
+                  align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '40%',
+                  text: item.name,
+                  font_size: 22,
+                  align: AlignmentType.LEFT
                 }),
                 new TableCell({
                   columnSpan: 5,
