@@ -312,7 +312,7 @@ export default {
               for (let list of this.lists) {
                 for (let ref of list.raw_ref) {
                   if (ref.id === value) {
-                    findings.push(`#${list.isoqf_id}`)
+                    findings.push(`#${list.cnt}`)
                   }
                 }
               }
@@ -335,7 +335,14 @@ export default {
       }
       reader.readAsText(file)
     },
-    saveReferences: function (from = '') {
+    requestsImportReferences: async function (ref) {
+      return axios({
+        method: 'POST',
+        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
+        data: ref
+      })
+    },
+    saveReferences: async function (from = '') {
       this.$emit('statusLoadReferences', true)
       let references = ''
       if (from === '') {
@@ -358,30 +365,23 @@ export default {
       for (let ref of references) {
         ref.organization = this.$route.params.org_id
         ref.project_id = this.$route.params.id
-        axiosArray.push = axios({
-          method: 'POST',
-          url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-          data: ref
-        })
+        axiosArray.push(await this.requestsImportReferences(ref))
       }
       Promise.all(axiosArray)
         .then((responses) => {
           let cnt = 0
-          for (let response of responses) {
+          for (const response of responses) {
             const data = response.data
             this.localReferences.push(data)
             cnt++
           }
-          this.$emit('CallUpdateMyDataTables')
           const _references = JSON.parse(JSON.stringify(this.localReferences))
           this.prefetchDataForExtractedDataUpdate(_references)
-
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
           this.fileReferences = []
-          this.$emit('CallEpisteReponse', [])
-          this.$emit('CallGetReferences', false)
           this.$refs['file-input'].reset()
+          this.$emit('CallGetReferences', false)
         })
         .catch((error) => {
           console.log('error', error)
@@ -485,53 +485,61 @@ export default {
 
       this.pubmed_requested.push(reference)
     },
-    importReferences: function () {
+    requestImportReferences: async function (index) {
+      return axios({
+        method: 'POST',
+        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
+        data: this.pubmed_requested[index]
+      })
+    },
+    importReferences: async function () {
       if (!this.pubmed_selected.length) return
       this.$emit('statusLoadReferences', true)
-
-      let axiosRequest = []
-      for (let index of this.pubmed_selected) {
+      let axiosRequests = []
+      for (const index of this.pubmed_selected) {
         delete this.pubmed_requested[index].disabled
-        axiosRequest.push = axios({
-          method: 'POST',
-          url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-          data: this.pubmed_requested[index]
-        })
+        axiosRequests.push(await this.requestImportReferences(index))
       }
-      Promise.all(axiosRequest)
-        .then((responses) => {
+      Promise.all(axiosRequests)
+        .then(() => {
           this.pubmed_request = ''
           this.pubmed_requested = []
           this.pubmed_selected = []
           this.pubmedErrorImported = []
           this.btnSearchPubMed = false
+          this.$emit('CallGetReferences', false)
         })
         .catch((error) => {
+          this.$emit('statusLoadReferences', false)
           console.log('error', error)
-        })
-        .finally(() => {
-          // this.$emit('statusLoadReferences', false)
-          this.$emit('CallGetReferences', false)
         })
     },
     // openModalReferencesSingle: function () {
     //   this.$emit('openModalReferencesSingle', true)
     // },
-    prefetchDataForExtractedDataUpdate: function (references) {
+    axiosGetFindings: async function (listId) {
+      return axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
+    },
+    axiosGetExtractedData: async function (organization, findingId) {
+      return axios.get(`/api/isoqf_extracted_data?organization=${organization}&finding_id=${findingId}`)
+    },
+    axiosPatchExtractedData: async function (id, params) {
+      return axios.patch(`/api/isoqf_extracted_data/${id}`, params)
+    },
+    prefetchDataForExtractedDataUpdate: async function (references) {
       let _lists = JSON.parse(JSON.stringify(this.lists))
       let _requestFindings = []
-      let _requestExtractedData = []
 
-      for (let list of _lists) {
-        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
+      for (const list of _lists) {
+        _requestFindings.push(await this.axiosGetFindings(list.id))
       }
       Promise.all(_requestFindings)
-        .then((responses) => {
-          for (let _response of responses) {
-            let response = _response.data[0]
-            _requestExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${response.organization}&finding_id=${response.id}`))
+        .then(async (responses) => {
+          let requestExtractedData = []
+          for (const response of responses) {
+            requestExtractedData.push(await this.axiosGetExtractedData(response.data[0].organization, response.data[0].id))
           }
-          this.updateExtractedDataReferences(_requestExtractedData, references)
+          this.updateExtractedDataReferences(requestExtractedData, references)
         })
         .catch((error) => {
           this.printErrors(error)
@@ -541,7 +549,7 @@ export default {
       if (references.length) {
         if (querys.length) {
           Promise.all(querys)
-            .then((responses) => {
+            .then(async (responses) => {
               let item = {}
               let _items = []
               let patchExtractedData = []
@@ -567,15 +575,13 @@ export default {
                 const params = {
                   items: _items
                 }
-                patchExtractedData.push(axios.patch(`/api/isoqf_extracted_data/${response.id}`, params))
+                patchExtractedData.push(await this.axiosPatchExtractedData(response.id, params))
               }
-              if (patchExtractedData.length) {
-                Promise.all(patchExtractedData)
-                  .then(() => {})
-                  .catch((error) => {
-                    this.printErrors(error)
-                  })
-              }
+              Promise.all(patchExtractedData)
+                .then(() => {})
+                .catch((error) => {
+                  this.printErrors(error)
+                })
             })
         }
       }
@@ -597,7 +603,7 @@ export default {
       for (const list of this.lists) {
         for (const ref of list.raw_ref) {
           if (ref.id === refId) {
-            findings.push(`#${list.isoqf_id}`)
+            findings.push(`#${list.cnt}`)
           }
         }
       }
@@ -753,6 +759,27 @@ export default {
             }
           })
       }
+    },
+    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
+      let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length) {
+          if (reference.authors.length === 1) {
+            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else if (reference.authors.length === 2) {
+            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else {
+            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          }
+          if (!onlyAuthors) {
+            result = result + reference.title
+          }
+        } else {
+          return 'author(s) not found'
+        }
+      }
+      return result
     }
   },
   watch: {
