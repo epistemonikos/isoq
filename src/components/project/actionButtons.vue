@@ -993,17 +993,19 @@ export default {
     },
     generateParagraphExplanation: function (content) {
       let paragraph = []
-      if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
-        paragraph.push(
-          new Paragraph('')
-        )
-        paragraph.push(
-          new Paragraph({
-            children: [
-              ...(this.generateExplanationText(content))
-            ]
-          })
-        )
+      if (content.explanation !== '') {
+        if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
+          paragraph.push(
+            new Paragraph('')
+          )
+          paragraph.push(
+            new Paragraph({
+              children: [
+                ...(this.generateExplanationText(content))
+              ]
+            })
+          )
+        }
       }
       return paragraph
     },
