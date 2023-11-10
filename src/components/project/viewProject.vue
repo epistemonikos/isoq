@@ -59,12 +59,10 @@
                 :checkPermissions="checkPermissions()"
                 :loadReferences="loadReferences"
                 :references="references"
-                :episteResponse="episte_response"
                 :lists="lists"
                 :charsOfStudies="charsOfStudies"
                 :methodologicalTableRefs="methodologicalTableRefs"
-                @CallEpisteReponse="CallEpisteReponse"
-                @CallGetReferences="CallGetReferences"
+                @CallGetReferences="getReferences"
                 @statusLoadReferences="statusLoadReferences"
                 @CallGetProject="getProject"></UploadReferences>
             </b-col>
@@ -1238,7 +1236,6 @@ export default {
         editing: false
       },
       episte_request: '',
-      episte_response: [],
       episte_selected: [],
       episte_loading: false,
       episte_error: false,
@@ -1267,12 +1264,6 @@ export default {
       } else {
         this.charsOfStudies = data
       }
-    },
-    CallEpisteReponse: function (status) {
-      this.episte_response = status
-    },
-    CallGetReferences: function (status) {
-      this.getReferences(status)
     },
     statusLoadReferences: function (status) {
       this.loadReferences = status
@@ -1416,7 +1407,7 @@ export default {
         return 0
       })
       if (data.length) {
-        this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
+        this.lastId = data.length + 1// parseInt(data.slice(-1)[0].isoqf_id) + 1
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             list.status = 'unfinished'
@@ -1504,7 +1495,6 @@ export default {
                   category.items.push(
                     {
                       'id': list.id,
-                      'isoqf_id': list.isoqf_id,
                       'name': list.name,
                       'cerqual_option': list.cerqual_option,
                       'filter_cerqual': list.filter_cerqual,
@@ -1536,6 +1526,11 @@ export default {
 
           this.lists_print_version = _items
         } else {
+          let cnt = 1
+          for (let item of data) {
+            item.cnt = cnt
+            cnt++
+          }
           this.lists_print_version = data
         }
 
@@ -1568,11 +1563,6 @@ export default {
     },
     createList: function () {
       this.table_settings.isBusy = true
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      let _sort = 1
-      if (_lists.length) {
-        _sort = parseInt(_lists.slice(-1)[0].sort) + 1
-      }
       let isPublic = false
       if (this.project.is_public) {
         isPublic = true
@@ -1581,11 +1571,9 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         name: this.summarized_review,
-        isoqf_id: this.lastId,
         cerqual: { option: null, explanation: '' },
         references: [],
         category: this.list_categories.selected,
-        sort: _sort,
         editing: false,
         is_public: isPublic
       }
@@ -1594,7 +1582,6 @@ export default {
           const listId = response.data.id
           const listName = response.data.name
 
-          this.getLists()
           this.createFinding(listId, listName)
           this.summarized_review = ''
           this.list_categories.selected = null
@@ -1952,25 +1939,6 @@ export default {
             this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
         })
-    },
-    openModcontent: function (edit = false) {
-      let _fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-      let fields = []
-      const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
-        if (!excluded.includes(field.key)) {
-          fields.push(field)
-        }
-      }
-
-      if (edit) {
-        this.methodologicalFieldsModalEdit.fields = fields
-        this.methodologicalFieldsModalEdit.nroColumns = fields.length
-        this.$refs['open-methodological-table-modal-edit'].show()
-      } else {
-        this.methodologicalFieldsModal.fields = fields
-        this.$refs['open-methodological-table-modal'].show()
-      }
     },
     editModalFindingName: function (data) {
       this.editFindingName.index = data.index
@@ -2345,7 +2313,9 @@ export default {
       }
 
       axios.post('/api/isoqf_extracted_data', params)
-        .then()
+        .then(() => {
+          this.getLists()
+        })
         .catch((error) => {
           this.printErrors(error)
         })
@@ -2444,16 +2414,6 @@ export default {
       }
       axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
         .then()
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    getUserInfo: function (userId) {
-      axios.get(`/users/${userId}`)
-        .then((response) => {
-          this.editingUser = response.data
-          this.editingUser.show = true
-        })
         .catch((error) => {
           this.printErrors(error)
         })
