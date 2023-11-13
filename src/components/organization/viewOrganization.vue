@@ -49,54 +49,66 @@
                 </b-link>
               </template>
               <template v-slot:cell(actions)="data">
-                <b-button
-                  v-if="data.item.is_owner || data.item.allow_to_write"
-                  title="Duplicate"
-                  variant="outline-secondary"
-                  @click="openCloneModal(data.item.id)">
-                  <font-awesome-icon
-                    icon="copy"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner && (data.item.sharedToken.length)"
-                  title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
-                  variant="outline-secondary"
-                  @click="modalShareOptions(data.item.id, 2)">
-                  <font-awesome-icon
-                    icon="link"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner"
-                  title="Share"
-                  variant="outline-secondary"
-                  @click="modalShareOptions(data.item.id)">
-                  <font-awesome-icon
-                    icon="users"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.allow_to_write"
-                  title="Edit"
-                  variant="outline-success"
-                  @click="openModalEditProject(data.item)">
-                  <font-awesome-icon
-                    icon="edit"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner"
-                  title="Remove"
-                  variant="outline-danger"
-                  @click="modalRemoveProject(data.item)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
-                  title="Leave"
-                  variant="outline-success"
-                  @click="openModalLeaveProject(data.item)">
-                  <font-awesome-icon
-                    icon="sign-out-alt"></font-awesome-icon>
-                </b-button>
+                <div class="d-block d-lg-none">
+                  <b-dropdown id="dropdown-1" text="Project Options" class="m-md-2" variant="outline-secondary">
+                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> Duplicate</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> Shared</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> Share</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>Edit</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> Remove</b-dropdown-item>
+                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> Leave</b-dropdown-item>
+                  </b-dropdown>
+                </div>
+                <div class="d-none d-lg-block">
+                  <b-button
+                    v-if="data.item.is_owner || data.item.allow_to_write"
+                    title="Duplicate"
+                    variant="outline-secondary"
+                    @click="openCloneModal(data.item.id)">
+                    <font-awesome-icon
+                      icon="copy"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                    title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
+                    variant="outline-secondary"
+                    @click="modalShareOptions(data.item.id, 2)">
+                    <font-awesome-icon
+                      icon="link"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner"
+                    title="Share"
+                    variant="outline-secondary"
+                    @click="modalShareOptions(data.item.id)">
+                    <font-awesome-icon
+                      icon="users"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.allow_to_write"
+                    title="Edit"
+                    variant="outline-success"
+                    @click="openModalEditProject(data.item)">
+                    <font-awesome-icon
+                      icon="edit"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner"
+                    title="Remove"
+                    variant="outline-danger"
+                    @click="modalRemoveProject(data.item)">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
+                    title="Leave"
+                    variant="outline-success"
+                    @click="openModalLeaveProject(data.item)">
+                    <font-awesome-icon
+                      icon="sign-out-alt"></font-awesome-icon>
+                  </b-button>
+                </div>
               </template>
               <template v-slot:table-busy>
                 <div class="text-center text-danger my-2">
@@ -1444,11 +1456,11 @@ export default {
     }
   div >>>
     table#organizations thead th:nth-child(2) {
-      width: 70%;
+      width: 60%;
     }
   div >>>
     table#organizations thead th:last-child {
-      width: 20%;
+      width: 30%;
     }
   /* div >>>
     table#organizations tbody tr td button {
