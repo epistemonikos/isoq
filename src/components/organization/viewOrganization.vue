@@ -710,70 +710,6 @@ export default {
           })
       }
     },
-    getProjectsAndLists: function () {
-      let projects = []
-      let lists = []
-      const excludeOrgs = ['examples', 'episte']
-
-      for (let org of this.$store.state.user.orgs) {
-        if (!excludeOrgs.includes(org.id)) {
-          projects.push(axios.get('/api/isoqf_projects', {
-            params: {
-              organization: org.id
-            }
-          }))
-          lists.push(axios.get('/api/isoqf_lists', {
-            params: {
-              organization: org.id
-            }
-          }))
-        }
-      }
-      axios.all(projects).then(axios.spread((...results) => {
-        for (const result of results) {
-          let _projects = result.data
-          for (let project of _projects) {
-            if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            } else {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            }
-            if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
-              project.tmp_invite_emails = []
-            }
-            project.is_owner = false
-            project.allow_to_write = false
-            project.allow_to_read = false
-            if (project.organization === this.$store.state.user.personal_organization) {
-              project.is_owner = true
-              project.allow_to_write = true
-              project.allow_to_read = true
-            } else {
-              if (project.organization !== this.$store.state.user.personal_organization) {
-                project.is_owner = false
-              }
-              if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
-                if (project.can_write.includes(this.$store.state.user.id)) {
-                  project.allow_to_write = true
-                }
-              } else {
-                project.can_write = []
-              }
-            }
-            this.projects.push(project)
-          }
-        }
-      }))
-      this.ui.projectTable.isBusy = false
-    },
     editProjectList: function (projectPosition, listPosition) {
       this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
       this.$refs['new-project-list'].show()
@@ -1100,10 +1036,10 @@ export default {
           console.log(error)
         })
     },
-    generateACopyOfAProject: function () {
-      this.ui.copy.project = true
-      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+    processCloneProject: async function () {
       let bufferProject = JSON.parse(JSON.stringify(this.buffer_project))
+      delete bufferProject.id
+      delete bufferProject._id
       bufferProject.sharedTo = ''
       bufferProject.name = '(Copy of) ' + bufferProject.name
       bufferProject.sharedCan = {read: [], write: []}
@@ -1117,9 +1053,12 @@ export default {
       bufferProject.can_read = []
       bufferProject.private = true
       bufferProject.is_public = false
-      let newProject = bufferProject
-      delete newProject.id
-      delete newProject._id
+      return bufferProject
+    },
+    generateACopyOfAProject: async function () {
+      this.ui.copy.project = true
+      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+      const newProject = await this.processCloneProject()
       axios.post('/api/isoqf_projects', newProject)
         .then((response) => {
           this.modalCloneNewId = response.data.id
