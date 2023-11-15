@@ -1138,6 +1138,19 @@ export default {
           console.log(error)
         })
     },
+    processReferences: async function (projectId, data) {
+      let newReferences = []
+      for (let reference of data) {
+        let modifiedRef = JSON.parse(JSON.stringify(reference))
+        modifiedRef.oldId = reference.id
+        modifiedRef.project_id = projectId
+        modifiedRef.organization = this.$route.params.id
+        delete modifiedRef.id
+        delete modifiedRef._id
+        newReferences.push(modifiedRef)
+      }
+      return newReferences
+    },
     generateCopyOfReferences: function (originalProject, project) {
       this.ui.copy.references = true
       const params = {
@@ -1145,24 +1158,15 @@ export default {
         project_id: originalProject.id
       }
       axios.get('/api/isoqf_references', {params})
-        .then((response) => {
-          let newReferences = []
+        .then(async (response) => {
           if (response.data.length < 1) {
             this.ui.copy.references = false
           }
-          for (let reference of response.data) {
-            let modifiedRef = JSON.parse(JSON.stringify(reference))
-            modifiedRef.oldId = reference.id
-            modifiedRef.project_id = project.id
-            modifiedRef.organization = this.$route.params.id
-            delete modifiedRef.id
-            delete modifiedRef._id
-            newReferences.push(modifiedRef)
-          }
+          const newReferences = await this.processReferences(project.id, response.data)
           if (newReferences.length) {
             let postReferences = []
             for (let reference of newReferences) {
-              postReferences.push(axios.post('/api/isoqf_references', reference))
+              postReferences.push(await axios.post('/api/isoqf_references', reference))
             }
             axios.all(postReferences)
               .then((responses) => {
