@@ -43,6 +43,7 @@
               </template>
               <template v-slot:cell(name)="data">
                 <b-link
+                  :id="`p-${data.item.id}`"
                   class="link-project"
                   :to="{name: 'viewProject', params: {org_id: data.item.organization, id: data.item.id}}">
                   {{ data.item.name }}
@@ -491,7 +492,8 @@ export default {
       projects: [],
       modalCloneId: null,
       modalCloneNewId: null,
-      newReferences: []
+      newReferences: [],
+      hashId: null
     }
   },
   mounted () {
@@ -556,37 +558,57 @@ export default {
         console.log(error)
       }
     },
-    getProjects: function () {
+    axiosGetProjects: async function (organizationId) {
+      try {
+        return axios.get('/api/isoqf_projects', {
+          params: {
+            organization: organizationId
+          }
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    getProjects: async function () {
       let requests = []
       const excludeOrgs = ['examples', 'episte']
       this.projects = []
 
       for (let _org of this.$store.state.user.orgs) {
         if (!excludeOrgs.includes(_org.id)) {
-          requests.push(axios.get('/api/isoqf_projects', {
-            params: {
-              organization: _org.id
-            }
-          }))
+          requests.push(await this.axiosGetProjects(_org.id))
         }
       }
-      axios.all(requests).then(axios.spread((...responses) => {
-        let _projects = []
-        for (let response of responses) {
-          if (response.data.length) {
-            for (let project of response.data) {
-              const response = this.processProject(project)
-              if (Object.keys(response).length) {
-                _projects.push(response)
+      Promise.all(requests)
+        .then((responses) => {
+          let _projects = []
+          for (const response of responses) {
+            if (response.data.length) {
+              for (const project of response.data) {
+                const processProject = this.processProject(project)
+                if (Object.keys(processProject).length) {
+                  _projects.push(processProject)
+                }
               }
             }
           }
-        }
-        const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
-        this.projects.push(...finalList)
-      })).catch((error) => {
-        console.log(error)
-      })
+          const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
+          this.projects.push(...finalList)
+
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash') || this.hashId !== null) {
+            const hash = (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) ? `#${this.$route.query.hash}` : `#p-${this.hashId}`
+            this.$router.push({
+              name: 'viewOrganization',
+              params: {
+                organization: this.$route.params.org_id
+              },
+              hash: `${hash}`
+            })
+            this.hashId = null
+          }
+        }).catch((error) => {
+          console.log(error)
+        })
       this.ui.projectTable.isBusy = false
     },
     processProject: function (project) {
@@ -661,6 +683,7 @@ export default {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
           .then(() => {
+            this.hashId = this.buffer_project.id
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.getProjects()
           })
@@ -1165,10 +1188,10 @@ export default {
           const newReferences = await this.processReferences(project.id, response.data)
           if (newReferences.length) {
             let postReferences = []
-            for (let reference of newReferences) {
+            for (const reference of newReferences) {
               postReferences.push(await axios.post('/api/isoqf_references', reference))
             }
-            axios.all(postReferences)
+            Promise.all(postReferences)
               .then((responses) => {
                 this.buffer_project.references = []
                 for (let response of responses) {
