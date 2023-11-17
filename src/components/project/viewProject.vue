@@ -5,7 +5,7 @@
         <b-row align-h="end">
           <b-col
             class="text-right">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }}" class="d-print-none return">
+            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: {hash: `p-${this.project.id}`}}" class="d-print-none return">
               <font-awesome-icon icon="long-arrow-alt-left" title="return to My Workspace" />
               return to My Workspace
             </b-link>
@@ -1211,26 +1211,12 @@ export default {
           { key: 'authors', label: 'Author(s), Year' }
         ]
       },
-      methodologicalTableRefsTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
-      methodologicalFieldsModal: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
-      methodologicalFieldsModalEdit: {
-        nroColumns: 1,
-        fields: []
-      },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
       disableBtnRemoveAllRefs: false,
       editFindingName: {
         index: null,
+        id: null,
         name: null,
         notes: null,
         editing: false
@@ -1251,13 +1237,22 @@ export default {
       printableItems: []
     }
   },
-  mounted () {
-    this.getListCategories()
-    this.getReferences()
-    this.openModalReferencesSingle(false)
-    this.getProject()
+  async mounted () {
+    await this.getListCategories()
+    await this.getReferences()
+    await this.openModalReferencesSingle(false)
+    await this.getProject()
   },
   methods: {
+    resetFindingName: function () {
+      this.editFindingName = {
+        index: null,
+        id: null,
+        name: null,
+        notes: null,
+        editing: false
+      }
+    },
     updateDataTable: function (data, type) {
       if (type === 'isoqf_assessments') {
         this.methodologicalTableRefs = data
@@ -1327,7 +1322,7 @@ export default {
         return ''
       }
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
+    parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
@@ -1348,7 +1343,7 @@ export default {
       }
       return result
     },
-    getProject: function () {
+    getProject: async function () {
       const params = {
         organization: this.$route.params.org_id
       }
@@ -1362,44 +1357,49 @@ export default {
             this.project.exclusion = ''
           }
           this.ui.project.show_criteria = true
-          this.getLists() // summary review
-          // this.getCharacteristics()
-          this.getMethodological()
+          this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
         })
     },
-    getLists: function (id = null, resort = false) {
+    getLists: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.get('/api/isoqf_lists', { params })
-        .then((response) => {
-          this.lists = this.processLists(response)
+        .then(async (response) => {
+          this.table_settings.isBusy = false
+          this.lists = await this.processLists(response)
           this.table_settings.totalRows = this.lists.length
-          if (id) {
-            this.$router.push({hash: `a-${id}`})
-          }
-          if (resort) {
-            let cnt = 1
-            for (const list of this.lists) {
-              this.updateFindingSort(list.id, cnt)
-              cnt++
-            }
-          } else {
-            this.table_settings.isBusy = false
-          }
-          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
-            this.$router.push({hash: `${this.$route.query.hash}`})
+          // if (resort) {
+          //   let cnt = 1
+          //   for (const list of this.lists) {
+          //     this.updateFindingSort(list.id, cnt)
+          //     cnt++
+          //   }
+          // } else {
+          // }
+
+          if (this.editFindingName.id !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
+            const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : `#${this.$route.query.hash}`
+            this.$router.push({
+              name: 'viewProject',
+              params: {
+                organization: this.$route.params.org_id,
+                id: this.$route.params.id
+              },
+              hash: `${hash}`
+            })
+            this.resetFindingName()
           }
         })
         .catch((error) => {
           this.printErrors(error)
         })
     },
-    processLists: function (response) {
+    processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
       data.sort(function (a, b) {
         if (a.sort < b.sort) { return -1 }
@@ -1470,7 +1470,7 @@ export default {
           for (let r of this.references) {
             for (let ref of list.references) {
               if (ref === r.id) {
-                list.ref_list = list.ref_list + this.parseReference(r, true)
+                list.ref_list = list.ref_list + await this.parseReference(r, true)
                 list.raw_ref.push(r)
               }
             }
@@ -1630,20 +1630,20 @@ export default {
         is_public: isPublic
       }
       axios.post('/api/isoqf_findings', params)
-        .then((response) => {
-          this.createExtractedData(response.data.id)
+        .then(async (response) => {
+          await this.createExtractedData(response.data.id)
         })
         .catch((error) => {
           this.printErrors(error)
         })
     },
-    getReferences: function (changeTab = true) {
+    getReferences: async function (changeTab = true) {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.get(`/api/isoqf_references`, { params })
-        .then((response) => {
+        .then(async (response) => {
           const data = JSON.parse(JSON.stringify(response.data))
           let _references = data
           for (const d of data) {
@@ -1651,14 +1651,16 @@ export default {
           }
           this.references = data
           let _refs = []
-          for (let reference of _references) {
-            let content = this.parseReference(reference)
+          for (const reference of _references) {
+            let content = await this.parseReference(reference)
             if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
               _refs.push({'id': reference.id, 'content': content})
             }
           }
 
-          this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
+          if (_refs.length) {
+            this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
+          }
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
@@ -1677,9 +1679,9 @@ export default {
           this.printErrors(error)
         })
     },
-    openModalReferencesSingle: function (showModal) {
+    openModalReferencesSingle: async function (showModal) {
       if (showModal) {
-        this.getReferences(false)
+        await this.getReferences(false)
         this.msgUploadReferences = ''
         this.appearMsgRemoveReferences = false
         this.disableBtnRemoveAllRefs = false
@@ -1687,10 +1689,11 @@ export default {
       }
     },
     openModalReferences: function (data) {
+      this.editFindingName = this.setEditFindingNameProp(data)
       const index = this.lists.findIndex((item) => item.id === data.item.id)
       this.selected_list_index = index
       axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
-        .then(() => {
+        .then(async () => {
           let list = JSON.parse(JSON.stringify(this.lists[index]))
           const params = {
             organization: this.$route.params.org_id,
@@ -1706,7 +1709,7 @@ export default {
               this.printErrors(error)
             })
 
-          this.getReferences()
+          await this.getReferences()
           this.selected_references = this.lists[index].references
           this.showBanner = false
           if (this.lists[index].cerqual_option !== '') {
@@ -1726,12 +1729,12 @@ export default {
         references: this.selected_references
       }
       axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
-        .then(() => {
+        .then(async () => {
           this.updateFindingReferences(this.selected_references)
           this.selected_references = []
           this.selected_list_index = null
-          this.getReferences()
-          this.getLists(this.lists[index].id)
+          await this.getReferences()
+          this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1903,49 +1906,17 @@ export default {
         return 'author(s) not found'
       }
     },
-    getMethodological: function () {
-      this.methodologicalTableRefsTableSettings.isBusy = true
-      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-        .then((response) => {
-          if (response.data.length) {
-            this.methodologicalTableRefs = response.data[0]
-            if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
-              const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-              const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
-              this.methodologicalTableRefs.items = _items
-
-              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              this.methodologicalFieldsModal.fields = []
-
-              for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  this.methodologicalFieldsModal.fields.push(f.label)
-                  this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
-                }
-              }
-              this.methodologicalTableRefs.fieldsObj.push({'key': 'actions', 'label': ''})
-
-              this.methodologicalFieldsModal.nroColumns = (this.methodologicalTableRefs.fieldsObj.length === 2) ? 1 : this.methodologicalTableRefs.fieldsObj.length - 2
-
-              for (let item of _items) {
-                this.methodologicalFieldsModal.items.push(item)
-              }
-
-              this.methodologicalTableRefsTableSettings.isBusy = false
-            }
-          } else {
-            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
-          }
-        })
+    setEditFindingNameProp: function (data) {
+      return {
+        index: data.index,
+        id: data.item.id,
+        name: data.item.name,
+        category: data.item.category,
+        notes: data.item.notes
+      }
     },
     editModalFindingName: function (data) {
-      this.editFindingName.index = data.index
-      this.editFindingName.id = data.item.id
-      this.editFindingName.name = data.item.name
-      this.editFindingName.category = data.item.category
-      this.editFindingName.notes = data.item.notes
+      this.editFindingName = this.setEditFindingNameProp(data)
 
       const params = {
         organization: this.$route.params.org_id,
@@ -1960,15 +1931,14 @@ export default {
         })
       this.$refs['edit-finding-name'].show()
     },
-    updateListName: function () {
-      this.table_settings.isBusy = true
-      let _lists = JSON.parse(JSON.stringify(this.lists))
+    processDataList: async function () {
+      const lists = JSON.parse(JSON.stringify(this.lists))
       let _item = {}
       _item.is_public = false
       if (this.project.is_public) {
         _item.is_public = true
       }
-      for (let item of _lists) {
+      for (let item of lists) {
         if (item.id === this.editFindingName.id) {
           _item = item
           _item.name = this.editFindingName.name
@@ -1976,11 +1946,14 @@ export default {
           _item.notes = this.editFindingName.notes
         }
       }
-
-      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, _item)
+      return _item
+    },
+    updateListName: async function () {
+      this.table_settings.isBusy = true
+      const list = await this.processDataList()
+      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, list)
         .then(() => {
           this.updateFinding(this.editFindingName)
-          this.getLists()
           this.updateModificationTime()
         })
         .catch((error) => {
@@ -2000,7 +1973,9 @@ export default {
         'evidence_profile.notes': finding.notes
       }
       axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
-        .then(() => {})
+        .then(() => {
+          this.getLists()
+        })
         .catch((error) => {
           this.printErrors(error)
         })
@@ -2053,7 +2028,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getListCategories: function () {
+    getListCategories: async function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -2062,6 +2037,11 @@ export default {
         .then((response) => {
           if (response.data.length) {
             let options = JSON.parse(JSON.stringify(response.data))
+            for (let option of options) {
+              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+                option.text = ''
+              }
+            }
             options.sort((a, b) => a.text.localeCompare(b.text))
             let _options = JSON.parse(JSON.stringify(options))
             options.splice(0, 0, {id: null, text: 'No group'})
@@ -2093,8 +2073,8 @@ export default {
           this.printErrors(error)
         })
     },
-    modalListCategories: function () {
-      this.getListCategories()
+    modalListCategories: async function () {
+      await this.getListCategories()
       this.$refs['modalEditListCategories'].show()
     },
     saveNewCategory: function () {
@@ -2106,8 +2086,8 @@ export default {
       }
 
       axios.post('/api/isoqf_list_categories', params)
-        .then(() => {
-          this.getListCategories()
+        .then(async () => {
+          await this.getListCategories()
           this.getLists()
           this.modal_edit_list_categories.new = false
           this.modal_edit_list_categories.text = ''
@@ -2135,8 +2115,8 @@ export default {
           extra_info: this.modal_edit_list_categories.extra_info
         }
         axios.patch(`/api/isoqf_list_categories/${objID}`, params)
-          .then(() => {
-            this.getListCategories()
+          .then(async () => {
+            await this.getListCategories()
             this.getLists()
             this.modal_edit_list_categories.edit = false
             this.modal_edit_list_categories.text = ''
@@ -2167,8 +2147,8 @@ export default {
 
       if (objID) {
         axios.delete(`/api/isoqf_list_categories/${objID}`)
-          .then(() => {
-            this.getListCategories()
+          .then(async () => {
+            await this.getListCategories()
             this.updateLists(deletedItem)
             this.modal_edit_list_categories.remove = false
             this.modal_edit_list_categories.text = ''
@@ -2295,7 +2275,7 @@ export default {
       }
       console.log(error.config)
     },
-    createExtractedData: function (findingID) {
+    createExtractedData: async function (findingID) {
       const _references = JSON.parse(JSON.stringify(this.references))
       let params = {
         fields: [
@@ -2309,7 +2289,7 @@ export default {
       }
 
       for (let reference of _references) {
-        params.items.push({ 'ref_id': reference.id, 'authors': this.parseReference(reference, true), 'column_0': '' })
+        params.items.push({ 'ref_id': reference.id, 'authors': await this.parseReference(reference, true), 'column_0': '' })
       }
 
       axios.post('/api/isoqf_extracted_data', params)
