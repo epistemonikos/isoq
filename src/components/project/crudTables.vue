@@ -851,7 +851,7 @@ export default {
 
       for (const field of _headers) {
         if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push('"' + field.label + '"')
+          headers.push(`"${field.label}"`)
           keys.push(field.key)
         }
       }
