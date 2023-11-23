@@ -1363,7 +1363,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getLists: function () {
+    getLists: function (reSorting = false) {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -1373,14 +1373,13 @@ export default {
           this.table_settings.isBusy = false
           this.lists = await this.processLists(response)
           this.table_settings.totalRows = this.lists.length
-          // if (resort) {
-          //   let cnt = 1
-          //   for (const list of this.lists) {
-          //     this.updateFindingSort(list.id, cnt)
-          //     cnt++
-          //   }
-          // } else {
-          // }
+          if (reSorting) {
+            let cnt = 1
+            for (const list of this.lists) {
+              this.updateFindingSort(list.id, cnt)
+              cnt++
+            }
+          }
 
           if (this.editFindingName.id !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
             const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : `#${this.$route.query.hash}`
@@ -1402,8 +1401,8 @@ export default {
     processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
       data.sort(function (a, b) {
-        if (a.sort < b.sort) { return -1 }
-        if (a.sort > b.sort) { return 1 }
+        if (a.cnt < b.cnt) { return -1 }
+        if (a.cnt > b.cnt) { return 1 }
         return 0
       })
       if (data.length) {
@@ -1974,7 +1973,7 @@ export default {
       }
       axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
-          this.getLists()
+          this.getLists(true)
         })
         .catch((error) => {
           this.printErrors(error)
@@ -2309,7 +2308,7 @@ export default {
         .then((response) => {
           axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
             .then(() => {
-              this.getLists(null, true)
+              this.getLists(true)
             })
             .catch((error) => {
               this.table_settings.isBusy = false
