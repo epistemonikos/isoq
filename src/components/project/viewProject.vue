@@ -1376,6 +1376,7 @@ export default {
           if (reSorting) {
             let cnt = 1
             for (const list of this.lists) {
+              await this.updateListSort(list.id, cnt)
               this.updateFindingSort(list.id, cnt)
               cnt++
             }
@@ -1401,8 +1402,8 @@ export default {
     processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
       data.sort(function (a, b) {
-        if (a.cnt < b.cnt) { return -1 }
-        if (a.cnt > b.cnt) { return 1 }
+        if (a.sort < b.sort) { return -1 }
+        if (a.sort > b.sort) { return 1 }
         return 0
       })
       if (data.length) {
@@ -1525,11 +1526,11 @@ export default {
 
           this.lists_print_version = _items
         } else {
-          let cnt = 1
-          for (let item of data) {
-            item.cnt = cnt
-            cnt++
-          }
+          // let cnt = 1
+          // for (let item of data) {
+          //   item.sort = cnt
+          //   cnt++
+          // }
           this.lists_print_version = data
         }
 
@@ -1562,6 +1563,10 @@ export default {
     },
     createList: function () {
       this.table_settings.isBusy = true
+      let sort = 1
+      if (this.lists.length) {
+        sort = this.lists.slice(-1)[0].sort + 1
+      }
       let isPublic = false
       if (this.project.is_public) {
         isPublic = true
@@ -1574,7 +1579,8 @@ export default {
         references: [],
         category: this.list_categories.selected,
         editing: false,
-        is_public: isPublic
+        is_public: isPublic,
+        sort: sort
       }
       axios.post('/api/isoqf_lists', params)
         .then((response) => {
@@ -2215,6 +2221,23 @@ export default {
           for (const response of responses) {
             this.updateFindingSort(response.data.id, response.data.$set.sort)
           }
+        })
+        .catch((error) => {
+          this.table_settings.isBusy = false
+          this.printErrors(error)
+        })
+    },
+    updateListSort: async function (listId, sort, getList = true) {
+      const params = {
+        'isoqf_id': sort,
+        'sort': sort
+      }
+      axios.patch(`/api/isoqf_lists/${listId}`, params)
+        .then(() => {
+          // if (getList) {
+          //   this.table_settings.isBusy = true
+          //   this.getLists()
+          // }
         })
         .catch((error) => {
           this.table_settings.isBusy = false
