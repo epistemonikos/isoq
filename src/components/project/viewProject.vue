@@ -828,6 +828,7 @@
                 ref="modal-references-list"
                 title="References"
                 @ok="saveReferencesList"
+                @cancel="cancelReferencesList"
                 :ok-disabled="(selected_list_index === null) ? true : false"
                 ok-title="Save"
                 ok-variant="outline-success"
@@ -1217,6 +1218,7 @@ export default {
       editFindingName: {
         index: null,
         id: null,
+        finding_id: null,
         name: null,
         notes: null,
         editing: false
@@ -1240,10 +1242,140 @@ export default {
   async mounted () {
     await this.getListCategories()
     await this.getReferences()
-    await this.openModalReferencesSingle(false)
     await this.getProject()
   },
   methods: {
+    getListCategories: async function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_list_categories', { params })
+        .then((response) => {
+          this.processGetListCategories(response.data)
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    getReferences: async function (changeTab = true) {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.get(`/api/isoqf_references`, { params })
+        .then(async (response) => {
+          this.references = await this.processGetReferencesRaw(response.data)
+          this.refs = await this.processGetReferencesWithNames(response.data)
+
+          if (changeTab) {
+            if (this.references.length) {
+              this.$nextTick(() => {
+                if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
+                  const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
+                } else {
+                  this.tabOpened = 2
+                }
+              })
+            }
+          }
+          this.loadReferences = false
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    getProject: async function () {
+      const params = {
+        organization: this.$route.params.org_id
+      }
+      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
+        .then((response) => {
+          this.project = JSON.parse(JSON.stringify(response.data))
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+            this.project.inclusion = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+            this.project.exclusion = ''
+          }
+          this.ui.project.show_criteria = true
+          this.getLists()
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    processGetListCategories: function (data) {
+      this.list_categories.options = []
+      this.modal_edit_list_categories.options = []
+      if (data.length) {
+        let options = JSON.parse(JSON.stringify(data))
+        for (let option of options) {
+          if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+            option.text = ''
+          }
+        }
+        options.sort((a, b) => a.text.localeCompare(b.text))
+        let modalOptions = JSON.parse(JSON.stringify(options))
+        options.splice(0, 0, {id: null, text: 'No group'})
+        this.list_categories.options = options
+        this.modal_edit_list_categories.options = modalOptions
+      }
+    },
+    processGetReferencesRaw: async function (references) {
+      const data = JSON.parse(JSON.stringify(references))
+      for (const d of data) {
+        d._showDetails = false
+      }
+      return data
+    },
+    processGetReferencesWithNames: async function (references) {
+      const data = JSON.parse(JSON.stringify(references))
+      let refs = []
+
+      for (const reference of data) {
+        let content = await this.parseReference(reference)
+        if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+          refs.push({'id': reference.id, 'content': content})
+        }
+      }
+
+      if (refs.length) {
+        return refs.sort((a, b) => a.content.localeCompare(b.content))
+      }
+      return refs
+    },
+    getLists: function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      axios.get('/api/isoqf_lists', { params })
+        .then(async (response) => {
+          this.lists = await this.processLists(response)
+          this.table_settings.totalRows = this.lists.length
+          this.routeAnchorHash()
+          this.table_settings.isBusy = false
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    routeAnchorHash: function () {
+      if (this.editFindingName.id !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
+        const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : `#${this.$route.query.hash}`
+        this.$router.push({
+          name: 'viewProject',
+          params: {
+            organization: this.$route.params.org_id,
+            id: this.$route.params.id
+          },
+          hash: `${hash}`
+        })
+        this.resetFindingName()
+      }
+    },
     resetFindingName: function () {
       this.editFindingName = {
         index: null,
@@ -1343,70 +1475,14 @@ export default {
       }
       return result
     },
-    getProject: async function () {
-      const params = {
-        organization: this.$route.params.org_id
-      }
-      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
-        .then((response) => {
-          this.project = JSON.parse(JSON.stringify(response.data))
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
-            this.project.inclusion = ''
-          }
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
-            this.project.exclusion = ''
-          }
-          this.ui.project.show_criteria = true
-          this.getLists()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    getLists: function (reSorting = false) {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-      axios.get('/api/isoqf_lists', { params })
-        .then(async (response) => {
-          this.table_settings.isBusy = false
-          this.lists = await this.processLists(response)
-          this.table_settings.totalRows = this.lists.length
-          if (reSorting) {
-            let cnt = 1
-            for (const list of this.lists) {
-              await this.updateListSort(list.id, cnt)
-              this.updateFindingSort(list.id, cnt)
-              cnt++
-            }
-          }
-
-          if (this.editFindingName.id !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
-            const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : `#${this.$route.query.hash}`
-            this.$router.push({
-              name: 'viewProject',
-              params: {
-                organization: this.$route.params.org_id,
-                id: this.$route.params.id
-              },
-              hash: `${hash}`
-            })
-            this.resetFindingName()
-          }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
-      data.sort(function (a, b) {
-        if (a.sort < b.sort) { return -1 }
-        if (a.sort > b.sort) { return 1 }
-        return 0
-      })
       if (data.length) {
+        data.sort(function (a, b) {
+          if (a.sort < b.sort) { return -1 }
+          if (a.sort > b.sort) { return 1 }
+          return 0
+        })
         this.lastId = data.length + 1// parseInt(data.slice(-1)[0].isoqf_id) + 1
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
@@ -1526,11 +1602,6 @@ export default {
 
           this.lists_print_version = _items
         } else {
-          // let cnt = 1
-          // for (let item of data) {
-          //   item.sort = cnt
-          //   cnt++
-          // }
           this.lists_print_version = data
         }
 
@@ -1538,6 +1609,7 @@ export default {
           this.printableItems.push(items.id)
         }
       }
+      this.table_settings.isBusy = false
       return data
     },
     getFinding: function (orgId, listId) {
@@ -1642,57 +1714,6 @@ export default {
           this.printErrors(error)
         })
     },
-    getReferences: async function (changeTab = true) {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-      axios.get(`/api/isoqf_references`, { params })
-        .then(async (response) => {
-          const data = JSON.parse(JSON.stringify(response.data))
-          let _references = data
-          for (const d of data) {
-            d._showDetails = false
-          }
-          this.references = data
-          let _refs = []
-          for (const reference of _references) {
-            let content = await this.parseReference(reference)
-            if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-              _refs.push({'id': reference.id, 'content': content})
-            }
-          }
-
-          if (_refs.length) {
-            this.refs = _refs.sort((a, b) => a.content.localeCompare(b.content))
-          }
-          if (changeTab) {
-            if (this.references.length) {
-              this.$nextTick(() => {
-                if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
-                  const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
-                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
-                } else {
-                  this.tabOpened = 2
-                }
-              })
-            }
-          }
-          this.loadReferences = false
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openModalReferencesSingle: async function (showModal) {
-      if (showModal) {
-        await this.getReferences(false)
-        this.msgUploadReferences = ''
-        this.appearMsgRemoveReferences = false
-        this.disableBtnRemoveAllRefs = false
-        this.$refs['modal-references'].show()
-      }
-    },
     openModalReferences: function (data) {
       this.editFindingName = this.setEditFindingNameProp(data)
       const index = this.lists.findIndex((item) => item.id === data.item.id)
@@ -1726,6 +1747,15 @@ export default {
           this.printErrors(error)
         })
     },
+    cleanReferencesList: function () {
+      this.selected_references = []
+      this.selected_list_index = null
+      this.finding = {}
+    },
+    cancelReferencesList: function () {
+      this.cleanReferencesList()
+      this.$refs['modal-references-list'].hide()
+    },
     saveReferencesList: function () {
       this.loadReferences = true
       this.table_settings.isBusy = true
@@ -1736,9 +1766,6 @@ export default {
       axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
         .then(async () => {
           this.updateFindingReferences(this.selected_references)
-          this.selected_references = []
-          this.selected_list_index = null
-          await this.getReferences()
           this.getLists()
         })
         .catch((error) => {
@@ -1751,7 +1778,7 @@ export default {
       }
       axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
         .then(() => {
-          this.finding = {}
+          this.cleanReferencesList()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1986,34 +2013,28 @@ export default {
         })
     },
     removeModalFinding: function (data) {
-      const index = this.lists.findIndex((item) => item.id === data.item.id)
-      const list = this.lists[index]
-      axios.get(`/api/isoqf_lists/${list.id}`)
+      this.editFindingName.index = data.index
+      this.editFindingName.name = data.item.name
+      this.editFindingName.id = data.item.id
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: data.item.id
+      }
+      axios.get('/api/isoqf_findings', {params})
         .then((response) => {
-          this.editFindingName.index = index
-          this.editFindingName.name = response.data.name
-          const params = {
-            organization: this.$route.params.org_id,
-            list_id: response.data.id
-          }
-          axios.get('/api/isoqf_findings', {params})
-            .then((response) => {
-              this.editFindingName.finding_id = response.data[0].id
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-          this.$refs['remove-finding'].show()
+          this.editFindingName.finding_id = response.data[0].id
         })
         .catch((error) => {
-          console.log(error)
+          this.printErrors(error)
         })
+      this.$refs['remove-finding'].show()
     },
     confirmRemoveList: function () {
+      if (!this.editFindingName.id) {
+        return
+      }
       this.table_settings.isBusy = true
-      const index = this.editFindingName.index
-      const _list = JSON.parse(JSON.stringify(this.lists[index]))
-      axios.delete(`/api/isoqf_lists/${_list.id}`)
+      axios.delete(`/api/isoqf_lists/${this.editFindingName.id}`)
         .then(() => {
           this.confirmRemoveFinding()
         })
@@ -2023,41 +2044,15 @@ export default {
         })
     },
     confirmRemoveFinding: function () {
-      const findingId = this.editFindingName.finding_id
-      axios.delete(`/api/isoqf_findings/${findingId}`)
+      if (!this.editFindingName.finding_id) {
+        return
+      }
+      axios.delete(`/api/isoqf_findings/${this.editFindingName.finding_id}`)
         .then(() => {
-          this.deleteExtractedData(findingId)
+          this.deleteExtractedData()
         })
         .catch((error) => {
           this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
-    },
-    getListCategories: async function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-      axios.get('/api/isoqf_list_categories', { params })
-        .then((response) => {
-          if (response.data.length) {
-            let options = JSON.parse(JSON.stringify(response.data))
-            for (let option of options) {
-              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
-                option.text = ''
-              }
-            }
-            options.sort((a, b) => a.text.localeCompare(b.text))
-            let _options = JSON.parse(JSON.stringify(options))
-            options.splice(0, 0, {id: null, text: 'No group'})
-            this.list_categories.options = options
-            this.modal_edit_list_categories.options = _options
-          } else {
-            this.list_categories.options = []
-            this.modal_edit_list_categories.options = []
-          }
-        })
-        .catch((error) => {
           this.printErrors(error)
         })
     },
@@ -2207,9 +2202,8 @@ export default {
       let cnt = 1
       let requests = []
       this.table_settings.isBusy = true
-      for (let list of this.sorted_lists) {
+      for (const list of this.sorted_lists) {
         const params = {
-          'isoqf_id': cnt,
           'sort': cnt
         }
         requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
@@ -2227,24 +2221,7 @@ export default {
           this.printErrors(error)
         })
     },
-    updateListSort: async function (listId, sort, getList = true) {
-      const params = {
-        'isoqf_id': sort,
-        'sort': sort
-      }
-      axios.patch(`/api/isoqf_lists/${listId}`, params)
-        .then(() => {
-          // if (getList) {
-          //   this.table_settings.isBusy = true
-          //   this.getLists()
-          // }
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
-    },
-    updateFindingSort: function (listId, sort, getList = true) {
+    updateFindingSort: function (listId, sort, getList = false) {
       const params = {
         organization: this.$route.params.org_id,
         list_id: listId
@@ -2322,21 +2299,47 @@ export default {
           this.printErrors(error)
         })
     },
-    deleteExtractedData: function (findingID) {
+    deleteExtractedData: function () {
       const params = {
         organization: this.$route.params.org_id,
-        finding_id: findingID
+        finding_id: this.editFindingName.finding_id
       }
       axios.get('/api/isoqf_extracted_data', {params})
         .then((response) => {
           axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
             .then(() => {
-              this.getLists(true)
+              this.updateSortList(JSON.parse(JSON.stringify(this.editFindingName)))
+              this.editFindingName = {
+                index: null,
+                finding_id: null,
+                id: null,
+                name: null,
+                notes: null,
+                editing: false
+              }
             })
             .catch((error) => {
               this.table_settings.isBusy = false
               this.printErrors(error)
             })
+        })
+        .catch((error) => {
+          this.table_settings.isBusy = false
+          this.printErrors(error)
+        })
+    },
+    updateSortList: function (data) {
+      const index = data.index
+      this.lists.splice(index, 1)
+      let querys = []
+      let cnt = 1
+      for (const list of this.lists) {
+        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {sort: cnt}))
+        cnt++
+      }
+      Promise.all(querys)
+        .then(() => {
+          this.getLists()
         })
         .catch((error) => {
           this.table_settings.isBusy = false
