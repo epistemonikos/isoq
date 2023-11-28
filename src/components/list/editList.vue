@@ -1208,14 +1208,23 @@ export default {
       }
     },
     getAllReferences: function () {
-      axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+      const params = {
+        organization: this.list.organization,
+        project_id: this.list.project_id
+      }
+      axios.get(`/api/isoqf_references`, {params})
         .then((response) => {
           let _references = response.data
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
-            _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+            _refs.push({
+              'id': reference.id,
+              'content': this.parseReference(reference, true)
+            })
+            _refsWithTitles.push({
+              'id': reference.id,
+              'content': this.parseReference(reference, false)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
@@ -1236,7 +1245,7 @@ export default {
             items: []
           }
           // this.checkWrittingStatus(this.list) // disabled for the v1
-          this.getProject(this.list.project_id)
+          this.getProject()
           this.getAllReferences()
           this.getStageOneData(fromModal)
           this.getCharsOfStudies()
@@ -1250,7 +1259,11 @@ export default {
     },
     updateMyData: function () {
       let _extractedData = []
-      axios.get(`/api/isoqf_extracted_data?organization=${this.list.organization}&finding_id=${this.findings.id}`)
+      const params = {
+        organization: this.list.organization,
+        list_id: this.list.id
+      }
+      axios.get(`/api/isoqf_extracted_data`, {params})
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
@@ -1274,7 +1287,11 @@ export default {
           }
         })
     },
-    getProject: function (projectId) {
+    getProject: function () {
+      if (!this.list.project_id) {
+        return
+      }
+      const projectId = this.list.project_id
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
@@ -1330,9 +1347,11 @@ export default {
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
+            this.findings.isoqf_id = this.list.sort
             this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push(this.findings.evidence_profile)
+              this.evidence_profile[0].isoqf_id = this.list.sort
             }
             if (fromModal) {
               const title = this.buffer_modal_stage_two.title
