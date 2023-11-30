@@ -1063,7 +1063,10 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '5%',
+                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
                     width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
@@ -1157,7 +1160,7 @@ export default {
               children: [
                 this.generateTableCell({
                   width_size: '40%',
-                  text: item.cnt,
+                  text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
