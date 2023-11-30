@@ -656,7 +656,7 @@
                         <p>{{item.cnt}}</p>
                         </template>
                         <template v-else>
-                        {{index+1}}
+                        {{ index + 1 }}
                         </template>
                       </b-td>
                       <b-td>
