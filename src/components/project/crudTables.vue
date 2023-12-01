@@ -57,7 +57,9 @@
           :items="dataTable.items"
           :current-page="dataTableSettings.currentPage"
           :per-page="dataTableSettings.perPage"
-          :busy="dataTableSettings.isBusy">
+          :busy="dataTableSettings.isBusy"
+          :responsive="true"
+          sticky-header="600px">
           <template
             v-slot:cell(authors)="data">
             <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
