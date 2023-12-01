@@ -425,7 +425,7 @@
                   </template>
                   <!-- data -->
                   <template v-slot:cell(sort)="data">
-                    {{data.index + 1}}
+                    {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
                   </template>
                   <template v-slot:cell(name)="data">
                     <a :id="`a-${data.item.id}`"></a>
@@ -1508,11 +1508,14 @@ export default {
             list.category = null
           } else {
             list.category_name = ''
+            list.category_name_filtered = ''
             list.category_extra_info = ''
             if (this.list_categories.options.length) {
               for (let category of this.list_categories.options) {
                 if (list.category === category.id) {
                   list.category_name = category.text
+                  // clean from special chars the category.text and store under list.category_name_filtered
+                  list.category_name_filtered = category.text.replace(/[^a-zA-Z0-9]/g, '')
                   list.category_extra_info = category.extra_info
                 }
               }
@@ -1559,7 +1562,13 @@ export default {
 
           for (let category of this.list_categories.options) {
             if (category.id !== null) {
-              categories.push({'name': category.text, 'id': category.id, 'value': category.id, 'items': [], is_category: true})
+              categories.push({
+                'name': category.text,
+                'id': category.id,
+                'value': category.id,
+                'items': [],
+                is_category: true
+              })
             }
           }
           categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
@@ -1784,7 +1793,7 @@ export default {
           this.printErrors(error)
         })
     },
-    onFiltered (filteredItems) {
+    onFiltered: function (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
@@ -2366,7 +2375,7 @@ export default {
       this.table_settings.filter = ''
       window.scrollTo({ top: 500, behavior: 'smooth' })
     },
-    tableFilter (txt, filter) {
+    tableFilter: function (txt, filter) {
       this.table_settings.filter = txt
       switch (filter) {
         case 1:
@@ -2388,7 +2397,8 @@ export default {
       window.scrollTo({ top: 600, behavior: 'smooth' })
     },
     isFilterActive: function (val) {
-      return val === this.table_settings.filter
+      const regex = new RegExp(`^${val}$`, 'i')
+      return regex.test(this.table_settings.filter)
     },
     cleanTableFilter () {
       this.ui.project.showFilterOne = false
