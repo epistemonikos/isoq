@@ -58,10 +58,10 @@
           :current-page="dataTableSettings.currentPage"
           :per-page="dataTableSettings.perPage"
           :busy="dataTableSettings.isBusy"
-          :responsive="true"
-          sticky-header="600px">
+          :responsive="true">
           <template
             v-slot:cell(authors)="data">
+            <a :id="`${prefix}-${data.item.ref_id}`"></a>
             <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
           </template>
           <template
@@ -357,6 +357,10 @@ export default {
   name: 'crudTables',
   props: {
     type: {
+      type: String,
+      default: ''
+    },
+    prefix: {
       type: String,
       default: ''
     },
@@ -723,6 +727,7 @@ export default {
 
       axios.patch(`/api/${this.type}/${id}`, params)
         .then(() => {
+          this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
           this.$emit('get-project')
           this.getData()
           this.$refs['edit-content-dataTable'].hide()

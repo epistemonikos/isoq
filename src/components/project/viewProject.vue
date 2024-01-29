@@ -87,6 +87,7 @@
 
               <crudTables
                 type="isoqf_characteristics"
+                prefix="ch"
                 :checkPermissions="checkPermissions()"
                 :project="project"
                 :ui="ui"
@@ -96,6 +97,7 @@
                 @get-project="getProject"
                 @print-errors="printErrors"
                 @updateDataTable="updateDataTable"
+                @set-item-data="setItemData"
               ></crudTables>
             </b-col>
             <b-col
@@ -109,6 +111,7 @@
 
               <crudTables
                 type="isoqf_assessments"
+                prefix="as"
                 :checkPermissions="checkPermissions()"
                 :project="project"
                 :ui="ui"
@@ -118,7 +121,8 @@
                 @get-project="getProject"
                 @print-errors="printErrors"
                 @updateDataTable="updateDataTable"
-                ></crudTables>
+                @set-item-data="setItemData"
+              ></crudTables>
 
             </b-col>
           </b-row>
@@ -1080,6 +1084,7 @@ export default {
           showFilterThree: false,
           show_criteria: false
         },
+        itemData: null,
         publish: {
           showLoader: false
         }
@@ -1245,6 +1250,9 @@ export default {
     await this.getProject()
   },
   methods: {
+    setItemData: function (data) {
+      this.ui.itemData = data
+    },
     getListCategories: async function () {
       const params = {
         organization: this.$route.params.org_id,
@@ -1363,10 +1371,13 @@ export default {
         })
     },
     routeAnchorHash: function () {
-      if (this.editFindingName.id !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
-        const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : `#${this.$route.query.hash}`
+      if (this.editFindingName.id !== null || this.ui.itemData !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
+        const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : (this.ui.itemData !== null) ? `#${this.ui.itemData}` : `#${this.$route.query.hash}`
         this.$router.push({
           name: 'viewProject',
+          query: {
+            tab: this.$route.query.tab
+          },
           params: {
             organization: this.$route.params.org_id,
             id: this.$route.params.id
@@ -1374,7 +1385,11 @@ export default {
           hash: `${hash}`
         })
         this.resetFindingName()
+        this.resetItemData()
       }
+    },
+    resetItemData: function () {
+      this.ui.itemData = null
     },
     resetFindingName: function () {
       this.editFindingName = {
