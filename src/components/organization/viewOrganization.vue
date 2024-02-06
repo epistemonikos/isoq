@@ -43,60 +43,73 @@
               </template>
               <template v-slot:cell(name)="data">
                 <b-link
+                  :id="`p-${data.item.id}`"
                   class="link-project"
                   :to="{name: 'viewProject', params: {org_id: data.item.organization, id: data.item.id}}">
                   {{ data.item.name }}
                 </b-link>
               </template>
               <template v-slot:cell(actions)="data">
-                <b-button
-                  v-if="data.item.is_owner || data.item.allow_to_write"
-                  title="Duplicate"
-                  variant="outline-secondary"
-                  @click="openCloneModal(data.item.id)">
-                  <font-awesome-icon
-                    icon="copy"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner && (data.item.sharedToken.length)"
-                  title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
-                  variant="outline-secondary"
-                  @click="modalShareOptions(data.item.id, 2)">
-                  <font-awesome-icon
-                    icon="link"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner"
-                  title="Share"
-                  variant="outline-secondary"
-                  @click="modalShareOptions(data.item.id)">
-                  <font-awesome-icon
-                    icon="users"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.allow_to_write"
-                  title="Edit"
-                  variant="outline-success"
-                  @click="openModalEditProject(data.item)">
-                  <font-awesome-icon
-                    icon="edit"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="data.item.is_owner"
-                  title="Remove"
-                  variant="outline-danger"
-                  @click="modalRemoveProject(data.item)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
-                </b-button>
-                <b-button
-                  v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
-                  title="Leave"
-                  variant="outline-success"
-                  @click="openModalLeaveProject(data.item)">
-                  <font-awesome-icon
-                    icon="sign-out-alt"></font-awesome-icon>
-                </b-button>
+                <div class="d-block d-lg-none">
+                  <b-dropdown id="dropdown-1" text="Project Options" class="m-md-2" variant="outline-secondary">
+                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> Duplicate</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> Shared</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> Share</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>Edit</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> Remove</b-dropdown-item>
+                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> Leave</b-dropdown-item>
+                  </b-dropdown>
+                </div>
+                <div class="d-none d-lg-block">
+                  <b-button
+                    v-if="data.item.is_owner || data.item.allow_to_write"
+                    title="Duplicate"
+                    variant="outline-secondary"
+                    @click="openCloneModal(data.item.id)">
+                    <font-awesome-icon
+                      icon="copy"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                    title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
+                    variant="outline-secondary"
+                    @click="modalShareOptions(data.item.id, 2)">
+                    <font-awesome-icon
+                      icon="link"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner"
+                    title="Share"
+                    variant="outline-secondary"
+                    @click="modalShareOptions(data.item.id)">
+                    <font-awesome-icon
+                      icon="users"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.allow_to_write"
+                    title="Edit"
+                    variant="outline-success"
+                    @click="openModalEditProject(data.item)">
+                    <font-awesome-icon
+                      icon="edit"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="data.item.is_owner"
+                    title="Remove"
+                    variant="outline-danger"
+                    @click="modalRemoveProject(data.item)">
+                    <font-awesome-icon
+                      icon="trash"></font-awesome-icon>
+                  </b-button>
+                  <b-button
+                    v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
+                    title="Leave"
+                    variant="outline-success"
+                    @click="openModalLeaveProject(data.item)">
+                    <font-awesome-icon
+                      icon="sign-out-alt"></font-awesome-icon>
+                  </b-button>
+                </div>
               </template>
               <template v-slot:table-busy>
                 <div class="text-center text-danger my-2">
@@ -479,7 +492,8 @@ export default {
       projects: [],
       modalCloneId: null,
       modalCloneNewId: null,
-      newReferences: []
+      newReferences: [],
+      hashId: null
     }
   },
   mounted () {
@@ -544,37 +558,57 @@ export default {
         console.log(error)
       }
     },
-    getProjects: function () {
+    axiosGetProjects: async function (organizationId) {
+      try {
+        return axios.get('/api/isoqf_projects', {
+          params: {
+            organization: organizationId
+          }
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    getProjects: async function () {
       let requests = []
       const excludeOrgs = ['examples', 'episte']
       this.projects = []
 
       for (let _org of this.$store.state.user.orgs) {
         if (!excludeOrgs.includes(_org.id)) {
-          requests.push(axios.get('/api/isoqf_projects', {
-            params: {
-              organization: _org.id
-            }
-          }))
+          requests.push(await this.axiosGetProjects(_org.id))
         }
       }
-      axios.all(requests).then(axios.spread((...responses) => {
-        let _projects = []
-        for (let response of responses) {
-          if (response.data.length) {
-            for (let project of response.data) {
-              const response = this.processProject(project)
-              if (Object.keys(response).length) {
-                _projects.push(response)
+      Promise.all(requests)
+        .then((responses) => {
+          let _projects = []
+          for (const response of responses) {
+            if (response.data.length) {
+              for (const project of response.data) {
+                const processProject = this.processProject(project)
+                if (Object.keys(processProject).length) {
+                  _projects.push(processProject)
+                }
               }
             }
           }
-        }
-        const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
-        this.projects.push(...finalList)
-      })).catch((error) => {
-        console.log(error)
-      })
+          const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
+          this.projects.push(...finalList)
+
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash') || this.hashId !== null) {
+            const hash = (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) ? `#${this.$route.query.hash}` : `#p-${this.hashId}`
+            this.$router.push({
+              name: 'viewOrganization',
+              params: {
+                organization: this.$route.params.org_id
+              },
+              hash: `${hash}`
+            })
+            this.hashId = null
+          }
+        }).catch((error) => {
+          console.log(error)
+        })
       this.ui.projectTable.isBusy = false
     },
     processProject: function (project) {
@@ -649,6 +683,7 @@ export default {
         delete this.buffer_project.lists
         axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
           .then(() => {
+            this.hashId = this.buffer_project.id
             this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
             this.getProjects()
           })
@@ -697,70 +732,6 @@ export default {
             this.$refs['new-project-list'].show()
           })
       }
-    },
-    getProjectsAndLists: function () {
-      let projects = []
-      let lists = []
-      const excludeOrgs = ['examples', 'episte']
-
-      for (let org of this.$store.state.user.orgs) {
-        if (!excludeOrgs.includes(org.id)) {
-          projects.push(axios.get('/api/isoqf_projects', {
-            params: {
-              organization: org.id
-            }
-          }))
-          lists.push(axios.get('/api/isoqf_lists', {
-            params: {
-              organization: org.id
-            }
-          }))
-        }
-      }
-      axios.all(projects).then(axios.spread((...results) => {
-        for (const result of results) {
-          let _projects = result.data
-          for (let project of _projects) {
-            if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            } else {
-              if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
-                project.sharedTokenOnOff = true
-              } else {
-                project.sharedTokenOnOff = false
-              }
-            }
-            if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
-              project.tmp_invite_emails = []
-            }
-            project.is_owner = false
-            project.allow_to_write = false
-            project.allow_to_read = false
-            if (project.organization === this.$store.state.user.personal_organization) {
-              project.is_owner = true
-              project.allow_to_write = true
-              project.allow_to_read = true
-            } else {
-              if (project.organization !== this.$store.state.user.personal_organization) {
-                project.is_owner = false
-              }
-              if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
-                if (project.can_write.includes(this.$store.state.user.id)) {
-                  project.allow_to_write = true
-                }
-              } else {
-                project.can_write = []
-              }
-            }
-            this.projects.push(project)
-          }
-        }
-      }))
-      this.ui.projectTable.isBusy = false
     },
     editProjectList: function (projectPosition, listPosition) {
       this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
@@ -1088,10 +1059,10 @@ export default {
           console.log(error)
         })
     },
-    generateACopyOfAProject: function () {
-      this.ui.copy.project = true
-      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+    processCloneProject: async function () {
       let bufferProject = JSON.parse(JSON.stringify(this.buffer_project))
+      delete bufferProject.id
+      delete bufferProject._id
       bufferProject.sharedTo = ''
       bufferProject.name = '(Copy of) ' + bufferProject.name
       bufferProject.sharedCan = {read: [], write: []}
@@ -1105,9 +1076,12 @@ export default {
       bufferProject.can_read = []
       bufferProject.private = true
       bufferProject.is_public = false
-      let newProject = bufferProject
-      delete newProject.id
-      delete newProject._id
+      return bufferProject
+    },
+    generateACopyOfAProject: async function () {
+      this.ui.copy.project = true
+      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
+      const newProject = await this.processCloneProject()
       axios.post('/api/isoqf_projects', newProject)
         .then((response) => {
           this.modalCloneNewId = response.data.id
@@ -1187,6 +1161,19 @@ export default {
           console.log(error)
         })
     },
+    processReferences: async function (projectId, data) {
+      let newReferences = []
+      for (let reference of data) {
+        let modifiedRef = JSON.parse(JSON.stringify(reference))
+        modifiedRef.oldId = reference.id
+        modifiedRef.project_id = projectId
+        modifiedRef.organization = this.$route.params.id
+        delete modifiedRef.id
+        delete modifiedRef._id
+        newReferences.push(modifiedRef)
+      }
+      return newReferences
+    },
     generateCopyOfReferences: function (originalProject, project) {
       this.ui.copy.references = true
       const params = {
@@ -1194,26 +1181,17 @@ export default {
         project_id: originalProject.id
       }
       axios.get('/api/isoqf_references', {params})
-        .then((response) => {
-          let newReferences = []
+        .then(async (response) => {
           if (response.data.length < 1) {
             this.ui.copy.references = false
           }
-          for (let reference of response.data) {
-            let modifiedRef = JSON.parse(JSON.stringify(reference))
-            modifiedRef.oldId = reference.id
-            modifiedRef.project_id = project.id
-            modifiedRef.organization = this.$route.params.id
-            delete modifiedRef.id
-            delete modifiedRef._id
-            newReferences.push(modifiedRef)
-          }
+          const newReferences = await this.processReferences(project.id, response.data)
           if (newReferences.length) {
             let postReferences = []
-            for (let reference of newReferences) {
-              postReferences.push(axios.post('/api/isoqf_references', reference))
+            for (const reference of newReferences) {
+              postReferences.push(await axios.post('/api/isoqf_references', reference))
             }
-            axios.all(postReferences)
+            Promise.all(postReferences)
               .then((responses) => {
                 this.buffer_project.references = []
                 for (let response of responses) {
@@ -1444,11 +1422,11 @@ export default {
     }
   div >>>
     table#organizations thead th:nth-child(2) {
-      width: 70%;
+      width: 60%;
     }
   div >>>
     table#organizations thead th:last-child {
-      width: 20%;
+      width: 30%;
     }
   /* div >>>
     table#organizations tbody tr td button {

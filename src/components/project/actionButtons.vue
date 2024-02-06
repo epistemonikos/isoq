@@ -565,7 +565,7 @@ export default {
                     })
                   ]
                 }),
-                ...this.generateEvidenceProfileTable2(this.lists)
+                ...this.generateEvidenceProfileTable2()
               ]
             })
           ]
@@ -993,17 +993,19 @@ export default {
     },
     generateParagraphExplanation: function (content) {
       let paragraph = []
-      if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
-        paragraph.push(
-          new Paragraph('')
-        )
-        paragraph.push(
-          new Paragraph({
-            children: [
-              ...(this.generateExplanationText(content))
-            ]
-          })
-        )
+      if (content.explanation !== '') {
+        if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
+          paragraph.push(
+            new Paragraph('')
+          )
+          paragraph.push(
+            new Paragraph({
+              children: [
+                ...(this.generateExplanationText(content))
+              ]
+            })
+          )
+        }
       }
       return paragraph
     },
@@ -1061,7 +1063,10 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER
+                    width_size: '5%',
+                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    font_size: 22,
+                    align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
                     width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
@@ -1154,7 +1159,16 @@ export default {
             return new TableRow({
               children: [
                 this.generateTableCell({
-                  width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT
+                  width_size: '40%',
+                  text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
+                  font_size: 22,
+                  align: AlignmentType.LEFT
+                }),
+                this.generateTableCell({
+                  width_size: '40%',
+                  text: item.name,
+                  font_size: 22,
+                  align: AlignmentType.LEFT
                 }),
                 new TableCell({
                   columnSpan: 5,

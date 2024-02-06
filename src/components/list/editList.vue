@@ -136,7 +136,7 @@
                           </p>
                           <p class="font-weight-light">
                             <b><u>Remember</u></b> this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
-                            (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.methodological_limitations.option"
@@ -199,7 +199,7 @@
                             Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
                           </p>
                           <p class="font-weight-light">
-                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesise the data. (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesise the data. (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
                           </p>
                           <p class="font-weight-light">
                             <b><u>Remember</u></b>, coherence is not about the consistency of findings between studies, but is about the fit between the extracted data and the review finding as you have written it.
@@ -263,7 +263,7 @@
                         <div id="left-adequacy" v-if="buffer_modal_stage_two.type === 'adequacy'">
                           <p class="font-weight-bold">
                             <b>Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?</b>
-                            (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.adequacy.option"
@@ -326,7 +326,7 @@
                             Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
                           </p>
                           <p class="font-weight-light">
-                            You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Guidance-on-Applying-CERQual`">here</b-link>)
+                            You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
                           </p>
                           <b-form-radio-group
                             v-model="buffer_modal_stage_two.relevance.option"
@@ -467,7 +467,7 @@
                                 v-if="ui.methodological_assessments.display_warning"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
                               </p>
                               <b-table
                                 class="table-small-font"
@@ -699,7 +699,7 @@
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
                               </p>
                               <b-table
                                 class="table-small-font"
@@ -735,7 +735,7 @@
                                 v-if="project.review_question === ''"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The review question is missing. Add it in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#Project-Property`">Project Properties</b-link>.
+                                The review question is missing. Add it in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Project-Property'}}">Project Properties</b-link>.
                               </p>
                               <p>{{ project.review_question }}</p>
                               <h4>Inclusion criteria</h4>
@@ -743,7 +743,7 @@
                                 v-if="project.inclusion === ''"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The inclusion criteria are missing. Add them in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                The inclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
                               </p>
                               <p>{{ project.inclusion }}</p>
                               <h4>Exclusion criteria</h4>
@@ -751,7 +751,7 @@
                                 v-if="project.exclusion === ''"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The exclusion criteria are missing. Add them in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                The exclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
                               </p>
                               <p>{{ project.exclusion }}</p>
                             </b-tab>
@@ -763,7 +763,7 @@
                               <p
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
                                 class="text-danger">
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>.
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                               </p>
                               <b-table
@@ -1208,14 +1208,23 @@ export default {
       }
     },
     getAllReferences: function () {
-      axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+      const params = {
+        organization: this.list.organization,
+        project_id: this.list.project_id
+      }
+      axios.get(`/api/isoqf_references`, {params})
         .then((response) => {
           let _references = response.data
           let _refs = []
           let _refsWithTitles = []
           for (let reference of _references) {
-            _refs.push({'id': reference.id, 'content': this.parseReference(reference, true)})
-            _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
+            _refs.push({
+              'id': reference.id,
+              'content': this.parseReference(reference, true)
+            })
+            _refsWithTitles.push({
+              'id': reference.id,
+              'content': this.parseReference(reference, false)})
           }
 
           this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
@@ -1236,7 +1245,7 @@ export default {
             items: []
           }
           // this.checkWrittingStatus(this.list) // disabled for the v1
-          this.getProject(this.list.project_id)
+          this.getProject()
           this.getAllReferences()
           this.getStageOneData(fromModal)
           this.getCharsOfStudies()
@@ -1250,7 +1259,11 @@ export default {
     },
     updateMyData: function () {
       let _extractedData = []
-      axios.get(`/api/isoqf_extracted_data?organization=${this.list.organization}&finding_id=${this.findings.id}`)
+      const params = {
+        organization: this.list.organization,
+        list_id: this.list.id
+      }
+      axios.get(`/api/isoqf_extracted_data`, {params})
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
@@ -1274,7 +1287,11 @@ export default {
           }
         })
     },
-    getProject: function (projectId) {
+    getProject: function () {
+      if (!this.list.project_id) {
+        return
+      }
+      const projectId = this.list.project_id
       axios.get(`/api/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
@@ -1330,9 +1347,11 @@ export default {
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
+            this.findings.isoqf_id = this.list.sort
             this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push(this.findings.evidence_profile)
+              this.evidence_profile[0].isoqf_id = this.list.sort
             }
             if (fromModal) {
               const title = this.buffer_modal_stage_two.title
