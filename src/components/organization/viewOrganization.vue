@@ -1204,7 +1204,6 @@ export default {
                 this.generateCopyOfLists(originalProject, project)
                 this.generateCopyOf('isoqf_assessments', originalProject, project)
                 this.generateCopyOf('isoqf_characteristics', originalProject, project)
-                this.getProjects()
               })
           }
         })
