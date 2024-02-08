@@ -569,27 +569,15 @@ export default {
         console.log(error)
       }
     },
-    getProjects: async function () {
-      let requests = []
-      const excludeOrgs = ['examples', 'episte']
-      this.projects = []
-
-      for (let _org of this.$store.state.user.orgs) {
-        if (!excludeOrgs.includes(_org.id)) {
-          requests.push(await this.axiosGetProjects(_org.id))
-        }
-      }
-      Promise.all(requests)
-        .then((responses) => {
+    getProjects: function () {
+      axios.get('/api/getProjects')
+        .then((response) => {
+          this.projects = []
           let _projects = []
-          for (const response of responses) {
-            if (response.data.length) {
-              for (const project of response.data) {
-                const processProject = this.processProject(project)
-                if (Object.keys(processProject).length) {
-                  _projects.push(processProject)
-                }
-              }
+          for (const project of response.data) {
+            const processProject = this.processProject(project)
+            if (Object.keys(processProject).length) {
+              _projects.push(processProject)
             }
           }
           const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
