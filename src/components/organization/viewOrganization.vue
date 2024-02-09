@@ -761,75 +761,19 @@ export default {
     },
     removeProject: function () {
       this.ui.projectTable.isBusy = true
-      const params = {
-        organization: this.$route.params.id,
-        project_id: this.buffer_project.id
-      }
-      axios.get('/api/isoqf_lists', { params })
+      axios.get(`/api/remove/project/${this.buffer_project.id}`)
         .then((response) => {
-          let requestsLists = []
-          const lists = response.data
-          for (let list of lists) {
-            this.getFindings(list.id)
-            requestsLists.push(axios.delete(`/api/isoqf_lists/${list.id}`))
+          if (response.data.status) {
+            this.getProjects()
+            this.ui.projectTable.isBusy = false
+          } else {
+            this.ui.projectTable.isBusy = false
+            console.log(response.data)
           }
-          this.processRequests(requestsLists)
         })
         .catch((error) => {
           console.log(error)
-        })
-      axios.get('/api/isoqf_list_categories', { params })
-        .then((response) => {
-          let requestsCategories = []
-          const categories = response.data
-          for (let category of categories) {
-            requestsCategories.push(axios.delete(`/api/isoqf_list_categories/${category.id}`))
-          }
-          this.processRequests(requestsCategories)
-        })
-      axios.get('/api/isoqf_references', { params })
-        .then((response) => {
-          let referencesRequests = []
-          const references = response.data
-          for (let reference of references) {
-            referencesRequests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-          }
-          this.processRequests(referencesRequests)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_assessments', { params })
-        .then((response) => {
-          let requestsAssessments = []
-          const methAssessments = response.data
-          for (let methAssessment of methAssessments) {
-            requestsAssessments.push(axios.delete(`/api/isoqf_assessments/${methAssessment.id}`))
-          }
-          this.processRequests(requestsAssessments)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_characteristics', { params })
-        .then((response) => {
-          let requestsCharacteristics = []
-          const charOfStudies = response.data
-          for (let charOfStudy of charOfStudies) {
-            requestsCharacteristics.push(axios.delete(`/api/isoqf_characteristics/${charOfStudy.id}`))
-          }
-          this.processRequests(requestsCharacteristics)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_projects/${this.buffer_project.id}`)
-        .then((response) => {
-          this.getProjects()
           this.ui.projectTable.isBusy = false
-        })
-        .catch((error) => {
-          console.log(error)
         })
     },
     getFindings: function (id) {
