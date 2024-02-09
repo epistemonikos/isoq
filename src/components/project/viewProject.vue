@@ -1742,30 +1742,21 @@ export default {
       this.editFindingName = this.setEditFindingNameProp(data)
       const index = this.lists.findIndex((item) => item.id === data.item.id)
       this.selected_list_index = index
-      axios.get(`/api/isoqf_lists/${this.lists[index].id}`)
-        .then(async () => {
-          let list = JSON.parse(JSON.stringify(this.lists[index]))
-          const params = {
-            organization: this.$route.params.org_id,
-            list_id: list.id
+      const params = {
+        list_id: data.item.id
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then(async (response) => {
+          if (response.data.length) {
+            this.finding = JSON.parse(JSON.stringify(response.data[0]))
+            await this.getReferences()
+            this.selected_references = data.item.references
+            this.showBanner = false
+            if (data.item.cerqual_option !== '') {
+              this.showBanner = true
+            }
+            this.$refs['modal-references-list'].show()
           }
-          axios.get('/api/isoqf_findings', {params})
-            .then((response) => {
-              if (response.data.length) {
-                this.finding = JSON.parse(JSON.stringify(response.data[0]))
-              }
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-
-          await this.getReferences()
-          this.selected_references = this.lists[index].references
-          this.showBanner = false
-          if (this.lists[index].cerqual_option !== '') {
-            this.showBanner = true
-          }
-          this.$refs['modal-references-list'].show()
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1803,6 +1794,7 @@ export default {
       axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
         .then(() => {
           this.cleanReferencesList()
+          this.loadReferences = false
         })
         .catch((error) => {
           this.printErrors(error)

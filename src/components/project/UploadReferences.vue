@@ -312,7 +312,11 @@ export default {
               for (let list of this.lists) {
                 for (let ref of list.raw_ref) {
                   if (ref.id === value) {
-                    findings.push(`#${list.cnt}`)
+                    if (Object.prototype.hasOwnProperty.call(list, 'cnt')) {
+                      findings.push(`#${list.cnt}`)
+                    } else {
+                      findings.push(`#${list.sort}`)
+                    }
                   }
                 }
               }
