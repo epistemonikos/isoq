@@ -2251,10 +2251,7 @@ export default {
           }
           axios.patch(`/api/isoqf_findings/${findingId}`, params)
             .then(() => {
-              if (getList) {
-                this.table_settings.isBusy = true
-                this.getLists()
-              }
+              this.getLists()
             })
             .catch((error) => {
               this.table_settings.isBusy = false
