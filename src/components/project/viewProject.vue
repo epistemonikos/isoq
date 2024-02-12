@@ -2411,8 +2411,7 @@ export default {
       this.table_settings.filter = ''
     },
     continueToIsoq: function () {
-      window.scrollTo({top: 0, behavior: 'smooth'})
-      this.tabOpened = 2
+      this.clickTab(2)
     },
     checkPermissions: function (type = 'can_write') {
       if (this.$store.state.user.personal_organization === this.$route.params.org_id) {
