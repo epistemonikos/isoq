@@ -1281,9 +1281,9 @@ export default {
               this.$nextTick(() => {
                 if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
                   const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
-                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
+                  this.clickTab(tabs.indexOf(this.$route.query.tab))
                 } else {
-                  this.tabOpened = 2
+                  this.clickTab(2)
                 }
               })
             }
