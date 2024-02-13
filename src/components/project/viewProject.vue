@@ -1362,6 +1362,8 @@ export default {
       axios.get('/api/isoqf_lists', { params })
         .then(async (response) => {
           this.lists = await this.processLists(response)
+          const lists = response.data.map((list) => { return list.id })
+          this.getFindings(lists.toString())
           this.table_settings.totalRows = this.lists.length
           this.routeAnchorHash()
           this.table_settings.isBusy = false
@@ -1569,7 +1571,6 @@ export default {
               }
             }
           }
-          this.getFinding(this.$route.params.org_id, list.id)
         }
 
         if (this.list_categories.options.length) {
@@ -1636,17 +1637,14 @@ export default {
       this.table_settings.isBusy = false
       return data
     },
-    getFinding: function (orgId, listId) {
+    getFindings: function (listIds) {
       const params = {
-        organization: orgId,
-        list_id: listId
+        'list_ids': listIds
       }
-      axios.get('/api/isoqf_findings', {params})
+      axios.get('/api/findings', {params})
         .then((response) => {
           if (response.data.length) {
-            if (!this.findings.includes(response.data[0].id)) {
-              this.findings.push(response.data[0].id)
-            }
+            this.findings.push(...response.data)
           }
         })
         .catch((error) => {
