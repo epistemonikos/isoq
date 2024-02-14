@@ -1747,7 +1747,7 @@ export default {
         .then(async (response) => {
           if (response.data.length) {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
-            await this.getReferences()
+            await this.getReferences(false)
             this.selected_references = data.item.references
             this.showBanner = false
             if (data.item.cerqual_option !== '') {
@@ -2020,7 +2020,7 @@ export default {
       }
       axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
-          this.getLists(true)
+          this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
