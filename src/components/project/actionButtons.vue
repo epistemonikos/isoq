@@ -781,7 +781,33 @@ export default {
     },
     savePublicStatus: function (event) {
       event.preventDefault()
-      // this.ui.publish.showLoader = true
+      this.$emit('uiPublishShowLoader', true)
+      let params = {}
+      params.private = true
+      params.is_public = false
+      params.public_type = this.modalProject.public_type
+      params.license_type = this.modalProject.license_type
+      params.project_id = this.project.id
+      if (this.modalProject.public_type !== 'private') {
+        params.private = false
+        params.is_public = true
+      } else {
+        params.license_type = ''
+      }
+
+      axios.get('/api/publish', {params})
+        .then(() => {
+          this.modalProject = {}
+          this.$emit('getProject')
+          this.$emit('uiPublishShowLoader', false)
+          this.$refs['modal-change-status'].hide()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    savePublicStatus2: function (event) {
+      event.preventDefault()
       this.$emit('uiPublishShowLoader', true)
       let params = {}
       params.private = true

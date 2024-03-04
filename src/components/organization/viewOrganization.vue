@@ -569,27 +569,15 @@ export default {
         console.log(error)
       }
     },
-    getProjects: async function () {
-      let requests = []
-      const excludeOrgs = ['examples', 'episte']
-      this.projects = []
-
-      for (let _org of this.$store.state.user.orgs) {
-        if (!excludeOrgs.includes(_org.id)) {
-          requests.push(await this.axiosGetProjects(_org.id))
-        }
-      }
-      Promise.all(requests)
-        .then((responses) => {
+    getProjects: function () {
+      axios.get('/api/getProjects')
+        .then((response) => {
+          this.projects = []
           let _projects = []
-          for (const response of responses) {
-            if (response.data.length) {
-              for (const project of response.data) {
-                const processProject = this.processProject(project)
-                if (Object.keys(processProject).length) {
-                  _projects.push(processProject)
-                }
-              }
+          for (const project of response.data) {
+            const processProject = this.processProject(project)
+            if (Object.keys(processProject).length) {
+              _projects.push(processProject)
             }
           }
           const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
@@ -773,75 +761,19 @@ export default {
     },
     removeProject: function () {
       this.ui.projectTable.isBusy = true
-      const params = {
-        organization: this.$route.params.id,
-        project_id: this.buffer_project.id
-      }
-      axios.get('/api/isoqf_lists', { params })
+      axios.get(`/api/remove/project/${this.buffer_project.id}`)
         .then((response) => {
-          let requestsLists = []
-          const lists = response.data
-          for (let list of lists) {
-            this.getFindings(list.id)
-            requestsLists.push(axios.delete(`/api/isoqf_lists/${list.id}`))
+          if (response.data.status) {
+            this.getProjects()
+            this.ui.projectTable.isBusy = false
+          } else {
+            this.ui.projectTable.isBusy = false
+            console.log(response.data)
           }
-          this.processRequests(requestsLists)
         })
         .catch((error) => {
           console.log(error)
-        })
-      axios.get('/api/isoqf_list_categories', { params })
-        .then((response) => {
-          let requestsCategories = []
-          const categories = response.data
-          for (let category of categories) {
-            requestsCategories.push(axios.delete(`/api/isoqf_list_categories/${category.id}`))
-          }
-          this.processRequests(requestsCategories)
-        })
-      axios.get('/api/isoqf_references', { params })
-        .then((response) => {
-          let referencesRequests = []
-          const references = response.data
-          for (let reference of references) {
-            referencesRequests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-          }
-          this.processRequests(referencesRequests)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_assessments', { params })
-        .then((response) => {
-          let requestsAssessments = []
-          const methAssessments = response.data
-          for (let methAssessment of methAssessments) {
-            requestsAssessments.push(axios.delete(`/api/isoqf_assessments/${methAssessment.id}`))
-          }
-          this.processRequests(requestsAssessments)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.get('/api/isoqf_characteristics', { params })
-        .then((response) => {
-          let requestsCharacteristics = []
-          const charOfStudies = response.data
-          for (let charOfStudy of charOfStudies) {
-            requestsCharacteristics.push(axios.delete(`/api/isoqf_characteristics/${charOfStudy.id}`))
-          }
-          this.processRequests(requestsCharacteristics)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      axios.delete(`/api/isoqf_projects/${this.buffer_project.id}`)
-        .then((response) => {
-          this.getProjects()
           this.ui.projectTable.isBusy = false
-        })
-        .catch((error) => {
-          console.log(error)
         })
     },
     getFindings: function (id) {
@@ -1059,34 +991,10 @@ export default {
           console.log(error)
         })
     },
-    processCloneProject: async function () {
-      let bufferProject = JSON.parse(JSON.stringify(this.buffer_project))
-      delete bufferProject.id
-      delete bufferProject._id
-      bufferProject.sharedTo = ''
-      bufferProject.name = '(Copy of) ' + bufferProject.name
-      bufferProject.sharedCan = {read: [], write: []}
-      bufferProject.temporaryUrl = ''
-      bufferProject.invite_emails = []
-      bufferProject.tmp_invite_emails = []
-      bufferProject.is_owner = true
-      bufferProject.organization = this.$route.params.id
-      bufferProject.created_at = Date.now()
-      bufferProject.can_write = []
-      bufferProject.can_read = []
-      bufferProject.private = true
-      bufferProject.is_public = false
-      return bufferProject
-    },
     generateACopyOfAProject: async function () {
       this.ui.copy.project = true
-      const originalProject = JSON.parse(JSON.stringify(this.buffer_project))
-      const newProject = await this.processCloneProject()
-      axios.post('/api/isoqf_projects', newProject)
-        .then((response) => {
-          this.modalCloneNewId = response.data.id
-          this.generateCopyOfReferences(originalProject, response.data)
-          this.generateCopyOfCategories(originalProject)
+      axios.get(`/api/clone/project/${this.buffer_project.id}/org/${this.$route.params.id}`)
+        .then(() => {
           this.ui.copy.project = false
           this.getProjects()
         })
@@ -1102,255 +1010,6 @@ export default {
           } else {
             // Something happened in setting up the request that triggered an Error
             console.log('Error', error.message)
-          }
-        })
-    },
-    generateCopyOfLists: function (originalProject, newProject) {
-      this.ui.copy.lists = true
-      const params = {
-        project_id: originalProject.id,
-        organization: originalProject.organization
-      }
-      axios.get('/api/isoqf_lists', {params})
-        .then((response) => {
-          if (response.data.length < 1) {
-            this.ui.copy.lists = false
-          }
-          for (let list of response.data) {
-            let modifiedList = JSON.parse(JSON.stringify(list))
-            const originalList = JSON.parse(JSON.stringify(list))
-            delete modifiedList.id
-            delete modifiedList._id
-            modifiedList.project_id = newProject.id
-            modifiedList.organization = this.$route.params.id
-            for (let reference of this.buffer_project.references) {
-              let i = modifiedList.references.indexOf(reference.oldId)
-              if (i !== -1) {
-                modifiedList.references[i] = reference.id
-              }
-            }
-            axios.post('/api/isoqf_lists', modifiedList)
-              .then((response) => {
-                this.generateCopyOfFindings(originalList, response.data)
-                this.replaceReferences(response.data)
-                this.replaceCategory(response.data)
-                this.ui.copy.lists = false
-              })
-          }
-        })
-    },
-    generateCopyOfCategories: function (originalProject) {
-      const params = {
-        project_id: originalProject.id,
-        organization: originalProject.organization
-      }
-      axios.get('/api/isoqf_list_categories', {params})
-        .then((response) => {
-          for (let category of response.data) {
-            let modifiedCategory = JSON.parse(JSON.stringify(category))
-            // const originalCategory = JSON.parse(JSON.stringify(category))
-            modifiedCategory.oldId = modifiedCategory.id
-            delete modifiedCategory.id
-            delete modifiedCategory._id
-            modifiedCategory.project_id = this.modalCloneNewId
-            modifiedCategory.organization = this.$route.params.id
-            axios.post('/api/isoqf_list_categories', modifiedCategory)
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    processReferences: async function (projectId, data) {
-      let newReferences = []
-      for (let reference of data) {
-        let modifiedRef = JSON.parse(JSON.stringify(reference))
-        modifiedRef.oldId = reference.id
-        modifiedRef.project_id = projectId
-        modifiedRef.organization = this.$route.params.id
-        delete modifiedRef.id
-        delete modifiedRef._id
-        newReferences.push(modifiedRef)
-      }
-      return newReferences
-    },
-    generateCopyOfReferences: function (originalProject, project) {
-      this.ui.copy.references = true
-      const params = {
-        organization: originalProject.organization,
-        project_id: originalProject.id
-      }
-      axios.get('/api/isoqf_references', {params})
-        .then(async (response) => {
-          if (response.data.length < 1) {
-            this.ui.copy.references = false
-          }
-          const newReferences = await this.processReferences(project.id, response.data)
-          if (newReferences.length) {
-            let postReferences = []
-            for (const reference of newReferences) {
-              postReferences.push(await axios.post('/api/isoqf_references', reference))
-            }
-            Promise.all(postReferences)
-              .then((responses) => {
-                this.buffer_project.references = []
-                for (let response of responses) {
-                  this.buffer_project.references.push(response.data)
-                  this.newReferences.push(response.data)
-                }
-              })
-              .then(() => {
-                this.ui.copy.references = false
-                this.generateCopyOfLists(originalProject, project)
-                this.generateCopyOf('isoqf_assessments', originalProject, project)
-                this.generateCopyOf('isoqf_characteristics', originalProject, project)
-              })
-          }
-        })
-    },
-    generateCopyOfFindings: function (originalList, newList) {
-      this.ui.copy.findings = true
-      const params = {
-        organization: originalList.organization,
-        list_id: originalList.id
-      }
-      axios.get('/api/isoqf_findings', {params})
-        .then((response) => {
-          if (response.data.length < 1) {
-            this.ui.copy.findings = false
-          }
-          for (let finding of response.data) {
-            let modifiedFinding = JSON.parse(JSON.stringify(finding))
-            const originalFinding = JSON.parse(JSON.stringify(finding))
-            delete modifiedFinding.id
-            delete modifiedFinding._id
-            modifiedFinding.organization = this.$route.params.id
-            modifiedFinding.list_id = newList.id
-            if (Object.prototype.hasOwnProperty.call(modifiedFinding, 'evidence_profile')) {
-              if (Object.prototype.hasOwnProperty.call(modifiedFinding.evidence_profile, 'references')) {
-                for (let nr of this.newReferences) {
-                  for (let ref in modifiedFinding.evidence_profile.references) {
-                    if (nr.oldId === modifiedFinding.evidence_profile.references[ref]) {
-                      modifiedFinding.evidence_profile.references[ref] = nr.id
-                    }
-                  }
-                }
-              }
-            }
-            axios.post('/api/isoqf_findings', modifiedFinding)
-              .then((response) => {
-                this.generateCopyOf('isoqf_extracted_data', originalFinding, response.data)
-                this.ui.copy.findings = false
-              })
-          }
-        })
-    },
-    replaceCategory: function (newList) {
-      const params = {
-        organization: newList.organization,
-        project_id: newList.project_id
-      }
-      axios.get('/api/isoqf_list_categories', params)
-        .then((response) => {
-          for (let category of response.data) {
-            if (category.oldId === newList.category) {
-              axios.patch('/api/isoqf_lists/' + newList.id, {category: category.id})
-            }
-          }
-        })
-    },
-    replaceReferences: function (newList) {
-      this.ui.copy.replaceReferences = true
-      const params = {
-        organization: newList.organization,
-        project_id: this.modalCloneId// newList.project_id
-      }
-      axios.get('/api/isoqf_references', {params})
-        .then((response) => {
-          if (response.data.length < 1) {
-            this.ui.copy.replaceReferences = false
-          }
-          if (newList.references.length) {
-            for (let reference of response.data) {
-              let index = newList.references.indexOf(reference.oldId)
-              if (index !== -1) {
-                newList.references[index] = reference.id
-              }
-            }
-            axios.patch(`/api/isoqf_lists/${newList.id}`, {references: newList.references})
-              .then(() => {
-                this.ui.copy.replaceReferences = false
-              })
-          } else {
-            this.ui.copy.replaceReferences = false
-          }
-        })
-    },
-    generateCopyOf: function (table, originalProject, project) {
-      this.ui.copy.copyOf = true
-      let params = {
-        organization: originalProject.organization,
-        project_id: originalProject.id
-      }
-      if (table === 'isoqf_extracted_data') {
-        params = {
-          organization: originalProject.organization,
-          finding_id: originalProject.id
-        }
-      }
-      axios.get(`/api/${table}`, {params})
-        .then((response) => {
-          if (response.data.length < 1) {
-            this.ui.copy.copyOf = false
-          }
-          let q = []
-          for (let data of response.data) {
-            let modifiedData = JSON.parse(JSON.stringify(data))
-            delete modifiedData.id
-            delete modifiedData._id
-            modifiedData.organization = this.$route.params.id
-            if (table === 'isoqf_extracted_data') {
-              modifiedData.finding_id = project.id
-              modifiedData.list_id = project.list_id
-            } else {
-              modifiedData.project_id = project.id
-            }
-            q.push(axios.post(`/api/${table}`, modifiedData))
-          }
-          axios.all(q)
-            .then((responses) => {
-              for (let response of responses) {
-                this.replaceReferencesTable(table, response.data)
-              }
-            })
-            .then(() => {
-              this.ui.copy.copyOf = false
-            })
-        })
-    },
-    replaceReferencesTable: function (table, data) {
-      this.ui.copy.referencesTable = true
-      let params = {
-        organization: data.organization,
-        project_id: data.project_id
-      }
-      if (table === 'isoqf_extracted_data') {
-        params.project_id = this.modalCloneNewId
-      }
-      axios.get('/api/isoqf_references', {params})
-        .then((response) => {
-          if (data.items.length) {
-            for (let reference of response.data) {
-              for (let item of data.items) {
-                if (reference.oldId === item.ref_id) {
-                  item.ref_id = reference.id
-                }
-              }
-            }
-            axios.patch(`/api/${table}/${data.id}`, {items: data.items})
-              .then(() => {
-                this.ui.copy.referencesTable = false
-              })
           }
         })
     },
