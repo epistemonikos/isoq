@@ -78,6 +78,7 @@
                   placeholder="Write the same password as above"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
+              <p>Would you like to be subscribed to our newsletter? <b>Yeah! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
               </b-card-text>
