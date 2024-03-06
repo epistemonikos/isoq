@@ -78,10 +78,19 @@ export default {
       }
       axios.patch(`/api/isoqf_projects/${project.id}`, project)
         .then(() => {
-          console.log('Project updated', project.id, project)
-          this.msgUpdateProject = 'The project has been updated'
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-          this.$emit('update-modification')
+          let params = {
+            project_id: project.id,
+            is_public: project.is_public,
+            private: project.private,
+            license_type: project.license_type,
+            public_type: project.public_type
+          }
+          axios.get(`/api/publish`, {params})
+            .then(() => {
+              this.msgUpdateProject = 'The project has been updated'
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              this.$emit('update-modification')
+            })
         })
         .catch((error) => {
           this.msgUpdateProject = error
