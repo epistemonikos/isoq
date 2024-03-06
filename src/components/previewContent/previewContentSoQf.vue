@@ -338,9 +338,8 @@ export default {
             this.$router.push({ name: 'MainPage' })
           }
         })
-        .catch((error) => {
-          console.log(error)
-          // this.printErrors(error)
+        .catch(() => {
+          this.$router.push({ name: 'MainPage' })
         })
     },
     getLists: function () {
