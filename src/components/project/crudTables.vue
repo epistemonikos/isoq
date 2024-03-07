@@ -686,11 +686,8 @@ export default {
         }
         // sort fields by key
         fields.sort((a, b) => {
-          if (a.key < b.key) {
-            return -1
-          }
-          if (a.key > b.key) {
-            return 1
+          if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
+            return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
           }
           return 0
         })
