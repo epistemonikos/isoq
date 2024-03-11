@@ -543,19 +543,19 @@ export default {
           for (const response of responses) {
             requestExtractedData.push(await this.axiosGetExtractedData(response.data[0].organization, response.data[0].id))
           }
-          this.updateExtractedDataReferences(requestExtractedData, references)
+          await this.updateExtractedDataReferences(requestExtractedData, references)
         })
         .catch((error) => {
           this.printErrors(error)
         })
     },
-    updateExtractedDataReferences: function (querys = [], references = []) {
+    updateExtractedDataReferences: async function (extractedDataQuerys = [], references = []) {
       if (references.length) {
-        if (querys.length) {
-          Promise.all(querys)
+        if (extractedDataQuerys.length) {
+          Promise.all(extractedDataQuerys)
             .then(async (responses) => {
               let item = {}
-              let _items = []
+              let itemsReferences = []
               let patchExtractedData = []
               for (let reference of references) {
                 item = {
@@ -563,23 +563,15 @@ export default {
                   'authors': this.parseReference(reference, true),
                   'column_0': ''
                 }
-                _items.push(item)
+                itemsReferences.push(item)
               }
               for (let _response of responses) {
-                let response = _response.data[0]
-                for (let _item of _items) {
-                  for (let item of response.items) {
-                    if (item.ref_id === _item.ref_id) {
-                      if (item.column_0.length) {
-                        _item.column_0 = item.column_0
-                      }
-                    }
-                  }
-                }
+                let responseItems = _response.data[0].items
+                responseItems.push(...itemsReferences)
                 const params = {
-                  items: _items
+                  items: responseItems
                 }
-                patchExtractedData.push(await this.axiosPatchExtractedData(response.id, params))
+                patchExtractedData.push(await this.axiosPatchExtractedData(_response.data[0].id, params))
               }
               Promise.all(patchExtractedData)
                 .then(() => {})
