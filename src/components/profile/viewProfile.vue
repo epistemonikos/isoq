@@ -39,7 +39,8 @@
           </b-tr>
         </b-tbody>
       </b-table-simple>
-      <b-button @click="update" :disabled="isDisabled">save</b-button>
+      <p>Would you like to be subscribed to our newsletter? <b>Yeah! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
+      <b-button @click="update" :disabled="isDisabled">Save</b-button>
     </b-container>
   </div>
 </template>
