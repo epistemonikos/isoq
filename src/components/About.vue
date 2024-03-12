@@ -41,7 +41,7 @@
       </p>
 
       <h3>How was the iSoQ tool funded?</h3>
-      <p>The iSoQ tool was developed with funding from the Norwegian Institute of Public Health’s Centre for Informed Health Choices.</p>
+      <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR). Additional funding for members of the development team is provided by the Western Norway University of Applied Sciences (HVL), the Norwegian University of Science and Technology (NTNU) and the Epistemonikos Foundation.</p>
 
       <h3>How is the iSoQ tool and its contents licenced?</h3>
       <ul>
