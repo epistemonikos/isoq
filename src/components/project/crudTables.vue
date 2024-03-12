@@ -50,7 +50,7 @@
         cols="12">
         <b-table
           sort-by="authors"
-          id="chars-of-studies-table"
+          :id="`${prefix}-table`"
           class="table-content-refs mt-3"
           v-if="dataTable.fieldsObj.length > 1"
           :fields="dataTable.fieldsObj"
@@ -105,7 +105,7 @@
           v-model="dataTableSettings.currentPage"
           :total-rows="dataTable.items.length"
           :per-page="dataTableSettings.perPage"
-          aria-controls="chars-of-studies-table">
+          :aria-controls="`${prefix}-table`">
         </b-pagination>
       </b-col>
 
