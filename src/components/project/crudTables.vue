@@ -67,7 +67,7 @@
           <template
             v-slot:cell(actions)="data"
             v-if="dataTable.fields.length > 2">
-            <b-row>
+            <b-row class="actionButtons">
               <b-col>
                 <b-button
                   block
