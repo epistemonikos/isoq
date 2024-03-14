@@ -67,7 +67,7 @@
           <template
             v-slot:cell(actions)="data"
             v-if="dataTable.fields.length > 2">
-            <b-row class="actionButtons">
+            <b-row>
               <b-col>
                 <b-button
                   block
@@ -508,7 +508,7 @@ export default {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
-              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
 
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
@@ -523,8 +523,6 @@ export default {
                   this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
-
-              this.dataTable.fieldsObj.push({'key': 'actions', 'label': ''})
 
               this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
 

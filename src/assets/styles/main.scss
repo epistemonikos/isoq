@@ -87,21 +87,13 @@ html, body {
   box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
 }
 
-.table.b-table tbody tr td {
-  .actionButtons {
-    display: none;
+#ch-table.table.b-table, #as-table.table.b-table {
+  tbody tr {
+    td:first-child {
+      width: 6%;
+    }
+    td:nth-child(2) {
+      width: 20%;
+    }
   }
-}
-.table.b-table tbody tr:hover td {
-  .actionButtons {
-    display: flex;
-    width: 20%;
-    float: left;
-    position: absolute;
-    left: 0;
-    height: fit-content;
-    align-items: center;
-    box-sizing: content-box;
-    background-color: #fff;
-  }
-}
+} 
