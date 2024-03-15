@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="w-80">
     <b-row
       v-if="checkPermissions">
       <b-col
@@ -51,7 +51,7 @@
         <b-table
           sort-by="authors"
           id="chars-of-studies-table"
-          class="table-content-refs mt-3"
+          class="mt-3"
           v-if="dataTable.fieldsObj.length > 1"
           :fields="dataTable.fieldsObj"
           :items="dataTable.items"
