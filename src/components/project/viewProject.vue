@@ -62,14 +62,14 @@
                   @statusLoadReferences="statusLoadReferences"
                   @CallGetProject="getProject"></UploadReferences>
               </b-tab>
-              <b-tab title="STEP 2: Inclusion & Exclusion criteria" class="w-85">
+              <b-tab title="STEP 2: Inclusion & Exclusion criteria" class="w-85" :disabled="references.length?false:true">
                 <InclusionExclusioCriteria
                   :checkPermissions="checkPermissions()"
                   :project="project"
                   :ui="ui"
                   @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
               </b-tab>
-              <b-tab title="STEP 3: Characteristics of studies table" class="w-85">
+              <b-tab title="STEP 3: Characteristics of studies table" class="w-85" :disabled="references.length?false:true">
                 <div>
                   <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
                   <p class="font-weight-light">
@@ -91,7 +91,7 @@
                     ></crudTables>
                 </div>
               </b-tab>
-              <b-tab title="STEP 4: Methodological assessments table" class="w-85">
+              <b-tab title="STEP 4: Methodological assessments table" class="w-85" :disabled="references.length?false:true">
                 <h4>STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
                 <p class="font-weight-light">
                   Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
