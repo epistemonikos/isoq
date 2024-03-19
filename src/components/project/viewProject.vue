@@ -50,8 +50,8 @@
             </p>
           </b-col>
           <b-card no-body>
-            <b-tabs pills card vertical nav-wrapper-class="w-15" class="link-steps nowrap" active-nav-item-class="btn-success">
-              <b-tab title="STEP 1: References" class="w-85">
+            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
+              <b-tab title="STEP 1: References">
                 <UploadReferences
                   :checkPermissions="checkPermissions()"
                   :loadReferences="loadReferences"
@@ -62,42 +62,68 @@
                   @CallGetReferences="getReferences"
                   @statusLoadReferences="statusLoadReferences"
                   @CallGetProject="getProject"></UploadReferences>
+                  <div>
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                    </b-col>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 2</a>
+                    </b-col>
+                  </b-row>
+                </div>
               </b-tab>
-              <b-tab title="STEP 2: Inclusion & Exclusion criteria" class="w-85" :disabled="references.length?false:true">
+              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :active="references.length?true:false" :disabled="references.length?false:true">
                 <InclusionExclusioCriteria
                   :checkPermissions="checkPermissions()"
                   :project="project"
                   :ui="ui"
                   @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
-              </b-tab>
-              <b-tab title="STEP 3: Characteristics of studies table" class="w-85" :disabled="references.length?false:true">
                 <div>
-                  <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
-                  <p class="font-weight-light">
-                    Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
-                  </p>
-                  <crudTables
-                    type="isoqf_characteristics"
-                    prefix="ch"
-                    :checkPermissions="checkPermissions()"
-                    :project="project"
-                    :ui="ui"
-                    :references="references"
-                    :refs="refs"
-                    :lists="lists"
-                    @get-project="getProject"
-                    @print-errors="printErrors"
-                    @updateDataTable="updateDataTable"
-                    @set-item-data="setItemData"
-                    ></crudTables>
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 3</a>
+                    </b-col>
+                  </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 4: Methodological assessments table" class="w-85" :disabled="references.length?false:true">
+              <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
+                <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+                <p class="font-weight-light">
+                  Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+                </p>
+                <crudTables
+                  type="isoqf_characteristics"
+                  prefix="ch"
+                  :checkPermissions="checkPermissions()"
+                  :project="project"
+                  :ui="ui"
+                  :references="references"
+                  :refs="refs"
+                  :lists="lists"
+                  @get-project="getProject"
+                  @print-errors="printErrors"
+                  @updateDataTable="updateDataTable"
+                  @set-item-data="setItemData"
+                  ></crudTables>
+                <div>
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 2</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 4</a>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-tab>
+              <b-tab title="STEP 4: Methodological assessments table" :disabled="references.length?false:true">
                 <h4>STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
                 <p class="font-weight-light">
                   Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
                 </p>
-
                 <crudTables
                   type="isoqf_assessments"
                   prefix="as"
@@ -112,25 +138,25 @@
                   @updateDataTable="updateDataTable"
                   @set-item-data="setItemData"
                 ></crudTables>
+                <div>
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 3</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <b-button
+                        block
+                        variant="success"
+                        class="mb-3"
+                        @click="continueToIsoq">
+                        Continue to iSoQ
+                      </b-button>
+                    </b-col>
+                  </b-row>
+                </div>
               </b-tab>
             </b-tabs>
           </b-card>
-
-        </b-row>
-        <b-row
-          v-if="references.length"
-          align-h="end"
-          class="mt-5 mb-2">
-          <b-col
-            cols="6">
-            <b-button
-              block
-              variant="success"
-              class="mb-3"
-              @click="continueToIsoq">
-              Continue to iSoQ
-            </b-button>
-          </b-col>
         </b-row>
       </div>
       <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
@@ -1029,6 +1055,7 @@ export default {
   },
   data () {
     return {
+      stepStage: 0,
       project: {
         name: '',
         authors: '',
@@ -1238,6 +1265,10 @@ export default {
     await this.getProject()
   },
   methods: {
+    isActiveStepTwo: function () {
+      if (this.references.length === 0) { return false }
+      if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }
+    },
     setItemData: function (data) {
       this.ui.itemData = data
     },
