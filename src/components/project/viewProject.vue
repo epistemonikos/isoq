@@ -24,6 +24,7 @@
             @click="clickTab(1)">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
+            :disabled="(references.length) ? false : true"
             @click="clickTab(2)">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
