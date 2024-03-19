@@ -1,5 +1,5 @@
 <template>
-  <div class="w-80">
+  <div>
     <b-row
       v-if="checkPermissions">
       <b-col
