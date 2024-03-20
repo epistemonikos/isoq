@@ -166,8 +166,11 @@
                           <b-form-group
                             v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
                             class="mt-4 font-weight-light"
-                            label="Explain any concerns you have in your own words."
                             label-for="input-ml-explanation">
+                            <template slot="label">
+                              Explain any concerns you have in your own words.
+                              <small class="text-muted">{{ buffer_modal_stage_two.methodological_limitations.example }}</small>
+                            </template>
                             <template slot="description">
                               The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example
                             </template>
@@ -1059,11 +1062,11 @@ export default {
         organization: ''
       },
       buffer_modal_stage_two: {
-        methodological_limitations: {option: null, explanation: '', notes: '', title: ''},
-        coherence: {option: null, explanation: '', notes: '', title: ''},
-        adequacy: {option: null, explanation: '', notes: '', title: ''},
-        relevance: {option: null, explanation: '', notes: '', title: ''},
-        cerqual: {option: null, explanation: '', notes: '', title: ''}
+        methodological_limitations: {option: null, example: '', explanation: '', notes: '', title: ''},
+        coherence: {option: null, example: '', explanation: '', notes: '', title: ''},
+        adequacy: {option: null, example: '', explanation: '', notes: '', title: ''},
+        relevance: {option: null, example: '', explanation: '', notes: '', title: ''},
+        cerqual: {option: null, example: '', explanation: '', notes: '', title: ''}
       },
       list: {
         id: '',
@@ -1782,7 +1785,7 @@ export default {
         })
     },
     propExplanation: function (txt, type) {
-      this.buffer_modal_stage_two[type].explanation = txt
+      this.buffer_modal_stage_two[type].example = txt
     },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')
