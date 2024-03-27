@@ -1,31 +1,37 @@
 <template>
   <div id="mainContainer" class="vh-100">
-    <b-container id="mainPage" fluid class="pt-5">
-      <b-row>
-        <b-col cols="12" md="6" lg="3">
+    <b-container fluid>
+      <b-row cols="1">
+        <b-col>
           <h2>iSoQ <span>Version 1.0</span></h2>
           <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
         </b-col>
-      </b-row>
+      <!-- </b-row>
 
-      <b-row class="py-5">
-        <b-col cols="12" md="4" lg="3">
+      <b-row> -->
+        <b-col>
           <ul id="main-page-nav" class="unstyled-list">
             <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
             <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
             <li><b-link href="https://vimeo.com/687899560" target="_blank">Watch a short video</b-link></li>
           </ul>
         </b-col>
-      </b-row>
+      <!-- </b-row>
 
-      <b-row align-v="end">
-        <b-col cols="12" md="4">
-          <ul class="list-inline logo-orgs">
+      <b-row> -->
+        <b-col align-self="end">
+          <ul class="list-inline logo-orgs w-100">
             <li class="list-inline-item">
-              <img src="../assets/logo-niph.png" alt="NIPH">
+              <img src="../assets/logo-niph.png" height="50" alt="NIPH">
             </li>
             <li class="list-inline-item">
-              <img src="../assets/logo-epistemonikos.png" alt="Epistemonikos Foundation">
+              <img src="../assets/hvl_logo_en_neg.png" height="50" alt="HVL">
+            </li>
+            <li class="list-inline-item">
+              <img src="../assets/logo-nust.png" height="50" alt="Norwegian University ST">
+            </li>
+            <li class="list-inline-item">
+              <img src="../assets/logo-epistemonikos.png" height="50" alt="Epistemonikos Foundation">
             </li>
           </ul>
           <p class="credit">Image by Sarah Rosenbaum, Norway</p>
