@@ -539,9 +539,11 @@ export default {
       if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
         const params = {
           sharedToken: project.sharedToken,
-          is_public: isPublic
+          is_public: isPublic,
+          temporaryUrl: project.temporaryUrl,
+          project_id: project.id
         }
-        axios.patch(`/api/isoqf_projects/${project.id}`, params)
+        axios.patch('/api/sharedLink', { params })
           .then(() => {})
           .catch((error) => {
             console.log(error)
