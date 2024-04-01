@@ -25,10 +25,10 @@
             <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
           </b-col>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
+            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
           </b-col>
           <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
+            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
           </b-col>
         </b-row>
       </b-container>
