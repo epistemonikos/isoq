@@ -1,37 +1,43 @@
 <template>
   <div id="mainContainer" class="vh-100">
-    <b-container id="mainPage" fluid class="pt-5">
-      <b-row>
-        <b-col cols="12" md="6" lg="3">
-          <h2>iSoQ <span>Version 1.0</span></h2>
-          <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
+    <div class="d-flex flex-column h-100">
+      <b-container fluid class="mb-auto">
+        <b-row>
+          <b-col cols="12" md="3" class="pt-5">
+            <h2>iSoQ <span>Version 1.0</span></h2>
+            <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
+          </b-col>
+          <b-col cols="12">
+            <ul id="main-page-nav" class="unstyled-list">
+              <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
+              <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
+              <li><b-link href="https://vimeo.com/687899560" target="_blank">Watch a short video</b-link></li>
+            </ul>
+          </b-col>
+        </b-row>
+      </b-container>
+      <b-container fluid class="bg-black py-3">
+        <b-row>
+          <b-col class="text-center" cols="3" align-self="center">
+            <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" alt="NIPH"></b-img>
+          </b-col>
+          <b-col class="text-center" cols="3" align-self="center">
+            <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
+          </b-col>
+          <b-col class="text-center" cols="3" align-self="center">
+            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
+          </b-col>
+          <b-col class="text-center" cols="3" align-self="center">
+            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
+          </b-col>
+        </b-row>
+      </b-container>
+      <div class="">
+        <b-col align-self="center">
+          <p class="text-center credit">Image by Sarah Rosenbaum, Norway</p>
         </b-col>
-      </b-row>
-
-      <b-row class="py-5">
-        <b-col cols="12" md="4" lg="3">
-          <ul id="main-page-nav" class="unstyled-list">
-            <li><b-link :to="{ name: 'About' }">Learn more about iSoQ</b-link></li>
-            <li><b-link :to="{ name: 'Browse' }">Browse</b-link></li>
-            <li><b-link href="https://vimeo.com/687899560" target="_blank">Watch a short video</b-link></li>
-          </ul>
-        </b-col>
-      </b-row>
-
-      <b-row align-v="end">
-        <b-col cols="12" md="4">
-          <ul class="list-inline logo-orgs">
-            <li class="list-inline-item">
-              <img src="../assets/logo-niph.png" alt="NIPH">
-            </li>
-            <li class="list-inline-item">
-              <img src="../assets/logo-epistemonikos.png" alt="Epistemonikos Foundation">
-            </li>
-          </ul>
-          <p class="credit">Image by Sarah Rosenbaum, Norway</p>
-        </b-col>
-      </b-row>
-    </b-container>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -52,6 +58,8 @@ export default {
   #mainContainer {
     background: url('../assets/a.jpg');
     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #FFF;
   }
   div >>>
