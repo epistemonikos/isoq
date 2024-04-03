@@ -62,8 +62,8 @@
                   @CallGetReferences="getReferences"
                   @statusLoadReferences="statusLoadReferences"
                   @CallGetProject="getProject"></UploadReferences>
-                  <div>
-                  <b-row>
+                <div class="mt-3">
+                  <b-row v-if="references.length">
                     <b-col cols="auto" class="mr-auto">
                     </b-col>
                     <b-col cols="auto">
@@ -78,7 +78,7 @@
                   :project="project"
                   :ui="ui"
                   @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
-                <div>
+                <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
@@ -108,7 +108,7 @@
                   @updateDataTable="updateDataTable"
                   @set-item-data="setItemData"
                   ></crudTables>
-                <div>
+                <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">Step 2</a>
@@ -138,7 +138,7 @@
                   @updateDataTable="updateDataTable"
                   @set-item-data="setItemData"
                 ></crudTables>
-                <div>
+                <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">Step 3</a>
