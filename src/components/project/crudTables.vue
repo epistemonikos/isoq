@@ -77,7 +77,7 @@
                     icon="edit"></font-awesome-icon>
                 </b-button>
               </b-col>
-              <b-col class="pt-2 pt-xl-0">
+              <b-col class="pt-2">
                 <b-button
                   block
                   variant="outline-danger"
