@@ -1,3 +1,5 @@
+import { name } from 'file-loader'
+
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
 const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
 const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
@@ -14,6 +16,7 @@ const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 // const fixCats = () => import(/* webpackChunkName: "fixCats" */ '@/components/fixCategories')
+const WhatsNew = () => import(/* webpackChunkName: "whatsnew" */ '@/components/WhatsNew')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -108,14 +111,6 @@ var routes = [
       requiresAuth: true
     }
   },
-  // {
-  //   path: '/workspace/:org_id/fixCats',
-  //   name: 'fixCats',
-  //   component: fixCats,
-  //   meta: {
-  //     requiresAuth: true
-  //   }
-  // },
   {
     path: '/worksheet/:id/edit',
     name: 'editList',
@@ -147,6 +142,14 @@ var routes = [
     component: previewWorksheet,
     meta: {
       title: 'Worksheet Preview - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/whats-new',
+    name: 'WhatsNew',
+    component: WhatsNew,
+    meta: {
+      title: 'Whats new - Interactive Summary of Qualitative Findings'
     }
   }
 ]
