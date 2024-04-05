@@ -6,6 +6,10 @@
       </b-container>
     </b-container>
     <b-container class="py-5">
+      <h3>What's new in iSoQ?</h3>
+      <p>Here you will find the latest updates and improvements to iSoQ.</p>
+      <h3>Version 1.0.0</h3>
+      <p>Initial release of iSoQ.</p>
     </b-container>
   </div>
 </template>
