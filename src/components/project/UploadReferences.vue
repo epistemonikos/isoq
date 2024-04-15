@@ -154,26 +154,26 @@
           <b-row>
             <b-col
               cols="12">
-              <p>This action will remove all the references</p>
+              <p class="alert text-danger">This action will delete all the references and all the data linked to them, including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables, and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Findings Table.<br><b>Are you sure you want to delete all the references?</b></p>
             </b-col>
           </b-row>
-          <b-row>
+          <b-row align-h="center">
             <b-col
-              cols="6">
+              cols="3">
               <b-button
                 block
                 @click="removeAllReferences"
                 variant="outline-danger">
-                Continue
+                Yes
               </b-button>
             </b-col>
             <b-col
-              cols="6">
+              cols="3">
               <b-button
                 block
                 @click="appearMsgRemoveReferences = false"
                 variant="outline-success">
-                Cancel
+                No
               </b-button>
             </b-col>
           </b-row>
@@ -199,7 +199,7 @@
           </template>
           <template v-slot:row-details="data">
             <b-card>
-              <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
+              <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all review findings that it supported.</p>
               <p>{{ findRelatedFindings(data.item.id) }}</p>
               <p>Are you sure you want to delete this reference?</p>
               <div>
@@ -224,7 +224,7 @@
         <div class="mt-2">
           <b-button
           @click="confirmRemoveAllReferences($event)"
-            >Remove all references</b-button>
+            >Delete all references</b-button>
         </div>
         </template>
       </b-col>
@@ -582,7 +582,7 @@ export default {
       if (findings.length) {
         return 'The findings affected are: ' + findings.join(', ')
       } else {
-        return 'No findings will be affected.'
+        return 'No review findings will be affected.'
       }
     },
     confirmRemoveAllReferences: function (event) {
