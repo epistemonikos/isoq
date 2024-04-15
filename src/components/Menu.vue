@@ -17,6 +17,7 @@
           <b-nav-item :to="{ name: 'Help' }">Help</b-nav-item>
           <b-nav-item :to="{ name: 'WhatsNew' }">What's new</b-nav-item>
           <template v-if="$store.getters.isLoggedIn">
+            <b-nav-item :to="$i18nRoute({ name: 'viewOrganization', params: {id: this.$store.state.user.personal_organization }})">My Workspace</b-nav-item>
             <b-nav-item-dropdown right>
               <!-- Using 'button-content' slot -->
               <template #button-content>
