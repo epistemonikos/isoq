@@ -150,6 +150,7 @@
     </b-row>
     <b-row v-if="references.length">
       <b-col>
+        <b-card>
         <template v-if="appearMsgRemoveReferences">
           <b-row>
             <b-col
@@ -179,54 +180,57 @@
           </b-row>
         </template>
         <template v-else>
-        <b-table
-          sort-by="authors"
-          responsive
-          hover
-          bordered
-          borderless
-          striped
-          :fields="fields_references_table"
-          :items="references">
-          <template v-slot:cell(action)="data">
+          <b-table
+            sort-by="authors"
+            responsive
+            hover
+            bordered
+            borderless
+            striped
+            :fields="fields_references_table"
+            :items="references"
+            head-variant="light"
+            outlined>
+            <template v-slot:cell(action)="data">
+              <b-button
+                v-if="checkPermissions"
+                variant="outline-danger"
+                @click="data.toggleDetails">
+                <font-awesome-icon
+                  icon="trash"></font-awesome-icon>
+              </b-button>
+            </template>
+            <template v-slot:row-details="data">
+              <b-card>
+                <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all review findings that it supported.</p>
+                <p>{{ findRelatedFindings(data.item.id) }}</p>
+                <p>Are you sure you want to delete this reference?</p>
+                <div>
+                  <b-row align-h="center">
+                    <b-col cols="3">
+                      <b-button
+                        block
+                        variant="outline-success"
+                        @click="data.toggleDetails">No</b-button>
+                    </b-col>
+                    <b-col cols="3">
+                      <b-button
+                        block
+                        variant="outline-danger"
+                        @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-card>
+            </template>
+          </b-table>
+          <div class="mt-2">
             <b-button
-              v-if="checkPermissions"
-              variant="outline-danger"
-              @click="data.toggleDetails">
-              <font-awesome-icon
-                icon="trash"></font-awesome-icon>
-            </b-button>
-          </template>
-          <template v-slot:row-details="data">
-            <b-card>
-              <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all review findings that it supported.</p>
-              <p>{{ findRelatedFindings(data.item.id) }}</p>
-              <p>Are you sure you want to delete this reference?</p>
-              <div>
-                <b-row align-h="center">
-                  <b-col cols="3">
-                    <b-button
-                      block
-                      variant="outline-success"
-                      @click="data.toggleDetails">No</b-button>
-                  </b-col>
-                  <b-col cols="3">
-                    <b-button
-                      block
-                      variant="outline-danger"
-                      @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
-                  </b-col>
-                </b-row>
-              </div>
-            </b-card>
-          </template>
-        </b-table>
-        <div class="mt-2">
-          <b-button
-          @click="confirmRemoveAllReferences($event)"
-            >Delete all references</b-button>
-        </div>
+            @click="confirmRemoveAllReferences($event)"
+              >Delete all references</b-button>
+          </div>
         </template>
+        </b-card>
       </b-col>
     </b-row>
   </div>
@@ -575,7 +579,7 @@ export default {
       for (const list of this.lists) {
         for (const ref of list.raw_ref) {
           if (ref.id === refId) {
-            findings.push(`#${list.cnt}`)
+            findings.push(`#${list.cnt || list.sort}`)
           }
         }
       }
