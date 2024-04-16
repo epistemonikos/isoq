@@ -154,7 +154,7 @@
           <b-row>
             <b-col
               cols="12">
-              <p class="alert text-danger">This action will delete all the references and all the data linked to them, including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables, and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Findings Table.<br><b>Are you sure you want to delete all the references?</b></p>
+              <p class="alert text-danger">This action will delete all the references and all the data linked to them, including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables, and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Qualitative Findings Table.<br><b>Are you sure you want to delete all the references?</b></p>
             </b-col>
           </b-row>
           <b-row align-h="center">
