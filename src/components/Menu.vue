@@ -15,7 +15,9 @@
           <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("About") }}</b-nav-item>
           <b-nav-item :to="$i18nRoute({ name: 'Browse'})">{{ $t("Browse") }}</b-nav-item>
           <b-nav-item :to="{ name: 'Help' }">Help</b-nav-item>
-          <b-nav-item :to="{ name: 'WhatsNew' }">What's new</b-nav-item>
+          <template v-if="!$store.getters.isLoggedIn">
+            <b-nav-item :to="{ name: 'WhatsNew' }">What's new</b-nav-item>
+          </template>
           <template v-if="$store.getters.isLoggedIn">
             <b-nav-item :to="$i18nRoute({ name: 'viewOrganization', params: {id: this.$store.state.user.personal_organization }})">My Workspace</b-nav-item>
             <b-nav-item-dropdown right>
@@ -23,8 +25,8 @@
               <template #button-content>
                 {{username}}
               </template>
-              <b-dropdown-item :to="$i18nRoute({ name: 'viewOrganization', params: {id: this.$store.state.user.personal_organization }})">My Workspace</b-dropdown-item>
-              <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">Change pasword</b-dropdown-item>
+              <b-dropdown-item :to="{ name: 'WhatsNew' }">What's new</b-dropdown-item>
+              <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">Change password</b-dropdown-item>
               <b-dropdown-item @click="logout">{{ $t('Logout') }}</b-dropdown-item>
             </b-nav-item-dropdown>
           </template>
