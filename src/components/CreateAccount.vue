@@ -320,7 +320,7 @@ export default {
         }
       }
       axios.post('/create_user', params)
-        .then((response) => {
+        .then(() => {
           this.login(this.user.username, this.user.password)
         })
         .catch((error) => {
@@ -335,7 +335,7 @@ export default {
           this.ui.display_join_org_or_create_org = false
           this.user = response.data
           let orgPath = {'id': response.data.personal_organization}
-          const path = { 'name': 'viewOrganization', 'params': orgPath }
+          const path = { 'name': 'viewOrganization', 'params': orgPath, 'query': { 'subscribe': true } }
           this.$router.push(path)
         })
         .catch((error) => console.log(error))

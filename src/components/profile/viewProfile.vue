@@ -41,22 +41,24 @@
       </b-table-simple>
       <b-button @click="update" :disabled="isDisabled">Save</b-button>
     </b-container>
-    <b-modal id="subscribe" ref="subscribe" title="Newsletter" ok-only ok-title="Close">
-      <p>Would you like to be subscribed to our newsletter?<br>
-      <b>Yeah! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
-    </b-modal>
+    <subscribe :show="showSubscribe"></subscribe>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import subscribe from '@/components/commons/subscribe.vue'
 
 export default {
   name: 'viewProfile',
+  components: {
+    subscribe
+  },
   data () {
     return {
       new_password: null,
-      msg: ''
+      msg: '',
+      showSubscribe: false
     }
   },
   computed: {
@@ -97,7 +99,7 @@ export default {
         .then((r) => {
           this.new_password = null
           this.msg = 'Your password has been changed!'
-          this.$refs['subscribe'].show()
+          this.showSubscribe = true
         })
     },
     showAlert: function () {

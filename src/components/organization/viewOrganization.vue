@@ -342,11 +342,14 @@
         <p>Leave the project <b>{{buffer_project.name}}</b></p>
       </b-modal>
     </b-container>
+    <subscribe :show="showSubscribe"></subscribe>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import subscribe from '@/components/commons/subscribe.vue'
+
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
@@ -354,10 +357,12 @@ export default {
   name: 'viewOrganization',
   components: {
     'organizationForm': organizationForm,
-    videoHelp
+    videoHelp,
+    subscribe
   },
   data () {
     return {
+      showSubscribe: false,
       users: [],
       project_id: '',
       organization: '',
@@ -497,6 +502,9 @@ export default {
     }
   },
   mounted () {
+    if (this.$route.query.subscribe === 'true') {
+      this.showSubscribe = true
+    }
     this.getProjects()
   },
   watch: {
