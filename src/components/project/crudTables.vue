@@ -51,7 +51,7 @@
         <b-table
           sort-by="authors"
           id="chars-of-studies-table"
-          class="table-content-refs mt-3"
+          class="mt-3"
           v-if="dataTable.fieldsObj.length > 1"
           :fields="dataTable.fieldsObj"
           :items="dataTable.items"
@@ -531,7 +531,6 @@ export default {
               for (let item of _items) {
                 this.dataTableFieldsModal.items.push(item)
               }
-              this.$emit('updateDataTable', this.dataTable, this.type)
             }
           } else {
             this.dataTable = {
@@ -546,6 +545,7 @@ export default {
               ]
             }
           }
+          this.$emit('updateDataTable', this.dataTable, this.type)
           this.dataTableSettings.isBusy = false
           // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
         })
@@ -940,6 +940,7 @@ export default {
       axios.get(`/api/${this.type}`, {params})
         .then((response) => {
           if (!response.data.length) {
+            this.getData()
             return
           }
           const responseData = JSON.parse(JSON.stringify(response.data[0]))

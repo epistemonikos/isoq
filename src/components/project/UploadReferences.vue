@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4 class="mt-5">STEP 1: Upload the <b>references</b> for your included studies (required)</h4>
+    <h4>STEP 1: Upload the <b>references</b> for your included studies (required)</h4>
     <p class="font-weight-light">
     You must import only the references for your final list of included studies
     </p>
@@ -140,71 +140,46 @@
             </b-row>
             <b-row v-else>
               <b-col
-                cols="6"
-                class="pt-2">
-                <span>You have <b>{{ references.length }}</b> references loaded</span>
-              </b-col>
-              <b-col cols="6">
-                <b-button
-                  block
-                  @click="openModalReferencesSingle"
-                  variant="outline-primary">
-                  View references
-                </b-button>
+                cols="12">
+                <p class="text-center my-0">You have <b>{{ references.length }}</b> references loaded listed below</p>
               </b-col>
             </b-row>
           </template>
         </b-card>
       </b-col>
     </b-row>
-
-    <b-modal
-      id="modal-references"
-      ref="modal-references"
-      title="References"
-      size="xl"
-      :ok-only="!checkPermissions"
-      @ok="getProject"
-      @cancel="confirmRemoveAllReferences($event)"
-      scrollable
-      ok-variant="outline-success"
-      ok-title="Close"
-      cancel-variant="outline-danger"
-      cancel-title="Remove all references"
-      :cancel-disabled="disableBtnRemoveAllRefs">
-      <template v-if="appearMsgRemoveReferences">
-        <b-row>
-          <b-col
-            cols="12">
-            <p>This action will remove all the references</p>
-          </b-col>
-        </b-row>
-        <b-row>
-          <b-col
-            cols="6">
-            <b-button
-              block
-              @click="removeAllReferences"
-              variant="outline-danger">
-              Continue
-            </b-button>
-          </b-col>
-          <b-col
-            cols="6">
-            <b-button
-              block
-              @click="appearMsgRemoveReferences = false"
-              variant="outline-success">
-              Cancel
-            </b-button>
-          </b-col>
-        </b-row>
-      </template>
-      <template v-else>
-        <div
-          class="mt-2"
-          v-if="references.length">
-          <p>Below are the references you have uploaded.</p>
+    <b-row v-if="references.length">
+      <b-col>
+        <b-card>
+        <template v-if="appearMsgRemoveReferences">
+          <b-row>
+            <b-col
+              cols="12">
+              <p class="alert text-danger">This action will delete all the references and all the data linked to them, including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables, and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Qualitative Findings Table.<br><b>Are you sure you want to delete all the references?</b></p>
+            </b-col>
+          </b-row>
+          <b-row align-h="center">
+            <b-col
+              cols="3">
+              <b-button
+                block
+                @click="removeAllReferences"
+                variant="outline-danger">
+                Yes
+              </b-button>
+            </b-col>
+            <b-col
+              cols="3">
+              <b-button
+                block
+                @click="appearMsgRemoveReferences = false"
+                variant="outline-success">
+                No
+              </b-button>
+            </b-col>
+          </b-row>
+        </template>
+        <template v-else>
           <b-table
             sort-by="authors"
             responsive
@@ -213,7 +188,9 @@
             borderless
             striped
             :fields="fields_references_table"
-            :items="references">
+            :items="references"
+            head-variant="light"
+            outlined>
             <template v-slot:cell(action)="data">
               <b-button
                 v-if="checkPermissions"
@@ -225,7 +202,7 @@
             </template>
             <template v-slot:row-details="data">
               <b-card>
-                <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all findings that it supported.</p>
+                <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all review findings that it supported.</p>
                 <p>{{ findRelatedFindings(data.item.id) }}</p>
                 <p>Are you sure you want to delete this reference?</p>
                 <div>
@@ -247,9 +224,15 @@
               </b-card>
             </template>
           </b-table>
-        </div>
-      </template>
-    </b-modal>
+          <div class="mt-2">
+            <b-button
+            @click="confirmRemoveAllReferences($event)"
+              >Delete all references</b-button>
+          </div>
+        </template>
+        </b-card>
+      </b-col>
+    </b-row>
   </div>
 </template>
 
@@ -306,7 +289,7 @@ export default {
           { key: 'publication_year', label: 'Year' },
           {
             key: 'id',
-            label: 'Related to finding(s)',
+            label: 'Related to review finding(s)',
             formatter: value => {
               let findings = []
               for (let list of this.lists) {
@@ -518,9 +501,6 @@ export default {
           console.log('error', error)
         })
     },
-    // openModalReferencesSingle: function () {
-    //   this.$emit('openModalReferencesSingle', true)
-    // },
     axiosGetFindings: async function (listId) {
       return axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
     },
@@ -599,14 +579,14 @@ export default {
       for (const list of this.lists) {
         for (const ref of list.raw_ref) {
           if (ref.id === refId) {
-            findings.push(`#${list.cnt}`)
+            findings.push(`#${list.cnt || list.sort}`)
           }
         }
       }
       if (findings.length) {
         return 'The findings affected are: ' + findings.join(', ')
       } else {
-        return 'No findings will be affected.'
+        return 'No review findings will be affected.'
       }
     },
     confirmRemoveAllReferences: function (event) {
@@ -615,65 +595,13 @@ export default {
       this.disableBtnRemoveAllRefs = true
     },
     removeAllReferences: function () {
-      // this.loadReferences = true
-      this.$emit('loadReferences', true)
-      this.$refs['modal-references'].hide()
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      const _charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      const _references = JSON.parse(JSON.stringify(this.references))
-      let requests = []
-
-      if (Object.prototype.hasOwnProperty.call(_charsOfStudies, 'id')) {
-        requests.push(axios.delete(`/api/isoqf_characteristics/${_charsOfStudies.id}`))
-      }
-      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-        requests.push(axios.delete(`/api/isoqf_assessments/${_assessments.id}`))
-      }
-      for (let reference of _references) {
-        requests.push(axios.delete(`/api/isoqf_references/${reference.id}`))
-      }
-
-      let _requestFindings = []
-      for (let list of _lists) {
-        _requestFindings.push(axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${list.id}`))
-        list.references = []
-        axios.patch(`/api/isoqf_lists/${list.id}`, list)
-          .then(() => {})
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-      if (_requestFindings.length) {
-        Promise.all(_requestFindings)
-          .then((responses) => {
-            let getExtractedData = []
-            for (let response of responses) {
-              let finding = response.data[0]
-              getExtractedData.push(axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${finding.id}`))
-            }
-            if (getExtractedData.length) {
-              this.getAndDeleteExtractedData(getExtractedData)
-            }
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-      Promise.all(requests)
+      axios.post(`/api/remove/references/all?project_id=${this.$route.params.id}`)
         .then(() => {
+          this.$emit('loadReferences', true)
           this.$emit('CallGetReferences')
-          // this.openModalReferencesSingle(false)
           this.$emit('CallGetProject')
-          this.resetData()
+          this.appearMsgRemoveReferences = false
         })
-    },
-    resetData: function () {
-      // this.charsOfStudiesFieldsModal.nroColumns = 1
-      // this.charsOfStudiesFieldsModal.selected_item_index = 0
-      // this.charsOfStudiesFieldsModalEditnroColumns = 1
-      // this.charsOfStudiesFieldsModalEditfields = []
-      // this.charsOfStudiesFieldsModalEditmainFields = []
     },
     confirmRemoveReferenceById: function (refId) {
       if (!refId) return
@@ -740,21 +668,6 @@ export default {
           this.openModalReferencesSingle(false)
           this.$emit('CallGetProject')
         })
-    },
-    getAndDeleteExtractedData: function (requests) {
-      if (requests.length) {
-        axios.all(requests)
-          .then((responses) => {
-            for (let response of responses) {
-              let data = response.data[0]
-              axios.patch(`/api/isoqf_extracted_data/${data.id}`, { items: [] })
-                .then((response) => {})
-                .catch((error) => {
-                  this.printErrors(error)
-                })
-            }
-          })
-      }
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
