@@ -40,8 +40,8 @@
         iSoQ can be used on a Mac but has not been extensively tested with Mac. We are aware of one common issue for Mac users and that is with the “import table” function in the My Data section. When our Excel template is downloaded and opened in Excel for Mac, columns A and B are merged instead of separate. This causes import failure and serious malfunctioning in the software. We therefore recommend Mac users work on the template in either Google docs, Open Office or LibreOffice. Be sure to save the file as a “comma-separated values” (CSV). We welcome feedback from Mac users so we can continue to improve your experience with iSoQ.
       </p>
 
-      <h3>How was the iSoQ tool funded?</h3>
-      <p>The iSoQ tool was developed with funding from the Norwegian Institute of Public Health’s Centre for Informed Health Choices.</p>
+      <h3>How is the iSoQ tool funded?</h3>
+      <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR). Additional funding for members of the development team is provided by the Western Norway University of Applied Sciences (HVL), the Norwegian University of Science and Technology (NTNU) and the Epistemonikos Foundation.</p>
 
       <h3>How is the iSoQ tool and its contents licenced?</h3>
       <ul>
