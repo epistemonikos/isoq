@@ -128,3 +128,15 @@ html, body {
 .w-85 {
   width: 85%;
 }
+
+#ch-table.table.b-table, #as-table.table.b-table {
+  tbody tr {
+    td:first-child {
+      width: 6%;
+    }
+    td:nth-child(2) {
+      width: 20%;
+    }
+  }
+} 
+
