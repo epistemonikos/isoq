@@ -24,6 +24,7 @@
             @click="clickTab(1)">My Data</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
+            :disabled="(references.length) ? false : true"
             @click="clickTab(2)">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
@@ -32,981 +33,994 @@
       </b-container>
     </b-container>
     <b-container class="mb-5">
-      <b-tabs
-        id="tabsContent"
-        content-class="mt-3"
-        fill
-        v-model="tabOpened">
-        <b-tab>
-          <propertiesProject
-            :project="project"
-            @update-modification="updateModificationTime()"
-            :canWrite="checkPermissions()">
-          </propertiesProject>
-        </b-tab>
-        <b-tab>
-          <b-row>
-            <b-col
-              cols="12">
-              <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
-              <p>
-                To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
-              </p>
-            </b-col>
-            <b-col
-              cols="12">
-              <UploadReferences
-                :checkPermissions="checkPermissions()"
-                :loadReferences="loadReferences"
-                :references="references"
-                :lists="lists"
-                :charsOfStudies="charsOfStudies"
-                :methodologicalTableRefs="methodologicalTableRefs"
-                @CallGetReferences="getReferences"
-                @statusLoadReferences="statusLoadReferences"
-                @CallGetProject="getProject"></UploadReferences>
-            </b-col>
-            <b-col
-              v-if="references.length"
-              cols="12"
-              class="mt-3">
-              <InclusionExclusioCriteria
-                :checkPermissions="checkPermissions()"
-                :project="project"
-                :ui="ui"
-                @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
-            </b-col>
-            <b-col
-              v-if="references.length"
-              cols="12"
-              class="mt-3">
-              <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
-              <p class="font-weight-light">
-                Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
-              </p>
-
-              <crudTables
-                type="isoqf_characteristics"
-                prefix="ch"
-                :checkPermissions="checkPermissions()"
-                :project="project"
-                :ui="ui"
-                :references="references"
-                :refs="refs"
-                :lists="lists"
-                @get-project="getProject"
-                @print-errors="printErrors"
-                @updateDataTable="updateDataTable"
-                @set-item-data="setItemData"
-              ></crudTables>
-            </b-col>
-            <b-col
-              v-if="references.length"
-              cols="12"
-              class="mt-3">
-              <h4 class="mt-5">STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
-              <p class="font-weight-light">
-                Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
-              </p>
-
-              <crudTables
-                type="isoqf_assessments"
-                prefix="as"
-                :checkPermissions="checkPermissions()"
-                :project="project"
-                :ui="ui"
-                :references="references"
-                :refs="refs"
-                :lists="lists"
-                @get-project="getProject"
-                @print-errors="printErrors"
-                @updateDataTable="updateDataTable"
-                @set-item-data="setItemData"
-              ></crudTables>
-
-            </b-col>
-          </b-row>
-          <b-row
-            v-if="references.length"
-            align-h="end"
-            class="mt-5 mb-2">
-            <b-col
-              cols="6">
-              <b-button
-                block
-                variant="success"
-                class="mb-3"
-                @click="continueToIsoq">
-                Continue to iSoQ
-              </b-button>
-            </b-col>
-          </b-row>
-        </b-tab>
-        <b-tab
-          :disabled="(references.length) ? false : true">
-          <action-buttons
-            :mode="mode"
-            :permissions="checkPermissions()"
-            :project="project"
-            :ui="ui"
-            :lists="lists"
-            :findings="findings"
-            :references="references"
-            :charsOfStudies="charsOfStudies"
-            :methodologicalTableRefs="methodologicalTableRefs"
-            :listsPrintVersion="lists_print_version"
-            :selectOptions="select_options"
-            :cerqualConfidence="cerqual_confidence"
-            :printableItems="printableItems"
-            @uiPublishShowLoader="uiShowLoaders"
-            @getProject="getProject"
-            @changeMode="changeMode"
-            @changeTableSettings="changeTableSettings"></action-buttons>
-          <b-row class="mb-3">
-            <b-col cols="12" class="toDoc">
-              <videoHelp
-                :txt="title"
-                :tag="'h2'"
-                :urlId="'449743080'"></videoHelp>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col cols="12">
-              <b-card header-tag="header">
-                <template v-slot:header>
-                  <b-container fluid>
-                    <b-row v-b-toggle.info-project>
-                      <b-col
-                        cols="11">
-                        <p
-                        class="mb-0 text-left"
-                        >See more information</p>
-                      </b-col>
-                      <b-col
-                        cols="1"
-                        align-self="end">
-                        <p class="text-right">
-                          {{ changeTxtProjectProperties }}
-                        </p>
-                      </b-col>
-                    </b-row>
-                  </b-container>
-                </template>
-                <b-collapse id="info-project">
-                  <b-row>
-                    <b-col cols="12" md="8" class="toDoc">
-                      <h5>Review question</h5>
-                      <p>{{project.review_question}}</p>
-
-                      <h5>Has the review been published?</h5>
-                      <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
-
-                      <h5 v-if="project.description">Additional Information</h5>
-                      <p v-if="project.description">{{project.description}}</p>
-
-                      <template v-if="project.public_type !== 'private'">
-                        <h5>License</h5>
-                        <p>{{ project.license_type }}</p>
-                      </template>
+      <div :class="{'block mt-3': (tabOpened===0)?true:false, 'd-none': (tabOpened===0)?!true:!false}">
+        <propertiesProject
+          :project="project"
+          @update-modification="updateModificationTime()"
+          :canWrite="checkPermissions()">
+        </propertiesProject>
+      </div>
+      <div :class="{'block mt-3': (tabOpened===1)?true:false, 'd-none': (tabOpened===1)?!true:!false}">
+        <b-row>
+          <b-col
+            cols="12">
+            <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
+            <p>
+              To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
+            </p>
+          </b-col>
+          <b-card no-body>
+            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
+              <b-tab title="STEP 1: References">
+                <UploadReferences
+                  :checkPermissions="checkPermissions()"
+                  :loadReferences="loadReferences"
+                  :references="references"
+                  :lists="lists"
+                  :charsOfStudies="charsOfStudies"
+                  :methodologicalTableRefs="methodologicalTableRefs"
+                  @CallGetReferences="getReferences"
+                  @statusLoadReferences="statusLoadReferences"
+                  @CallGetProject="getProject"></UploadReferences>
+                <div class="mt-3">
+                  <b-row v-if="references.length">
+                    <b-col cols="auto" class="mr-auto">
                     </b-col>
-                    <b-col cols="12" md="4" class="toDoc">
-                      <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-                      <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
-                        <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
-                      </ul>
-
-                      <h5>Corresponding author</h5>
-                      <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
-
-                      <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
-                      <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 2</a>
                     </b-col>
                   </b-row>
-                </b-collapse>
-              </b-card>
-            </b-col>
-          </b-row>
-          <b-row
-            class="mt-2">
-            <b-col
-              v-if="checkPermissions()"
-              cols="12">
-              <b-row
-                class="mb-2">
-                <b-col
-                  v-if="mode!=='view'"
-                  md="3"
-                  cols="12">
-                  <b-button
-                    class="mt-1"
-                    v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
-                    :variant="(lists.length) ? 'outline-success' : 'success'"
-                    @click="modalAddList"
-                    block>
-                    Add review finding to the table
-                  </b-button>
-                </b-col>
-                <b-col
-                  v-if="mode!=='view'"
-                  md="4"
-                  cols="12">
-                  <b-button
-                    class="mt-1"
-                    v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
-                    variant="outline-secondary"
-                    @click="modalListCategories"
-                    block>
-                    Organise review findings into groups
-                  </b-button>
-                </b-col>
-                <b-col
-                  v-if="mode!=='view' && lists.length > 1"
-                  md="3"
-                  cols="12">
-                  <b-button
-                    class="mt-1"
-                    block
-                    variant="outline-secondary"
-                    @click="modalSortFindings">Re-order your review findings</b-button>
+                </div>
+              </b-tab>
+              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :active="references.length?true:false" :disabled="references.length?false:true">
+                <InclusionExclusioCriteria
+                  :checkPermissions="checkPermissions()"
+                  :project="project"
+                  :ui="ui"
+                  @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
+                <div class="mt-3">
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 3</a>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-tab>
+              <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
+                <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+                <p class="font-weight-light">
+                  Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+                </p>
+                <crudTables
+                  type="isoqf_characteristics"
+                  prefix="ch"
+                  :checkPermissions="checkPermissions()"
+                  :project="project"
+                  :ui="ui"
+                  :references="references"
+                  :refs="refs"
+                  :lists="lists"
+                  @get-project="getProject"
+                  @print-errors="printErrors"
+                  @updateDataTable="updateDataTable"
+                  @set-item-data="setItemData"
+                  ></crudTables>
+                <div class="mt-3">
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 2</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <a class="btn btn-success text-white" @click="stepStage++">Step 4</a>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-tab>
+              <b-tab title="STEP 4: Methodological assessments table" :disabled="references.length?false:true">
+                <h4>STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
+                <p class="font-weight-light">
+                  Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
+                </p>
+                <crudTables
+                  type="isoqf_assessments"
+                  prefix="as"
+                  :checkPermissions="checkPermissions()"
+                  :project="project"
+                  :ui="ui"
+                  :references="references"
+                  :refs="refs"
+                  :lists="lists"
+                  @get-project="getProject"
+                  @print-errors="printErrors"
+                  @updateDataTable="updateDataTable"
+                  @set-item-data="setItemData"
+                ></crudTables>
+                <div class="mt-3">
+                  <b-row>
+                    <b-col cols="auto" class="mr-auto">
+                      <a class="btn btn-success text-white" @click="stepStage--">Step 3</a>
+                    </b-col>
+                    <b-col cols="auto">
+                      <b-button
+                        block
+                        variant="success"
+                        class="mb-3"
+                        @click="continueToIsoq">
+                        Continue to iSoQ
+                      </b-button>
+                    </b-col>
+                  </b-row>
+                </div>
+              </b-tab>
+            </b-tabs>
+          </b-card>
+        </b-row>
+      </div>
+      <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
+        <action-buttons
+          :mode="mode"
+          :permissions="checkPermissions()"
+          :project="project"
+          :ui="ui"
+          :lists="lists"
+          :findings="findings"
+          :references="references"
+          :charsOfStudies="charsOfStudies"
+          :methodologicalTableRefs="methodologicalTableRefs"
+          :listsPrintVersion="lists_print_version"
+          :selectOptions="select_options"
+          :cerqualConfidence="cerqual_confidence"
+          :printableItems="printableItems"
+          @uiPublishShowLoader="uiShowLoaders"
+          @getProject="getProject"
+          @changeMode="changeMode"
+          @changeTableSettings="changeTableSettings"></action-buttons>
+        <b-row class="mb-3">
+          <b-col cols="12" class="toDoc">
+            <videoHelp
+              :txt="title"
+              :tag="'h2'"
+              :urlId="'449743080'"></videoHelp>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col cols="12">
+            <b-card header-tag="header">
+              <template v-slot:header>
+                <b-container fluid>
+                  <b-row v-b-toggle.info-project>
+                    <b-col
+                      cols="11">
+                      <p
+                      class="mb-0 text-left"
+                      >See more information</p>
+                    </b-col>
+                    <b-col
+                      cols="1"
+                      align-self="end">
+                      <p class="text-right">
+                        {{ changeTxtProjectProperties }}
+                      </p>
+                    </b-col>
+                  </b-row>
+                </b-container>
+              </template>
+              <b-collapse id="info-project">
+                <b-row>
+                  <b-col cols="12" md="8" class="toDoc">
+                    <h5>Review question</h5>
+                    <p>{{project.review_question}}</p>
 
-                  <b-modal
-                    ref="modal-sort-findings"
-                    id="modal-sort-findings"
-                    size="xl"
-                    ok-title="Save"
-                    ok-variant="outline-success"
-                    cancel-variant="outline-primary"
-                    scrollable
-                    @ok="saveSortedLists">
-                    <template v-slot:modal-title>
-                      <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
+                    <h5>Has the review been published?</h5>
+                    <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                    <h5 v-if="project.description">Additional Information</h5>
+                    <p v-if="project.description">{{project.description}}</p>
+
+                    <template v-if="project.public_type !== 'private'">
+                      <h5>License</h5>
+                      <p>{{ project.license_type }}</p>
                     </template>
-                    <p class="font-weight-light">
-                      Drag and drop findings to re-order them in the iSoQ table
-                    </p>
-                    <b-list-group>
-                      <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                        <b-list-group-item
-                          v-for="(item, index) of sorted_lists"
-                          :key="index"
-                          class="flex-column align-items-start"
-                          style="cursor: move">
-                          <div
-                            class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ item.name }}</h5>
-                          </div>
-                          <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
-                        </b-list-group-item>
-                      </draggable>
-                    </b-list-group>
-                  </b-modal>
+                  </b-col>
+                  <b-col cols="12" md="4" class="toDoc">
+                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                    <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                      <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                    </ul>
+
+                    <h5>Corresponding author</h5>
+                    <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+
+                    <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
+                    <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                  </b-col>
+                </b-row>
+              </b-collapse>
+            </b-card>
+          </b-col>
+        </b-row>
+        <b-row
+          class="mt-2">
+          <b-col
+            v-if="checkPermissions()"
+            cols="12">
+            <b-row
+              class="mb-2">
+              <b-col
+                v-if="mode!=='view'"
+                md="3"
+                cols="12">
+                <b-button
+                  class="mt-1"
+                  v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
+                  :variant="(lists.length) ? 'outline-success' : 'success'"
+                  @click="modalAddList"
+                  block>
+                  Add review finding to the table
+                </b-button>
+              </b-col>
+              <b-col
+                v-if="mode!=='view'"
+                md="4"
+                cols="12">
+                <b-button
+                  class="mt-1"
+                  v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
+                  variant="outline-secondary"
+                  @click="modalListCategories"
+                  block>
+                  Organise review findings into groups
+                </b-button>
+              </b-col>
+              <b-col
+                v-if="mode!=='view' && lists.length > 1"
+                md="3"
+                cols="12">
+                <b-button
+                  class="mt-1"
+                  block
+                  variant="outline-secondary"
+                  @click="modalSortFindings">Re-order your review findings</b-button>
+
+                <b-modal
+                  ref="modal-sort-findings"
+                  id="modal-sort-findings"
+                  size="xl"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-primary"
+                  scrollable
+                  @ok="saveSortedLists">
+                  <template v-slot:modal-title>
+                    <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
+                  </template>
+                  <p class="font-weight-light">
+                    Drag and drop findings to re-order them in the iSoQ table
+                  </p>
+                  <b-list-group>
+                    <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
+                      <b-list-group-item
+                        v-for="(item, index) of sorted_lists"
+                        :key="index"
+                        class="flex-column align-items-start"
+                        style="cursor: move">
+                        <div
+                          class="d-flex w-100 justify-content-between">
+                          <h5 class="mb-1">{{ item.name }}</h5>
+                        </div>
+                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
+                      </b-list-group-item>
+                    </draggable>
+                  </b-list-group>
+                </b-modal>
+              </b-col>
+              <b-col
+                v-if="mode!=='view' && lists.length > 1"
+                md="2"
+                cols="12">
+                <b-button
+                  class="mt-1"
+                  block
+                  variant="outline-secondary"
+                  @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+              </b-col>
+            </b-row>
+          </b-col>
+          <b-col
+            v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
+            cols="12"
+            class="my-2 d-print-none">
+            <b-card
+              id="card-search"
+              bg-variant="light">
+              <b-row>
+                <b-col
+                  cols="11">
+                  <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
                 </b-col>
                 <b-col
-                  v-if="mode!=='view' && lists.length > 1"
-                  md="2"
-                  cols="12">
+                  cols="1">
                   <b-button
-                    class="mt-1"
-                    block
-                    variant="outline-secondary"
-                    @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+                    class="close mb-1"
+                    @click="toggleSearch(ui.project.displaySearch)">×</b-button>
                 </b-col>
               </b-row>
-            </b-col>
-            <b-col
-              v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
-              cols="12"
-              class="my-2 d-print-none">
-              <b-card
-                id="card-search"
-                bg-variant="light">
-                <b-row>
-                  <b-col
-                    cols="11">
-                    <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
-                  </b-col>
-                  <b-col
-                    cols="1">
-                    <b-button
-                      class="close mb-1"
-                      @click="toggleSearch(ui.project.displaySearch)">×</b-button>
-                  </b-col>
-                </b-row>
-                <b-row>
-                  <b-col
-                    cols="12">
-                    <b-form-group>
-                      <b-input-group>
-                        <b-form-input
-                          v-model="table_settings.filter"
-                          type="search"
-                          id="filterInput"
-                          placeholder="Type to search the text in the table below"></b-form-input>
-                        <b-input-group-append>
-                          <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                  </b-col>
-                </b-row>
+              <b-row>
+                <b-col
+                  cols="12">
+                  <b-form-group>
+                    <b-input-group>
+                      <b-form-input
+                        v-model="table_settings.filter"
+                        type="search"
+                        id="filterInput"
+                        placeholder="Type to search the text in the table below"></b-form-input>
+                      <b-input-group-append>
+                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                  </b-form-group>
+                </b-col>
+              </b-row>
 
-              </b-card>
-            </b-col>
-            <b-col cols="12" class="toDoc">
-              <template
-                v-if="mode==='edit' && checkPermissions()">
-                <b-table
-                  :selectable="(mode==='view')?true:false"
-                  select-mode="multi"
-                  selected-variant="warning"
-                  bordered
-                  head-variant="light"
-                  id="findings"
-                  ref="findings"
-                  sort-by="sort"
-                  :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
-                  :items="lists"
-                  show-empty
-                  :busy="table_settings.isBusy"
-                  :current-page="table_settings.currentPage"
-                  :filter="table_settings.filter"
-                  @filtered="onFiltered"
-                  :filter-included-fields="table_settings.filterOn">
-                  <template v-slot:head(sort)="data">
-                    <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{ data.label }}</span>
+            </b-card>
+          </b-col>
+          <b-col cols="12" class="toDoc">
+            <template
+              v-if="mode==='edit' && checkPermissions()">
+              <b-table
+                :selectable="(mode==='view')?true:false"
+                select-mode="multi"
+                selected-variant="warning"
+                bordered
+                head-variant="light"
+                id="findings"
+                ref="findings"
+                sort-by="sort"
+                :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
+                :items="lists"
+                show-empty
+                :busy="table_settings.isBusy"
+                :current-page="table_settings.currentPage"
+                :filter="table_settings.filter"
+                @filtered="onFiltered"
+                :filter-included-fields="table_settings.filterOn">
+                <template v-slot:head(sort)="data">
+                  <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{ data.label }}</span>
+                </template>
+                <template v-slot:head(name)="data">
+                  <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
+                </template>
+                <template v-slot:head(category_name)="data">
+                  {{data.label}}
+                  <b-dropdown
+                    id="dropdown-categories"
+                    text=""
+                    class="finding-filter"
+                    :no-caret="false"
+                    size="sm">
+                    <b-dropdown-item
+                    v-for="(category, index) of list_categories.options"
+                    :key="index"
+                    @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text }}</b-dropdown-item>
+                  </b-dropdown>
+                  <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
+                </template>
+                <template v-slot:head(cerqual_option)="data">
+                  <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+                  <b-dropdown
+                    id="dropdown-cerqual-option"
+                    text=""
+                    class="finding-filter"
+                    :no-caret="false"
+                    size="sm">
+                    <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">High confidence</b-dropdown-item>
+                    <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">Moderate confidence</b-dropdown-item>
+                    <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">Low confidence</b-dropdown-item>
+                    <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">Very low confidence</b-dropdown-item>
+                    <b-dropdown-divider></b-dropdown-divider>
+                    <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">Assessments completed</b-dropdown-item>
+                    <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">Assessments not completed</b-dropdown-item>
+                  </b-dropdown>
+                  <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
+                </template>
+                <template v-slot:head(cerqual_explanation)="data">
+                  <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+                  <b-dropdown
+                    id="dropdown-cerqual-explanation"
+                    text=""
+                    class="finding-filter"
+                    :no-caret="false"
+                    size="sm">
+                    <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">Completed</b-dropdown-item>
+                    <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">Not completed</b-dropdown-item>
+                  </b-dropdown>
+                  <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
+                </template>
+                <template v-slot:head(ref_list)="data">
+                  <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
+                </template>
+                <!-- data -->
+                <template v-slot:cell(sort)="data">
+                  {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
+                </template>
+                <template v-slot:cell(name)="data">
+                  <a :id="`a-${data.item.id}`"></a>
+                  <span v-if="mode === 'edit'">
+                    <b-row
+                      class="mb-3">
+                      <b-col
+                        lg="6"
+                        cols="12">
+                        <b-button
+                          block
+                          v-if="mode==='edit'"
+                          variant="outline-success"
+                          @click="editModalFindingName(data)">
+                          <font-awesome-icon
+                            v-if=(data.item.notes.length)
+                            icon="comments"></font-awesome-icon>
+                          Edit
+                        </b-button>
+                      </b-col>
+                      <b-col
+                        class="mt-1 mt-lg-0"
+                        lg="6"
+                        cols="12">
+                        <b-button
+                          block
+                          v-if="mode==='edit'"
+                          variant="outline-danger"
+                          @click="removeModalFinding(data)">
+                          Remove
+                        </b-button>
+                      </b-col>
+                    </b-row>
+                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                  </span>
+                  <span v-else>
+                    {{ data.item.name }}
+                  </span>
+                </template>
+                <template v-slot:cell(category_name)="data">
+                  <template v-if="data.item.category !== null">
+                    <b-button
+                      block
+                      variant="outline-info"
+                      @click="editModalFindingName(data)">Edit group</b-button>
+                    {{ data.item.category_name }}
+                    <span
+                      v-if="data.item.category_extra_info !== ''"
+                      v-b-tooltip.hover
+                      :title="data.item.category_extra_info">*</span>
                   </template>
-                  <template v-slot:head(name)="data">
-                    <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
-                  </template>
-                  <template v-slot:head(category_name)="data">
-                    {{data.label}}
-                    <b-dropdown
-                      id="dropdown-categories"
-                      text=""
-                      class="finding-filter"
-                      :no-caret="false"
-                      size="sm">
-                      <b-dropdown-item
-                      v-for="(category, index) of list_categories.options"
-                      :key="index"
-                      @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text }}</b-dropdown-item>
-                    </b-dropdown>
-                    <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                  </template>
-                  <template v-slot:head(cerqual_option)="data">
-                    <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
-                    <b-dropdown
-                      id="dropdown-cerqual-option"
-                      text=""
-                      class="finding-filter"
-                      :no-caret="false"
-                      size="sm">
-                      <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">High confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">Moderate confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">Low confidence</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">Very low confidence</b-dropdown-item>
-                      <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">Assessments completed</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">Assessments not completed</b-dropdown-item>
-                    </b-dropdown>
-                    <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                  </template>
-                  <template v-slot:head(cerqual_explanation)="data">
-                    <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
-                    <b-dropdown
-                      id="dropdown-cerqual-explanation"
-                      text=""
-                      class="finding-filter"
-                      :no-caret="false"
-                      size="sm">
-                      <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">Completed</b-dropdown-item>
-                      <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">Not completed</b-dropdown-item>
-                    </b-dropdown>
-                    <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                  </template>
-                  <template v-slot:head(ref_list)="data">
-                    <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
-                  </template>
-                  <!-- data -->
-                  <template v-slot:cell(sort)="data">
-                    {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
-                  </template>
-                  <template v-slot:cell(name)="data">
-                    <a :id="`a-${data.item.id}`"></a>
-                    <span v-if="mode === 'edit'">
-                      <b-row
-                        class="mb-3">
-                        <b-col
-                          lg="6"
-                          cols="12">
-                          <b-button
-                            block
-                            v-if="mode==='edit'"
-                            variant="outline-success"
-                            @click="editModalFindingName(data)">
-                            <font-awesome-icon
-                              v-if=(data.item.notes.length)
-                              icon="comments"></font-awesome-icon>
-                            Edit
-                          </b-button>
-                        </b-col>
-                        <b-col
-                          class="mt-1 mt-lg-0"
-                          lg="6"
-                          cols="12">
-                          <b-button
-                            block
-                            v-if="mode==='edit'"
-                            variant="outline-danger"
-                            @click="removeModalFinding(data)">
-                            Remove
-                          </b-button>
-                        </b-col>
-                      </b-row>
-                      <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                      <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                    </span>
-                    <span v-else>
-                      {{ data.item.name }}
-                    </span>
-                  </template>
-                  <template v-slot:cell(category_name)="data">
-                    <template v-if="data.item.category !== null">
-                      <b-button
-                        block
-                        variant="outline-info"
-                        @click="editModalFindingName(data)">Edit group</b-button>
-                      {{ data.item.category_name }}
-                      <span
-                        v-if="data.item.category_extra_info !== ''"
-                        v-b-tooltip.hover
-                        :title="data.item.category_extra_info">*</span>
-                    </template>
-                    <template v-else>
-                      <b-button
-                        v-if="mode==='edit' && data.item.references.length"
-                        variant="info"
-                        block
-                        @click="editModalFindingName(data)">Assign group</b-button>
-                    </template>
-                  </template>
-                  <template v-slot:cell(cerqual_option)="data">
+                  <template v-else>
                     <b-button
                       v-if="mode==='edit' && data.item.references.length"
-                      class="d-print-none mb-3"
-                      :disabled="(data.item.references.length) ? false : true"
+                      variant="info"
                       block
-                      :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
-                      :to="{name: 'editList', params: {id: data.item.id}}">
-                        <font-awesome-icon
-                          v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-                          icon="comments"></font-awesome-icon>
-                        <span v-if="data.item.cerqual_option===''">Complete</span>
-                        <span v-if="data.item.cerqual_option!=''">Edit</span>
-                        GRADE-CERQual Assessment
-                      </b-button>
-                    <b>{{ data.item.cerqual_option }}</b>
+                      @click="editModalFindingName(data)">Assign group</b-button>
                   </template>
-                  <template v-slot:cell(cerqual_explanation)="data">
-                    <b-button
-                      v-if="mode==='edit' && data.item.references.length"
-                      class="d-print-none mb-3"
-                      :disabled="(data.item.references.length) ? false : true"
-                      block
-                      :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
-                      :to="{name: 'editList', params: {id: data.item.id}}">
-                        <font-awesome-icon
-                          v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-                          icon="comments"></font-awesome-icon>
-                        <span v-if="data.item.cerqual_explanation===''">Complete</span>
-                        <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                        GRADE-CERQual Assessment
+                </template>
+                <template v-slot:cell(cerqual_option)="data">
+                  <b-button
+                    v-if="mode==='edit' && data.item.references.length"
+                    class="d-print-none mb-3"
+                    :disabled="(data.item.references.length) ? false : true"
+                    block
+                    :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
+                    :to="{name: 'editList', params: {id: data.item.id}}">
+                      <font-awesome-icon
+                        v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+                        icon="comments"></font-awesome-icon>
+                      <span v-if="data.item.cerqual_option===''">Complete</span>
+                      <span v-if="data.item.cerqual_option!=''">Edit</span>
+                      GRADE-CERQual Assessment
                     </b-button>
-                    <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
+                  <b>{{ data.item.cerqual_option }}</b>
+                </template>
+                <template v-slot:cell(cerqual_explanation)="data">
+                  <b-button
+                    v-if="mode==='edit' && data.item.references.length"
+                    class="d-print-none mb-3"
+                    :disabled="(data.item.references.length) ? false : true"
+                    block
+                    :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
+                    :to="{name: 'editList', params: {id: data.item.id}}">
+                      <font-awesome-icon
+                        v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+                        icon="comments"></font-awesome-icon>
+                      <span v-if="data.item.cerqual_explanation===''">Complete</span>
+                      <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+                      GRADE-CERQual Assessment
+                  </b-button>
+                  <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
+                </template>
+                <template v-slot:cell(ref_list)="data">
+                  <template v-if="mode!=='edit'">
+                    {{ data.item.ref_list }}
                   </template>
-                  <template v-slot:cell(ref_list)="data">
-                    <template v-if="mode!=='edit'">
-                      {{ data.item.ref_list }}
+                  <template v-else>
+                    <b-button
+                      block
+                      class="mb-3 d-print-none"
+                      :variant="(data.item.references.length) ? 'outline-info' : 'info'"
+                      @click="openModalReferences(data)">
+                      <span v-if="data.item.references.length">View or edit references</span>
+                      <span v-else>Select references</span>
+                    </b-button>
+                    There are <b>{{ data.item.raw_ref.length }}</b> references.
+                  </template>
+                </template>
+                <template v-slot:empty>
+                  <p class="text-center my-5">
+                    There are no findings to show, <a href="#" @click="modalAddList">add review finding</a>
+                  </p>
+                </template>
+                <template v-slot:table-busy>
+                  <div class="text-center text-danger my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong>Loading...</strong>
+                  </div>
+                </template>
+              </b-table>
+            </template>
+            <!-- printed version -->
+            <template v-else>
+              <b-table-simple
+                id="findings-print"
+                ref="findings-print">
+                <b-thead>
+                  <b-tr>
+                    <!-- <b-th class="d-print-none">Printable?</b-th> -->
+                    <b-th>#</b-th>
+                    <b-th>Summarised review finding</b-th>
+                    <b-th>GRADE-CERQual assessment of confidence</b-th>
+                    <b-th>Explanation of GRADE-CERQual assessment</b-th>
+                    <b-th>References</b-th>
+                  </b-tr>
+                </b-thead>
+                <b-tbody>
+                  <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
+                    <!-- <b-td class="d-print-none">
+                      <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
+                    </b-td> -->
+                    <template v-if="item.is_category">
+                      <b-td
+                        colspan="5"
+                        class="text-center text-uppercase font-weight-bolder"
+                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                        {{ item.name }}
+                      </b-td>
                     </template>
                     <template v-else>
-                      <b-button
-                        block
-                        class="mb-3 d-print-none"
-                        :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                        @click="openModalReferences(data)">
-                        <span v-if="data.item.references.length">View or edit references</span>
-                        <span v-else>Select references</span>
-                      </b-button>
-                      There are <b>{{ data.item.raw_ref.length }}</b> references.
-                    </template>
-                  </template>
-                  <template v-slot:empty>
-                    <p class="text-center my-5">
-                      There are no findings to show, <a href="#" @click="modalAddList">add review finding</a>
-                    </p>
-                  </template>
-                  <template v-slot:table-busy>
-                    <div class="text-center text-danger my-2">
-                      <b-spinner class="align-middle"></b-spinner>
-                      <strong>Loading...</strong>
-                    </div>
-                  </template>
-                </b-table>
-              </template>
-              <!-- printed version -->
-              <template v-else>
-                <b-table-simple
-                  id="findings-print"
-                  ref="findings-print">
-                  <b-thead>
-                    <b-tr>
-                      <!-- <b-th class="d-print-none">Printable?</b-th> -->
-                      <b-th>#</b-th>
-                      <b-th>Summarised review finding</b-th>
-                      <b-th>GRADE-CERQual assessment of confidence</b-th>
-                      <b-th>Explanation of GRADE-CERQual assessment</b-th>
-                      <b-th>References</b-th>
-                    </b-tr>
-                  </b-thead>
-                  <b-tbody>
-                    <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                      <!-- <b-td class="d-print-none">
-                        <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
-                      </b-td> -->
-                      <template v-if="item.is_category">
-                        <b-td
-                          colspan="5"
-                          class="text-center text-uppercase font-weight-bolder"
-                          style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                          {{ item.name }}
-                        </b-td>
-                      </template>
-                      <template v-else>
-                        <b-td
-                          style="vertical-align: top;">
-                          <template v-if="list_categories.options.length">
-                          <p>{{item.cnt}}</p>
-                          </template>
-                          <template v-else>
-                          {{index+1}}
-                          </template>
-                        </b-td>
-                        <b-td
-                          style="vertical-align: top;">
-                          <template v-if="checkPermissions('can_read')">
-                          <template v-if="item.ref_list.length">
-                            <p>
-                              {{ item.name }}
-                            </p>
-                          </template>
-                          <template v-else>
-                          {{ item.name }}
-                          </template>
-                          </template>
-                          <template v-else>
-                            <p>{{ item.name }}</p>
-                          </template>
-                        </b-td>
-                        <b-td
-                          style="vertical-align: top;">
-                          <p>{{ item.cerqual_option }}</p>
-                        </b-td>
-                        <b-td
-                          style="vertical-align: top;">
-                          <template v-if="item.cerqual_option !== ''">
-                            <p>{{ item.cerqual_explanation }}</p>
-                          </template>
-                          <template v-else>
-                            <p>&nbsp;</p>
-                          </template>
-                        </b-td>
-                        <b-td
-                          style="vertical-align: top;">
-                          <p class="references">{{ item.ref_list }}</p>
-                        </b-td>
-                      </template>
-                    </b-tr>
-                  </b-tbody>
-                </b-table-simple>
-                <back-to-top></back-to-top>
-                <div class="mt-5">
-                <h3>Evidence Profile Table</h3>
-                <b-table-simple>
-                  <b-thead>
-                    <b-tr>
-                      <b-th>#</b-th>
-                      <b-th>Summarised review finding</b-th>
-                      <b-th>Methodological limitations</b-th>
-                      <b-th>Coherence</b-th>
-                      <b-th>Adequacy</b-th>
-                      <b-th>Relevance</b-th>
-                      <b-th>GRADE-CERQual assessment of confidence</b-th>
-                      <b-th>References</b-th>
-                    </b-tr>
-                  </b-thead>
-                  <b-tbody>
-                    <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                      <template v-if="item.is_category">
-                        <b-td
-                          colspan="8"
-                          class="text-center text-uppercase font-weight-bolder"
-                          style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                          {{ item.name }}
-                        </b-td>
-                      </template>
-                      <template v-else>
-                      <b-td>
+                      <b-td
+                        style="vertical-align: top;">
                         <template v-if="list_categories.options.length">
                         <p>{{item.cnt}}</p>
                         </template>
                         <template v-else>
-                        {{ index + 1 }}
+                        {{index+1}}
                         </template>
                       </b-td>
-                      <b-td>
-                        <p>{{item.name}}</p>
-                      </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
-                          <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
-                          <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
-                          </template>
-                          </template>
+                      <b-td
+                        style="vertical-align: top;">
+                        <template v-if="checkPermissions('can_read')">
+                        <template v-if="item.ref_list.length">
+                          <p>
+                            {{ item.name }}
+                          </p>
+                        </template>
+                        <template v-else>
+                        {{ item.name }}
+                        </template>
+                        </template>
+                        <template v-else>
+                          <p>{{ item.name }}</p>
                         </template>
                       </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
-                          <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
-                          <template v-if="item.evidence_profile.coherence.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
-                          </template>
-                          </template>
-                          </template>
+                      <b-td
+                        style="vertical-align: top;">
+                        <p>{{ item.cerqual_option }}</p>
                       </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
-                          <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
-                          <template v-if="item.evidence_profile.adequacy.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
-                          </template>
-                          </template>
+                      <b-td
+                        style="vertical-align: top;">
+                        <template v-if="item.cerqual_option !== ''">
+                          <p>{{ item.cerqual_explanation }}</p>
+                        </template>
+                        <template v-else>
+                          <p>&nbsp;</p>
                         </template>
                       </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
-                          <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
-                          <template v-if="item.evidence_profile.relevance.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
-                          </template>
-                          </template>
-                        </template>
+                      <b-td
+                        style="vertical-align: top;">
+                        <p class="references">{{ item.ref_list }}</p>
                       </b-td>
-                      <b-td>
-                        <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                          <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
-                          <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
-                          <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                            <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
-                          </template>
-                          </template>
-                        </template>
+                    </template>
+                  </b-tr>
+                </b-tbody>
+              </b-table-simple>
+              <back-to-top></back-to-top>
+              <div class="mt-5">
+              <h3>Evidence Profile Table</h3>
+              <b-table-simple>
+                <b-thead>
+                  <b-tr>
+                    <b-th>#</b-th>
+                    <b-th>Summarised review finding</b-th>
+                    <b-th>Methodological limitations</b-th>
+                    <b-th>Coherence</b-th>
+                    <b-th>Adequacy</b-th>
+                    <b-th>Relevance</b-th>
+                    <b-th>GRADE-CERQual assessment of confidence</b-th>
+                    <b-th>References</b-th>
+                  </b-tr>
+                </b-thead>
+                <b-tbody>
+                  <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
+                    <template v-if="item.is_category">
+                      <b-td
+                        colspan="8"
+                        class="text-center text-uppercase font-weight-bolder"
+                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                        {{ item.name }}
                       </b-td>
-                      <b-td>
-                        <p class="references">{{returnRefWithNames(item.references)}}</p>
-                      </b-td>
+                    </template>
+                    <template v-else>
+                    <b-td>
+                      <template v-if="list_categories.options.length">
+                      <p>{{item.cnt}}</p>
                       </template>
-                    </b-tr>
-                  </b-tbody>
-                </b-table-simple>
-                </div>
-              </template>
-              <!-- eopv -->
-              <b-modal
-                size="xl"
-                id="edit-finding-name"
-                ref="edit-finding-name"
-                title="Edit Summarised review finding"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary"
-                @ok="updateListName">
-                <b-alert
-                  :show="editingUser.show"
-                  variant="danger">
-                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-                </b-alert>
-                <b-form-group
-                  label="Summarised review finding"
-                  label-for="finding-name">
-                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
-                  <b-form-textarea
-                    id="finding-name"
-                    v-model="editFindingName.name"
-                    rows="6"
-                    max-rows="100"></b-form-textarea>
-                </b-form-group>
-                <b-form-group
-                  v-if="list_categories.options.length"
-                  label="Select review finding group"
-                  description="You can leave this option blank. You can always assign a finding to a group later.">
-                  <b-form-select
-                    v-model="editFindingName.category"
-                    value-field="id"
-                    text-field="text"
-                    :options="list_categories.options"></b-form-select>
-                </b-form-group>
-                <b-form-group
-                  label-for="finding-note"
-                  description="Optional space for reviewers to leave notes for each other about this review finding">
-                  <template v-slot:label>
-                    <videoHelp txt="Notes" tag="none" urlId="462176506"></videoHelp>
-                  </template>
-                  <b-form-textarea
-                    id="finding-note"
-                    v-model="editFindingName.notes"
-                    rows="6"
-                    max-rows="100"></b-form-textarea>
-                </b-form-group>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="remove-finding"
-                ref="remove-finding"
-                title="Remove summarised review finding"
-                ok-title="Confirm"
-                ok-variant="outline-danger"
-                cancel-variant="outline-secondary"
-                @ok="confirmRemoveList">
-                <b-alert
-                  :show="editingUser.show"
-                  variant="danger">
-                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-                </b-alert>
-                <p class="text-danger">
-                  Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
-                </p>
-                <p>
-                  Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
-                </p>
-              </b-modal>
-              <b-modal
-                size="xl"
-                id="add-summarized"
-                ref="add-summarized"
-                title="Add Summarised review finding"
-                :ok-disabled="(summarized_review)?false:true"
-                @ok="createList"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <b-form-group
-                  label="Summarised review finding"
-                  label-for="summarized-review">
-                  <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
-                  <b-form-textarea
-                    id="summarized-review"
-                    v-model="summarized_review"
-                    rows="6"
-                    max-rows="100"></b-form-textarea>
-                </b-form-group>
-                <b-form-group
-                  v-if="list_categories.options.length"
-                  label="Select review finding group"
-                  description="You can leave this option blank. You can always assign a finding to a group later.">
-                  <b-form-select
-                    v-model="list_categories.selected"
-                    value-field="id"
-                    text-field="text"
-                    :options="list_categories.options"></b-form-select>
-                </b-form-group>
-              </b-modal>
-
-              <b-modal
-                v-if="selected_list_index >= 0"
-                id="modal-references-list"
-                ref="modal-references-list"
-                title="References"
-                @ok="saveReferencesList"
-                @cancel="cancelReferencesList"
-                :ok-disabled="(selected_list_index === null) ? true : false"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary"
-                size="xl"
-                scrollable>
-                <b-alert
-                  :show="editingUser.show"
-                  variant="danger">
-                  The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-                </b-alert>
-                <template v-if="references.length">
-                  <div
-                    class="mt-2">
-                    <b-alert
-                      v-if="showBanner"
-                      show
-                      variant="danger">
-                      <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
-                    </b-alert>
-                    <b-table
-                      responsive
-                      striped
-                      :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
-                      :items="refs">
-                      <template v-slot:cell(checkbox)="data">
-                        <b-form-checkbox
-                          :id="`checkbox-${data.index}`"
-                          v-model="selected_references"
-                          :name="`checkbox-${data.index}`"
-                          :value="data.item.id">
-                        </b-form-checkbox>
+                      <template v-else>
+                      {{ index + 1 }}
                       </template>
-                    </b-table>
-                  </div>
+                    </b-td>
+                    <b-td>
+                      <p>{{item.name}}</p>
+                    </b-td>
+                    <b-td>
+                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
+                        <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
+                        <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
+                        </template>
+                        </template>
+                      </template>
+                    </b-td>
+                    <b-td>
+                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
+                        <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
+                        <template v-if="item.evidence_profile.coherence.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
+                        </template>
+                        </template>
+                        </template>
+                    </b-td>
+                    <b-td>
+                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
+                        <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
+                        <template v-if="item.evidence_profile.adequacy.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
+                        </template>
+                        </template>
+                      </template>
+                    </b-td>
+                    <b-td>
+                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
+                        <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
+                        <template v-if="item.evidence_profile.relevance.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
+                        </template>
+                        </template>
+                      </template>
+                    </b-td>
+                    <b-td>
+                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
+                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
+                        <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
+                        <template v-if="item.evidence_profile.cerqual.explanation!==''">
+                          <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                        </template>
+                        </template>
+                      </template>
+                    </b-td>
+                    <b-td>
+                      <p class="references">{{returnRefWithNames(item.references)}}</p>
+                    </b-td>
+                    </template>
+                  </b-tr>
+                </b-tbody>
+              </b-table-simple>
+              </div>
+            </template>
+            <!-- eopv -->
+            <b-modal
+              size="xl"
+              id="edit-finding-name"
+              ref="edit-finding-name"
+              title="Edit Summarised review finding"
+              ok-title="Save"
+              ok-variant="outline-success"
+              cancel-variant="outline-secondary"
+              @ok="updateListName">
+              <b-alert
+                :show="editingUser.show"
+                variant="danger">
+                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+              </b-alert>
+              <b-form-group
+                label="Summarised review finding"
+                label-for="finding-name">
+                <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
+                <b-form-textarea
+                  id="finding-name"
+                  v-model="editFindingName.name"
+                  rows="6"
+                  max-rows="100"></b-form-textarea>
+              </b-form-group>
+              <b-form-group
+                v-if="list_categories.options.length"
+                label="Select review finding group"
+                description="You can leave this option blank. You can always assign a finding to a group later.">
+                <b-form-select
+                  v-model="editFindingName.category"
+                  value-field="id"
+                  text-field="text"
+                  :options="list_categories.options"></b-form-select>
+              </b-form-group>
+              <b-form-group
+                label-for="finding-note"
+                description="Optional space for reviewers to leave notes for each other about this review finding">
+                <template v-slot:label>
+                  <videoHelp txt="Notes" tag="none" urlId="462176506"></videoHelp>
                 </template>
-                <template v-else>
-                  <div
-                    class="mt-2">
-                    <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
-                  </div>
-                </template>
-              </b-modal>
+                <b-form-textarea
+                  id="finding-note"
+                  v-model="editFindingName.notes"
+                  rows="6"
+                  max-rows="100"></b-form-textarea>
+              </b-form-group>
+            </b-modal>
+            <b-modal
+              size="xl"
+              id="remove-finding"
+              ref="remove-finding"
+              title="Remove summarised review finding"
+              ok-title="Confirm"
+              ok-variant="outline-danger"
+              cancel-variant="outline-secondary"
+              @ok="confirmRemoveList">
+              <b-alert
+                :show="editingUser.show"
+                variant="danger">
+                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+              </b-alert>
+              <p class="text-danger">
+                Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
+              </p>
+              <p>
+                Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
+              </p>
+            </b-modal>
+            <b-modal
+              size="xl"
+              id="add-summarized"
+              ref="add-summarized"
+              title="Add Summarised review finding"
+              :ok-disabled="(summarized_review)?false:true"
+              @ok="createList"
+              ok-title="Save"
+              ok-variant="outline-success"
+              cancel-variant="outline-secondary">
+              <b-form-group
+                label="Summarised review finding"
+                label-for="summarized-review">
+                <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
+                <b-form-textarea
+                  id="summarized-review"
+                  v-model="summarized_review"
+                  rows="6"
+                  max-rows="100"></b-form-textarea>
+              </b-form-group>
+              <b-form-group
+                v-if="list_categories.options.length"
+                label="Select review finding group"
+                description="You can leave this option blank. You can always assign a finding to a group later.">
+                <b-form-select
+                  v-model="list_categories.selected"
+                  value-field="id"
+                  text-field="text"
+                  :options="list_categories.options"></b-form-select>
+              </b-form-group>
+            </b-modal>
 
-              <b-modal
-                size="xl"
-                id="modalEditListCategories"
-                ref="modalEditListCategories"
-                scrollable>
-                <template v-slot:modal-title>
-                  <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
-                </template>
-                <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
-                  <p class="font-weight-light">
-                    Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
-                  </p>
-                  <p class="text-danger">
-                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
-                  </p>
-                </template>
-                <template
-                  v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+            <b-modal
+              v-if="selected_list_index >= 0"
+              id="modal-references-list"
+              ref="modal-references-list"
+              title="References"
+              @ok="saveReferencesList"
+              @cancel="cancelReferencesList"
+              :ok-disabled="(selected_list_index === null) ? true : false"
+              ok-title="Save"
+              ok-variant="outline-success"
+              cancel-variant="outline-secondary"
+              size="xl"
+              scrollable>
+              <b-alert
+                :show="editingUser.show"
+                variant="danger">
+                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+              </b-alert>
+              <template v-if="references.length">
+                <div
+                  class="mt-2">
+                  <b-alert
+                    v-if="showBanner"
+                    show
+                    variant="danger">
+                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+                  </b-alert>
                   <b-table
-                    head-variant="highlight"
+                    responsive
                     striped
-                    :fields="modal_edit_list_categories.fields"
-                    :items="modal_edit_list_categories.options">
-                    <template v-slot:cell(actions)="data">
-                      <b-button
-                        block
-                        variant="outline-success"
-                        @click="editListCategoryName(data.index)">Edit</b-button>
-                      <b-button
-                        block
-                        variant="outline-danger"
-                        class="mt-1"
-                        @click="removeListCategory(data)">Remove</b-button>
+                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
+                    :items="refs">
+                    <template v-slot:cell(checkbox)="data">
+                      <b-form-checkbox
+                        :id="`checkbox-${data.index}`"
+                        v-model="selected_references"
+                        :name="`checkbox-${data.index}`"
+                        :value="data.item.id">
+                      </b-form-checkbox>
                     </template>
                   </b-table>
-                </template>
-                <template
-                  v-if="modal_edit_list_categories.new">
-                  <p class="text-danger">
-                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
-                  </p>
-                  <b-form-group
-                    class="mt-3"
-                    label="Add group name">
-                    <b-form-input
-                      v-model="modal_edit_list_categories.text"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-3"
-                    label="Describe this group for the user viewing this table">
-                    <b-form-input
-                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
-                  </b-form-group>
-                </template>
-                <template
-                  class="mt-3"
-                  v-if="modal_edit_list_categories.edit">
-                  <p class="text-danger">
-                    Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
-                  </p>
-                  <b-form-group
-                    label="Edit group name">
-                    <b-form-input
-                      v-model="modal_edit_list_categories.text"></b-form-input>
-                  </b-form-group>
-                  <b-form-group
-                    class="mt-3"
-                    label="Describe this group for the user viewing this table">
-                    <b-form-input
-                      v-model="modal_edit_list_categories.extra_info"></b-form-input>
-                  </b-form-group>
-                </template>
-                <template
-                  class="mt-3"
-                  v-if="modal_edit_list_categories.remove">
-                  <p>
-                    Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
-                  </p>
-                </template>
-                <template
-                  v-slot:modal-footer>
-                  <div
-                    v-if="modal_edit_list_categories.remove">
-                    <b-button
-                      variant="outline-primary"
-                      @click="modalCancelCategoryButtons">Cancel</b-button>
-                    <b-button
-                      variant="outline-danger"
-                      @click="removeCategory()">Confirm</b-button>
-                  </div>
-                  <div
-                    v-if="modal_edit_list_categories.new">
-                    <b-button
-                      variant="outline-primary"
-                      @click="modalCancelCategoryButtons">Cancel</b-button>
-                    <b-button
-                      variant="outline-success"
-                      :disabled="modal_edit_list_categories.text === ''"
-                      @click="saveNewCategory">Save</b-button>
-                  </div>
-                  <div
-                    v-if="!modal_edit_list_categories.new">
-                    <b-button
-                      v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                      variant="outline-primary"
-                      @click="modal_edit_list_categories.new=true">
-                      Add new review finding group
-                    </b-button>
-                  </div>
-                  <div
-                    v-if="modal_edit_list_categories.edit">
-                    <b-button
-                      variant="outline-primary"
-                      @click="modalCancelCategoryButtons">Cancel</b-button>
-                    <b-button
-                      variant="outline-success"
-                      :disabled="modal_edit_list_categories.text === ''"
-                      @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
-                  </div>
-                </template>
-              </b-modal>
-              <back-to-top></back-to-top>
-            </b-col>
-          </b-row>
-        </b-tab>
-        <b-tab>
-          <content-guidance></content-guidance>
-        </b-tab>
-      </b-tabs>
+                </div>
+              </template>
+              <template v-else>
+                <div
+                  class="mt-2">
+                  <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
+                </div>
+              </template>
+            </b-modal>
 
+            <b-modal
+              size="xl"
+              id="modalEditListCategories"
+              ref="modalEditListCategories"
+              scrollable>
+              <template v-slot:modal-title>
+                <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
+              </template>
+              <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                <p class="font-weight-light">
+                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                </p>
+                <p class="text-danger">
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                </p>
+              </template>
+              <template
+                v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+                <b-table
+                  head-variant="highlight"
+                  striped
+                  :fields="modal_edit_list_categories.fields"
+                  :items="modal_edit_list_categories.options">
+                  <template v-slot:cell(actions)="data">
+                    <b-button
+                      block
+                      variant="outline-success"
+                      @click="editListCategoryName(data.index)">Edit</b-button>
+                    <b-button
+                      block
+                      variant="outline-danger"
+                      class="mt-1"
+                      @click="removeListCategory(data)">Remove</b-button>
+                  </template>
+                </b-table>
+              </template>
+              <template
+                v-if="modal_edit_list_categories.new">
+                <p class="text-danger">
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                </p>
+                <b-form-group
+                  class="mt-3"
+                  label="Add group name">
+                  <b-form-input
+                    v-model="modal_edit_list_categories.text"></b-form-input>
+                </b-form-group>
+                <b-form-group
+                  class="mt-3"
+                  label="Describe this group for the user viewing this table">
+                  <b-form-input
+                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                </b-form-group>
+              </template>
+              <template
+                class="mt-3"
+                v-if="modal_edit_list_categories.edit">
+                <p class="text-danger">
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                </p>
+                <b-form-group
+                  label="Edit group name">
+                  <b-form-input
+                    v-model="modal_edit_list_categories.text"></b-form-input>
+                </b-form-group>
+                <b-form-group
+                  class="mt-3"
+                  label="Describe this group for the user viewing this table">
+                  <b-form-input
+                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                </b-form-group>
+              </template>
+              <template
+                class="mt-3"
+                v-if="modal_edit_list_categories.remove">
+                <p>
+                  Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
+                </p>
+              </template>
+              <template
+                v-slot:modal-footer>
+                <div
+                  v-if="modal_edit_list_categories.remove">
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-danger"
+                    @click="removeCategory()">Confirm</b-button>
+                </div>
+                <div
+                  v-if="modal_edit_list_categories.new">
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === ''"
+                    @click="saveNewCategory">Save</b-button>
+                </div>
+                <div
+                  v-if="!modal_edit_list_categories.new">
+                  <b-button
+                    v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                    variant="outline-primary"
+                    @click="modal_edit_list_categories.new=true">
+                    Add new review finding group
+                  </b-button>
+                </div>
+                <div
+                  v-if="modal_edit_list_categories.edit">
+                  <b-button
+                    variant="outline-primary"
+                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button
+                    variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === ''"
+                    @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
+                </div>
+              </template>
+            </b-modal>
+            <back-to-top></back-to-top>
+          </b-col>
+        </b-row>
+      </div>
+      <div :class="{'block mt-3': (tabOpened===3)?true:false, 'd-none': (tabOpened===3)?!true:!false}">
+        <content-guidance></content-guidance>
+      </div>
     </b-container>
   </div>
 </template>
@@ -1041,6 +1055,7 @@ export default {
   },
   data () {
     return {
+      stepStage: 0,
       project: {
         name: '',
         authors: '',
@@ -1250,6 +1265,10 @@ export default {
     await this.getProject()
   },
   methods: {
+    isActiveStepTwo: function () {
+      if (this.references.length === 0) { return false }
+      if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }
+    },
     setItemData: function (data) {
       this.ui.itemData = data
     },

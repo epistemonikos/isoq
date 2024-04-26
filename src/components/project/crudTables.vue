@@ -529,7 +529,6 @@ export default {
               for (let item of _items) {
                 this.dataTableFieldsModal.items.push(item)
               }
-              this.$emit('updateDataTable', this.dataTable, this.type)
             }
           } else {
             this.dataTable = {
@@ -544,6 +543,7 @@ export default {
               ]
             }
           }
+          this.$emit('updateDataTable', this.dataTable, this.type)
           this.dataTableSettings.isBusy = false
           // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
         })
@@ -684,11 +684,8 @@ export default {
         }
         // sort fields by key
         fields.sort((a, b) => {
-          if (a.key < b.key) {
-            return -1
-          }
-          if (a.key > b.key) {
-            return 1
+          if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
+            return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
           }
           return 0
         })
@@ -941,6 +938,7 @@ export default {
       axios.get(`/api/${this.type}`, {params})
         .then((response) => {
           if (!response.data.length) {
+            this.getData()
             return
           }
           const responseData = JSON.parse(JSON.stringify(response.data[0]))
