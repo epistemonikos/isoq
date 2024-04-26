@@ -50,8 +50,8 @@
         cols="12">
         <b-table
           sort-by="authors"
-          id="chars-of-studies-table"
-          class="mt-3"
+          :id="`${prefix}-table`"
+          class="table-content-refs mt-3"
           v-if="dataTable.fieldsObj.length > 1"
           :fields="dataTable.fieldsObj"
           :items="dataTable.items"
@@ -77,7 +77,7 @@
                     icon="edit"></font-awesome-icon>
                 </b-button>
               </b-col>
-              <b-col class="pt-2 pt-xl-0">
+              <b-col class="pt-2">
                 <b-button
                   block
                   variant="outline-danger"
@@ -105,7 +105,7 @@
           v-model="dataTableSettings.currentPage"
           :total-rows="dataTable.items.length"
           :per-page="dataTableSettings.perPage"
-          aria-controls="chars-of-studies-table">
+          :aria-controls="`${prefix}-table`">
         </b-pagination>
       </b-col>
 
@@ -508,7 +508,7 @@ export default {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
-              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
 
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
@@ -523,8 +523,6 @@ export default {
                   this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
-
-              this.dataTable.fieldsObj.push({'key': 'actions', 'label': ''})
 
               this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
 
