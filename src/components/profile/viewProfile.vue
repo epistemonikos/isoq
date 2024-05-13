@@ -37,11 +37,23 @@
             </b-form-group>
             </b-td>
           </b-tr>
+          <b-tr>
+            <b-td>
+              <p>repeat password</p>
+            </b-td>
+            <b-td>
+              <b-form-group
+                description="8 characters at least"
+                class="mb-0">
+                <b-form-input type="password" v-model="new_password_repeat"></b-form-input>
+            </b-form-group>
+            </b-td>
+          </b-tr>
         </b-tbody>
       </b-table-simple>
       <b-button @click="update" :disabled="isDisabled">Save</b-button>
     </b-container>
-    <subscribe :show="showSubscribe"></subscribe>
+    <subscribe :show="showSubscribe" @resetshowSubscribe="resetshowSubscribe"></subscribe>
   </div>
 </template>
 
@@ -57,8 +69,10 @@ export default {
   data () {
     return {
       new_password: null,
+      new_password_repeat: null,
       msg: '',
-      showSubscribe: false
+      showSubscribe: false,
+      isDisabled: true
     }
   },
   computed: {
@@ -67,20 +81,14 @@ export default {
     },
     fullname: function () {
       return this.$store.state.user.first_name + ' ' + this.$store.state.user.last_name
-    },
-    isDisabled: function () {
-      if (this.new_password === null) {
-        return true
-      }
-      if (this.new_password.length < 8) {
-        return true
-      }
-      return false
     }
   },
   watch: {
     password () {
-      this.isDisabled()
+      this.checkDisabled()
+    },
+    new_password_repeat () {
+      this.checkDisabled()
     },
     msg () {
       if (this.msg.length) {
@@ -98,6 +106,7 @@ export default {
       axios.post(`/users/change_password`, params)
         .then((r) => {
           this.new_password = null
+          this.new_password_repeat = null
           this.msg = 'Your password has been changed!'
           this.showSubscribe = true
         })
@@ -107,6 +116,24 @@ export default {
         return true
       }
       return false
+    },
+    resetshowSubscribe: function () {
+      this.showSubscribe = false
+    },
+    checkDisabled: function () {
+      if (this.new_password !== this.new_password_repeat) {
+        this.isDisabled = true
+        return
+      }
+      if (this.new_password === null) {
+        this.isDisabled = true
+        return
+      }
+      if (this.new_password.length < 8) {
+        this.isDisabled = true
+        return
+      }
+      this.isDisabled = false
     }
   }
 }
