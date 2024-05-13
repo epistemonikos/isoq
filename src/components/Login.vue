@@ -33,7 +33,7 @@
                     type="password"
                     required></b-form-input>
                 </b-form-group>
-                <p>Would you like to be subscribed to our newsletter? <b>Yeah! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
+                <p>Would you like to subscribe to the GRADE-CERQual mailing list? <b>Yes! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
                 <b-card-text class="text-center text-forgot-create">
                   <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
                 </b-card-text>
