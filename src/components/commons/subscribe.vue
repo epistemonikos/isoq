@@ -22,6 +22,11 @@ export default {
     show: {
       type: Boolean,
       required: true
+    },
+    isCreatedAccount: {
+      type: Boolean,
+      default: false,
+      required: false
     }
   },
   watch: {
@@ -33,6 +38,9 @@ export default {
   },
   methods: {
     hide () {
+      if (this.isCreatedAccount) {
+        this.$emit('doLogin')
+      }
       this.$emit('resetshowSubscribe')
       this.$refs.subscribe.hide()
     },
@@ -41,6 +49,9 @@ export default {
     },
     ok () {
       window.open('https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform', '_blank')
+      if (this.isCreatedAccount) {
+        this.$emit('doLogin')
+      }
       this.$emit('resetshowSubscribe')
       this.hide()
     }
