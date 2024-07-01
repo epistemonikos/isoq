@@ -16,7 +16,7 @@ export default {
         text: 'Attend a live demo on September 26, 2024.',
         url: 'https://training.cochrane.org/zoom/meeting/XnMukn%252BaRhayM%252FJlVxkicA%253D%253D/signup',
         url_text: 'Sign up here',
-        variant: 'primary'
+        variant: 'danger'
       }
     }
   }
