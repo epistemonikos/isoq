@@ -1,8 +1,6 @@
 <template>
   <div>
-    <h4 class="mt-5 mb-3">
-      STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)
-    </h4>
+    <h4>STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)</h4>
     <b-container>
       <b-row>
         <b-col

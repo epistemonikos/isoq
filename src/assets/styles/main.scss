@@ -48,6 +48,28 @@ html, body {
   border-color: #286090;
 }
 
+.btn-success:not(:disabled):not(.disabled):active, 
+.btn-success:not(:disabled):not(.disabled).active, 
+.show>.btn-success.dropdown-toggle {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+
+.btn-success:not(:disabled):not(.disabled):active, 
+.btn-success:not(:disabled):not(.disabled).active, 
+.show>.btn-success.dropdown-toggle {
+  -webkit-box-shadow: 0 0 0 .2rem #28609040;
+  box-shadow: 0 0 0 .2rem #28609040;
+}
+
+.btn-success:not(:disabled):not(.disabled):active:focus, 
+.btn-success:not(:disabled):not(.disabled).active:focus, 
+.show>.btn-success.dropdown-toggle {
+  -webkit-box-shadow: 0 0 0 .2rem #28609040;
+  box-shadow: 0 0 0 .2rem #28609040;
+}
+
 .btn-outline-info,
 .btn-outline-primary,
 .btn-outline-success {
@@ -90,3 +112,31 @@ html, body {
 .btn-outline-success:focus {
   box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
 }
+
+.tabs.link-steps.nowrap {
+  flex-wrap: nowrap;
+}
+.tabs.link-steps {
+  .w-15 {
+    width: 15%;
+    ul.card-header {
+      padding: 0.25rem;
+    }
+  }
+}
+
+.w-85 {
+  width: 85%;
+}
+
+#ch-table.table.b-table, #as-table.table.b-table {
+  tbody tr {
+    td:first-child {
+      width: 6%;
+    }
+    td:nth-child(2) {
+      width: 20%;
+    }
+  }
+} 
+

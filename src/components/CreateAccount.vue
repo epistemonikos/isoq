@@ -78,6 +78,7 @@
                   placeholder="Write the same password as above"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
+
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
               </b-card-text>
@@ -231,12 +232,15 @@
         </b-col>
       </b-row>
     </b-container>
+
+    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login(user.username, user.password)"></subscribe>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
 import _debounce from 'lodash.debounce'
+import subscribe from '@/components/commons/subscribe.vue'
 
 export default {
   data () {
@@ -275,8 +279,12 @@ export default {
         {text: 'Small', value: 'small', specs: {users: 10, tables: 20, price: 'free'}},
         {text: 'Medium', value: 'medium', specs: {users: 50, tables: 200, price: '1000 USD a year'}},
         {text: 'Large', value: 'large', specs: {users: 'Contact us', tables: 'Contact us', price: 'Contact us'}}
-      ]
+      ],
+      showSubscribe: false
     }
+  },
+  components: {
+    subscribe
   },
   watch: {
     'user.username': function () {
@@ -319,8 +327,9 @@ export default {
         }
       }
       axios.post('/create_user', params)
-        .then((response) => {
-          this.login(this.user.username, this.user.password)
+        .then(() => {
+          // this.login(this.user.username, this.user.password)
+          this.showSubscribe = true
         })
         .catch((error) => {
           console.log(error)
@@ -392,19 +401,19 @@ export default {
         })
     },
     comparePassword: function () {
-      if (this.ui.display_create_account === true) {
-        let password = this.user.password.trim()
-        let password2 = this.user.password_2.trim()
+      if (this.user.password !== this.user.password_2) {
         this.ui.password_validation = false
-
-        if (password !== '' && password2 !== '') {
-          if (password === password2) {
-            this.ui.password_validation = true
-          }
-        }
-      } else {
-        this.ui.password_validation = false
+        return
       }
+      if (this.user.password === null || this.user.password_2 === null) {
+        this.ui.password_validation = false
+        return
+      }
+      if (this.user.password.length < 8 || this.user.password_2 < 8) {
+        this.ui.password_validation = false
+        return
+      }
+      this.ui.password_validation = true
     },
     getOrganizations: function () {
       axios.get('/api/organizations?personal_organization=false')
