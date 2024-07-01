@@ -805,7 +805,7 @@ export default {
       }
 
       for (let ref of _refs) {
-        obj.data.push(ref.id, ref.content.split(';')[0])
+        obj.data.push([ref.id, ref.content.split(';')[0]])
       }
 
       const data = Papa.unparse(obj)
