@@ -10,6 +10,7 @@
       <p>Here you will find the latest updates and improvements to iSoQ.</p>
       <h3>Version 1.0.0</h3>
       <p>Initial release of iSoQ.</p>
+      <p>new content</p>
     </b-container>
   </div>
 </template>
