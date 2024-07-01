@@ -798,18 +798,23 @@ export default {
         })
     },
     generateTemplate: function () {
-      const BOM = '\uFEFF'
       const _refs = JSON.parse(JSON.stringify(this.refs))
-      let csvContent = 'data:text/csv;charset=utf-8,' + BOM
-      csvContent += `Reference ID, "Author(s), Year"` + '\r\n'
-
-      for (let ref of _refs) {
-        csvContent += `${ref.id}, ${ref.content.split(';')[0]}` + '\r\n'
+      let obj = {
+        fields: ['Reference ID', 'Author(s), Year'],
+        data: []
       }
 
-      let encodedUri = encodeURI(csvContent)
+      for (let ref of _refs) {
+        obj.data.push(ref.id, ref.content.split(';')[0])
+      }
+
+      const data = Papa.unparse(obj)
+
+      var csvData = new Blob([data], {type: 'text/csv;charset=utf-8;'})
+      var csvURL = window.URL.createObjectURL(csvData)
+
       let link = document.createElement('a')
-      link.setAttribute('href', encodedUri)
+      link.setAttribute('href', csvURL)
       link.setAttribute('download', 'my_data.csv')
       document.body.appendChild(link)
 
