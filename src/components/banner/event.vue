@@ -1,6 +1,8 @@
 <template>
   <div>
-    <b-alert show :variant="ui.variant" class="text-center">{{ ui.text }} <a :href="ui.url" target="_blank">{{ ui.url_text }}</a></b-alert>
+    <b-alert show :variant="ui.variant" class="text-center">
+      <p>{{ ui.text }} <a :href="ui.url" target="_blank">{{ ui.url_text }}</a></p>
+    </b-alert>
   </div>
 </template>
 
@@ -21,8 +23,12 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .alert {
     border-radius: 0;
+    p {
+      margin-bottom: 0;
+      font-size: 1.2rem;
+    }
   }
 </style>
