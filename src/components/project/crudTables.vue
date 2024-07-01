@@ -801,10 +801,10 @@ export default {
       const BOM = '\uFEFF'
       const _refs = JSON.parse(JSON.stringify(this.refs))
       let csvContent = 'data:text/csv;charset=utf-8,' + BOM
-      csvContent += '"Reference ID", "Author(s), Year"' + '\r\n'
+      csvContent += `Reference ID, "Author(s), Year"` + '\r\n'
 
       for (let ref of _refs) {
-        csvContent += `"${ref.id}", "${ref.content.split(';')[0]}"` + '\r\n'
+        csvContent += `${ref.id}, ${ref.content.split(';')[0]}` + '\r\n'
       }
 
       let encodedUri = encodeURI(csvContent)
