@@ -156,7 +156,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.methodological_limitations.option = null; buffer_modal_stage_two.methodological_limitations.explanation = ''"
+                            @click="clearMySelection('methodological_limitations')"
                             v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -222,7 +222,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.coherence.option = null; buffer_modal_stage_two.coherence.explanation = ''"
+                            @click="clearMySelection('coherence')"
                             v-if="buffer_modal_stage_two.coherence.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -283,7 +283,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.adequacy.option = null; buffer_modal_stage_two.adequacy.explanation = ''"
+                            @click="clearMySelection('adequacy')"
                             v-if="buffer_modal_stage_two.adequacy.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -346,7 +346,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.relevance.option = null; buffer_modal_stage_two.relevance.explanation = ''"
+                            @click="clearMySelection('relevance')"
                             v-if="buffer_modal_stage_two.relevance.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -409,7 +409,7 @@
                             </b-form-radio>
                           </b-form-radio-group>
                           <a
-                            @click="buffer_modal_stage_two.cerqual.option = null; buffer_modal_stage_two.cerqual.explanation = ''"
+                            @click="clearMySelection('cerqual')"
                             v-if="buffer_modal_stage_two.cerqual.option !== null"
                             class="mt-2 font-weight-light text-danger">
                             <font-awesome-icon
@@ -1409,19 +1409,20 @@ export default {
       this.$refs['modal-stage-two'].show()
     },
     saveListName: function () {
+      const data = this.processBufferModalStageTwo()
       let params = {
-        cerqual: this.buffer_modal_stage_two.cerqual,
+        cerqual: data.cerqual,
         evidence_profile: {
-          methodological_limitations: this.buffer_modal_stage_two.methodological_limitations,
-          coherence: this.buffer_modal_stage_two.coherence,
-          adequacy: this.buffer_modal_stage_two.adequacy,
-          relevance: this.buffer_modal_stage_two.relevance,
-          cerqual: this.buffer_modal_stage_two.cerqual
+          methodological_limitations: data.methodological_limitations,
+          coherence: data.coherence,
+          adequacy: data.adequacy,
+          relevance: data.relevance,
+          cerqual: data.cerqual
         }
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-        .then((response) => {
-          this.list.cerqual = response.data['$set'].cerqual
+        .then(() => {
+          this.list.cerqual = data.cerqual
           this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
@@ -1489,13 +1490,28 @@ export default {
           return false
       }
     },
+    processBufferModalStageTwo: function () {
+      const data = this.buffer_modal_stage_two
+      delete data.type
+      delete data.title
+      for (let el in data) {
+        if (el === 'cerqual') {
+          continue
+        }
+        if (data[el].option === null) {
+          data['cerqual'].explanation = ''
+          data['cerqual'].option = null
+          data['cerqual'].notes = ''
+        }
+      }
+      return data
+    },
     continueSavingDataModal: function () {
       this.evidence_profile_table_settings.isBusy = true
-      delete this.buffer_modal_stage_two.type
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
-        evidence_profile: this.buffer_modal_stage_two
+        evidence_profile: this.processBufferModalStageTwo()
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
@@ -1509,7 +1525,7 @@ export default {
           })
       } else {
         axios.post(`/api/isoqf_findings`, params)
-          .then((response) => {
+          .then(() => {
             this.getStageOneData()
             this.$refs['modal-stage-two'].hide()
           })
@@ -1856,6 +1872,11 @@ export default {
       } else {
         this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
       }
+    },
+    clearMySelection: function (item) {
+      this.buffer_modal_stage_two[item].option = null
+      this.buffer_modal_stage_two[item].explanation = ''
+      this.buffer_modal_stage_two[item].notes = ''
     }
   }
 }
