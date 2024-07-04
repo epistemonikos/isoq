@@ -94,30 +94,114 @@
       <template v-slot:modal-title>
         <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
       </template>
+
       <p class="font-weight-light">
         By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
       </p>
       <b-form-group>
         <b-form-radio-group
-          id="modal-publish-status"
-          v-model="modalProject.public_type"
-          :options="global_status"
-          name="modal-radio-status"
+        id="modal-publish-status"
+        v-model="modalProject.public_type"
+        :options="global_status"
+        name="modal-radio-status"
         ></b-form-radio-group>
       </b-form-group>
       <template v-if="modalProject.public_type !== 'private'">
+        {{ errors }}
+        <b-form-group
+          :label="$t('Title of review')"
+          label-for="input-project-list-name"
+          description="Insert the title that you plan to use for this report or paper.">
+          <b-form-input
+            id="input-project-list-name"
+            type="text"
+            required
+            :placeholder="$t('Title of review')"
+            v-model="modalProject.name"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Authors')"
+          label-for="input-project-authors"
+          description="First then last name of all authors separated by commas">
+          <b-form-input
+            id="input-project-authors"
+            :placeholder="$t('Authors of review')"
+            v-model="modalProject.authors"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          label="Corresponding author"
+          label-for="input-project-author"
+          description="First then last name">
+          <b-form-input
+            id="input-project-author"
+            v-model="modalProject.author"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          label="Corresponding author's email address"
+          label-for="input-project-author-email">
+          <b-form-input
+            type="email"
+            id="input-project-author-email"
+            v-model="modalProject.author_email"></b-form-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Review question')"
+          label-for="input-project-review-question">
+          <b-form-textarea
+            id="input-project-review-question"
+            :placeholder="$t('Insert main question that the review addresses')"
+            rows="6"
+            max-rows="100"
+            v-model="modalProject.review_question"></b-form-textarea>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Has this review been published?')"
+          label-for="select-project-list-published-status">
+          <b-select
+            id="select-project-list-published-status"
+            v-model="modalProject.published_status"
+            :options="yes_or_no"></b-select>
+        </b-form-group>
+        <b-form-group
+          v-if="modalProject.published_status"
+          :label="$t('URL or DOI')"
+          label-for="select-project-list-url-doi">
+          <b-input
+            placeholder="https://doi.org/10.1109/5.771073"
+            type="url"
+            id="select-project-list-url-doi"
+            v-model="modalProject.url_doi"></b-input>
+        </b-form-group>
+        <b-form-group
+          :label="$t('Is the iSoQ being completed by the review authors?')"
+          label-for="select-project-list-completed-by-author-status">
+          <b-select
+            id="select-project-list-completed-by-author-status"
+            v-model="modalProject.complete_by_author"
+            :options="yes_or_no"></b-select>
+        </b-form-group>
+        <b-form-group
+          v-if="modalProject.complete_by_author"
+          label="Please list the authors of this iSoQ"
+          label-for="input-project-list-authors">
+          <b-form-input
+            id="input-project-list-authors"
+            v-model="modalProject.lists_authors"></b-form-input>
+        </b-form-group>
+
         <h5>Choose a license</h5>
         <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
         <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
         <b-form-group>
           <b-form-radio-group
-            id="modal-publish-license"
-            v-model="getLicense"
-            :options="global_licenses"
-            name="modal-radio-license"
+          id="modal-publish-license"
+          v-model="getLicense"
+          :options="global_licenses"
+          name="modal-radio-license"
           ></b-form-radio-group>
         </b-form-group>
       </template>
+
       <template #modal-footer>
         <div class="w-100">
           <b-button
@@ -186,7 +270,12 @@ export default {
         { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
         { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
         { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ]
+      ],
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ],
+      errors: []
     }
   },
   methods: {
@@ -781,13 +870,23 @@ export default {
     },
     savePublicStatus: function (event) {
       event.preventDefault()
+      this.errors = []
+      if (this.modalProject.public_type !== 'private') {
+        for (let key in this.modalProject) {
+          if (!this.checkIfCanPublish(key)) {
+            this.errors.push(key)
+            return
+          }
+        }
+      }
       this.$emit('uiPublishShowLoader', true)
       let params = {}
+      params.project_id = this.project.id
+      for (let key in this.modalProject) {
+        params[key] = this.modalProject[key]
+      }
       params.private = true
       params.is_public = false
-      params.public_type = this.modalProject.public_type
-      params.license_type = this.modalProject.license_type
-      params.project_id = this.project.id
       if (this.modalProject.public_type !== 'private') {
         params.private = false
         params.is_public = true
@@ -795,7 +894,7 @@ export default {
         params.license_type = ''
       }
 
-      axios.get('/api/publish', {params})
+      axios.patch('/api/publish', {params})
         .then(() => {
           this.modalProject = {}
           this.$emit('getProject')
@@ -804,71 +903,6 @@ export default {
         })
         .catch((error) => {
           console.log(error)
-        })
-    },
-    savePublicStatus2: function (event) {
-      event.preventDefault()
-      this.$emit('uiPublishShowLoader', true)
-      let params = {}
-      params.private = true
-      params.is_public = false
-      params.public_type = this.modalProject.public_type
-      params.license_type = this.modalProject.license_type
-      if (this.modalProject.public_type !== 'private') {
-        params.private = false
-        params.is_public = true
-      } else {
-        params.license_type = ''
-      }
-
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      let _requests = []
-      for (let list of lists) {
-        _requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
-      }
-      let findings = JSON.parse(JSON.stringify(this.findings))
-      for (let index in findings) {
-        _requests.push(axios.patch(`/api/isoqf_findings/${findings[index]}`, params))
-        axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${findings[index]}`)
-          .then((response) => {
-            if (response.data.length) {
-              _requests.push(axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, { is_public: params.is_public }))
-            }
-          })
-      }
-
-      let otherParams = {}
-      otherParams.is_public = false
-      if (this.modalProject.public_type !== 'private') {
-        otherParams.is_public = true
-      }
-
-      let references = JSON.parse(JSON.stringify(this.references))
-      for (let ref of references) {
-        _requests.push(axios.patch(`/api/isoqf_references/${ref.id}`, otherParams))
-      }
-      let characteristicTable = JSON.parse(JSON.stringify(this.charsOfStudies))
-      _requests.push(axios.patch(`/api/isoqf_characteristics/${characteristicTable.id}`, otherParams))
-      let methodologicalTable = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      _requests.push(axios.patch(`/api/isoqf_assessments/${methodologicalTable.id}`, otherParams))
-
-      axios.all(_requests)
-        .then(axios.spread(() => {
-          axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
-            .then(() => {
-              this.modalProject = {}
-              // this.getProject()
-              this.$emit('getProject')
-              // this.ui.publish.showLoader = false
-              this.$emit('uiPublishShowLoader', false)
-              this.$refs['modal-change-status'].hide()
-            })
-            .catch((error) => {
-              this.printErrors(error)
-            })
-        }))
-        .catch((error) => {
-          this.printErrors(error)
         })
     },
     exportToRIS: function () {
@@ -1279,6 +1313,53 @@ export default {
       } else {
         return 'author(s) not found'
       }
+    },
+    checkIfCanPublish: function (type) {
+      const project = this.modalProject
+      if (type === 'name' && project.name === '') {
+        return false
+      }
+      // check if project has authors
+      if (type === 'authors' && project.authors === '') {
+        return false
+      }
+      // check if project has author
+      if (type === 'author' && project.author === '') {
+        return false
+      }
+      // check if project has a valid author email address
+      if (type === 'author_email' && project.author_email !== '' && !this.validEmail(project.author_email)) {
+        return false
+      }
+      // check if project has a review question
+      if (type === 'review_question' && project.review_question === '') {
+        return false
+      }
+      // check if published status is true
+      if (type === 'published_status' && !project.published_status) {
+        return false
+      }
+      // check project url or doi
+      if (type === 'url_doi' && project.published_status && (project.url_doi === '' || project.url_doi === null || !this.validUrl(project.url_doi))) {
+        return false
+      }
+      // check if project has a complete by author set as true
+      if (type === 'complete_by_author' && !project.complete_by_author) {
+        return false
+      }
+      if (type === 'lists_authors' && project.lists_authors === '') {
+        return false
+      }
+
+      return true
+    },
+    validEmail: function (email) {
+      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      return re.test(email)
+    },
+    validUrl: function (url) {
+      var re = /^(http|https):\/\/[^ "]+$/
+      return re.test(url)
     }
   },
   computed: {
