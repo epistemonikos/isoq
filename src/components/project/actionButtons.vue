@@ -107,16 +107,23 @@
         ></b-form-radio-group>
       </b-form-group>
       <template v-if="modalProject.public_type !== 'private'">
-        {{ errors }}
+        <template v-if="errors.length">
+          <p class="text-danger">The following data must be complete</p>
+          <ul class="text-danger">
+            <li v-for="error in errors" :key="error">{{ errorMsg(error) }}</li>
+          </ul>
+        </template>
         <b-form-group
           :label="$t('Title of review')"
-          label-for="input-project-list-name"
+          label-for="input-project-name"
           description="Insert the title that you plan to use for this report or paper.">
           <b-form-input
-            id="input-project-list-name"
+            id="input-project-name"
+            ref="input-project-name"
             type="text"
             required
             :placeholder="$t('Title of review')"
+            :state="state.name"
             v-model="modalProject.name"></b-form-input>
         </b-form-group>
         <b-form-group
@@ -125,6 +132,7 @@
           description="First then last name of all authors separated by commas">
           <b-form-input
             id="input-project-authors"
+            ref="input-project-authors"
             :placeholder="$t('Authors of review')"
             v-model="modalProject.authors"></b-form-input>
         </b-form-group>
@@ -134,6 +142,7 @@
           description="First then last name">
           <b-form-input
             id="input-project-author"
+            ref="input-project-author"
             v-model="modalProject.author"></b-form-input>
         </b-form-group>
         <b-form-group
@@ -142,6 +151,7 @@
           <b-form-input
             type="email"
             id="input-project-author-email"
+            ref="input-project-author-email"
             v-model="modalProject.author_email"></b-form-input>
         </b-form-group>
         <b-form-group
@@ -149,6 +159,7 @@
           label-for="input-project-review-question">
           <b-form-textarea
             id="input-project-review-question"
+            ref="input-project-review-question"
             :placeholder="$t('Insert main question that the review addresses')"
             rows="6"
             max-rows="100"
@@ -156,27 +167,30 @@
         </b-form-group>
         <b-form-group
           :label="$t('Has this review been published?')"
-          label-for="select-project-list-published-status">
+          label-for="select-project-published-status">
           <b-select
-            id="select-project-list-published-status"
+            id="select-project-published-status"
+            ref="select-project-published-status"
             v-model="modalProject.published_status"
             :options="yes_or_no"></b-select>
         </b-form-group>
         <b-form-group
           v-if="modalProject.published_status"
           :label="$t('URL or DOI')"
-          label-for="select-project-list-url-doi">
+          label-for="select-project-url-doi">
           <b-input
             placeholder="https://doi.org/10.1109/5.771073"
             type="url"
-            id="select-project-list-url-doi"
+            id="select-project-url-doi"
+            ref="select-project-url-doi"
             v-model="modalProject.url_doi"></b-input>
         </b-form-group>
         <b-form-group
           :label="$t('Is the iSoQ being completed by the review authors?')"
-          label-for="select-project-list-completed-by-author-status">
+          label-for="select-project-completed-by-author">
           <b-select
-            id="select-project-list-completed-by-author-status"
+            id="select-project-completed-by-author"
+            ref="select-project-completed-by-author"
             v-model="modalProject.complete_by_author"
             :options="yes_or_no"></b-select>
         </b-form-group>
@@ -186,6 +200,7 @@
           label-for="input-project-list-authors">
           <b-form-input
             id="input-project-list-authors"
+            ref="input-project-list-authors"
             v-model="modalProject.lists_authors"></b-form-input>
         </b-form-group>
 
@@ -275,7 +290,23 @@ export default {
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
       ],
-      errors: []
+      errors: [],
+      state: {
+        name: null,
+        authors: null,
+        author: null,
+        author_email: null,
+        review_question: null,
+        published_status: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null
+      }
+    }
+  },
+  watch: {
+    'modalProject.name': function (val) {
+      this.state.name = val.length > 0 ? null : false
     }
   },
   methods: {
@@ -875,9 +906,11 @@ export default {
         for (let key in this.modalProject) {
           if (!this.checkIfCanPublish(key)) {
             this.errors.push(key)
-            return
           }
         }
+      }
+      if (this.errors.length) {
+        return
       }
       this.$emit('uiPublishShowLoader', true)
       let params = {}
@@ -1317,37 +1350,55 @@ export default {
     checkIfCanPublish: function (type) {
       const project = this.modalProject
       if (type === 'name' && project.name === '') {
+        this.state.name = false
+        this.$refs['input-project-name'].focus()
         return false
       }
       // check if project has authors
       if (type === 'authors' && project.authors === '') {
+        this.state.authors = false
+        this.$refs['input-project-authors'].focus()
         return false
       }
       // check if project has author
       if (type === 'author' && project.author === '') {
+        this.state.author = false
+        this.$refs['input-project-author'].focus()
         return false
       }
       // check if project has a valid author email address
-      if (type === 'author_email' && project.author_email !== '' && !this.validEmail(project.author_email)) {
+      if (type === 'author_email' && project.author_email === '' && !this.validEmail(project.author_email)) {
+        this.state.author_email = false
+        this.$refs['input-project-author-email'].focus()
         return false
       }
       // check if project has a review question
       if (type === 'review_question' && project.review_question === '') {
+        this.state.review_question = false
+        this.$refs['input-project-review-question'].focus()
         return false
       }
       // check if published status is true
       if (type === 'published_status' && !project.published_status) {
+        this.state.published_status = false
+        this.$refs['input-project-published-status'].focus()
         return false
       }
       // check project url or doi
       if (type === 'url_doi' && project.published_status && (project.url_doi === '' || project.url_doi === null || !this.validUrl(project.url_doi))) {
+        this.state.url_doi = false
+        this.$refs['input-project-url-doi'].focus()
         return false
       }
       // check if project has a complete by author set as true
       if (type === 'complete_by_author' && !project.complete_by_author) {
+        this.state.complete_by_author = false
+        this.$refs['input-project-complete-by-author'].focus()
         return false
       }
       if (type === 'lists_authors' && project.lists_authors === '') {
+        this.state.lists_authors = false
+        this.$refs['input-project-lists-authors'].focus()
         return false
       }
 
@@ -1360,6 +1411,35 @@ export default {
     validUrl: function (url) {
       var re = /^(http|https):\/\/[^ "]+$/
       return re.test(url)
+    },
+    errorMsg: function (key) {
+      if (key === 'name') {
+        return 'You must provide a title for your review'
+      }
+      if (key === 'authors') {
+        return 'You must provide the authors of the review'
+      }
+      if (key === 'author') {
+        return 'You must provide the corresponding author'
+      }
+      if (key === 'author_email') {
+        return 'You must provide the corresponding author\'s email address'
+      }
+      if (key === 'review_question') {
+        return 'You must provide the review question'
+      }
+      if (key === 'published_status') {
+        return 'You must provide if the review has been published'
+      }
+      if (key === 'url_doi') {
+        return 'You must provide the URL or DOI'
+      }
+      if (key === 'complete_by_author') {
+        return 'You must provide if the iSoQ is being completed by the review authors'
+      }
+      if (key === 'lists_authors') {
+        return 'You must provide the authors of the iSoQ'
+      }
     }
   },
   computed: {
