@@ -54,7 +54,10 @@
               type="text"
               required
               :placeholder="$t('Title of review')"
+              :state="state.name"
+              @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
               v-model="formData.name"></b-form-input>
+            <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('Authors')"
@@ -64,7 +67,10 @@
               :disabled="!canWrite"
               id="input-project-authors"
               :placeholder="$t('Authors of review')"
+              :state="state.authors"
+              @blur="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : false"
               v-model="formData.authors"></b-form-input>
+            <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             label="Corresponding author"
@@ -73,7 +79,10 @@
             <b-form-input
               :disabled="!canWrite"
               id="input-project-author"
+              :state="state.author"
+              @blur="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : false"
               v-model="formData.author"></b-form-input>
+              <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             label="Corresponding author's email address"
@@ -82,7 +91,10 @@
               :disabled="!canWrite"
               type="email"
               id="input-project-author-email"
+              :state="state.author_email"
+              @blur="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false"
               v-model="formData.author_email"></b-form-input>
+              <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('Review question')"
@@ -93,16 +105,23 @@
               :placeholder="$t('Insert main question that the review addresses')"
               rows="6"
               max-rows="100"
+              :state="state.review_question"
+              @blur="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : false"
               v-model="formData.review_question"></b-form-textarea>
+            <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 2 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('Has this review been published?')"
             label-for="select-project-list-published-status">
+            {{ formData.published_status }} {{ formData.public_type }}
             <b-select
               :disabled="!canWrite"
               id="select-project-list-published-status"
+              :state="state.published_status"
+              @change="state.published_status = (formData.published_status && formData.public_type !== 'private') ? null : false"
               v-model="formData.published_status"
               :options="yes_or_no"></b-select>
+            <b-form-invalid-feedback :state="state.published_status">{{ $t('The project must be review been published') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             v-if="formData.published_status"
@@ -113,7 +132,10 @@
               placeholder="https://doi.org/10.1109/5.771073"
               type="url"
               id="select-project-list-url-doi"
+              :state="state.url_doi"
+              @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) && formData.public_type !== 'private') ? null : false"
               v-model="formData.url_doi"></b-input>
+            <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('Is the iSoQ being completed by the review authors?')"
@@ -121,17 +143,22 @@
             <b-select
               :disabled="!canWrite"
               id="select-project-list-completed-by-author-status"
+              :state="state.complete_by_author"
+              @change="state.complete_by_author = (formData.complete_by_author && formData.public_type !== 'private') ? null : false"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
           </b-form-group>
           <b-form-group
-            v-if="!formData.complete_by_author"
+            v-if="formData.complete_by_author"
             label="Please list the authors of this iSoQ"
             label-for="input-project-list-authors">
             <b-form-input
               :disabled="!canWrite"
               id="input-project-list-authors"
+              :state="state.lists_authors"
+              @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : false"
               v-model="formData.lists_authors"></b-form-input>
+            <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             label-for="select-project-list-status"
@@ -153,10 +180,13 @@
               </template>
               <b-select
                 :disabled="!canWrite"
+                :state="state.license"
+                @change="state.license = (formData.license_type !== '' && formData.license_type !== null) ? null : false"
                 id="select-project-list-license"
                 v-model="defaultLicense"
                 :options="global_licenses"></b-select>
             </b-form-group>
+            <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a license') }}</b-form-invalid-feedback>
             <p v-for="license of global_licenses" :key="license.value">
               <span v-if="license.value === formData.license_type">
                 <b>Explanation:</b> {{ license.explanation }}
@@ -224,7 +254,19 @@ export default {
         { value: 'CC-BY-NC', text: 'CC BY-NC', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
         { value: 'CC-BY-SA', text: 'CC BY-SA', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
         { value: 'CC-BY', text: 'CC BY', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ]
+      ],
+      state: {
+        name: null,
+        authors: null,
+        author: null,
+        author_email: null,
+        review_question: null,
+        published_status: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null,
+        license: null
+      }
     }
   },
   computed: {
@@ -253,43 +295,63 @@ export default {
         project.private = false
         project.is_public = true
         // check if the project has a title
-        if (project.title === '') {
+        if (project.name === '') {
+          this.state.name = false
           this.setMsgUpdateProject('The project must have a title')
           return
         }
         // check if project has authors
         if (project.authors === '') {
+          this.state.authors = false
           this.setMsgUpdateProject('The project must have at least one author')
           return
         }
         // check if project has author
         if (project.author === '') {
+          this.state.author = false
           this.setMsgUpdateProject('The project must have a corresponding author')
           return
         }
         // check if project has a valid author email address
         if (project.author_email !== '' && !this.validEmail(project.author_email)) {
+          this.state.author_email = false
           this.setMsgUpdateProject('The project must have a valid author email address')
           return
         }
         // check if project has a review question
         if (project.review_question === '') {
+          this.state.review_question = false
           this.setMsgUpdateProject('The project must have a review question')
           return
         }
         // check if published status is true
         if (!project.published_status) {
+          this.state.published_status = false
           this.setMsgUpdateProject('The project must be review been published')
           return
         }
         // check project url or doi
         if (project.published_status && (project.url_doi === '' || project.url_doi === null || !this.validUrl(project.url_doi))) {
+          this.state.url_doi = false
           this.setMsgUpdateProject('The project must have a valid URL or DOI')
           return
         }
         // check if project has a complete by author set as true
         if (!project.complete_by_author) {
+          this.state.complete_by_author = false
           this.setMsgUpdateProject('The project must have being completed by the review authors')
+          return
+        }
+        // check if project has a list of authors
+        if (project.complete_by_author && (project.lists_authors === '' || project.lists_authors === null)) {
+          this.state.lists_authors = false
+          this.setMsgUpdateProject('The project must have a list of authors')
+          return
+        }
+        // check if project has a license
+        if (project.license_type === '' || project.license_type === null) {
+          this.state.license = false
+          this.setMsgUpdateProject('The project must have a license')
           return
         }
       }
