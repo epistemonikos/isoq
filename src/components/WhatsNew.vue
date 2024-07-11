@@ -11,6 +11,16 @@
       <h3>Version 1.0.0</h3>
       <p>Initial release of iSoQ.</p>
       <p>new content</p>
+      <!-- acá escribes tu comentario -->
+      <ul>
+        <li>item 1</li>
+        <li>item 2</li>
+      </ul>
+
+      <ol>
+        <li>item 1</li>
+        <li>item 2</li>
+      </ol>
     </b-container>
   </div>
 </template>
