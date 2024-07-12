@@ -127,7 +127,7 @@
         ref="new-project"
         size="xl"
         :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
-        @ok="AddProject"
+        @ok="save"
         @cancel="closeModalProject"
         :ok-disabled="!buffer_project.name"
         ok-title="Save"
@@ -142,8 +142,11 @@
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
         <organizationForm
+          ref="organizationForm"
           :formData="buffer_project"
-          :canWrite="($store.state.user.personal_organization === this.$route.params.id)"></organizationForm>
+          :canWrite="($store.state.user.personal_organization === this.$route.params.id)"
+          :isModal="true"
+          @modal-notification="modalNotification"></organizationForm>
       </b-modal>
       <b-modal
         size="xl"
@@ -662,41 +665,13 @@ export default {
         return {}
       }
     },
-    AddProject: function () {
-      this.ui.projectTable.isBusy = true
-      this.buffer_project.private = true
-      this.buffer_project.is_public = false
-      if (this.buffer_project.public_type !== 'private') {
-        this.buffer_project.private = false
-        this.buffer_project.is_public = true
-      }
-      if (this.buffer_project.id) {
-        delete this.buffer_project.lists
-        axios.patch(`/api/isoqf_projects/${this.buffer_project.id}`, this.buffer_project)
-          .then(() => {
-            this.hashId = this.buffer_project.id
-            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-            this.getProjects()
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      } else {
-        const _date = Date.now()
-        this.buffer_project.created_at = _date
-        this.buffer_project.last_update = _date
-        axios.post('/api/isoqf_projects', this.buffer_project)
-          .then(() => {
-            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-            this.$refs['new-project'].hide()
-            this.getProjects()
-          })
-          .catch((error) => {
-            this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-            console.log('error', error)
-            this.$refs['new-project'].show()
-          })
-      }
+    modalNotification: function () {
+      this.$refs['new-project'].hide()
+      this.getProjects()
+    },
+    save: function (e) {
+      e.preventDefault()
+      this.$refs['organizationForm'].save()
     },
     countDownChanged (dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
