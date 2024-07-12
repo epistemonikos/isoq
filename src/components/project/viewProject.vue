@@ -37,7 +37,8 @@
         <propertiesProject
           :project="project"
           @update-modification="updateModificationTime()"
-          :canWrite="checkPermissions()">
+          :canWrite="checkPermissions()"
+          @update-project="updateDataProject">
         </propertiesProject>
       </div>
       <div :class="{'block mt-3': (tabOpened===1)?true:false, 'd-none': (tabOpened===1)?!true:!false}">
@@ -1265,6 +1266,10 @@ export default {
     await this.getProject()
   },
   methods: {
+    updateDataProject: function (data) {
+      console.log('updateDataProject', data)
+      this.getProject()
+    },
     isActiveStepTwo: function () {
       if (this.references.length === 0) { return false }
       if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }

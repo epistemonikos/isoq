@@ -9,7 +9,8 @@
     </b-row>
     <organizationForm
       :formData="project"
-      :canWrite="canWrite"></organizationForm>
+      :canWrite="canWrite"
+      @update-form-data="updateFormData"></organizationForm>
   </div>
 </template>
 
@@ -27,6 +28,12 @@ export default {
     canWrite: {
       type: Boolean,
       required: true
+    }
+  },
+  methods: {
+    updateFormData: function (data) {
+      console.log('updateFormData', data)
+      this.$emit('update-project', data)
     }
   }
 }
