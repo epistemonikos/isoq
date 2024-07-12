@@ -113,7 +113,6 @@
           <b-form-group
             :label="$t('Has this review been published?')"
             label-for="select-project-list-published-status">
-            {{ formData.published_status }} {{ formData.public_type }}
             <b-select
               :disabled="!canWrite"
               id="select-project-list-published-status"
@@ -147,6 +146,7 @@
               @change="state.complete_by_author = (formData.complete_by_author && formData.public_type !== 'private') ? null : false"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
+              <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('The project must be completed by the review authors') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             v-if="formData.complete_by_author"
@@ -170,7 +170,9 @@
               :disabled="!canWrite"
               id="select-project-list-status"
               v-model="formData.public_type"
+              @change="resetState()"
               :options="global_status"></b-select>
+            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one reference and one completed finding. Choose \'Private\' until you are finished.') }}</b-form-invalid-feedback>
           </b-form-group>
           <template v-if="formData.public_type !== 'private'">
             <b-form-group
@@ -183,7 +185,7 @@
                 :state="state.license"
                 @change="state.license = (formData.license_type !== '' && formData.license_type !== null) ? null : false"
                 id="select-project-list-license"
-                v-model="defaultLicense"
+                v-model="formData.license_type"
                 :options="global_licenses"></b-select>
             </b-form-group>
             <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a license') }}</b-form-invalid-feedback>
@@ -206,14 +208,14 @@
           </b-form-group>
         </b-col>
       </b-row>
-      <b-row align-h="end" v-if="canWrite">
+      <b-row align-h="end" v-if="canWrite && !isModal">
         <b-col
           cols="6"
           class="mb-3">
           <b-button
             block
             variant="outline-success"
-            @click="updateProjectInfo">
+            @click="save">
             Save
           </b-button>
         </b-col>
@@ -224,6 +226,8 @@
 
 <script>
 import axios from 'axios'
+import Project from '@/utils/project'
+
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
@@ -231,17 +235,34 @@ export default {
   components: {videoHelp},
   props: {
     formData: Object,
-    canWrite: Boolean
+    canWrite: Boolean,
+    isModal: {
+      type: Boolean,
+      default: false
+    }
+  },
+  mounted () {
+    if (this.formData.id) {
+      let data = JSON.parse(JSON.stringify(this.global_status))
+      let newData = []
+      for (let i of data) {
+        if (i.disabled) {
+          i.disabled = false
+        }
+        newData.push(i)
+      }
+      this.global_status = newData
+    }
   },
   data: function () {
     return {
       variant: 'info',
       msgUpdateProject: null,
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
+        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database', disabled: false },
+        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database', disabled: true },
+        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database', disabled: true },
+        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database', disabled: true }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -256,6 +277,7 @@ export default {
         { value: 'CC-BY', text: 'CC BY', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
       ],
       state: {
+        id: null,
         name: null,
         authors: null,
         author: null,
@@ -265,124 +287,180 @@ export default {
         url_doi: null,
         complete_by_author: null,
         lists_authors: null,
-        license: null
-      }
-    }
-  },
-  computed: {
-    defaultLicense: {
-      get: function () {
-        if (!Object.prototype.hasOwnProperty.call(this.formData, 'license_type')) {
-          return 'CC-BY-NC-ND'
-        } else {
-          return this.formData.license_type
-        }
-      },
-      set: function (license) {
-        this.formData.license_type = license
+        license: null,
+        can_publish: null
       }
     }
   },
   methods: {
+    resetState: function () {
+      this.state = {
+        id: null,
+        name: null,
+        authors: null,
+        author_email: null,
+        review_question: null,
+        published_status: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null,
+        license: null,
+        can_publish: null
+      }
+    },
     dismissAlertProject: function () {
       this.msgUpdateProject = null
     },
+    save: async function () {
+      const data = JSON.parse(JSON.stringify(this.formData))
+      data.organization = this.$store.state.user.personal_organization
+      if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
+        const response = await Project.update(data)
+        if (response.data.status) {
+          this.variant = 'success'
+          this.msgUpdateProject = 'The project has been updated'
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          this.$emit('modal-notification')
+        } else {
+          this.variant = 'danger'
+          this.state = { ...this.state, ...response.data.state }
+          this.msgUpdateProject = 'The project present some errors, please check the fields and try again.'
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      } else {
+        const response = await Project.create(data)
+        if (response.data.status) {
+          this.variant = 'success'
+          this.msgUpdateProject = 'The project has been created'
+          this.$emit('modal-notification', response)
+        } else {
+          this.variant = 'danger'
+          this.msgUpdateProject = 'The project present some errors, please check the fields and try again.'
+          this.state = { ...this.state, ...response.data.state }
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      }
+    },
     updateProjectInfo: function () {
-      let project = JSON.parse(JSON.stringify(this.formData))
-      project.private = true
-      project.is_public = false
-      if (project.public_type !== 'private') {
-        project.private = false
-        project.is_public = true
+      const data = JSON.parse(JSON.stringify(this.formData))
+      console.log(data)
+      let params = {}
+      for (let key of Object.keys(data)) {
+        params[key] = data[key]
+      }
+      params.private = true
+      params.is_public = false
+      if (params.public_type !== 'private') {
+        params.private = false
+        params.is_public = true
         // check if the project has a title
-        if (project.name === '') {
+        if (params.name === '') {
           this.state.name = false
           this.setMsgUpdateProject('The project must have a title')
           return
         }
         // check if project has authors
-        if (project.authors === '') {
+        if (params.authors === '') {
           this.state.authors = false
           this.setMsgUpdateProject('The project must have at least one author')
           return
         }
         // check if project has author
-        if (project.author === '') {
+        if (params.author === '') {
           this.state.author = false
           this.setMsgUpdateProject('The project must have a corresponding author')
           return
         }
         // check if project has a valid author email address
-        if (project.author_email !== '' && !this.validEmail(project.author_email)) {
+        if (params.author_email !== '' && !this.validEmail(params.author_email)) {
           this.state.author_email = false
           this.setMsgUpdateProject('The project must have a valid author email address')
           return
         }
         // check if project has a review question
-        if (project.review_question === '') {
+        if (params.review_question === '') {
           this.state.review_question = false
           this.setMsgUpdateProject('The project must have a review question')
           return
         }
         // check if published status is true
-        if (!project.published_status) {
+        if (!params.published_status) {
           this.state.published_status = false
           this.setMsgUpdateProject('The project must be review been published')
           return
         }
         // check project url or doi
-        if (project.published_status && (project.url_doi === '' || project.url_doi === null || !this.validUrl(project.url_doi))) {
+        if (params.published_status && (params.url_doi === '' || params.url_doi === null || !this.validUrl(params.url_doi))) {
           this.state.url_doi = false
           this.setMsgUpdateProject('The project must have a valid URL or DOI')
           return
         }
         // check if project has a complete by author set as true
-        if (!project.complete_by_author) {
+        if (!params.complete_by_author) {
           this.state.complete_by_author = false
           this.setMsgUpdateProject('The project must have being completed by the review authors')
           return
         }
         // check if project has a list of authors
-        if (project.complete_by_author && (project.lists_authors === '' || project.lists_authors === null)) {
+        if (params.complete_by_author && (params.lists_authors === '' || params.lists_authors === null)) {
           this.state.lists_authors = false
           this.setMsgUpdateProject('The project must have a list of authors')
           return
         }
         // check if project has a license
-        if (project.license_type === '' || project.license_type === null) {
+        if (params.license_type === '' || params.license_type === null) {
           this.state.license = false
           this.setMsgUpdateProject('The project must have a license')
           return
         }
       }
-      axios.patch(`/api/isoqf_projects/${project.id}`, project)
-        .then(() => {
-          let params = {
-            project_id: project.id,
-            is_public: project.is_public,
-            private: project.private,
-            license_type: project.license_type,
-            public_type: project.public_type
-          }
-          axios.get(`/api/publish`, {params})
-            .then(() => {
-              this.variant = 'success'
-              this.msgUpdateProject = 'The project has been updated'
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-              this.$emit('update-modification')
-            })
-        })
-        .catch((error) => {
-          this.msgUpdateProject = error
-        })
+      if (params.public_type !== 'private') {
+        axios.get('/api/project/can_publish', { params })
+          .then((response) => {
+            if (response.data.status) {
+              axios.patch(`/api/publish`, { params })
+                .then(() => {
+                  this.variant = 'success'
+                  this.msgUpdateProject = 'The project has been published'
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  this.$emit('update-modification')
+                })
+            } else {
+              params.private = true
+              params.is_public = false
+              params.license_type = ''
+              params.public_type = 'private'
+              axios.patch(`/api/publish`, { params })
+                .then(() => {
+                  this.variant = 'success'
+                  this.msgUpdateProject = `The project has been updated, but no published because it does not meet the requirements to be published. ${response.data.message}`
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  this.$emit('update-modification')
+                  this.$emit('update-form-data', params)
+                })
+            }
+          })
+          .catch((error) => {
+            this.msgUpdateProject = error
+          })
+      } else {
+        axios.patch(`/api/publish`, { params })
+          .then(() => {
+            this.variant = 'success'
+            this.msgUpdateProject = 'The project has been updated'
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            this.$emit('update-modification')
+          })
+          .catch((error) => {
+            this.msgUpdateProject = error
+          })
+      }
     },
     validEmail: function (email) {
-      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      return re.test(email)
+      return Project.validEmail(email)
     },
     validUrl: function (url) {
-      var re = /^(http|https):\/\/[^ "]+$/
-      return re.test(url)
+      return Project.validUrl(url)
     },
     setMsgUpdateProject: function (msg) {
       this.msgUpdateProject = msg
