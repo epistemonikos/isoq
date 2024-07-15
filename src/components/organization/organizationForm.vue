@@ -467,6 +467,21 @@ export default {
       this.variant = 'danger'
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  },
+  watch: {
+    formData: function (data) {
+      if (data.id) {
+        let data = JSON.parse(JSON.stringify(this.global_status))
+        let newData = []
+        for (let i of data) {
+          if (i.disabled) {
+            i.disabled = false
+          }
+          newData.push(i)
+        }
+        this.global_status = newData
+      }
+    }
   }
 }
 </script>
