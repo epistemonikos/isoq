@@ -821,6 +821,10 @@ export default {
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
         this.modalProject.license_type = 'CC-BY-NC-ND'
       }
+      this.errorsResponse = {
+        message: '',
+        items: []
+      }
       this.$refs['modal-change-status'].show()
     },
     changeMode: function () {
