@@ -95,6 +95,16 @@
         <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
       </template>
 
+      <template v-if="errorsResponse.message !== ''">
+        <b-alert
+          show
+          variant="danger"
+          dismissible
+          @dismissed="errorsResponse.message = ''">
+          <p class="mb-0">{{ errorsResponse.message }}</p>
+        </b-alert>
+      </template>
+
       <p class="font-weight-light">
         By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
       </p>
@@ -106,115 +116,31 @@
         name="modal-radio-status"
         ></b-form-radio-group>
       </b-form-group>
-      <template v-if="modalProject.public_type !== 'private'">
-        <template v-if="errors.length">
-          <p class="text-danger">The following data must be complete</p>
-          <ul class="text-danger">
-            <li v-for="error in errors" :key="error">{{ errorMsg(error) }}</li>
-          </ul>
-        </template>
-        <b-form-group
-          :label="$t('Title of review')"
-          label-for="input-project-name"
-          description="Insert the title that you plan to use for this report or paper.">
-          <b-form-input
-            id="input-project-name"
-            ref="input-project-name"
-            type="text"
-            required
-            :placeholder="$t('Title of review')"
-            :state="state.name"
-            v-model="modalProject.name"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Authors')"
-          label-for="input-project-authors"
-          description="First then last name of all authors separated by commas">
-          <b-form-input
-            id="input-project-authors"
-            ref="input-project-authors"
-            :placeholder="$t('Authors of review')"
-            v-model="modalProject.authors"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          label="Corresponding author"
-          label-for="input-project-author"
-          description="First then last name">
-          <b-form-input
-            id="input-project-author"
-            ref="input-project-author"
-            v-model="modalProject.author"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          label="Corresponding author's email address"
-          label-for="input-project-author-email">
-          <b-form-input
-            type="email"
-            id="input-project-author-email"
-            ref="input-project-author-email"
-            v-model="modalProject.author_email"></b-form-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Review question')"
-          label-for="input-project-review-question">
-          <b-form-textarea
-            id="input-project-review-question"
-            ref="input-project-review-question"
-            :placeholder="$t('Insert main question that the review addresses')"
-            rows="6"
-            max-rows="100"
-            v-model="modalProject.review_question"></b-form-textarea>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Has this review been published?')"
-          label-for="select-project-published-status">
-          <b-select
-            id="select-project-published-status"
-            ref="select-project-published-status"
-            v-model="modalProject.published_status"
-            :options="yes_or_no"></b-select>
-        </b-form-group>
-        <b-form-group
-          v-if="modalProject.published_status"
-          :label="$t('URL or DOI')"
-          label-for="select-project-url-doi">
-          <b-input
-            placeholder="https://doi.org/10.1109/5.771073"
-            type="url"
-            id="select-project-url-doi"
-            ref="select-project-url-doi"
-            v-model="modalProject.url_doi"></b-input>
-        </b-form-group>
-        <b-form-group
-          :label="$t('Is the iSoQ being completed by the review authors?')"
-          label-for="select-project-completed-by-author">
-          <b-select
-            id="select-project-completed-by-author"
-            ref="select-project-completed-by-author"
-            v-model="modalProject.complete_by_author"
-            :options="yes_or_no"></b-select>
-        </b-form-group>
-        <b-form-group
-          v-if="modalProject.complete_by_author"
-          label="Please list the authors of this iSoQ"
-          label-for="input-project-list-authors">
-          <b-form-input
-            id="input-project-list-authors"
-            ref="input-project-list-authors"
-            v-model="modalProject.lists_authors"></b-form-input>
-        </b-form-group>
 
+      <template v-if="modalProject.public_type !== 'private'">
         <h5>Choose a license</h5>
         <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
         <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
         <b-form-group>
           <b-form-radio-group
           id="modal-publish-license"
-          v-model="getLicense"
+          v-model="modalProject.license_type"
           :options="global_licenses"
+          @change="state.license_type = null"
           name="modal-radio-license"
           ></b-form-radio-group>
+          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons license.</b-form-invalid-feedback>
         </b-form-group>
+      </template>
+
+      <template v-if="errorsResponse.message !== ''">
+        <b-alert
+          show
+          variant="danger"
+          dismissible
+          @dismissed="errorsResponse.message = ''">
+          <p class="mb-0">{{ errorsResponse.message }}</p>
+        </b-alert>
       </template>
 
       <template #modal-footer>
@@ -271,7 +197,7 @@ export default {
   },
   data () {
     return {
-      modalProject: {},
+      modalProject: {name: ''},
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
         { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
@@ -300,7 +226,13 @@ export default {
         published_status: null,
         url_doi: null,
         complete_by_author: null,
-        lists_authors: null
+        lists_authors: null,
+        public_type: null,
+        license_type: null
+      },
+      errorsResponse: {
+        message: '',
+        items: []
       }
     }
   },
@@ -899,44 +831,57 @@ export default {
         this.$emit('changeTableSettings', {perPage: 5, currentPage: 1})
       }
     },
-    savePublicStatus: function (event) {
+    savePublicStatus: async function (event) {
       event.preventDefault()
-      this.errors = []
-      if (this.modalProject.public_type !== 'private') {
-        for (let key in this.modalProject) {
-          if (!this.checkIfCanPublish(key)) {
-            this.errors.push(key)
-          }
-        }
-      }
-      if (this.errors.length) {
-        return
-      }
       this.$emit('uiPublishShowLoader', true)
       let params = {}
-      params.project_id = this.project.id
-      for (let key in this.modalProject) {
-        params[key] = this.modalProject[key]
-      }
+      params.id = this.project.id
+      params.public_type = this.modalProject.public_type
       params.private = true
       params.is_public = false
+
       if (this.modalProject.public_type !== 'private') {
         params.private = false
         params.is_public = true
+        params.license_type = this.modalProject.license_type
+        if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
+          this.state.license_type = false
+          this.$emit('uiPublishShowLoader', false)
+          return
+        }
       } else {
         params.license_type = ''
       }
 
-      axios.patch('/api/publish', {params})
-        .then(() => {
-          this.modalProject = {}
-          this.$emit('getProject')
+      if (this.modalProject.public_type !== 'private') {
+        const canPublish = await axios.get('/api/project/can_publish', {params: {project_id: this.project.id}})
+        if (canPublish.data.status) {
+          axios.patch('/api/publish', {params})
+            .then(() => {
+              this.modalProject = {name: ''}
+              this.$emit('getProject')
+              this.$emit('uiPublishShowLoader', false)
+              this.$refs['modal-change-status'].hide()
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        } else {
+          this.errorsResponse.message = canPublish.data.message
           this.$emit('uiPublishShowLoader', false)
-          this.$refs['modal-change-status'].hide()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+        }
+      } else {
+        axios.patch('/api/publish', {params})
+          .then(() => {
+            this.modalProject = {name: ''}
+            this.$emit('getProject')
+            this.$emit('uiPublishShowLoader', false)
+            this.$refs['modal-change-status'].hide()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     exportToRIS: function () {
       const _refs = JSON.parse(JSON.stringify(this.references))
@@ -1345,100 +1290,6 @@ export default {
         }
       } else {
         return 'author(s) not found'
-      }
-    },
-    checkIfCanPublish: function (type) {
-      const project = this.modalProject
-      if (type === 'name' && project.name === '') {
-        this.state.name = false
-        this.$refs['input-project-name'].focus()
-        return false
-      }
-      // check if project has authors
-      if (type === 'authors' && project.authors === '') {
-        this.state.authors = false
-        this.$refs['input-project-authors'].focus()
-        return false
-      }
-      // check if project has author
-      if (type === 'author' && project.author === '') {
-        this.state.author = false
-        this.$refs['input-project-author'].focus()
-        return false
-      }
-      // check if project has a valid author email address
-      if (type === 'author_email' && project.author_email === '' && !this.validEmail(project.author_email)) {
-        this.state.author_email = false
-        this.$refs['input-project-author-email'].focus()
-        return false
-      }
-      // check if project has a review question
-      if (type === 'review_question' && project.review_question === '') {
-        this.state.review_question = false
-        this.$refs['input-project-review-question'].focus()
-        return false
-      }
-      // check if published status is true
-      if (type === 'published_status' && !project.published_status) {
-        this.state.published_status = false
-        this.$refs['input-project-published-status'].focus()
-        return false
-      }
-      // check project url or doi
-      if (type === 'url_doi' && project.published_status && (project.url_doi === '' || project.url_doi === null || !this.validUrl(project.url_doi))) {
-        this.state.url_doi = false
-        this.$refs['input-project-url-doi'].focus()
-        return false
-      }
-      // check if project has a complete by author set as true
-      if (type === 'complete_by_author' && !project.complete_by_author) {
-        this.state.complete_by_author = false
-        this.$refs['input-project-complete-by-author'].focus()
-        return false
-      }
-      if (type === 'lists_authors' && project.lists_authors === '') {
-        this.state.lists_authors = false
-        this.$refs['input-project-lists-authors'].focus()
-        return false
-      }
-
-      return true
-    },
-    validEmail: function (email) {
-      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      return re.test(email)
-    },
-    validUrl: function (url) {
-      var re = /^(http|https):\/\/[^ "]+$/
-      return re.test(url)
-    },
-    errorMsg: function (key) {
-      if (key === 'name') {
-        return 'You must provide a title for your review'
-      }
-      if (key === 'authors') {
-        return 'You must provide the authors of the review'
-      }
-      if (key === 'author') {
-        return 'You must provide the corresponding author'
-      }
-      if (key === 'author_email') {
-        return 'You must provide the corresponding author\'s email address'
-      }
-      if (key === 'review_question') {
-        return 'You must provide the review question'
-      }
-      if (key === 'published_status') {
-        return 'You must provide if the review has been published'
-      }
-      if (key === 'url_doi') {
-        return 'You must provide the URL or DOI'
-      }
-      if (key === 'complete_by_author') {
-        return 'You must provide if the iSoQ is being completed by the review authors'
-      }
-      if (key === 'lists_authors') {
-        return 'You must provide the authors of the iSoQ'
       }
     }
   },
