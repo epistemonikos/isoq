@@ -132,7 +132,7 @@
               type="url"
               id="select-project-list-url-doi"
               :state="state.url_doi"
-              @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) && formData.public_type !== 'private') ? null : false"
+              @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
               v-model="formData.url_doi"></b-input>
             <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
           </b-form-group>
