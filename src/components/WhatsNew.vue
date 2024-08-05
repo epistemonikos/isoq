@@ -13,16 +13,18 @@
       <p>Initial release of iSoQ.</p>
       <p>new content</p>
       <!-- acá escribes tu comentario -->
-      <ul> We have redesigned the My Data page for easier navigation
-        <li>item 1</li> A table of contents on the left makes visualising and moving between each step easy
-        <li>item 2</li> Edit and delete buttons for each row in the tables (step 3&4) remain visible even when scrolling
-        <li>item 3</li> Scroll over the Authors names to see the title of the paper in Steps 3&4
+      <p>We have redesigned the My Data page for easier navigation</p>
+      <ul>
+        <li>
+          A table of contents on the left makes visualising and moving between each step easy
+        </li>
+        <li>
+          Edit and delete buttons for each row in the tables (step 3&4) remain visible even when scrolling
+        </li>
+        <li>
+          Scroll over the Authors names to see the title of the paper in Steps 3&4
+        </li>
       </ul>
-
-      <ol>
-        <li>item 1</li>
-        <li>item 2</li>
-      </ol>
       <!-- hasta aqui -->
     </b-container>
   </div>
