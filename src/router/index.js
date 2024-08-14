@@ -1,5 +1,3 @@
-import { name } from 'file-loader'
-
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
 const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
 const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
