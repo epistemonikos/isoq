@@ -564,36 +564,36 @@ export default {
       switch (type) {
         case 'methodological-limitations':
           if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
+            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because' ||
+            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because' ||
+            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because'
           ) {
             return true
           }
           return false
         case 'coherence':
           if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because...'
+            prop.coherence.explanation === 'Minor concerns regarding coherence because' ||
+            prop.coherence.explanation === 'Moderate concerns regarding coherence because' ||
+            prop.coherence.explanation === 'Serious concerns regarding coherence because'
           ) {
             return true
           }
           return false
         case 'adequacy':
           if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because...'
+            prop.adequacy.explanation === 'Minor concerns regarding adequacy because' ||
+            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because' ||
+            prop.adequacy.explanation === 'Serious concerns regarding adequacy because'
           ) {
             return true
           }
           return false
         case 'relevance':
           if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because...'
+            prop.relevance.explanation === 'Minor concerns regarding relevance because' ||
+            prop.relevance.explanation === 'Moderate concerns regarding relevance because' ||
+            prop.relevance.explanation === 'Serious concerns regarding relevance because'
           ) {
             return true
           }

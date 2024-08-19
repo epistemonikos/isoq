@@ -145,13 +145,13 @@
                             <b-form-radio value="0" @change="propExplanation('', 'methodological_limitations')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding methodological limitations because...', 'methodological_limitations')">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding methodological limitations because', 'methodological_limitations')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding methodological limitations because...', 'methodological_limitations')">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding methodological limitations because', 'methodological_limitations')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding methodological limitations because...', 'methodological_limitations')">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding methodological limitations because', 'methodological_limitations')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -168,8 +168,8 @@
                             class="mt-4 font-weight-light"
                             label-for="input-ml-explanation">
                             <template slot="label">
-                              Explain any concerns you have in your own words.
-                              <small class="text-muted">{{ buffer_modal_stage_two.methodological_limitations.example }}</small>
+                              <p>Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)</p>
+                              <p class="font-weight-bold">{{ buffer_modal_stage_two.methodological_limitations.example }}</p>
                             </template>
                             <template slot="description">
                               The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example
@@ -214,13 +214,13 @@
                             <b-form-radio value="0" @change="propExplanation('', 'coherence')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding coherence because...', 'coherence')">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding coherence because', 'coherence')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding coherence because...', 'coherence')">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding coherence because', 'coherence')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding coherence because...', 'coherence')">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding coherence because', 'coherence')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -275,13 +275,13 @@
                             <b-form-radio value="0" @change="propExplanation('', 'adequacy')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding adequacy because...', 'adequacy')">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding adequacy because', 'adequacy')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding adequacy because...', 'adequacy')">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding adequacy because', 'adequacy')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding adequacy because...', 'adequacy')">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding adequacy because', 'adequacy')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -338,13 +338,13 @@
                             <b-form-radio value="0" @change="propExplanation('', 'relevance')">
                               No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding relevance because...', 'relevance')">
+                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding relevance because', 'relevance')">
                               Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding relevance because...', 'relevance')">
+                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding relevance because', 'relevance')">
                               Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
                             </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding relevance because...', 'relevance')">
+                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding relevance because', 'relevance')">
                               Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
                             </b-form-radio>
                           </b-form-radio-group>
@@ -1454,36 +1454,36 @@ export default {
       switch (type) {
         case 'methodological-limitations':
           if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
+            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because' ||
+            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because' ||
+            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because'
           ) {
             return true
           }
           return false
         case 'coherence':
           if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because...'
+            prop.coherence.explanation === 'Minor concerns regarding coherence because' ||
+            prop.coherence.explanation === 'Moderate concerns regarding coherence because' ||
+            prop.coherence.explanation === 'Serious concerns regarding coherence because'
           ) {
             return true
           }
           return false
         case 'adequacy':
           if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because...'
+            prop.adequacy.explanation === 'Minor concerns regarding adequacy because' ||
+            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because' ||
+            prop.adequacy.explanation === 'Serious concerns regarding adequacy because'
           ) {
             return true
           }
           return false
         case 'relevance':
           if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because...'
+            prop.relevance.explanation === 'Minor concerns regarding relevance because' ||
+            prop.relevance.explanation === 'Moderate concerns regarding relevance because' ||
+            prop.relevance.explanation === 'Serious concerns regarding relevance because'
           ) {
             return true
           }
@@ -1785,7 +1785,9 @@ export default {
         })
     },
     propExplanation: function (txt, type) {
+      console.log(txt, type)
       this.buffer_modal_stage_two[type].example = txt
+      console.log(this.buffer_modal_stage_two)
     },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')
