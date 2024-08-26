@@ -424,11 +424,35 @@
         </template>
       </b-table>
     </b-modal>
+
+    <!-- modal -->
+    <evidence-profile-form
+      ref="evidenceProfileForm"
+      :modalData="modalData"
+      :list="list"
+      :ui="ui"
+      :methAssessments="methAssessments"
+      :findings="findings"
+      :mode="mode"
+      :extractedData="extractedData"
+      :refsWithTitle="refsWithTitle"
+      :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
+      :charsOfStudies="charsOfStudies"
+      :project="project"
+      :evidenceProfile="evidenceProfile"
+      :selectOptions="selectOptions"
+      @propExplanation="propExplanation"
+      @update-list-data="getList"
+      @busyEvidenceProfileTable="busyEvidenceProfileTable"
+      @callGetStageOneData="callGetStageOneData"
+      @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+      @getExtractedData="getExtractedData"></evidence-profile-form>
+    <!-- end modal -->
   </div>
   <div v-else>
     <div class="text-center my-5">
       <p>
-        {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-stage-two>{{ $t('add a evidence profile') }}</b-link>
+        {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-evidence-profile-form>{{ $t('add a evidence profile') }}</b-link>
       </p>
     </div>
   </div>
@@ -452,10 +476,17 @@ export default {
     permission: Boolean,
     selectOptions: Array,
     levelConfidence: Array,
-    findings: Object
+    findings: Object,
+    methAssessments: Object,
+    extractedData: Object,
+    showEditExtractedDataInPlace: Object,
+    modalData: Object,
+    charsOfStudies: Object
   },
   components: {
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    'evidence-profile-form': () => import('./evidenceProfileForm.vue'),
+    'videoHelp': () => import('../videoHelp')
   },
   data () {
     return {
@@ -606,8 +637,6 @@ export default {
       this.$refs['modalReferences'].show()
     },
     editStageTwo: function (data, type) {
-      let theData = JSON.parse(JSON.stringify(data))
-      this.$emit('bufferModalStageOne', theData.name)
       const titles = {
         'methodological-limitations': 'Methodological limitations',
         'coherence': 'Coherence',
@@ -615,8 +644,29 @@ export default {
         'relevance': 'Relevance',
         'cerqual': 'GRADE-CERQual assessment of confidence'
       }
-      this.$emit('bufferModalStageTwo', {...theData}, type, titles[type])
-      this.$emit('openModalStageTwo')
+      data.type = type
+      data.title = titles[type]
+      const theData = JSON.parse(JSON.stringify(data))
+      this.$emit('modalDataChanged', theData)
+      this.$refs.evidenceProfileForm.openModalEvidenceProfie()
+    },
+    propExplanation: function (text, type) {
+      this.$emit('propExplanation', text, type)
+    },
+    getList: function (status = false) {
+      this.$emit('update-list-data', status)
+    },
+    busyEvidenceProfileTable: function (status) {
+      this.$emit('busyEvidenceProfileTable', status)
+    },
+    callGetStageOneData: function (status) {
+      this.$emit('callGetStageOneData', status)
+    },
+    setShowEditExtractedDataInPlace: function (data) {
+      this.$emit('setShowEditExtractedDataInPlace', data)
+    },
+    getExtractedData: function () {
+      this.$emit('getExtractedData')
     }
   }
 }

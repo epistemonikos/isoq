@@ -100,747 +100,6 @@
           <!--<b-tabs>-->
             <!-- Evidence Profile-->
             <!--<b-tab :title="$t('Evidence Profile')">-->
-              <b-modal
-                size="xl"
-                id="modal-stage-two"
-                ref="modal-stage-two"
-                scrollable
-                @ok="saveStageOneAndTwo(buffer_modal_stage_two.type, $event)"
-                ok-title="Save"
-                ok-variant="outline-success"
-                cancel-variant="outline-secondary">
-                <template v-slot:modal-title>
-                  <videoHelp v-if="buffer_modal_stage_two.type === 'methodological-limitations'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835272"></videoHelp>
-                  <videoHelp v-if="buffer_modal_stage_two.type === 'coherence'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835237"></videoHelp>
-                  <videoHelp v-if="buffer_modal_stage_two.type === 'adequacy'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835188"></videoHelp>
-                  <videoHelp v-if="buffer_modal_stage_two.type === 'relevance'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835406"></videoHelp>
-                  <videoHelp v-if="buffer_modal_stage_two.type === 'cerqual'" :txt="`Evidence profile - ${buffer_modal_stage_two.title}`" tag="none" urlId="450835499"></videoHelp>
-                </template>
-                  <b-container>
-                    <b-row>
-                      <b-col
-                        id="left-modal-content"
-                        cols="12"
-                        md="4">
-                        <div
-                          class="float-right mb-5">
-                          <span
-                            id="span-txt"
-                            class="bg-secondary text-white font-weight-bold ml-5 py-1 px-2"
-                            @click="btnShowHideColumn(showPanel, buffer_modal_stage_two.type)">&lsaquo;</span>
-                        </div>
-
-                        <div id="left-methodological-limitations" v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
-                          <p class="font-weight-bold">
-                            Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?
-                          </p>
-                          <p class="font-weight-light">
-                            <b><u>Remember</u></b> this is an assessment of the whole body of evidence supporting this finding, not an assessment of an individual contributing study.
-                            (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
-                          </p>
-                          <b-form-radio-group
-                            v-model="buffer_modal_stage_two.methodological_limitations.option"
-                            name="methodological-limitations"
-                            stacked>
-                            <b-form-radio value="0" @change="propExplanation('', 'methodological_limitations')">
-                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding methodological limitations because', 'methodological_limitations')">
-                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding methodological limitations because', 'methodological_limitations')">
-                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding methodological limitations because', 'methodological_limitations')">
-                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                          </b-form-radio-group>
-                          <a
-                            @click="buffer_modal_stage_two.methodological_limitations.option = null; buffer_modal_stage_two.methodological_limitations.explanation = ''"
-                            v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
-                            class="mt-2 font-weight-light text-danger">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                            clear my selection
-                          </a>
-                          <b-form-group
-                            v-if="buffer_modal_stage_two.methodological_limitations.option !== null"
-                            class="mt-4 font-weight-light"
-                            label-for="input-ml-explanation">
-                            <template slot="label">
-                              <p>Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)</p>
-                              <p class="font-weight-bold">{{ buffer_modal_stage_two.methodological_limitations.example }}</p>
-                            </template>
-                            <template slot="description">
-                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-explanation"
-                              v-model="buffer_modal_stage_two.methodological_limitations.explanation"
-                              :placeholder="buffer_modal_stage_two.methodological_limitations.option === '0' ? '' : ''"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <b-form-group
-                            class="mt-2 font-weight-light"
-                            label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
-                            <template slot="label">
-                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-notes"
-                              v-model="buffer_modal_stage_two.methodological_limitations.notes"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                        </div>
-
-                        <div id="left-coherence" v-if="buffer_modal_stage_two.type === 'coherence'">
-                          <!-- coherence -->
-                          <p class="font-weight-bold">
-                            Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?
-                          </p>
-                          <p class="font-weight-light">
-                            You may have concerns if some of the data from included studies contradict the review finding, if it’s not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesise the data. (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
-                          </p>
-                          <p class="font-weight-light">
-                            <b><u>Remember</u></b>, coherence is not about the consistency of findings between studies, but is about the fit between the extracted data and the review finding as you have written it.
-                          </p>
-                          <b-form-radio-group
-                            v-model="buffer_modal_stage_two.coherence.option"
-                            name="coherence"
-                            stacked>
-                            <b-form-radio value="0" @change="propExplanation('', 'coherence')">
-                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding coherence because', 'coherence')">
-                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding coherence because', 'coherence')">
-                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding coherence because', 'coherence')">
-                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                          </b-form-radio-group>
-                          <a
-                            @click="buffer_modal_stage_two.coherence.option = null; buffer_modal_stage_two.coherence.explanation = ''"
-                            v-if="buffer_modal_stage_two.coherence.option !== null"
-                            class="mt-2 font-weight-light text-danger">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                            clear my selection
-                          </a>
-                          <b-form-group
-                            v-if="buffer_modal_stage_two.coherence.option !== null"
-                            class="mt-4 font-weight-light"
-                            label="Explain any concerns in your own words."
-                            label-for="input-coherence-explanation">
-                            <template slot="description">
-                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
-                            </template>
-                            <b-form-textarea
-                              id="input-coherence-explanation"
-                              v-model="buffer_modal_stage_two.coherence.explanation"
-                              :placeholder="buffer_modal_stage_two.coherence.option === '0' ? '' : ''"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <b-form-group
-                            class="mt-2 font-weight-light"
-                            label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
-                            <template slot="label">
-                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-notes"
-                              v-model="buffer_modal_stage_two.coherence.notes"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <!-- adequacy -->
-                        </div>
-
-                        <div id="left-adequacy" v-if="buffer_modal_stage_two.type === 'adequacy'">
-                          <p class="font-weight-bold">
-                            <b>Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?</b>
-                            (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
-                          </p>
-                          <b-form-radio-group
-                            v-model="buffer_modal_stage_two.adequacy.option"
-                            name="adequacy"
-                            stacked>
-                            <b-form-radio value="0" @change="propExplanation('', 'adequacy')">
-                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding adequacy because', 'adequacy')">
-                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding adequacy because', 'adequacy')">
-                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding adequacy because', 'adequacy')">
-                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                          </b-form-radio-group>
-                          <a
-                            @click="buffer_modal_stage_two.adequacy.option = null; buffer_modal_stage_two.adequacy.explanation = ''"
-                            v-if="buffer_modal_stage_two.adequacy.option !== null"
-                            class="mt-2 font-weight-light text-danger">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                            clear my selection
-                          </a>
-                          <b-form-group
-                            v-if="buffer_modal_stage_two.adequacy.option !== null"
-                            class="mt-4 font-weight-light"
-                            label="Explain any concerns in your own words."
-                            label-for="input-adequacy-explanation">
-                            <template slot="description">
-                              The GRADE-CERQual approach requires you to include an explanation for your judgement. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
-                            </template>
-                            <b-form-textarea
-                              id="input-adequacy-explanation"
-                              v-model="buffer_modal_stage_two.adequacy.explanation"
-                              :placeholder="buffer_modal_stage_two.adequacy.option === '0' ? '' : ''"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <b-form-group
-                            class="mt-2 font-weight-light"
-                            label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
-                            <template slot="label">
-                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-notes"
-                              v-model="buffer_modal_stage_two.adequacy.notes"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <!-- relevance -->
-                        </div>
-
-                        <div id="left-relevance" v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <p class="font-weight-bold">
-                            Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?
-                          </p>
-                          <p class="font-weight-light">
-                            You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant. (guidance available <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Guidance-on-applying-GRADE-CERQual'}}">here</b-link>)
-                          </p>
-                          <b-form-radio-group
-                            v-model="buffer_modal_stage_two.relevance.option"
-                            name="relevance"
-                            stacked>
-                            <b-form-radio value="0" @change="propExplanation('', 'relevance')">
-                              No/Very minor concerns <small v-b-tooltip.hover title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation('Minor concerns regarding relevance because', 'relevance')">
-                              Minor concerns <small v-b-tooltip.hover title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation('Moderate concerns regarding relevance because', 'relevance')">
-                              Moderate concerns <small v-b-tooltip.hover title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation('Serious concerns regarding relevance because', 'relevance')">
-                              Serious concerns <small v-b-tooltip.hover title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
-                            </b-form-radio>
-                          </b-form-radio-group>
-                          <a
-                            @click="buffer_modal_stage_two.relevance.option = null; buffer_modal_stage_two.relevance.explanation = ''"
-                            v-if="buffer_modal_stage_two.relevance.option !== null"
-                            class="mt-2 font-weight-light text-danger">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                            clear my selection
-                          </a>
-                          <b-form-group
-                            v-if="buffer_modal_stage_two.relevance.option !== null"
-                            class="mt-4 font-weight-light"
-                            label="Explain any concerns in your own words using the terms indirect, partial or unclear relevance when appropriate."
-                            label-for="input-relevance-explanation"
-                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
-                            <b-form-textarea
-                              id="input-relevance-explanation"
-                              v-model="buffer_modal_stage_two.relevance.explanation"
-                              :placeholder="buffer_modal_stage_two.relevance.option === '0' ? '' : ''"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <b-form-group
-                            class="mt-2 font-weight-light"
-                            label-for="input-ml-notes">
-                            <template slot="label">
-                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
-                            </template>
-                            <template slot="description">
-                              Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4" target="_blank">here</a> to see an example.
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-notes"
-                              v-model="buffer_modal_stage_two.relevance.notes"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <!-- CERQual assessment -->
-                        </div>
-
-                        <div id="left-cerqual" v-if="buffer_modal_stage_two.type === 'cerqual'">
-                          <p class="font-weight-bold">
-                            To what extent is the review finding a reasonable representation of the phenomenon of interest?
-                          </p>
-                          <p>
-                            Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/5" target="_blank">here</a> for practical guidance on making an overall assessment of confidence for a review finding.
-                          </p>
-                          <b-form-radio-group
-                            v-model="buffer_modal_stage_two.cerqual.option"
-                            name="cerqual"
-                            stacked>
-                            <b-form-radio value="0" @change="propExplanation(cerqualExplanation, 'cerqual')">
-                              High confidence <small v-b-tooltip.hover title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="1" @change="propExplanation(cerqualExplanation, 'cerqual')">
-                              Moderate confidence <small v-b-tooltip.hover title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="2" @change="propExplanation(cerqualExplanation, 'cerqual')">
-                              Low confidence <small v-b-tooltip.hover title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                            </b-form-radio>
-                            <b-form-radio value="3" @change="propExplanation(cerqualExplanation, 'cerqual')">
-                              Very low confidence <small v-b-tooltip.hover title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
-                            </b-form-radio>
-                          </b-form-radio-group>
-                          <a
-                            @click="buffer_modal_stage_two.cerqual.option = null; buffer_modal_stage_two.cerqual.explanation = ''"
-                            v-if="buffer_modal_stage_two.cerqual.option !== null"
-                            class="mt-2 font-weight-light text-danger">
-                            <font-awesome-icon
-                              icon="trash"></font-awesome-icon>
-                            clear my selection
-                          </a>
-                          <b-form-group
-                            v-if="buffer_modal_stage_two.cerqual.option !== null"
-                            class="mt-4 font-weight-light"
-                            label-for="input-cerqual"
-                            description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
-                            <template slot="label">
-                              Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment. <a href="#" @click="(ui.showExample) ? ui.showExample = false : ui.showExample = true ">{{ (ui.showExample) ? 'Hide' : 'Show' }} example</a>
-                              <!-- Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.-->
-                              <div class="mt-2 bg-light text-dark p-1" v-if="ui.showExample">
-                                <p class="font-italic">If concerns about coherence and relevance contribute most to my decision to downgrade to “low confidence” then I will briefly summarise these specific concerns in brackets  e.g.</p>
-                                <p class="font-italic">No/very minor concerns regarding methodological limitations, Moderate concerns regarding coherence <b>(some contradictory opinions expressed in the underlying data but not reflected in finding)</b>, No/Very minor concerns regarding adequacy, and Serious concerns regarding relevance <b>(indirectly relevant because studies are all from high income rather than LMICs)</b></p>
-                                <p class="font-italic">[non bolded text is the minimum required text generated automatically and the bolded text are the details I have added to explain the concern]</p>
-                              </div>
-                            </template>
-                            <b-form-textarea
-                              id="input-cerqual"
-                              v-model="buffer_modal_stage_two.cerqual.explanation"
-                              placeholder="Enter an explanation"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                          <b-form-group
-                            class="mt-2 font-weight-light"
-                            label-for="input-ml-notes"
-                            description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
-                            <template slot="label">
-                              <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
-                            </template>
-                            <b-form-textarea
-                              id="input-ml-notes"
-                              v-model="buffer_modal_stage_two.cerqual.notes"
-                              rows="6"
-                              max-rows="100"></b-form-textarea>
-                          </b-form-group>
-                        </div>
-                      </b-col>
-                      <b-col
-                        id="right-modal-content"
-                        cols="12"
-                        md="8">
-                        <div v-if="buffer_modal_stage_two.type === 'methodological-limitations'">
-                          <b-tabs content-class="mt-3">
-                            <b-tab active>
-                              <template slot="title">
-                                Methodological Assessments <font-awesome-icon v-if="ui.methodological_assessments.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Methodological Assessments</h4>
-                              <p
-                                v-if="ui.methodological_assessments.display_warning"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
-                              </p>
-                              <b-table
-                                class="table-small-font"
-                                responsive
-                                head-variant="light"
-                                outlined
-                                :fields="meth_assessments.fieldsObj"
-                                :items="meth_assessments.items">
-                                <template
-                                  v-slot:cell(authors)="data">
-                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                                </template>
-                              </b-table>
-                            </b-tab>
-                            <b-tab title="Review Finding">
-                              <edit-review-finding
-                                @update-list-data="getList(true)"
-                                :list="list"
-                                :finding="findings">
-                              </edit-review-finding>
-                            </b-tab>
-                            <b-tab>
-                              <template slot="title">
-                                Extracted Data <font-awesome-icon v-if="ui.methodological_assessments.extracted_data.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Extracted data</h4>
-                              <p
-                                v-if="ui.methodological_assessments.extracted_data.display_warning"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
-                              </p>
-                              <b-table
-                                class="table-small-font extracted-data"
-                                responsive
-                                head-variant="light"
-                                outlined
-                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                                :items="extracted_data.items">
-                                <template
-                                  v-slot:cell(authors)="data">
-                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                                </template>
-                                <template v-slot:cell(column_0)="data">
-                                  <template
-                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                    <b-form-group>
-                                      <b-form-textarea
-                                        rows="6"
-                                        max-rows="100"
-                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                                    </b-form-group>
-                                  </template>
-                                  <template
-                                    v-else>
-                                    {{ data.item.column_0 }}
-                                  </template>
-                                </template>
-                                <template v-slot:cell(actions)="data">
-                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                    <b-button
-                                      block
-                                      variant="success"
-                                      @click="updateContentExtractedDataItem(data.item.ref_id)">
-                                      Save
-                                    </b-button>
-                                    <b-button
-                                      block
-                                      variant="outline-secondary"
-                                      @click="cancelExtractedDataInPlace">
-                                      Cancel
-                                    </b-button>
-                                  </template>
-                                  <template v-else>
-                                    <b-button
-                                      variant="outline-success"
-                                      @click="editExtractedDataInPlace(data.index)">
-                                      <font-awesome-icon
-                                        icon="edit"
-                                        :title="$t('Edit')" />
-                                    </b-button>
-                                  </template>
-                                </template>
-                              </b-table>
-                            </b-tab>
-                          </b-tabs>
-                        </div>
-
-                        <div v-if="buffer_modal_stage_two.type === 'coherence'">
-                          <edit-review-finding
-                            @update-list-data="getList(true)"
-                            :list="list"
-                            :finding="findings">
-                          </edit-review-finding>
-                          <h4>Extracted Data</h4>
-                          <p
-                            v-if="ui.adequacy.extracted_data.display_warning"
-                            class="text-danger">
-                            <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                            Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
-                          </p>
-                          <b-table
-                            class="table-small-font extracted-data"
-                            responsive
-                            head-variant="light"
-                            outlined
-                            :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                            :items="extracted_data.items">
-                            <template
-                              v-slot:cell(authors)="data">
-                              <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                            </template>
-                            <template v-slot:cell(column_0)="data">
-                              <template
-                                v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-form-group>
-                                  <b-form-textarea
-                                    rows="6"
-                                    max-rows="100"
-                                    v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                                </b-form-group>
-                              </template>
-                              <template
-                                v-else>
-                                {{ data.item.column_0 }}
-                              </template>
-                            </template>
-                            <template v-slot:cell(actions)="data">
-                              <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                <b-button
-                                  block
-                                  variant="success"
-                                  @click="updateContentExtractedDataItem(data.item.ref_id)">
-                                  Save
-                                </b-button>
-                                <b-button
-                                  block
-                                  variant="outline-secondary"
-                                  @click="cancelExtractedDataInPlace">
-                                  Cancel
-                                </b-button>
-                              </template>
-                              <template v-else>
-                                <b-button
-                                  variant="outline-success"
-                                  @click="editExtractedDataInPlace(data.index)">
-                                  <font-awesome-icon
-                                    icon="edit"
-                                    :title="$t('Edit')" />
-                                </b-button>
-                              </template>
-                            </template>
-                          </b-table>
-                        </div>
-
-                        <div v-if="buffer_modal_stage_two.type === 'adequacy'">
-                          <b-tabs content-class="mt-3">
-                            <b-tab active>
-                              <template slot="title">
-                                Extracted Data <font-awesome-icon v-if="ui.adequacy.extracted_data.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Extracted Data</h4>
-                              <p
-                                v-if="ui.adequacy.extracted_data.display_warning"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                Some or all of the extracted data for this finding are missing. Add them into the table below using the edit button for each included study.
-                              </p>
-                              <b-table
-                                class="table-small-font extracted-data"
-                                responsive
-                                head-variant="light"
-                                outlined
-                                :fields="(mode==='view') ? mode_print_fieldsObj : extracted_data.fieldsObj"
-                                :items="extracted_data.items">
-                                <template
-                                  v-slot:cell(authors)="data">
-                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                                </template>
-                                <template v-slot:cell(column_0)="data">
-                                  <template
-                                    v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                    <b-form-group>
-                                      <b-form-textarea
-                                        rows="6"
-                                        max-rows="100"
-                                        v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                                    </b-form-group>
-
-                                  </template>
-                                  <template
-                                    v-else>
-                                    {{ data.item.column_0 }}
-                                  </template>
-                                </template>
-                                <template v-slot:cell(actions)="data">
-                                  <template v-if="showEditExtractedDataInPlace.display && showEditExtractedDataInPlace.item.index === data.item.index">
-                                    <b-button
-                                      block
-                                      variant="success"
-                                      @click="updateContentExtractedDataItem(data.item.ref_id)">
-                                      Save
-                                    </b-button>
-                                    <b-button
-                                      block
-                                      variant="outline-secondary"
-                                      @click="cancelExtractedDataInPlace">
-                                      Cancel
-                                    </b-button>
-                                  </template>
-                                  <template v-else>
-                                    <b-button
-                                      variant="outline-success"
-                                      @click="editExtractedDataInPlace(data.index)">
-                                      <font-awesome-icon
-                                        icon="edit"
-                                        :title="$t('Edit')" />
-                                    </b-button>
-                                  </template>
-                                </template>
-                              </b-table>
-                            </b-tab>
-                            <b-tab>
-                              <template slot="title">
-                                Characteristics of Studies <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Characteristics of Studies</h4>
-                              <p
-                                v-if="ui.adequacy.chars_of_studies.display_warning"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
-                              </p>
-                              <b-table
-                                class="table-small-font"
-                                responsive
-                                head-variant="light"
-                                outlined
-                                :fields="characteristics_studies.fieldsObj"
-                                :items="characteristics_studies.items">
-                                <template
-                                  v-slot:cell(authors)="data">
-                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                                </template>
-                              </b-table>
-                            </b-tab>
-                            <b-tab title="Review Finding">
-                              <edit-review-finding
-                                @update-list-data="getList(true)"
-                                :list="list"
-                                :finding="findings">
-                              </edit-review-finding>
-                            </b-tab>
-                          </b-tabs>
-                        </div>
-
-                        <div v-if="buffer_modal_stage_two.type === 'relevance'">
-                          <b-tabs content-class="mt-3">
-                            <b-tab active>
-                              <template slot="title">
-                                Question and Criteria <font-awesome-icon v-if="(project.review_question === '') ? true : false || (project.inclusion === '') ? true : false || (project.exclusion === '') ? true : false" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Review Question</h4>
-                              <p
-                                v-if="project.review_question === ''"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The review question is missing. Add it in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'Project-Property'}}">Project Properties</b-link>.
-                              </p>
-                              <p>{{ project.review_question }}</p>
-                              <h4>Inclusion criteria</h4>
-                              <p
-                                v-if="project.inclusion === ''"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The inclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
-                              </p>
-                              <p>{{ project.inclusion }}</p>
-                              <h4>Exclusion criteria</h4>
-                              <p
-                                v-if="project.exclusion === ''"
-                                class="text-danger">
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The exclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
-                              </p>
-                              <p>{{ project.exclusion }}</p>
-                            </b-tab>
-                            <b-tab>
-                              <template slot="title">
-                                Characteristics of Studies <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" icon="exclamation-circle"></font-awesome-icon>
-                              </template>
-                              <h4>Characteristics of Studies</h4>
-                              <p
-                                v-if="ui.adequacy.chars_of_studies.display_warning"
-                                class="text-danger">
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
-                                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                              </p>
-                              <b-table
-                                class="table-small-font"
-                                responsive
-                                head-variant="light"
-                                outlined
-                                :fields="characteristics_studies.fieldsObj"
-                                :items="characteristics_studies.items">
-                                <template
-                                  v-slot:cell(authors)="data">
-                                  <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-                                </template>
-                              </b-table>
-                            </b-tab>
-                            <b-tab title="Review Finding">
-                              <edit-review-finding
-                                @update-list-data="getList(true)"
-                                :list="list"
-                                :finding="findings">
-                              </edit-review-finding>
-                            </b-tab>
-                          </b-tabs>
-                        </div>
-
-                        <div v-if="buffer_modal_stage_two.type === 'cerqual'">
-                          <b-tabs content-class="mt-3">
-                            <b-tab title="Component assessments">
-                              <h5>Methodological limitations</h5>
-                              <p>
-                                <b>{{displaySelectedOption(evidence_profile[0].methodological_limitations.option)}}</b>
-                                <template v-if="parseInt(evidence_profile[0].methodological_limitations.option) > 0">
-                                  <br>
-                                  Explanation: <span v-if="evidence_profile[0].methodological_limitations.explanation">{{evidence_profile[0].methodological_limitations.explanation}}</span> <span v-else>Explanation not yet added</span>
-                                </template>
-                              </p>
-                              <h5>Coherence</h5>
-                              <p>
-                                <b>{{displaySelectedOption(evidence_profile[0].coherence.option)}}</b>
-                                <template v-if="parseInt(evidence_profile[0].coherence.option) > 0">
-                                  <br>
-                                  Explanation: <span v-if="evidence_profile[0].coherence.explanation">{{evidence_profile[0].coherence.explanation}}</span> <span v-else>Explanation not yet added</span>
-                                </template>
-                              </p>
-                              <h5>Adequacy</h5>
-                              <p>
-                                <b>{{displaySelectedOption(evidence_profile[0].adequacy.option)}}</b>
-                                <template v-if="parseInt(evidence_profile[0].adequacy.option) > 0">
-                                  <br>
-                                  Explanation: <span v-if="evidence_profile[0].adequacy.explanation">{{evidence_profile[0].adequacy.explanation}}</span> <span v-else>Explanation not yet added</span>
-                                </template>
-                              </p>
-                              <h5>Relevance</h5>
-                              <p>
-                                <b>{{displaySelectedOption(evidence_profile[0].relevance.option)}}</b>
-                                <template v-if="parseInt(evidence_profile[0].relevance.option) > 0">
-                                  <br>
-                                  Explanation: <span v-if="evidence_profile[0].relevance.explanation">{{evidence_profile[0].relevance.explanation}}</span> <span v-else>Explanation not yet added</span>
-                                </template>
-                              </p>
-                            </b-tab>
-                            <b-tab title="Review finding">
-                              <edit-review-finding
-                                @update-list-data="getList(true)"
-                                :list="list"
-                                :finding="findings">
-                              </edit-review-finding>
-                            </b-tab>
-                          </b-tabs>
-                        </div>
-                      </b-col>
-                    </b-row>
-                  </b-container>
-              </b-modal>
 
               <b-modal
                 id="modal-warning-same-txt"
@@ -896,11 +155,19 @@
                 :selectOptions="select_options"
                 :levelConfidence="level_confidence"
                 :findings="findings"
+                :methAssessments="meth_assessments"
+                :extractedData="extracted_data"
+                :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
+                :modalData="buffer_modal_stage_two"
+                :charsOfStudies="characteristics_studies"
+                @propExplanation="propExplanation"
                 @update-list-data="getList"
-                @bufferModalStageOne="bufferModalStageOne"
-                @bufferModalStageTwo="bufferModalStageTwo"
-                @openModalStageTwo="openModalStageTwo"
                 @printErrors="printErrors"
+                @modalDataChanged="modalDataChanged"
+                @busyEvidenceProfileTable="busyEvidenceProfileTable"
+                @callGetStageOneData="callGetStageOneData"
+                @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+                @getExtractedData="getExtractedData"
               ></evidence-profile-table>
 
             <table-chars-of-studies
@@ -1055,18 +322,50 @@ export default {
         list_id: '',
         organization: ''
       },
-      buffer_modal_stage_one: {
-        id: null,
-        name: '',
-        list_id: '',
-        organization: ''
-      },
+      // buffer_modal_stage_one: {
+      //   id: null,
+      //   name: '',
+      //   list_id: '',
+      //   organization: ''
+      // },
       buffer_modal_stage_two: {
-        methodological_limitations: {option: null, example: '', explanation: '', notes: '', title: ''},
-        coherence: {option: null, example: '', explanation: '', notes: '', title: ''},
-        adequacy: {option: null, example: '', explanation: '', notes: '', title: ''},
-        relevance: {option: null, example: '', explanation: '', notes: '', title: ''},
-        cerqual: {option: null, example: '', explanation: '', notes: '', title: ''}
+        methodological_limitations: {
+          option: null,
+          example: '',
+          explanation: '',
+          notes: '',
+          title: ''
+        },
+        coherence: {
+          option: null,
+          example: '',
+          explanation: '',
+          notes: '',
+          title: ''
+        },
+        adequacy: {
+          option: null,
+          example: '',
+          explanation: '',
+          notes: '',
+          title: ''
+        },
+        relevance: {
+          option: null,
+          example: '',
+          explanation: '',
+          notes: '',
+          title: ''
+        },
+        cerqual: {
+          option: null,
+          example: '',
+          explanation: '',
+          notes: '',
+          title: ''
+        },
+        type: '',
+        title: ''
       },
       list: {
         id: '',
@@ -1145,7 +444,6 @@ export default {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
       },
-      showPanel: true,
       editingUser: {
         show: false
       }
@@ -1154,26 +452,7 @@ export default {
   mounted () {
     this.getList()
   },
-  computed: {
-    cerqualExplanation: function () {
-      if (this.buffer_modal_stage_two.methodological_limitations.option &&
-        this.buffer_modal_stage_two.coherence.option &&
-        this.buffer_modal_stage_two.adequacy.option &&
-        this.buffer_modal_stage_two.relevance.option) {
-        return this.displaySelectedOption(this.buffer_modal_stage_two.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.buffer_modal_stage_two.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.buffer_modal_stage_two.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.buffer_modal_stage_two.relevance.option) + ' regarding relevance'
-      } else {
-        return ''
-      }
-    }
-  },
   methods: {
-    getReferenceInfo: function (refId) {
-      for (let ref of this.refsWithTitle) {
-        if (ref.id === refId) {
-          return ref.content
-        }
-      }
-    },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true
@@ -1399,128 +678,14 @@ export default {
         this.status_evidence_profile.variant = 'success'
       }
     },
-    bufferModalStageOne: function (name) {
-      this.buffer_modal_stage_one.name = name
-    },
-    bufferModalStageTwo: function (data, type, title) {
-      this.buffer_modal_stage_two = data
-      this.buffer_modal_stage_two.type = type
-      this.buffer_modal_stage_two.title = title
-    },
-    openModalStageTwo: function () {
-      this.showPanel = true
-      this.$refs['modal-stage-two'].show()
-    },
-    saveListName: function () {
-      let params = {
-        cerqual: this.buffer_modal_stage_two.cerqual,
-        evidence_profile: {
-          methodological_limitations: this.buffer_modal_stage_two.methodological_limitations,
-          coherence: this.buffer_modal_stage_two.coherence,
-          adequacy: this.buffer_modal_stage_two.adequacy,
-          relevance: this.buffer_modal_stage_two.relevance,
-          cerqual: this.buffer_modal_stage_two.cerqual
-        }
-      }
-      axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
-        .then((response) => {
-          this.list.cerqual = response.data['$set'].cerqual
-          this.buffer_modal_stage_one = this.initial_modal_stage_one
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    openWarningModal: function () {
-      this.$refs['modal-warning-same-txt'].show()
-    },
-    closeWarningModalDoItNow: function (type = '') {
-      this.buffer_modal_stage_two.type = type
-      this.$refs['modal-warning-same-txt'].hide()
-    },
-    closeWarningModalDoItLater: function () {
-      this.continueSavingDataModal()
-      this.$refs['modal-warning-same-txt'].hide()
-    },
-    saveStageOneAndTwo: function (type, e) {
-      e.preventDefault()
-      if (this.checkValidationText(type, this.buffer_modal_stage_two)) {
-        this.openWarningModal()
-      } else {
-        this.continueSavingDataModal()
-      }
-    },
-    checkValidationText: function (type, prop) {
-      switch (type) {
-        case 'methodological-limitations':
-          if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because'
-          ) {
-            return true
-          }
-          return false
-        case 'coherence':
-          if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because'
-          ) {
-            return true
-          }
-          return false
-        case 'adequacy':
-          if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because'
-          ) {
-            return true
-          }
-          return false
-        case 'relevance':
-          if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because'
-          ) {
-            return true
-          }
-          return false
-        default:
-          return false
-      }
-    },
-    continueSavingDataModal: function () {
-      this.evidence_profile_table_settings.isBusy = true
-      delete this.buffer_modal_stage_two.type
-      let params = {
-        organization: this.list.organization,
-        list_id: this.list.id,
-        evidence_profile: this.buffer_modal_stage_two
-      }
-      if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
-        axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
-          .then(() => {
-            this.getStageOneData()
-            this.saveListName()
-            this.$refs['modal-stage-two'].hide()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      } else {
-        axios.post(`/api/isoqf_findings`, params)
-          .then((response) => {
-            this.getStageOneData()
-            this.$refs['modal-stage-two'].hide()
-          })
-          .catch((error) => {
-            this.printErrors(error)
-          })
-      }
-    },
+    // bufferModalStageOne: function (name) {
+    //   this.buffer_modal_stage_one.name = name
+    // },
+
+    // openModalStageTwo: function () {
+    //   this.showPanel = true
+    //   this.$refs['modal-stage-two'].show()
+    // },
     getCharsOfStudies: function () {
       let params = {
         organization: this.list.organization,
@@ -1750,63 +915,8 @@ export default {
       }
       console.log(error.config)
     },
-    editExtractedDataInPlace: function (index) {
-      const _item = JSON.parse(JSON.stringify(this.extracted_data.items[index]))
-      this.showEditExtractedDataInPlace.display = true
-      this.showEditExtractedDataInPlace.item = _item
-    },
-    cancelExtractedDataInPlace: function () {
-      this.showEditExtractedDataInPlace.display = false
-      this.showEditExtractedDataInPlace.item = {}
-    },
-    updateContentExtractedDataItem: function (refId) {
-      let _items = JSON.parse(JSON.stringify(this.extracted_data.items))
-
-      if (refId.length) {
-        for (let i = 0; i < _items.length; i++) {
-          if (_items[i].ref_id === refId) {
-            _items[i] = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
-          }
-        }
-      }
-
-      const params = {
-        organization: this.list.organization,
-        finding_id: this.findings.id,
-        items: _items
-      }
-      axios.patch(`/api/isoqf_extracted_data/${this.extracted_data.id}`, params)
-        .then(() => {
-          this.getExtractedData()
-          this.showEditExtractedDataInPlace.display = false
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     propExplanation: function (txt, type) {
-      console.log(txt, type)
       this.buffer_modal_stage_two[type].example = txt
-      console.log(this.buffer_modal_stage_two)
-    },
-    btnShowHideColumn: function (val, panel) {
-      const elLeft = document.getElementById('left-modal-content')
-      const elRight = document.getElementById('right-modal-content')
-      const elSpan = document.getElementById('span-txt')
-      const elPanel = document.getElementById('left-' + panel)
-      if (val) {
-        elLeft.className = 'col-md-1 col-12'
-        elRight.className = 'col-md-11 col-12'
-        elSpan.innerHTML = '&rsaquo;'
-        elPanel.className = 'invisible'
-        this.showPanel = false
-      } else {
-        elLeft.className = 'col-md-4 col-12'
-        elRight.className = 'col-md-8 col-12'
-        elSpan.innerHTML = '&lsaquo;'
-        elPanel.className = 'visible'
-        this.showPanel = true
-      }
     },
     displaySelectedOption: function (option) {
       if (option === null) {
@@ -1861,6 +971,18 @@ export default {
       } else {
         this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
       }
+    },
+    modalDataChanged: function (data) {
+      this.buffer_modal_stage_two = JSON.parse(JSON.stringify(data))
+    },
+    busyEvidenceProfileTable: function (status) {
+      this.evidence_profile_table_settings.isBusy = status
+    },
+    callGetStageOneData: function (status) {
+      this.getStageOneData(status)
+    },
+    setShowEditExtractedDataInPlace: function (data) {
+      this.showEditExtractedDataInPlace = data
     }
   }
 }
