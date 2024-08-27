@@ -41,9 +41,6 @@
         <li>
           Previously iSoQ defaulted to jumping to the top of the page when the user navigated between pages. Now iSoQ holds your spot on the page thus reducing scroll time.
         </li>
-         <li>
-          Previously iSoQ defaulted to jumping to the top of the page when the user navigated between pages. Now iSoQ holds your spot on the page thus reducing scroll time.
-        </li>
         <li>
          You will notice this enhancement especially when navigating back and forth between the iSoQ table and he GRADE-CERQual assessment worksheets for each finding.
         </li>
