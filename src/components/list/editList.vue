@@ -160,7 +160,6 @@
                 :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
                 :modalData="buffer_modal_stage_two"
                 :charsOfStudies="characteristics_studies"
-                @propExplanation="propExplanation"
                 @update-list-data="getList"
                 @printErrors="printErrors"
                 @modalDataChanged="modalDataChanged"
@@ -914,9 +913,6 @@ export default {
         console.log('Error', error.message)
       }
       console.log(error.config)
-    },
-    propExplanation: function (txt, type) {
-      this.buffer_modal_stage_two[type].example = txt
     },
     displaySelectedOption: function (option) {
       if (option === null) {

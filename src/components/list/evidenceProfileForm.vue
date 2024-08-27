@@ -275,37 +275,22 @@
               }">here</b-link>)
             </p>
             <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked>
-              <b-form-radio value="0" @change="propExplanation('', 'relevance')">
+              <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
                   title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
               </b-form-radio>
-              <b-form-radio value="1" @change="
-                propExplanation(
-                  'Minor concerns regarding relevance because',
-                  'relevance'
-                )
-                ">
+              <b-form-radio value="1">
                 Minor concerns
                 <small v-b-tooltip.hover
                   title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
               </b-form-radio>
-              <b-form-radio value="2" @change="
-                propExplanation(
-                  'Moderate concerns regarding relevance because',
-                  'relevance'
-                )
-                ">
+              <b-form-radio value="2">
                 Moderate concerns
                 <small v-b-tooltip.hover
                   title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
               </b-form-radio>
-              <b-form-radio value="3" @change="
-                propExplanation(
-                  'Serious concerns regarding relevance because',
-                  'relevance'
-                )
-                ">
+              <b-form-radio value="3">
                 Serious concerns
                 <small v-b-tooltip.hover
                   title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
@@ -356,22 +341,22 @@
               for a review finding.
             </p>
             <b-form-radio-group v-model="selectedOptions.cerqual.option" name="cerqual" stacked>
-              <b-form-radio value="0" @change="propExplanation(cerqualExplanation, 'cerqual')">
+              <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
                   title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
               </b-form-radio>
-              <b-form-radio value="1" @change="propExplanation(cerqualExplanation, 'cerqual')">
+              <b-form-radio value="1">
                 Moderate confidence
                 <small v-b-tooltip.hover
                   title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
               </b-form-radio>
-              <b-form-radio value="2" @change="propExplanation(cerqualExplanation, 'cerqual')">
+              <b-form-radio value="2">
                 Low confidence
                 <small v-b-tooltip.hover
                   title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
               </b-form-radio>
-              <b-form-radio value="3" @change="propExplanation(cerqualExplanation, 'cerqual')">
+              <b-form-radio value="3">
                 Very low confidence
                 <small v-b-tooltip.hover
                   title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
@@ -770,7 +755,7 @@
                   <template v-if="parseInt( evidenceProfile[0].methodological_limitations.option ) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ evidenceProfile[0].methodological_limitations.explanation }}</span>
+                    <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ displayExplanation('methodological-limitations', evidenceProfile[0].methodological_limitations.option, evidenceProfile[0].methodological_limitations.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -780,7 +765,7 @@
                   <template v-if="parseInt(evidenceProfile[0].coherence.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].coherence.explanation">{{ evidenceProfile[0].coherence.explanation }}</span>
+                    <span v-if="evidenceProfile[0].coherence.explanation">{{ displayExplanation('coherence', evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -790,7 +775,7 @@
                   <template v-if="parseInt(evidenceProfile[0].adequacy.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].adequacy.explanation">{{ evidenceProfile[0].adequacy.explanation }}</span>
+                    <span v-if="evidenceProfile[0].adequacy.explanation">{{ displayExplanation('adequacy', evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -800,7 +785,7 @@
                   <template v-if="parseInt(evidenceProfile[0].relevance.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].relevance.explanation">{{ evidenceProfile[0].relevance.explanation }}</span>
+                    <span v-if="evidenceProfile[0].relevance.explanation">{{ displayExplanation('relevance', evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -891,6 +876,50 @@ export default {
     }
   },
   methods: {
+    displayExplanation: function (type, option, explanation) {
+      if (type === '') {
+        return ''
+      }
+      if (option === '0') {
+        return explanation
+      }
+      if (explanation === '') {
+        return ''
+      }
+      let options = {}
+      switch (type) {
+        case 'methodological-limitations':
+          options = {
+            '1': 'Minor concerns regarding methodological limitations because',
+            '2': 'Moderate concerns regarding methodological limitations because',
+            '3': 'Serious concerns regarding methodological limitations because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'coherence':
+          options = {
+            '1': 'Minor concerns regarding coherence because',
+            '2': 'Moderate concerns regarding coherence because',
+            '3': 'Serious concerns regarding coherence because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'adequacy':
+          options = {
+            '1': 'Minor concerns regarding adequacy because',
+            '2': 'Moderate concerns regarding adequacy because',
+            '3': 'Serious concerns regarding adequacy because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'relevance':
+          options = {
+            '1': 'Minor concerns regarding relevance because',
+            '2': 'Moderate concerns regarding relevance because',
+            '3': 'Serious concerns regarding relevance because'
+          }
+          return `${options[option]} ${explanation}`
+        default:
+          return ''
+      }
+    },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')
       const elRight = document.getElementById('right-modal-content')
@@ -916,10 +945,6 @@ export default {
           return ref.content
         }
       }
-    },
-    propExplanation: function (text, type) {
-      this.$emit('propExplanation', text, type)
-      // modalData[type].example = text
     },
     openWarningModal: function () {
       this.$refs['modal-warning-same-txt'].show()

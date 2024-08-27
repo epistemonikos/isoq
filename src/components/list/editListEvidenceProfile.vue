@@ -101,6 +101,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('methodological-limitations')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -149,6 +156,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('coherence')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -197,6 +211,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('adequacy')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -245,6 +266,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('relevance')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -441,7 +469,6 @@
       :project="project"
       :evidenceProfile="evidenceProfile"
       :selectOptions="selectOptions"
-      @propExplanation="propExplanation"
       @update-list-data="getList"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
@@ -638,38 +665,22 @@ export default {
     checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
-          if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because'
-          ) {
+          if (prop.methodological_limitations.option > 0 && prop.methodological_limitations.explanation === '') {
             return true
           }
           return false
         case 'coherence':
-          if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because'
-          ) {
+          if (prop.coherence.option > 0 && prop.coherence.explanation === '') {
             return true
           }
           return false
         case 'adequacy':
-          if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because'
-          ) {
+          if (prop.adequacy.option > 0 && prop.adequacy.explanation === '') {
             return true
           }
           return false
         case 'relevance':
-          if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because'
-          ) {
+          if (prop.relevance.option > 0 && prop.relevance.explanation === '') {
             return true
           }
           return false
@@ -693,9 +704,6 @@ export default {
       const theData = JSON.parse(JSON.stringify(data))
       this.$emit('modalDataChanged', theData)
       this.$refs.evidenceProfileForm.openModalEvidenceProfie()
-    },
-    propExplanation: function (text, type) {
-      this.$emit('propExplanation', text, type)
     },
     getList: function (status = false) {
       this.$emit('update-list-data', status)
