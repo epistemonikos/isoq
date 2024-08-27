@@ -384,7 +384,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].methodological_limitations.explanation.length) ? this.evidenceProfile[0].methodological_limitations.explanation : '',
+                            text: this.displayExplanation('methodological-limitations', this.evidenceProfile[0].methodological_limitations.option, this.evidenceProfile[0].methodological_limitations.explanation),
                             size: 22
                           })
                         ]
@@ -406,7 +406,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].coherence.explanation.length) ? this.evidenceProfile[0].coherence.explanation : '',
+                            text: this.displayExplanation('coherence', this.evidenceProfile[0].coherence.option, this.evidenceProfile[0].coherence.explanation), // (this.evidenceProfile[0].coherence.explanation.length) ? this.evidenceProfile[0].coherence.explanation : '',
                             size: 22
                           })
                         ]
@@ -428,7 +428,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].adequacy.explanation.length) ? this.evidenceProfile[0].adequacy.explanation : '',
+                            text: this.displayExplanation('adequacy', this.evidenceProfile[0].adequacy.option, this.evidenceProfile[0].adequacy.explanation), // (this.evidenceProfile[0].adequacy.explanation.length) ? this.evidenceProfile[0].adequacy.explanation : '',
                             size: 22
                           })
                         ]
@@ -450,7 +450,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].relevance.explanation.length) ? this.evidenceProfile[0].relevance.explanation : '',
+                            text: this.displayExplanation('relevance', this.evidenceProfile[0].relevance.option, this.evidenceProfile[0].relevance.explanation), // (this.evidenceProfile[0].relevance.explanation.length) ? this.evidenceProfile[0].relevance.explanation : '',
                             size: 22
                           })
                         ]
@@ -706,6 +706,50 @@ export default {
     },
     print: function () {
       window.print()
+    },
+    displayExplanation: function (type, option, explanation) {
+      if (type === '') {
+        return ''
+      }
+      if (option === '0') {
+        return explanation
+      }
+      if (explanation === '') {
+        return ''
+      }
+      let options = {}
+      switch (type) {
+        case 'methodological-limitations':
+          options = {
+            '1': 'Minor concerns regarding methodological limitations because',
+            '2': 'Moderate concerns regarding methodological limitations because',
+            '3': 'Serious concerns regarding methodological limitations because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'coherence':
+          options = {
+            '1': 'Minor concerns regarding coherence because',
+            '2': 'Moderate concerns regarding coherence because',
+            '3': 'Serious concerns regarding coherence because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'adequacy':
+          options = {
+            '1': 'Minor concerns regarding adequacy because',
+            '2': 'Moderate concerns regarding adequacy because',
+            '3': 'Serious concerns regarding adequacy because'
+          }
+          return `${options[option]} ${explanation}`
+        case 'relevance':
+          options = {
+            '1': 'Minor concerns regarding relevance because',
+            '2': 'Moderate concerns regarding relevance because',
+            '3': 'Serious concerns regarding relevance because'
+          }
+          return `${options[option]} ${explanation}`
+        default:
+          return ''
+      }
     }
   }
 }
