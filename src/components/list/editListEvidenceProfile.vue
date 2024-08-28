@@ -86,7 +86,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
-            Explanation {{ displayExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ displayExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
