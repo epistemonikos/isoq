@@ -86,7 +86,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ displayExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
@@ -141,7 +141,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
           <p v-if="data.item.coherence.explanation">
-            Explanation: {{ displayExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
+            Explanation: {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
             <span
               v-if="displayExclamationAlert('coherence')"
               class="text-danger"
@@ -196,7 +196,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
           <p v-if="data.item.adequacy.explanation">
-            Explanation: {{ displayExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
+            Explanation: {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
             <span
               v-if="displayExclamationAlert('adequacy')"
               class="text-danger"
@@ -251,7 +251,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
           <p v-if="data.item.relevance.explanation">
-            Explanation: {{ displayExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
+            Explanation: {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
             <span
               v-if="displayExclamationAlert('relevance')"
               class="text-danger"
@@ -487,6 +487,7 @@
 
 <script>
 import axios from 'axios'
+import { displayExplanation } from '../utils/commons'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
@@ -553,49 +554,8 @@ export default {
     }
   },
   methods: {
-    displayExplanation: function (type, option, explanation) {
-      if (type === '') {
-        return ''
-      }
-      if (option === '0') {
-        return explanation
-      }
-      if (explanation === '') {
-        return ''
-      }
-      let options = {}
-      switch (type) {
-        case 'methodological-limitations':
-          options = {
-            '1': 'Minor concerns regarding methodological limitations because',
-            '2': 'Moderate concerns regarding methodological limitations because',
-            '3': 'Serious concerns regarding methodological limitations because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'coherence':
-          options = {
-            '1': 'Minor concerns regarding coherence because',
-            '2': 'Moderate concerns regarding coherence because',
-            '3': 'Serious concerns regarding coherence because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'adequacy':
-          options = {
-            '1': 'Minor concerns regarding adequacy because',
-            '2': 'Moderate concerns regarding adequacy because',
-            '3': 'Serious concerns regarding adequacy because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'relevance':
-          options = {
-            '1': 'Minor concerns regarding relevance because',
-            '2': 'Moderate concerns regarding relevance because',
-            '3': 'Serious concerns regarding relevance because'
-          }
-          return `${options[option]} ${explanation}`
-        default:
-          return ''
-      }
+    getExplanation: function (type, option, explanation) {
+      return displayExplanation(type, option, explanation)
     },
     saveReferencesList: function () {
       this.evidenceProfileTableSettings.isBusy = true

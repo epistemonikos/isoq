@@ -756,7 +756,7 @@
                   <template v-if="parseInt( evidenceProfile[0].methodological_limitations.option ) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ displayExplanation('methodological-limitations', evidenceProfile[0].methodological_limitations.option, evidenceProfile[0].methodological_limitations.explanation) }}</span>
+                    <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ getExplanation('methodological-limitations', evidenceProfile[0].methodological_limitations.option, evidenceProfile[0].methodological_limitations.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -766,7 +766,7 @@
                   <template v-if="parseInt(evidenceProfile[0].coherence.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].coherence.explanation">{{ displayExplanation('coherence', evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
+                    <span v-if="evidenceProfile[0].coherence.explanation">{{ getExplanation('coherence', evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -776,7 +776,7 @@
                   <template v-if="parseInt(evidenceProfile[0].adequacy.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].adequacy.explanation">{{ displayExplanation('adequacy', evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
+                    <span v-if="evidenceProfile[0].adequacy.explanation">{{ getExplanation('adequacy', evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -786,7 +786,7 @@
                   <template v-if="parseInt(evidenceProfile[0].relevance.option) > 0">
                     <br />
                     Explanation:
-                    <span v-if="evidenceProfile[0].relevance.explanation">{{ displayExplanation('relevance', evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
+                    <span v-if="evidenceProfile[0].relevance.explanation">{{ getExplanation('relevance', evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
@@ -832,6 +832,7 @@
 
 <script>
 import axios from 'axios'
+import { displayExplanation } from '../utils/commons'
 export default {
   name: 'evidenceProfileForm',
   components: {
@@ -904,49 +905,8 @@ export default {
     }
   },
   methods: {
-    displayExplanation: function (type, option, explanation) {
-      if (type === '') {
-        return ''
-      }
-      if (option === '0') {
-        return explanation
-      }
-      if (explanation === '') {
-        return ''
-      }
-      let options = {}
-      switch (type) {
-        case 'methodological-limitations':
-          options = {
-            '1': 'Minor concerns regarding methodological limitations because',
-            '2': 'Moderate concerns regarding methodological limitations because',
-            '3': 'Serious concerns regarding methodological limitations because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'coherence':
-          options = {
-            '1': 'Minor concerns regarding coherence because',
-            '2': 'Moderate concerns regarding coherence because',
-            '3': 'Serious concerns regarding coherence because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'adequacy':
-          options = {
-            '1': 'Minor concerns regarding adequacy because',
-            '2': 'Moderate concerns regarding adequacy because',
-            '3': 'Serious concerns regarding adequacy because'
-          }
-          return `${options[option]} ${explanation}`
-        case 'relevance':
-          options = {
-            '1': 'Minor concerns regarding relevance because',
-            '2': 'Moderate concerns regarding relevance because',
-            '3': 'Serious concerns regarding relevance because'
-          }
-          return `${options[option]} ${explanation}`
-        default:
-          return ''
-      }
+    getExplanation: function (type, option, explanation) {
+      return displayExplanation(type, option, explanation)
     },
     btnShowHideColumn: function (val, panel) {
       const elLeft = document.getElementById('left-modal-content')
