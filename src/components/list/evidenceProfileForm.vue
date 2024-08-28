@@ -1,4 +1,5 @@
 <template>
+  <div>
   <b-modal size="xl" id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
     @ok="saveStageOneAndTwo(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
     cancel-variant="outline-secondary">
@@ -800,6 +801,33 @@
       </b-row>
     </b-container>
   </b-modal>
+
+    <b-modal
+      id="modal-warning-same-txt"
+      ref="modal-warning-same-txt"
+      title="Warning"
+      :hide-footer="true">
+      <p>
+        It looks like you have not finished writing an explanation for your judgement
+      </p>
+      <b-container>
+        <b-row align-h="between">
+          <b-col
+            cols="4">
+            <b-button
+              block
+              @click="closeWarningModalDoItNow(selectedOptions.type)">Do it now</b-button>
+          </b-col>
+          <b-col
+            cols="4">
+            <b-button
+              block
+              @click="closeWarningModalDoItLater()">Do it later</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
+  </div>
 </template>
 
 <script>
@@ -968,38 +996,22 @@ export default {
     checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
-          if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because'
-          ) {
+          if (prop.methodological_limitations.explanation === '') {
             return true
           }
           return false
         case 'coherence':
-          if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because'
-          ) {
+          if (prop.coherence.explanation === '') {
             return true
           }
           return false
         case 'adequacy':
-          if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because'
-          ) {
+          if (prop.adequacy.explanation === '') {
             return true
           }
           return false
         case 'relevance':
-          if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because'
-          ) {
+          if (prop.relevance.explanation === '') {
             return true
           }
           return false

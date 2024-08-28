@@ -101,32 +101,6 @@
             <!-- Evidence Profile-->
             <!--<b-tab :title="$t('Evidence Profile')">-->
 
-              <b-modal
-                id="modal-warning-same-txt"
-                ref="modal-warning-same-txt"
-                title="Warning"
-                :hide-footer="true">
-                <p>
-                  It looks like you have not finished writing an explanation for your judgement
-                </p>
-                <b-container>
-                  <b-row align-h="between">
-                    <b-col
-                      cols="4">
-                      <b-button
-                        block
-                        @click="closeWarningModalDoItNow(buffer_modal_stage_two.type)">Do it now</b-button>
-                    </b-col>
-                    <b-col
-                      cols="4">
-                      <b-button
-                        block
-                        @click="closeWarningModalDoItLater()">Do it later</b-button>
-                    </b-col>
-                  </b-row>
-                </b-container>
-              </b-modal>
-
               <div id="progress-status"
                 v-if="mode==='edit'"
                 class="d-print-none">
