@@ -142,21 +142,19 @@
             <b-select
               :disabled="!canWrite"
               id="select-project-list-completed-by-author-status"
-              :state="state.complete_by_author"
-              @change="state.complete_by_author = (formData.complete_by_author && formData.public_type !== 'private') ? null : false"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
-              <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('The project must be completed by the review authors') }}</b-form-invalid-feedback>
+              <!-- <b-form-invalid-feedback :state="state.complete_by_author">{{ $t('The project must be completed by the review authors') }}</b-form-invalid-feedback> -->
           </b-form-group>
           <b-form-group
-            v-if="formData.complete_by_author"
+            v-if="!formData.complete_by_author"
             label="Please list the authors of this iSoQ"
             label-for="input-project-list-authors">
             <b-form-input
               :disabled="!canWrite"
               id="input-project-list-authors"
               :state="state.lists_authors"
-              @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : false"
+              @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : (formData.public_type !== 'private') ? false : null"
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -329,7 +327,7 @@ export default {
         }
       } else {
         const response = await Project.create(data)
-        if (response.data.status) {
+        if (response.data.id) {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been created'
           this.$emit('modal-notification', response)
@@ -343,7 +341,6 @@ export default {
     },
     updateProjectInfo: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
-      console.log(data)
       let params = {}
       for (let key of Object.keys(data)) {
         params[key] = data[key]

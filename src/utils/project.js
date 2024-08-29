@@ -8,8 +8,8 @@ function validUrl (url) {
   var re = /^(http|https):\/\/[^ "]+$/
   return re.test(url)
 }
-async function canPublish (projectId) {
-  return axios.get('/api/project/can_publish', { params: { project_id: projectId } })
+async function canPublish (project) {
+  return axios.get('/api/project/can_publish', { params: project })
 }
 
 export default class Project {
@@ -74,13 +74,8 @@ export default class Project {
         responses.state.url_doi = false
         cnt++
       }
-      // check if project has a complete by author set as true
-      if (!data.complete_by_author) {
-        responses.state.complete_by_author = false
-        cnt++
-      }
       // check if project has a list of authors
-      if (data.complete_by_author && (data.lists_authors === '' || data.lists_authors === null)) {
+      if (!data.complete_by_author && (data.lists_authors === '' || data.lists_authors === null)) {
         responses.state.lists_authors = false
         cnt++
       }
@@ -90,7 +85,7 @@ export default class Project {
         cnt++
       }
 
-      const canPublish = await Project.canPublish(data.id)
+      const canPublish = await Project.canPublish(data)
       if (canPublish.data.status === false) {
         responses.state.can_publish = false
         cnt++
@@ -119,7 +114,7 @@ export default class Project {
     }
     delete params.id
 
-    const validation = Project.validations(params)
+    const validation = await Project.validations(params)
     if (validation.data.status) {
       const creationDate = Date.now()
       params.created_at = creationDate
