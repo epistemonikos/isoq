@@ -1306,6 +1306,9 @@ export default {
               })
             }
           }
+          if (this.references.length) {
+            this.stepStage = 1
+          }
           this.loadReferences = false
         })
         .catch((error) => {
