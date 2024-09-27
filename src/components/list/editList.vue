@@ -467,7 +467,7 @@
                                 v-if="ui.methodological_assessments.display_warning"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
+                                The Methodological Assessments table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data', step: 4}}">My Data</b-link>.
                               </p>
                               <b-table
                                 class="table-small-font"
@@ -699,7 +699,7 @@
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data', step: 3}}">My Data</b-link>.
                               </p>
                               <b-table
                                 class="table-small-font"
@@ -743,7 +743,7 @@
                                 v-if="project.inclusion === ''"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The inclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
+                                The inclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data', step: 2}}">My Data</b-link>.
                               </p>
                               <p>{{ project.inclusion }}</p>
                               <h4>Exclusion criteria</h4>
@@ -751,7 +751,7 @@
                                 v-if="project.exclusion === ''"
                                 class="text-danger">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                                The exclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
+                                The exclusion criteria are missing. Add them in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data', step: 2}}">My Data</b-link>.
                               </p>
                               <p>{{ project.exclusion }}</p>
                             </b-tab>
@@ -763,7 +763,7 @@
                               <p
                                 v-if="ui.adequacy.chars_of_studies.display_warning"
                                 class="text-danger">
-                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data'}}">My Data</b-link>.
+                                The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in <b-link :to="{name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}, query: {tab: 'My-Data', step: 3}}">My Data</b-link>.
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                               </p>
                               <b-table
