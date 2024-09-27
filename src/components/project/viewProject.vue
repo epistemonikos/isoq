@@ -572,175 +572,12 @@
             </template>
             <!-- printed version -->
             <template v-else>
-              <b-table-simple
-                id="findings-print"
-                ref="findings-print">
-                <b-thead>
-                  <b-tr>
-                    <!-- <b-th class="d-print-none">Printable?</b-th> -->
-                    <b-th>#</b-th>
-                    <b-th>Summarised review finding</b-th>
-                    <b-th>GRADE-CERQual assessment of confidence</b-th>
-                    <b-th>Explanation of GRADE-CERQual assessment</b-th>
-                    <b-th>References</b-th>
-                  </b-tr>
-                </b-thead>
-                <b-tbody>
-                  <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                    <!-- <b-td class="d-print-none">
-                      <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
-                    </b-td> -->
-                    <template v-if="item.is_category">
-                      <b-td
-                        colspan="5"
-                        class="text-center text-uppercase font-weight-bolder"
-                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                        {{ item.name }}
-                      </b-td>
-                    </template>
-                    <template v-else>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="list_categories.options.length">
-                        <p>{{item.cnt}}</p>
-                        </template>
-                        <template v-else>
-                        {{index+1}}
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="checkPermissions('can_read')">
-                        <template v-if="item.ref_list.length">
-                          <p>
-                            {{ item.name }}
-                          </p>
-                        </template>
-                        <template v-else>
-                        {{ item.name }}
-                        </template>
-                        </template>
-                        <template v-else>
-                          <p>{{ item.name }}</p>
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <p>{{ item.cerqual_option }}</p>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="item.cerqual_option !== ''">
-                          <p>{{ item.cerqual_explanation }}</p>
-                        </template>
-                        <template v-else>
-                          <p>&nbsp;</p>
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <p class="references">{{ item.ref_list }}</p>
-                      </b-td>
-                    </template>
-                  </b-tr>
-                </b-tbody>
-              </b-table-simple>
-              <back-to-top></back-to-top>
-              <div class="mt-5">
-              <h3>Evidence Profile Table</h3>
-              <b-table-simple>
-                <b-thead>
-                  <b-tr>
-                    <b-th>#</b-th>
-                    <b-th>Summarised review finding</b-th>
-                    <b-th>Methodological limitations</b-th>
-                    <b-th>Coherence</b-th>
-                    <b-th>Adequacy</b-th>
-                    <b-th>Relevance</b-th>
-                    <b-th>GRADE-CERQual assessment of confidence</b-th>
-                    <b-th>References</b-th>
-                  </b-tr>
-                </b-thead>
-                <b-tbody>
-                  <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                    <template v-if="item.is_category">
-                      <b-td
-                        colspan="8"
-                        class="text-center text-uppercase font-weight-bolder"
-                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                        {{ item.name }}
-                      </b-td>
-                    </template>
-                    <template v-else>
-                    <b-td>
-                      <template v-if="list_categories.options.length">
-                      <p>{{item.cnt}}</p>
-                      </template>
-                      <template v-else>
-                      {{ index + 1 }}
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <p>{{item.name}}</p>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
-                        <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
-                        <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
-                        <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
-                        <template v-if="item.evidence_profile.coherence.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
-                        </template>
-                        </template>
-                        </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
-                        <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
-                        <template v-if="item.evidence_profile.adequacy.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
-                        <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
-                        <template v-if="item.evidence_profile.relevance.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
-                        <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
-                        <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <p class="references">{{returnRefWithNames(item.references)}}</p>
-                    </b-td>
-                    </template>
-                  </b-tr>
-                </b-tbody>
-              </b-table-simple>
-              </div>
+              <PrintViewTable
+                :dataPrintVersion="lists_print_version"
+                :references="references"
+                :categories="list_categories"
+                :printableItems="printableItems"
+                :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             </template>
             <!-- eopv -->
             <b-modal
@@ -1030,6 +867,7 @@
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
+import Commons from '../../utils/commons.js'
 
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
@@ -1039,6 +877,7 @@ const actionButtons = () => import(/* webpackChunkName: 'actionButtons' */'./act
 const propertiesProject = () => import(/* webpackChunkName: "propertiesProject" */ './propertiesProject.vue')
 const UploadReferences = () => import(/* webpackChunkName: "uploadReferences" */ './UploadReferences.vue')
 const InclusionExclusioCriteria = () => import(/* webpackChunkName: "inclusionExclusionCriteria" */ './InclusionExclusionCriteria.vue')
+const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './PrintViewTable.vue')
 
 export default {
   components: {
@@ -1052,7 +891,8 @@ export default {
     UploadReferences,
     InclusionExclusioCriteria,
     CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
-    crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue')
+    crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
+    PrintViewTable
   },
   data () {
     return {
@@ -1267,7 +1107,6 @@ export default {
   },
   methods: {
     updateDataProject: function (data) {
-      console.log('updateDataProject', data)
       this.getProject()
     },
     isActiveStepTwo: function () {
@@ -1482,18 +1321,8 @@ export default {
       }
       return authors
     },
-    displaySelectedOption: function (option, type = '') {
-      if (option === null) {
-        return ''
-      } else if (option >= 0) {
-        if (type === 'cerqual') {
-          return this.cerqual_confidence[option].text
-        } else {
-          return this.select_options[option].text
-        }
-      } else {
-        return ''
-      }
+    displaySelectedOption: function (option, type) {
+      return Commons.displaySelectedOption(option, type)
     },
     parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
