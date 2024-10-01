@@ -383,6 +383,7 @@
                 :refs="refs"
                 @update-modification-time="updateModificationTime"
                 @get-lists="getLists"
+                @add-list="modalAddList"
                 @set-busy="setBusy"
                 @set-load-references="statusLoadReferences"
                 @get-references="getReferences"

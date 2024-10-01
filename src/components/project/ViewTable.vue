@@ -535,8 +535,7 @@ export default {
       this.$refs['remove-finding'].show()
     },
     modalAddList: function () {
-      this.list_categories.selected = null
-      this.$refs['add-summarized'].show()
+      this.$emit('add-list')
     },
     openModalReferences: function (data) {
       this.editFindingName = this.setEditFindingNameProp(data)
