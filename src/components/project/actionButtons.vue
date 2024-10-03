@@ -133,16 +133,6 @@
         </b-form-group>
       </template>
 
-      <template v-if="errorsResponse.message !== ''">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="errorsResponse.message = ''">
-          <p class="mb-0">{{ errorsResponse.message }}</p>
-        </b-alert>
-      </template>
-
       <template #modal-footer>
         <div class="w-100">
           <b-button
@@ -858,7 +848,7 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {project_id: this.project.id}})
+        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id}})
         if (canPublish.data.status) {
           axios.patch('/api/publish', {params})
             .then(() => {
