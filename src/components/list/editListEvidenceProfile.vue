@@ -387,25 +387,25 @@
       <template v-slot:cell(methodological-limit)="data">
         <div v-if="data.item.methodological_limitations.option !== null">
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-          <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+          <p v-if="data.item.methodological_limitations.explanation">Explanation: {{getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(coherence)="data">
         <div v-if="data.item.coherence.option !== null">
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-          <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+          <p v-if="data.item.coherence.explanation">Explanation: {{getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(adequacy)="data">
         <div v-if="data.item.adequacy.option !== null">
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-          <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+          <p v-if="data.item.adequacy.explanation">Explanation: {{getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(relevance)="data">
         <div v-if="data.item.relevance.option !== null">
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-          <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+          <p v-if="data.item.relevance.explanation">Explanation: {{getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(cerqual)="data">
