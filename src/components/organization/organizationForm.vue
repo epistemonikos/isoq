@@ -317,13 +317,21 @@ export default {
         if (response.data.status) {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been updated'
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          if (this.isModal) {
+            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
           this.$emit('modal-notification')
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = 'The project present some errors, please check the fields and try again.'
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          this.msgUpdateProject = 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below or select "Private" under "Visibility on the iSoQ database" to continue.'
+          if (this.isModal) {
+            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
         }
       } else {
         const response = await Project.create(data)
@@ -333,9 +341,13 @@ export default {
           this.$emit('modal-notification', response)
         } else {
           this.variant = 'danger'
-          this.msgUpdateProject = 'The project present some errors, please check the fields and try again.'
+          this.msgUpdateProject = 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below or select "Private" under "Visibility on the iSoQ database" to continue.'
           this.state = { ...this.state, ...response.data.state }
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          if (this.isModal) {
+            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
         }
       }
     },
