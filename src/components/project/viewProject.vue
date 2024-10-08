@@ -865,13 +865,22 @@ export default {
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
         .then((response) => {
-          this.project = JSON.parse(JSON.stringify(response.data))
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
-            this.project.inclusion = ''
+          let _project = JSON.parse(JSON.stringify(response.data))
+          if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {
+            _project.inclusion = ''
           }
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
-            this.project.exclusion = ''
+          if (!Object.prototype.hasOwnProperty.call(_project, 'exclusion')) {
+            _project.exclusion = ''
           }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+            _project.license_type = 'CC-BY-NC-ND'
+          }
+          if (Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+            if (_project.license_type === '') {
+              _project.license_type = 'CC-BY-NC-ND'
+            }
+          }
+          this.project = _project
           this.ui.project.show_criteria = true
           this.getLists()
         })

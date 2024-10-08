@@ -449,6 +449,7 @@ export default {
         description: '',
         private: true,
         public_type: 'private',
+        license_type: 'CC-BY-NC-ND',
         organization: this.$route.params.id,
         review_question: '',
         published_status: false,
@@ -730,7 +731,17 @@ export default {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
     openModalEditProject: function (project) {
-      this.buffer_project = JSON.parse(JSON.stringify(project))
+      let _project = JSON.parse(JSON.stringify(project))
+      if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+        _project.license_type = 'CC-BY-NC-ND'
+      }
+      if (Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+        if (_project.license_type === '') {
+          _project.license_type = 'CC-BY-NC-ND'
+        }
+      }
+
+      this.buffer_project = _project
       this.$refs['new-project'].show()
     },
     modalRemoveProject: function (project) {
