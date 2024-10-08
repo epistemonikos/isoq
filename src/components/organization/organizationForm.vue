@@ -116,11 +116,8 @@
             <b-select
               :disabled="!canWrite"
               id="select-project-list-published-status"
-              :state="state.published_status"
-              @change="state.published_status = (formData.published_status && formData.public_type !== 'private') ? null : false"
               v-model="formData.published_status"
               :options="yes_or_no"></b-select>
-            <b-form-invalid-feedback :state="state.published_status">{{ $t('The project must be review been published') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             v-if="formData.published_status"
@@ -170,7 +167,7 @@
               v-model="formData.public_type"
               @change="resetState()"
               :options="global_status"></b-select>
-            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one reference and one completed finding. Choose \'Private\' until you are finished.') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one review finding with a completed GRADE-CERQual assessment to be published to the iSoQ database. Choose \'Private\' until you are finished.') }}</b-form-invalid-feedback>
           </b-form-group>
           <template v-if="formData.public_type !== 'private'">
             <b-form-group
@@ -314,6 +311,7 @@ export default {
       data.organization = this.$store.state.user.personal_organization
       if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
         const response = await Project.update(data)
+        console.log('response', response)
         if (response.data.status) {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been updated'

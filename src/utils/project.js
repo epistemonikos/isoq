@@ -28,7 +28,6 @@ export default class Project {
           author: null,
           author_email: null,
           review_question: null,
-          published_status: null,
           url_doi: null,
           complete_by_author: null,
           lists_authors: null,
@@ -65,10 +64,10 @@ export default class Project {
         cnt++
       }
       // check if published status is true
-      if (!data.published_status) {
-        responses.state.published_status = false
-        cnt++
-      }
+      // if (!data.published_status) {
+      //   responses.state.published_status = false
+      //   cnt++
+      // }
       // check project url or doi
       if (data.published_status && (data.url_doi === '' || data.url_doi === null || !Project.validUrl(data.url_doi))) {
         responses.state.url_doi = false
