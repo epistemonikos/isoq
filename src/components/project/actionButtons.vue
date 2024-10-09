@@ -57,10 +57,10 @@
                 v-if="permissions"
                 class="mt-1"
                 @click="modalChangePublicStatus"
-                :variant="(!project.private) ? 'outline-primary' : 'primary'"
+                :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
                 v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
-                <span v-if="!project.private">Published</span><span v-else>Publish</span>
+                <span v-if="project.is_public">Published</span><span v-else>Publish</span>
               </b-button>
           </b-col>
           <b-col
