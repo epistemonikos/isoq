@@ -32,7 +32,6 @@ export default {
   },
   methods: {
     updateFormData: function (data) {
-      console.log('updateFormData', data)
       this.$emit('update-project', data)
     }
   }
