@@ -129,6 +129,12 @@ export default class Project {
     const validation = await Project.validations(params)
 
     if (validation.data.status) {
+      params.private = true
+      params.is_public = false
+      if (params.public_type !== 'private') {
+        params.private = false
+        params.is_public = true
+      }
       const data = await axios.patch('/api/publish', { params })
       return {data: {status: true, ...data}}
     } else {
