@@ -220,7 +220,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import Project from '@/utils/project'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
@@ -311,16 +310,16 @@ export default {
       data.organization = this.$store.state.user.personal_organization
       if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
         const response = await Project.update(data)
-        console.log('response', response)
         if (response.data.status) {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been updated'
           if (this.isModal) {
             document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
+            this.$emit('modal-notification')
           } else {
             window.scrollTo({ top: 0, behavior: 'smooth' })
+            this.$emit('update-form-data', data)
           }
-          this.$emit('modal-notification')
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
@@ -347,120 +346,6 @@ export default {
             window.scrollTo({ top: 0, behavior: 'smooth' })
           }
         }
-      }
-    },
-    updateProjectInfo: function () {
-      const data = JSON.parse(JSON.stringify(this.formData))
-      let params = {}
-      for (let key of Object.keys(data)) {
-        params[key] = data[key]
-      }
-      params.private = true
-      params.is_public = false
-      if (params.public_type !== 'private') {
-        params.private = false
-        params.is_public = true
-        // check if the project has a title
-        if (params.name === '') {
-          this.state.name = false
-          this.setMsgUpdateProject('The project must have a title')
-          return
-        }
-        // check if project has authors
-        if (params.authors === '') {
-          this.state.authors = false
-          this.setMsgUpdateProject('The project must have at least one author')
-          return
-        }
-        // check if project has author
-        if (params.author === '') {
-          this.state.author = false
-          this.setMsgUpdateProject('The project must have a corresponding author')
-          return
-        }
-        // check if project has a valid author email address
-        if (params.author_email !== '' && !this.validEmail(params.author_email)) {
-          this.state.author_email = false
-          this.setMsgUpdateProject('The project must have a valid author email address')
-          return
-        }
-        // check if project has a review question
-        if (params.review_question === '') {
-          this.state.review_question = false
-          this.setMsgUpdateProject('The project must have a review question')
-          return
-        }
-        // check if published status is true
-        if (!params.published_status) {
-          this.state.published_status = false
-          this.setMsgUpdateProject('The project must be review been published')
-          return
-        }
-        // check project url or doi
-        if (params.published_status && (params.url_doi === '' || params.url_doi === null || !this.validUrl(params.url_doi))) {
-          this.state.url_doi = false
-          this.setMsgUpdateProject('The project must have a valid URL or DOI')
-          return
-        }
-        // check if project has a complete by author set as true
-        if (!params.complete_by_author) {
-          this.state.complete_by_author = false
-          this.setMsgUpdateProject('The project must have being completed by the review authors')
-          return
-        }
-        // check if project has a list of authors
-        if (params.complete_by_author && (params.lists_authors === '' || params.lists_authors === null)) {
-          this.state.lists_authors = false
-          this.setMsgUpdateProject('The project must have a list of authors')
-          return
-        }
-        // check if project has a license
-        if (params.license_type === '' || params.license_type === null) {
-          this.state.license = false
-          this.setMsgUpdateProject('The project must have a license')
-          return
-        }
-      }
-      if (params.public_type !== 'private') {
-        axios.get('/api/project/can_publish', { params })
-          .then((response) => {
-            if (response.data.status) {
-              axios.patch(`/api/publish`, { params })
-                .then(() => {
-                  this.variant = 'success'
-                  this.msgUpdateProject = 'The project has been published'
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                  this.$emit('update-modification')
-                })
-            } else {
-              params.private = true
-              params.is_public = false
-              params.license_type = ''
-              params.public_type = 'private'
-              axios.patch(`/api/publish`, { params })
-                .then(() => {
-                  this.variant = 'success'
-                  this.msgUpdateProject = `The project has been updated, but no published because it does not meet the requirements to be published. ${response.data.message}`
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                  this.$emit('update-modification')
-                  this.$emit('update-form-data', params)
-                })
-            }
-          })
-          .catch((error) => {
-            this.msgUpdateProject = error
-          })
-      } else {
-        axios.patch(`/api/publish`, { params })
-          .then(() => {
-            this.variant = 'success'
-            this.msgUpdateProject = 'The project has been updated'
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-            this.$emit('update-modification')
-          })
-          .catch((error) => {
-            this.msgUpdateProject = error
-          })
       }
     },
     validEmail: function (email) {
