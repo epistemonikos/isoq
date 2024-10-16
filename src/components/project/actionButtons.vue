@@ -808,6 +808,7 @@ export default {
     },
     modalChangePublicStatus: function () {
       this.modalProject = JSON.parse(JSON.stringify(this.project))
+      this.modalProject.isModal = true
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
         this.modalProject.license_type = 'CC-BY-NC-ND'
       }
@@ -831,6 +832,7 @@ export default {
       let params = {}
       params.id = this.project.id
       params.public_type = this.modalProject.public_type
+      const isModal = this.modalProject.isModal || false
       params.private = true
       params.is_public = false
 
@@ -848,7 +850,7 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id}})
+        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, isModal: isModal}})
         if (canPublish.data.status) {
           axios.patch('/api/publish', {params})
             .then(() => {
