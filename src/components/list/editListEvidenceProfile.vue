@@ -86,7 +86,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
-            Explanation: {{data.item.methodological_limitations.explanation}}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
@@ -101,6 +101,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('methodological-limitations')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -134,7 +141,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
           <p v-if="data.item.coherence.explanation">
-            Explanation: {{data.item.coherence.explanation}}
+            Explanation: {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
             <span
               v-if="displayExclamationAlert('coherence')"
               class="text-danger"
@@ -149,6 +156,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('coherence')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -182,7 +196,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
           <p v-if="data.item.adequacy.explanation">
-            Explanation: {{data.item.adequacy.explanation}}
+            Explanation: {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
             <span
               v-if="displayExclamationAlert('adequacy')"
               class="text-danger"
@@ -197,6 +211,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('adequacy')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -230,7 +251,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
           <p v-if="data.item.relevance.explanation">
-            Explanation: {{data.item.relevance.explanation}}
+            Explanation: {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
             <span
               v-if="displayExclamationAlert('relevance')"
               class="text-danger"
@@ -245,6 +266,13 @@
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
               variant="info">Explanation not yet added</span>
+            <span
+              v-if="displayExclamationAlert('relevance')"
+              class="text-danger"
+              v-b-tooltip.hover
+              title="This explanation is incomplete">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+            </span>
           </p>
         </div>
         <div v-else>
@@ -359,25 +387,25 @@
       <template v-slot:cell(methodological-limit)="data">
         <div v-if="data.item.methodological_limitations.option !== null">
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-          <p v-if="data.item.methodological_limitations.explanation">Explanation: {{data.item.methodological_limitations.explanation}}</p>
+          <p v-if="data.item.methodological_limitations.explanation">Explanation: {{getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(coherence)="data">
         <div v-if="data.item.coherence.option !== null">
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-          <p v-if="data.item.coherence.explanation">Explanation: {{data.item.coherence.explanation}}</p>
+          <p v-if="data.item.coherence.explanation">Explanation: {{getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(adequacy)="data">
         <div v-if="data.item.adequacy.option !== null">
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-          <p v-if="data.item.adequacy.explanation">Explanation: {{data.item.adequacy.explanation}}</p>
+          <p v-if="data.item.adequacy.explanation">Explanation: {{getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(relevance)="data">
         <div v-if="data.item.relevance.option !== null">
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-          <p v-if="data.item.relevance.explanation">Explanation: {{data.item.relevance.explanation}}</p>
+          <p v-if="data.item.relevance.explanation">Explanation: {{getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(cerqual)="data">
@@ -424,11 +452,34 @@
         </template>
       </b-table>
     </b-modal>
+
+    <!-- modal -->
+    <evidence-profile-form
+      ref="evidenceProfileForm"
+      :modalData="modalData"
+      :list="list"
+      :ui="ui"
+      :methAssessments="methAssessments"
+      :findings="findings"
+      :mode="mode"
+      :extractedData="extractedData"
+      :refsWithTitle="refsWithTitle"
+      :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
+      :charsOfStudies="charsOfStudies"
+      :project="project"
+      :evidenceProfile="evidenceProfile"
+      :selectOptions="selectOptions"
+      @update-list-data="getList"
+      @busyEvidenceProfileTable="busyEvidenceProfileTable"
+      @callGetStageOneData="callGetStageOneData"
+      @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+      @getExtractedData="getExtractedData"></evidence-profile-form>
+    <!-- end modal -->
   </div>
   <div v-else>
     <div class="text-center my-5">
       <p>
-        {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-stage-two>{{ $t('add a evidence profile') }}</b-link>
+        {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-evidence-profile-form>{{ $t('add a evidence profile') }}</b-link>
       </p>
     </div>
   </div>
@@ -436,6 +487,7 @@
 
 <script>
 import axios from 'axios'
+import { displayExplanation } from '../utils/commons'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
@@ -452,10 +504,17 @@ export default {
     permission: Boolean,
     selectOptions: Array,
     levelConfidence: Array,
-    findings: Object
+    findings: Object,
+    methAssessments: Object,
+    extractedData: Object,
+    showEditExtractedDataInPlace: Object,
+    modalData: Object,
+    charsOfStudies: Object
   },
   components: {
-    'back-to-top': backToTop
+    'back-to-top': backToTop,
+    'evidence-profile-form': () => import('./evidenceProfileForm.vue'),
+    'videoHelp': () => import('../videoHelp')
   },
   data () {
     return {
@@ -495,6 +554,9 @@ export default {
     }
   },
   methods: {
+    getExplanation: function (type, option, explanation) {
+      return displayExplanation(type, option, explanation)
+    },
     saveReferencesList: function () {
       this.evidenceProfileTableSettings.isBusy = true
       const params = {
@@ -563,38 +625,22 @@ export default {
     checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
-          if (
-            prop.methodological_limitations.explanation === 'Minor concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Moderate concerns regarding methodological limitations because...' ||
-            prop.methodological_limitations.explanation === 'Serious concerns regarding methodological limitations because...'
-          ) {
+          if (prop.methodological_limitations.option > 0 && prop.methodological_limitations.explanation === '') {
             return true
           }
           return false
         case 'coherence':
-          if (
-            prop.coherence.explanation === 'Minor concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Moderate concerns regarding coherence because...' ||
-            prop.coherence.explanation === 'Serious concerns regarding coherence because...'
-          ) {
+          if (prop.coherence.option > 0 && prop.coherence.explanation === '') {
             return true
           }
           return false
         case 'adequacy':
-          if (
-            prop.adequacy.explanation === 'Minor concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Moderate concerns regarding adequacy because...' ||
-            prop.adequacy.explanation === 'Serious concerns regarding adequacy because...'
-          ) {
+          if (prop.adequacy.option > 0 && prop.adequacy.explanation === '') {
             return true
           }
           return false
         case 'relevance':
-          if (
-            prop.relevance.explanation === 'Minor concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Moderate concerns regarding relevance because...' ||
-            prop.relevance.explanation === 'Serious concerns regarding relevance because...'
-          ) {
+          if (prop.relevance.option > 0 && prop.relevance.explanation === '') {
             return true
           }
           return false
@@ -606,8 +652,6 @@ export default {
       this.$refs['modalReferences'].show()
     },
     editStageTwo: function (data, type) {
-      let theData = JSON.parse(JSON.stringify(data))
-      this.$emit('bufferModalStageOne', theData.name)
       const titles = {
         'methodological-limitations': 'Methodological limitations',
         'coherence': 'Coherence',
@@ -615,8 +659,26 @@ export default {
         'relevance': 'Relevance',
         'cerqual': 'GRADE-CERQual assessment of confidence'
       }
-      this.$emit('bufferModalStageTwo', {...theData}, type, titles[type])
-      this.$emit('openModalStageTwo')
+      data.type = type
+      data.title = titles[type]
+      const theData = JSON.parse(JSON.stringify(data))
+      this.$emit('modalDataChanged', theData)
+      this.$refs.evidenceProfileForm.openModalEvidenceProfie()
+    },
+    getList: function (status = false) {
+      this.$emit('update-list-data', status)
+    },
+    busyEvidenceProfileTable: function (status) {
+      this.$emit('busyEvidenceProfileTable', status)
+    },
+    callGetStageOneData: function (status) {
+      this.$emit('callGetStageOneData', status)
+    },
+    setShowEditExtractedDataInPlace: function (data) {
+      this.$emit('setShowEditExtractedDataInPlace', data)
+    },
+    getExtractedData: function () {
+      this.$emit('getExtractedData')
     }
   }
 }
