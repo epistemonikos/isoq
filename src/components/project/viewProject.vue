@@ -73,7 +73,7 @@
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :active="references.length?true:false" :disabled="references.length?false:true">
+              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :disabled="references.length?false:true">
                 <InclusionExclusioCriteria
                   :checkPermissions="checkPermissions()"
                   :project="project"
@@ -846,12 +846,18 @@ export default {
               this.$nextTick(() => {
                 if (Object.prototype.hasOwnProperty.call(this.$route.query, 'tab')) {
                   const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
-                  this.clickTab(tabs.indexOf(this.$route.query.tab))
+                  this.tabOpened = tabs.indexOf(this.$route.query.tab)
+                  if (Object.prototype.hasOwnProperty.call(this.$route.query, 'step')) {
+                    this.stepStage = parseInt(this.$route.query.step) - 1
+                  }
                 } else {
-                  this.clickTab(2)
+                  this.tabOpened = 2
                 }
               })
             }
+          }
+          if (this.references.length) {
+            this.stepStage = 1
           }
           this.loadReferences = false
         })
@@ -988,22 +994,26 @@ export default {
     },
     clickTab: function (option) {
       this.tabOpened = option
-      let theHash = ''
-      switch (option) {
-        case 0:
-          theHash = 'Project-Property'
-          break
-        case 1:
-          theHash = 'My-Data'
-          break
-        case 2:
-          theHash = 'iSoQ'
-          break
-        case 3:
-          theHash = 'Guidance-on-applying-GRADE-CERQual'
-          break
-      }
-      this.$router.push({query: {tab: `${theHash}`}})
+      // let theHash = ''
+      // switch (option) {
+      //   case 0:
+      //     theHash = 'Project-Property'
+      //     break
+      //   case 1:
+      //     theHash = 'My-Data'
+      //     break
+      //   case 2:
+      //     theHash = 'iSoQ'
+      //     break
+      //   case 3:
+      //     theHash = 'Guidance-on-applying-GRADE-CERQual'
+      //     break
+      // }
+      // if (Object.hasOwnProperty.call(this.$route.query, 'step')) {
+      //   this.$router.push({query: {tab: `${theHash}`, step: this.$route.query.step}})
+      // } else {
+      //   this.$router.push({query: {tab: `${theHash}`}})
+      // }
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status

@@ -159,6 +159,7 @@
 import axios from 'axios'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
+import { displayExplanation } from '../utils/commons'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
@@ -1147,7 +1148,7 @@ export default {
                     {
                       width_size: '10%',
                       text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
-                      explanation: (item.evidence_profile.methodological_limitations.option.length) ? item.evidence_profile.methodological_limitations.explanation : '',
+                      explanation: (item.evidence_profile.methodological_limitations.option.length) ? this.getExplanation('methodological-limitations', item.evidence_profile.methodological_limitations.option, item.evidence_profile.methodological_limitations.explanation) : '',
                       font_size: 22,
                       align: AlignmentType.LEFT
                     }
@@ -1155,21 +1156,21 @@ export default {
                   this.generateTableCell({
                     width_size: '10%',
                     text: this.displaySelectedOption(item.evidence_profile.coherence.option),
-                    explanation: (item.evidence_profile.coherence.explanation.length) ? item.evidence_profile.coherence.explanation : '',
+                    explanation: (item.evidence_profile.coherence.explanation.length) ? this.getExplanation('coherence', item.evidence_profile.coherence.option, item.evidence_profile.coherence.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
                     width_size: '10%',
                     text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
-                    explanation: (item.evidence_profile.adequacy.explanation.length) ? item.evidence_profile.adequacy.explanation : '',
+                    explanation: (item.evidence_profile.adequacy.explanation.length) ? this.getExplanation('adequacy', item.evidence_profile.adequacy.option, item.evidence_profile.adequacy.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
                     width_size: '10%',
                     text: this.displaySelectedOption(item.evidence_profile.relevance.option),
-                    explanation: (item.evidence_profile.relevance.explanation.length) ? item.evidence_profile.relevance.explanation : '',
+                    explanation: (item.evidence_profile.relevance.explanation.length) ? this.getExplanation('relevance', item.evidence_profile.relevance.option, item.evidence_profile.relevance.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
@@ -1287,6 +1288,9 @@ export default {
       } else {
         return 'author(s) not found'
       }
+    },
+    getExplanation: function (type, option, explanation) {
+      return displayExplanation(type, option, explanation)
     }
   },
   computed: {

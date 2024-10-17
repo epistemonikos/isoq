@@ -14,7 +14,7 @@
     </h3>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
       To add data or make changes to this table do so in the
-      <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}#My-Data`">My Data</b-link>
+      <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">My Data</b-link>
       section of iSoQ
     </p>
     <template v-if="charsOfStudies.fields.length">
