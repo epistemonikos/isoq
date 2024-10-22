@@ -82,6 +82,7 @@
     </b-row>
     <b-modal
       ref="modal-change-status"
+      id="modal-change-status"
       scrollable
       size="xl"
       ok-title="Save"
@@ -101,7 +102,7 @@
           variant="danger"
           dismissible
           @dismissed="errorsResponse.message = ''">
-          <p class="mb-0">{{ errorsResponse.message }}</p>
+          <p class="mb-0" v-html="errorsResponse.message"></p>
         </b-alert>
       </template>
 
@@ -851,7 +852,7 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, isModal: isModal}})
+        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
         if (canPublish.data.status) {
           axios.patch('/api/publish', {params})
             .then(() => {
@@ -864,6 +865,7 @@ export default {
               console.log(error)
             })
         } else {
+          document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
           this.errorsResponse.message = canPublish.data.message
           this.$emit('uiPublishShowLoader', false)
         }

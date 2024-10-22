@@ -63,11 +63,6 @@ export default class Project {
         responses.state.review_question = false
         cnt++
       }
-      // check if published status is true
-      // if (!data.published_status) {
-      //   responses.state.published_status = false
-      //   cnt++
-      // }
       // check project url or doi
       if (data.published_status && (data.url_doi === '' || data.url_doi === null || !Project.validUrl(data.url_doi))) {
         responses.state.url_doi = false
@@ -84,15 +79,22 @@ export default class Project {
         cnt++
       }
 
-      const canPublish = await Project.canPublish(data)
-      if (canPublish.data.status === false) {
-        responses.state.can_publish = false
-        cnt++
-      }
+      // const canPublish = await Project.canPublish(data)
+      // if (canPublish.data.status === false) {
+      //   responses.message = canPublish.data.message
+      //   responses.state.can_publish = false
+      //   cnt++
+      // }
 
       if (cnt > 0) {
-        return { data: { status: false, ...responses } }
+        return { data: { status: false, message: 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.', ...responses } }
       } else {
+        const canPublish = await Project.canPublish(data)
+        if (canPublish.data.status === false) {
+          responses.message = canPublish.data.message
+          responses.state.can_publish = false
+          return { data: { status: false, ...responses } }
+        }
         return { data: { status: true } }
       }
     }
