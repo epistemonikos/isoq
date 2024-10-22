@@ -627,22 +627,22 @@ export default {
     checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
-          if (prop.methodological_limitations.option > 0 && prop.methodological_limitations.explanation === '') {
+          if (parseInt(prop.methodological_limitations.option) > 0 && prop.methodological_limitations.explanation === '') {
             return true
           }
           return false
         case 'coherence':
-          if (prop.coherence.option > 0 && prop.coherence.explanation === '') {
+          if (parseInt(prop.coherence.option) > 0 && prop.coherence.explanation === '') {
             return true
           }
           return false
         case 'adequacy':
-          if (prop.adequacy.option > 0 && prop.adequacy.explanation === '') {
+          if (parseInt(prop.adequacy.option) > 0 && prop.adequacy.explanation === '') {
             return true
           }
           return false
         case 'relevance':
-          if (prop.relevance.option > 0 && prop.relevance.explanation === '') {
+          if (parseInt(prop.relevance.option) > 0 && prop.relevance.explanation === '') {
             return true
           }
           return false
