@@ -1053,7 +1053,9 @@ export default {
       }
       switch (type) {
         case 'methodological_limitations':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding methodological limitations because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding methodological limitations because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding methodological limitations because'
@@ -1063,7 +1065,9 @@ export default {
             return ''
           }
         case 'coherence':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding coherence because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding coherence because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding coherence because'
@@ -1073,7 +1077,9 @@ export default {
             return ''
           }
         case 'adequacy':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding adequacy because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding adequacy because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding adequacy because'
@@ -1083,7 +1089,9 @@ export default {
             return ''
           }
         case 'relevance':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding relevance because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding relevance because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding relevance because'

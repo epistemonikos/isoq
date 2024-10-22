@@ -141,7 +141,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
           <p v-if="data.item.coherence.explanation">
-            Explanation: {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
             <span
               v-if="displayExclamationAlert('coherence')"
               class="text-danger"
@@ -196,7 +196,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
           <p v-if="data.item.adequacy.explanation">
-            Explanation: {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
             <span
               v-if="displayExclamationAlert('adequacy')"
               class="text-danger"
@@ -251,7 +251,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
           <p v-if="data.item.relevance.explanation">
-            Explanation: {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
             <span
               v-if="displayExclamationAlert('relevance')"
               class="text-danger"
@@ -305,7 +305,9 @@
             </b-button>
           </template>
           <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-          <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
+          <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">
+            <span class="font-weight-bolder text-black-50">Explanation:</span> {{data.item.cerqual.explanation}}
+          </p>
           <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
             Explanation not yet added
           </p>
