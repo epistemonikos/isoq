@@ -341,7 +341,7 @@
               for practical guidance on making an overall assessment of confidence
               for a review finding.
             </p>
-            <b-form-radio-group v-model="selectedOptions.cerqual.option" name="cerqual" stacked>
+            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked>
               <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
@@ -832,7 +832,7 @@
 
 <script>
 import axios from 'axios'
-import { displayExplanation } from '../utils/commons'
+import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 export default {
   name: 'evidenceProfileForm',
   components: {
@@ -892,19 +892,10 @@ export default {
   mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
   },
-  computed: {
-    cerqualExplanation: function () {
-      if (this.selectedOptions.methodological_limitations.option &&
-        this.selectedOptions.coherence.option &&
-        this.selectedOptions.adequacy.option &&
-        this.selectedOptions.relevance.option) {
-        return this.displaySelectedOption(this.selectedOptions.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.selectedOptions.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.selectedOptions.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.selectedOptions.relevance.option) + ' regarding relevance'
-      } else {
-        return ''
-      }
-    }
-  },
   methods: {
+    commonGenerateCerqualExplanation: function () {
+      this.selectedOptions.cerqual.explanation = generateCerqualExplanation(this.selectedOptions)
+    },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
     },
@@ -956,22 +947,22 @@ export default {
     checkValidationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
-          if (prop.methodological_limitations.explanation === '') {
+          if (parseInt(prop.methodological_limitations.option) > 0 && prop.methodological_limitations.explanation === '') {
             return true
           }
           return false
         case 'coherence':
-          if (prop.coherence.explanation === '') {
+          if (parseInt(prop.coherence.option) > 0 && prop.coherence.explanation === '') {
             return true
           }
           return false
         case 'adequacy':
-          if (prop.adequacy.explanation === '') {
+          if (parseInt(prop.adequacy.option) > 0 && prop.adequacy.explanation === '') {
             return true
           }
           return false
         case 'relevance':
-          if (prop.relevance.explanation === '') {
+          if (parseInt(prop.relevance.option) > 0 && prop.relevance.explanation === '') {
             return true
           }
           return false
@@ -981,9 +972,14 @@ export default {
     },
     continueSavingDataModal: function () {
       const selectedOptions = this.selectedOptions
-      // this.evidence_profile_table_settings.isBusy = true
       this.$emit('busyEvidenceProfileTable', true)
       delete this.selectedOptions.type
+      // if (selectedOptions.cerqual.option !== null || selectedOptions.cerqual.option !== '') {
+      //   console.log('a', selectedOptions)
+      //   selectedOptions.cerqual.explanation = ''
+      //   selectedOptions.cerqual.explanation = generateCerqualExplanation(selectedOptions)
+      //   console.log('b', selectedOptions)
+      // }
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
@@ -1053,7 +1049,9 @@ export default {
       }
       switch (type) {
         case 'methodological_limitations':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding methodological limitations because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding methodological limitations because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding methodological limitations because'
@@ -1063,7 +1061,9 @@ export default {
             return ''
           }
         case 'coherence':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding coherence because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding coherence because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding coherence because'
@@ -1073,7 +1073,9 @@ export default {
             return ''
           }
         case 'adequacy':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding adequacy because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding adequacy because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding adequacy because'
@@ -1083,7 +1085,9 @@ export default {
             return ''
           }
         case 'relevance':
-          if (opt === '1') {
+          if (opt === '0') {
+            return 'No/very minor concerns regarding relevance because'
+          } else if (opt === '1') {
             return 'Minor concerns regarding relevance because'
           } else if (opt === '2') {
             return 'Moderate concerns regarding relevance because'
