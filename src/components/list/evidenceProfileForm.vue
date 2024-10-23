@@ -341,7 +341,7 @@
               for practical guidance on making an overall assessment of confidence
               for a review finding.
             </p>
-            <b-form-radio-group v-model="selectedOptions.cerqual.option" name="cerqual" stacked>
+            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="generateCerqualExplanation()" name="cerqual" stacked>
               <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
@@ -905,6 +905,18 @@ export default {
     }
   },
   methods: {
+    generateCerqualExplanation: function () {
+      if (this.selectedOptions.cerqual.explanation === '') {
+        if (this.selectedOptions.methodological_limitations.option &&
+        this.selectedOptions.coherence.option &&
+        this.selectedOptions.adequacy.option &&
+        this.selectedOptions.relevance.option) {
+          this.selectedOptions.cerqual.explanation = this.displaySelectedOption(this.selectedOptions.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.selectedOptions.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.selectedOptions.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.selectedOptions.relevance.option) + ' regarding relevance'
+        } else {
+          this.selectedOptions.cerqual.explanation = ''
+        }
+      }
+    },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
     },
