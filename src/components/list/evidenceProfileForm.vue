@@ -341,7 +341,7 @@
               for practical guidance on making an overall assessment of confidence
               for a review finding.
             </p>
-            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="generateCerqualExplanation()" name="cerqual" stacked>
+            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked>
               <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
@@ -832,7 +832,7 @@
 
 <script>
 import axios from 'axios'
-import { displayExplanation } from '../utils/commons'
+import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 export default {
   name: 'evidenceProfileForm',
   components: {
@@ -892,30 +892,9 @@ export default {
   mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
   },
-  computed: {
-    cerqualExplanation: function () {
-      if (this.selectedOptions.methodological_limitations.option &&
-        this.selectedOptions.coherence.option &&
-        this.selectedOptions.adequacy.option &&
-        this.selectedOptions.relevance.option) {
-        return this.displaySelectedOption(this.selectedOptions.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.selectedOptions.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.selectedOptions.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.selectedOptions.relevance.option) + ' regarding relevance'
-      } else {
-        return ''
-      }
-    }
-  },
   methods: {
-    generateCerqualExplanation: function () {
-      if (this.selectedOptions.cerqual.explanation === '') {
-        if (this.selectedOptions.methodological_limitations.option &&
-        this.selectedOptions.coherence.option &&
-        this.selectedOptions.adequacy.option &&
-        this.selectedOptions.relevance.option) {
-          this.selectedOptions.cerqual.explanation = this.displaySelectedOption(this.selectedOptions.methodological_limitations.option) + ' regarding methodological limitations, ' + this.displaySelectedOption(this.selectedOptions.coherence.option) + ' regarding coherence, ' + this.displaySelectedOption(this.selectedOptions.adequacy.option) + ' regarding adequacy, and ' + this.displaySelectedOption(this.selectedOptions.relevance.option) + ' regarding relevance'
-        } else {
-          this.selectedOptions.cerqual.explanation = ''
-        }
-      }
+    commonGenerateCerqualExplanation: function () {
+      this.selectedOptions.cerqual.explanation = generateCerqualExplanation(this.selectedOptions)
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -993,9 +972,14 @@ export default {
     },
     continueSavingDataModal: function () {
       const selectedOptions = this.selectedOptions
-      // this.evidence_profile_table_settings.isBusy = true
       this.$emit('busyEvidenceProfileTable', true)
       delete this.selectedOptions.type
+      // if (selectedOptions.cerqual.option !== null || selectedOptions.cerqual.option !== '') {
+      //   console.log('a', selectedOptions)
+      //   selectedOptions.cerqual.explanation = ''
+      //   selectedOptions.cerqual.explanation = generateCerqualExplanation(selectedOptions)
+      //   console.log('b', selectedOptions)
+      // }
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,

@@ -2,9 +2,6 @@ export const displayExplanation = (type, option, explanation) => {
   if (type === '') {
     return ''
   }
-  // if (option === '0') {
-  //   return explanation
-  // }
   if (explanation === '') {
     return ''
   }
@@ -44,5 +41,37 @@ export const displayExplanation = (type, option, explanation) => {
       return `${options[option]} ${explanation}`
     default:
       return ''
+  }
+}
+
+function displaySelectedOption (option) {
+  const selectOptions = [
+    { value: 0, text: 'No/Very minor concerns' },
+    { value: 1, text: 'Minor concerns' },
+    { value: 2, text: 'Moderate concerns' },
+    { value: 3, text: 'Serious concerns' },
+    { value: null, text: 'Undefined' }
+  ]
+  if (option === null) {
+    return ''
+  } else if (option >= 0) {
+    return selectOptions[option].text
+  } else {
+    return ''
+  }
+}
+
+export const generateCerqualExplanation = (data) => {
+  if (data.cerqual.explanation === '') {
+    if (data.methodological_limitations.option &&
+    data.coherence.option &&
+    data.adequacy.option &&
+    data.relevance.option) {
+      return displaySelectedOption(data.methodological_limitations.option) + ' regarding methodological limitations, ' + displaySelectedOption(data.coherence.option) + ' regarding coherence, ' + displaySelectedOption(data.adequacy.option) + ' regarding adequacy, and ' + displaySelectedOption(data.relevance.option) + ' regarding relevance'
+    } else {
+      return ''
+    }
+  } else {
+    return data.cerqual.explanation
   }
 }
