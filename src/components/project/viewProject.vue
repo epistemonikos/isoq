@@ -1185,7 +1185,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['filter_cerqual', 'category_name', 'explanation']
+        filterOn: ['filter_cerqual', 'category_name', 'explanation', 'status']
       },
       summarized_review: '',
       select_options: [
