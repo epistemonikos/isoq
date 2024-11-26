@@ -1,6 +1,5 @@
 <template>
   <div id="app" class="h-100">
-    <banner v-if="!excluded.includes($route.name)"></banner>
     <main-menu/>
     <router-view class="h-100"/>
   </div>
@@ -12,8 +11,7 @@ const Menu = () => import(/* webpackChunkName: "menu" */ '@/components/Menu')
 export default {
   name: 'App',
   components: {
-    'main-menu': Menu,
-    'banner': () => import('@/components/banner/event.vue')
+    'main-menu': Menu
   },
   data () {
     return {
