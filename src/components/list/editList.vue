@@ -15,7 +15,7 @@
       :name="list.name"
       :mode="mode"
       :list="list"></edit-header-list>
-    <b-container>
+    <b-container fluid>
       <edit-list-actions-buttons
         :mode="mode"
         :permission="checkPermissions(list.organization)"

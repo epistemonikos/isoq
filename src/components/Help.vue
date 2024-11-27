@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>Help</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="py-5">
+    <b-container fluid class="py-5">
       <h3>You need help?</h3>
       <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues, please report your issues using <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank">this form</a>.
         <br>If you cannot access the form email us at isoq [at] epistemonikos.org</p>

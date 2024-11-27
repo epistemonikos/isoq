@@ -1,11 +1,10 @@
 <template>
   <div>
     <h4>STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)</h4>
-    <b-container>
+    <b-container fluid>
       <b-row>
         <b-col
-          cols="12"
-          md="6"
+          cols="6"
           class="pl-0">
           <criteria
             v-if="ui.project.show_criteria"
@@ -18,8 +17,7 @@
           </criteria>
         </b-col>
         <b-col
-          cols="12"
-          md="6"
+          cols="6"
           class="pr-0">
           <criteria
             v-if="ui.project.show_criteria"
