@@ -1,14 +1,14 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>Browse public iSoQ tables</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container>
+    <b-container fluid>
       <p>Review authors using the iSoQ tool can choose to publish some or all of their interactive Summary of Qualitative Findings table to the database below. The GRADE-CERQual project group does not currate this database, therefore we cannot attest to whether or not the GRADE-CERQual approach was applied appropriately and in line with our <a href="https://implementationscience.biomedcentral.com/articles/supplements/volume-13-supplement-1" target="_blank">guidance</a>.</p>
     </b-container>
-    <div class="container">
+    <div class="container-fluid">
       <b-row
         class="my-4">
         <b-col
