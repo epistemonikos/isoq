@@ -1,6 +1,6 @@
 <template>
   <div>
-  <b-modal size="xl" id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
+  <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
     @ok="saveStageOneAndTwo(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
     cancel-variant="outline-secondary">
     <template v-slot:modal-title>
@@ -15,7 +15,7 @@
       <videoHelp v-if="selectedOptions.type === 'cerqual'" :txt="`Evidence profile - ${selectedOptions.title}`"
         tag="none" urlId="450835499"></videoHelp>
     </template>
-    <b-container>
+    <b-container fluid>
       <b-row>
         <b-col id="left-modal-content" cols="12" md="4">
           <div class="float-right mb-5">
