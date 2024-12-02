@@ -1,22 +1,34 @@
 <template>
-  <div>
-    <b-container fluid class="float-right">
-      <b-row align-h="end">
-        <b-col cols="1" class="mt-2">
-          <ul class="list-inline text-center accessibility">
-            <!-- <li class="list-inline-item">Font size</li> -->
-            <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">+A</li>
-            <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">-A</li>
-          </ul>
-        </b-col>
-      </b-row>
-    </b-container>
+  <div :class="{'navbar-nav ml-auto': isMenu}">
+    <template v-if="isMenu">
+      <b-nav-item @click="increaseFontSize">+A</b-nav-item>
+      <b-nav-item @click="decreaseFontSize">-A</b-nav-item>
+    </template>
+    <template v-else>
+      <b-container fluid class="float-right">
+        <b-row align-h="end">
+          <b-col cols="1" class="mt-2">
+            <ul class="list-inline text-center accessibility">
+              <!-- <li class="list-inline-item">Font size</li> -->
+              <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">+A</li>
+              <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">-A</li>
+            </ul>
+          </b-col>
+        </b-row>
+      </b-container>
+    </template>
   </div>
 </template>
 
 <script>
 export default {
   name: 'Accessibility',
+  props: {
+    isMenu: {
+      type: Boolean,
+      default: false
+    }
+  },
   methods: {
     increaseFontSize () {
       const currentSize = window.getComputedStyle(document.body, null).getPropertyValue('font-size')
