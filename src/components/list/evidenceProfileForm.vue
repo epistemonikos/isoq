@@ -437,7 +437,7 @@
                       org_id: this.list.organization,
                       id: this.list.project_id
                     },
-                    query: { tab: 'My-Data' }
+                    query: { tab: 'My-Data', step: 4 }
                   }">My Data</b-link>.
                 </p>
                 <b-table class="table-small-font" responsive head-variant="light" outlined
@@ -638,7 +638,7 @@
                       org_id: this.list.organization,
                       id: this.list.project_id
                     },
-                    query: { tab: 'My-Data' }
+                    query: { tab: 'My-Data', step: 3 }
                   }">My Data</b-link>.
                 </p>
                 <b-table class="table-small-font" responsive head-variant="light" outlined
@@ -694,7 +694,7 @@
                       org_id: this.list.organization,
                       id: this.list.project_id
                     },
-                    query: { tab: 'My-Data' }
+                    query: { tab: 'My-Data', step: 2 }
                   }">My Data</b-link>.
                 </p>
                 <p>{{ project.inclusion }}</p>
@@ -708,7 +708,7 @@
                       org_id: this.list.organization,
                       id: this.list.project_id
                     },
-                    query: { tab: 'My-Data' }
+                    query: { tab: 'My-Data', step: 2 }
                   }">My Data</b-link>.
                 </p>
                 <p>{{ project.exclusion }}</p>
@@ -729,7 +729,7 @@
                       org_id: this.list.organization,
                       id: this.list.project_id
                     },
-                    query: { tab: 'My-Data' }
+                    query: { tab: 'My-Data', step: 3 }
                   }">My Data</b-link>.
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 </p>
