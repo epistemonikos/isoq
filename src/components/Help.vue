@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>Help</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="py-5">
+    <b-container fluid class="py-5">
       <h3>You need help?</h3>
       <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues, please report your issues using <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank">this form</a>.
         <br>If you cannot access the form email us at isoq [at] epistemonikos.org</p>
@@ -42,6 +42,13 @@
         <li><a href="https://vimeo.com/450835499" target="_blank">Overview of the Overall Assessment of Confidence [2:33 min]</a></li>
         <li><a href="https://vimeo.com/462180668" target="_blank">Leaving notes about GRADE-CERQual assessments [1:33 min]</a></li>
       </ol>
+
+      <h3>iSoQ Training Webinars</h3>
+      <ul>
+        <li><a href="https://vimeo.com/737300971" target="_blank">Watch a presentation on iSoQ</a></li>
+        <li><a href="https://vimeo.com/738892529" target="_blank">Watch a demo of the iSoQ tool</a></li>
+        <li><a href="https://training.cochrane.org/resource/how-the-isoq-tool-can-help-you-apply-grade-cerqual-in-your-qes" target="_blank">Access the Cochrane Learning Live training on iSoQ</a></li>
+      </ul>
 
       <h3>GRADE-CERQual Webinars</h3>
       <ul>

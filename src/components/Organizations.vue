@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>Workspaces</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="mt-5">
+    <b-container fluid class="mt-5">
       <b-row>
         <b-col
           sm="6"

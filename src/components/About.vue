@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>{{ $t("About") }}</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="pt-5 pb-5">
+    <b-container fluid class="pt-5 pb-5">
       <h3>What is iSoQ?</h3>
       <p>The GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) is an online tool designed to:</p>
       <ul>

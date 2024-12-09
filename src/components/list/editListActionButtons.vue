@@ -47,6 +47,7 @@
 <script>
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
+import { displayExplanation } from '../utils/commons'
 
 export default {
   name: 'editListActionsButtons',
@@ -384,7 +385,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].methodological_limitations.explanation.length) ? this.evidenceProfile[0].methodological_limitations.explanation : '',
+                            text: displayExplanation('methodological-limitations', this.evidenceProfile[0].methodological_limitations.option, this.evidenceProfile[0].methodological_limitations.explanation),
                             size: 22
                           })
                         ]
@@ -406,7 +407,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].coherence.explanation.length) ? this.evidenceProfile[0].coherence.explanation : '',
+                            text: displayExplanation('coherence', this.evidenceProfile[0].coherence.option, this.evidenceProfile[0].coherence.explanation), // (this.evidenceProfile[0].coherence.explanation.length) ? this.evidenceProfile[0].coherence.explanation : '',
                             size: 22
                           })
                         ]
@@ -428,7 +429,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].adequacy.explanation.length) ? this.evidenceProfile[0].adequacy.explanation : '',
+                            text: displayExplanation('adequacy', this.evidenceProfile[0].adequacy.option, this.evidenceProfile[0].adequacy.explanation), // (this.evidenceProfile[0].adequacy.explanation.length) ? this.evidenceProfile[0].adequacy.explanation : '',
                             size: 22
                           })
                         ]
@@ -450,7 +451,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: (this.evidenceProfile[0].relevance.explanation.length) ? this.evidenceProfile[0].relevance.explanation : '',
+                            text: displayExplanation('relevance', this.evidenceProfile[0].relevance.option, this.evidenceProfile[0].relevance.explanation), // (this.evidenceProfile[0].relevance.explanation.length) ? this.evidenceProfile[0].relevance.explanation : '',
                             size: 22
                           })
                         ]
