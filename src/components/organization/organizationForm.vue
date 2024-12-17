@@ -62,7 +62,7 @@
     </b-form-group>
     <b-form-group
       v-if="formData.published_status"
-      :label="$t('URL or DOI')"
+      :label="$t('URL or DOI (the DOI must begin with https:// as seen below)')"
       label-for="select-project-list-url-doi">
       <b-input
         :disabled="!canWrite"
