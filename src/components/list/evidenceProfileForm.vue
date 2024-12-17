@@ -17,7 +17,7 @@
     </template>
     <b-container fluid>
       <b-row>
-        <b-col id="left-modal-content" cols="12" sm="4">
+        <b-col id="left-modal-content" cols="12" sm="3">
           <div class="float-right mb-5">
             <span id="span-txt" class="bg-secondary text-white font-weight-bold ml-5 py-1 px-2"
               @click="btnShowHideColumn(showPanel, selectedOptions.type)">&lsaquo;</span>
@@ -417,7 +417,7 @@
             </b-form-group>
           </div>
         </b-col>
-        <b-col id="right-modal-content" cols="12" sm="8">
+        <b-col id="right-modal-content" cols="12" sm="9">
           <div v-if="selectedOptions.type === 'methodological-limitations'">
             <b-tabs content-class="mt-3">
               <b-tab active>
