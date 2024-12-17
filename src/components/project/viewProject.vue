@@ -372,7 +372,7 @@
           </b-col>
           <b-col cols="12" class="toDoc">
             <template
-              v-if="mode==='edit' && checkPermissions()">
+              v-if="mode==='edit'">
               <b-table
                 :selectable="(mode==='view')?true:false"
                 select-mode="multi"
@@ -451,7 +451,7 @@
                 </template>
                 <template v-slot:cell(name)="data">
                   <a :id="`a-${data.item.id}`"></a>
-                  <span v-if="mode === 'edit'">
+                  <template v-if="mode === 'edit' && checkPermissions()">
                     <b-row
                       class="mb-3">
                       <b-col
@@ -483,34 +483,37 @@
                     </b-row>
                     <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
                     <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                  </span>
-                  <span v-else>
-                    {{ data.item.name }}
-                  </span>
-                </template>
-                <template v-slot:cell(category_name)="data">
-                  <template v-if="data.item.category !== null">
-                    <b-button
-                      block
-                      variant="outline-info"
-                      @click="editModalFindingName(data)">Edit group</b-button>
-                    {{ data.item.category_name }}
-                    <span
-                      v-if="data.item.category_extra_info !== ''"
-                      v-b-tooltip.hover
-                      :title="data.item.category_extra_info">*</span>
                   </template>
                   <template v-else>
-                    <b-button
-                      v-if="mode==='edit' && data.item.references.length"
-                      variant="info"
-                      block
-                      @click="editModalFindingName(data)">Assign group</b-button>
+                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
+                  </template>
+                </template>
+                <template v-slot:cell(category_name)="data">
+                  <template v-if="checkPermissions()">
+                    <template v-if="data.item.category !== null">
+                      <b-button
+                        block
+                        variant="outline-info"
+                        @click="editModalFindingName(data)">Edit group</b-button>
+                      {{ data.item.category_name }}
+                      <span
+                        v-if="data.item.category_extra_info !== ''"
+                        v-b-tooltip.hover
+                        :title="data.item.category_extra_info">*</span>
+                    </template>
+                    <template v-else>
+                      <b-button
+                        v-if="mode==='edit' && data.item.references.length"
+                        variant="info"
+                        block
+                        @click="editModalFindingName(data)">Assign group</b-button>
+                    </template>
                   </template>
                 </template>
                 <template v-slot:cell(cerqual_option)="data">
                   <b-button
-                    v-if="mode==='edit' && data.item.references.length"
+                    v-if="mode==='edit' && data.item.references.length && checkPermissions()"
                     class="d-print-none mb-3"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -527,7 +530,7 @@
                 </template>
                 <template v-slot:cell(cerqual_explanation)="data">
                   <b-button
-                    v-if="mode==='edit' && data.item.references.length"
+                    v-if="mode==='edit' && data.item.references.length && checkPermissions()"
                     class="d-print-none mb-3"
                     :disabled="(data.item.references.length) ? false : true"
                     block
@@ -548,6 +551,7 @@
                   </template>
                   <template v-else>
                     <b-button
+                      v-if="checkPermissions()"
                       block
                       class="mb-3 d-print-none"
                       :variant="(data.item.references.length) ? 'outline-info' : 'info'"
