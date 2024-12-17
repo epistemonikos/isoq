@@ -224,7 +224,7 @@
               </b-card>
             </template>
           </b-table>
-          <div class="mt-2">
+          <div v-if="checkPermissions" class="mt-2">
             <b-button
             @click="confirmRemoveAllReferences($event)"
               >Delete all references</b-button>
