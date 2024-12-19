@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>What's New</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="py-5">
+    <b-container fluid class="py-5">
       <!-- desde aqui -->
       <h3>What's new in iSoQ?</h3>
       <p>Here you will find the latest updates and improvements to iSoQ Version 1.0.0.</p>

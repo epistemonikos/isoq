@@ -326,7 +326,6 @@ export default {
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
-          console.log(response.data)
           this.msgUpdateProject = response.data.message // 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.'
           if (this.isModal) {
             document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })

@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="pt-5">
+      <div class="pt-5">
         <b-row align-h="end">
           <b-col
             class="text-right">
@@ -30,9 +30,9 @@
             :active="(tabOpened === 3) ? true : false"
             @click="clickTab(3)">Guidance on applying GRADE-CERQual</b-nav-item>
         </b-nav>
-      </b-container>
+      </div>
     </b-container>
-    <b-container class="mb-5">
+    <b-container fluid class="mb-5">
       <div :class="{'block mt-3': (tabOpened===0)?true:false, 'd-none': (tabOpened===0)?!true:!false}">
         <propertiesProject
           :project="project"
@@ -50,7 +50,7 @@
               To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
             </p>
           </b-col>
-          <b-card no-body>
+          <b-card no-body class="col-12">
             <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
               <b-tab title="STEP 1: References">
                 <UploadReferences
@@ -74,20 +74,22 @@
                 </div>
               </b-tab>
               <b-tab title="STEP 2: Inclusion & Exclusion criteria" :disabled="references.length?false:true">
-                <InclusionExclusioCriteria
-                  :checkPermissions="checkPermissions()"
-                  :project="project"
-                  :ui="ui"
-                  @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
-                <div class="mt-3">
-                  <b-row>
-                    <b-col cols="auto" class="mr-auto">
-                      <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
-                    </b-col>
-                    <b-col cols="auto">
-                      <a class="btn btn-success text-white" @click="stepStage++">Step 3</a>
-                    </b-col>
-                  </b-row>
+                <div>
+                  <InclusionExclusioCriteria
+                    :checkPermissions="checkPermissions()"
+                    :project="project"
+                    :ui="ui"
+                    @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
+                  <div class="mt-3">
+                    <b-row>
+                      <b-col cols="auto" class="mr-auto">
+                        <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
+                      </b-col>
+                      <b-col cols="auto">
+                        <a class="btn btn-success text-white" @click="stepStage++">Step 3</a>
+                      </b-col>
+                    </b-row>
+                  </div>
                 </div>
               </b-tab>
               <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
@@ -727,7 +729,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['isoqf_id', 'name', 'filter_cerqual', 'cerqual_explanation', 'ref_list', 'category_name', 'status', 'explanation']
+        filterOn: ['filter_cerqual', 'category_name', 'explanation', 'status']
       },
       summarized_review: '',
       select_options: [

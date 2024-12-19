@@ -1,11 +1,11 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="py-5">
+      <div class="py-5">
         <h2>My Workspace</h2>
-      </b-container>
+      </div>
     </b-container>
-    <b-container>
+    <b-container fluid>
       <div class="my-4">
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
