@@ -827,6 +827,31 @@
         </b-row>
       </b-container>
     </b-modal>
+
+    <b-modal
+      id="modal-warning-changed-option"
+      ref="modal-warning-changed-option"
+      title="Warning"
+      :hide-footer="true">
+      <p>
+        By changing this assessment, you will need to redo your overall GRADE-CERQual assessment of confidence. Your confidence level selection will be cleared, and your explanation erased. Your notes will be maintained.
+        <br>Do you wish to continue?
+      </p>
+      <b-container>
+        <b-row>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, true)">Yes</b-button>
+          </b-col>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, false)">No</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
   </div>
 </template>
 
@@ -887,6 +912,11 @@ export default {
   watch: {
     modalData: function () {
       this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
+    },
+    'selectedOptions.methodological_limitations.option': function (val) {
+      if (this.modalData.methodological_limitations.option !== val) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
     }
   },
   mounted () {
@@ -970,16 +1000,24 @@ export default {
           return false
       }
     },
+    updateOptions: function (option, status) {
+      if (option === 'methodological-limitations') {
+        option = 'methodological_limitations'
+      }
+      if (status) {
+        this.selectedOptions[option].explanation = ''
+        this.selectedOptions.cerqual.option = null
+        this.selectedOptions.cerqual.explanation = ''
+        this.$refs['modal-warning-changed-option'].hide()
+      } else {
+        this.selectedOptions[option].option = this.modalData[option].option
+        this.$refs['modal-warning-changed-option'].hide()
+      }
+    },
     continueSavingDataModal: function () {
       const selectedOptions = this.selectedOptions
       this.$emit('busyEvidenceProfileTable', true)
       delete this.selectedOptions.type
-      // if (selectedOptions.cerqual.option !== null || selectedOptions.cerqual.option !== '') {
-      //   console.log('a', selectedOptions)
-      //   selectedOptions.cerqual.explanation = ''
-      //   selectedOptions.cerqual.explanation = generateCerqualExplanation(selectedOptions)
-      //   console.log('b', selectedOptions)
-      // }
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
@@ -1019,9 +1057,7 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
-          // this.list.cerqual = response.data['$set'].cerqual
           this.$emit('update-list-data')
-          // this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1147,9 +1183,7 @@ export default {
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
         .then(() => {
-          // this.getExtractedData()
           this.$emit('getExtractedData')
-          // this.showEditExtractedDataInPlace.display = false
           const data = {
             display: false,
             item: {}
