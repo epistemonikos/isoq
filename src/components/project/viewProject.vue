@@ -1292,7 +1292,6 @@ export default {
         .then(async (response) => {
           this.references = await this.processGetReferencesRaw(response.data)
           this.refs = await this.processGetReferencesWithNames(response.data)
-
           if (changeTab) {
             if (this.references.length) {
               this.$nextTick(() => {
@@ -1308,7 +1307,7 @@ export default {
               })
             }
           }
-          if (this.references.length) {
+          if (this.references.length && changeTab) {
             this.stepStage = 1
           }
           this.loadReferences = false
