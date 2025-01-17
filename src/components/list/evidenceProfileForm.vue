@@ -914,7 +914,22 @@ export default {
       this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     },
     'selectedOptions.methodological_limitations.option': function (val) {
-      if (this.modalData.methodological_limitations.option !== val) {
+      if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.coherence.option': function (val) {
+      if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.adequacy.option': function (val) {
+      if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.relevance.option': function (val) {
+      if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
         this.$refs['modal-warning-changed-option'].show()
       }
     }
