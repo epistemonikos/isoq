@@ -66,10 +66,11 @@
           </template>
           <template
             v-slot:cell(actions)="data"
-            v-if="dataTable.fields.length > 2">
+            v-if="dataTable.fields.length > 2 && checkPermissions">
             <b-row>
               <b-col>
                 <b-button
+                  v-if="checkPermissions"
                   block
                   variant="outline-success"
                   @click="addContentDataTable((dataTableSettings.currentPage > 1) ? (dataTableSettings.perPage * (dataTableSettings.currentPage - 1)) + data.index : data.index)">
@@ -79,6 +80,7 @@
               </b-col>
               <b-col class="pt-2">
                 <b-button
+                  v-if="checkPermissions"
                   block
                   variant="outline-danger"
                   @click="openModalRemoveContentDataTable(data.item.ref_id)">
@@ -508,7 +510,10 @@ export default {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
-              this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              if (this.checkPermissions) {
+                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
+              }
 
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))

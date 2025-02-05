@@ -1,6 +1,7 @@
 <template>
   <div>
   <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
+    :ok-disabled="!permissions"
     @ok="saveStageOneAndTwo(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
     cancel-variant="outline-secondary">
     <template v-slot:modal-title>
@@ -43,7 +44,7 @@
               }">here</b-link>)
             </p>
             <b-form-radio-group v-model="selectedOptions.methodological_limitations.option"
-              name="methodological-limitations" stacked>
+              name="methodological-limitations" stacked :disabled="!permissions">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -65,7 +66,7 @@
                   title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.methodological_limitations.option = null; selectedOptions.methodological_limitations.explanation = ''; selectedOptions.methodological_limitations.example = '';"
                 v-if="selectedOptions.methodological_limitations.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
@@ -91,7 +92,7 @@
               </template>
               <b-form-textarea id="input-ml-explanation"
                 v-model="selectedOptions.methodological_limitations.explanation" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -99,7 +100,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.methodological_limitations.notes" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
           </div>
 
@@ -130,7 +131,7 @@
               studies, but is about the fit between the extracted data and the
               review finding as you have written it.
             </p>
-            <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked>
+            <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked :disabled="!permissions">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -152,7 +153,7 @@
                   title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.coherence.option = null; selectedOptions.coherence.explanation = '';" v-if="selectedOptions.coherence.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -174,7 +175,7 @@
                   target="_blank">here</a>
                 to see an example.
               </template>
-              <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation" :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100"></b-form-textarea>
+              <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation" :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -182,7 +183,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.coherence.notes" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <!-- adequacy -->
           </div>
@@ -202,7 +203,7 @@
                 query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
               }">here</b-link>)
             </p>
-            <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked>
+            <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked :disabled="!permissions">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -224,7 +225,7 @@
                   title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.adequacy.option = null; selectedOptions.adequacy.explanation = ''; " v-if="selectedOptions.adequacy.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -243,7 +244,7 @@
                   target="_blank">here</a>
                 to see an example.
               </template>
-              <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation" :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100"></b-form-textarea>
+              <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation" :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -251,7 +252,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.adequacy.notes" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <!-- relevance -->
           </div>
@@ -275,7 +276,7 @@
                 query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
               }">here</b-link>)
             </p>
-            <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked>
+            <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked :disabled="!permissions">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -297,7 +298,7 @@
                   title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.relevance.option = null; selectedOptions.relevance.explanation = '';" v-if="selectedOptions.relevance.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -310,7 +311,7 @@
                   {{ showMessage(selectedOptions.relevance.option, 'relevance') }}
                 </p>
               </template>
-              <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation" :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100"></b-form-textarea>
+              <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation" :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes">
               <template slot="label">
@@ -324,7 +325,7 @@
                 to see an example.
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <!-- CERQual assessment -->
           </div>
@@ -341,7 +342,7 @@
               for practical guidance on making an overall assessment of confidence
               for a review finding.
             </p>
-            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked>
+            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked :disabled="!permissions">
               <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
@@ -363,7 +364,7 @@
                   title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.cerqual.option = null; selectedOptions.cerqual.explanation = '';" v-if="selectedOptions.cerqual.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -405,7 +406,7 @@
                 </div>
               </template>
               <b-form-textarea id="input-cerqual" v-model="selectedOptions.cerqual.explanation"
-                placeholder="Enter an explanation" rows="6" max-rows="100"></b-form-textarea>
+                placeholder="Enter an explanation" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -413,7 +414,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.cerqual.notes" rows="6"
-                max-rows="100"></b-form-textarea>
+                max-rows="100" :disabled="!permissions"></b-form-textarea>
             </b-form-group>
           </div>
         </b-col>
@@ -448,7 +449,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
                 </edit-review-finding>
               </b-tab>
               <b-tab>
@@ -503,7 +504,7 @@
                       </b-button>
                     </template>
                     <template v-else>
-                      <b-button variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                      <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
                         <font-awesome-icon icon="edit" :title="$t('Edit')" />
                       </b-button>
                     </template>
@@ -514,7 +515,7 @@
           </div>
 
           <div v-if="selectedOptions.type === 'coherence'">
-            <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings">
+            <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
             </edit-review-finding>
             <h4>Extracted Data</h4>
             <p v-if="ui.adequacy.extracted_data.display_warning" class="text-danger">
@@ -555,7 +556,7 @@
                   </b-button>
                 </template>
                 <template v-else>
-                  <b-button variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                  <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
                     <font-awesome-icon icon="edit" :title="$t('Edit')" />
                   </b-button>
                 </template>
@@ -614,7 +615,7 @@
                       </b-button>
                     </template>
                     <template v-else>
-                      <b-button variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                      <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
                         <font-awesome-icon icon="edit" :title="$t('Edit')" />
                       </b-button>
                     </template>
@@ -649,7 +650,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -741,7 +742,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -792,7 +793,7 @@
                 </p>
               </b-tab>
               <b-tab title="Review finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -827,6 +828,31 @@
         </b-row>
       </b-container>
     </b-modal>
+
+    <b-modal
+      id="modal-warning-changed-option"
+      ref="modal-warning-changed-option"
+      title="Warning"
+      :hide-footer="true">
+      <p>
+        By changing this assessment, you will need to redo your overall GRADE-CERQual assessment of confidence. Your confidence level selection will be cleared, and your explanation erased. Your notes will be maintained.
+        <br>Do you wish to continue?
+      </p>
+      <b-container>
+        <b-row>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, true)">Yes</b-button>
+          </b-col>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, false)">No</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
   </div>
 </template>
 
@@ -852,7 +878,8 @@ export default {
     charsOfStudies: Object,
     project: Object,
     evidenceProfile: Array,
-    selectOptions: Array
+    selectOptions: Array,
+    permissions: Boolean
   },
   data () {
     return {
@@ -887,6 +914,26 @@ export default {
   watch: {
     modalData: function () {
       this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
+    },
+    'selectedOptions.methodological_limitations.option': function (val) {
+      if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.coherence.option': function (val) {
+      if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.adequacy.option': function (val) {
+      if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
+    },
+    'selectedOptions.relevance.option': function (val) {
+      if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
+        this.$refs['modal-warning-changed-option'].show()
+      }
     }
   },
   mounted () {
@@ -970,16 +1017,24 @@ export default {
           return false
       }
     },
+    updateOptions: function (option, status) {
+      if (option === 'methodological-limitations') {
+        option = 'methodological_limitations'
+      }
+      if (status) {
+        this.selectedOptions[option].explanation = ''
+        this.selectedOptions.cerqual.option = null
+        this.selectedOptions.cerqual.explanation = ''
+        this.$refs['modal-warning-changed-option'].hide()
+      } else {
+        this.selectedOptions[option].option = this.modalData[option].option
+        this.$refs['modal-warning-changed-option'].hide()
+      }
+    },
     continueSavingDataModal: function () {
       const selectedOptions = this.selectedOptions
       this.$emit('busyEvidenceProfileTable', true)
       delete this.selectedOptions.type
-      // if (selectedOptions.cerqual.option !== null || selectedOptions.cerqual.option !== '') {
-      //   console.log('a', selectedOptions)
-      //   selectedOptions.cerqual.explanation = ''
-      //   selectedOptions.cerqual.explanation = generateCerqualExplanation(selectedOptions)
-      //   console.log('b', selectedOptions)
-      // }
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
@@ -1019,9 +1074,7 @@ export default {
       }
       axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
-          // this.list.cerqual = response.data['$set'].cerqual
           this.$emit('update-list-data')
-          // this.buffer_modal_stage_one = this.initial_modal_stage_one
         })
         .catch((error) => {
           this.printErrors(error)
@@ -1147,9 +1200,7 @@ export default {
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
         .then(() => {
-          // this.getExtractedData()
           this.$emit('getExtractedData')
-          // this.showEditExtractedDataInPlace.display = false
           const data = {
             display: false,
             item: {}
