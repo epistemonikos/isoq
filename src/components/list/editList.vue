@@ -506,7 +506,9 @@ export default {
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          const elementScroll = document.getElementsByName('evidence-profile')[0]
+
+          window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
         })
         .catch((error) => {
           this.printErrors(error)
