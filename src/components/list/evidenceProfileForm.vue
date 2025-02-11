@@ -1022,7 +1022,6 @@ export default {
         option = 'methodological_limitations'
       }
       if (status) {
-        this.selectedOptions[option].explanation = ''
         this.selectedOptions.cerqual.option = null
         this.selectedOptions.cerqual.explanation = ''
         this.$refs['modal-warning-changed-option'].hide()
