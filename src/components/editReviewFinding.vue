@@ -4,6 +4,7 @@
       <h4>Review Finding</h4>
       <p>{{ list.name }}</p>
       <b-button
+        v-if="permissions"
         variant="outline-primary"
         @click="ui.editMode=true">Edit</b-button>
     </template>
@@ -16,14 +17,16 @@
             max-rows="30"
             v-model="reviewContent"></b-form-textarea>
         </b-form>
-        <b-button
-          class="mt-2"
-          variant="outline-primary"
-          @click="updateReview">Update</b-button>
-        <b-button
-          class="mt-2"
-          variant="outline-secondary"
-          @click="ui.editMode=false">Cancel</b-button>
+        <template v-if="permissions">
+          <b-button
+            class="mt-2"
+            variant="outline-primary"
+            @click="updateReview">Update</b-button>
+          <b-button
+            class="mt-2"
+            variant="outline-secondary"
+            @click="ui.editMode=false">Cancel</b-button>
+        </template>
       </div>
     </template>
   </div>
@@ -36,7 +39,11 @@ export default {
   name: 'editReviewFinding',
   props: {
     list: Object,
-    finding: Object
+    finding: Object,
+    permissions: {
+      type: Boolean,
+      default: () => true
+    }
   },
   data: function () {
     return {

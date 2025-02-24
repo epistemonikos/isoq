@@ -72,13 +72,14 @@
       </template>
       <template v-slot:cell(methodological-limit)="data">
         <div v-if="data.item.methodological_limitations.option !== null">
-          <template v-if="permission">
+          <template>
             <b-button
               block
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'methodological-limitations')">
-              Edit
+              <template v-if="permission">Edit</template>
+              <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
                 icon="comments"></font-awesome-icon>
@@ -127,13 +128,14 @@
       </template>
       <template v-slot:cell(coherence)="data">
         <div v-if="data.item.coherence.option !== null">
-          <template v-if="permission">
+          <template>
             <b-button
               block
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'coherence')">
-              Edit
+              <template v-if="permission">Edit</template>
+              <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.coherence.notes"
                 icon="comments"></font-awesome-icon>
@@ -182,13 +184,14 @@
       </template>
       <template v-slot:cell(adequacy)="data">
         <div v-if="data.item.adequacy.option !== null">
-          <template v-if="permission">
+          <template>
             <b-button
               block
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'adequacy')">
-              Edit
+              <template v-if="permission">Edit</template>
+              <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.adequacy.notes"
                 icon="comments"></font-awesome-icon>
@@ -237,13 +240,14 @@
       </template>
       <template v-slot:cell(relevance)="data">
         <div v-if="data.item.relevance.option !== null">
-          <template v-if="permission">
+          <template>
             <b-button
               block
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'relevance')">
-              Edit
+              <template v-if="permission">Edit</template>
+              <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.relevance.notes"
                 icon="comments"></font-awesome-icon>
@@ -292,13 +296,14 @@
       </template>
       <template v-slot:cell(cerqual)="data">
         <div v-if="data.item.methodological_limitations.option !== null && data.item.coherence.option !== null && data.item.adequacy.option !== null && data.item.relevance.option !== null && data.item.cerqual.option !== null">
-          <template v-if="permission">
+          <template>
             <b-button
               block
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'cerqual')">
-              Edit
+              <template v-if="permission">Edit</template>
+              <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.cerqual.notes"
                 icon="comments"></font-awesome-icon>
@@ -329,13 +334,14 @@
         </div>
       </template>
       <template v-slot:cell(references)="data">
-        <template v-if="permission">
+        <template>
           <b-button
             block
             class="d-print-none mb-3"
             variant="outline-info"
             @click="openModalReferences">
-            View or Edit references
+            <template v-if="permission">Edit references</template>
+            <template v-else>View references</template>
           </b-button>
         </template>
         There are <b>{{ data.item.references.length }}</b> references.
@@ -432,7 +438,8 @@
       title="References"
       size="xl"
       scrollable
-      @ok="saveReferencesList">
+      @ok="saveReferencesList"
+      :ok-disabled="!permission">
       <b-alert
         v-if="list.cerqual.option"
         show
@@ -449,7 +456,8 @@
             :id="`checkbox-${data.index}`"
             v-model="list.references"
             :name="`checkbox-${data.index}`"
-            :value="data.item.id">
+            :value="data.item.id"
+            :disabled="!permission">
           </b-form-checkbox>
         </template>
       </b-table>
@@ -471,6 +479,7 @@
       :project="project"
       :evidenceProfile="evidenceProfile"
       :selectOptions="selectOptions"
+      :permissions="permission"
       @update-list-data="getList"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
