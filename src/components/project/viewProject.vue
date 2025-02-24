@@ -446,7 +446,7 @@
                 <template v-slot:head(ref_list)="data">
                   <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
                 </template>
-                <!-- data -->
+                
                 <template v-slot:cell(sort)="data">
                   {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
                 </template>
