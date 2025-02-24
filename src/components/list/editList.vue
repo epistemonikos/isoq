@@ -100,7 +100,6 @@
           <!--<b-tabs>-->
             <!-- Evidence Profile-->
             <!--<b-tab :title="$t('Evidence Profile')">-->
-
               <div id="progress-status"
                 v-if="mode==='edit'"
                 class="d-print-none">

@@ -37,7 +37,8 @@
         <propertiesProject
           :project="project"
           @update-modification="updateModificationTime()"
-          :canWrite="checkPermissions()">
+          :canWrite="checkPermissions()"
+          @update-project="updateDataProject">
         </propertiesProject>
       </div>
       <div :class="{'block mt-3': (tabOpened===1)?true:false, 'd-none': (tabOpened===1)?!true:!false}">
@@ -371,8 +372,8 @@
             </b-card>
           </b-col>
           <b-col cols="12" class="toDoc">
-            <template
-              v-if="mode==='edit'">
+            <!--
+            <template v-if="mode==='edit'">
               <b-table
                 :selectable="(mode==='view')?true:false"
                 select-mode="multi"
@@ -575,247 +576,36 @@
                 </template>
               </b-table>
             </template>
+            -->
+            <template
+              v-if="mode==='edit' && checkPermissions()">
+              <ViewTable
+                :lists="lists"
+                :list_categories="list_categories"
+                :fields="fields"
+                :project="project"
+                :mode="mode"
+                :isBusy="table_settings.isBusy"
+                :references="references"
+                :refs="refs"
+                @update-modification-time="updateModificationTime"
+                @get-lists="getLists"
+                @add-list="modalAddList"
+                @set-busy="setBusy"
+                @set-load-references="statusLoadReferences"
+                @get-references="getReferences"
+                 />
+            </template>
             <!-- printed version -->
             <template v-else>
-              <b-table-simple
-                id="findings-print"
-                ref="findings-print">
-                <b-thead>
-                  <b-tr>
-                    <!-- <b-th class="d-print-none">Printable?</b-th> -->
-                    <b-th>#</b-th>
-                    <b-th>Summarised review finding</b-th>
-                    <b-th>GRADE-CERQual assessment of confidence</b-th>
-                    <b-th>Explanation of GRADE-CERQual assessment</b-th>
-                    <b-th>References</b-th>
-                  </b-tr>
-                </b-thead>
-                <b-tbody>
-                  <b-tr v-for="(item, index) of lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                    <!-- <b-td class="d-print-none">
-                      <b-form-checkbox :value="item.id" v-model="printableItems"></b-form-checkbox>
-                    </b-td> -->
-                    <template v-if="item.is_category">
-                      <b-td
-                        colspan="5"
-                        class="text-center text-uppercase font-weight-bolder"
-                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                        {{ item.name }}
-                      </b-td>
-                    </template>
-                    <template v-else>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="list_categories.options.length">
-                        <p>{{item.cnt}}</p>
-                        </template>
-                        <template v-else>
-                        {{index+1}}
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="checkPermissions('can_read')">
-                        <template v-if="item.ref_list.length">
-                          <p>
-                            {{ item.name }}
-                          </p>
-                        </template>
-                        <template v-else>
-                        {{ item.name }}
-                        </template>
-                        </template>
-                        <template v-else>
-                          <p>{{ item.name }}</p>
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <p>{{ item.cerqual_option }}</p>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <template v-if="item.cerqual_option !== ''">
-                          <p>{{ item.cerqual_explanation }}</p>
-                        </template>
-                        <template v-else>
-                          <p>&nbsp;</p>
-                        </template>
-                      </b-td>
-                      <b-td
-                        style="vertical-align: top;">
-                        <p class="references">{{ item.ref_list }}</p>
-                      </b-td>
-                    </template>
-                  </b-tr>
-                </b-tbody>
-              </b-table-simple>
-              <back-to-top></back-to-top>
-              <div class="mt-5">
-              <h3>Evidence Profile Table</h3>
-              <b-table-simple>
-                <b-thead>
-                  <b-tr>
-                    <b-th>#</b-th>
-                    <b-th>Summarised review finding</b-th>
-                    <b-th>Methodological limitations</b-th>
-                    <b-th>Coherence</b-th>
-                    <b-th>Adequacy</b-th>
-                    <b-th>Relevance</b-th>
-                    <b-th>GRADE-CERQual assessment of confidence</b-th>
-                    <b-th>References</b-th>
-                  </b-tr>
-                </b-thead>
-                <b-tbody>
-                  <b-tr v-for="(item, index) of this.lists_print_version" :key="index" :class="{'d-print-none': !printableItems.includes(item.id)}">
-                    <template v-if="item.is_category">
-                      <b-td
-                        colspan="8"
-                        class="text-center text-uppercase font-weight-bolder"
-                        style="font-weight: bold; text-align: center; text-transform: uppercase;">
-                        {{ item.name }}
-                      </b-td>
-                    </template>
-                    <template v-else>
-                    <b-td>
-                      <template v-if="list_categories.options.length">
-                      <p>{{item.cnt}}</p>
-                      </template>
-                      <template v-else>
-                      {{ index + 1 }}
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <p>{{item.name}}</p>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
-                        <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
-                        <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
-                        <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
-                        <template v-if="item.evidence_profile.coherence.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
-                        </template>
-                        </template>
-                        </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
-                        <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
-                        <template v-if="item.evidence_profile.adequacy.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
-                        <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
-                        <template v-if="item.evidence_profile.relevance.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                        <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
-                        <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
-                        <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                          <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
-                        </template>
-                        </template>
-                      </template>
-                    </b-td>
-                    <b-td>
-                      <p class="references">{{returnRefWithNames(item.references)}}</p>
-                    </b-td>
-                    </template>
-                  </b-tr>
-                </b-tbody>
-              </b-table-simple>
-              </div>
+              <PrintViewTable
+                :dataPrintVersion="lists_print_version"
+                :references="references"
+                :categories="list_categories"
+                :printableItems="printableItems"
+                :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             </template>
             <!-- eopv -->
-            <b-modal
-              size="xl"
-              id="edit-finding-name"
-              ref="edit-finding-name"
-              title="Edit Summarised review finding"
-              ok-title="Save"
-              ok-variant="outline-success"
-              cancel-variant="outline-secondary"
-              @ok="updateListName">
-              <b-alert
-                :show="editingUser.show"
-                variant="danger">
-                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-              </b-alert>
-              <b-form-group
-                label="Summarised review finding"
-                label-for="finding-name">
-                <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
-                <b-form-textarea
-                  id="finding-name"
-                  v-model="editFindingName.name"
-                  rows="6"
-                  max-rows="100"></b-form-textarea>
-              </b-form-group>
-              <b-form-group
-                v-if="list_categories.options.length"
-                label="Select review finding group"
-                description="You can leave this option blank. You can always assign a finding to a group later.">
-                <b-form-select
-                  v-model="editFindingName.category"
-                  value-field="id"
-                  text-field="text"
-                  :options="list_categories.options"></b-form-select>
-              </b-form-group>
-              <b-form-group
-                label-for="finding-note"
-                description="Optional space for reviewers to leave notes for each other about this review finding">
-                <template v-slot:label>
-                  <videoHelp txt="Notes" tag="none" urlId="462176506"></videoHelp>
-                </template>
-                <b-form-textarea
-                  id="finding-note"
-                  v-model="editFindingName.notes"
-                  rows="6"
-                  max-rows="100"></b-form-textarea>
-              </b-form-group>
-            </b-modal>
-            <b-modal
-              size="xl"
-              id="remove-finding"
-              ref="remove-finding"
-              title="Remove summarised review finding"
-              ok-title="Confirm"
-              ok-variant="outline-danger"
-              cancel-variant="outline-secondary"
-              @ok="confirmRemoveList">
-              <b-alert
-                :show="editingUser.show"
-                variant="danger">
-                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-              </b-alert>
-              <p class="text-danger">
-                Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
-              </p>
-              <p>
-                Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
-              </p>
-            </b-modal>
             <b-modal
               size="xl"
               id="add-summarized"
@@ -846,57 +636,6 @@
                   text-field="text"
                   :options="list_categories.options"></b-form-select>
               </b-form-group>
-            </b-modal>
-
-            <b-modal
-              v-if="selected_list_index >= 0"
-              id="modal-references-list"
-              ref="modal-references-list"
-              title="References"
-              @ok="saveReferencesList"
-              @cancel="cancelReferencesList"
-              :ok-disabled="(selected_list_index === null) ? true : false"
-              ok-title="Save"
-              ok-variant="outline-success"
-              cancel-variant="outline-secondary"
-              size="xl"
-              scrollable>
-              <b-alert
-                :show="editingUser.show"
-                variant="danger">
-                The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
-              </b-alert>
-              <template v-if="references.length">
-                <div
-                  class="mt-2">
-                  <b-alert
-                    v-if="showBanner"
-                    show
-                    variant="danger">
-                    <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
-                  </b-alert>
-                  <b-table
-                    responsive
-                    striped
-                    :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
-                    :items="refs">
-                    <template v-slot:cell(checkbox)="data">
-                      <b-form-checkbox
-                        :id="`checkbox-${data.index}`"
-                        v-model="selected_references"
-                        :name="`checkbox-${data.index}`"
-                        :value="data.item.id">
-                      </b-form-checkbox>
-                    </template>
-                  </b-table>
-                </div>
-              </template>
-              <template v-else>
-                <div
-                  class="mt-2">
-                  <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
-                </div>
-              </template>
             </b-modal>
 
             <b-modal
@@ -1035,6 +774,7 @@
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
+import Commons from '../../utils/commons.js'
 
 const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
@@ -1044,6 +784,7 @@ const actionButtons = () => import(/* webpackChunkName: 'actionButtons' */'./act
 const propertiesProject = () => import(/* webpackChunkName: "propertiesProject" */ './propertiesProject.vue')
 const UploadReferences = () => import(/* webpackChunkName: "uploadReferences" */ './UploadReferences.vue')
 const InclusionExclusioCriteria = () => import(/* webpackChunkName: "inclusionExclusionCriteria" */ './InclusionExclusionCriteria.vue')
+const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './PrintViewTable.vue')
 
 export default {
   components: {
@@ -1057,7 +798,9 @@ export default {
     UploadReferences,
     InclusionExclusioCriteria,
     CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
-    crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue')
+    crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
+    PrintViewTable,
+    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue')
   },
   data () {
     return {
@@ -1213,7 +956,6 @@ export default {
       loadReferences: true,
       fileReferences: [],
       selected_list_index: null,
-      selected_references: [],
       lastId: 1,
       mode: 'edit',
       msgUploadReferences: '',
@@ -1254,7 +996,6 @@ export default {
       episte_loading: false,
       episte_error: false,
       finding: {},
-      showBanner: false,
       sorted_lists: [],
       changeTxtProjectProperties: '+',
       btnSearchPubMed: false,
@@ -1271,6 +1012,16 @@ export default {
     await this.getProject()
   },
   methods: {
+    setBusy: function (value) {
+      this.table_settings.isBusy = value
+    },
+    updateDataProject: function (data) {
+      this.getProject()
+    },
+    isActiveStepTwo: function () {
+      if (this.references.length === 0) { return false }
+      if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }
+    },
     setItemData: function (data) {
       this.ui.itemData = data
     },
@@ -1326,13 +1077,22 @@ export default {
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
         .then((response) => {
-          this.project = JSON.parse(JSON.stringify(response.data))
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
-            this.project.inclusion = ''
+          let _project = JSON.parse(JSON.stringify(response.data))
+          if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {
+            _project.inclusion = ''
           }
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
-            this.project.exclusion = ''
+          if (!Object.prototype.hasOwnProperty.call(_project, 'exclusion')) {
+            _project.exclusion = ''
           }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+            _project.license_type = 'CC-BY-NC-ND'
+          }
+          if (Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
+            if (_project.license_type === '') {
+              _project.license_type = 'CC-BY-NC-ND'
+            }
+          }
+          this.project = _project
           this.ui.project.show_criteria = true
           this.getLists()
         })
@@ -1488,18 +1248,8 @@ export default {
       }
       return authors
     },
-    displaySelectedOption: function (option, type = '') {
-      if (option === null) {
-        return ''
-      } else if (option >= 0) {
-        if (type === 'cerqual') {
-          return this.cerqual_confidence[option].text
-        } else {
-          return this.select_options[option].text
-        }
-      } else {
-        return ''
-      }
+    displaySelectedOption: function (option, type) {
+      return Commons.displaySelectedOption(option, type)
     },
     parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
@@ -1766,73 +1516,6 @@ export default {
           this.printErrors(error)
         })
     },
-    openModalReferences: function (data) {
-      this.editFindingName = this.setEditFindingNameProp(data)
-      const index = this.lists.findIndex((item) => item.id === data.item.id)
-      this.selected_list_index = index
-      const params = {
-        list_id: data.item.id
-      }
-      axios.get('/api/isoqf_findings', {params})
-        .then(async (response) => {
-          if (response.data.length) {
-            this.finding = JSON.parse(JSON.stringify(response.data[0]))
-            await this.getReferences(false)
-            this.selected_references = data.item.references
-            this.showBanner = false
-            if (data.item.cerqual_option !== '') {
-              this.showBanner = true
-            }
-            this.$refs['modal-references-list'].show()
-          }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    cleanReferencesList: function () {
-      this.selected_references = []
-      this.selected_list_index = null
-      this.finding = {}
-    },
-    cancelReferencesList: function () {
-      this.cleanReferencesList()
-      this.$refs['modal-references-list'].hide()
-    },
-    saveReferencesList: function () {
-      this.loadReferences = true
-      this.table_settings.isBusy = true
-      const index = this.selected_list_index
-      const params = {
-        references: this.selected_references
-      }
-      axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
-        .then(async () => {
-          this.updateFindingReferences(this.selected_references)
-          this.getLists()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    updateFindingReferences: function (references) {
-      const params = {
-        'evidence_profile.references': references
-      }
-      axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
-        .then(() => {
-          this.cleanReferencesList()
-          this.loadReferences = false
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    onFiltered: function (filteredItems) {
-      // Trigger pagination to update the number of buttons/pages due to filtering
-      this.table_settings.totalRows = filteredItems.length
-      this.table_settings.currentPage = 1
-    },
     generateEvidenceProfileTableWithCategories: function (findings) {
       let content = []
       for (const position in findings) {
@@ -1981,124 +1664,6 @@ export default {
       } else {
         return 'author(s) not found'
       }
-    },
-    setEditFindingNameProp: function (data) {
-      return {
-        index: data.index,
-        id: data.item.id,
-        name: data.item.name,
-        category: data.item.category,
-        notes: data.item.notes
-      }
-    },
-    editModalFindingName: function (data) {
-      this.editFindingName = this.setEditFindingNameProp(data)
-
-      const params = {
-        organization: this.$route.params.org_id,
-        list_id: data.item.id
-      }
-      axios.get('/api/isoqf_findings', {params})
-        .then((response) => {
-          this.editFindingName.finding_id = response.data[0].id
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-      this.$refs['edit-finding-name'].show()
-    },
-    processDataList: async function () {
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      let _item = {}
-      _item.is_public = false
-      if (this.project.is_public) {
-        _item.is_public = true
-      }
-      for (let item of lists) {
-        if (item.id === this.editFindingName.id) {
-          _item = item
-          _item.name = this.editFindingName.name
-          _item.category = this.editFindingName.category
-          _item.notes = this.editFindingName.notes
-        }
-      }
-      return _item
-    },
-    updateListName: async function () {
-      this.table_settings.isBusy = true
-      const list = await this.processDataList()
-      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, list)
-        .then(() => {
-          this.updateFinding(this.editFindingName)
-          this.updateModificationTime()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    updateFinding: function (finding) {
-      let isPublic = false
-      if (this.project.is_public) {
-        isPublic = true
-      }
-      const params = {
-        name: finding.name,
-        notes: finding.notes,
-        is_public: isPublic,
-        'evidence_profile.name': finding.name,
-        'evidence_profile.notes': finding.notes
-      }
-      axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
-        .then(() => {
-          this.getLists()
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    removeModalFinding: function (data) {
-      this.editFindingName.index = data.index
-      this.editFindingName.name = data.item.name
-      this.editFindingName.id = data.item.id
-      const params = {
-        organization: this.$route.params.org_id,
-        list_id: data.item.id
-      }
-      axios.get('/api/isoqf_findings', {params})
-        .then((response) => {
-          this.editFindingName.finding_id = response.data[0].id
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-      this.$refs['remove-finding'].show()
-    },
-    confirmRemoveList: function () {
-      if (!this.editFindingName.id) {
-        return
-      }
-      this.table_settings.isBusy = true
-      axios.delete(`/api/isoqf_lists/${this.editFindingName.id}`)
-        .then(() => {
-          this.confirmRemoveFinding()
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
-    },
-    confirmRemoveFinding: function () {
-      if (!this.editFindingName.finding_id) {
-        return
-      }
-      axios.delete(`/api/isoqf_findings/${this.editFindingName.finding_id}`)
-        .then(() => {
-          this.deleteExtractedData()
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
     },
     saveListCategoryName: function () {
       const params = {
@@ -2340,53 +1905,6 @@ export default {
           this.printErrors(error)
         })
     },
-    deleteExtractedData: function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        finding_id: this.editFindingName.finding_id
-      }
-      axios.get('/api/isoqf_extracted_data', {params})
-        .then((response) => {
-          axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
-            .then(() => {
-              this.updateSortList(JSON.parse(JSON.stringify(this.editFindingName)))
-              this.editFindingName = {
-                index: null,
-                finding_id: null,
-                id: null,
-                name: null,
-                notes: null,
-                editing: false
-              }
-            })
-            .catch((error) => {
-              this.table_settings.isBusy = false
-              this.printErrors(error)
-            })
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
-    },
-    updateSortList: function (data) {
-      const index = data.index
-      this.lists.splice(index, 1)
-      let querys = []
-      let cnt = 1
-      for (const list of this.lists) {
-        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {sort: cnt}))
-        cnt++
-      }
-      Promise.all(querys)
-        .then(() => {
-          this.getLists()
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          this.printErrors(error)
-        })
-    },
     countDownChanged (dismissCountDown) {
       if (this.ui.project.type === 'inclusion') {
         this.ui.project.inclusion.success.dismissCountDown = dismissCountDown
@@ -2406,37 +1924,6 @@ export default {
       }
       this.table_settings.filter = ''
       window.scrollTo({ top: 500, behavior: 'smooth' })
-    },
-    tableFilter: function (txt, filter) {
-      this.table_settings.filter = txt
-      switch (filter) {
-        case 1:
-          this.ui.project.showFilterOne = true
-          this.ui.project.showFilterTwo = false
-          this.ui.project.showFilterThree = false
-          break
-        case 2:
-          this.ui.project.showFilterOne = false
-          this.ui.project.showFilterTwo = true
-          this.ui.project.showFilterThree = false
-          break
-        case 3:
-          this.ui.project.showFilterOne = false
-          this.ui.project.showFilterTwo = false
-          this.ui.project.showFilterThree = true
-          break
-      }
-      window.scrollTo({ top: 600, behavior: 'smooth' })
-    },
-    isFilterActive: function (val) {
-      const regex = new RegExp(`^${val}$`, 'i')
-      return regex.test(this.table_settings.filter)
-    },
-    cleanTableFilter () {
-      this.ui.project.showFilterOne = false
-      this.ui.project.showFilterTwo = false
-      this.ui.project.showFilterThree = false
-      this.table_settings.filter = ''
     },
     continueToIsoq: function () {
       this.clickTab(2)

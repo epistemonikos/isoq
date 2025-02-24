@@ -57,10 +57,10 @@
                 v-if="permissions"
                 class="mt-1"
                 @click="modalChangePublicStatus"
-                :variant="(!project.private) ? 'outline-primary' : 'primary'"
+                :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
                 v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
-                <span v-if="!project.private">Published</span><span v-else>Publish</span>
+                <span v-if="project.is_public">Published</span><span v-else>Publish</span>
               </b-button>
           </b-col>
           <b-col
@@ -82,6 +82,7 @@
     </b-row>
     <b-modal
       ref="modal-change-status"
+      id="modal-change-status"
       scrollable
       size="xl"
       ok-title="Save"
@@ -94,30 +95,45 @@
       <template v-slot:modal-title>
         <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
       </template>
+
+      <template v-if="errorsResponse.message !== ''">
+        <b-alert
+          show
+          variant="danger"
+          dismissible
+          @dismissed="errorsResponse.message = ''">
+          <p class="mb-0" v-html="errorsResponse.message"></p>
+        </b-alert>
+      </template>
+
       <p class="font-weight-light">
         By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
       </p>
       <b-form-group>
         <b-form-radio-group
-          id="modal-publish-status"
-          v-model="modalProject.public_type"
-          :options="global_status"
-          name="modal-radio-status"
+        id="modal-publish-status"
+        v-model="modalProject.public_type"
+        :options="global_status"
+        name="modal-radio-status"
         ></b-form-radio-group>
       </b-form-group>
+
       <template v-if="modalProject.public_type !== 'private'">
         <h5>Choose a license</h5>
         <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
         <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
         <b-form-group>
           <b-form-radio-group
-            id="modal-publish-license"
-            v-model="getLicense"
-            :options="global_licenses"
-            name="modal-radio-license"
+          id="modal-publish-license"
+          v-model="modalProject.license_type"
+          :options="global_licenses"
+          @change="state.license_type = null"
+          name="modal-radio-license"
           ></b-form-radio-group>
+          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons license.</b-form-invalid-feedback>
         </b-form-group>
       </template>
+
       <template #modal-footer>
         <div class="w-100">
           <b-button
@@ -173,7 +189,7 @@ export default {
   },
   data () {
     return {
-      modalProject: {},
+      modalProject: {name: ''},
       global_status: [
         { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
         { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
@@ -187,7 +203,34 @@ export default {
         { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
         { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
         { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ]
+      ],
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ],
+      errors: [],
+      state: {
+        name: null,
+        authors: null,
+        author: null,
+        author_email: null,
+        review_question: null,
+        published_status: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null,
+        public_type: null,
+        license_type: null
+      },
+      errorsResponse: {
+        message: '',
+        items: []
+      }
+    }
+  },
+  watch: {
+    'modalProject.name': function (val) {
+      this.state.name = val.length > 0 ? null : false
     }
   },
   methods: {
@@ -767,8 +810,13 @@ export default {
     },
     modalChangePublicStatus: function () {
       this.modalProject = JSON.parse(JSON.stringify(this.project))
+      this.modalProject.isModal = true
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
         this.modalProject.license_type = 'CC-BY-NC-ND'
+      }
+      this.errorsResponse = {
+        message: '',
+        items: []
       }
       this.$refs['modal-change-status'].show()
     },
@@ -780,97 +828,59 @@ export default {
         this.$emit('changeTableSettings', {perPage: 5, currentPage: 1})
       }
     },
-    savePublicStatus: function (event) {
+    savePublicStatus: async function (event) {
       event.preventDefault()
       this.$emit('uiPublishShowLoader', true)
       let params = {}
+      params.id = this.project.id
+      params.public_type = this.modalProject.public_type
+      const isModal = this.modalProject.isModal || false
       params.private = true
       params.is_public = false
-      params.public_type = this.modalProject.public_type
-      params.license_type = this.modalProject.license_type
-      params.project_id = this.project.id
+
       if (this.modalProject.public_type !== 'private') {
         params.private = false
         params.is_public = true
-      } else {
-        params.license_type = ''
-      }
-
-      axios.get('/api/publish', {params})
-        .then(() => {
-          this.modalProject = {}
-          this.$emit('getProject')
+        params.license_type = this.modalProject.license_type
+        if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
+          this.state.license_type = false
           this.$emit('uiPublishShowLoader', false)
-          this.$refs['modal-change-status'].hide()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    savePublicStatus2: function (event) {
-      event.preventDefault()
-      this.$emit('uiPublishShowLoader', true)
-      let params = {}
-      params.private = true
-      params.is_public = false
-      params.public_type = this.modalProject.public_type
-      params.license_type = this.modalProject.license_type
-      if (this.modalProject.public_type !== 'private') {
-        params.private = false
-        params.is_public = true
+          return
+        }
       } else {
         params.license_type = ''
       }
 
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      let _requests = []
-      for (let list of lists) {
-        _requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
-      }
-      let findings = JSON.parse(JSON.stringify(this.findings))
-      for (let index in findings) {
-        _requests.push(axios.patch(`/api/isoqf_findings/${findings[index]}`, params))
-        axios.get(`/api/isoqf_extracted_data?organization=${this.$route.params.org_id}&finding_id=${findings[index]}`)
-          .then((response) => {
-            if (response.data.length) {
-              _requests.push(axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, { is_public: params.is_public }))
-            }
-          })
-      }
-
-      let otherParams = {}
-      otherParams.is_public = false
       if (this.modalProject.public_type !== 'private') {
-        otherParams.is_public = true
-      }
-
-      let references = JSON.parse(JSON.stringify(this.references))
-      for (let ref of references) {
-        _requests.push(axios.patch(`/api/isoqf_references/${ref.id}`, otherParams))
-      }
-      let characteristicTable = JSON.parse(JSON.stringify(this.charsOfStudies))
-      _requests.push(axios.patch(`/api/isoqf_characteristics/${characteristicTable.id}`, otherParams))
-      let methodologicalTable = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      _requests.push(axios.patch(`/api/isoqf_assessments/${methodologicalTable.id}`, otherParams))
-
-      axios.all(_requests)
-        .then(axios.spread(() => {
-          axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
+        if (canPublish.data.status) {
+          axios.patch('/api/publish', {params})
             .then(() => {
-              this.modalProject = {}
-              // this.getProject()
+              this.modalProject = {name: ''}
               this.$emit('getProject')
-              // this.ui.publish.showLoader = false
               this.$emit('uiPublishShowLoader', false)
               this.$refs['modal-change-status'].hide()
             })
             .catch((error) => {
-              this.printErrors(error)
+              console.log(error)
             })
-        }))
-        .catch((error) => {
-          this.printErrors(error)
-        })
+        } else {
+          document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
+          this.errorsResponse.message = canPublish.data.message
+          this.$emit('uiPublishShowLoader', false)
+        }
+      } else {
+        axios.patch('/api/publish', {params})
+          .then(() => {
+            this.modalProject = {name: ''}
+            this.$emit('getProject')
+            this.$emit('uiPublishShowLoader', false)
+            this.$refs['modal-change-status'].hide()
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     exportToRIS: function () {
       const _refs = JSON.parse(JSON.stringify(this.references))
