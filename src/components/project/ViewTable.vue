@@ -260,8 +260,11 @@
         variant="danger">
         The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
       </b-alert>
-      <p class="text-danger">
+      <p v-if="project.private" class="text-danger">
         Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
+      </p>
+      <p v-else class="text-danger">
+        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to "Private" because it will no longer meet the requirements for being published to the iSoQ database.
       </p>
       <p>
         Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
@@ -624,70 +627,15 @@ export default {
         return
       }
       this.$emit('set-busy', true)
-      axios.delete(`/api/isoqf_lists/${this.editFindingName.id}`)
-        .then(() => {
-          this.confirmRemoveFinding()
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    confirmRemoveFinding: function () {
-      if (!this.editFindingName.finding_id) {
-        return
-      }
-      axios.delete(`/api/isoqf_findings/${this.editFindingName.finding_id}`)
-        .then(() => {
-          this.deleteExtractedData()
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    deleteExtractedData: function () {
       const params = {
         organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        list_id: this.editFindingName.id,
         finding_id: this.editFindingName.finding_id
       }
-      axios.get('/api/isoqf_extracted_data', {params})
-        .then((response) => {
-          axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
-            .then(() => {
-              this.updateSortList(JSON.parse(JSON.stringify(this.editFindingName)))
-              this.editFindingName = {
-                index: null,
-                finding_id: null,
-                id: null,
-                name: null,
-                notes: null,
-                editing: false
-              }
-            })
-            .catch((error) => {
-              this.$emit('set-busy', false)
-              console.log(Commons.printErrors(error))
-            })
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    updateSortList: function (data) {
-      const index = data.index
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      lists.splice(index, 1)
-      let querys = []
-      let cnt = 1
-      for (const list of lists) {
-        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {sort: cnt}))
-        cnt++
-      }
-      Promise.all(querys)
+      axios.post('/api/finding/remove', params)
         .then(() => {
-          this.$emit('get-lists')
+          this.$emit('get-project')
         })
         .catch((error) => {
           this.$emit('set-busy', false)

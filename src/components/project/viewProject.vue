@@ -589,6 +589,7 @@
                 :refs="refs"
                 @update-modification-time="updateModificationTime"
                 @get-lists="getLists"
+                @get-project="getProject"
                 @add-list="modalAddList"
                 @set-busy="setBusy"
                 @set-load-references="statusLoadReferences"
