@@ -175,11 +175,10 @@
               @printErrors="printErrors"
               @getExtractedData="getExtractedData"></table-extracted-data>
 
-            <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
-              <div class="mt-5">
-                <h5 class="text-info">License type</h5>
-                <p class="text-info">{{ theLicense(this.project.license_type) }}</p>
-                <!-- <img :src="licenseUrl" :alt="theLicense(this.project.license_type)"> -->
+            <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
+              <div class="mt-5 alert alert-info" role="alert">
+                <h5>License type</h5>
+                <p>{{ theLicense(this.project.license_type) }}</p>
               </div>
             </template>
         </b-col>
