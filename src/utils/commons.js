@@ -100,7 +100,6 @@ export default class Commons {
       { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-88x31.png' }
     ]
 
-    console.log('license', license)
     if (license.length) {
       for (const lic of globalLicenses) {
         if (lic.value === license) {
