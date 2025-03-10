@@ -260,7 +260,7 @@
         variant="danger">
         The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
       </b-alert>
-      <p v-if="project.private" class="text-danger">
+      <p v-if="showExtendedWarning" class="text-danger">
         Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
       </p>
       <p v-else class="text-danger">
@@ -678,6 +678,26 @@ export default {
         .catch((error) => {
           console.log(Commons.printErrors(error))
         })
+    }
+  },
+  computed: {
+    showExtendedWarning: function () {
+      let cnt = 0
+      for (const el of this.lists) {
+        if (document.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
+          cnt++
+        }
+      }
+      if (!this.project.private) { // false
+        console.log('false')
+        if (cnt >= 2) {
+          return true
+        }
+      }
+      if (this.project.private) { // true
+        console.log('true')
+        return true
+      }
     }
   }
 }
