@@ -260,11 +260,11 @@
         variant="danger">
         The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
       </b-alert>
-      <p v-if="showExtendedWarning" class="text-danger">
-        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
+      <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
+        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to "Private" because it will no longer meet the requirements for being published to the iSoQ database.
       </p>
       <p v-else class="text-danger">
-        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to "Private" because it will no longer meet the requirements for being published to the iSoQ database.
+        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
       </p>
       <p>
         Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
@@ -370,7 +370,8 @@ export default {
           showFilterOne: false,
           showFilterTwo: false,
           showFilterThree: false,
-          show_criteria: false
+          show_criteria: false,
+          showExtendedExplanationTextForDeleting: false
         },
         itemData: null,
         publish: {
@@ -396,7 +397,40 @@ export default {
         finding_id: null,
         name: null,
         notes: null,
-        editing: false
+        editing: false,
+        organization: null,
+        list_id: null,
+        isoqf_id: null,
+        evidence_profile: {
+          name: '',
+          isoqf_id: null,
+          relevance: {
+            explanation: '',
+            option: null
+          },
+          adequacy: {
+            explanation: '',
+            option: null
+          },
+          coherence: {
+            explanation: '',
+            option: null
+          },
+          methodological_limitations: {
+            explanation: '',
+            option: null
+          },
+          cerqual: {
+            explanation: '',
+            option: null
+          },
+          references: []
+        },
+        references: [],
+        is_public: null,
+        license_type: null,
+        private: null,
+        public_type: null
       },
       selected_list_index: null,
       showBanner: false,
@@ -522,20 +556,36 @@ export default {
     },
     removeModalFinding: function (data) {
       this.editFindingName.index = data.index
-      this.editFindingName.name = data.item.name
-      this.editFindingName.id = data.item.id
       const params = {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
       axios.get('/api/isoqf_findings', {params})
         .then((response) => {
-          this.editFindingName.finding_id = response.data[0].id
+          this.editFindingName = {...response.data[0]}
+
+          let cnt = 0
+          for (const el of this.lists) {
+            if (document.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
+              cnt++
+            }
+          }
+          if (!this.project.private) { // false
+            if (cnt) {
+              if (cnt === 1) {
+                if (this.editFindingName.evidence_profile.cerqual.option !== null) {
+                  this.ui.project.showExtendedExplanationTextForDeleting = true
+                } else {
+                  this.ui.project.showExtendedExplanationTextForDeleting = false
+                }
+              }
+            }
+          }
+          this.$refs['remove-finding'].show()
         })
         .catch((error) => {
           console.log(Commons.printErrors(error))
         })
-      this.$refs['remove-finding'].show()
     },
     modalAddList: function () {
       this.$emit('add-list')
@@ -628,10 +678,8 @@ export default {
       }
       this.$emit('set-busy', true)
       const params = {
-        organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
-        list_id: this.editFindingName.id,
-        finding_id: this.editFindingName.finding_id
+        finding_id: this.editFindingName.id
       }
       axios.post('/api/finding/remove', params)
         .then(() => {
@@ -678,26 +726,6 @@ export default {
         .catch((error) => {
           console.log(Commons.printErrors(error))
         })
-    }
-  },
-  computed: {
-    showExtendedWarning: function () {
-      let cnt = 0
-      for (const el of this.lists) {
-        if (document.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
-          cnt++
-        }
-      }
-      if (!this.project.private) { // false
-        console.log('false')
-        if (cnt >= 2) {
-          return true
-        }
-      }
-      if (this.project.private) { // true
-        console.log('true')
-        return true
-      }
     }
   }
 }
