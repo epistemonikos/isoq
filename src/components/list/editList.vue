@@ -137,7 +137,7 @@
                 @printErrors="printErrors"
                 @modalDataChanged="modalDataChanged"
                 @busyEvidenceProfileTable="busyEvidenceProfileTable"
-                @callGetStageOneData="callGetStageOneData"
+                @callGetFinding="callGetFinding"
                 @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
                 @getExtractedData="getExtractedData"
               ></evidence-profile-table>
@@ -485,7 +485,7 @@ export default {
           this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     getList: function (fromModal = false) {
@@ -501,7 +501,7 @@ export default {
           // this.checkWrittingStatus(this.list) // disabled for the v1
           this.getProject()
           this.getAllReferences()
-          this.getStageOneData(fromModal)
+          this.getFinding(fromModal)
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
@@ -594,7 +594,7 @@ export default {
           this.printErrors(error)
         })
     },
-    getStageOneData: function (fromModal = false) {
+    getFinding: function (fromModal = false) {
       let params = {
         organization: this.list.organization,
         list_id: this.list.id
@@ -864,22 +864,7 @@ export default {
         })
     },
     printErrors: function (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        console.log(error.request)
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message)
-      }
-      console.log(error.config)
+      Commons.printErrors(error)
     },
     displaySelectedOption: function (option) {
       if (option === null) {
@@ -915,8 +900,8 @@ export default {
     busyEvidenceProfileTable: function (status) {
       this.evidence_profile_table_settings.isBusy = status
     },
-    callGetStageOneData: function (status) {
-      this.getStageOneData(status)
+    callGetFinding: function (status) {
+      this.getFinding(status)
     },
     setShowEditExtractedDataInPlace: function (data) {
       this.showEditExtractedDataInPlace = data
