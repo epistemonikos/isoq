@@ -683,7 +683,7 @@ export default {
       this.$emit('busyEvidenceProfileTable', status)
     },
     callGetStageOneData: function (status) {
-      this.$emit('callGetStageOneData', status)
+      this.$emit('callGetFinding', status)
     },
     setShowEditExtractedDataInPlace: function (data) {
       this.$emit('setShowEditExtractedDataInPlace', data)

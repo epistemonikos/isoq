@@ -461,56 +461,49 @@ export default {
         return result
       }
     },
-    getAllReferences: function () {
-      const params = {
-        organization: this.list.organization,
-        project_id: this.list.project_id
+    getAllReferences: function (references) {
+      let _references = references
+      let _refs = []
+      let _refsWithTitles = []
+      for (let reference of _references) {
+        _refs.push({
+          'id': reference.id,
+          'content': this.parseReference(reference, true)
+        })
+        _refsWithTitles.push({
+          'id': reference.id,
+          'content': this.parseReference(reference, false)})
       }
-      axios.get(`/api/isoqf_references`, {params})
-        .then((response) => {
-          let _references = response.data
-          let _refs = []
-          let _refsWithTitles = []
-          for (let reference of _references) {
-            _refs.push({
-              'id': reference.id,
-              'content': this.parseReference(reference, true)
-            })
-            _refsWithTitles.push({
-              'id': reference.id,
-              'content': this.parseReference(reference, false)})
-          }
 
-          this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
-          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
-        })
-        .catch((error) => {
-          Commons.printErrors(error)
-        })
+      this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
+      this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
     },
     getList: function (fromModal = false) {
-      axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
+      axios.get('/api/getLists', {params: {list_id: this.$route.params.id}})
         .then((response) => {
-          this.list = JSON.parse(JSON.stringify(response.data))
-          this.list.sources = []
-          this.evidence_profile = []
-          this.extracted_data = {
-            fields: [],
-            items: []
-          }
-          // this.checkWrittingStatus(this.list) // disabled for the v1
-          this.getProject()
-          this.getAllReferences()
+          this.list = JSON.parse(JSON.stringify(response.data[0]))
+          // this.list.sources = []
+          // this.evidence_profile = []
+          // this.extracted_data = {
+          //   fields: [],
+          //   items: []
+          // }
+          const project = JSON.parse(JSON.stringify(response.data[0]['project']))
+          const references = JSON.parse(JSON.stringify(response.data[0]['fullreferences']))
+          const characteristics = JSON.parse(JSON.stringify(response.data[0]['characteristics']))
+          const assessments = JSON.parse(JSON.stringify(response.data[0]['assessments']))
+          const extractedData = JSON.parse(JSON.stringify(response.data[0]['extracted_data']))
+          this.getProject(project)
+          this.getAllReferences(references)
           this.getFinding(fromModal)
-          this.getCharsOfStudies()
-          this.getMethAssessments()
+          this.getCharsOfStudies(characteristics[0])
+          this.getMethAssessments(assessments)
+          this.getExtractedData(extractedData)
+
           this.evidence_profile_table_settings.isBusy = false
           const elementScroll = document.getElementsByName('evidence-profile')[0]
 
           window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
-        })
-        .catch((error) => {
-          this.printErrors(error)
         })
     },
     updateMyData: function () {
@@ -543,24 +536,14 @@ export default {
           }
         })
     },
-    getProject: function () {
-      if (!this.list.project_id) {
-        return
+    getProject: function (project) {
+      this.project = project
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+        this.project.inclusion = ''
       }
-      const projectId = this.list.project_id
-      axios.get(`/api/isoqf_projects/${projectId}`)
-        .then((response) => {
-          this.project = response.data
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
-            this.project.inclusion = ''
-          }
-          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
-            this.project.exclusion = ''
-          }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+        this.project.exclusion = ''
+      }
     },
     renderReference: function (reference) {
       let authors = ''
@@ -595,35 +578,27 @@ export default {
         })
     },
     getFinding: function (fromModal = false) {
-      let params = {
-        organization: this.list.organization,
-        list_id: this.list.id
+      const finding = this.list.findings
+      if (finding.length) {
+        this.findings = JSON.parse(JSON.stringify(finding[0]))
+        this.findings.isoqf_id = this.list.sort
+        this.evidence_profile = []
+        if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
+          this.evidence_profile.push(this.findings.evidence_profile)
+          this.evidence_profile[0].isoqf_id = this.list.sort
+        }
+        if (fromModal) {
+          const title = this.buffer_modal_stage_two.title
+          const type = this.buffer_modal_stage_two.type
+          this.buffer_modal_stage_two = this.evidence_profile[0]
+          this.buffer_modal_stage_two.title = title
+          this.buffer_modal_stage_two.type = type
+        }
+        this.updateMyData()
       }
-      axios.get('/api/isoqf_findings', {params})
-        .then((response) => {
-          if (response.data.length) {
-            this.findings = JSON.parse(JSON.stringify(response.data[0]))
-            this.findings.isoqf_id = this.list.sort
-            this.evidence_profile = []
-            if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
-              this.evidence_profile.push(this.findings.evidence_profile)
-              this.evidence_profile[0].isoqf_id = this.list.sort
-            }
-            if (fromModal) {
-              const title = this.buffer_modal_stage_two.title
-              const type = this.buffer_modal_stage_two.type
-              this.buffer_modal_stage_two = this.evidence_profile[0]
-              this.buffer_modal_stage_two.title = title
-              this.buffer_modal_stage_two.type = type
-            }
-            this.updateMyData()
-          }
-          this.getStatus()
-          this.getExtractedData()
-          this.evidence_profile_table_settings.isBusy = false
-        }).catch((error) => {
-          this.printErrors(error)
-        })
+      this.getStatus()
+      // this.getExtractedData()
+      this.evidence_profile_table_settings.isBusy = false
     },
     getStatus: function () {
       this.status_evidence_profile.value = 0
@@ -652,216 +627,187 @@ export default {
         this.status_evidence_profile.variant = 'success'
       }
     },
-    getCharsOfStudies: function () {
-      let params = {
-        organization: this.list.organization,
-        project_id: this.list.project_id
-      }
-      axios.get('/api/isoqf_characteristics', {params})
-        .then((response) => {
-          if (response.data.length) {
-            let data = response.data[0]
-            let items = []
+    getCharsOfStudies: function (characteristics) {
+      if (characteristics.items.length) {
+        let data = characteristics
+        let items = []
 
-            let haveContent = 0
-            for (let item of data.items) {
-              for (let reference of this.list.references) {
-                if (reference === item.ref_id) {
-                  items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                      if (item[i] === '') {
-                        haveContent++
-                      }
-                    }
-                  }
-                  if (data.fields.length > Object.keys(item).length) {
+        let haveContent = 0
+        for (let item of data.items) {
+          for (let reference of this.list.references) {
+            if (reference === item.ref_id) {
+              items.push(item)
+              for (let i in item) {
+                if (item[i] !== 'ref_id' && item[i] !== 'authors') {
+                  if (item[i] === '') {
                     haveContent++
                   }
                 }
               }
-            }
-            if (data.fields.length < 3) {
-              haveContent++
-            }
-
-            this.ui.adequacy.chars_of_studies.display_warning = true
-            this.ui.relevance.chars_of_studies.display_warning = true
-            if (!haveContent) {
-              this.ui.adequacy.chars_of_studies.display_warning = false
-              this.ui.relevance.chars_of_studies.display_warning = false
-            }
-            data.items = items
-            this.characteristics_studies = data
-            if (data.fields.length) {
-              let fields = JSON.parse(JSON.stringify(data.fields))
-              let lastItem = fields.splice(fields.length - 1, 1)
-              this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-              this.characteristics_studies.fieldsObj = []
-              let _fields = data.fields
-              for (let field of _fields) {
-                if (field.key !== 'ref_id') {
-                  this.characteristics_studies.fieldsObj.push(field)
-                }
+              if (data.fields.length > Object.keys(item).length) {
+                haveContent++
               }
-              if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
-                this.characteristics_studies.items = []
-              }
-            }
-            this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
-            this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
-
-            let tableTop = []
-
-            if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
-              const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
-              for (let tt of _tableTop) {
-                tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
-              }
-            }
-            this.characteristics_studies.tableTop = tableTop
-          } else {
-            this.characteristics_studies = {
-              items: [],
-              fields: []
             }
           }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
+        }
+        if (data.fields.length < 3) {
+          haveContent++
+        }
+
+        this.ui.adequacy.chars_of_studies.display_warning = true
+        this.ui.relevance.chars_of_studies.display_warning = true
+        if (!haveContent) {
+          this.ui.adequacy.chars_of_studies.display_warning = false
+          this.ui.relevance.chars_of_studies.display_warning = false
+        }
+
+        data.items = items
+        this.characteristics_studies = data
+        if (data.fields.length) {
+          let fields = JSON.parse(JSON.stringify(data.fields))
+          let lastItem = fields.splice(fields.length - 1, 1)
+          this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
+          this.characteristics_studies.fieldsObj = []
+          let _fields = data.fields
+          for (let field of _fields) {
+            if (field.key !== 'ref_id') {
+              this.characteristics_studies.fieldsObj.push(field)
+            }
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
+            this.characteristics_studies.items = []
+          }
+        }
+        this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
+        this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
+
+        let tableTop = []
+
+        if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
+          const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
+          for (let tt of _tableTop) {
+            tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+          }
+        }
+        this.characteristics_studies.tableTop = tableTop
+      } else {
+        this.characteristics_studies = {
+          items: [],
+          fields: []
+        }
+      }
     },
-    getMethAssessments: function () {
-      let params = {
-        organization: this.list.organization,
-        project_id: this.list.project_id
-      }
-      axios.get('/api/isoqf_assessments', {params})
-        .then((response) => {
-          if (response.data.length) {
-            const _references = JSON.parse(JSON.stringify(this.list.references))
-            let data = response.data[0]
-            let items = []
+    getMethAssessments: function (assessments) {
+      if (assessments.length) {
+        const _references = JSON.parse(JSON.stringify(this.list.references))
+        let data = assessments[0]
+        let items = []
 
-            let haveContent = 0
-            for (let item of data.items) {
-              for (let reference of _references) {
-                if (reference === item.ref_id) {
-                  items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'author' && item[i] !== 'ref_id') {
-                      if (item[i] === '') {
-                        haveContent++
-                      }
-                    }
-                  }
-                  if (data.fields.length > Object.keys(item).length) {
+        let haveContent = 0
+        for (let item of data.items) {
+          for (let reference of _references) {
+            if (reference === item.ref_id) {
+              items.push(item)
+              for (let i in item) {
+                if (item[i] !== 'author' && item[i] !== 'ref_id') {
+                  if (item[i] === '') {
                     haveContent++
                   }
                 }
               }
-            }
-            if (data.fields.length < 3) {
-              haveContent++
-            }
-            this.ui.methodological_assessments.display_warning = true
-            if (!haveContent) {
-              this.ui.methodological_assessments.display_warning = false
-            }
-
-            data.items = items
-
-            let _fields = data.fields
-            data.fieldsObj = []
-            for (let field of _fields) {
-              if (field.key !== 'ref_id') {
-                data.fieldsObj.push(field)
+              if (data.fields.length > Object.keys(item).length) {
+                haveContent++
               }
             }
-
-            this.meth_assessments = data
-          } else {
-            this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
           }
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
+        }
+        if (data.fields.length < 3) {
+          haveContent++
+        }
+        this.ui.methodological_assessments.display_warning = true
+        if (!haveContent) {
+          this.ui.methodological_assessments.display_warning = false
+        }
+
+        data.items = items
+
+        let _fields = data.fields
+        data.fieldsObj = []
+        for (let field of _fields) {
+          if (field.key !== 'ref_id') {
+            data.fieldsObj.push(field)
+          }
+        }
+
+        this.meth_assessments = data
+      } else {
+        this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
+      }
     },
-    getExtractedData: function () {
-      let params = {
-        organization: this.list.organization,
-        finding_id: this.findings.id
-      }
-      axios.get('/api/isoqf_extracted_data', {params})
-        .then((response) => {
-          let localData = {id: null, fields: [], items: []}
-          if (response.data.length) {
-            localData = response.data[0]
-            this.extracted_data = response.data[0]
-            localData.fields.push({key: 'actions', label: ''})
-            let _fields = JSON.parse(JSON.stringify(localData.fields))
-            localData.fieldsObj = []
-            this.mode_print_fieldsObj = []
-            for (let field of _fields) {
-              if (field.key !== 'ref_id') {
-                localData.fieldsObj.push(field)
-                if (field.key !== 'actions') {
-                  this.mode_print_fieldsObj.push(field)
-                }
-              }
+    getExtractedData: function (extractedData) {
+      let localData = {id: null, fields: [], items: []}
+      if (extractedData.length) {
+        localData = extractedData[0]
+        this.extracted_data = extractedData[0]
+        localData.fields.push({key: 'actions', label: ''})
+        let _fields = JSON.parse(JSON.stringify(localData.fields))
+        localData.fieldsObj = []
+        this.mode_print_fieldsObj = []
+        for (let field of _fields) {
+          if (field.key !== 'ref_id') {
+            localData.fieldsObj.push(field)
+            if (field.key !== 'actions') {
+              this.mode_print_fieldsObj.push(field)
             }
-
-            const _references = this.list.references
-            let _items = []
-            let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
-            extractedDataItems.sort(function (a, b) {
-              if (a.authors < b.authors) {
-                return -1
-              }
-              if (a.authors > b.authors) {
-                return 1
-              }
-              return 0
-            })
-            localData.original_items = JSON.parse(JSON.stringify(localData.items))
-            let haveContent = 0
-            for (let i in _references) {
-              let index = 0
-              for (let item of extractedDataItems) {
-                if (item.ref_id === _references[i]) {
-                  _items.push({
-                    ref_id: item.ref_id,
-                    authors: item.authors,
-                    column_0: item.column_0,
-                    index: index
-                  })
-                  if (Object.prototype.hasOwnProperty.call(item, 'column_0')) {
-                    if (item.column_0 === '') {
-                      haveContent++
-                    }
-                  } else {
-                    haveContent++
-                  }
-                }
-                index++
-              }
-            }
-
-            this.ui.coherence.display_warning = true
-            this.ui.methodological_assessments.extracted_data.display_warning = true
-            this.ui.adequacy.extracted_data.display_warning = true
-            if (!haveContent) {
-              this.ui.coherence.display_warning = false
-              this.ui.methodological_assessments.extracted_data.display_warning = false
-              this.ui.adequacy.extracted_data.display_warning = false
-            }
-            this.extracted_data.items = _items
           }
+        }
+
+        const _references = this.list.references
+        let _items = []
+        let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
+        extractedDataItems.sort(function (a, b) {
+          if (a.authors < b.authors) {
+            return -1
+          }
+          if (a.authors > b.authors) {
+            return 1
+          }
+          return 0
         })
-        .catch((error) => {
-          this.printErrors(error)
-        })
+        localData.original_items = JSON.parse(JSON.stringify(localData.items))
+        let haveContent = 0
+        for (let i in _references) {
+          let index = 0
+          for (let item of extractedDataItems) {
+            if (item.ref_id === _references[i]) {
+              _items.push({
+                ref_id: item.ref_id,
+                authors: item.authors,
+                column_0: item.column_0,
+                index: index
+              })
+              if (Object.prototype.hasOwnProperty.call(item, 'column_0')) {
+                if (item.column_0 === '') {
+                  haveContent++
+                }
+              } else {
+                haveContent++
+              }
+            }
+            index++
+          }
+        }
+
+        this.ui.coherence.display_warning = true
+        this.ui.methodological_assessments.extracted_data.display_warning = true
+        this.ui.adequacy.extracted_data.display_warning = true
+        if (!haveContent) {
+          this.ui.coherence.display_warning = false
+          this.ui.methodological_assessments.extracted_data.display_warning = false
+          this.ui.adequacy.extracted_data.display_warning = false
+        }
+        this.extracted_data.items = _items
+      }
     },
     printErrors: function (error) {
       Commons.printErrors(error)
