@@ -7,7 +7,7 @@
       <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
     </template>
     <template v-else>
-      <h3>Extracted data</h3>
+      <h3 v-if="showTitle">Extracted data</h3>
     </template>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
       It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
@@ -15,6 +15,7 @@
     <template v-if="localExtractedData.fields.length">
       <bc-filters
         v-if="mode==='edit'"
+        :showFilters="showFilters"
         class="d-print-none"
         idname="extracted-data-filter"
         :tableSettings="tableSettings"
@@ -114,6 +115,11 @@ export default {
     showParagraph: {
       type: Boolean,
       default: false
+    },
+    showFilters: Boolean,
+    showTitle: {
+      type: Boolean,
+      default: true
     }
   },
   components: {
