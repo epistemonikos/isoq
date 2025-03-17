@@ -469,6 +469,8 @@
                   included study.
                 </p>
                 <table-extracted-data
+                  :showTitle="false"
+                  :showFilters="false"
                   :ui="ui"
                   :show="show"
                   :mode="mode"
@@ -494,44 +496,20 @@
               them into the table below using the edit button for each included
               study.
             </p>
-            <b-table class="table-small-font extracted-data" responsive head-variant="light" outlined :fields="mode === 'view' ? mode_print_fieldsObj : extractedData.fieldsObj
-              " :items="extractedData.items">
-              <template v-slot:cell(authors)="data">
-                <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-              </template>
-              <template v-slot:cell(column_0)="data">
-                <template v-if="
-                  showEditExtractedDataInPlace.display &&
-                  showEditExtractedDataInPlace.item.index === data.item.index
-                ">
-                  <b-form-group>
-                    <b-form-textarea rows="6" max-rows="100"
-                      v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                  </b-form-group>
-                </template>
-                <template v-else>
-                  {{ data.item.column_0 }}
-                </template>
-              </template>
-              <template v-slot:cell(actions)="data">
-                <template v-if="
-                  showEditExtractedDataInPlace.display &&
-                  showEditExtractedDataInPlace.item.index === data.item.index
-                ">
-                  <b-button block variant="success" @click="updateContentExtractedDataItem(data.item.ref_id)">
-                    Save
-                  </b-button>
-                  <b-button block variant="outline-secondary" @click="cancelExtractedDataInPlace">
-                    Cancel
-                  </b-button>
-                </template>
-                <template v-else>
-                  <b-button v-if="permission" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
-                    <font-awesome-icon icon="edit" :title="$t('Edit')" />
-                  </b-button>
-                </template>
-              </template>
-            </b-table>
+            <table-extracted-data
+              :showTitle="false"
+              :showFilters="false"
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="permission"
+              :extractedData="extractedData"
+              :modePrintFieldObject="modePrintFieldObject"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="false"
+              @printErrors="printErrors"
+              @getExtractedData="getExtractedData"></table-extracted-data>
           </div>
 
           <div v-if="selectedOptions.type === 'adequacy'">
