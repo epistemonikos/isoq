@@ -469,17 +469,19 @@
       :modalData="modalData"
       :list="list"
       :ui="ui"
+      :show="show"
       :methAssessments="methAssessments"
       :findings="findings"
       :mode="mode"
-      :extractedData="extractedData"
+      :extractedData="localExtractedData"
       :refsWithTitle="refsWithTitle"
       :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
       :charsOfStudies="charsOfStudies"
       :project="project"
       :evidenceProfile="evidenceProfile"
       :selectOptions="selectOptions"
-      :permissions="permission"
+      :permission="permission"
+      :modePrintFieldObject="modePrintFieldObject"
       @update-list-data="getList"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
@@ -520,12 +522,25 @@ export default {
     extractedData: Object,
     showEditExtractedDataInPlace: Object,
     modalData: Object,
-    charsOfStudies: Object
+    charsOfStudies: Object,
+    show: Object,
+    modePrintFieldObject: Array
   },
   components: {
     'back-to-top': backToTop,
     'evidence-profile-form': () => import('./evidenceProfileForm.vue'),
     'videoHelp': () => import('../videoHelp')
+  },
+  mounted: function () {
+    this.localExtractedData = this.extractedData
+  },
+  watch: {
+    extractedData: {
+      handler: function (val) {
+        this.localExtractedData = val
+      },
+      deep: true
+    }
   },
   data () {
     return {
@@ -561,7 +576,11 @@ export default {
             return references
           }
         }
-      ]
+      ],
+      localExtractedData: {
+        fields: [],
+        items: []
+      }
     }
   },
   methods: {
@@ -688,8 +707,8 @@ export default {
     setShowEditExtractedDataInPlace: function (data) {
       this.$emit('setShowEditExtractedDataInPlace', data)
     },
-    getExtractedData: function () {
-      this.$emit('getExtractedData')
+    getExtractedData: function (status) {
+      this.$emit('getExtractedData', status)
     }
   }
 }

@@ -118,6 +118,7 @@
               <evidence-profile-table
                 :evidenceProfile="evidence_profile"
                 :ui="ui"
+                :show="show"
                 :evidenceProfileTableSettings="evidence_profile_table_settings"
                 :references="references"
                 :mode="mode"
@@ -130,6 +131,7 @@
                 :findings="findings"
                 :methAssessments="meth_assessments"
                 :extractedData="extracted_data"
+                :modePrintFieldObject="mode_print_fieldsObj"
                 :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
                 :modalData="buffer_modal_stage_two"
                 :charsOfStudies="characteristics_studies"
@@ -461,8 +463,8 @@ export default {
         return result
       }
     },
-    getAllReferences: function (references) {
-      let _references = references
+    getAllReferences: function () {
+      let _references = JSON.parse(JSON.stringify(this.list.fullreferences))
       let _refs = []
       let _refsWithTitles = []
       for (let reference of _references) {
@@ -488,17 +490,17 @@ export default {
           //   fields: [],
           //   items: []
           // }
-          const project = JSON.parse(JSON.stringify(response.data[0]['project']))
-          const references = JSON.parse(JSON.stringify(response.data[0]['fullreferences']))
-          const characteristics = JSON.parse(JSON.stringify(response.data[0]['characteristics']))
-          const assessments = JSON.parse(JSON.stringify(response.data[0]['assessments']))
-          const extractedData = JSON.parse(JSON.stringify(response.data[0]['extracted_data']))
-          this.getProject(project)
-          this.getAllReferences(references)
+          // const project = JSON.parse(JSON.stringify(response.data[0]['project']))
+          // const references = JSON.parse(JSON.stringify(response.data[0]['fullreferences']))
+          // const characteristics = JSON.parse(JSON.stringify(response.data[0]['characteristics']))
+          // const assessments = JSON.parse(JSON.stringify(response.data[0]['assessments']))
+          // const extractedData = JSON.parse(JSON.stringify(response.data[0]['extracted_data']))
+          this.getProject()
+          this.getAllReferences()
           this.getFinding(fromModal)
-          this.getCharsOfStudies(characteristics[0])
-          this.getMethAssessments(assessments)
-          this.getExtractedData(extractedData)
+          this.getCharsOfStudies()
+          this.getMethAssessments()
+          this.getExtractedData()
 
           this.evidence_profile_table_settings.isBusy = false
           const elementScroll = document.getElementsByName('evidence-profile')[0]
@@ -536,8 +538,8 @@ export default {
           }
         })
     },
-    getProject: function (project) {
-      this.project = project
+    getProject: function () {
+      this.project = JSON.parse(JSON.stringify(this.list.project))
       if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
         this.project.inclusion = ''
       }
@@ -627,9 +629,10 @@ export default {
         this.status_evidence_profile.variant = 'success'
       }
     },
-    getCharsOfStudies: function (characteristics) {
-      if (characteristics.items.length) {
-        let data = characteristics
+    getCharsOfStudies: function () {
+      const characteristics = JSON.parse(JSON.stringify(this.list.characteristics))
+      if (characteristics.length) {
+        let data = characteristics[0]
         let items = []
 
         let haveContent = 0
@@ -697,7 +700,8 @@ export default {
         }
       }
     },
-    getMethAssessments: function (assessments) {
+    getMethAssessments: function () {
+      const assessments = JSON.parse(JSON.stringify(this.list.assessments))
       if (assessments.length) {
         const _references = JSON.parse(JSON.stringify(this.list.references))
         let data = assessments[0]
@@ -744,7 +748,18 @@ export default {
         this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
       }
     },
-    getExtractedData: function (extractedData) {
+    getExtractedData: function (status = false) {
+      let extractedData = JSON.parse(JSON.stringify(this.list.extracted_data))
+      if (status) {
+        axios.get(`/api/isoqf_extracted_data`, {params: {finding_id: this.findings.id}})
+          .then((response) => {
+            extractedData = response.data
+            this.processExtractedData(extractedData)
+          })
+      }
+      this.processExtractedData(extractedData)
+    },
+    processExtractedData: function (extractedData) {
       let localData = {id: null, fields: [], items: []}
       if (extractedData.length) {
         localData = extractedData[0]
