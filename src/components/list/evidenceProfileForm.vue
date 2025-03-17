@@ -1,7 +1,7 @@
 <template>
   <div>
   <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
-    :ok-disabled="!permissions"
+    :ok-disabled="!permission"
     @ok="saveStageOneAndTwo(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
     cancel-variant="outline-secondary">
     <template v-slot:modal-title>
@@ -44,7 +44,7 @@
               }">here</b-link>)
             </p>
             <b-form-radio-group v-model="selectedOptions.methodological_limitations.option"
-              name="methodological-limitations" stacked :disabled="!permissions">
+              name="methodological-limitations" stacked :disabled="!permission">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -66,7 +66,7 @@
                   title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.methodological_limitations.option = null; selectedOptions.methodological_limitations.explanation = ''; selectedOptions.methodological_limitations.example = '';"
                 v-if="selectedOptions.methodological_limitations.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
@@ -92,7 +92,7 @@
               </template>
               <b-form-textarea id="input-ml-explanation"
                 v-model="selectedOptions.methodological_limitations.explanation" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -100,7 +100,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.methodological_limitations.notes" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
           </div>
 
@@ -131,7 +131,7 @@
               studies, but is about the fit between the extracted data and the
               review finding as you have written it.
             </p>
-            <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked :disabled="!permissions">
+            <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked :disabled="!permission">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -153,7 +153,7 @@
                   title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.coherence.option = null; selectedOptions.coherence.explanation = '';" v-if="selectedOptions.coherence.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -175,7 +175,7 @@
                   target="_blank">here</a>
                 to see an example.
               </template>
-              <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation" :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
+              <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation" :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -183,7 +183,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.coherence.notes" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <!-- adequacy -->
           </div>
@@ -203,7 +203,7 @@
                 query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
               }">here</b-link>)
             </p>
-            <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked :disabled="!permissions">
+            <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked :disabled="!permission">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -225,7 +225,7 @@
                   title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.adequacy.option = null; selectedOptions.adequacy.explanation = ''; " v-if="selectedOptions.adequacy.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -244,7 +244,7 @@
                   target="_blank">here</a>
                 to see an example.
               </template>
-              <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation" :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
+              <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation" :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -252,7 +252,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.adequacy.notes" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <!-- relevance -->
           </div>
@@ -276,7 +276,7 @@
                 query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
               }">here</b-link>)
             </p>
-            <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked :disabled="!permissions">
+            <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked :disabled="!permission">
               <b-form-radio value="0">
                 No/Very minor concerns
                 <small v-b-tooltip.hover
@@ -298,7 +298,7 @@
                   title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.relevance.option = null; selectedOptions.relevance.explanation = '';" v-if="selectedOptions.relevance.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -311,7 +311,7 @@
                   {{ showMessage(selectedOptions.relevance.option, 'relevance') }}
                 </p>
               </template>
-              <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation" :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
+              <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation" :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes">
               <template slot="label">
@@ -325,7 +325,7 @@
                 to see an example.
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <!-- CERQual assessment -->
           </div>
@@ -342,7 +342,7 @@
               for practical guidance on making an overall assessment of confidence
               for a review finding.
             </p>
-            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked :disabled="!permissions">
+            <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked :disabled="!permission">
               <b-form-radio value="0">
                 High confidence
                 <small v-b-tooltip.hover
@@ -364,7 +364,7 @@
                   title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
               </b-form-radio>
             </b-form-radio-group>
-            <p v-if="permissions" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="selectedOptions.cerqual.option = null; selectedOptions.cerqual.explanation = '';" v-if="selectedOptions.cerqual.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -406,7 +406,7 @@
                 </div>
               </template>
               <b-form-textarea id="input-cerqual" v-model="selectedOptions.cerqual.explanation"
-                placeholder="Enter an explanation" rows="6" max-rows="100" :disabled="!permissions"></b-form-textarea>
+                placeholder="Enter an explanation" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
             <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
               description="Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments">
@@ -414,7 +414,7 @@
                 <videoHelp txt="Notes" tag="none" urlId="462180668"></videoHelp>
               </template>
               <b-form-textarea id="input-ml-notes" v-model="selectedOptions.cerqual.notes" rows="6"
-                max-rows="100" :disabled="!permissions"></b-form-textarea>
+                max-rows="100" :disabled="!permission"></b-form-textarea>
             </b-form-group>
           </div>
         </b-col>
@@ -449,7 +449,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
                 </edit-review-finding>
               </b-tab>
               <b-tab>
@@ -468,54 +468,24 @@
                   Add them into the table below using the edit button for each
                   included study.
                 </p>
-                <b-table class="table-small-font extracted-data" responsive head-variant="light" outlined :fields="mode === 'view'
-                    ? mode_print_fieldsObj
-                    : extractedData.fieldsObj
-                  " :items="extractedData.items">
-                  <template v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-                  </template>
-                  <template v-slot:cell(column_0)="data">
-                    <template v-if="
-                      showEditExtractedDataInPlace.display &&
-                      showEditExtractedDataInPlace.item.index ===
-                      data.item.index
-                    ">
-                      <b-form-group>
-                        <b-form-textarea rows="6" max-rows="100"
-                          v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
-                      </b-form-group>
-                    </template>
-                    <template v-else>
-                      {{ data.item.column_0 }}
-                    </template>
-                  </template>
-                  <template v-slot:cell(actions)="data">
-                    <template v-if="
-                      showEditExtractedDataInPlace.display &&
-                      showEditExtractedDataInPlace.item.index ===
-                      data.item.index
-                    ">
-                      <b-button block variant="success" @click="updateContentExtractedDataItem(data.item.ref_id)">
-                        Save
-                      </b-button>
-                      <b-button block variant="outline-secondary" @click="cancelExtractedDataInPlace">
-                        Cancel
-                      </b-button>
-                    </template>
-                    <template v-else>
-                      <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
-                        <font-awesome-icon icon="edit" :title="$t('Edit')" />
-                      </b-button>
-                    </template>
-                  </template>
-                </b-table>
+                <table-extracted-data
+                  :ui="ui"
+                  :show="show"
+                  :mode="mode"
+                  :list="list"
+                  :permission="permission"
+                  :extractedData="extractedData"
+                  :modePrintFieldObject="modePrintFieldObject"
+                  :refsWithTitle="refsWithTitle"
+                  :showParagraph="false"
+                  @printErrors="printErrors"
+                  @getExtractedData="getExtractedData"></table-extracted-data>
               </b-tab>
             </b-tabs>
           </div>
 
           <div v-if="selectedOptions.type === 'coherence'">
-            <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
+            <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
             </edit-review-finding>
             <h4>Extracted Data</h4>
             <p v-if="ui.adequacy.extracted_data.display_warning" class="text-danger">
@@ -556,7 +526,7 @@
                   </b-button>
                 </template>
                 <template v-else>
-                  <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                  <b-button v-if="permission" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
                     <font-awesome-icon icon="edit" :title="$t('Edit')" />
                   </b-button>
                 </template>
@@ -615,7 +585,7 @@
                       </b-button>
                     </template>
                     <template v-else>
-                      <b-button v-if="permissions" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                      <b-button v-if="permission" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
                         <font-awesome-icon icon="edit" :title="$t('Edit')" />
                       </b-button>
                     </template>
@@ -650,7 +620,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -742,7 +712,7 @@
                 </b-table>
               </b-tab>
               <b-tab title="Review Finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -793,7 +763,7 @@
                 </p>
               </b-tab>
               <b-tab title="Review finding">
-                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
+                <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
                 </edit-review-finding>
               </b-tab>
             </b-tabs>
@@ -859,11 +829,13 @@
 <script>
 import axios from 'axios'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
+
 export default {
   name: 'evidenceProfileForm',
   components: {
     videoHelp: () => import('@/components/videoHelp.vue'),
-    'edit-review-finding': () => import('@/components/editReviewFinding.vue')
+    'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
+    'table-extracted-data': () => import('./editListExtractedData.vue')
   },
   props: {
     modalData: Object,
@@ -879,7 +851,9 @@ export default {
     project: Object,
     evidenceProfile: Array,
     selectOptions: Array,
-    permissions: Boolean
+    permission: Boolean,
+    show: Object,
+    modePrintFieldObject: Array
   },
   data () {
     return {
@@ -908,10 +882,20 @@ export default {
         type: '',
         isoqf_id: null
       },
-      showPanel: true
+      showPanel: true,
+      localExtractedData: {
+        items: [],
+        fields: []
+      }
     }
   },
   watch: {
+    extractedData: {
+      handler: function (val) {
+        this.localExtractedData = val
+      },
+      deep: true
+    },
     modalData: function () {
       this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     },
@@ -938,6 +922,7 @@ export default {
   },
   mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
+    this.localExtractedData = JSON.parse(JSON.stringify(this.extractedData))
   },
   methods: {
     commonGenerateCerqualExplanation: function () {
@@ -1199,7 +1184,7 @@ export default {
       }
       axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
         .then(() => {
-          this.$emit('getExtractedData')
+          this.$emit('getExtractedData', true)
           const data = {
             display: false,
             item: {}
@@ -1209,6 +1194,9 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    getExtractedData: function (status) {
+      this.$emit('getExtractedData', status)
     }
   }
 }
