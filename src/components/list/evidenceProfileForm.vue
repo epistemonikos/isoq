@@ -2,7 +2,7 @@
   <div>
   <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
     :ok-disabled="!permission"
-    @ok="saveStageOneAndTwo(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
+    @ok="saveEvidenceProfile(selectedOptions.type, $event)" ok-title="Save" ok-variant="outline-success"
     cancel-variant="outline-secondary">
     <template v-slot:modal-title>
       <videoHelp v-if="selectedOptions.type === 'methodological-limitations'"
@@ -935,7 +935,7 @@ export default {
         }
       }
     },
-    openWarningModal: function () {
+    openWarningModalForExplanationText: function () {
       this.$refs['modal-warning-same-txt'].show()
     },
     closeWarningModalDoItNow: function (type = '') {
@@ -946,15 +946,15 @@ export default {
       this.continueSavingDataModal()
       this.$refs['modal-warning-same-txt'].hide()
     },
-    saveStageOneAndTwo: function (type, e) {
+    saveEvidenceProfile: function (type, e) {
       e.preventDefault()
-      if (this.checkValidationText(type, this.selectedOptions)) {
-        this.openWarningModal()
+      if (this.checkValidationExplanationText(type, this.selectedOptions)) {
+        this.openWarningModalForExplanationText()
       } else {
         this.continueSavingDataModal()
       }
     },
-    checkValidationText: function (type, prop) {
+    checkValidationExplanationText: function (type, prop) {
       switch (type) {
         case 'methodological-limitations':
           if (parseInt(prop.methodological_limitations.option) > 0 && prop.methodological_limitations.explanation === '') {
