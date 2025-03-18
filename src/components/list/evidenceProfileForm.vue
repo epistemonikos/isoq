@@ -67,7 +67,7 @@
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
-              <a @click="selectedOptions.methodological_limitations.option = null; selectedOptions.methodological_limitations.explanation = ''; selectedOptions.methodological_limitations.example = '';"
+              <a @click="clearMySelection('methodological_limitations')"
                 v-if="selectedOptions.methodological_limitations.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
@@ -154,7 +154,7 @@
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
-              <a @click="selectedOptions.coherence.option = null; selectedOptions.coherence.explanation = '';" v-if="selectedOptions.coherence.option !== null">
+              <a @click="clearMySelection('coherence')" v-if="selectedOptions.coherence.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
               </a>
@@ -226,7 +226,7 @@
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
-              <a @click="selectedOptions.adequacy.option = null; selectedOptions.adequacy.explanation = ''; " v-if="selectedOptions.adequacy.option !== null">
+              <a @click="clearMySelection('adequacy')" v-if="selectedOptions.adequacy.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
               </a>
@@ -299,7 +299,7 @@
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
-              <a @click="selectedOptions.relevance.option = null; selectedOptions.relevance.explanation = '';" v-if="selectedOptions.relevance.option !== null">
+              <a @click="clearMySelection('relevance')" v-if="selectedOptions.relevance.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
               </a>
@@ -365,7 +365,7 @@
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
-              <a @click="selectedOptions.cerqual.option = null; selectedOptions.cerqual.explanation = '';" v-if="selectedOptions.cerqual.option !== null">
+              <a @click="clearMySelection('cerqual')" v-if="selectedOptions.cerqual.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
                 clear my selection
               </a>
@@ -1175,6 +1175,31 @@ export default {
     },
     getExtractedData: function (status) {
       this.$emit('getExtractedData', status)
+    },
+    clearMySelection: function (option) {
+      switch (option) {
+        case 'methodological_limitations':
+          this.selectedOptions.methodological_limitations.option = null
+          this.selectedOptions.methodological_limitations.explanation = ''
+          this.selectedOptions.methodological_limitations.example = ''
+          break
+        case 'coherence':
+          this.selectedOptions.coherence.option = null
+          this.selectedOptions.coherence.explanation = ''
+          break
+        case 'adequacy':
+          this.selectedOptions.adequacy.option = null
+          this.selectedOptions.adequacy.explanation = ''
+          break
+        case 'relevance':
+          this.selectedOptions.relevance.option = null
+          this.selectedOptions.relevance.explanation = ''
+          break
+        case 'cerqual':
+          this.selectedOptions.cerqual.option = null
+          this.selectedOptions.cerqual.explanation = ''
+          break
+      }
     }
   }
 }
