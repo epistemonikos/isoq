@@ -801,6 +801,19 @@
         </b-row>
       </b-container>
     </b-modal>
+
+    <b-modal
+      id="modal-warning-unpublished"
+      ref="modal-warning-unpublished"
+      title="Warning"
+      @ok="continueSavingDataModal(true)">
+        <p>
+          By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.
+        </p>
+        <p>
+          Do you wish to continue?
+        </p>
+    </b-modal>
   </div>
 </template>
 
@@ -864,7 +877,8 @@ export default {
       localExtractedData: {
         items: [],
         fields: []
-      }
+      },
+      showModalWarningUnpublished: false
     }
   },
   watch: {
@@ -951,7 +965,11 @@ export default {
       if (this.checkValidationExplanationText(type, this.selectedOptions)) {
         this.openWarningModalForExplanationText()
       } else {
-        this.continueSavingDataModal()
+        if (this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.private === false) {
+          this.$refs['modal-warning-unpublished'].show()
+        } else {
+          this.continueSavingDataModal()
+        }
       }
     },
     checkValidationExplanationText: function (type, prop) {
@@ -993,7 +1011,7 @@ export default {
         this.$refs['modal-warning-changed-option'].hide()
       }
     },
-    continueSavingDataModal: function () {
+    continueSavingDataModal: function (status = false) {
       const selectedOptions = this.selectedOptions
       this.$emit('busyEvidenceProfileTable', true)
       delete this.selectedOptions.type
@@ -1005,9 +1023,21 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
           .then(() => {
-            this.$emit('callGetStageOneData', false)
-            this.saveListName()
-            this.$refs['modal-evidence-profile-form'].hide()
+            if (status) {
+              axios.post('/api/unpublish/project/', {params: {project_id: this.list.project_id}})
+                .then(() => {
+                  this.$emit('callGetStageOneData', false)
+                  this.saveListName()
+                  this.$refs['modal-evidence-profile-form'].hide()
+                })
+                .catch((error) => {
+                  this.printErrors(error)
+                })
+            } else {
+              this.$emit('callGetStageOneData', false)
+              this.saveListName()
+              this.$refs['modal-evidence-profile-form'].hide()
+            }
           })
           .catch((error) => {
             this.printErrors(error)
@@ -1182,23 +1212,33 @@ export default {
           this.selectedOptions.methodological_limitations.option = null
           this.selectedOptions.methodological_limitations.explanation = ''
           this.selectedOptions.methodological_limitations.example = ''
+          this.changeStatusForUnpublished()
           break
         case 'coherence':
           this.selectedOptions.coherence.option = null
           this.selectedOptions.coherence.explanation = ''
+          this.changeStatusForUnpublished()
           break
         case 'adequacy':
           this.selectedOptions.adequacy.option = null
           this.selectedOptions.adequacy.explanation = ''
+          this.changeStatusForUnpublished()
           break
         case 'relevance':
           this.selectedOptions.relevance.option = null
           this.selectedOptions.relevance.explanation = ''
+          this.changeStatusForUnpublished()
           break
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
+          this.changeStatusForUnpublished()
           break
+      }
+    },
+    changeStatusForUnpublished: function () {
+      if (this.list.cerqual_lists === 1) {
+        this.showModalWarningUnpublished = true
       }
     }
   }
