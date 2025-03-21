@@ -1024,7 +1024,7 @@ export default {
         axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
           .then(() => {
             if (status) {
-              axios.post('/api/unpublish/project/', {params: {project_id: this.list.project_id}})
+              axios.post(`/api/unpublish/project/${this.list.project_id}`)
                 .then(() => {
                   this.$emit('callGetStageOneData', false)
                   this.saveListName()
