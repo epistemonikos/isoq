@@ -784,7 +784,12 @@
       :hide-footer="true">
       <p>
         By changing this assessment, you will need to redo your overall GRADE-CERQual assessment of confidence. Your confidence level selection will be cleared, and your explanation erased. Your notes will be maintained.
-        <br>Do you wish to continue?
+      </p>
+      <p v-if="showModalWarningChangedOption">
+        Your project will revert to "private" and be removed from the iSoQ database. You can publish the project to the database once you have completed your GRADE-CERQual assessment of confidence.
+      </p>
+      <p>
+        Do you wish to continue?
       </p>
       <b-container>
         <b-row>
@@ -803,16 +808,30 @@
     </b-modal>
 
     <b-modal
-      id="modal-warning-unpublished"
-      ref="modal-warning-unpublished"
+      id="modal-warning-cleaning-cerqual"
+      ref="modal-warning-cleaning-cerqual"
       title="Warning"
-      @ok="continueSavingDataModal(true)">
-        <p>
-          By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.
-        </p>
-        <p>
-          Do you wish to continue?
-        </p>
+      :hide-footer="true">
+      <p>
+        By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.
+      </p>
+      <p>
+        Do you wish to continue?
+      </p>
+      <b-container>
+        <b-row>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, true)">Yes</b-button>
+          </b-col>
+          <b-col>
+            <b-button
+              block
+              @click="updateOptions(selectedOptions.type, false)">No</b-button>
+          </b-col>
+        </b-row>
+      </b-container>
     </b-modal>
   </div>
 </template>
@@ -878,7 +897,7 @@ export default {
         items: [],
         fields: []
       },
-      showModalWarningUnpublished: false
+      showModalWarningChangedOption: false
     }
   },
   watch: {
@@ -893,21 +912,25 @@ export default {
     },
     'selectedOptions.methodological_limitations.option': function (val) {
       if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
+        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
         this.$refs['modal-warning-changed-option'].show()
       }
     },
     'selectedOptions.coherence.option': function (val) {
       if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
+        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
         this.$refs['modal-warning-changed-option'].show()
       }
     },
     'selectedOptions.adequacy.option': function (val) {
       if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
+        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
         this.$refs['modal-warning-changed-option'].show()
       }
     },
     'selectedOptions.relevance.option': function (val) {
       if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
+        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
         this.$refs['modal-warning-changed-option'].show()
       }
     }
@@ -965,12 +988,26 @@ export default {
       if (this.checkValidationExplanationText(type, this.selectedOptions)) {
         this.openWarningModalForExplanationText()
       } else {
-        if (this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.private === false) {
-          this.$refs['modal-warning-unpublished'].show()
+        if (this.checkIfIsTheOnlyPublished()) {
+          let newType = type
+          if (type === 'methodological-limitations') {
+            newType = 'methodological_limitations'
+          }
+          if (this.selectedOptions[newType].option === null) {
+            this.continueSavingDataModal(true)
+          } else {
+            this.continueSavingDataModal()
+          }
         } else {
           this.continueSavingDataModal()
         }
       }
+    },
+    checkIfIsTheOnlyPublished: function () {
+      if (this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.project.private === false) {
+        return true
+      }
+      return false
     },
     checkValidationExplanationText: function (type, prop) {
       switch (type) {
@@ -1005,10 +1042,18 @@ export default {
       if (status) {
         this.selectedOptions.cerqual.option = null
         this.selectedOptions.cerqual.explanation = ''
-        this.$refs['modal-warning-changed-option'].hide()
+        if (option === 'cerqual') {
+          this.$refs['modal-warning-cleaning-cerqual'].hide()
+        } else {
+          this.$refs['modal-warning-changed-option'].hide()
+        }
       } else {
         this.selectedOptions[option].option = this.modalData[option].option
-        this.$refs['modal-warning-changed-option'].hide()
+        if (option === 'cerqual') {
+          this.$refs['modal-warning-cleaning-cerqual'].hide()
+        } else {
+          this.$refs['modal-warning-changed-option'].hide()
+        }
       }
     },
     continueSavingDataModal: function (status = false) {
@@ -1212,33 +1257,24 @@ export default {
           this.selectedOptions.methodological_limitations.option = null
           this.selectedOptions.methodological_limitations.explanation = ''
           this.selectedOptions.methodological_limitations.example = ''
-          this.changeStatusForUnpublished()
           break
         case 'coherence':
           this.selectedOptions.coherence.option = null
           this.selectedOptions.coherence.explanation = ''
-          this.changeStatusForUnpublished()
           break
         case 'adequacy':
           this.selectedOptions.adequacy.option = null
           this.selectedOptions.adequacy.explanation = ''
-          this.changeStatusForUnpublished()
           break
         case 'relevance':
           this.selectedOptions.relevance.option = null
           this.selectedOptions.relevance.explanation = ''
-          this.changeStatusForUnpublished()
           break
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
-          this.changeStatusForUnpublished()
+          this.$refs['modal-warning-cleaning-cerqual'].show()
           break
-      }
-    },
-    changeStatusForUnpublished: function () {
-      if (this.list.cerqual_lists === 1) {
-        this.showModalWarningUnpublished = true
       }
     }
   }
