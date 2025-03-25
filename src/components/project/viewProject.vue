@@ -372,211 +372,6 @@
             </b-card>
           </b-col>
           <b-col cols="12" class="toDoc">
-            <!--
-            <template v-if="mode==='edit'">
-              <b-table
-                :selectable="(mode==='view')?true:false"
-                select-mode="multi"
-                selected-variant="warning"
-                bordered
-                head-variant="light"
-                id="findings"
-                ref="findings"
-                sort-by="sort"
-                :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
-                :items="lists"
-                show-empty
-                :busy="table_settings.isBusy"
-                :current-page="table_settings.currentPage"
-                :filter="table_settings.filter"
-                @filtered="onFiltered"
-                :filter-included-fields="table_settings.filterOn">
-                <template v-slot:head(sort)="data">
-                  <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(name)="data">
-                  <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
-                </template>
-                <template v-slot:head(category_name)="data">
-                  {{data.label}}
-                  <b-dropdown
-                    id="dropdown-categories"
-                    text=""
-                    class="finding-filter"
-                    :no-caret="false"
-                    size="sm">
-                    <b-dropdown-item
-                    v-for="(category, index) of list_categories.options"
-                    :key="index"
-                    @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text }}</b-dropdown-item>
-                  </b-dropdown>
-                  <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                </template>
-                <template v-slot:head(cerqual_option)="data">
-                  <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
-                  <b-dropdown
-                    id="dropdown-cerqual-option"
-                    text=""
-                    class="finding-filter"
-                    :no-caret="false"
-                    size="sm">
-                    <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">High confidence</b-dropdown-item>
-                    <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">Moderate confidence</b-dropdown-item>
-                    <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">Low confidence</b-dropdown-item>
-                    <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">Very low confidence</b-dropdown-item>
-                    <b-dropdown-divider></b-dropdown-divider>
-                    <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">Assessments completed</b-dropdown-item>
-                    <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">Assessments not completed</b-dropdown-item>
-                  </b-dropdown>
-                  <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                </template>
-                <template v-slot:head(cerqual_explanation)="data">
-                  <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
-                  <b-dropdown
-                    id="dropdown-cerqual-explanation"
-                    text=""
-                    class="finding-filter"
-                    :no-caret="false"
-                    size="sm">
-                    <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">Completed</b-dropdown-item>
-                    <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">Not completed</b-dropdown-item>
-                  </b-dropdown>
-                  <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
-                </template>
-                <template v-slot:head(ref_list)="data">
-                  <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
-                </template>
-                
-                <template v-slot:cell(sort)="data">
-                  {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
-                </template>
-                <template v-slot:cell(name)="data">
-                  <a :id="`a-${data.item.id}`"></a>
-                  <template v-if="mode === 'edit' && checkPermissions()">
-                    <b-row
-                      class="mb-3">
-                      <b-col
-                        lg="6"
-                        cols="12">
-                        <b-button
-                          block
-                          v-if="mode==='edit'"
-                          variant="outline-success"
-                          @click="editModalFindingName(data)">
-                          <font-awesome-icon
-                            v-if=(data.item.notes.length)
-                            icon="comments"></font-awesome-icon>
-                          Edit
-                        </b-button>
-                      </b-col>
-                      <b-col
-                        class="mt-1 mt-lg-0"
-                        lg="6"
-                        cols="12">
-                        <b-button
-                          block
-                          v-if="mode==='edit'"
-                          variant="outline-danger"
-                          @click="removeModalFinding(data)">
-                          Remove
-                        </b-button>
-                      </b-col>
-                    </b-row>
-                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                  </template>
-                  <template v-else>
-                    <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
-                    <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
-                  </template>
-                </template>
-                <template v-slot:cell(category_name)="data">
-                  <template v-if="checkPermissions()">
-                    <template v-if="data.item.category !== null">
-                      <b-button
-                        block
-                        variant="outline-info"
-                        @click="editModalFindingName(data)">Edit group</b-button>
-                      {{ data.item.category_name }}
-                      <span
-                        v-if="data.item.category_extra_info !== ''"
-                        v-b-tooltip.hover
-                        :title="data.item.category_extra_info">*</span>
-                    </template>
-                    <template v-else>
-                      <b-button
-                        v-if="mode==='edit' && data.item.references.length"
-                        variant="info"
-                        block
-                        @click="editModalFindingName(data)">Assign group</b-button>
-                    </template>
-                  </template>
-                </template>
-                <template v-slot:cell(cerqual_option)="data">
-                  <b-button
-                    v-if="mode==='edit' && data.item.references.length && checkPermissions()"
-                    class="d-print-none mb-3"
-                    :disabled="(data.item.references.length) ? false : true"
-                    block
-                    :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
-                    :to="{name: 'editList', params: {id: data.item.id}}">
-                      <font-awesome-icon
-                        v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-                        icon="comments"></font-awesome-icon>
-                      <span v-if="data.item.cerqual_option===''">Complete</span>
-                      <span v-if="data.item.cerqual_option!=''">Edit</span>
-                      GRADE-CERQual Assessment
-                    </b-button>
-                  <b>{{ data.item.cerqual_option }}</b>
-                </template>
-                <template v-slot:cell(cerqual_explanation)="data">
-                  <b-button
-                    v-if="mode==='edit' && data.item.references.length && checkPermissions()"
-                    class="d-print-none mb-3"
-                    :disabled="(data.item.references.length) ? false : true"
-                    block
-                    :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
-                    :to="{name: 'editList', params: {id: data.item.id}}">
-                      <font-awesome-icon
-                        v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-                        icon="comments"></font-awesome-icon>
-                      <span v-if="data.item.cerqual_explanation===''">Complete</span>
-                      <span v-if="data.item.cerqual_explanation!=''">Edit</span>
-                      GRADE-CERQual Assessment
-                  </b-button>
-                  <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
-                </template>
-                <template v-slot:cell(ref_list)="data">
-                  <template v-if="mode!=='edit'">
-                    {{ data.item.ref_list }}
-                  </template>
-                  <template v-else>
-                    <b-button
-                      v-if="checkPermissions()"
-                      block
-                      class="mb-3 d-print-none"
-                      :variant="(data.item.references.length) ? 'outline-info' : 'info'"
-                      @click="openModalReferences(data)">
-                      <span v-if="data.item.references.length">View or edit references</span>
-                      <span v-else>Select references</span>
-                    </b-button>
-                    There are <b>{{ data.item.raw_ref.length }}</b> references.
-                  </template>
-                </template>
-                <template v-slot:empty>
-                  <p class="text-center my-5">
-                    There are no findings to show, <a href="#" @click="modalAddList">add review finding</a>
-                  </p>
-                </template>
-                <template v-slot:table-busy>
-                  <div class="text-center text-danger my-2">
-                    <b-spinner class="align-middle"></b-spinner>
-                    <strong>Loading...</strong>
-                  </div>
-                </template>
-              </b-table>
-            </template>
-            -->
             <template
               v-if="mode==='edit' && checkPermissions()">
               <ViewTable
@@ -1200,26 +995,6 @@ export default {
     },
     clickTab: function (option) {
       this.tabOpened = option
-      // let theHash = ''
-      // switch (option) {
-      //   case 0:
-      //     theHash = 'Project-Property'
-      //     break
-      //   case 1:
-      //     theHash = 'My-Data'
-      //     break
-      //   case 2:
-      //     theHash = 'iSoQ'
-      //     break
-      //   case 3:
-      //     theHash = 'Guidance-on-applying-GRADE-CERQual'
-      //     break
-      // }
-      // if (Object.hasOwnProperty.call(this.$route.query, 'step')) {
-      //   this.$router.push({query: {tab: `${theHash}`, step: this.$route.query.step}})
-      // } else {
-      //   this.$router.push({query: {tab: `${theHash}`}})
-      // }
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
@@ -1237,7 +1012,6 @@ export default {
         for (const r of this.references) {
           if (r.id === array[i]) {
             authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
-            // authors = this.getAuthorsFormat(r.authors, r.publication_year) + '; ' + authors
           }
         }
       }
@@ -1989,22 +1763,10 @@ export default {
     #chars-of-studies-table thead th:first-child {
       width: 25%;
     }
-    /* #chars-of-studies-table tbody tr td button {
-      display: none;
-    }
-    #chars-of-studies-table tbody tr:hover td button {
-      display: inline;
-    } */
   div >>>
     #methodological-table thead th:first-child {
       width: 25%;
     }
-    /* #methodological-table tbody tr td button {
-      display: none;
-    }
-    #methodological-table tbody tr:hover td button {
-      display: inline;
-    } */
   div >>>
     #extracted-data-table thead th:first-child {
       width: 25%;
