@@ -16,6 +16,28 @@ export default class Commons {
     return authors
   }
 
+  static parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
+    let result = ''
+    const semicolon = hasSemicolon ? '; ' : ''
+    if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+      if (reference.authors.length) {
+        if (reference.authors.length === 1) {
+          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+        } else if (reference.authors.length === 2) {
+          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+        } else {
+          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+        }
+        if (!onlyAuthors) {
+          result = result + reference.title
+        }
+      } else {
+        return 'author(s) not found'
+      }
+    }
+    return result
+  }
+
   static getAuthorsFormat (authors = [], pubYear = '') {
     if (authors.length) {
       const nroAuthors = authors.length
