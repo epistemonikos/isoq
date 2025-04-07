@@ -48,6 +48,11 @@
     <b-row>
       <b-col
         cols="12">
+        <b-form-checkbox
+          v-if="isCamelot"
+          v-model="showConcerns"
+          :value="true"
+          :unchecked-value="false">Show concerns</b-form-checkbox>
         <b-table
           sort-by="authors"
           :id="`${prefix}-table`"
@@ -472,7 +477,8 @@ export default {
           { key: 'presentation_extractedData', label: 'Extracted data' },
           { key: 'presentation_concerns', label: 'Concerns' }
         ]
-      }
+      },
+      showConcerns: false
     }
   },
   watch: {
@@ -529,6 +535,15 @@ export default {
     },
     references () {
       this.updateMyDataTables()
+    },
+    showConcerns () {
+      if (this.showConcerns) {
+        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal
+      } else {
+        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => {
+          return !item.key.match(/_concerns$/)
+        })
+      }
     }
   },
   methods: {
