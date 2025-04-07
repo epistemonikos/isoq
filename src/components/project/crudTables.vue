@@ -390,6 +390,10 @@ export default {
     lists: {
       type: Array,
       default: () => []
+    },
+    isCamelot: {
+      type: Boolean,
+      default: true
     }
   },
   components: {
@@ -408,7 +412,8 @@ export default {
         authors: '',
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ]
+        ],
+        fieldsObjOriginal: []
       },
       dataTableFieldsModal: {
         nroColumns: 1,
@@ -438,6 +443,34 @@ export default {
         items: [],
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
+        ]
+      },
+      camelot: {
+        fields: [
+          { key: 'research_extractedData', label: 'Extracted data' },
+          { key: 'research_concerns', label: 'Concerns' },
+          { key: 'stakeholders_extractedData', label: 'Extracted data' },
+          { key: 'stakeholders_concerns', label: 'Concerns' },
+          { key: 'researchers_extractedData', label: 'Extracted data' },
+          { key: 'researchers_concerns', label: 'Concerns' },
+          { key: 'context_extractedData', label: 'Extracted data' },
+          { key: 'context_concerns', label: 'Concerns' },
+          { key: 'strategy_extractedData', label: 'Extracted data' },
+          { key: 'strategy_concerns', label: 'Concerns' },
+          { key: 'theory_extractedData', label: 'Extracted data' },
+          { key: 'theory_concerns', label: 'Concerns' },
+          { key: 'ethical_extractedData', label: 'Extracted data' },
+          { key: 'ethical_concerns', label: 'Concerns' },
+          { key: 'equity_extractedData', label: 'Extracted data' },
+          { key: 'equity_concerns', label: 'Concerns' },
+          { key: 'participant_extractedData', label: 'Extracted data' },
+          { key: 'participant_concerns', label: 'Concerns' },
+          { key: 'data_extractedData', label: 'Extracted data' },
+          { key: 'data_concerns', label: 'Concerns' },
+          { key: 'analysis_extractedData', label: 'Extracted data' },
+          { key: 'analysis_concerns', label: 'Concerns' },
+          { key: 'presentation_extractedData', label: 'Extracted data' },
+          { key: 'presentation_concerns', label: 'Concerns' }
         ]
       }
     }
@@ -499,6 +532,11 @@ export default {
     }
   },
   methods: {
+    addFieldsObjects: function (fieldsObj) {
+      for (let field of this.camelot.fields) {
+        fieldsObj.push(field)
+      }
+    },
     getData: function () {
       this.dataTableSettings.isBusy = true
       const params = {
@@ -512,10 +550,6 @@ export default {
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              if (this.checkPermissions) {
-                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
-              }
-
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
 
@@ -528,6 +562,28 @@ export default {
                   this.dataTableFieldsModal.fields.push(f.label)
                   this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
                 }
+              }
+
+              if (this.isCamelot) {
+                this.addFieldsObjects(this.dataTable.fieldsObj)
+              }
+
+              if (this.checkPermissions) {
+                this.dataTable.fieldsObj.push({'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' })
+              }
+
+              const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
+              this.dataTable.fieldsObjOriginal = original
+
+              if (this.isCamelot) {
+                this.dataTable.fieldsObj.filter(item => {
+                  if (item.key.match(/_concerns$/)) {
+                    const index = this.dataTable.fieldsObj.indexOf(item)
+                    if (index > -1) {
+                      this.dataTable.fieldsObj.splice(index, 1)
+                    }
+                  }
+                })
               }
 
               this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
