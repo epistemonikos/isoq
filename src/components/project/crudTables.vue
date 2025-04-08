@@ -235,23 +235,67 @@
         cancel-variant="outline-secondary">
         <template
           v-if="dataTableFieldsModal.items.length">
-          <b-form-group
-            v-if="field.key !== 'ref_id'"
-            v-for="field of dataTable.fields"
-            :key="field.id"
-            :label="field.label"
-            label-class="font-weight-bold">
-            <template v-if="['ref_id', 'authors'].includes(field.key)">
-              <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
-            </template>
-            <template v-else>
-              <b-form-textarea
-                v-if="!['ref_id', 'authors'].includes(field.key)"
-                v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                rows="2"
-                max-rows="100"></b-form-textarea>
-            </template>
-          </b-form-group>
+          <template
+            v-if="isCamelot">
+            <b-row>
+              <b-col cols="3">
+                <ul>
+                  <li v-for="field of camelot.categories" :key="field.id" class="text-wrap">
+                    {{ field.label }}
+                  </li>
+                </ul>
+              </b-col>
+              <b-col cols="9">
+                <b-form-group
+                  v-if="!camelot.excluded.includes(field.key)"
+                  v-for="field of dataTableFieldsModal.fields"
+                  :key="field.id"
+                  :label="field.label"
+                  label-class="font-weight-bold">
+                  <b-form-textarea
+                      v-if="!camelot.excluded.includes(field.key)"
+                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                      rows="2"
+                      max-rows="100"></b-form-textarea>
+                </b-form-group>
+                <div v-for="field of camelot.categories" :key="field.id" class="mb-2 border border-light">
+                  <div>
+                    <div class="bg-light text-dark p-2">
+                      <p class="font-weight-bold mb-0">{{ field.label }}</p>
+                    </div>
+                    <b-row class="p-2">
+                      <b-col v-for="option in field.options" :key="option.key">
+                        <p>{{ option.label }}</p>
+                        <b-form-textarea
+                          v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
+                          rows="2"
+                          max-rows="100"></b-form-textarea>
+                      </b-col>
+                    </b-row>
+                  </div>
+                </div>
+              </b-col>
+            </b-row>
+          </template>
+          <template v-else>
+            <b-form-group
+              v-if="field.key !== 'ref_id'"
+              v-for="field of dataTableFieldsModal.fields"
+              :key="field.id"
+              :label="field.label"
+              label-class="font-weight-bold">
+              <template v-if="['ref_id', 'authors'].includes(field.key)">
+                <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
+              </template>
+              <template v-else>
+                <b-form-textarea
+                  v-if="!['ref_id', 'authors'].includes(field.key)"
+                  v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                  rows="2"
+                  max-rows="100"></b-form-textarea>
+              </template>
+            </b-form-group>
+          </template>
         </template>
       </b-modal>
 
@@ -476,6 +520,132 @@ export default {
           { key: 'analysis_concerns', label: 'Concerns' },
           { key: 'presentation_extractedData', label: 'Extracted data' },
           { key: 'presentation_concerns', label: 'Concerns' }
+        ],
+        categories: [
+          {
+            key: 'research',
+            label: 'Meta domain 1 - Research',
+            options: [
+              { key: 'research_extractedData', label: 'Extracted data' },
+              { key: 'research_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'stakeholders',
+            label: 'Meta domain 2 - Stakeholders',
+            options: [
+              { key: 'stakeholders_extractedData', label: 'Extracted data' },
+              { key: 'stakeholders_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'researchers',
+            label: 'Meta domain 3 - Researchers',
+            options: [
+              { key: 'researchers_extractedData', label: 'Extracted data' },
+              { key: 'researchers_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'context',
+            label: 'Meta domain 4 - Context',
+            options: [
+              { key: 'context_extractedData', label: 'Extracted data' },
+              { key: 'context_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'strategy',
+            label: 'Research design 1 - Research strategy',
+            options: [
+              { key: 'strategy_extractedData', label: 'Extracted data' },
+              { key: 'strategy_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'theory',
+            label: 'Research design 2 - Theory',
+            options: [
+              { key: 'theory_extractedData', label: 'Extracted data' },
+              { key: 'theory_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'ethical',
+            label: 'Research design 3 - Ethical considerations',
+            options: [
+              { key: 'ethical_extractedData', label: 'Extracted data' },
+              { key: 'ethical_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'equity',
+            label: 'Research design 4 - Equity, diversity & inclusion considerations',
+            options: [
+              { key: 'equity_extractedData', label: 'Extracted data' },
+              { key: 'equity_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'participant',
+            label: 'Research conduct 1 - Participant recruitment & selection',
+            options: [
+              { key: 'participant_extractedData', label: 'Extracted data' },
+              { key: 'participant_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'data',
+            label: 'Research conduct 2 - Data collection',
+            options: [
+              { key: 'data_extractedData', label: 'Extracted data' },
+              { key: 'data_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'analysis',
+            label: 'Research conduct 3 - Analysis & interpretation',
+            options: [
+              { key: 'analysis_extractedData', label: 'Extracted data' },
+              { key: 'analysis_concerns', label: 'Concerns' }
+            ]
+          },
+          {
+            key: 'presentation',
+            label: 'Research conduct 4 - Presentation of findings',
+            options: [
+              { key: 'presentation_extractedData', label: 'Extracted data' },
+              { key: 'presentation_concerns', label: 'Concerns' }
+            ]
+          }
+        ],
+        excluded: [
+          'ref_id',
+          'authors',
+          'research_extractedData',
+          'research_concerns',
+          'stakeholders_extractedData',
+          'stakeholders_concerns',
+          'researchers_extractedData',
+          'researchers_concerns',
+          'context_extractedData',
+          'context_concerns',
+          'strategy_extractedData',
+          'strategy_concerns',
+          'theory_extractedData',
+          'theory_concerns',
+          'ethical_extractedData',
+          'ethical_concerns',
+          'equity_extractedData',
+          'equity_concerns',
+          'participant_extractedData',
+          'participant_concerns',
+          'data_extractedData',
+          'data_concerns',
+          'analysis_extractedData',
+          'analysis_concerns',
+          'presentation_extractedData',
+          'presentation_concerns'
         ]
       },
       showConcerns: false
@@ -584,11 +754,14 @@ export default {
               }
 
               if (this.checkPermissions) {
-                this.dataTable.fieldsObj.push({'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' })
+                this.dataTable.fieldsObj.push({'key': 'actions', 'label': '', stickyColumn: true})
               }
 
               const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
-              this.dataTable.fieldsObjOriginal = original
+              this.dataTable.fieldsObjOriginal = original.filter(item => {
+                // exclude actions
+                return item.key !== 'actions'
+              })
 
               if (this.isCamelot) {
                 this.dataTable.fieldsObj.filter(item => {
@@ -786,7 +959,13 @@ export default {
     },
     addContentDataTable: function (index = 0) {
       const items = JSON.parse(JSON.stringify(this.dataTable.items))
+      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
 
+      if (this.isCamelot) {
+        fields = JSON.parse(JSON.stringify(this.dataTable.fieldsObjOriginal))
+      }
+
+      this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
       this.dataTableFieldsModal.selected_item_index = index
       this.$refs['edit-content-dataTable'].show()
