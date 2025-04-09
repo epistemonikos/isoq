@@ -239,39 +239,41 @@
             v-if="isCamelot">
             <b-row>
               <b-col cols="3">
-                <ul>
-                  <li v-for="field of camelot.categories" :key="field.id" class="text-wrap">
-                    {{ field.label }}
-                  </li>
-                </ul>
+                <b-list-group v-b-scrollspy:camelot>
+                  <b-list-group-item v-for="field of camelot.categories" :key="field.id" :href="`#${field.key}`">{{ field.label }}</b-list-group-item>
+                </b-list-group>
               </b-col>
               <b-col cols="9">
-                <b-form-group
-                  v-if="!camelot.excluded.includes(field.key)"
-                  v-for="field of dataTableFieldsModal.fields"
-                  :key="field.id"
-                  :label="field.label"
-                  label-class="font-weight-bold">
-                  <b-form-textarea
-                      v-if="!camelot.excluded.includes(field.key)"
-                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                      rows="2"
-                      max-rows="100"></b-form-textarea>
-                </b-form-group>
-                <div v-for="field of camelot.categories" :key="field.id" class="mb-2 border border-light">
-                  <div>
-                    <div class="bg-light text-dark p-2">
-                      <p class="font-weight-bold mb-0">{{ field.label }}</p>
-                    </div>
-                    <b-row class="p-2">
-                      <b-col v-for="option in field.options" :key="option.key">
-                        <p>{{ option.label }}</p>
-                        <b-form-textarea
-                          v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
+                <div id="camelot" class="h-auto" style="position:relative; overflow-y:auto;">
+                  <div
+                    v-if="!camelot.excluded.includes(field.key)"
+                    v-for="field of dataTableFieldsModal.fields"
+                    :key="field.id">
+                    <b-form-group
+                      :label="field.label"
+                      label-class="font-weight-bold">
+                      <b-form-textarea
+                          v-if="!camelot.excluded.includes(field.key)"
+                          v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
                           rows="2"
                           max-rows="100"></b-form-textarea>
-                      </b-col>
-                    </b-row>
+                    </b-form-group>
+                  </div>
+                  <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
+                    <div>
+                      <div class="bg-light text-dark p-2">
+                        <p class="font-weight-bold mb-0">{{ field.label }}</p>
+                      </div>
+                      <b-row class="p-2">
+                        <b-col v-for="option in field.options" :key="option.key" :id="option.key">
+                          <p>{{ option.label }}</p>
+                          <b-form-textarea
+                            v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
+                            rows="2"
+                            max-rows="100"></b-form-textarea>
+                        </b-col>
+                      </b-row>
+                    </div>
                   </div>
                 </div>
               </b-col>
