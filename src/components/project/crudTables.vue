@@ -737,7 +737,7 @@ export default {
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+              let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
 
               const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
@@ -745,7 +745,7 @@ export default {
 
               this.dataTableFieldsModal.fields = []
               for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                if (!['ref_id', 'authors', 'actions'].includes(f.key)) {
                   this.dataTableFieldsModal.fields.push(f.label)
                   this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
                 }
@@ -776,7 +776,7 @@ export default {
                 })
               }
 
-              this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
+              // this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
 
               for (let item of _items) {
                 this.dataTableFieldsModal.items.push(item)
@@ -799,6 +799,13 @@ export default {
           this.dataTableSettings.isBusy = false
           // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
         })
+        .catch((error) => {
+          console.error('Error fetching data:', error)
+          this.$emit('print-errors', error.response.data.message || 'An error occurred')
+        })
+        .finally(() => {
+          this.dataTableSettings.isBusy = false
+        })
     },
     openModalDataTable: function () {
       let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
@@ -809,6 +816,8 @@ export default {
           editFields.push(field.label)
         }
       }
+
+      this.dataTableFieldsModal.nroColumns = editFields.length + 1
       this.dataTableFieldsModal.fields = editFields
       this.$refs['open-dataTable-modal'].show()
     },
@@ -842,48 +851,47 @@ export default {
         is_public: false
       }
 
-      for (const index in fields) {
-        let objField = {
+      const createFields = (fields) => {
+        return fields.map((field, index) => ({
           key: `column_${index}`,
-          label: fields[index]
-        }
-        params.fields.push(objField)
+          label: field
+        }))
       }
 
-      for (const ref of references) {
-        let objItem = {
-          ref_id: ref.id,
-          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
-        }
-
-        for (const cnt in fields) {
-          objItem[`column_${cnt}`] = ''
-        }
-
-        params.items.push(objItem)
+      const createItems = (references, fields) => {
+        return references.map((ref) => {
+          const item = {
+            ref_id: ref.id,
+            authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
+          }
+          fields.forEach((_, index) => {
+            item[`column_${index}`] = ''
+          })
+          return item
+        })
       }
+
+      params.fields.push(...createFields(fields))
+      params.items = createItems(references, fields)
 
       if (this.project.is_public) {
         params.is_public = true
       }
 
-      if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
-        axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
-          .then(() => {
-            this.$emit('get-project')
-            this.dataTableSettings.isBusy = false
-          }).catch((error) => {
-            this.$emit('print-errors', error)
-          })
-      } else {
-        axios.post(`/api/${this.type}`, params)
-          .then(() => {
-            this.getData()
-          })
-          .catch((error) => {
-            this.$emit('print-errors', error)
-          })
-      }
+      const request = this.dataTable.id
+        ? axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+        : axios.post(`/api/${this.type}`, params)
+
+      request
+        .then(() => {
+          // this.dataTable.id ? this.$emit('get-project') : this.getData()
+          this.$emit('get-project')
+          this.getData()
+          this.dataTableSettings.isBusy = false
+        })
+        .catch((error) => {
+          this.$emit('print-errors', error)
+        })
     },
     updateDataTableFields: function () {
       this.dataTableSettings.isBusy = true
@@ -902,7 +910,6 @@ export default {
       for (let item of _items) {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
             item[field.key] = ''
           }
         }
