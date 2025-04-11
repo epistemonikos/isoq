@@ -944,7 +944,9 @@ export default {
         .then(async (response) => {
           this.lists = await this.processLists(response)
           const lists = response.data.map((list) => { return list.id })
-          this.getFindings(lists.toString())
+          if (lists.length) {
+            this.getFindings(lists.toString())
+          }
           this.table_settings.totalRows = this.lists.length
           this.routeAnchorHash()
           this.table_settings.isBusy = false
