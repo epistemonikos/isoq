@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <div class="pt-5">
+      <div class="pt-lg-3 pt-5">
         <b-row align-h="end">
           <b-col
             class="text-right">
@@ -15,7 +15,7 @@
             <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5">
+        <b-nav id="tabsTitle" tabs fill class="pt-lg-3 pt-5">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="clickTab(0)">Project properties</b-nav-item>
@@ -106,6 +106,7 @@
                   :references="references"
                   :refs="refs"
                   :lists="lists"
+                  :isCamelot="isCamelot"
                   @get-project="getProject"
                   @print-errors="printErrors"
                   @updateDataTable="updateDataTable"
@@ -127,20 +128,29 @@
                 <p class="font-weight-light">
                   Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
                 </p>
-                <crudTables
-                  type="isoqf_assessments"
-                  prefix="as"
-                  :checkPermissions="checkPermissions()"
-                  :project="project"
-                  :ui="ui"
-                  :references="references"
-                  :refs="refs"
-                  :lists="lists"
-                  @get-project="getProject"
-                  @print-errors="printErrors"
-                  @updateDataTable="updateDataTable"
-                  @set-item-data="setItemData"
-                ></crudTables>
+                <template v-if="isCamelot">
+                  <pre>{{ lists }}</pre>
+                  <CamelotStepFour
+                    type="isoqf_methodological"
+                    :references="references"></CamelotStepFour>
+                </template>
+                <template v-else>
+                  <crudTables
+                    type="isoqf_assessments"
+                    prefix="as"
+                    :checkPermissions="checkPermissions()"
+                    :project="project"
+                    :ui="ui"
+                    :references="references"
+                    :refs="refs"
+                    :lists="lists"
+                    :isCamelot="isCamelot"
+                    @get-project="getProject"
+                    @print-errors="printErrors"
+                    @updateDataTable="updateDataTable"
+                    @set-item-data="setItemData"
+                  ></crudTables>
+                </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
@@ -595,7 +605,14 @@ export default {
     CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
-    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue')
+    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue'),
+    CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
+  },
+  props: {
+    isCamelot: {
+      type: Boolean,
+      default: true
+    }
   },
   data () {
     return {
