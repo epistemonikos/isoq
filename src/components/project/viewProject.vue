@@ -129,7 +129,6 @@
                   Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
                 </p>
                 <template v-if="isCamelot">
-                  <pre>{{ lists }}</pre>
                   <CamelotStepFour
                     type="isoqf_methodological"
                     :references="references"></CamelotStepFour>
