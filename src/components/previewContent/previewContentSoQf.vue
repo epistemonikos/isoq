@@ -18,7 +18,7 @@
             </b-link>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5 d-print-none">
+        <b-nav id="tabsTitle" tabs fill class="pt-lg-3 pt-5 d-print-none">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="tabOpened=0">Project properties</b-nav-item>
