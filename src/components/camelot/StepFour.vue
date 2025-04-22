@@ -9,30 +9,30 @@
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button v-b-modal.modal-1>Assess</b-button>
+        <b-button @click="openModal(0)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button>Assess</b-button>
+        <b-button @click="openModal(1)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button>Assess</b-button>
+        <b-button @click="openModal(2)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepFour)="data">
-        <b-button>Assess</b-button>
+        <b-button @click="openModal(3)">Assess</b-button>
       </template>
     </b-table>
 
     <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment">
       <b-row>
         <b-col cols="12">
-          <b-tabs align="right">
+          <b-tabs v-model="modal.stage" align="right">
             <template #tabs-start>
               <li role="presentation" class="nav-item mr-auto align-self-center">[[ McMillan Boyles 2011 ]]</li>
             </template>
-            <b-tab active title-item-class="align-self-center">
+            <b-tab title-item-class="align-self-center">
               <template #title>
                 Fit between <br/>Meta domains and <br/>Research design
               </template>
@@ -74,43 +74,39 @@
                   <div role="tablist">
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-aa>1 - Research</h4>
-                      <!-- <b-button block v-b-toggle.accordion-aa>1 - Research</b-button> -->
                     </div>
                     <b-collapse id="accordion-aa" visible accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[0]['research_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ab>2 - Stakeholders</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ab>2 - Stakeholders</b-button> -->
                     </div>
                     <b-collapse id="accordion-ab" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ac>3 - Researchers</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ac>3 - Researchers</b-button> -->
                     </div>
                     <b-collapse id="accordion-ac" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ad>4 - Context</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ad>4 - Context</b-button> -->
                     </div>
                     <b-collapse id="accordion-ad" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[3]['context_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[3]['context_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
@@ -121,43 +117,39 @@
                   <div role="tablist">
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ae>1 - Research strategy</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ae>1 - Research strategy</b-button> -->
                     </div>
                     <b-collapse id="accordion-ae" visible accordion="ab" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[1].values[0]['strategy_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-af>2 - Ethical considerations</h4>
-                      <!-- <b-button block v-b-toggle.accordion-af>2 - Ethical considerations</b-button> -->
                     </div>
                     <b-collapse id="accordion-af" accordion="ab" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[1].values[1]['ethical_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ag>3 - Equity, diversity & inclusion considerations</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ag>3 - Equity, diversity & inclusion considerations</b-button> -->
                     </div>
                     <b-collapse id="accordion-ag" accordion="ab" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[1].values[2]['equity_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[1].values[2]['equity_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ah>4 - Theory</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ah>4 - Theory</b-button> -->
                     </div>
                     <b-collapse id="accordion-ah" accordion="ab" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[1].values[3]['theory_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[1].values[3]['theory_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
@@ -205,43 +197,39 @@
                   <div role="tablist">
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-ba>1 - Research</h4>
-                      <!-- <b-button block v-b-toggle.accordion-ba>1 - Research</b-button> -->
                     </div>
                     <b-collapse id="accordion-ba" visible accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[0]['research_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bb>2 - Stakeholders</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bb>2 - Stakeholders</b-button> -->
                     </div>
                     <b-collapse id="accordion-bb" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bc>3 - Researchers</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bc>3 - Researchers</b-button> -->
                     </div>
                     <b-collapse id="accordion-bc" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bd>4 - Context</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bd>4 - Context</b-button> -->
                     </div>
                     <b-collapse id="accordion-bd" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[0].values[3]['context_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[0].values[3]['context_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
@@ -252,45 +240,41 @@
                   <div role="tablist">
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-be>1 - Participant recruitment & selection</h4>
-                      <!-- <b-button block v-b-toggle.accordion-be>1 - Participant recruitment & selection</b-button> -->
                     </div>
                     <b-collapse id="accordion-be" visible accordion="bb" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[0]['participant_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[0]['participant_concerns'] }}
                     </b-collapse>
 
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bf>2 - Data collection</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bf>2 - Data collection</b-button> -->
                     </div>
                     <b-collapse id="accordion-bf" accordion="bb" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[1]['data_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[1]['data_concerns'] }}
                     </b-collapse>
 
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bg>3 - Analysis and interpretation</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bg>3 - Analysis and interpretation</b-button> -->
                     </div>
                     <b-collapse id="accordion-bg" accordion="bb" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[2]['analysis_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
                       <h4 block v-b-toggle.accordion-bh>4 - Presentation of findings</h4>
-                      <!-- <b-button block v-b-toggle.accordion-bh>4 - Presentation of findings</b-button> -->
                     </div>
                     <b-collapse id="accordion-bh" accordion="bb" role="tabpanel">
-                      <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[3]['presentation_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
@@ -337,40 +321,40 @@
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ca>1 - Research</h4>
+                      <h4 block v-b-toggle.accordion-ca>1 - Research strategy</h4>
                     </div>
                     <b-collapse id="accordion-ca" visible accordion="ca" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[1].values[0]['strategy_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cb>2 - Stakeholders</h4>
+                      <h4 block v-b-toggle.accordion-cb>2 - Ethical considerations</h4>
                     </div>
                     <b-collapse id="accordion-cb" accordion="ca" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[1].values[1]['ethical_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cc>3 - Researchers</h4>
+                      <h4 block v-b-toggle.accordion-cc>3 - Equity, diversity & inclusion considerations</h4>
                     </div>
                     <b-collapse id="accordion-cc" accordion="ca" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[1].values[2]['equity_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[1].values[2]['equity_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cd>4 - Context</h4>
+                      <h4 block v-b-toggle.accordion-cd>4 - Theory</h4>
                     </div>
                     <b-collapse id="accordion-cd" accordion="ca" role="tabpanel">
                       <h5>Extracted data</h5>
-                      <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
+                      {{ this.meta[1].values[3]['theory_extractedData'] }}
                       <h5>Concerns</h5>
-                      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                      {{ this.meta[1].values[3]['theory_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
@@ -381,40 +365,40 @@
                     </div>
                     <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ce>Research strategy</h4>
+                        <h4 block v-b-toggle.accordion-ce>1 - Participant recruitment & selection</h4>
                       </div>
                       <b-collapse id="accordion-ce" visible accordion="cb" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                         <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[0]['participant_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[0]['participant_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cf>Ethical considerations</h4>
+                        <h4 block v-b-toggle.accordion-cf>2 - Data collection</h4>
                       </div>
                       <b-collapse id="accordion-cf" accordion="cb" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                         <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[1]['data_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[1]['data_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cg>Equity, diversity & inclusion  considerations</h4>
+                        <h4 block v-b-toggle.accordion-cg>3 - Analysis and interpretation</h4>
                       </div>
                       <b-collapse id="accordion-cg" accordion="cb" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                         <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[2]['analysis_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ch>Theory</h4>
+                        <h4 block v-b-toggle.accordion-ch>4 - Presentation of findings</h4>
                       </div>
                       <b-collapse id="accordion-ch" accordion="cb" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
                         <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
+                      <h5>Concerns</h5>
+                      {{ this.meta[2].values[3]['presentation_concerns'] }}
                       </b-collapse>
                     </div>
                   </div>
@@ -632,9 +616,80 @@ export default {
       selected: null,
       text1: '',
       modal: {
-        tabIndex: 0
-      }
+        stage: 2
+      },
+      meta: [
+        {
+          name: 'Meta Domains',
+          items: ['research_', 'stakeholders_', 'researchers_', 'context_'],
+          values: [
+            {
+              research_extractedData: '',
+              research_concerns: ''
+            },
+            {
+              stakeholders_extractedData: '',
+              stakeholders_concerns: ''
+            },
+            {
+              researchers_extractedData: '',
+              researchers_concerns: ''
+            },
+            {
+              context_extractedData: '',
+              context_concerns: ''
+            }
+          ]
+        },
+        {
+          name: 'Research design domains',
+          items: ['strategy_', 'ethical_', 'equity_', 'theory_'],
+          values: [
+            {
+              strategy_extractedData: '',
+              strategy_concerns: ''
+            },
+            {
+              ethical_extractedData: '',
+              ethical_concerns: ''
+            },
+            {
+              equity_extractedData: '',
+              equity_concerns: ''
+            },
+            {
+              theory_extractedData: '',
+              theory_concerns: ''
+            }
+          ]
+        },
+        {
+          name: 'Research conduct',
+          items: ['participant_', 'data_', 'analysis_', 'presentation_'],
+          values: [
+            {
+              participant_extractedData: '',
+              participant_concerns: ''
+            },
+            {
+              data_extractedData: '',
+              data_concerns: ''
+            },
+            {
+              analysis_extractedData: '',
+              analysis_concerns: ''
+            },
+            {
+              presentation_extractedData: '',
+              presentation_concerns: ''
+            }
+          ]
+        }
+      ]
     }
+  },
+  watch: {
+    // Watch for changes in props or data if needed
   },
   computed: {
     // Define any computed properties here if needed
@@ -658,17 +713,35 @@ export default {
         })
     },
     getCharacteristics: function () {
+      console.log('getCharacteristics')
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.get('/api/isoqf_characteristics', { params })
         .then(response => {
+          const data = response.data[0]
+          const items = data.items
+          console.log(items)
+          for (let x = 0; x < this.meta.length; x++) {
+            for (let y = 0; y < this.meta[x].items.length; y++) {
+              for (let z = 0; z < items.length; z++) {
+                this.meta[x].values[y][this.meta[x].items[y] + 'extractedData'] = items[z][this.meta[x].items[y] + 'extractedData']
+                this.meta[x].values[y][this.meta[x].items[y] + 'concerns'] = items[z][this.meta[x].items[y] + 'concerns']
+              }
+            }
+          }
+
           this.characteristics = response.data[0]
         })
         .catch(error => {
           console.error('Error fetching characteristics:', error)
         })
+    },
+    openModal: function (stage = 0) {
+      this.getCharacteristics()
+      this.modal.stage = stage
+      this.$bvModal.show('modal-1')
     }
   }
 }
