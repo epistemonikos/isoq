@@ -42,30 +42,9 @@
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
-                  <div>
-                    <h3>Fit assessment</h3>
-                  </div>
-                  <div>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis qui quod unde doloremque consectetur aperiam dicta hic earum. Quasi illum quis quaerat consequuntur repellat animi asperiores aliquid ratione quia ut.</p>
-                  </div>
-                  <div>
-                    <b-form-group label="" v-slot="{ ariaDescribedby }">
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="A">Option A</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="B">Option B</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="C">Option C</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="D">Option D</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="E">Option E</b-form-radio>
-                    </b-form-group>
-
-                    <b-form-group
-                      label="Explain any concerns you have in your own words"
-                      label-for="textarea-formatter">
-                      <b-form-textarea
-                        id="textarea-formatter"
-                        v-model="text1"
-                        placeholder="Enter your text"></b-form-textarea>
-                    </b-form-group>
-                  </div>
+                  <assessmentForm
+                    :modalStage="modal.stage"
+                    :selectedMeta="selectedMeta"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -73,7 +52,7 @@
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-aa>1 - Research</h4>
+                      <h4 block @click="showFitAssessment('accordion-aa', 0)">1 - Research</h4>
                     </div>
                     <b-collapse id="accordion-aa" visible accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -82,7 +61,7 @@
                       {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ab>2 - Stakeholders</h4>
+                      <h4 block @click="showFitAssessment('accordion-ab', 1)">2 - Stakeholders</h4>
                     </div>
                     <b-collapse id="accordion-ab" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -91,7 +70,7 @@
                       {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ac>3 - Researchers</h4>
+                      <h4 block @click="showFitAssessment('accordion-ac', 2)">3 - Researchers</h4>
                     </div>
                     <b-collapse id="accordion-ac" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -100,7 +79,7 @@
                       {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ad>4 - Context</h4>
+                      <h4 block @click="showFitAssessment('accordion-ad', 3)">4 - Context</h4>
                     </div>
                     <b-collapse id="accordion-ad" accordion="aa" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -165,30 +144,9 @@
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
-                  <div>
-                    <h3>Fit assessment</h3>
-                  </div>
-                  <div>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis qui quod unde doloremque consectetur aperiam dicta hic earum. Quasi illum quis quaerat consequuntur repellat animi asperiores aliquid ratione quia ut.</p>
-                  </div>
-                  <div>
-                    <b-form-group label="" v-slot="{ ariaDescribedby }">
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="A">Option A</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="B">Option B</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="C">Option C</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="D">Option D</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="E">Option E</b-form-radio>
-                    </b-form-group>
-
-                    <b-form-group
-                      label="Explain any concerns you have in your own words"
-                      label-for="textarea-formatter">
-                      <b-form-textarea
-                        id="textarea-formatter"
-                        v-model="text1"
-                        placeholder="Enter your text"></b-form-textarea>
-                    </b-form-group>
-                  </div>
+                  <assessmentForm
+                    :modalStage="modal.stage"
+                    :selectedMeta="selectedMeta"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -196,7 +154,7 @@
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ba>1 - Research</h4>
+                      <h4 block @click="showFitAssessment('accordion-ba', 0)">1 - Research</h4>
                     </div>
                     <b-collapse id="accordion-ba" visible accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -205,7 +163,7 @@
                       {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bb>2 - Stakeholders</h4>
+                      <h4 block @click="showFitAssessment('accordion-bb', 1)">2 - Stakeholders</h4>
                     </div>
                     <b-collapse id="accordion-bb" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -214,7 +172,7 @@
                       {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bc>3 - Researchers</h4>
+                      <h4 block @click="showFitAssessment('accordion-bc', 2)">3 - Researchers</h4>
                     </div>
                     <b-collapse id="accordion-bc" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -223,7 +181,7 @@
                       {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bd>4 - Context</h4>
+                      <h4 block @click="showFitAssessment('accordion-bd', 3)">4 - Context</h4>
                     </div>
                     <b-collapse id="accordion-bd" accordion="ba" role="tabpanel">
                       <h5>Extracted data</h5>
@@ -290,30 +248,9 @@
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
-                  <div>
-                    <h3>Fit assessment</h3>
-                  </div>
-                  <div>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis qui quod unde doloremque consectetur aperiam dicta hic earum. Quasi illum quis quaerat consequuntur repellat animi asperiores aliquid ratione quia ut.</p>
-                  </div>
-                  <div>
-                    <b-form-group label="" v-slot="{ ariaDescribedby }">
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="A">Option A</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="B">Option B</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="C">Option C</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="D">Option D</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="E">Option E</b-form-radio>
-                    </b-form-group>
-
-                    <b-form-group
-                      label="Explain any concerns you have in your own words"
-                      label-for="textarea-formatter">
-                      <b-form-textarea
-                        id="textarea-formatter"
-                        v-model="text1"
-                        placeholder="Enter your text"></b-form-textarea>
-                    </b-form-group>
-                  </div>
+                  <assessmentForm
+                    :modalStage="modal.stage"
+                    :selectedMeta="selectedMeta"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -415,30 +352,9 @@
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="3">
-                  <div>
-                    <h3>Fit assessment</h3>
-                  </div>
-                  <div>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis qui quod unde doloremque consectetur aperiam dicta hic earum. Quasi illum quis quaerat consequuntur repellat animi asperiores aliquid ratione quia ut.</p>
-                  </div>
-                  <div>
-                    <b-form-group label="" v-slot="{ ariaDescribedby }">
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="A">Option A</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="B">Option B</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="C">Option C</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="D">Option D</b-form-radio>
-                      <b-form-radio v-model="selected" :aria-describedby="ariaDescribedby" name="some-radios" value="E">Option E</b-form-radio>
-                    </b-form-group>
-
-                    <b-form-group
-                      label="Explain any concerns you have in your own words"
-                      label-for="textarea-formatter">
-                      <b-form-textarea
-                        id="textarea-formatter"
-                        v-model="text1"
-                        placeholder="Enter your text"></b-form-textarea>
-                    </b-form-group>
-                  </div>
+                  <assessmentForm
+                    :modalStage="modal.stage"
+                    :selectedMeta="selectedMeta"></assessmentForm>
                 </b-col>
                 <b-col cols="3">
                   <div>
@@ -586,6 +502,7 @@
 <script>
 import axios from 'axios'
 import Commons from '../../utils/commons.js'
+import AssessmentForm from './assessment/AssessmentForm.vue'
 
 export default {
   name: 'StepFour',
@@ -598,6 +515,9 @@ export default {
       type: Array,
       required: true
     }
+  },
+  components: {
+    AssessmentForm
   },
   data () {
     return {
@@ -616,7 +536,7 @@ export default {
       selected: null,
       text1: '',
       modal: {
-        stage: 2
+        stage: 0
       },
       meta: [
         {
@@ -685,11 +605,15 @@ export default {
             }
           ]
         }
-      ]
+      ],
+      selectedMeta: 0
     }
   },
   watch: {
     // Watch for changes in props or data if needed
+    'modal.stage': function (newVal) {
+      this.selectedMeta = 0
+    }
   },
   computed: {
     // Define any computed properties here if needed
@@ -741,7 +665,12 @@ export default {
     openModal: function (stage = 0) {
       this.getCharacteristics()
       this.modal.stage = stage
+      this.selectedMeta = 0
       this.$bvModal.show('modal-1')
+    },
+    showFitAssessment: function (assessmentId, position) {
+      this.selectedMeta = position
+      this.$root.$emit('bv::toggle::collapse', assessmentId)
     }
   }
 }
