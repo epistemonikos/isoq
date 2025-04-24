@@ -33,7 +33,6 @@
         save
       </b-button>
     </div>
-    <pre>{{ assessments }}</pre>
   </div>
 </template>
 
