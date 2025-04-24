@@ -373,37 +373,29 @@
                         <h4 block v-b-toggle.accordion-da>1 - Research</h4>
                       </div>
                       <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                        <p>{{ assessments.items.stages[0].options[0].option }}</p>
+                        <p>{{ assessments.items.stages[0].options[0].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-db>2 - Stakeholders</h4>
                       </div>
                       <b-collapse id="accordion-db" accordion="da" role="tabpanel">
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                        <p>{{ assessments.items.stages[0].options[1].option }}</p>
+                        <p>{{ assessments.items.stages[0].options[1].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dc>3 - Researchers</h4>
                       </div>
                       <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                        <p>{{ assessments.items.stages[0].options[2].option }}</p>
+                        <p>{{ assessments.items.stages[0].options[2].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dd>4 - Context</h4>
                       </div>
                       <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellendus ducimus fugit at recusandae, fuga tenetur, veniam laudantium animi eos voluptate aperiam beatae tempore odit repellat debitis quae! Eveniet, nobis sint?</p>
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil omnis error ipsa id, esse veniam soluta porro unde laborum impedit eos nemo. Ex delectus maiores aliquam fugit cupiditate soluta provident.</p>
+                        <p>{{ assessments.items.stages[0].options[3].option }}</p>
+                        <p>{{ assessments.items.stages[0].options[3].text }}</p>
                       </b-collapse>
                   </div>
                 </b-col>
@@ -417,37 +409,29 @@
                         <h4 block v-b-toggle.accordion-de>Research strategy</h4>
                       </div>
                       <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                        <p>{{ assessments.items.stages[1].options[0].option }}</p>
+                        <p>{{ assessments.items.stages[1].options[0].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-df>Ethical considerations</h4>
                       </div>
                       <b-collapse id="accordion-df" accordion="db" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                        <p>{{ assessments.items.stages[1].options[1].option }}</p>
+                        <p>{{ assessments.items.stages[1].options[1].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dg>Equity, diversity & inclusion  considerations</h4>
                       </div>
                       <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                        <p>{{ assessments.items.stages[1].options[2].option }}</p>
+                        <p>{{ assessments.items.stages[1].options[2].text }}</p>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dh>Theory</h4>
                       </div>
                       <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                        <p>{{ assessments.items.stages[1].options[3].option }}</p>
+                        <p>{{ assessments.items.stages[1].options[3].text }}</p>
                       </b-collapse>
                     </div>
                   </div>
@@ -459,40 +443,11 @@
                     </div>
                     <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-di>Research strategy</h4>
+                        <h4 block v-b-toggle.accordion-di>Fit assessment</h4>
                       </div>
                       <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dj>Ethical considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-dj" accordion="dc" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dk>Equity, diversity & inclusion  considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-dk" accordion="dc" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dl>Theory</h4>
-                      </div>
-                      <b-collapse id="accordion-dl" accordion="dc" role="tabpanel">
-                        <h5>Concerns</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati, possimus nesciunt facilis eum veritatis dignissimos officiis, tempore quam deserunt illo optio fugit non veniam consequuntur. Animi temporibus magni error iusto!</p>
-                        <h5>Extracted data</h5>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci explicabo ab id non, maxime, repellat nihil nostrum, quisquam quaerat voluptatibus debitis impedit eligendi temporibus error mollitia aperiam ducimus sit repudiandae.</p>
+                        <p>{{ assessments.items.stages[2].options[0].option }}</p>
+                        <p>{{ assessments.items.stages[2].options[0].text }}</p>
                       </b-collapse>
                     </div>
 
@@ -540,7 +495,72 @@ export default {
         ]
       },
       characteristics: [],
-      assessments: {},
+      assessments: {
+        items: {
+          stages: [
+            {
+              key: 0,
+              options: [
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                }
+              ]
+            },
+            {
+              key: 1,
+              options: [
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                },
+                {
+                  option: null,
+                  text: ''
+                }
+              ]
+            },
+            {
+              key: 2,
+              options: [
+                {
+                  option: null,
+                  text: ''
+                }
+              ]
+            },
+            {
+              key: 3,
+              options: [
+                {
+                  option: null,
+                  text: ''
+                }
+              ]
+            }
+          ]
+        }
+      },
       selected: null,
       text1: '',
       modal: {
@@ -638,72 +658,8 @@ export default {
       }
       axios.get('/api/isoqf_assessments', { params })
         .then(response => {
-          this.assessments = {
-            items: {
-              stages: [{
-                key: 0,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 1,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 2,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 3,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              }]
-            }
-          }
           if (response.data.length) {
-            this.assessments = response.data[0]
+            this.assessments = {...response.data[0]}
           }
         })
         .catch(error => {

@@ -186,6 +186,13 @@ export default {
     selectedMeta (newValue) {
       this.selected = this.assessments.items.stages[this.modalStage].options[newValue].option
       this.text1 = this.assessments.items.stages[this.modalStage].options[newValue].text
+    },
+    assessments: {
+      handler (newValue) {
+        this.selected = newValue.items.stages[this.modalStage].options[this.selectedMeta].option
+        this.text1 = newValue.items.stages[this.modalStage].options[this.selectedMeta].text
+      },
+      deep: true
     }
   },
   mounted: function () {
