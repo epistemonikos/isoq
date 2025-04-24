@@ -43,8 +43,10 @@
                 </b-col>
                 <b-col cols="4">
                   <assessmentForm
+                    :assessments="assessments"
                     :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"></assessmentForm>
+                    :selectedMeta="selectedMeta"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -145,8 +147,10 @@
                 </b-col>
                 <b-col cols="4">
                   <assessmentForm
+                    :assessments="assessments"
                     :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"></assessmentForm>
+                    :selectedMeta="selectedMeta"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -249,8 +253,10 @@
                 </b-col>
                 <b-col cols="4">
                   <assessmentForm
+                    :assessments="assessments"
                     :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"></assessmentForm>
+                    :selectedMeta="selectedMeta"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
                   <div>
@@ -353,8 +359,10 @@
                 </b-col>
                 <b-col cols="3">
                   <assessmentForm
+                    :assessments="assessments"
                     :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"></assessmentForm>
+                    :selectedMeta="selectedMeta"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="3">
                   <div>
@@ -532,7 +540,7 @@ export default {
         ]
       },
       characteristics: [],
-      methodologicals: [],
+      assessments: {},
       selected: null,
       text1: '',
       modal: {
@@ -623,21 +631,86 @@ export default {
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
     },
-    getMethodological: function () {
+    getAssessments: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
       axios.get('/api/isoqf_assessments', { params })
         .then(response => {
-          this.methodologicals = response.data[0]
+          this.assessments = {
+            items: {
+              stages: [{
+                key: 0,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 1,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 2,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 3,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              }]
+            }
+          }
+          if (response.data.length) {
+            this.assessments = response.data[0]
+          }
         })
         .catch(error => {
           console.error('Error fetching methodological data:', error)
         })
     },
     getCharacteristics: function () {
-      console.log('getCharacteristics')
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -646,7 +719,6 @@ export default {
         .then(response => {
           const data = response.data[0]
           const items = data.items
-          console.log(items)
           for (let x = 0; x < this.meta.length; x++) {
             for (let y = 0; y < this.meta[x].items.length; y++) {
               for (let z = 0; z < items.length; z++) {
@@ -663,6 +735,7 @@ export default {
         })
     },
     openModal: function (stage = 0) {
+      this.getAssessments()
       this.getCharacteristics()
       this.modal.stage = stage
       this.selectedMeta = 0
