@@ -248,7 +248,11 @@ export default {
     episteResponse: Array,
     lists: Array,
     charsOfStudies: Object,
-    methodologicalTableRefs: Object
+    methodologicalTableRefs: Object,
+    isCamelot: {
+      type: Boolean,
+      default: true
+    }
   },
   components: {
     videoHelp
@@ -363,6 +367,83 @@ export default {
             cnt++
           }
           const _references = JSON.parse(JSON.stringify(this.localReferences))
+          if (this.isCamelot) {
+            let items = []
+            for (let i = 0; i < _references.length; i++) {
+              items.push({
+                ref_id: _references[i].id,
+                stages: [
+                  {
+                    key: 0,
+                    options: [
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      }
+                    ]
+                  },
+                  {
+                    key: 1,
+                    options: [
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      },
+                      {
+                        option: null,
+                        text: ''
+                      }
+                    ]
+                  },
+                  {
+                    key: 2,
+                    options: [
+                      {
+                        option: null,
+                        text: ''
+                      }
+                    ]
+                  },
+                  {
+                    key: 3,
+                    options: [
+                      {
+                        option: null,
+                        text: ''
+                      }
+                    ]
+                  }
+                ]
+              })
+            }
+            axios.post('/api/isoqf_assessments', {
+              organization: this.$route.params.org_id,
+              project_id: this.$route.params.id,
+              items: items
+            }).then((response) => {
+              this.$emit('loadAssessments', response.data)
+            })
+          }
           this.prefetchDataForExtractedDataUpdate(_references)
           this.msgUploadReferences = `${cnt} references have been added.`
           this.pre_references = ''
