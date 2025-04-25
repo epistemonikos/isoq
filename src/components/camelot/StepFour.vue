@@ -9,19 +9,19 @@
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button @click="openModal(0)">Assess</b-button>
+        <b-button @click="openModal(0, data.item.id, data.index)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button @click="openModal(1)">Assess</b-button>
+        <b-button @click="openModal(1, data.item.id, data.index)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button @click="openModal(2)">Assess</b-button>
+        <b-button @click="openModal(2, data.item.id, data.index)">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepFour)="data">
-        <b-button @click="openModal(3)">Assess</b-button>
+        <b-button @click="openModal(3, data.item.id, data.index)">Assess</b-button>
       </template>
     </b-table>
 
@@ -46,6 +46,8 @@
                     :assessments="assessments"
                     :modalStage="modal.stage"
                     :selectedMeta="selectedMeta"
+                    :refId="refId"
+                    :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
@@ -150,6 +152,8 @@
                     :assessments="assessments"
                     :modalStage="modal.stage"
                     :selectedMeta="selectedMeta"
+                    :refId="refId"
+                    :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
@@ -256,6 +260,8 @@
                     :assessments="assessments"
                     :modalStage="modal.stage"
                     :selectedMeta="selectedMeta"
+                    :refId="refId"
+                    :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="4">
@@ -362,6 +368,8 @@
                     :assessments="assessments"
                     :modalStage="modal.stage"
                     :selectedMeta="selectedMeta"
+                    :refId="refId"
+                    :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
                 <b-col cols="3">
@@ -373,29 +381,37 @@
                         <h4 block v-b-toggle.accordion-da>1 - Research</h4>
                       </div>
                       <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
-                        <p>{{ assessments.items.stages[0].options[0].option }}</p>
-                        <p>{{ assessments.items.stages[0].options[0].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[0].options[0].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[0].options[0].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-db>2 - Stakeholders</h4>
                       </div>
                       <b-collapse id="accordion-db" accordion="da" role="tabpanel">
-                        <p>{{ assessments.items.stages[0].options[1].option }}</p>
-                        <p>{{ assessments.items.stages[0].options[1].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[0].options[1].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[0].options[1].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dc>3 - Researchers</h4>
                       </div>
                       <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
-                        <p>{{ assessments.items.stages[0].options[2].option }}</p>
-                        <p>{{ assessments.items.stages[0].options[2].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[0].options[2].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[0].options[2].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dd>4 - Context</h4>
                       </div>
                       <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
-                        <p>{{ assessments.items.stages[0].options[3].option }}</p>
-                        <p>{{ assessments.items.stages[0].options[3].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[0].options[3].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[0].options[3].text }}</p>
+                        </template>
                       </b-collapse>
                   </div>
                 </b-col>
@@ -409,29 +425,37 @@
                         <h4 block v-b-toggle.accordion-de>Research strategy</h4>
                       </div>
                       <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
-                        <p>{{ assessments.items.stages[1].options[0].option }}</p>
-                        <p>{{ assessments.items.stages[1].options[0].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[1].options[0].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[1].options[0].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-df>Ethical considerations</h4>
                       </div>
                       <b-collapse id="accordion-df" accordion="db" role="tabpanel">
-                        <p>{{ assessments.items.stages[1].options[1].option }}</p>
-                        <p>{{ assessments.items.stages[1].options[1].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[1].options[1].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[1].options[1].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dg>Equity, diversity & inclusion  considerations</h4>
                       </div>
                       <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
-                        <p>{{ assessments.items.stages[1].options[2].option }}</p>
-                        <p>{{ assessments.items.stages[1].options[2].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[1].options[2].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[1].options[2].text }}</p>
+                        </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
                         <h4 block v-b-toggle.accordion-dh>Theory</h4>
                       </div>
                       <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
-                        <p>{{ assessments.items.stages[1].options[3].option }}</p>
-                        <p>{{ assessments.items.stages[1].options[3].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[1].options[3].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[1].options[3].text }}</p>
+                        </template>
                       </b-collapse>
                     </div>
                   </div>
@@ -446,8 +470,10 @@
                         <h4 block v-b-toggle.accordion-di>Fit assessment</h4>
                       </div>
                       <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
-                        <p>{{ assessments.items.stages[2].options[0].option }}</p>
-                        <p>{{ assessments.items.stages[2].options[0].text }}</p>
+                        <template v-if="assessments.items.length">
+                          <p>{{ assessments.items[modal.index].stages[2].options[0].option }}</p>
+                          <p>{{ assessments.items[modal.index].stages[2].options[0].text }}</p>
+                        </template>
                       </b-collapse>
                     </div>
 
@@ -496,75 +522,79 @@ export default {
       },
       characteristics: [],
       assessments: {
-        items: {
-          stages: [
-            {
-              key: 0,
-              options: [
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                }
-              ]
-            },
-            {
-              key: 1,
-              options: [
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                },
-                {
-                  option: null,
-                  text: ''
-                }
-              ]
-            },
-            {
-              key: 2,
-              options: [
-                {
-                  option: null,
-                  text: ''
-                }
-              ]
-            },
-            {
-              key: 3,
-              options: [
-                {
-                  option: null,
-                  text: ''
-                }
-              ]
-            }
-          ]
-        }
+        items: [
+          {
+            ref_id: null,
+            stages: [
+              {
+                key: 0,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 1,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  },
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 2,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              },
+              {
+                key: 3,
+                options: [
+                  {
+                    option: null,
+                    text: ''
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       selected: null,
       text1: '',
       modal: {
-        stage: 0
+        stage: 0,
+        index: 0
       },
       meta: [
         {
@@ -634,7 +664,8 @@ export default {
           ]
         }
       ],
-      selectedMeta: 0
+      selectedMeta: 0,
+      refId: null
     }
   },
   watch: {
@@ -690,10 +721,11 @@ export default {
           console.error('Error fetching characteristics:', error)
         })
     },
-    openModal: function (stage = 0) {
+    openModal: function (stage = 0, refId, index = 0) {
       this.getAssessments()
       this.getCharacteristics()
       this.modal.stage = stage
+      this.modal.index = index
       this.selectedMeta = 0
       this.$bvModal.show('modal-1')
     },

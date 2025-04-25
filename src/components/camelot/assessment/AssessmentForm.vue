@@ -160,8 +160,7 @@ export default {
             ]
           }
         ]
-      ],
-      assessmentId: null
+      ]
     }
   },
   props: {
@@ -176,28 +175,44 @@ export default {
     assessments: {
       type: Object,
       default: () => ({})
+    },
+    refId: {
+      type: String,
+      default: ''
+    },
+    modalIndex: {
+      type: Number,
+      default: 0
     }
   },
   watch: {
     modalStage (newValue) {
-      this.selected = this.assessments.items.stages[newValue].options[this.selectedMeta].option
-      this.text1 = this.assessments.items.stages[newValue].options[this.selectedMeta].text
+      if (this.assessments.items.length) {
+        this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
+        this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
+      }
     },
     selectedMeta (newValue) {
-      this.selected = this.assessments.items.stages[this.modalStage].options[newValue].option
-      this.text1 = this.assessments.items.stages[this.modalStage].options[newValue].text
+      if (this.assessments.items) {
+        this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
+        this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
+      }
     },
     assessments: {
       handler (newValue) {
-        this.selected = newValue.items.stages[this.modalStage].options[this.selectedMeta].option
-        this.text1 = newValue.items.stages[this.modalStage].options[this.selectedMeta].text
+        if (newValue.items.length) {
+          this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
+          this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+        }
       },
       deep: true
     }
   },
   mounted: function () {
-    this.selected = this.assessments.items.stages[this.modalStage].options[this.selectedMeta].option
-    this.text1 = this.assessments.items.stages[this.modalStage].options[this.selectedMeta].text
+    if (this.assessments.items.length) {
+      this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
+      this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+    }
   },
   methods: {
     save () {
@@ -263,18 +278,29 @@ export default {
           ]
         }
       ]
-      const data = {
-        ref_id: this.assessments.ref_id,
-        authors: this.assessments.authors,
-        stages: this.assessments.items.stages || stages
-      }
-      data.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-      data.stages[this.modalStage].options[this.selectedMeta].text = this.text1
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
-        items: data
+        items: this.assessments.items || []
       }
+      const data = {
+        ref_id: this.refId,
+        stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
+      }
+
+      if (params.items.find((el) => el.ref_id === this.refId)) {
+        params.items.forEach((item) => {
+          if (item.ref_id === this.refId) {
+            item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
+            item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+          }
+        })
+        console.log('if')
+      } else {
+        params.items.push(data)
+        console.log('else')
+      }
+      console.log(params)
       if (this.assessments.id) {
         axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
           .then(response => {
