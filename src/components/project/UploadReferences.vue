@@ -368,81 +368,162 @@ export default {
           }
           const _references = JSON.parse(JSON.stringify(this.localReferences))
           if (this.isCamelot) {
-            let items = []
-            for (let i = 0; i < _references.length; i++) {
-              items.push({
-                ref_id: _references[i].id,
-                stages: [
-                  {
-                    key: 0,
-                    options: [
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      }
-                    ]
-                  },
-                  {
-                    key: 1,
-                    options: [
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      },
-                      {
-                        option: null,
-                        text: ''
-                      }
-                    ]
-                  },
-                  {
-                    key: 2,
-                    options: [
-                      {
-                        option: null,
-                        text: ''
-                      }
-                    ]
-                  },
-                  {
-                    key: 3,
-                    options: [
-                      {
-                        option: null,
-                        text: ''
-                      }
-                    ]
+            axios.get('/api/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
+              .then((response) => {
+                const _assessments = response.data[0]
+                if (_assessments.items.length) {
+                  const assessmentId = _assessments.id
+                  for (let i = 0; i < _references.length; i++) {
+                    _assessments.items.push({
+                      ref_id: _references[i].id,
+                      authors: this.parseReference(_references[i], true),
+                      stages: [
+                        {
+                          key: 0,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 1,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 2,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 3,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        }
+                      ]
+                    })
                   }
-                ]
+                  axios.patch(`/api/isoqf_assessments/${assessmentId}`, _assessments)
+                    .then((response) => {
+                      this.$emit('loadAssessments patch', response.data)
+                    })
+                } else {
+                  let items = []
+                  for (let i = 0; i < _references.length; i++) {
+                    items.push({
+                      ref_id: _references[i].id,
+                      authors: this.parseReference(_references[i], true),
+                      stages: [
+                        {
+                          key: 0,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 1,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            },
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 2,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        },
+                        {
+                          key: 3,
+                          options: [
+                            {
+                              option: null,
+                              text: ''
+                            }
+                          ]
+                        }
+                      ]
+                    })
+                  }
+                  axios.post('/api/isoqf_assessments', {
+                    organization: this.$route.params.org_id,
+                    project_id: this.$route.params.id,
+                    items: items
+                  }).then((response) => {
+                    this.$emit('loadAssessments', response.data)
+                  })
+                }
               })
-            }
-            axios.post('/api/isoqf_assessments', {
-              organization: this.$route.params.org_id,
-              project_id: this.$route.params.id,
-              items: items
-            }).then((response) => {
-              this.$emit('loadAssessments', response.data)
-            })
           }
           this.prefetchDataForExtractedDataUpdate(_references)
           this.msgUploadReferences = `${cnt} references have been added.`
