@@ -378,7 +378,7 @@
                   </div>
                   <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-da>1 - Research</h4>
+                        <h4 block v-b-toggle.accordion-da>1 - Research - {{ modal.index }}</h4>
                       </div>
                       <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
