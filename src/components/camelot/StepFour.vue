@@ -9,28 +9,28 @@
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button @click="openModal(0, data.item.id, data.index)">Assess</b-button>
+        <b-button @click="openModal(0, data)" variant="outline-primary">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button @click="openModal(1, data.item.id, data.index)">Assess</b-button>
+        <b-button @click="openModal(1, data)" variant="outline-primary">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button @click="openModal(2, data.item.id, data.index)">Assess</b-button>
+        <b-button @click="openModal(2, data)" variant="outline-primary">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepFour)="data">
-        <b-button @click="openModal(3, data.item.id, data.index)">Assess</b-button>
+        <b-button @click="openModal(3, data)" variant="outline-primary">Assess</b-button>
       </template>
     </b-table>
 
-    <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment">
+    <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
       <b-row>
-        <b-col cols="12">
-          <b-tabs v-model="modal.stage" align="right">
+        <b-col cols="12" class="modal-body">
+          <b-tabs active-nav-item-class="modal-active-tab" nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
             <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center">[[ McMillan Boyles 2011 ]]</li>
+              <li role="presentation" class="nav-item mr-auto align-self-center modal-author">{{ refId }}</li>
             </template>
             <b-tab title-item-class="align-self-center">
               <template #title>
@@ -677,6 +677,10 @@ export default {
   computed: {
     // Define any computed properties here if needed
   },
+  mounted () {
+    // Fetch data when the component is mounted
+    this.getAssessments()
+  },
   methods: {
     // Define any methods here if needed
     getReferenceData: function (reference) {
@@ -690,11 +694,12 @@ export default {
       axios.get('/api/isoqf_assessments', { params })
         .then(response => {
           if (response.data.length) {
+            console.log('Assessments data:', response.data[0])
             this.assessments = {...response.data[0]}
           }
         })
         .catch(error => {
-          console.error('Error fetching methodological data:', error)
+          console.error('Error fetching Assessments data:', error)
         })
     },
     getCharacteristics: function () {
@@ -721,12 +726,12 @@ export default {
           console.error('Error fetching characteristics:', error)
         })
     },
-    openModal: function (stage = 0, refId, index = 0) {
-      this.getAssessments()
+    openModal: function (stage = 0, modal) {
       this.getCharacteristics()
       this.modal.stage = stage
-      this.modal.index = index
+      this.modal.index = modal.index
       this.selectedMeta = 0
+      this.refId = modal.item.id
       this.$bvModal.show('modal-1')
     },
     showFitAssessment: function (assessmentId, position) {
@@ -738,5 +743,19 @@ export default {
 </script>
 
 <style lang="scss">
-
+.modal-header {
+  background-color: #1E2137;
+  color: #fff;
+  font-size: 1.375rem;
+}
+.modal-body {
+  color: #152536;
+}
+.modal-author {
+  font-size: 1rem;
+}
+.modal-active-tab {
+  font-weight: bold;
+  background-color: #9B9EB6 !important;
+}
 </style>

@@ -26,9 +26,10 @@
     </b-form-group>
 
     <div>
-      <b-button>cancel</b-button>
+      <!-- <b-button>cancel</b-button> -->
       <b-button
-        variant="primary"
+        :disabled="button.disabled"
+        :variant="(button.disabled) ? 'outline-primary' : 'primary'"
         @click="save">
         save
       </b-button>
@@ -160,7 +161,10 @@ export default {
             ]
           }
         ]
-      ]
+      ],
+      button: {
+        disabled: true
+      }
     }
   },
   props: {
@@ -206,6 +210,20 @@ export default {
         }
       },
       deep: true
+    },
+    selected (newValue) {
+      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option === newValue) {
+        this.button.disabled = true
+      } else {
+        this.button.disabled = false
+      }
+    },
+    text1 (newValue) {
+      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text === newValue) {
+        this.button.disabled = true
+      } else {
+        this.button.disabled = false
+      }
     }
   },
   mounted: function () {
@@ -283,42 +301,42 @@ export default {
         project_id: this.$route.params.id,
         items: this.assessments.items || []
       }
-      const data = {
-        ref_id: this.refId,
-        stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
-      }
-
-      if (params.items.find((el) => el.ref_id === this.refId)) {
-        params.items.forEach((item) => {
-          if (item.ref_id === this.refId) {
-            item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-            item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
-          }
-        })
-        console.log('if')
+      if (this.refId) {
+        const data = {
+          ref_id: this.refId,
+          stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
+        }
+        if (params.items.find((el) => el.ref_id === this.refId)) {
+          params.items.forEach((item) => {
+            if (item.ref_id === this.refId) {
+              item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
+              item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+            }
+          })
+        } else {
+          params.items.push(data)
+        }
+        if (this.assessments.id) {
+          axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
+            .then(response => {
+              console.log('Data updated successfully:', response.data)
+              this.$emit('getAssessments')
+            })
+            .catch(error => {
+              console.error('Error updating data:', error)
+            })
+        } else {
+          axios.post('/api/isoqf_assessments', params)
+            .then(response => {
+              this.$emit('getAssessments')
+              console.log('Data saved successfully:', response.data)
+            })
+            .catch(error => {
+              console.error('Error saving data:', error)
+            })
+        }
       } else {
-        params.items.push(data)
-        console.log('else')
-      }
-      console.log(params)
-      if (this.assessments.id) {
-        axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
-          .then(response => {
-            console.log('Data updated successfully:', response.data)
-            this.$emit('getAssessments')
-          })
-          .catch(error => {
-            console.error('Error updating data:', error)
-          })
-      } else {
-        axios.post('/api/isoqf_assessments', params)
-          .then(response => {
-            this.$emit('getAssessments')
-            console.log('Data saved successfully:', response.data)
-          })
-          .catch(error => {
-            console.error('Error saving data:', error)
-          })
+        console.log('no ref id')
       }
     }
   }
