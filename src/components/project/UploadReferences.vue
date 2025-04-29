@@ -361,6 +361,7 @@ export default {
       Promise.all(axiosArray)
         .then((responses) => {
           let cnt = 0
+          this.localReferences = []
           for (const response of responses) {
             const data = response.data
             this.localReferences.push(data)
@@ -371,10 +372,12 @@ export default {
             axios.get('/api/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
               .then((response) => {
                 const _assessments = response.data[0]
-                if (_assessments.items.length) {
+                if (response.data.length) {
                   const assessmentId = _assessments.id
+
+                  let data = []
                   for (let i = 0; i < _references.length; i++) {
-                    _assessments.items.push({
+                    data.push({
                       ref_id: _references[i].id,
                       authors: this.parseReference(_references[i], true),
                       stages: [
@@ -441,6 +444,7 @@ export default {
                       ]
                     })
                   }
+                  _assessments.items.push(...data)
                   axios.patch(`/api/isoqf_assessments/${assessmentId}`, _assessments)
                     .then((response) => {
                       this.$emit('loadAssessments patch', response.data)
