@@ -304,6 +304,7 @@ export default {
       if (this.refId) {
         const data = {
           ref_id: this.refId,
+          authors: this.assessments.items[this.modalIndex].authors,
           stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
         }
         if (params.items.find((el) => el.ref_id === this.refId)) {
