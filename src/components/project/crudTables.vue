@@ -1226,7 +1226,6 @@ export default {
       }
       for (const reference of this.references) {
         if (!references.includes(reference.id)) {
-          console.log('this.processItems')
           newItems.push({
             ref_id: reference.id,
             authors: this.parseReference(reference, true, false)
