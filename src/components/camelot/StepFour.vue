@@ -2,26 +2,26 @@
   <div>
     <b-table
       :fields="ui.fields"
-      :items="references">
+      :items="assessments.items">
       <template
         v-slot:cell(authors)="data">
-        {{ getReferenceData(data.item) }}
+        {{ data.item.authors }}
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button @click="openModal(0, data)" variant="outline-primary">Assess</b-button>
+        <b-button @click="openModal(0, data)" :variant="(iscompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button @click="openModal(1, data)" variant="outline-primary">Assess</b-button>
+        <b-button @click="openModal(1, data)" :variant="(iscompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button @click="openModal(2, data)" variant="outline-primary">Assess</b-button>
+        <b-button @click="openModal(2, data)" :variant="(iscompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepFour)="data">
-        <b-button @click="openModal(3, data)" variant="outline-primary">Assess</b-button>
+        <b-button @click="openModal(3, data)" :variant="(iscompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
     </b-table>
 
@@ -672,6 +672,12 @@ export default {
     // Watch for changes in props or data if needed
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
+    },
+    assessments: {
+      handler (newVal) {
+        this.iscompleted()
+      },
+      deep: true
     }
   },
   computed: {
@@ -694,7 +700,6 @@ export default {
       axios.get('/api/isoqf_assessments', { params })
         .then(response => {
           if (response.data.length) {
-            console.log('Assessments data:', response.data[0])
             this.assessments = {...response.data[0]}
           }
         })
@@ -731,12 +736,25 @@ export default {
       this.modal.stage = stage
       this.modal.index = modal.index
       this.selectedMeta = 0
-      this.refId = modal.item.id
+      this.refId = modal.item.ref_id
       this.$bvModal.show('modal-1')
     },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
+    },
+    iscompleted: function (stage = 0, index = 0) {
+      const options = this.assessments.items[index].stages[stage].options
+      let cnt = 0
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].option === null) {
+          cnt++
+        }
+      }
+      if (cnt) {
+        return false
+      }
+      return true
     }
   }
 }
