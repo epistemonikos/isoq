@@ -378,12 +378,15 @@
                   </div>
                   <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-da>1 - Research - {{ modal.index }}</h4>
+                        <h4 block v-b-toggle.accordion-da>1 - Research</h4>
                       </div>
                       <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[0].options[0].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[0].options[0].text }}</p>
+                          <responses
+                            :stage="0"
+                            :index="0"
+                            :option="assessments.items[modal.index].stages[0].options[0].option"
+                            :text="assessments.items[modal.index].stages[0].options[0].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -391,8 +394,11 @@
                       </div>
                       <b-collapse id="accordion-db" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[0].options[1].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[0].options[1].text }}</p>
+                          <responses
+                            :stage="0"
+                            :index="1"
+                            :option="assessments.items[modal.index].stages[0].options[1].option"
+                            :text="assessments.items[modal.index].stages[0].options[1].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -400,8 +406,11 @@
                       </div>
                       <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[0].options[2].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[0].options[2].text }}</p>
+                          <responses
+                            :stage="0"
+                            :index="2"
+                            :option="assessments.items[modal.index].stages[0].options[2].option"
+                            :text="assessments.items[modal.index].stages[0].options[2].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -409,8 +418,11 @@
                       </div>
                       <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[0].options[3].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[0].options[3].text }}</p>
+                          <responses
+                            :stage="0"
+                            :index="3"
+                            :option="assessments.items[modal.index].stages[0].options[3].option"
+                            :text="assessments.items[modal.index].stages[0].options[3].text"></responses>
                         </template>
                       </b-collapse>
                   </div>
@@ -426,8 +438,11 @@
                       </div>
                       <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[1].options[0].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[1].options[0].text }}</p>
+                          <responses
+                            :stage="1"
+                            :index="0"
+                            :option="assessments.items[modal.index].stages[1].options[0].option"
+                            :text="assessments.items[modal.index].stages[1].options[0].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -435,8 +450,11 @@
                       </div>
                       <b-collapse id="accordion-df" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[1].options[1].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[1].options[1].text }}</p>
+                          <responses
+                            :stage="1"
+                            :index="1"
+                            :option="assessments.items[modal.index].stages[1].options[1].option"
+                            :text="assessments.items[modal.index].stages[1].options[1].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -444,8 +462,11 @@
                       </div>
                       <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[1].options[2].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[1].options[2].text }}</p>
+                          <responses
+                            :stage="1"
+                            :index="2"
+                            :option="assessments.items[modal.index].stages[1].options[2].option"
+                            :text="assessments.items[modal.index].stages[1].options[2].text"></responses>
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
@@ -453,8 +474,11 @@
                       </div>
                       <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[1].options[3].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[1].options[3].text }}</p>
+                          <responses
+                            :stage="1"
+                            :index="3"
+                            :option="assessments.items[modal.index].stages[1].options[3].option"
+                            :text="assessments.items[modal.index].stages[1].options[3].text"></responses>
                         </template>
                       </b-collapse>
                     </div>
@@ -471,8 +495,11 @@
                       </div>
                       <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
                         <template v-if="assessments.items.length">
-                          <p>{{ assessments.items[modal.index].stages[2].options[0].option }}</p>
-                          <p>{{ assessments.items[modal.index].stages[2].options[0].text }}</p>
+                          <responses
+                            :stage="2"
+                            :index="0"
+                            :option="assessments.items[modal.index].stages[2].options[0].option"
+                            :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
                         </template>
                       </b-collapse>
                     </div>
@@ -492,6 +519,7 @@
 import axios from 'axios'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
+import Responses from './Responses.vue'
 
 export default {
   name: 'StepFour',
@@ -506,7 +534,7 @@ export default {
     }
   },
   components: {
-    AssessmentForm
+    AssessmentForm, Responses
   },
   data () {
     return {
