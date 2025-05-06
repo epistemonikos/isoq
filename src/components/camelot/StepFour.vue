@@ -30,7 +30,7 @@
         <b-col cols="12" class="modal-body">
           <b-tabs active-nav-item-class="modal-active-tab" nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
             <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center modal-author">{{ refId }}</li>
+              <li role="presentation" class="nav-item mr-auto align-self-center modal-author">{{ ui.authors }}</li>
             </template>
             <b-tab title-item-class="align-self-center">
               <template #title>
@@ -518,7 +518,8 @@ export default {
           { key: 'stepTwo', label: 'Fit between Meta domains and Research conduct' },
           { key: 'stepThree', label: 'Fit between Research design and Research conduct' },
           { key: 'stepFour', label: 'Overall assessment' }
-        ]
+        ],
+        authors: ''
       },
       characteristics: [],
       assessments: {
@@ -678,6 +679,12 @@ export default {
         this.iscompleted()
       },
       deep: true
+    },
+    references: {
+      handler (newVal) {
+        this.getAssessments()
+      },
+      immediate: true
     }
   },
   computed: {
@@ -716,11 +723,14 @@ export default {
         .then(response => {
           const data = response.data[0]
           const items = data.items
-          for (let x = 0; x < this.meta.length; x++) {
-            for (let y = 0; y < this.meta[x].items.length; y++) {
-              for (let z = 0; z < items.length; z++) {
-                this.meta[x].values[y][this.meta[x].items[y] + 'extractedData'] = items[z][this.meta[x].items[y] + 'extractedData']
-                this.meta[x].values[y][this.meta[x].items[y] + 'concerns'] = items[z][this.meta[x].items[y] + 'concerns']
+
+          for (let x = 0; x < items.length; x++) {
+            if (items[x].ref_id === this.refId) {
+              for (let y = 0; y < this.meta.length; y++) {
+                for (let z = 0; z < this.meta[y].items.length; z++) {
+                  this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = items[x][this.meta[y].items[z] + 'extractedData']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'concerns'] = items[x][this.meta[y].items[z] + 'concerns']
+                }
               }
             }
           }
@@ -737,6 +747,7 @@ export default {
       this.modal.index = modal.index
       this.selectedMeta = 0
       this.refId = modal.item.ref_id
+      this.ui.authors = modal.item.authors
       this.$bvModal.show('modal-1')
     },
     showFitAssessment: function (assessmentId, position) {
