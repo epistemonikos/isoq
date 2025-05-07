@@ -28,11 +28,11 @@
     <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
       <b-row>
         <b-col cols="12" class="modal-body">
-          <b-tabs active-nav-item-class="modal-active-tab" nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
+          <b-tabs nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
             <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center modal-author">{{ ui.authors }}</li>
+              <li role="presentation" class="nav-item mr-auto align-self-center modal-author"><b>{{ ui.authors }}</b></li>
             </template>
-            <b-tab title-item-class="align-self-center">
+            <b-tab title-item-class="align-self-center" :title-link-class="modal.stage === 0 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
                 Fit between <br/>Meta domains and <br/>Research design
               </template>
@@ -138,7 +138,7 @@
                 </b-col>
               </b-row>
             </b-tab>
-            <b-tab>
+            <b-tab :title-link-class="modal.stage === 1 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
                 Fit between <br/>Meta domains and <br/>Research conduct
               </template>
@@ -246,7 +246,7 @@
                 </b-col>
               </b-row>
             </b-tab>
-            <b-tab>
+            <b-tab :title-link-class="modal.stage === 2 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
                 Fit between <br/>Research design and <br/>Research conduct
               </template>
@@ -354,7 +354,7 @@
                 </b-col>
               </b-row>
             </b-tab>
-            <b-tab title-item-class="align-self-end">
+            <b-tab :title-link-class="modal.stage === 3 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']" title-item-class="align-self-end">
               <template #title>
                 Overall assessment
               </template>
@@ -814,5 +814,14 @@ export default {
 .modal-active-tab {
   font-weight: bold;
   background-color: #9B9EB6 !important;
+}
+.modal-active-tab-text {
+  color: #152536;
+}
+.modal-normal-tab {
+  background-color: #D8DAE5 !important;
+}
+.modal-normal-tab-text {
+  color: #6C6C6C;
 }
 </style>
