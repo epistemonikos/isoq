@@ -243,6 +243,7 @@
               <b-form-textarea
                 v-if="!['ref_id', 'authors'].includes(field.key)"
                 v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                :placeholder="(type === 'isoqf_assessments') ? 'Enter both your assessment and the explanation for your assessment here' : ''"
                 rows="2"
                 max-rows="100"></b-form-textarea>
             </template>
