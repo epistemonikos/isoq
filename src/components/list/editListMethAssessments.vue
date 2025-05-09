@@ -41,7 +41,7 @@
             <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
           </template>
         </b-table>
-  
+
         <!-- end of -->
         <back-to-top></back-to-top>
       </template>
@@ -50,9 +50,10 @@
 </template>
 
 <script>
+import AssessmentTable from '../camelot/assessment/AssessmentTable.vue'
+
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
-import AssessmentTable from '../camelot/assessment/AssessmentTable.vue'
 export default {
   name: 'editListMethAssessments',
   props: {
