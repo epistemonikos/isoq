@@ -932,23 +932,32 @@ export default {
     },
     dataTableNewColumn: function () {
       let _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
-      let fields = _fields.filter(field => !['ref_id', 'authors', 'actions'].includes(field.key))
+      let fields = []
+      let column = '0'
+      const excluded = ['ref_id', 'authors', 'actions']
+      if (_fields.length) {
+        for (const field of _fields) {
+          if (!excluded.includes(field.key)) {
+            fields.push(field)
+          }
+        }
+        // sort fields by key
+        fields.sort((a, b) => {
+          if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
+            return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
+          }
+          return 0
+        })
+        this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
+        column = parseInt(fields[ fields.length - 1 ].key.split('_')[1]) + 1
+      }
 
-      // Sort fields by key
-      fields.sort((a, b) => {
-        const aKey = a.key.match(/\d+/g)
-        const bKey = b.key.match(/\d+/g)
-        return aKey && bKey ? parseInt(aKey[0]) - parseInt(bKey[0]) : 0
-      })
-
-      this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
-      const lastColumnIndex = fields.length ? parseInt(fields[fields.length - 1].key.split('_')[1]) : -1
-      const newColumnKey = `column_${lastColumnIndex + 1}`
-
-      this.dataTableFieldsModalEdit.fields.push({
-        key: newColumnKey,
-        label: ''
-      })
+      this.dataTableFieldsModalEdit.fields.push(
+        {
+          'key': `column_${column.toString()}`,
+          'label': ''
+        }
+      )
     },
     getReferenceInfo: function (refId) {
       for (let ref of this.refs) {
@@ -1226,6 +1235,7 @@ export default {
       }
       for (const reference of this.references) {
         if (!references.includes(reference.id)) {
+          console.log('this.processItems')
           newItems.push({
             ref_id: reference.id,
             authors: this.parseReference(reference, true, false)
