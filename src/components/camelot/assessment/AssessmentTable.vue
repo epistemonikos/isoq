@@ -18,7 +18,7 @@
                             class="option-circle mr-2"
                             :style="{ backgroundColor: getOptionColor(option.option) }"
                         />
-                        <p><strong>{{ getOptionText(option.option) }}</strong></p> 
+                        <p><strong>{{ getOptionText(option.option) }}</strong></p>
                         <p>{{ option.text }}</p>
                     </div>
                 </div>
@@ -74,67 +74,67 @@
 
 <script>
 export default {
-    name: 'AssessmentTable',
-    props: {
-        assessments: {
-            type: Object,
-            required: true
-        }
-    },
-    data () {
-        return {
-            fields: [
-                { key: 'authors', label: 'Authors' },
-                { key: 'lastStage', label: 'Research question & aim domain' },
-                { key: 'firstStage', label: 'Stakeholders domain' },
-                { key: 'secondStage', label: 'Researchers domain' },
-                { key: 'thirdStage', label: 'Overall assessment' }
-            ]
-        }
-    },
-    methods: {
-        getOptionText (option) {
-            const optionsMap = {
-                'A': 'No or minimal concern',
-                'B': 'Minor concerns',
-                'C': 'Moderate concerns',
-                'D': 'Serious concerns',
-                'E': 'Unclear'
-            }
-            return optionsMap[option] || option
-        },
-        getOptionColor (option) {
-            const colorMap = {
-                'A': '#1065AB',
-                'B': '#8EC4DE',
-                'C': '#F6A482',
-                'D': '#B31529',
-                'E': '#B3B3B3'
-            }
-            return colorMap[option] || '#B3B3B3'
-        }
-    },
-    computed: {
-        tableItems () {
-            if (!this.assessments || !this.assessments.items) return []
-            
-            return this.assessments.items.map(item => {
-                const stages = item.stages || []
-                const lastStage = stages.length > 0 ? stages[stages.length - 1] : null
-                const firstStage = stages.length > 0 ? stages[0] : null
-                const secondStage = stages.length > 1 ? stages[1] : null
-                const thirdStage = stages.length > 2 ? stages[2] : null
-
-                return {
-                    authors: item.authors,
-                    lastStage,
-                    firstStage,
-                    secondStage,
-                    thirdStage
-                }
-            })
-        }
+  name: 'AssessmentTable',
+  props: {
+    assessments: {
+      type: Object,
+      required: true
     }
+  },
+  data () {
+    return {
+      fields: [
+        { key: 'authors', label: 'Authors' },
+        { key: 'lastStage', label: 'Research question & aim domain' },
+        { key: 'firstStage', label: 'Stakeholders domain' },
+        { key: 'secondStage', label: 'Researchers domain' },
+        { key: 'thirdStage', label: 'Overall assessment' }
+      ]
+    }
+  },
+  methods: {
+    getOptionText (option) {
+      const optionsMap = {
+        'A': 'No or minimal concern',
+        'B': 'Minor concerns',
+        'C': 'Moderate concerns',
+        'D': 'Serious concerns',
+        'E': 'Unclear'
+      }
+      return optionsMap[option] || option
+    },
+    getOptionColor (option) {
+      const colorMap = {
+        'A': '#1065AB',
+        'B': '#8EC4DE',
+        'C': '#F6A482',
+        'D': '#B31529',
+        'E': '#B3B3B3'
+      }
+      return colorMap[option] || '#B3B3B3'
+    }
+  },
+  computed: {
+    tableItems () {
+      if (!this.assessments || !this.assessments.items) return []
+
+      return this.assessments.items.map(item => {
+        const stages = item.stages || []
+        const lastStage = stages.length > 0 ? stages[stages.length - 1] : null
+        const firstStage = stages.length > 0 ? stages[0] : null
+        const secondStage = stages.length > 1 ? stages[1] : null
+        const thirdStage = stages.length > 2 ? stages[2] : null
+
+        return {
+          authors: item.authors,
+          lastStage,
+          firstStage,
+          secondStage,
+          thirdStage
+        }
+      })
+    }
+  }
 }
 </script>
 
