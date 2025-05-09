@@ -1141,53 +1141,66 @@ export default {
         }
 
         if (this.list_categories.options.length) {
-          let categories = []
+          // Create a map to quickly look up categories by id
+          const categoryMap = new Map()
+          const categories = []
 
-          for (let category of this.list_categories.options) {
+          // First, extract all categories except 'null' (no group)
+          this.list_categories.options.forEach(category => {
             if (category.id !== null) {
-              categories.push({
-                'name': category.text,
-                'id': category.id,
-                'value': category.id,
-                'items': [],
+              const categoryObj = {
+                name: category.text,
+                id: category.id,
+                value: category.id,
+                items: [],
                 is_category: true
-              })
-            }
-          }
-          categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
-
-          for (let list of data) {
-            if (categories.length) {
-              for (let category of categories) {
-                if (category.value === list.category) {
-                  category.items.push(
-                    {
-                      'id': list.id,
-                      'name': list.name,
-                      'cerqual_option': list.cerqual_option,
-                      'filter_cerqual': list.filter_cerqual,
-                      'cerqual_explanation': list.cerqual_explanation,
-                      'ref_list': list.ref_list,
-                      'sort': list.sort,
-                      'notes': list.notes,
-                      'evidence_profile': list.evidence_profile,
-                      'references': list.references,
-                      'cnt': 0
-                    }
-                  )
-                }
               }
+              categories.push(categoryObj)
+              categoryMap.set(category.id, categoryObj)
             }
+          })
+
+          // Add the uncategorized category
+          categories.push({
+            name: 'Uncategorised findings',
+            id: 'uncategorized',
+            value: null,
+            items: [],
+            is_category: true
+          })
+
+          // Process each list item once and add to appropriate category
+          for (const list of data) {
+            const categoryId = list.category
+            const targetCategory = categoryId !== null && categoryMap.has(categoryId)
+              ? categoryMap.get(categoryId)
+              : categories[categories.length - 1] // uncategorized
+
+            targetCategory.items.push({
+              id: list.id,
+              name: list.name,
+              cerqual_option: list.cerqual_option,
+              filter_cerqual: list.filter_cerqual,
+              cerqual_explanation: list.cerqual_explanation,
+              ref_list: list.ref_list,
+              sort: list.sort,
+              notes: list.notes,
+              evidence_profile: list.evidence_profile,
+              references: list.references,
+              cnt: 0
+            })
           }
-          let _items = []
+
+          // Build the final list with proper numbering for print view
+          const _items = []
           let cnt = 1
+
           for (const cat of categories) {
             if (cat.items.length) {
               _items.push(cat)
               for (const _item of cat.items) {
-                _item.cnt = cnt
+                _item.cnt = cnt++
                 _items.push(_item)
-                cnt++
               }
             }
           }
@@ -1197,9 +1210,10 @@ export default {
           this.lists_print_version = data
         }
 
-        for (let items of this.lists_print_version) {
-          this.printableItems.push(items.id)
-        }
+        // Save IDs of all items for printable content
+        this.printableItems = this.lists_print_version
+          .filter(item => item.id !== 'uncategorized') // Skip category headers
+          .map(item => item.id)
       }
       this.table_settings.isBusy = false
       return data
