@@ -155,6 +155,25 @@
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
           </b-form-group>
+
+          <b-form-group
+            label="Would you like to use CAMELOT for this project?"
+            label-for="input-project-use-camelot"
+            description="CAMELOT provides additional tools for quality assessment and data extraction.">
+            <b-form-radio-group
+              :disabled="!canWrite"
+              id="input-project-use-camelot"
+              v-model="formData.use_camelot"
+              :options="[
+                { text: 'Yes, use CAMELOT (recommended)', value: true },
+                { text: 'No, do not use CAMELOT', value: false }
+              ]"
+              buttons
+              button-variant="outline-primary"
+              size="md"
+              name="use-camelot-buttons"></b-form-radio-group>
+          </b-form-group>
+
           <b-form-group
             label-for="select-project-list-status"
             description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it “private”. You can change these settings at any time.">
@@ -231,7 +250,12 @@ export default {
   name: 'organizationForm',
   components: {videoHelp},
   props: {
-    formData: Object,
+    formData: {
+      type: Object,
+      default: () => ({
+        use_camelot: true // Inicializar CAMELOT como habilitado por defecto
+      })
+    },
     canWrite: Boolean,
     isModal: {
       type: Boolean,
