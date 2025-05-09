@@ -1,13 +1,21 @@
 <template>
   <div v-if="evidenceProfile.length">
-    <a name="evidence-profile"></a>
+    <a name="evidence-profile" />
     <h3 class="mt-4">
       Evidence Profile
       <span
-        v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
+        v-if="ui.adequacy.chars_of_studies.display_warning ||
+               ui.methodological_assessments.display_warning ||
+               ui.adequacy.extracted_data.display_warning ||
+               !hasValidProject ||
+               !projectReviewQuestion ||
+               !projectInclusion ||
+               !projectExclusion"
         class="text-danger d-print-none"
-        v-b-tooltip.hover title="Data are missing.">
-        <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+        v-b-tooltip.hover
+        title="Data are missing."
+      >
+        <font-awesome-icon icon="exclamation-circle" />
       </span>
     </h3>
     <b-table
@@ -22,49 +30,82 @@
       :filter="evidenceProfileTableSettings.filter"
       :busy="evidenceProfileTableSettings.isBusy">
       <template v-slot:head(isoqf_id)="data">
-        <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="Automatic numbering of summarised review findings"
+        >{{data.label}}</span>
       </template>
       <template v-slot:head(methodological-limit)="data">
-        <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding"
+        >{{data.label}}</span>
         <span
           v-if="ui.methodological_assessments.display_warning || ui.methodological_assessments.extracted_data.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-          <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+          v-b-tooltip.hover
+          title="Data needed to make this assessment are missing. Click button below to see what's missing."
+        >
+          <font-awesome-icon icon="exclamation-circle" />
         </span>
       </template>
       <template v-slot:head(coherence)="data">
-        <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By 'cogent', we mean well supported or compelling"
+        >{{data.label}}</span>
         <span
           v-if="ui.coherence.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-          <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+          v-b-tooltip.hover
+          title="Data needed to make this assessment are missing. Click button below to see what's missing."
+        >
+          <font-awesome-icon icon="exclamation-circle" />
         </span>
       </template>
       <template v-slot:head(adequacy)="data">
-        <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="An overall determination of the degree of richness and quantity of data supporting a review finding"
+        >{{data.label}}</span>
         <span
           v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-          <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+          v-b-tooltip.hover
+          title="Data needed to make this assessment are missing. Click button below to see what's missing."
+        >
+          <font-awesome-icon icon="exclamation-circle" />
         </span>
       </template>
       <template v-slot:head(relevance)="data">
-        <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
         <span
-          v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
+          v-b-tooltip.hover
+          title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question"
+        >{{data.label}}</span>
+        <span
+          v-if="ui.relevance.chars_of_studies.display_warning ||
+                 !hasValidProject ||
+                 !projectInclusion ||
+                 !projectExclusion ||
+                 !projectReviewQuestion"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
-          <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+          v-b-tooltip.hover
+          title="Data needed to make this assessment are missing. Click button below to see what's missing."
+        >
+          <font-awesome-icon icon="exclamation-circle" />
         </span>
       </template>
       <template v-slot:head(cerqual)="data">
-        <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest"
+        >{{data.label}}</span>
       </template>
       <template v-slot:head(references)="data">
-        <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
+        <span
+          v-b-tooltip.hover
+          title="Studies that contribute to this review finding"
+        >{{data.label}}</span>
       </template>
       <!-- content -->
       <template v-slot:cell(isoqf_id)="data">
@@ -77,23 +118,27 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
-              @click="editStageTwo(data.item, 'methodological-limitations')">
+              @click="editStageTwo(data.item, 'methodological-limitations')"
+            >
               <template v-if="permission">Edit</template>
               <template v-else>View</template>
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
-                icon="comments"></font-awesome-icon>
+                icon="comments"
+              />
             </b-button>
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
+            <span class="font-weight-bolder text-black-50">Explanation:</span>
+            {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
-                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              title="This explanation is incomplete"
+            >
+              <font-awesome-icon icon="exclamation-circle" />
             </span>
           </p>
           <p v-else class="text-muted font-weight-light">
@@ -101,13 +146,15 @@
               v-if="data.item.methodological_limitations.option !== '0'"
               v-b-tooltip.hover
               title="Provide an explanation for your assessment"
-              variant="info">Explanation not yet added</span>
+              variant="info"
+            >Explanation not yet added</span>
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
-                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
+              title="This explanation is incomplete"
+            >
+              <font-awesome-icon icon="exclamation-circle" />
             </span>
           </p>
         </div>
@@ -117,11 +164,13 @@
               block
               class="d-print-none"
               variant="info"
-              @click="editStageTwo(data.item, 'methodological-limitations')">
+              @click="editStageTwo(data.item, 'methodological-limitations')"
+            >
               Assessment not completed
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
-                icon="comments"></font-awesome-icon>
+                icon="comments"
+              />
             </b-button>
           </template>
         </div>
@@ -511,7 +560,15 @@ export default {
     mode: String,
     list: Object,
     refsWithTitle: Array,
-    project: Object,
+    project: {
+      type: Object,
+      required: true,
+      default: () => ({
+        review_question: '',
+        inclusion: '',
+        exclusion: ''
+      })
+    },
     permission: Boolean,
     selectOptions: Array,
     levelConfidence: Array,
@@ -564,11 +621,30 @@ export default {
       ]
     }
   },
+  computed: {
+    hasValidProject () {
+      return this.project &&
+             typeof this.project === 'object' &&
+             'review_question' in this.project &&
+             'inclusion' in this.project &&
+             'exclusion' in this.project
+    },
+    projectReviewQuestion () {
+      return this.hasValidProject ? this.project.review_question : ''
+    },
+    projectInclusion () {
+      return this.hasValidProject ? this.project.inclusion : ''
+    },
+    projectExclusion () {
+      return this.hasValidProject ? this.project.exclusion : ''
+    }
+  },
   methods: {
-    getExplanation: function (type, option, explanation) {
+    getExplanation (type, option, explanation) {
       return displayExplanation(type, option, explanation)
     },
-    saveReferencesList: function () {
+
+    saveReferencesList () {
       this.evidenceProfileTableSettings.isBusy = true
       const params = {
         references: this.list.references
@@ -578,21 +654,21 @@ export default {
           this.updateReferencesInFindings()
         })
     },
-    updateReferencesInFindings: function () {
+
+    updateReferencesInFindings () {
       let params = {
         'evidence_profile.references': this.list.references
       }
       axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
         .then((response) => {
           this.$emit('update-list-data')
-          // this.getList()
         })
         .catch((error) => {
           this.$emit('printErrors', error)
-          // this.printErrors(error)
         })
     },
-    displaySelectedOption: function (option) {
+
+    displaySelectedOption (option) {
       if (option === null) {
         return ''
       } else if (option >= 0) {
@@ -601,7 +677,8 @@ export default {
         return ''
       }
     },
-    displayExclamationAlert: function (type) {
+
+    displayExclamationAlert (type) {
       const evidenceProfile = this.evidenceProfile[0]
       switch (type) {
         case 'methodological-limitations':
@@ -627,13 +704,15 @@ export default {
       }
       return false
     },
-    displayLevelConfidence: function (option) {
+
+    displayLevelConfidence (option) {
       if (option !== null) {
         return this.levelConfidence[option].text
       }
       return ''
     },
-    checkValidationText: function (type, prop) {
+
+    checkValidationText (type, prop) {
       switch (type) {
         case 'methodological-limitations':
           if (parseInt(prop.methodological_limitations.option) > 0 && prop.methodological_limitations.explanation === '') {
@@ -659,10 +738,12 @@ export default {
           return false
       }
     },
-    openModalReferences: function () {
+
+    openModalReferences () {
       this.$refs['modalReferences'].show()
     },
-    editStageTwo: function (data, type) {
+
+    editStageTwo (data, type) {
       const titles = {
         'methodological-limitations': 'Methodological limitations',
         'coherence': 'Coherence',
@@ -676,19 +757,24 @@ export default {
       this.$emit('modalDataChanged', theData)
       this.$refs.evidenceProfileForm.openModalEvidenceProfie()
     },
-    getList: function (status = false) {
+
+    getList (status = false) {
       this.$emit('update-list-data', status)
     },
-    busyEvidenceProfileTable: function (status) {
+
+    busyEvidenceProfileTable (status) {
       this.$emit('busyEvidenceProfileTable', status)
     },
-    callGetStageOneData: function (status) {
+
+    callGetStageOneData (status) {
       this.$emit('callGetStageOneData', status)
     },
-    setShowEditExtractedDataInPlace: function (data) {
+
+    setShowEditExtractedDataInPlace (data) {
       this.$emit('setShowEditExtractedDataInPlace', data)
     },
-    getExtractedData: function () {
+
+    getExtractedData () {
       this.$emit('getExtractedData')
     }
   }
