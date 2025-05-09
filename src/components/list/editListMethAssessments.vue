@@ -13,34 +13,38 @@
       </span>
     </h3>
     <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">My Data</b-link> section of iSoQ</p>
-    <pre>{{ methAssessments }}</pre>
-    <template v-if="methAssessments && methAssessments.fields && methAssessments.fields.length">
-      <bc-filters
-        v-if="mode==='edit' && methAssessments.items && methAssessments.items.length && permission"
-        class="d-print-none"
-        idname="meth-assessments-filter"
-        :tableSettings="methodological_assessments_table_settings"
-        type="meth_assessments"
-        :fields="methAssessments.fields"
-        :items="methAssessments.items">
-      </bc-filters>
-      <b-table
-        class="toDoc"
-        id="methodological"
-        responsive
-        head-variant="light"
-        outlined
-        :fields="methAssessments.fieldsObj || []"
-        :items="methAssessments.items || []"
-        :filter="methodological_assessments_table_settings.filter">
-        <template
-          v-slot:cell(authors)="data">
-          <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
-        </template>
-      </b-table>
-
-      <!-- end of -->
-      <back-to-top></back-to-top>
+    <template v-if="isCamelot">
+      <assessment-table :assessments="methAssessments" />
+    </template>
+    <template v-else>
+      <template v-if="methAssessments && methAssessments.fields && methAssessments.fields.length">
+        <bc-filters
+          v-if="mode==='edit' && methAssessments.items && methAssessments.items.length && permission"
+          class="d-print-none"
+          idname="meth-assessments-filter"
+          :tableSettings="methodological_assessments_table_settings"
+          type="meth_assessments"
+          :fields="methAssessments.fields"
+          :items="methAssessments.items">
+        </bc-filters>
+        <b-table
+          class="toDoc"
+          id="methodological"
+          responsive
+          head-variant="light"
+          outlined
+          :fields="methAssessments.fieldsObj || []"
+          :items="methAssessments.items || []"
+          :filter="methodological_assessments_table_settings.filter">
+          <template
+            v-slot:cell(authors)="data">
+            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+          </template>
+        </b-table>
+  
+        <!-- end of -->
+        <back-to-top></back-to-top>
+      </template>
     </template>
   </div>
 </template>
@@ -48,7 +52,7 @@
 <script>
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
-
+import AssessmentTable from '../camelot/assessment/AssessmentTable.vue'
 export default {
   name: 'editListMethAssessments',
   props: {
@@ -93,11 +97,16 @@ export default {
     showParagraph: {
       type: Boolean,
       default: false
+    },
+    isCamelot: {
+      type: Boolean,
+      default: true
     }
   },
   components: {
     'back-to-top': backToTop,
-    'bc-filters': bCardFilters
+    'bc-filters': bCardFilters,
+    'assessment-table': AssessmentTable
   },
   data () {
     return {
