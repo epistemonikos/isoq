@@ -106,7 +106,7 @@
                   :references="references"
                   :refs="refs"
                   :lists="lists"
-                  :isCamelot="isCamelot"
+                  :isCamelot="project.use_camelot"
                   @get-project="getProject"
                   @print-errors="printErrors"
                   @updateDataTable="updateDataTable"
@@ -128,7 +128,7 @@
                 <p class="font-weight-light">
                   Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
                 </p>
-                <template v-if="isCamelot">
+                <template v-if="project.use_camelot">
                   <CamelotStepFour
                     type="isoqf_methodological"
                     :references="references"></CamelotStepFour>
@@ -143,7 +143,7 @@
                     :references="references"
                     :refs="refs"
                     :lists="lists"
-                    :isCamelot="isCamelot"
+                    :isCamelot="project.use_camelot"
                     @get-project="getProject"
                     @print-errors="printErrors"
                     @updateDataTable="updateDataTable"
@@ -607,12 +607,7 @@ export default {
     ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue'),
     CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
   },
-  props: {
-    isCamelot: {
-      type: Boolean,
-      default: true
-    }
-  },
+  props: { },
   data () {
     return {
       stepStage: 0,

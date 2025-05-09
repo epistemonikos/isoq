@@ -101,7 +101,7 @@ export default {
     },
     isCamelot: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   components: {
