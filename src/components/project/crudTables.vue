@@ -228,7 +228,7 @@
         size="xl"
         ref="edit-content-dataTable"
         title="Edit data"
-        scrollable
+        
         @ok="saveContentDataTable"
         ok-title="Save"
         ok-variant="outline-success"
@@ -239,12 +239,19 @@
             v-if="isCamelot">
             <b-row>
               <b-col cols="3">
-                <b-list-group v-b-scrollspy:camelot>
-                  <b-list-group-item v-for="field of camelot.categories" :key="field.id" :href="`#${field.key}`">{{ field.label }}</b-list-group-item>
+                <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
+                  <b-list-group-item 
+                    v-for="field of camelot.categories" 
+                    :active="modal.selectedOption === field.key"
+                    :key="field.key" 
+                    :href="`#${field.key}`"
+                    @click="scrollToSection(field.key)">
+                    {{ field.label }}
+                  </b-list-group-item>
                 </b-list-group>
               </b-col>
               <b-col cols="9">
-                <div id="camelot" class="h-auto" style="position:relative; overflow-y:auto;">
+                <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
                   <div
                     v-if="!camelot.excluded.includes(field.key)"
                     v-for="field of dataTableFieldsModal.fields"
@@ -457,6 +464,9 @@ export default {
   },
   data () {
     return {
+      modal: {
+        selectedOption: 'research'
+      },
       dataTable: {
         fields: [],
         items: [],
@@ -1299,6 +1309,18 @@ export default {
         }
       } else {
         return 'author(s) not found'
+      }
+    },
+    scrollToSection (sectionId) {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        this.modal.selectedOption = sectionId
+        const camelotContainer = document.getElementById('camelot')
+        const offset = element.offsetTop - camelotContainer.offsetTop
+        camelotContainer.scrollTo({
+          top: offset,
+          behavior: 'smooth'
+        })
       }
     }
   }
