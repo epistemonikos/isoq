@@ -228,7 +228,6 @@
         size="xl"
         ref="edit-content-dataTable"
         title="Edit data"
-        
         @ok="saveContentDataTable"
         ok-title="Save"
         ok-variant="outline-success"
@@ -240,10 +239,10 @@
             <b-row>
               <b-col cols="3">
                 <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
-                  <b-list-group-item 
-                    v-for="field of camelot.categories" 
+                  <b-list-group-item
+                    v-for="field of camelot.categories"
                     :active="modal.selectedOption === field.key"
-                    :key="field.key" 
+                    :key="field.key"
                     :href="`#${field.key}`"
                     @click="scrollToSection(field.key)">
                     {{ field.label }}
