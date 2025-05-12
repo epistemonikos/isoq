@@ -880,8 +880,24 @@ export default {
         if (response && response.length) {
           let data = response[0]
 
-          if (this.project.isCamelot) {
+          // Asegurarse de que data.fields exista y sea un array
+          if (!data.fields) {
+            data.fields = []
+          }
+
+          // Asegurarse de que data.items exista y sea un array
+          if (!data.items) {
+            data.items = []
+          }
+
+          if (this.project.use_camelot) {
+            // Para Camelot, simplemente asignar los datos pero asegurarse de que tenga las propiedades necesarias
             this.meth_assessments = data
+
+            // Asegurar que exista fieldsObj si no viene en la respuesta
+            if (!this.meth_assessments.fieldsObj) {
+              this.meth_assessments.fieldsObj = []
+            }
           } else {
             const _references = JSON.parse(JSON.stringify(this.list.references))
             let items = []
@@ -898,13 +914,15 @@ export default {
                       }
                     }
                   }
-                  if (data.fields.length > Object.keys(item).length) {
+                  // Verificar que data.fields.length sea seguro de utilizar
+                  if (data.fields.length > 0 && data.fields.length > Object.keys(item).length) {
                     haveContent++
                   }
                 }
               }
             }
 
+            // Verificar que data.fields.length sea seguro de utilizar
             if (data.fields.length < 3) {
               haveContent++
             }
@@ -917,16 +935,19 @@ export default {
             data.items = items
             data.fieldsObj = []
 
-            for (let field of data.fields) {
-              if (field.key !== 'ref_id') {
-                data.fieldsObj.push(field)
+            // Verificar que data.fields exista antes de iterarlo
+            if (data.fields && data.fields.length > 0) {
+              for (let field of data.fields) {
+                if (field.key !== 'ref_id') {
+                  data.fieldsObj.push(field)
+                }
               }
             }
 
             this.meth_assessments = data
           }
         } else {
-          this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
+          this.meth_assessments = { nroOfColumns: 1, fields: [], items: [], fieldsObj: [] }
         }
       } catch (error) {
         this.printErrors(error)
