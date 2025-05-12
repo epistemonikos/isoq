@@ -251,20 +251,21 @@
               </b-col>
               <b-col cols="9">
                 <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
-                  <div
-                    v-if="!camelot.excluded.includes(field.key)"
-                    v-for="field of dataTableFieldsModal.fields"
-                    :key="field.id">
-                    <b-form-group
-                      :label="field.label"
-                      label-class="font-weight-bold">
-                      <b-form-textarea
-                          v-if="!camelot.excluded.includes(field.key)"
-                          v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                          rows="2"
-                          max-rows="100"></b-form-textarea>
-                    </b-form-group>
-                  </div>
+                  <template v-for="field of dataTableFieldsModal.fields">
+                    <div
+                      v-if="!camelot.excluded.includes(field.key)"
+                      :key="field.id">
+                      <b-form-group
+                        :label="field.label"
+                        label-class="font-weight-bold">
+                        <b-form-textarea
+                            v-if="!camelot.excluded.includes(field.key)"
+                            v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                            rows="2"
+                            max-rows="100"></b-form-textarea>
+                      </b-form-group>
+                    </div>
+                  </template>
                   <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
                     <div>
                       <div class="bg-light text-dark p-2">
@@ -286,23 +287,24 @@
             </b-row>
           </template>
           <template v-else>
-            <b-form-group
-              v-if="field.key !== 'ref_id'"
-              v-for="field of dataTableFieldsModal.fields"
-              :key="field.id"
-              :label="field.label"
-              label-class="font-weight-bold">
-              <template v-if="['ref_id', 'authors'].includes(field.key)">
-                <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
-              </template>
-              <template v-else>
-                <b-form-textarea
-                  v-if="!['ref_id', 'authors'].includes(field.key)"
-                  v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                  rows="2"
-                  max-rows="100"></b-form-textarea>
-              </template>
-            </b-form-group>
+            <template v-for="field of dataTableFieldsModal.fields">
+              <b-form-group
+                v-if="field.key !== 'ref_id'"
+                :key="field.id"
+                :label="field.label"
+                label-class="font-weight-bold">
+                <template v-if="['ref_id', 'authors'].includes(field.key)">
+                  <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
+                </template>
+                <template v-else>
+                  <b-form-textarea
+                    v-if="!['ref_id', 'authors'].includes(field.key)"
+                    v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                    rows="2"
+                    max-rows="100"></b-form-textarea>
+                </template>
+              </b-form-group>
+            </template>
           </template>
         </template>
       </b-modal>
@@ -408,13 +410,16 @@
 </template>
 
 <script>
+import { dataTableMixin } from '@/mixins/dataTableMixin'
+import { tableImportExportMixin } from '@/mixins/tableImportExportMixin'
+import { camelotMixin } from '@/mixins/camelotMixin'
 import axios from 'axios'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
-const ExportCSV = require('export-to-csv').ExportToCsv
 
 export default {
   name: 'crudTables',
+  mixins: [dataTableMixin, tableImportExportMixin, camelotMixin],
   props: {
     type: {
       type: String,
@@ -430,11 +435,11 @@ export default {
     },
     project: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     ui: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     references: {
       type: Array,
@@ -458,22 +463,10 @@ export default {
     draggable: () => import('vuedraggable'),
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  mounted () {
-    this.getData()
-  },
   data () {
     return {
       modal: {
         selectedOption: 'research'
-      },
-      dataTable: {
-        fields: [],
-        items: [],
-        authors: '',
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ],
-        fieldsObjOriginal: []
       },
       dataTableFieldsModal: {
         nroColumns: 1,
@@ -487,232 +480,33 @@ export default {
         items: [],
         selected_item_index: 0
       },
-      dataTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
       removeReferenceDataTable: {
         id: null,
         findings: []
       },
-      pre_ImportDataTable: '',
-      importDataTable: {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      },
-      camelot: {
-        fields: [
-          { key: 'research_extractedData', label: 'Extracted data' },
-          { key: 'research_concerns', label: 'Concerns' },
-          { key: 'stakeholders_extractedData', label: 'Extracted data' },
-          { key: 'stakeholders_concerns', label: 'Concerns' },
-          { key: 'researchers_extractedData', label: 'Extracted data' },
-          { key: 'researchers_concerns', label: 'Concerns' },
-          { key: 'context_extractedData', label: 'Extracted data' },
-          { key: 'context_concerns', label: 'Concerns' },
-          { key: 'strategy_extractedData', label: 'Extracted data' },
-          { key: 'strategy_concerns', label: 'Concerns' },
-          { key: 'theory_extractedData', label: 'Extracted data' },
-          { key: 'theory_concerns', label: 'Concerns' },
-          { key: 'ethical_extractedData', label: 'Extracted data' },
-          { key: 'ethical_concerns', label: 'Concerns' },
-          { key: 'equity_extractedData', label: 'Extracted data' },
-          { key: 'equity_concerns', label: 'Concerns' },
-          { key: 'participant_extractedData', label: 'Extracted data' },
-          { key: 'participant_concerns', label: 'Concerns' },
-          { key: 'data_extractedData', label: 'Extracted data' },
-          { key: 'data_concerns', label: 'Concerns' },
-          { key: 'analysis_extractedData', label: 'Extracted data' },
-          { key: 'analysis_concerns', label: 'Concerns' },
-          { key: 'presentation_extractedData', label: 'Extracted data' },
-          { key: 'presentation_concerns', label: 'Concerns' }
-        ],
-        categories: [
-          {
-            key: 'research',
-            label: 'Meta domain 1 - Research',
-            options: [
-              { key: 'research_extractedData', label: 'Extracted data' },
-              { key: 'research_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'stakeholders',
-            label: 'Meta domain 2 - Stakeholders',
-            options: [
-              { key: 'stakeholders_extractedData', label: 'Extracted data' },
-              { key: 'stakeholders_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'researchers',
-            label: 'Meta domain 3 - Researchers',
-            options: [
-              { key: 'researchers_extractedData', label: 'Extracted data' },
-              { key: 'researchers_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'context',
-            label: 'Meta domain 4 - Context',
-            options: [
-              { key: 'context_extractedData', label: 'Extracted data' },
-              { key: 'context_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'strategy',
-            label: 'Research design 1 - Research strategy',
-            options: [
-              { key: 'strategy_extractedData', label: 'Extracted data' },
-              { key: 'strategy_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'theory',
-            label: 'Research design 2 - Theory',
-            options: [
-              { key: 'theory_extractedData', label: 'Extracted data' },
-              { key: 'theory_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'ethical',
-            label: 'Research design 3 - Ethical considerations',
-            options: [
-              { key: 'ethical_extractedData', label: 'Extracted data' },
-              { key: 'ethical_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'equity',
-            label: 'Research design 4 - Equity, diversity & inclusion considerations',
-            options: [
-              { key: 'equity_extractedData', label: 'Extracted data' },
-              { key: 'equity_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'participant',
-            label: 'Research conduct 1 - Participant recruitment & selection',
-            options: [
-              { key: 'participant_extractedData', label: 'Extracted data' },
-              { key: 'participant_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'data',
-            label: 'Research conduct 2 - Data collection',
-            options: [
-              { key: 'data_extractedData', label: 'Extracted data' },
-              { key: 'data_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'analysis',
-            label: 'Research conduct 3 - Analysis & interpretation',
-            options: [
-              { key: 'analysis_extractedData', label: 'Extracted data' },
-              { key: 'analysis_concerns', label: 'Concerns' }
-            ]
-          },
-          {
-            key: 'presentation',
-            label: 'Research conduct 4 - Presentation of findings',
-            options: [
-              { key: 'presentation_extractedData', label: 'Extracted data' },
-              { key: 'presentation_concerns', label: 'Concerns' }
-            ]
-          }
-        ],
-        excluded: [
-          'ref_id',
-          'authors',
-          'research_extractedData',
-          'research_concerns',
-          'stakeholders_extractedData',
-          'stakeholders_concerns',
-          'researchers_extractedData',
-          'researchers_concerns',
-          'context_extractedData',
-          'context_concerns',
-          'strategy_extractedData',
-          'strategy_concerns',
-          'theory_extractedData',
-          'theory_concerns',
-          'ethical_extractedData',
-          'ethical_concerns',
-          'equity_extractedData',
-          'equity_concerns',
-          'participant_extractedData',
-          'participant_concerns',
-          'data_extractedData',
-          'data_concerns',
-          'analysis_extractedData',
-          'analysis_concerns',
-          'presentation_extractedData',
-          'presentation_concerns'
-        ]
-      },
       showConcerns: false
     }
   },
+  mounted () {
+    this.getData()
+  },
   watch: {
-    pre_ImportDataTable: function (data) {
-      let fields = []
-      let items = []
-      const csvData = Papa.parse(data, { skipEmptyLines: true })
-      this.importDataTable.error = null
-      if (csvData.data.length) {
+    pre_ImportDataTable: {
+      handler (data) {
+        if (!data) return
+
+        const csvData = Papa.parse(data, { skipEmptyLines: true })
+        this.importDataTable.error = null
+
+        if (!csvData.data.length) return
+
         if (csvData.data[0].length < 3) {
           this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
-        } else {
-          for (let cnt in csvData.data) {
-            if (parseInt(cnt) === 0) {
-              let cntI = 0
-              for (let i in csvData.data[cnt]) {
-                let obj = {}
-                if (parseInt(i) === 0) {
-                  obj.key = 'ref_id'
-                }
-                if (parseInt(i) === 1) {
-                  obj.key = 'authors'
-                }
-                if (parseInt(i) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
-                  obj.key = 'column_' + cntI
-                  cntI++
-                }
-                obj.label = csvData.data[cnt][i]
-                fields.push(obj)
-              }
-            } else {
-              let cntI = 0
-              let obj = {}
-              for (let i in csvData.data[cnt]) {
-                if (parseInt(i) === 0) {
-                  obj.ref_id = csvData.data[cnt][i]
-                }
-                if (parseInt(i) === 1) {
-                  obj.authors = csvData.data[cnt][i]
-                }
-                if (parseInt(i) > 1) {
-                  obj[`column_${cntI}`] = csvData.data[cnt][i]
-                  cntI++
-                }
-              }
-              items.push(obj)
-            }
-          }
+          return
         }
+
+        this.processImportData(csvData.data)
       }
-      this.importDataTable.fields = fields
-      this.importDataTable.items = items
     },
     references () {
       this.updateMyDataTables()
@@ -721,18 +515,129 @@ export default {
       if (this.showConcerns) {
         this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal
       } else {
-        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => {
-          return !item.key.match(/_concerns$/)
-        })
+        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => !item.key.match(/_concerns$/))
       }
     }
   },
   methods: {
+    processImportData (data) {
+      const fields = []
+      const items = []
+
+      for (let cnt in data) {
+        if (parseInt(cnt) === 0) {
+          let cntI = 0
+          for (let i in data[cnt]) {
+            let obj = {}
+            if (parseInt(i) === 0) {
+              obj.key = 'ref_id'
+            }
+            if (parseInt(i) === 1) {
+              obj.key = 'authors'
+            }
+            if (parseInt(i) > 1) {
+              this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': data[cnt][i] })
+              obj.key = 'column_' + cntI
+              cntI++
+            }
+            obj.label = data[cnt][i]
+            fields.push(obj)
+          }
+        } else {
+          let cntI = 0
+          let obj = {}
+          for (let i in data[cnt]) {
+            if (parseInt(i) === 0) {
+              obj.ref_id = data[cnt][i]
+            }
+            if (parseInt(i) === 1) {
+              obj.authors = data[cnt][i]
+            }
+            if (parseInt(i) > 1) {
+              obj[`column_${cntI}`] = data[cnt][i]
+              cntI++
+            }
+          }
+          items.push(obj)
+        }
+      }
+
+      this.importDataTable.fields = fields
+      this.importDataTable.items = items
+    },
+
+    updateMyDataTables () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      axios.get(`/api/${this.type}`, { params })
+        .then((response) => {
+          if (!response.data.length) {
+            this.getData()
+            return
+          }
+          const responseData = JSON.parse(JSON.stringify(response.data[0]))
+          const charId = responseData.id
+
+          if (responseData.items.length) {
+            const items = this.processItems(responseData.items)
+            let params = {
+              items: items
+            }
+            axios.patch(`/api/${this.type}/${charId}`, params)
+              .then(() => {
+                this.getData()
+              })
+          }
+        })
+    },
+
+    processItems (dataItems) {
+      let items = JSON.parse(JSON.stringify(dataItems))
+      let references = []
+      let newItems = []
+      for (const item of items) {
+        references.push(item.ref_id)
+      }
+      for (const reference of this.references) {
+        if (!references.includes(reference.id)) {
+          newItems.push({
+            ref_id: reference.id,
+            authors: this.parseReference(reference, true, false)
+          })
+        }
+      }
+      items.push(...newItems)
+      return items
+    },
+
+    parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
+      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
+    },
+
+    getAuthorsFormat (authors = [], pubYear = '') {
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0].split(',')[0] + ' ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        } else {
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        }
+      } else {
+        return 'author(s) not found'
+      }
+    },
+
     addFieldsObjects: function (fieldsObj) {
       for (let field of this.camelot.fields) {
         fieldsObj.push(field)
       }
     },
+
     getData: function () {
       this.dataTableSettings.isBusy = true
       const params = {
@@ -769,20 +674,10 @@ export default {
               }
 
               const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
-              this.dataTable.fieldsObjOriginal = original.filter(item => {
-                // exclude actions
-                return item.key !== 'actions'
-              })
+              this.dataTable.fieldsObjOriginal = original
 
-              if (this.isCamelot) {
-                this.dataTable.fieldsObj.filter(item => {
-                  if (item.key.match(/_concerns$/)) {
-                    const index = this.dataTable.fieldsObj.indexOf(item)
-                    if (index > -1) {
-                      this.dataTable.fieldsObj.splice(index, 1)
-                    }
-                  }
-                })
+              if (this.isCamelot && !this.showConcerns) {
+                this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
               }
 
               // this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
@@ -998,7 +893,13 @@ export default {
         .then(() => {
           this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
           this.$emit('get-project')
+          // Guardamos el estado actual de showConcerns
+          const currentShowConcerns = this.showConcerns
           this.getData()
+          // Aseguramos que el estado de showConcerns se mantenga después de obtener los datos
+          if (currentShowConcerns !== this.showConcerns) {
+            this.showConcerns = currentShowConcerns
+          }
           this.$refs['edit-content-dataTable'].hide()
         })
         .catch((error) => {
@@ -1071,192 +972,6 @@ export default {
           this.$emit('print-errors', error)
         })
     },
-    generateTemplate: function () {
-      const _refs = JSON.parse(JSON.stringify(this.refs))
-      let obj = {
-        fields: ['Reference ID', 'Author(s), Year'],
-        data: []
-      }
-
-      for (let ref of _refs) {
-        obj.data.push([ref.id, ref.content.split(';')[0]])
-      }
-
-      const data = Papa.unparse(obj)
-
-      var csvData = new Blob([data], {type: 'text/csv;charset=utf-8;'})
-      var csvURL = window.URL.createObjectURL(csvData)
-
-      let link = document.createElement('a')
-      link.setAttribute('href', csvURL)
-      link.setAttribute('download', 'my_data.csv')
-      document.body.appendChild(link)
-
-      link.click()
-    },
-    loadTableImportData: function (event) {
-      const file = event.target.files[0]
-      if (!file) {
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.pre_ImportDataTable = e.target.result
-      }
-      reader.readAsText(file)
-    },
-    cleanVars: function (isCancel = false) {
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-      this.$refs['import-file'].reset()
-      if (isCancel) {
-        this.$refs[`import-table-${this.type}`].hide()
-      }
-    },
-    openModalImportTable: function () {
-      this.$refs[`import-table-${this.type}`].show()
-    },
-    exportTableToCSV: function (type) {
-      let _headers = JSON.parse(JSON.stringify(this.dataTable.fields))
-      let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let headers = []
-      let items = []
-      let keys = []
-
-      for (const field of _headers) {
-        if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push(`"${field.label}"`)
-          keys.push(field.key)
-        }
-      }
-
-      for (const i of _items) {
-        let item = {}
-        for (const k in keys) {
-          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-            item[keys[k]] = i[keys[k]]
-          } else {
-            item[keys[k]] = ''
-          }
-        }
-        items.push(item)
-      }
-
-      const options = {
-        filename: 'exportable_table',
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
-    },
-    saveImportedData: function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        fields: this.importDataTable.fields,
-        items: this.importDataTable.items
-      }
-      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
-        if (this.dataTable.items.length) {
-          this.cleanImportedData(this.dataTable.id, params)
-        } else {
-          this.insertImportedData(params)
-        }
-      }
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-    },
-    cleanImportedData: function (id = '', params = {}) {
-      axios.delete(`/api/${this.type}/${id}`)
-        .then(() => {
-          this.pre_ImportDataTable = ''
-          this.insertImportedData(params)
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
-    },
-    insertImportedData: function (params = {}) {
-      if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
-        return
-      }
-      axios.post(`/api/${this.type}/`, params)
-        .then(() => {
-          this.getData()
-          this.$refs[`import-table-${this.type}`].hide()
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
-    },
-    updateMyDataTables: function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-
-      axios.get(`/api/${this.type}`, {params})
-        .then((response) => {
-          if (!response.data.length) {
-            this.getData()
-            return
-          }
-          const responseData = JSON.parse(JSON.stringify(response.data[0]))
-          const charId = responseData.id
-
-          if (responseData.items.length) {
-            const items = this.processItems(responseData.items)
-            let params = {
-              items: items
-            }
-            axios.patch(`/api/${this.type}/${charId}`, params)
-              .then(() => {
-                this.getData()
-              })
-          }
-        })
-    },
-    processItems: function (dataItems) {
-      let items = JSON.parse(JSON.stringify(dataItems))
-      let references = []
-      let newItems = []
-      for (const item of items) {
-        references.push(item.ref_id)
-      }
-      for (const reference of this.references) {
-        if (!references.includes(reference.id)) {
-          console.log('this.processItems')
-          newItems.push({
-            ref_id: reference.id,
-            authors: this.parseReference(reference, true, false)
-          })
-        }
-      }
-      items.push(...newItems)
-      return items
-    },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
-    },
     deleteFieldFromCharsSudiesEdit: function (index) {
       let params = {}
       const _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
@@ -1295,20 +1010,6 @@ export default {
         .catch((error) => {
           this.$emit('print-errors', error)
         })
-    },
-    getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
     },
     scrollToSection (sectionId) {
       const element = document.getElementById(sectionId)
