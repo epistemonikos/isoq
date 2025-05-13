@@ -14,7 +14,9 @@
     </h3>
     <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">My Data</b-link> section of iSoQ</p>
     <template v-if="isCamelot">
-      <assessment-table :assessments="methAssessments" />
+      <assessment-table
+        :assessments="methAssessments"
+        :references="list.references" />
     </template>
     <template v-else>
       <template v-if="methAssessments && methAssessments.fields && methAssessments.fields.length">
