@@ -1180,65 +1180,111 @@ export default {
 }
 </script>
 
-<style scoped>
-  div >>> .navlink {
+<style lang="scss" scoped>
+div {
+  :deep(.navlink) {
     padding: 0.5rem 0.9rem;
   }
-  div >>> a.return {
+
+  :deep(a.return) {
     font-size: 1.2rem;
   }
-  div >>> h3 span {
-    font-size: 1.55rem;
+
+  :deep(h3) {
+    span {
+      font-size: 1.55rem;
+
+      &.title-finding {
+        font-weight: 300;
+      }
+    }
   }
-  div >>> h3 span.title-finding {
-    font-weight: 300;
+
+  :deep(#assessments.table) {
+    thead {
+      th {
+        width: 19%;
+
+        &:first-child {
+          width: 2%;
+        }
+
+        &:last-child {
+          width: 3%;
+        }
+      }
+    }
   }
-  div >>> #assessments.table thead th:first-child {
-    width: 2%;
+
+  :deep(#assessments-print.table) {
+    thead {
+      th {
+        &:first-child {
+          width: 2%;
+        }
+
+        &:nth-child(2) {
+          width: 35%;
+        }
+
+        &:last-child {
+          width: 15%;
+        }
+      }
+    }
   }
-  div >>> #assessments.table thead th:last-child {
-    width: 3%;
+
+  :deep(.table) {
+    tbody {
+      td {
+        div {
+          li {
+            font-size: 0.8rem;
+            padding-top: 0.4rem;
+            list-style-type: none;
+          }
+        }
+      }
+    }
   }
-  div >>> #assessments.table thead th {
-    width: 19%;
+
+  :deep(#extracted.table) {
+    thead {
+      th {
+        &:last-child {
+          text-align: right;
+          width: 13%;
+        }
+      }
+    }
   }
-  div >>> #assessments-print.table thead th:first-child {
-    width: 2%;
-  }
-  div >>> #assessments-print.table thead th:nth-child(2) {
-    width: 35%;
-  }
-  div >>> #assessments-print.table thead th:last-child {
-    width: 15%;
-  }
-  div >>> .table tbody td div li {
-    font-size: 0.8rem;
-    padding-top: 0.4rem;
-    list-style-type: none;
-  }
-  div >>> #extracted.table thead th:last-child {
-    text-align: right;
-    width: 13%;
-  }
-  div >>> .table-small-font {
+
+  :deep(.table-small-font) {
     font-size: 14px;
+
+    &.extracted-data {
+      thead {
+        th {
+          &:last-child {
+            width: 3%;
+          }
+        }
+      }
+    }
   }
-  div >>> .table-small-font.extracted-data thead th:last-child {
-    width: 3%;
-  }
-  div >>> .reference-txt {
+
+  :deep(.reference-txt) {
     font-size: 12px;
   }
-  div >>> #span-txt {
+
+  :deep(#span-txt) {
     font-size: 2rem;
   }
-  div >>> label b {
-    font-weight: bold;
+
+  :deep(label) {
+    b {
+      font-weight: bold;
+    }
   }
-  /* .extracted-data-table tbody tr td:last-child button {
-    display: none;
-  }
-  .extracted-data-table tbody tr:hover td:last-child button {
-    display: inline;
-  } */
+}
 </style>
