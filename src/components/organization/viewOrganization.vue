@@ -86,20 +86,20 @@
       ok-title="Duplicate"
       cancel-title="Close"
       :ok-disabled="!isLoading && isCloneDone || isLoading">
+
+      <p>
+        Click on the "duplicate" button to start making a copy of the project "<b>{{ cloningProject && cloningProject.name || '' }}</b>".
+        <br>
+        The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
+        <br>
+        Use the "share" button to share the duplicated project.
+      </p>
+
       <template v-if="isLoading">
         <div class="text-center">
           <b-spinner class="align-middle"></b-spinner>
           <strong>Loading...</strong>
         </div>
-      </template>
-      <template v-if="!isLoading && !isCloneDone">
-        <p>
-          Click on the "duplicate" button to start making a copy of the project "<b>{{ cloningProject && cloningProject.name || '' }}</b>".
-          <br>
-          The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
-          <br>
-          Use the "share" button to share the duplicated project.
-        </p>
       </template>
       <template v-if="!isLoading && isCloneDone">
         <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
@@ -257,6 +257,7 @@ export default {
         if (response.data.status) {
           this.isLoading = false
           this.isCloneDone = true
+          await this.getProjects()
         } else {
           throw new Error('No se pudo duplicar el proyecto')
         }
