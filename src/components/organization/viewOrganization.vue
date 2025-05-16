@@ -780,17 +780,24 @@ export default {
 
     async unshareEmail (email) {
       try {
-        const response = await axios.post(`/unshare/project/${this.sharingProject.id}`, {
+        const response = await axios.post(`/share/project/${this.sharingProject.id}/unshare`, null, {params: {
           current_user: this.$store.state.user.name,
           email: email,
-          org: this.$route.params.id
-        })
+          org_id: this.$route.params.id
+        }})
 
         if (response.status === 200) {
           this.$bvToast.toast('Email removed successfully', {
             title: 'Success',
             variant: 'success'
           })
+          // Actualizar el proyecto con los datos más recientes
+          const updatedProject = await axios.get(`/api/isoqf_projects/${this.sharingProject.id}`)
+          this.sharingProject = updatedProject.data
+          // Limpiar las listas actuales
+          this.registeredUsers = []
+          this.pendingUsers = []
+          // Recargar la lista de usuarios
           await this.loadUsersWithAccess()
         } else {
           throw new Error('Failed to remove email')
