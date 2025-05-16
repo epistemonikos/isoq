@@ -651,6 +651,17 @@ export default {
             variant: 'success'
           })
           this.resetShareForm()
+
+          // Actualizar el proyecto con los datos más recientes
+          const updatedProject = await axios.get(`/api/isoqf_projects/${this.sharingProject.id}`)
+          this.sharingProject = updatedProject.data
+
+          // Limpiar las listas actuales
+          this.registeredUsers = []
+          this.pendingUsers = []
+
+          // Recargar la lista de usuarios
+          await this.loadUsersWithAccess()
         } else {
           throw new Error(`Failed to send invitations: ${response.data.message || 'Unknown error'}`)
         }
@@ -713,11 +724,9 @@ export default {
 
     async updateUserPermission (user) {
       try {
-        const response = await axios.post(`/share/project/${this.sharingProject.id}`, {
-          current_user: this.$store.state.user.name,
-          user_id: user.id,
-          user_can: user.user_can,
-          org: this.$route.params.id
+        const response = await axios.patch(`/share/project/${this.sharingProject.id}/options-update`, {
+          'user_id': user.id,
+          'option': user.user_can
         })
 
         if (response.status === 200) {
@@ -741,17 +750,21 @@ export default {
 
     async unshareUser (user) {
       try {
-        const response = await axios.post(`/unshare/project/${this.sharingProject.id}`, {
+        const response = await axios.post(`/share/project/${this.sharingProject.id}/unshare`, null, {params: {
           current_user: this.$store.state.user.name,
           user_id: user.id,
-          org: this.$route.params.id
-        })
+          org_id: this.$route.params.id
+        }})
 
         if (response.status === 200) {
           this.$bvToast.toast('User removed successfully', {
             title: 'Success',
             variant: 'success'
           })
+          // Actualizar el proyecto con los datos más recientes
+          const updatedProject = await axios.get(`/api/isoqf_projects/${this.sharingProject.id}`)
+          this.sharingProject = updatedProject.data
+          // Recargar la lista de usuarios
           await this.loadUsersWithAccess()
         } else {
           throw new Error('Failed to remove user')
