@@ -42,7 +42,7 @@
         <template #cell(actions)="row">
           <b-button-group>
             <!-- Botones para el dueño del proyecto -->
-            <template v-if="row.item.is_owner">
+            <template v-if="row.item.isOwner">
               <b-button
                 size="sm"
                 variant="outline-secondary"
@@ -87,7 +87,7 @@
             </template>
 
             <!-- Botones para usuarios con permisos de escritura -->
-            <template v-else-if="row.item.allow_to_write">
+            <template v-else-if="row.item.allowToWrite">
               <b-button
                 size="sm"
                 variant="outline-secondary"
@@ -104,9 +104,27 @@
                 <font-awesome-icon
                   icon="edit"></font-awesome-icon>
               </b-button>
+              <b-button
+                size="sm"
+                variant="outline-success"
+                title="Leave"
+                @click="openLeaveModal(row.item)">
+                <font-awesome-icon
+                  icon="sign-out-alt"></font-awesome-icon>
+              </b-button>
             </template>
 
-            <!-- No se muestran botones para usuarios con solo permisos de lectura -->
+            <!-- Botones para usuarios con solo permisos de lectura -->
+            <template v-else-if="row.item.allowToRead">
+              <b-button
+                size="sm"
+                variant="outline-success"
+                title="Leave"
+                @click="openLeaveModal(row.item)">
+                <font-awesome-icon
+                  icon="sign-out-alt"></font-awesome-icon>
+              </b-button>
+            </template>
           </b-button-group>
         </template>
 
@@ -317,6 +335,20 @@
         </b-tab>
       </b-tabs>
     </b-modal>
+
+    <!-- Modal de Leave -->
+    <b-modal
+      id="leave-modal"
+      ref="leave-modal"
+      v-model="showLeaveModal"
+      title="Leave project"
+      @ok="leaveProject"
+      @cancel="closeLeaveModal"
+      ok-title="Leave"
+      cancel-title="Cancel"
+      ok-variant="danger">
+      <p>Leave the project <b>{{ leavingProject ? leavingProject.name : '' }}</b></p>
+    </b-modal>
   </div>
 </template>
 
@@ -374,7 +406,9 @@ export default {
       ],
       isTemporaryEnabled: false,
       temporaryUrl: '',
-      sharedToken: ''
+      sharedToken: '',
+      showLeaveModal: false,
+      leavingProject: null
     }
   },
 
@@ -447,22 +481,22 @@ export default {
         const response = await axios.get('/api/getProjects')
         this.projects = response.data.map(project => {
           // Verificar si el usuario es dueño del proyecto
-          const is_owner = project.organization === this.$store.state.user.personal_organization
+          const isOwner = project.organization === this.$store.state.user.personal_organization
 
           // Si no es dueño, verificar permisos de lectura y escritura
-          let allow_to_read = false
-          let allow_to_write = false
+          let allowToRead = false
+          let allowToWrite = false
 
-          if (!is_owner) {
-            allow_to_read = project.can_read && project.can_read.includes(this.$store.state.user.id)
-            allow_to_write = project.can_write && project.can_write.includes(this.$store.state.user.id)
+          if (!isOwner) {
+            allowToRead = project.can_read && project.can_read.includes(this.$store.state.user.id)
+            allowToWrite = project.can_write && project.can_write.includes(this.$store.state.user.id)
           }
 
           return {
             ...project,
-            is_owner,
-            allow_to_read,
-            allow_to_write
+            isOwner,
+            allowToRead,
+            allowToWrite
           }
         }).sort((a, b) => {
           const dateA = new Date(a.last_update || 0)
@@ -843,6 +877,44 @@ export default {
           }
         }
       })
+    },
+
+    openLeaveModal (project) {
+      this.leavingProject = project
+      this.showLeaveModal = true
+    },
+
+    closeLeaveModal () {
+      this.leavingProject = null
+      this.showLeaveModal = false
+    },
+
+    async leaveProject () {
+      if (!this.leavingProject) return
+
+      try {
+        this.isLoading = true
+        const response = await axios.post(`/project/${this.leavingProject.id}/unsubscribe?userId=${this.$store.state.user.id}`)
+
+        if (response.status === 200) {
+          this.$bvToast.toast('Successfully left the project', {
+            title: 'Success',
+            variant: 'success'
+          })
+          await this.getProjects()
+        } else {
+          throw new Error('Failed to leave the project')
+        }
+      } catch (error) {
+        console.error('Error leaving project:', error)
+        this.$bvToast.toast('Error leaving the project. Please try again.', {
+          title: 'Error',
+          variant: 'danger'
+        })
+      } finally {
+        this.isLoading = false
+        this.closeLeaveModal()
+      }
     }
   }
 }
