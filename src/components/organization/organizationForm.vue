@@ -165,7 +165,7 @@
               id="input-project-use-camelot"
               v-model="formData.use_camelot"
               :options="[
-                { text: 'Yes, use CAMELOT (recommended)', value: true },
+                { text: 'Yes, use CAMELOT (recommended)', value: true, checked: true },
                 { text: 'No, do not use CAMELOT', value: false }
               ]"
               buttons
@@ -176,7 +176,7 @@
 
           <b-form-group
             label-for="select-project-list-status"
-            description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it “private”. You can change these settings at any time.">
+            description="When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. Until you are finished, keep it private. You can change these settings at any time.">
             <template v-slot:description v-if="formData.id === null">
               When you finish your iSoQ you can publish some, or all of it, to the iSoQ database. These options become available once you have entered the required project properties and have at least one review finding with a complete GRADE-CERQual assessment.
             </template>
@@ -189,7 +189,7 @@
               v-model="formData.public_type"
               @change="resetState()"
               :options="global_status"></b-select>
-            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select “Private” until you are finished.') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select Private until you are finished.') }}</b-form-invalid-feedback>
           </b-form-group>
           <template v-if="formData.public_type !== 'private'">
             <b-form-group
@@ -350,7 +350,7 @@ export default {
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = response.data.message // 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.'
+          this.msgUpdateProject = response.data.message // 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select "Private" under "Visibility on the iSoQ database" to continue.'
           if (this.isModal) {
             document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
           } else {

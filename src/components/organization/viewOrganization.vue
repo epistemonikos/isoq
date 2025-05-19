@@ -158,7 +158,8 @@
       @cancel="closeEditModal"
       :ok-disabled="!editingProject.name"
       ok-title="Guardar"
-      cancel-title="Cancelar">
+      cancel-title="Cancelar"
+      size="lg">
       <organizationForm
           ref="organizationForm"
           :formData="editingProject"
@@ -467,7 +468,8 @@ export default {
         lists_authors: '',
         author: '',
         author_email: '',
-        is_public: false
+        is_public: false,
+        use_camelot: true
       }
     },
 
