@@ -295,6 +295,9 @@
                   Unshare
                 </b-button>
               </template>
+              <template v-slot:empty>
+                <p class="font-weight-light text-center my-3">No pending access requests</p>
+              </template>
             </b-table>
           </div>
         </b-tab>
