@@ -6,129 +6,146 @@
       </div>
     </b-container>
     <b-container fluid>
-      <b-table
-        :items="projects"
-        :fields="fields"
-        :busy="isLoading"
-        striped
-        hover>
+      <div class="my-4">
+        <h3>{{ $t("Projects") }}</h3>
+        <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
+          <b-col cols="12" class="text-right">
+            <b-button
+              v-b-tooltip.hover
+              title="Create a new Interactive Summary of Qualitative Findings Table"
+              variant="success"
+              @click="openNewProjectModal">{{ $t("Add new project") }}</b-button>
+          </b-col>
+        </b-row>
+        <b-row
+          class="mt-3">
+          <b-col>
+            <b-table
+              :items="projects"
+              :fields="fields"
+              :busy="isLoading"
+              striped
+              hover>
 
-        <template #table-busy>
-          <div class="text-center my-2">
-            <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
-          </div>
-        </template>
+              <template #table-busy>
+                <div class="text-center my-2">
+                  <b-spinner class="align-middle"></b-spinner>
+                  <strong>Loading...</strong>
+                </div>
+              </template>
 
-        <template v-slot:cell(private)="row">
-          <b-badge
-            variant="light"
-            class="publish-status"
-            v-b-tooltip.hover
-            :title="publicTypeOptions.map((obj)=>{ if (obj.value === row.item.public_type) { return obj.text } })">
-            {{ row.item.public_type }}
-          </b-badge>
-        </template>
+              <template v-slot:cell(private)="row">
+                <b-badge
+                  variant="light"
+                  class="publish-status"
+                  v-b-tooltip.hover
+                  :title="publicTypeOptions.map((obj)=>{ if (obj.value === row.item.public_type) { return obj.text } })">
+                  {{ row.item.public_type }}
+                </b-badge>
+              </template>
 
-        <template v-slot:cell(name)="row">
-          <b-link
-            :id="`p-${row.item.id}`"
-            class="link-project"
-            :to="{name: 'viewProject', params: {org_id: row.item.organization, id: row.item.id}}">
-            {{ row.item.name }}
-          </b-link>
-        </template>
+              <template v-slot:cell(name)="row">
+                <b-link
+                  :id="`p-${row.item.id}`"
+                  class="link-project"
+                  :to="{name: 'viewProject', params: {org_id: row.item.organization, id: row.item.id}}">
+                  {{ row.item.name }}
+                </b-link>
+              </template>
 
-        <template #cell(actions)="row">
-          <b-button-group>
-            <!-- Botones para el dueño del proyecto -->
-            <template v-if="row.item.isOwner">
-              <b-button
-                size="sm"
-                variant="outline-secondary"
-                title="Duplicate"
-                @click="openCloneModal(row.item)">
-                <font-awesome-icon
-                  icon="copy"></font-awesome-icon>
-              </b-button>
-              <b-button
-                v-if="row.item.sharedToken"
-                size="sm"
-                variant="outline-secondary"
-                title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
-                @click="openShareModalWithTab(row.item)">
-                <font-awesome-icon
-                  icon="link"></font-awesome-icon>
-              </b-button>
-              <b-button
-                size="sm"
-                variant="outline-secondary"
-                title="Share"
-                @click="openShareModal(row.item)">
-                <font-awesome-icon
-                  icon="users"></font-awesome-icon>
-              </b-button>
-              <b-button
-                size="sm"
-                variant="outline-success"
-                title="Edit"
-                @click="openEditModal(row.item)">
-                <font-awesome-icon
-                  icon="edit"></font-awesome-icon>
-              </b-button>
-              <b-button
-                size="sm"
-                variant="outline-danger"
-                title="Remove"
-                @click="deleteProject(row.item.id)">
-                <font-awesome-icon
-                  icon="trash"></font-awesome-icon>
-              </b-button>
-            </template>
+              <template #cell(actions)="row">
+                <b-button-group>
+                  <!-- Botones para el dueño del proyecto -->
+                  <template v-if="row.item.isOwner">
+                    <b-button
+                      size="sm"
+                      variant="outline-secondary"
+                      title="Duplicate"
+                      @click="openCloneModal(row.item)">
+                      <font-awesome-icon
+                        icon="copy"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      v-if="row.item.sharedToken"
+                      size="sm"
+                      variant="outline-secondary"
+                      title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
+                      @click="openShareModalWithTab(row.item)">
+                      <font-awesome-icon
+                        icon="link"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      size="sm"
+                      variant="outline-secondary"
+                      title="Share"
+                      @click="openShareModal(row.item)">
+                      <font-awesome-icon
+                        icon="users"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      size="sm"
+                      variant="outline-success"
+                      title="Edit"
+                      @click="openEditModal(row.item)">
+                      <font-awesome-icon
+                        icon="edit"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      size="sm"
+                      variant="outline-danger"
+                      title="Remove"
+                      @click="deleteProject(row.item.id)">
+                      <font-awesome-icon
+                        icon="trash"></font-awesome-icon>
+                    </b-button>
+                  </template>
 
-            <!-- Botones para usuarios con permisos de escritura -->
-            <template v-else-if="row.item.allowToWrite">
-              <b-button
-                size="sm"
-                variant="outline-secondary"
-                title="Duplicate"
-                @click="openCloneModal(row.item)">
-                <font-awesome-icon
-                  icon="copy"></font-awesome-icon>
-              </b-button>
-              <b-button
-                size="sm"
-                variant="outline-success"
-                title="Edit"
-                @click="openEditModal(row.item)">
-                <font-awesome-icon
-                  icon="edit"></font-awesome-icon>
-              </b-button>
-              <b-button
-                size="sm"
-                variant="outline-success"
-                title="Leave"
-                @click="openLeaveModal(row.item)">
-                <font-awesome-icon
-                  icon="sign-out-alt"></font-awesome-icon>
-              </b-button>
-            </template>
+                  <!-- Botones para usuarios con permisos de escritura -->
+                  <template v-else-if="row.item.allowToWrite">
+                    <b-button
+                      size="sm"
+                      variant="outline-secondary"
+                      title="Duplicate"
+                      @click="openCloneModal(row.item)">
+                      <font-awesome-icon
+                        icon="copy"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      size="sm"
+                      variant="outline-success"
+                      title="Edit"
+                      @click="openEditModal(row.item)">
+                      <font-awesome-icon
+                        icon="edit"></font-awesome-icon>
+                    </b-button>
+                    <b-button
+                      size="sm"
+                      variant="outline-success"
+                      title="Leave"
+                      @click="openLeaveModal(row.item)">
+                      <font-awesome-icon
+                        icon="sign-out-alt"></font-awesome-icon>
+                    </b-button>
+                  </template>
 
-            <!-- Botones para usuarios con solo permisos de lectura -->
-            <template v-else-if="row.item.allowToRead">
-              <b-button
-                size="sm"
-                variant="outline-success"
-                title="Leave"
-                @click="openLeaveModal(row.item)">
-                <font-awesome-icon
-                  icon="sign-out-alt"></font-awesome-icon>
-              </b-button>
-            </template>
-          </b-button-group>
-        </template>
+                  <!-- Botones para usuarios con solo permisos de lectura -->
+                  <template v-else-if="row.item.allowToRead">
+                    <b-button
+                      size="sm"
+                      variant="outline-success"
+                      title="Leave"
+                      @click="openLeaveModal(row.item)">
+                      <font-awesome-icon
+                        icon="sign-out-alt"></font-awesome-icon>
+                    </b-button>
+                  </template>
+                </b-button-group>
+              </template>
 
-      </b-table>
+            </b-table>
+          </b-col>
+        </b-row>
+      </div>
     </b-container>
 
     <!-- Modal de Edición -->
@@ -139,7 +156,7 @@
       :title="(editingProject.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
       @ok="saveProject"
       @cancel="closeEditModal"
-      :ok-disabled="!isFormValid"
+      :ok-disabled="!editingProject.name"
       ok-title="Guardar"
       cancel-title="Cancelar">
       <organizationForm
@@ -938,6 +955,11 @@ export default {
         this.isLoading = false
         this.closeLeaveModal()
       }
+    },
+
+    openNewProjectModal () {
+      this.editingProject = this.getDefaultProject()
+      this.showEditModal = true
     }
   }
 }
