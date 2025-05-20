@@ -362,9 +362,9 @@ export default {
 
       // Dividir por líneas y comas, y limpiar espacios
       const allLines = this.pubmed_request
-        .split(/[\n,]+/)  // Dividir por líneas nuevas o comas
-        .map(line => line.trim())  // Limpiar espacios
-        .filter(id => id !== '')  // Eliminar líneas vacías
+        .split(/[\n,]+/)
+        .map(line => line.trim())
+        .filter(id => id !== '')
 
       await this.processPubMedRequest(allLines)
     },
