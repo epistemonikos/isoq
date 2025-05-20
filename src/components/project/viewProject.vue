@@ -60,6 +60,7 @@
                   :lists="lists"
                   :charsOfStudies="charsOfStudies"
                   :methodologicalTableRefs="methodologicalTableRefs"
+                  :isCamelot="project.use_camelot"
                   @CallGetReferences="getReferences"
                   @statusLoadReferences="statusLoadReferences"
                   @CallGetProject="getProject"></UploadReferences>

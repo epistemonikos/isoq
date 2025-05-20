@@ -251,7 +251,7 @@ export default {
     methodologicalTableRefs: Object,
     isCamelot: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   components: {
