@@ -50,6 +50,14 @@
                   class="link-project"
                   :to="{name: 'viewProject', params: {org_id: row.item.organization, id: row.item.id}}">
                   {{ row.item.name }}
+                  <b-badge
+                    v-if="row.item.use_camelot"
+                    variant="info"
+                    class="ml-2"
+                    v-b-tooltip.hover
+                    title="This project uses CAMELOT">
+                    C
+                  </b-badge>
                 </b-link>
               </template>
 
