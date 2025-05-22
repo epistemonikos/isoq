@@ -1,6 +1,5 @@
 <template>
   <div>
-    <pre>{{ dataTable }}</pre>
     <b-row
       v-if="checkPermissions">
       <b-col
