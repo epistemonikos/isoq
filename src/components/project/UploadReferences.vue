@@ -480,7 +480,7 @@ export default {
 
     // Métodos para API
     async apiPubMed (id) {
-      const urlBase = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=abdb2d5a30084a5a7200df1515d45fb36f08&db=pubmed&retmode=json&id='
+      const urlBase = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?api_key=${process.env.PUBMED_API_KEY}&db=pubmed&retmode=json&id=`
       try {
         return await axios.get(urlBase + id)
       } catch (error) {
