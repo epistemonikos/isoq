@@ -736,6 +736,28 @@ export default {
         .then(response => {
           if (response.data.length) {
             this.assessments = {...response.data[0]}
+          } else {
+            // Inicializar con estructura vacía si no hay datos
+            this.assessments = {
+              items: this.references.map(ref => ({
+                ref_id: ref.id,
+                authors: this.getReferenceData(ref),
+                stages: [
+                  {
+                    key: 0,
+                    options: Array(4).fill({ option: null, text: '' })
+                  },
+                  {
+                    key: 1,
+                    options: Array(4).fill({ option: null, text: '' })
+                  },
+                  {
+                    key: 2,
+                    options: [{ option: null, text: '' }]
+                  }
+                ]
+              }))
+            }
           }
         })
         .catch(error => {
