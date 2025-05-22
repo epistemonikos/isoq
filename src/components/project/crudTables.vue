@@ -1,5 +1,6 @@
 <template>
   <div>
+    <pre>{{ dataTable }}</pre>
     <b-row
       v-if="checkPermissions">
       <b-col
@@ -8,14 +9,14 @@
           block
           variant="outline-primary"
           :disabled="(references.length) ? false : true"
-          v-if="dataTable.fields.length <= 2"
+          v-if="!isCamelot && dataTable.fields.length <= 2"
           @click="openModalDataTable()">
           Create Table
         </b-button>
         <b-button
           block
           variant="outline-primary"
-          v-if="dataTable.fields.length > 2"
+          v-if="!isCamelot && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
           Add or Edit column headings
         </b-button>
@@ -468,6 +469,25 @@ export default {
       modal: {
         selectedOption: 'research'
       },
+      dataTable: {
+        id: null,
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
+      },
+      dataTableSettings: {
+        isBusy: false,
+        currentPage: 1,
+        perPage: 10,
+        totalRows: 0
+      },
       dataTableFieldsModal: {
         nroColumns: 1,
         fields: [],
@@ -646,22 +666,26 @@ export default {
       }
       axios.get(`/api/${this.type}`, { params })
         .then((response) => {
-          if (response.data.length) {
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
-            this.dataTable = dataTable
-            if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
+            this.dataTable = {
+              ...this.dataTable,
+              ...dataTable
+            }
+
+            if (this.dataTable && this.dataTable.fields && Array.isArray(this.dataTable.fields)) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
               let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
-              const items = JSON.parse(JSON.stringify(this.dataTable.items))
+              const items = Array.isArray(this.dataTable.items) ? JSON.parse(JSON.stringify(this.dataTable.items)) : []
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
               this.dataTable.items = _items
 
               this.dataTableFieldsModal.fields = []
               for (let f of fields) {
-                if (!['ref_id', 'authors', 'actions'].includes(f.key)) {
-                  this.dataTableFieldsModal.fields.push(f.label)
-                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
+                if (f && f.key && !['ref_id', 'authors', 'actions'].includes(f.key)) {
+                  this.dataTableFieldsModal.fields.push(f.label || '')
+                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label || '' })
                 }
               }
 
@@ -680,28 +704,10 @@ export default {
                 this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
               }
 
-              // this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
-
-              for (let item of _items) {
-                this.dataTableFieldsModal.items.push(item)
-              }
-            }
-          } else {
-            this.dataTable = {
-              fields: [],
-              items: [],
-              authors: '',
-              fieldsObj: [
-                {
-                  key: 'authors',
-                  label: 'Author(s), Year'
-                }
-              ]
+              this.dataTableFieldsModal.items = _items
             }
           }
           this.$emit('updateDataTable', this.dataTable, this.type)
-          this.dataTableSettings.isBusy = false
-          // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
         })
         .catch((error) => {
           console.error('Error fetching data:', error)
@@ -788,7 +794,6 @@ export default {
 
       request
         .then(() => {
-          // this.dataTable.id ? this.$emit('get-project') : this.getData()
           this.$emit('get-project')
           this.getData()
           this.dataTableSettings.isBusy = false
@@ -845,7 +850,6 @@ export default {
             fields.push(field)
           }
         }
-        // sort fields by key
         fields.sort((a, b) => {
           if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
             return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
@@ -893,10 +897,8 @@ export default {
         .then(() => {
           this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
           this.$emit('get-project')
-          // Guardamos el estado actual de showConcerns
           const currentShowConcerns = this.showConcerns
           this.getData()
-          // Aseguramos que el estado de showConcerns se mantenga después de obtener los datos
           if (currentShowConcerns !== this.showConcerns) {
             this.showConcerns = currentShowConcerns
           }
