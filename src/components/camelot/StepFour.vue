@@ -9,19 +9,19 @@
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button @click="openModal(0, data)" :variant="(iscompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+        <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button @click="openModal(1, data)" :variant="(iscompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+        <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button @click="openModal(2, data)" :variant="(iscompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+        <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
       <template
         v-slot:cell(stepFour)="data">
-        <b-button @click="openModal(3, data)" :variant="(iscompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+        <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
       </template>
     </b-table>
 
@@ -704,7 +704,7 @@ export default {
     },
     assessments: {
       handler (newVal) {
-        this.iscompleted()
+        this.isCompleted()
       },
       deep: true
     },
@@ -804,7 +804,17 @@ export default {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
     },
-    iscompleted: function (stage = 0, index = 0) {
+    isCompleted: function (stage = 0, index = 0) {
+      // Verificar si el item existe y tiene la estructura necesaria
+      if (!this.assessments ||
+          !this.assessments.items ||
+          !this.assessments.items[index] ||
+          !this.assessments.items[index].stages ||
+          !this.assessments.items[index].stages[stage] ||
+          !this.assessments.items[index].stages[stage].options) {
+        return false
+      }
+
       const options = this.assessments.items[index].stages[stage].options
       let cnt = 0
       for (let i = 0; i < options.length; i++) {
@@ -812,10 +822,7 @@ export default {
           cnt++
         }
       }
-      if (cnt) {
-        return false
-      }
-      return true
+      return cnt === 0
     }
   }
 }
