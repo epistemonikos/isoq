@@ -705,6 +705,21 @@ export default {
 
               this.dataTableFieldsModal.items = _items
             }
+          } else {
+            this.dataTable = {
+              id: null,
+              fields: [],
+              items: [],
+              authors: '',
+              fieldsObj: [
+                {
+                  key: 'authors',
+                  label: 'Author(s), Year'
+                }
+              ],
+              fieldsObjOriginal: []
+            }
+            console.log('No data found for', this.type, this.dataTable)
           }
           this.$emit('updateDataTable', this.dataTable, this.type)
         })
