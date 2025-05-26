@@ -754,6 +754,10 @@ export default {
                   {
                     key: 2,
                     options: [{ option: null, text: '' }]
+                  },
+                  {
+                    key: 3,
+                    options: [{ option: null, text: '' }]
                   }
                 ]
               }))
