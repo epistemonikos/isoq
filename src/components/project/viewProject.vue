@@ -590,12 +590,17 @@ export default {
       mode: 'edit',
       msgUploadReferences: '',
       charsOfStudies: {
+        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
       },
       tabOpened: 1,
       yes_or_no: [
@@ -603,12 +608,17 @@ export default {
         { value: true, text: 'yes' }
       ],
       methodologicalTableRefs: {
+        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
       },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
