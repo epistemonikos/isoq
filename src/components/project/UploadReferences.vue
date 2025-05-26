@@ -807,63 +807,19 @@ export default {
               stages: [
                 {
                   key: 0,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: Array(4).fill({ option: null, text: '' })
                 },
                 {
                   key: 1,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: Array(4).fill({ option: null, text: '' })
                 },
                 {
                   key: 2,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: [{ option: null, text: '' }]
                 },
                 {
                   key: 3,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: [{ option: null, text: '' }]
                 }
               ]
             })
@@ -877,65 +833,21 @@ export default {
               ref_id: references[i].id,
               authors: this.parseReference(references[i], true),
               stages: [
-                {
+              {
                   key: 0,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: Array(4).fill({ option: null, text: '' })
                 },
                 {
                   key: 1,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    },
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: Array(4).fill({ option: null, text: '' })
                 },
                 {
                   key: 2,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: [{ option: null, text: '' }]
                 },
                 {
                   key: 3,
-                  options: [
-                    {
-                      option: null,
-                      text: ''
-                    }
-                  ]
+                  options: [{ option: null, text: '' }]
                 }
               ]
             })
