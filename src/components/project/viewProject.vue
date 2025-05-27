@@ -345,7 +345,7 @@
                   <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template class="mt-3" v-if="modal_edit_list_categories.edit">
+              <template v-if="modal_edit_list_categories.edit">
                 <p class="text-danger">
                   Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the
                   exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1.
@@ -358,7 +358,7 @@
                   <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template class="mt-3" v-if="modal_edit_list_categories.remove">
+              <template v-if="modal_edit_list_categories.remove">
                 <p>
                   Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
                 </p>
