@@ -1,21 +1,21 @@
 <template>
   <div>
     <b-row
-      v-if="checkPermissions">
+      v-if="checkPermissions && !useCamelot">
       <b-col
         sm="4">
         <b-button
           block
           variant="outline-primary"
           :disabled="(references.length) ? false : true"
-          v-if="!isCamelot && dataTable.fields.length <= 2"
+          v-if="!useCamelot && dataTable.fields.length <= 2"
           @click="openModalDataTable()">
           Create Table
         </b-button>
         <b-button
           block
           variant="outline-primary"
-          v-if="!isCamelot && dataTable.fields.length > 2"
+          v-if="!useCamelot && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
           Add or Edit column headings
         </b-button>
@@ -49,7 +49,7 @@
       <b-col
         cols="12">
         <b-form-checkbox
-          v-if="isCamelot"
+          v-if="useCamelot"
           v-model="showConcerns"
           :value="true"
           :unchecked-value="false">Show concerns</b-form-checkbox>
@@ -235,7 +235,7 @@
         <template
           v-if="dataTableFieldsModal.items.length && dataTableFieldsModal.selected_item_index < dataTableFieldsModal.items.length">
           <template
-            v-if="isCamelot">
+            v-if="useCamelot">
             <b-row>
               <b-col cols="3">
                 <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
@@ -457,7 +457,7 @@ export default {
       type: Array,
       default: () => []
     },
-    isCamelot: {
+    useCamelot: {
       type: Boolean,
       default: false
     }
@@ -768,7 +768,7 @@ export default {
                 }
               }
 
-              if (this.isCamelot) {
+              if (this.useCamelot) {
                 this.addFieldsObjects(this.dataTable.fieldsObj)
               }
 
@@ -779,7 +779,7 @@ export default {
               const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
               this.dataTable.fieldsObjOriginal = original
 
-              if (this.isCamelot && !this.showConcerns) {
+              if (this.useCamelot && !this.showConcerns) {
                 this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
               }
 
@@ -976,7 +976,7 @@ export default {
       const items = JSON.parse(JSON.stringify(this.dataTable.items))
       let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
 
-      if (this.isCamelot) {
+      if (this.useCamelot) {
         fields = JSON.parse(JSON.stringify(this.dataTable.fieldsObjOriginal))
       }
 
