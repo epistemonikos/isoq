@@ -233,7 +233,7 @@
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <template
-          v-if="dataTableFieldsModal.items.length">
+          v-if="dataTableFieldsModal.items.length && dataTableFieldsModal.selected_item_index < dataTableFieldsModal.items.length">
           <template
             v-if="isCamelot">
             <b-row>
@@ -259,7 +259,7 @@
                         :label="field.label"
                         label-class="font-weight-bold">
                         <b-form-textarea
-                            v-if="!camelot.excluded.includes(field.key)"
+                            v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
                             v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
                             rows="2"
                             max-rows="100"></b-form-textarea>
@@ -275,6 +275,7 @@
                         <b-col v-for="option in field.options" :key="option.key" :id="option.key">
                           <p>{{ option.label }}</p>
                           <b-form-textarea
+                            v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
                             v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
                             rows="2"
                             max-rows="100"></b-form-textarea>
@@ -293,12 +294,12 @@
                 :key="field.id"
                 :label="field.label"
                 label-class="font-weight-bold">
-                <template v-if="['ref_id', 'authors'].includes(field.key)">
+                <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
                   <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
                 </template>
                 <template v-else>
                   <b-form-textarea
-                    v-if="!['ref_id', 'authors'].includes(field.key)"
+                    v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
                     v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
                     rows="2"
                     max-rows="100"></b-form-textarea>
@@ -306,6 +307,9 @@
               </b-form-group>
             </template>
           </template>
+        </template>
+        <template v-else>
+          <p class="text-center">No items available for editing.</p>
         </template>
       </b-modal>
 
@@ -584,11 +588,16 @@ export default {
       this.importDataTable.fields = fields
       this.importDataTable.items = items
     },
-
     updateMyDataTables () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
+      }
+
+      // Handle case when there are no references
+      if (!this.references || this.references.length === 0) {
+        this.getData()
+        return
       }
 
       axios.get(`/api/${this.type}`, { params })
@@ -598,36 +607,81 @@ export default {
             return
           }
           const responseData = JSON.parse(JSON.stringify(response.data[0]))
-          const charId = responseData.id
+          const tableId = responseData.id
 
-          if (responseData.items.length) {
-            const items = this.processItems(responseData.items)
-            let params = {
-              items: items
-            }
-            axios.patch(`/api/${this.type}/${charId}`, params)
-              .then(() => {
-                this.getData()
-              })
+          // Process items regardless of whether there are existing items or not
+          // This ensures we handle both new uploads and deleted references properly
+          const activeReferenceIds = this.references.map(ref => ref.id)
+          let currentItems = responseData.items || []
+
+          // Special handling for methodological assessments
+          if (this.type === 'isoqf_assessments') {
+            // For assessments, make sure we keep all items but update them with current reference data
+            // First, remove items that don't have corresponding active references
+            currentItems = currentItems.filter(item => activeReferenceIds.includes(item.ref_id))
+
+            // Then add any new references that aren't in the items
+            const existingRefIds = currentItems.map(item => item.ref_id)
+            const newItems = this.references
+              .filter(ref => !existingRefIds.includes(ref.id))
+              .map(ref => ({
+                ref_id: ref.id,
+                authors: this.parseReference(ref, true, false)
+              }))
+
+            // Combine existing and new items
+            currentItems.push(...newItems)
+
+            // Sort items by authors for consistency
+            currentItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+          } else {
+            // For other table types, use the standard processItems method
+            currentItems = this.processItems(currentItems)
           }
+
+          const patchParams = {
+            items: currentItems
+          }
+
+          axios.patch(`/api/${this.type}/${tableId}`, patchParams)
+            .then(() => {
+              this.getData()
+            })
+            .catch((error) => {
+              console.error('Error updating tables:', error)
+              this.$emit('print-errors', error)
+            })
+        })
+        .catch((error) => {
+          console.error('Error fetching tables data:', error)
+          this.getData()
         })
     },
 
     processItems (dataItems) {
       let items = JSON.parse(JSON.stringify(dataItems))
-      let references = []
+      let existingRefIds = []
+      let activeRefIds = this.references.map(ref => ref.id)
       let newItems = []
+
+      // Create a list of existing reference IDs
       for (const item of items) {
-        references.push(item.ref_id)
+        existingRefIds.push(item.ref_id)
       }
+
+      // Filter out items that don't have a corresponding active reference
+      items = items.filter(item => activeRefIds.includes(item.ref_id))
+
+      // Add any new references that aren't already in the items list
       for (const reference of this.references) {
-        if (!references.includes(reference.id)) {
+        if (!existingRefIds.includes(reference.id)) {
           newItems.push({
             ref_id: reference.id,
             authors: this.parseReference(reference, true, false)
           })
         }
       }
+
       items.push(...newItems)
       return items
     },
@@ -677,7 +731,33 @@ export default {
               let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = Array.isArray(this.dataTable.items) ? JSON.parse(JSON.stringify(this.dataTable.items)) : []
 
-              const _items = items.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+              // Filter items to include only those with references that currently exist in the references array
+              const activeReferenceIds = this.references.map(ref => ref.id)
+              const filteredItems = items.filter(item => activeReferenceIds.includes(item.ref_id))
+
+              // Special handling for assessments to ensure we don't lose data
+              let _items
+              if (this.type === 'isoqf_assessments') {
+                // Make sure we're not removing any special assessment data
+                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+
+                // Check if any references are missing from the assessment items
+                const existingRefIds = _items.map(item => item.ref_id)
+                const missingRefs = this.references.filter(ref => !existingRefIds.includes(ref.id))
+
+                // Add any missing references with empty data
+                if (missingRefs.length > 0) {
+                  const newItems = missingRefs.map(ref => ({
+                    ref_id: ref.id,
+                    authors: this.parseReference(ref, true, false)
+                  }))
+                  _items.push(...newItems)
+                  _items.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+                }
+              } else {
+                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+              }
+
               this.dataTable.items = _items
 
               this.dataTableFieldsModal.fields = []
@@ -762,7 +842,10 @@ export default {
     saveDataTableFields: function () {
       this.dataTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModal.fields))
+
+      // Make sure we're using the latest references
       let references = JSON.parse(JSON.stringify(this.references))
+
       let params = {
         fields: [
           {'key': 'ref_id', 'label': 'Reference ID'},
@@ -783,6 +866,7 @@ export default {
       }
 
       const createItems = (references, fields) => {
+        // Make sure we only include active references
         return references.map((ref) => {
           const item = {
             ref_id: ref.id,
@@ -898,18 +982,32 @@ export default {
 
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
-      this.dataTableFieldsModal.selected_item_index = index
+
+      // Ensure the index is valid by checking it against the actual items array length
+      this.dataTableFieldsModal.selected_item_index = index < items.length ? index : 0
+
       this.$refs['edit-content-dataTable'].show()
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
+
+      // Additional validation to ensure we have a valid selected_item_index
+      if (this.dataTableFieldsModal.selected_item_index < 0 ||
+          this.dataTableFieldsModal.selected_item_index >= this.dataTableFieldsModal.items.length) {
+        this.dataTableFieldsModal.selected_item_index = 0
+      }
+
       const params = {
         items: this.dataTableFieldsModal.items
       }
 
       axios.patch(`/api/${this.type}/${id}`, params)
         .then(() => {
-          this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
+          // Only try to emit set-item-data if we have a valid selected item
+          if (this.dataTableFieldsModal.items.length &&
+              this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]) {
+            this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
+          }
           this.$emit('get-project')
           const currentShowConcerns = this.showConcerns
           this.getData()
@@ -959,6 +1057,8 @@ export default {
       for (let item of _items) {
         if (item.ref_id === removedId) {
           let obj = {}
+
+          // Create a copy of the object with basic properties
           for (let k in keys) {
             if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
               if (keys[k] === 'ref_id' || keys[k] === 'authors') {
@@ -970,6 +1070,30 @@ export default {
               obj[keys[k]] = ''
             }
           }
+
+          // Special handling for assessments to preserve any complex structure
+          if (this.type === 'isoqf_assessments') {
+            // Preserve any special properties that might be needed for assessments
+            for (const key in item) {
+              if (!keys.includes(key) && key !== 'ref_id' && key !== 'authors') {
+                if (typeof item[key] === 'object' && item[key] !== null) {
+                  // For complex objects like stages, preserve structure but clear content
+                  if (key === 'stages' && Array.isArray(item[key])) {
+                    obj[key] = item[key].map(stage => ({
+                      key: stage.key,
+                      options: stage.options.map(() => ({ option: null, text: '' }))
+                    }))
+                  } else {
+                    // For other objects, copy the structure
+                    obj[key] = JSON.parse(JSON.stringify(item[key]))
+                  }
+                } else {
+                  obj[key] = item[key]
+                }
+              }
+            }
+          }
+
           items.push(obj)
         } else {
           items.push(item)

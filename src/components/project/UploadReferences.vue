@@ -530,6 +530,46 @@ export default {
 
     async removeAllReferences () {
       try {
+        // Ensure tables are properly cleared before removing references
+        const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
+        const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
+        let requests = []
+
+        // Clear characteristics of studies table but keep structure
+        if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
+          if (charsOfStudies.items && charsOfStudies.items.length) {
+            // Reset all items' data fields except ref_id and authors
+            for (let item of charsOfStudies.items) {
+              for (let key in item) {
+                if (key !== 'ref_id' && key !== 'authors') {
+                  item[key] = ''
+                }
+              }
+            }
+            requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
+          }
+        }
+
+        // Clear methodological assessments table but keep structure
+        if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+          if (_assessments.items && _assessments.items.length) {
+            // Reset all items' data fields except ref_id and authors
+            for (let item of _assessments.items) {
+              for (let key in item) {
+                if (key !== 'ref_id' && key !== 'authors') {
+                  item[key] = ''
+                }
+              }
+            }
+            requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
+          }
+        }
+
+        // Wait for table updates to complete before removing references
+        if (requests.length) {
+          await Promise.all(requests)
+        }
+
         await axios.post(`/api/remove/references/all?project_id=${this.$route.params.id}`)
         this.$emit('loadReferences', true)
         this.$emit('CallGetReferences')
@@ -737,12 +777,18 @@ export default {
       }
 
       if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
-        if (charsOfStudies.items.length) {
-          let items = []
+        if (charsOfStudies.items && charsOfStudies.items.length) {
+          let items = JSON.parse(JSON.stringify(charsOfStudies.items))
 
-          for (const item of charsOfStudies.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
+          // Instead of removing items, clear their content but keep the reference
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].ref_id === refId) {
+              const item = items[i]
+              for (let key in item) {
+                if (key !== 'ref_id' && key !== 'authors') {
+                  item[key] = ''
+                }
+              }
             }
           }
           charsOfStudies.items = items
@@ -752,12 +798,18 @@ export default {
       }
 
       if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-        if (_assessments.items.length) {
-          let items = []
+        if (_assessments.items && _assessments.items.length) {
+          let items = JSON.parse(JSON.stringify(_assessments.items))
 
-          for (const item of _assessments.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
+          // Instead of removing items, clear their content but keep the reference
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].ref_id === refId) {
+              const item = items[i]
+              for (let key in item) {
+                if (key !== 'ref_id' && key !== 'authors') {
+                  item[key] = ''
+                }
+              }
             }
           }
           _assessments.items = items
@@ -795,63 +847,57 @@ export default {
     handleCamelotAssessments: async function (references) {
       try {
         const response = await axios.get('/api/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
-        const _assessments = response.data[0]
+
+        // Create the assessment object structure
+        const createAssessmentItem = (reference) => ({
+          ref_id: reference.id,
+          authors: this.parseReference(reference, true),
+          stages: [
+            {
+              key: 0,
+              options: Array(4).fill({ option: null, text: '' })
+            },
+            {
+              key: 1,
+              options: Array(4).fill({ option: null, text: '' })
+            },
+            {
+              key: 2,
+              options: [{ option: null, text: '' }]
+            },
+            {
+              key: 3,
+              options: [{ option: null, text: '' }]
+            }
+          ]
+        })
+
         if (response.data.length) {
+          // Update existing assessment
+          const _assessments = response.data[0]
           const assessmentId = _assessments.id
 
-          let data = []
-          for (let i = 0; i < references.length; i++) {
-            data.push({
-              ref_id: references[i].id,
-              authors: this.parseReference(references[i], true),
-              stages: [
-                {
-                  key: 0,
-                  options: Array(4).fill({ option: null, text: '' })
-                },
-                {
-                  key: 1,
-                  options: Array(4).fill({ option: null, text: '' })
-                },
-                {
-                  key: 2,
-                  options: [{ option: null, text: '' }]
-                },
-                {
-                  key: 3,
-                  options: [{ option: null, text: '' }]
-                }
-              ]
-            })
+          // Get existing reference IDs
+          const existingRefIds = _assessments.items.map(item => item.ref_id)
+
+          // Only add references that don't already exist
+          const newReferences = references.filter(ref => !existingRefIds.includes(ref.id))
+
+          if (newReferences.length > 0) {
+            // Create new assessment items for the new references
+            const newItems = newReferences.map(ref => createAssessmentItem(ref))
+
+            // Add new items to the assessments
+            _assessments.items.push(...newItems)
+
+            // Update the assessments table
+            await axios.patch(`/api/isoqf_assessments/${assessmentId}`, _assessments)
           }
-          _assessments.items.push(...data)
-          await axios.patch(`/api/isoqf_assessments/${assessmentId}`, _assessments)
         } else {
-          let items = []
-          for (let i = 0; i < references.length; i++) {
-            items.push({
-              ref_id: references[i].id,
-              authors: this.parseReference(references[i], true),
-              stages: [
-              {
-                  key: 0,
-                  options: Array(4).fill({ option: null, text: '' })
-                },
-                {
-                  key: 1,
-                  options: Array(4).fill({ option: null, text: '' })
-                },
-                {
-                  key: 2,
-                  options: [{ option: null, text: '' }]
-                },
-                {
-                  key: 3,
-                  options: [{ option: null, text: '' }]
-                }
-              ]
-            })
-          }
+          // Create new assessments table
+          const items = references.map(ref => createAssessmentItem(ref))
+
+          // Post new assessments table
           await axios.post('/api/isoqf_assessments', {
             organization: this.$route.params.org_id,
             project_id: this.$route.params.id,
