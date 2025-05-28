@@ -226,6 +226,63 @@
 
       <b-modal
         size="xl"
+        id="open-modal-content-camelot-data"
+        ref="open-modal-content-camelot-data"
+        title="Edit Camelot data">
+        <b-row>
+          <b-col cols="3">
+            <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
+              <b-list-group-item
+                v-for="field of camelot.categories"
+                :active="modal.selectedOption === field.key"
+                :key="field.key"
+                :href="`#${field.key}`"
+                @click="scrollToSection(field.key)">
+                {{ field.label }}
+              </b-list-group-item>
+            </b-list-group>
+          </b-col>
+          <b-col cols="9">
+            <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
+              <template v-for="field of dataTableFieldsModal.fields">
+                <div
+                  v-if="!camelot.excluded.includes(field.key)"
+                  :key="field.id">
+                  <b-form-group
+                    :label="field.label"
+                    label-class="font-weight-bold">
+                    <b-form-textarea
+                        v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                        rows="2"
+                        max-rows="100"></b-form-textarea>
+                  </b-form-group>
+                </div>
+              </template>
+              <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
+                <div>
+                  <div class="bg-light text-dark p-2">
+                    <p class="font-weight-bold mb-0">{{ field.label }}</p>
+                  </div>
+                  <b-row class="p-2">
+                    <b-col v-for="option in field.options" :key="option.key" :id="option.key">
+                      <p>{{ option.label }}</p>
+                      <b-form-textarea
+                        v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
+                        rows="2"
+                        max-rows="100"></b-form-textarea>
+                    </b-col>
+                  </b-row>
+                </div>
+              </div>
+            </div>
+          </b-col>
+        </b-row>
+      </b-modal>
+
+      <b-modal
+        size="lg"
         ref="edit-content-dataTable"
         title="Edit data"
         @ok="saveContentDataTable"
@@ -234,78 +291,23 @@
         cancel-variant="outline-secondary">
         <template
           v-if="dataTableFieldsModal.items.length && dataTableFieldsModal.selected_item_index < dataTableFieldsModal.items.length">
-          <template
-            v-if="useCamelot">
-            <b-row>
-              <b-col cols="3">
-                <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
-                  <b-list-group-item
-                    v-for="field of camelot.categories"
-                    :active="modal.selectedOption === field.key"
-                    :key="field.key"
-                    :href="`#${field.key}`"
-                    @click="scrollToSection(field.key)">
-                    {{ field.label }}
-                  </b-list-group-item>
-                </b-list-group>
-              </b-col>
-              <b-col cols="9">
-                <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
-                  <template v-for="field of dataTableFieldsModal.fields">
-                    <div
-                      v-if="!camelot.excluded.includes(field.key)"
-                      :key="field.id">
-                      <b-form-group
-                        :label="field.label"
-                        label-class="font-weight-bold">
-                        <b-form-textarea
-                            v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                            v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                            rows="2"
-                            max-rows="100"></b-form-textarea>
-                      </b-form-group>
-                    </div>
-                  </template>
-                  <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
-                    <div>
-                      <div class="bg-light text-dark p-2">
-                        <p class="font-weight-bold mb-0">{{ field.label }}</p>
-                      </div>
-                      <b-row class="p-2">
-                        <b-col v-for="option in field.options" :key="option.key" :id="option.key">
-                          <p>{{ option.label }}</p>
-                          <b-form-textarea
-                            v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                            v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
-                            rows="2"
-                            max-rows="100"></b-form-textarea>
-                        </b-col>
-                      </b-row>
-                    </div>
-                  </div>
-                </div>
-              </b-col>
-            </b-row>
-          </template>
-          <template v-else>
-            <template v-for="field of dataTableFieldsModal.fields">
-              <b-form-group
-                v-if="field.key !== 'ref_id'"
-                :key="field.id"
-                :label="field.label"
-                label-class="font-weight-bold">
-                <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
-                  <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
-                </template>
-                <template v-else>
-                  <b-form-textarea
-                    v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                    v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                    rows="2"
-                    max-rows="100"></b-form-textarea>
-                </template>
-              </b-form-group>
-            </template>
+          <template v-for="field of dataTableFieldsModal.fields">
+            <b-form-group
+              v-if="field.key !== 'ref_id'"
+              :key="field.id"
+              :label="field.label"
+              label-class="font-weight-bold">
+              <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
+                <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
+              </template>
+              <template v-else>
+                <b-form-textarea
+                  v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                  v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                  rows="2"
+                  max-rows="100"></b-form-textarea>
+              </template>
+            </b-form-group>
           </template>
         </template>
         <template v-else>
@@ -986,7 +988,11 @@ export default {
       // Ensure the index is valid by checking it against the actual items array length
       this.dataTableFieldsModal.selected_item_index = index < items.length ? index : 0
 
-      this.$refs['edit-content-dataTable'].show()
+      if (this.useCamelot) {
+        this.$refs['open-modal-content-camelot-data'].show()
+      } else {
+        this.$refs['edit-content-dataTable'].show()
+      }
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
