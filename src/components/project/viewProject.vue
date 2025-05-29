@@ -81,10 +81,15 @@
                   Descriptive information extracted from the included studies (e.g. setting, country, perspectives,
                   methods, etc.)
                 </p>
-                <crudTables type="isoqf_characteristics" prefix="ch" :checkPermissions="checkPermissions()"
-                  :project="project" :ui="ui" :references="references" :refs="refs" :lists="lists"
-                  :useCamelot="project.use_camelot" @get-project="getProject" @print-errors="printErrors"
-                  @updateDataTable="updateDataTable" @set-item-data="setItemData"></crudTables>
+                <template v-if="project.use_camelot">
+                  <CamelotStepThree type="isoqf_characteristics" :references="references"></CamelotStepThree>
+                </template>
+                <template v-else>
+                  <crudTables type="isoqf_characteristics" prefix="ch" :checkPermissions="checkPermissions()"
+                    :project="project" :ui="ui" :references="references" :refs="refs" :lists="lists"
+                    :useCamelot="project.use_camelot" @get-project="getProject" @print-errors="printErrors"
+                    @updateDataTable="updateDataTable" @set-item-data="setItemData"></crudTables>
+                </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
@@ -429,6 +434,7 @@ export default {
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
     ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue'),
+    CamelotStepThree: () => import(/* webpackChunkName: "camelotStepThree" */ '@/components/camelot/StepThree.vue'),
     CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
   },
   props: {},
