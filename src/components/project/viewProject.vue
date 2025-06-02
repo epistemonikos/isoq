@@ -1,67 +1,53 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <div class="pt-5">
+      <div class="pt-lg-3 pt-5">
         <b-row align-h="end">
-          <b-col
-            class="text-right">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: {hash: `p-${this.project.id}`}}" class="d-print-none return">
+          <b-col class="text-right">
+            <b-link
+              :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: { hash: `p-${this.project.id}` } }"
+              class="d-print-none return">
               <font-awesome-icon icon="long-arrow-alt-left" title="return to My Workspace" />
               return to My Workspace
             </b-link>
           </b-col>
-          <b-col
-            cols="12" class="toDoc">
+          <b-col cols="12" class="toDoc">
             <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5">
-          <b-nav-item
-            :active="(tabOpened === 0) ? true : false"
-            @click="clickTab(0)">Project properties</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 1) ? true : false"
-            @click="clickTab(1)">My Data</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 2) ? true : false"
-            :disabled="(references.length) ? false : true"
+        <b-nav id="tabsTitle" tabs fill class="pt-lg-3 pt-5">
+          <b-nav-item :active="(tabOpened === 0) ? true : false" @click="clickTab(0)">Project properties</b-nav-item>
+          <b-nav-item :active="(tabOpened === 1) ? true : false" @click="clickTab(1)">My Data</b-nav-item>
+          <b-nav-item :active="(tabOpened === 2) ? true : false" :disabled="(references.length) ? false : true"
             @click="clickTab(2)">iSoQ</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 3) ? true : false"
-            @click="clickTab(3)">Guidance on applying GRADE-CERQual</b-nav-item>
+          <b-nav-item :active="(tabOpened === 3) ? true : false" @click="clickTab(3)">Guidance on applying
+            GRADE-CERQual</b-nav-item>
         </b-nav>
       </div>
     </b-container>
     <b-container fluid class="mb-5">
-      <div :class="{'block mt-3': (tabOpened===0)?true:false, 'd-none': (tabOpened===0)?!true:!false}">
-        <propertiesProject
-          :project="project"
-          @update-modification="updateModificationTime()"
-          :canWrite="checkPermissions()"
-          @update-project="updateDataProject">
+      <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
+        <propertiesProject :project="project" @update-modification="updateModificationTime()"
+          :canWrite="checkPermissions()" @update-project="updateDataProject">
         </propertiesProject>
       </div>
-      <div :class="{'block mt-3': (tabOpened===1)?true:false, 'd-none': (tabOpened===1)?!true:!false}">
+      <div :class="{ 'block mt-3': (tabOpened === 1) ? true : false, 'd-none': (tabOpened === 1) ? !true : !false }">
         <b-row>
-          <b-col
-            cols="12">
+          <b-col cols="12">
             <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
             <p>
-              To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
+              To optimise the functionality of iSoQ, and save you time, please add the following information organised
+              into 4 steps.
             </p>
           </b-col>
           <b-card no-body class="col-12">
-            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
+            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap"
+              active-nav-item-class="btn-success" v-model="stepStage">
               <b-tab title="STEP 1: References">
-                <UploadReferences
-                  :checkPermissions="checkPermissions()"
-                  :loadReferences="loadReferences"
-                  :references="references"
-                  :lists="lists"
-                  :charsOfStudies="charsOfStudies"
-                  :methodologicalTableRefs="methodologicalTableRefs"
-                  @CallGetReferences="getReferences"
-                  @statusLoadReferences="statusLoadReferences"
+                <UploadReferences :checkPermissions="checkPermissions()" :loadReferences="loadReferences"
+                  :references="references" :lists="lists" :charsOfStudies="charsOfStudies"
+                  :methodologicalTableRefs="methodologicalTableRefs" :useCamelot="project.use_camelot"
+                  @CallGetReferences="getReferences" @statusLoadReferences="statusLoadReferences"
                   @CallGetProject="getProject"></UploadReferences>
                 <div class="mt-3">
                   <b-row v-if="references.length">
@@ -73,12 +59,9 @@
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :disabled="references.length?false:true">
+              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :disabled="references.length ? false : true">
                 <div>
-                  <InclusionExclusioCriteria
-                    :checkPermissions="checkPermissions()"
-                    :project="project"
-                    :ui="ui"
+                  <InclusionExclusioCriteria :checkPermissions="checkPermissions()" :project="project" :ui="ui"
                     @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
                   <div class="mt-3">
                     <b-row>
@@ -92,25 +75,21 @@
                   </div>
                 </div>
               </b-tab>
-              <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
+              <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length ? false : true">
                 <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
                 <p class="font-weight-light">
-                  Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+                  Descriptive information extracted from the included studies (e.g. setting, country, perspectives,
+                  methods, etc.)
                 </p>
-                <crudTables
-                  type="isoqf_characteristics"
-                  prefix="ch"
-                  :checkPermissions="checkPermissions()"
-                  :project="project"
-                  :ui="ui"
-                  :references="references"
-                  :refs="refs"
-                  :lists="lists"
-                  @get-project="getProject"
-                  @print-errors="printErrors"
-                  @updateDataTable="updateDataTable"
-                  @set-item-data="setItemData"
-                  ></crudTables>
+                <template v-if="project.use_camelot">
+                  <CamelotStepThree type="isoqf_characteristics" :references="references"></CamelotStepThree>
+                </template>
+                <template v-else>
+                  <crudTables type="isoqf_characteristics" prefix="ch" :checkPermissions="checkPermissions()"
+                    :project="project" :ui="ui" :references="references" :refs="refs" :lists="lists"
+                    :useCamelot="project.use_camelot" @get-project="getProject" @print-errors="printErrors"
+                    @updateDataTable="updateDataTable" @set-item-data="setItemData"></crudTables>
+                </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
@@ -122,36 +101,28 @@
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 4: Methodological assessments table" :disabled="references.length?false:true">
+              <b-tab title="STEP 4: Methodological assessments table" :disabled="references.length ? false : true">
                 <h4>STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
                 <p class="font-weight-light">
-                  Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
+                  Methodological assessments of each included study using an existing critical/quality appraisal tool
+                  (e.g. CASP)
                 </p>
-                <crudTables
-                  type="isoqf_assessments"
-                  prefix="as"
-                  :checkPermissions="checkPermissions()"
-                  :project="project"
-                  :ui="ui"
-                  :references="references"
-                  :refs="refs"
-                  :lists="lists"
-                  @get-project="getProject"
-                  @print-errors="printErrors"
-                  @updateDataTable="updateDataTable"
-                  @set-item-data="setItemData"
-                ></crudTables>
+                <template v-if="project.use_camelot">
+                  <CamelotStepFour type="isoqf_methodological" :references="references"></CamelotStepFour>
+                </template>
+                <template v-else>
+                  <crudTables type="isoqf_assessments" prefix="as" :checkPermissions="checkPermissions()"
+                    :project="project" :ui="ui" :references="references" :refs="refs" :lists="lists"
+                    :useCamelot="project.use_camelot" @get-project="getProject" @print-errors="printErrors"
+                    @updateDataTable="updateDataTable" @set-item-data="setItemData"></crudTables>
+                </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">Step 3</a>
                     </b-col>
                     <b-col cols="auto">
-                      <b-button
-                        block
-                        variant="success"
-                        class="mb-3"
-                        @click="continueToIsoq">
+                      <b-button block variant="success" class="mb-3" @click="continueToIsoq">
                         Continue to iSoQ
                       </b-button>
                     </b-col>
@@ -162,31 +133,17 @@
           </b-card>
         </b-row>
       </div>
-      <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
-        <action-buttons
-          :mode="mode"
-          :permissions="checkPermissions()"
-          :project="project"
-          :ui="ui"
-          :lists="lists"
-          :findings="findings"
-          :references="references"
-          :charsOfStudies="charsOfStudies"
-          :methodologicalTableRefs="methodologicalTableRefs"
-          :listsPrintVersion="lists_print_version"
-          :selectOptions="select_options"
-          :cerqualConfidence="cerqual_confidence"
-          :printableItems="printableItems"
-          @uiPublishShowLoader="uiShowLoaders"
-          @getProject="getProject"
-          @changeMode="changeMode"
+      <div :class="{ 'block mt-3': (tabOpened === 2) ? true : false, 'd-none': (tabOpened === 2) ? !true : !false }"
+        :disabled="(references.length) ? false : true">
+        <action-buttons :mode="mode" :permissions="checkPermissions()" :project="project" :ui="ui" :lists="lists"
+          :findings="findings" :references="references" :charsOfStudies="charsOfStudies"
+          :methodologicalTableRefs="methodologicalTableRefs" :listsPrintVersion="lists_print_version"
+          :selectOptions="select_options" :cerqualConfidence="cerqual_confidence" :printableItems="printableItems"
+          @uiPublishShowLoader="uiShowLoaders" @getProject="getProject" @changeMode="changeMode"
           @changeTableSettings="changeTableSettings"></action-buttons>
         <b-row class="mb-3">
           <b-col cols="12" class="toDoc">
-            <videoHelp
-              :txt="title"
-              :tag="'h2'"
-              :urlId="'449743080'"></videoHelp>
+            <videoHelp :txt="title" :tag="'h2'" :urlId="'449743080'"></videoHelp>
           </b-col>
         </b-row>
         <b-row>
@@ -195,15 +152,10 @@
               <template v-slot:header>
                 <b-container fluid>
                   <b-row v-b-toggle.info-project>
-                    <b-col
-                      cols="11">
-                      <p
-                      class="mb-0 text-left"
-                      >See more information</p>
+                    <b-col cols="11">
+                      <p class="mb-0 text-left">See more information</p>
                     </b-col>
-                    <b-col
-                      cols="1"
-                      align-self="end">
+                    <b-col cols="1" align-self="end">
                       <p class="text-right">
                         {{ changeTxtProjectProperties }}
                       </p>
@@ -215,13 +167,14 @@
                 <b-row>
                   <b-col cols="12" md="8" class="toDoc">
                     <h5>Review question</h5>
-                    <p>{{project.review_question}}</p>
+                    <p>{{ project.review_question }}</p>
 
                     <h5>Has the review been published?</h5>
-                    <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                    <p>{{ (project.published_status) ? 'Yes' : 'No' }} <span v-if="project.published_status">| DOI:
+                        <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
                     <h5 v-if="project.description">Additional Information</h5>
-                    <p v-if="project.description">{{project.description}}</p>
+                    <p v-if="project.description">{{ project.description }}</p>
 
                     <template v-if="project.public_type !== 'private'">
                       <h5>License</h5>
@@ -235,68 +188,40 @@
                     </ul>
 
                     <h5>Corresponding author</h5>
-                    <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+                    <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{
+                      project.author_email }}</span></p>
 
                     <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
-                    <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    <p v-if="!project.complete_by_author">{{ (project.complete_by_author) ? 'Yes' : 'No' }}</p>
                   </b-col>
                 </b-row>
               </b-collapse>
             </b-card>
           </b-col>
         </b-row>
-        <b-row
-          class="mt-2">
-          <b-col
-            v-if="checkPermissions()"
-            cols="12">
-            <b-row
-              class="mb-2">
-              <b-col
-                v-if="mode!=='view'"
-                md="3"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
-                  :variant="(lists.length) ? 'outline-success' : 'success'"
-                  @click="modalAddList"
-                  block>
+        <b-row class="mt-2">
+          <b-col v-if="checkPermissions()" cols="12">
+            <b-row class="mb-2">
+              <b-col v-if="mode !== 'view'" md="3" cols="12">
+                <b-button class="mt-1" v-b-tooltip.hover
+                  title="Copy and paste one summarised review finding at a time into the iSoQ"
+                  :variant="(lists.length) ? 'outline-success' : 'success'" @click="modalAddList" block>
                   Add review finding to the table
                 </b-button>
               </b-col>
-              <b-col
-                v-if="mode!=='view'"
-                md="4"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
-                  variant="outline-secondary"
-                  @click="modalListCategories"
-                  block>
+              <b-col v-if="mode !== 'view'" md="4" cols="12">
+                <b-button class="mt-1" v-b-tooltip.hover
+                  title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
+                  variant="outline-secondary" @click="modalListCategories" block>
                   Organise review findings into groups
                 </b-button>
               </b-col>
-              <b-col
-                v-if="mode!=='view' && lists.length > 1"
-                md="3"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  block
-                  variant="outline-secondary"
-                  @click="modalSortFindings">Re-order your review findings</b-button>
+              <b-col v-if="mode !== 'view' && lists.length > 1" md="3" cols="12">
+                <b-button class="mt-1" block variant="outline-secondary" @click="modalSortFindings">Re-order your review
+                  findings</b-button>
 
-                <b-modal
-                  ref="modal-sort-findings"
-                  id="modal-sort-findings"
-                  size="xl"
-                  ok-title="Save"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-primary"
-                  scrollable
-                  @ok="saveSortedLists">
+                <b-modal ref="modal-sort-findings" id="modal-sort-findings" size="xl" ok-title="Save"
+                  ok-variant="outline-success" cancel-variant="outline-primary" scrollable @ok="saveSortedLists">
                   <template v-slot:modal-title>
                     <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
                   </template>
@@ -304,65 +229,46 @@
                     Drag and drop findings to re-order them in the iSoQ table
                   </p>
                   <b-list-group>
-                    <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                      <b-list-group-item
-                        v-for="(item, index) of sorted_lists"
-                        :key="index"
-                        class="flex-column align-items-start"
-                        style="cursor: move">
-                        <div
-                          class="d-flex w-100 justify-content-between">
+                    <draggable v-model="sorted_lists" group="columns" @start="drag = true" @end="drag = false">
+                      <b-list-group-item v-for="(item, index) of sorted_lists" :key="index"
+                        class="flex-column align-items-start" style="cursor: move">
+                        <div class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
-                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
+                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option
+                            }}</b>
+                        </p>
                       </b-list-group-item>
                     </draggable>
                   </b-list-group>
                 </b-modal>
               </b-col>
-              <b-col
-                v-if="mode!=='view' && lists.length > 1"
-                md="2"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  block
-                  variant="outline-secondary"
+              <b-col v-if="mode !== 'view' && lists.length > 1" md="2" cols="12">
+                <b-button class="mt-1" block variant="outline-secondary"
                   @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
               </b-col>
             </b-row>
           </b-col>
-          <b-col
-            v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
-            cols="12"
+          <b-col v-if="mode === 'edit' && this.lists.length && ui.project.displaySearch" cols="12"
             class="my-2 d-print-none">
-            <b-card
-              id="card-search"
-              bg-variant="light">
+            <b-card id="card-search" bg-variant="light">
               <b-row>
-                <b-col
-                  cols="11">
+                <b-col cols="11">
                   <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
                 </b-col>
-                <b-col
-                  cols="1">
-                  <b-button
-                    class="close mb-1"
-                    @click="toggleSearch(ui.project.displaySearch)">×</b-button>
+                <b-col cols="1">
+                  <b-button class="close mb-1" @click="toggleSearch(ui.project.displaySearch)">×</b-button>
                 </b-col>
               </b-row>
               <b-row>
-                <b-col
-                  cols="12">
+                <b-col cols="12">
                   <b-form-group>
                     <b-input-group>
-                      <b-form-input
-                        v-model="table_settings.filter"
-                        type="search"
-                        id="filterInput"
+                      <b-form-input v-model="table_settings.filter" type="search" id="filterInput"
                         placeholder="Type to search the text in the table below"></b-form-input>
                       <b-input-group-append>
-                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                        <b-button :disabled="!table_settings.filter"
+                          @click="table_settings.filter = null">Clear</b-button>
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
@@ -372,184 +278,116 @@
             </b-card>
           </b-col>
           <b-col cols="12" class="toDoc">
-            <template
-              v-if="mode==='edit' && checkPermissions()">
-              <ViewTable
-                :lists="lists"
-                :list_categories="list_categories"
-                :fields="fields"
-                :project="project"
-                :mode="mode"
-                :isBusy="table_settings.isBusy"
-                :references="references"
-                :refs="refs"
-                @update-modification-time="updateModificationTime"
-                @get-lists="getLists"
-                @add-list="modalAddList"
-                @set-busy="setBusy"
-                @set-load-references="statusLoadReferences"
-                @get-references="getReferences"
-                 />
+            <template v-if="mode === 'edit' && checkPermissions()">
+              <ViewTable :lists="lists" :list_categories="list_categories" :fields="fields" :project="project"
+                :mode="mode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
+                @update-modification-time="updateModificationTime" @get-lists="getLists" @add-list="modalAddList"
+                @set-busy="setBusy" @set-load-references="statusLoadReferences" @get-references="getReferences" />
             </template>
             <!-- printed version -->
             <template v-else>
-              <PrintViewTable
-                :dataPrintVersion="lists_print_version"
-                :references="references"
-                :categories="list_categories"
-                :printableItems="printableItems"
+              <PrintViewTable :dataPrintVersion="lists_print_version" :references="references"
+                :categories="list_categories" :printableItems="printableItems"
                 :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             </template>
             <!-- eopv -->
-            <b-modal
-              size="xl"
-              id="add-summarized"
-              ref="add-summarized"
-              title="Add Summarised review finding"
-              :ok-disabled="(summarized_review)?false:true"
-              @ok="createList"
-              ok-title="Save"
-              ok-variant="outline-success"
-              cancel-variant="outline-secondary">
-              <b-form-group
-                label="Summarised review finding"
-                label-for="summarized-review">
-                <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
-                <b-form-textarea
-                  id="summarized-review"
-                  v-model="summarized_review"
-                  rows="6"
+            <b-modal size="xl" id="add-summarized" ref="add-summarized" title="Add Summarised review finding"
+              :ok-disabled="(summarized_review) ? false : true" @ok="createList" ok-title="Save"
+              ok-variant="outline-success" cancel-variant="outline-secondary">
+              <b-form-group label="Summarised review finding" label-for="summarized-review">
+                <template slot="description">Click <a
+                    href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1"
+                    target="_blank">here</a> for tips for writing a summarised review finding</template>
+                <b-form-textarea id="summarized-review" v-model="summarized_review" rows="6"
                   max-rows="100"></b-form-textarea>
               </b-form-group>
-              <b-form-group
-                v-if="list_categories.options.length"
-                label="Select review finding group"
+              <b-form-group v-if="list_categories.options.length" label="Select review finding group"
                 description="You can leave this option blank. You can always assign a finding to a group later.">
-                <b-form-select
-                  v-model="list_categories.selected"
-                  value-field="id"
-                  text-field="text"
+                <b-form-select v-model="list_categories.selected" value-field="id" text-field="text"
                   :options="list_categories.options"></b-form-select>
               </b-form-group>
             </b-modal>
 
-            <b-modal
-              size="xl"
-              id="modalEditListCategories"
-              ref="modalEditListCategories"
-              scrollable>
+            <b-modal size="xl" id="modalEditListCategories" ref="modalEditListCategories" scrollable>
               <template v-slot:modal-title>
                 <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
               </template>
-              <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+              <template
+                v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                 <p class="font-weight-light">
-                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                  Some reviewers choose to organise their review findings into different groups, for example into themes
+                  or topics. To do so, add the names of the groups here. After you have created groups for your review
+                  findings you will be prompted to assign each new review finding to a group. You can choose not to
+                  assign a review finding to a group, or assign it later.
                 </p>
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the
+                  exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1.
+                  Feasibility, 2. Acceptability.
                 </p>
               </template>
               <template
                 v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
-                <b-table
-                  head-variant="highlight"
-                  striped
-                  :fields="modal_edit_list_categories.fields"
+                <b-table head-variant="highlight" striped :fields="modal_edit_list_categories.fields"
                   :items="modal_edit_list_categories.options">
                   <template v-slot:cell(actions)="data">
-                    <b-button
-                      block
-                      variant="outline-success"
-                      @click="editListCategoryName(data.index)">Edit</b-button>
-                    <b-button
-                      block
-                      variant="outline-danger"
-                      class="mt-1"
+                    <b-button block variant="outline-success" @click="editListCategoryName(data.index)">Edit</b-button>
+                    <b-button block variant="outline-danger" class="mt-1"
                       @click="removeListCategory(data)">Remove</b-button>
                   </template>
                 </b-table>
               </template>
-              <template
-                v-if="modal_edit_list_categories.new">
+              <template v-if="modal_edit_list_categories.new">
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the
+                  exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1.
+                  Feasibility, 2. Acceptability.
                 </p>
-                <b-form-group
-                  class="mt-3"
-                  label="Add group name">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.text"></b-form-input>
+                <b-form-group class="mt-3" label="Add group name">
+                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
-                <b-form-group
-                  class="mt-3"
-                  label="Describe this group for the user viewing this table">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                <b-form-group class="mt-3" label="Describe this group for the user viewing this table">
+                  <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template
-                class="mt-3"
-                v-if="modal_edit_list_categories.edit">
+              <template v-if="modal_edit_list_categories.edit">
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the
+                  exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1.
+                  Feasibility, 2. Acceptability.
                 </p>
-                <b-form-group
-                  label="Edit group name">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.text"></b-form-input>
+                <b-form-group label="Edit group name">
+                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
-                <b-form-group
-                  class="mt-3"
-                  label="Describe this group for the user viewing this table">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                <b-form-group class="mt-3" label="Describe this group for the user viewing this table">
+                  <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template
-                class="mt-3"
-                v-if="modal_edit_list_categories.remove">
+              <template v-if="modal_edit_list_categories.remove">
                 <p>
                   Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
                 </p>
               </template>
-              <template
-                v-slot:modal-footer>
-                <div
-                  v-if="modal_edit_list_categories.remove">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-danger"
-                    @click="removeCategory()">Confirm</b-button>
+              <template v-slot:modal-footer>
+                <div v-if="modal_edit_list_categories.remove">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button variant="outline-danger" @click="removeCategory()">Confirm</b-button>
                 </div>
-                <div
-                  v-if="modal_edit_list_categories.new">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === ''"
+                <div v-if="modal_edit_list_categories.new">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="saveNewCategory">Save</b-button>
                 </div>
-                <div
-                  v-if="!modal_edit_list_categories.new">
+                <div v-if="!modal_edit_list_categories.new">
                   <b-button
                     v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                    variant="outline-primary"
-                    @click="modal_edit_list_categories.new=true">
+                    variant="outline-primary" @click="modal_edit_list_categories.new = true">
                     Add new review finding group
                   </b-button>
                 </div>
-                <div
-                  v-if="modal_edit_list_categories.edit">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
-                  <b-button
-                    variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === ''"
+                <div v-if="modal_edit_list_categories.edit">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">Cancel</b-button>
+                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
                 </div>
               </template>
@@ -558,7 +396,7 @@
           </b-col>
         </b-row>
       </div>
-      <div :class="{'block mt-3': (tabOpened===3)?true:false, 'd-none': (tabOpened===3)?!true:!false}">
+      <div :class="{ 'block mt-3': (tabOpened === 3) ? true : false, 'd-none': (tabOpened === 3) ? !true : !false }">
         <content-guidance></content-guidance>
       </div>
     </b-container>
@@ -595,8 +433,11 @@ export default {
     CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
-    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue')
+    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue'),
+    CamelotStepThree: () => import(/* webpackChunkName: "camelotStepThree" */ '@/components/camelot/StepThree.vue'),
+    CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
   },
+  props: {},
   data () {
     return {
       stepStage: 0,
@@ -755,12 +596,17 @@ export default {
       mode: 'edit',
       msgUploadReferences: '',
       charsOfStudies: {
+        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
       },
       tabOpened: 1,
       yes_or_no: [
@@ -768,12 +614,17 @@ export default {
         { value: true, text: 'yes' }
       ],
       methodologicalTableRefs: {
+        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
       },
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
@@ -907,7 +758,7 @@ export default {
         }
         options.sort((a, b) => a.text.localeCompare(b.text))
         let modalOptions = JSON.parse(JSON.stringify(options))
-        options.splice(0, 0, {id: null, text: 'No group'})
+        options.splice(0, 0, { id: null, text: 'No group' })
         this.list_categories.options = options
         this.modal_edit_list_categories.options = modalOptions
       }
@@ -926,7 +777,7 @@ export default {
       for (const reference of data) {
         let content = await this.parseReference(reference)
         if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-          refs.push({'id': reference.id, 'content': content})
+          refs.push({ 'id': reference.id, 'content': content })
         }
       }
 
@@ -944,7 +795,9 @@ export default {
         .then(async (response) => {
           this.lists = await this.processLists(response)
           const lists = response.data.map((list) => { return list.id })
-          this.getFindings(lists.toString())
+          if (lists.length) {
+            this.getFindings(lists.toString())
+          }
           this.table_settings.totalRows = this.lists.length
           this.routeAnchorHash()
           this.table_settings.isBusy = false
@@ -1128,53 +981,66 @@ export default {
         }
 
         if (this.list_categories.options.length) {
-          let categories = []
+          // Create a map to quickly look up categories by id
+          const categoryMap = new Map()
+          const categories = []
 
-          for (let category of this.list_categories.options) {
+          // First, extract all categories except 'null' (no group)
+          this.list_categories.options.forEach(category => {
             if (category.id !== null) {
-              categories.push({
-                'name': category.text,
-                'id': category.id,
-                'value': category.id,
-                'items': [],
+              const categoryObj = {
+                name: category.text,
+                id: category.id,
+                value: category.id,
+                items: [],
                 is_category: true
-              })
-            }
-          }
-          categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
-
-          for (let list of data) {
-            if (categories.length) {
-              for (let category of categories) {
-                if (category.value === list.category) {
-                  category.items.push(
-                    {
-                      'id': list.id,
-                      'name': list.name,
-                      'cerqual_option': list.cerqual_option,
-                      'filter_cerqual': list.filter_cerqual,
-                      'cerqual_explanation': list.cerqual_explanation,
-                      'ref_list': list.ref_list,
-                      'sort': list.sort,
-                      'notes': list.notes,
-                      'evidence_profile': list.evidence_profile,
-                      'references': list.references,
-                      'cnt': 0
-                    }
-                  )
-                }
               }
+              categories.push(categoryObj)
+              categoryMap.set(category.id, categoryObj)
             }
+          })
+
+          // Add the uncategorized category
+          categories.push({
+            name: 'Uncategorised findings',
+            id: 'uncategorized',
+            value: null,
+            items: [],
+            is_category: true
+          })
+
+          // Process each list item once and add to appropriate category
+          for (const list of data) {
+            const categoryId = list.category
+            const targetCategory = categoryId !== null && categoryMap.has(categoryId)
+              ? categoryMap.get(categoryId)
+              : categories[categories.length - 1] // uncategorized
+
+            targetCategory.items.push({
+              id: list.id,
+              name: list.name,
+              cerqual_option: list.cerqual_option,
+              filter_cerqual: list.filter_cerqual,
+              cerqual_explanation: list.cerqual_explanation,
+              ref_list: list.ref_list,
+              sort: list.sort,
+              notes: list.notes,
+              evidence_profile: list.evidence_profile,
+              references: list.references,
+              cnt: 0
+            })
           }
-          let _items = []
+
+          // Build the final list with proper numbering for print view
+          const _items = []
           let cnt = 1
+
           for (const cat of categories) {
             if (cat.items.length) {
               _items.push(cat)
               for (const _item of cat.items) {
-                _item.cnt = cnt
+                _item.cnt = cnt++
                 _items.push(_item)
-                cnt++
               }
             }
           }
@@ -1184,9 +1050,10 @@ export default {
           this.lists_print_version = data
         }
 
-        for (let items of this.lists_print_version) {
-          this.printableItems.push(items.id)
-        }
+        // Save IDs of all items for printable content
+        this.printableItems = this.lists_print_version
+          .filter(item => item.id !== 'uncategorized') // Skip category headers
+          .map(item => item.id)
       }
       this.table_settings.isBusy = false
       return data
@@ -1195,7 +1062,7 @@ export default {
       const params = {
         'list_ids': listIds
       }
-      axios.get('/api/findings', {params})
+      axios.get('/api/findings', { params })
         .then((response) => {
           if (response.data.length) {
             this.findings.push(...response.data)
@@ -1609,7 +1476,7 @@ export default {
         organization: this.$route.params.org_id,
         list_id: listId
       }
-      axios.get('/api/isoqf_findings', {params})
+      axios.get('/api/isoqf_findings', { params })
         .then((reponse) => {
           const findingId = reponse.data[0].id
           const params = {
@@ -1725,188 +1592,196 @@ export default {
 </script>
 
 <style scoped>
-  .return {
-    font-size: 1.2rem;
+.return {
+  font-size: 1.2rem;
+}
+
+div>>>h2>span>svg,
+h3>span>svg,
+h4>span>svg {
+  font-size: 1rem;
+}
+
+div>>>.nav-fill .nav-item {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+div>>>a.table-edit-list {
+  color: #000;
+  text-decoration: underline;
+}
+
+div>>>#chars-of-studies-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#methodological-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#extracted-data-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#chars-of-studies-table thead th:last-child {
+  width: 13%;
+}
+
+div>>>#methodological-table thead th:last-child {
+  width: 13%;
+}
+
+div>>>#findings.table thead th {
+  width: 15%;
+}
+
+div>>>#findings.table thead th:nth-child(2) {
+  width: 45%;
+}
+
+div>>>#findings.table thead th:first-child {
+  width: 5%;
+}
+
+div>>>#findings.table thead th:last-child {
+  width: 5%;
+}
+
+div>>>.text-danger.remove-opt {
+  cursor: pointer;
+}
+
+div>>>#findings-print.table thead th {
+  width: 15%;
+}
+
+div>>>#findings-print.table thead th:nth-child(2) {
+  width: 35%;
+}
+
+div>>>#findings-print.table thead th:first-child {
+  width: 5%;
+}
+
+div>>>#findings-print.table thead th:last-child {
+  width: 15%;
+}
+
+div>>>table#findings-print tbody tr td a {
+  color: #000;
+}
+
+div>>>table .references {
+  font-size: 12px;
+}
+
+div>>>#export-button button:first-child {
+  width: 100%;
+}
+
+div>>>#export-button ul {
+  width: 100%;
+}
+
+div>>>#findings.table tbody td li {
+  font-size: 0.8rem;
+  padding-top: 0.4rem;
+  list-style-type: none;
+}
+
+div>>>table#chars-of-studies-table tbody td:last-child {
+  min-width: 10%;
+}
+
+div>>>table#methodological-table tbody td:last-child {
+  min-width: 10%;
+}
+
+div>>>#dropdown-categories .btn-secondary {
+  color: #495057;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+div>>>#dropdown-cerqual-option .btn-secondary {
+  color: #495057;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+div>>>#dropdown-cerqual-explanation .btn-secondary {
+  color: #495057;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+div>>>#import-data a.nav-link {
+  display: block;
+  padding: .5rem 1rem;
+}
+
+div>>>#tabsContent .nav-link {
+  display: none;
+  padding: 0;
+}
+
+#tabsContent ul {
+  border-bottom: 0px;
+}
+
+#tabsTitle {
+  border-bottom: 1px solid #bbb;
+}
+
+#tabsTitle a {
+  color: #3d3d3d;
+}
+
+#tabsTitle li:first-child,
+#tabsTitle li:last-child {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+#tabsTitle li {
+  border-top: 2px;
+  border-left: 2px;
+  border-right: 2px;
+  border-color: #bbb;
+  border-style: solid;
+  border-bottom: 0px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.card-header {
+  padding: .5rem .5rem 0 .5rem;
+}
+
+b.cerqual-explanation {
+  font-size: 13px;
+}
+
+#card-search .card-body {
+  padding: .3rem;
+}
+
+div>>>#modal-publish-license>.custom-control-inline {
+  padding-bottom: 0.6rem;
+}
+
+@media print {
+  div>>>#info-project {
+    display: block !important;
   }
-  div >>>
-    h2>span>svg,
-    h3>span>svg,
-    h4>span>svg {
-      font-size: 1rem;
-    }
-  div >>>
-    .nav-fill .nav-item {
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-  div >>>
-    a.table-edit-list {
-      color: #000;
-      text-decoration: underline;
-    }
-  div >>>
-    #chars-of-studies-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #methodological-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #extracted-data-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #chars-of-studies-table thead th:last-child {
-      width: 13%;
-    }
-  div >>>
-    #methodological-table thead th:last-child {
-      width: 13%;
-    }
-  div >>>
-    #findings.table thead th {
-      width: 15%;
-    }
-  div >>>
-    #findings.table thead th:nth-child(2) {
-      width: 45%;
-    }
-  div >>>
-    #findings.table thead th:first-child {
-      width: 5%;
-    }
-  div >>>
-    #findings.table thead th:last-child {
-      width: 5%;
-    }
-  div >>>
-    .text-danger.remove-opt {
-      cursor: pointer;
-    }
-  div >>>
-    #findings-print.table thead th {
-      width: 15%;
-    }
-  div >>>
-    #findings-print.table thead th:nth-child(2) {
-      width: 35%;
-    }
-  div >>>
-    #findings-print.table thead th:first-child {
-      width: 5%;
-    }
-  div >>>
-    #findings-print.table thead th:last-child {
-      width: 15%;
-    }
-  div >>>
-    table#findings-print tbody tr td a {
-      color: #000;
-    }
-  div >>>
-    table .references {
-      font-size: 12px;
-    }
-  div >>>
-    #export-button button:first-child {
-      width: 100%;
-    }
-  div >>>
-    #export-button ul {
-      width: 100%;
-    }
-  div >>>
-    #findings.table tbody td li {
-      font-size: 0.8rem;
-      padding-top: 0.4rem;
-      list-style-type: none;
-    }
-  div >>>
-    table#chars-of-studies-table tbody td:last-child {
-      min-width: 10%;
-    }
-  div >>>
-    table#methodological-table tbody td:last-child {
-      min-width: 10%;
-    }
-  div >>>
-    #dropdown-categories .btn-secondary {
-      color: #495057;
-      background-color: transparent;
-      border-color: transparent;
-    }
-  div >>>
-    #dropdown-cerqual-option .btn-secondary {
-      color: #495057;
-      background-color: transparent;
-      border-color: transparent;
-    }
-  div >>>
-    #dropdown-cerqual-explanation .btn-secondary {
-      color: #495057;
-      background-color: transparent;
-      border-color: transparent;
-    }
-  div >>>
-    #import-data a.nav-link {
-      display: block;
-      padding: .5rem 1rem;
-    }
-  div >>>
-    #tabsContent .nav-link {
-      display: none;
-      padding: 0;
-    }
-    #tabsContent ul {
-      border-bottom: 0px;
-    }
-    #tabsTitle {
-      border-bottom: 1px solid #bbb;
-    }
-    #tabsTitle a {
-      color: #3d3d3d;
-    }
-    #tabsTitle li:first-child,
-    #tabsTitle li:last-child {
-      margin-left: 0px;
-      margin-right: 0px;
-    }
-    #tabsTitle li {
-      border-top: 2px;
-      border-left: 2px;
-      border-right: 2px;
-      border-color: #bbb;
-      border-style: solid;
-      border-bottom: 0px;
-      margin-left: 5px;
-      margin-right: 5px;
-    }
-    .card-header {
-      padding: .5rem .5rem 0 .5rem;
-    }
-    b.cerqual-explanation {
-      font-size: 13px;
-    }
-    #card-search .card-body {
-      padding: .3rem;
-    }
-  div >>>
-    #modal-publish-license > .custom-control-inline {
-      padding-bottom: 0.6rem;
-    }
-  @media print {
-    div >>>
-      #info-project {
-        display: block !important;
-      }
-    div >>>
-      #findings tbody tr:not(.b-table-row-selected) {
-        display: none !important;
-      }
-    div >>>
-      ul.nav.nav-tabs.nav-fill {
-        display: none !important;
-      }
+
+  div>>>#findings tbody tr:not(.b-table-row-selected) {
+    display: none !important;
   }
+
+  div>>>ul.nav.nav-tabs.nav-fill {
+    display: none !important;
+  }
+}
 </style>
