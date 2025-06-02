@@ -621,6 +621,12 @@ export default {
         project.can_read.includes(this.$store.state.user.id) ||
         project.can_write.includes(this.$store.state.user.id)
       ) {
+        if (!Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
+          project.sharedToken = ''
+        }
+        if (project.sharedToken === null || project.sharedToken === undefined) {
+          project.sharedToken = ''
+        }
         if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
           if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
             project.sharedTokenOnOff = true
