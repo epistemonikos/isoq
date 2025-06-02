@@ -204,6 +204,7 @@
 import { camelotMixin } from '@/mixins/camelotMixin'
 import commons from '../../utils/commons'
 import draggable from 'vuedraggable'
+import axios from 'axios'
 
 export default {
   name: 'StepThree',
@@ -296,12 +297,12 @@ export default {
       bvModalEvent.preventDefault()
       if (this.validateForm()) {
         // Procesar autores si es un string
-        if (typeof this.editForm.authors === 'string') {
-          this.editForm.authors = this.editForm.authors
-            .split(',')
-            .map(author => author.trim())
-            .filter(author => author !== '')
-        }
+        // if (typeof this.editForm.authors === 'string') {
+        //   this.editForm.authors = this.editForm.authors
+        //     .split(',')
+        //     .map(author => author.trim())
+        //     .filter(author => author !== '')
+        // }
 
         // Procesamos los campos personalizados para fields (estructura con key y label)
         const customFieldsArray = this.processCustomFields()
@@ -340,6 +341,24 @@ export default {
           fields: customFieldsArray,
           // Agregamos el arreglo items que contiene los valores procesados
           items: [item]
+        }
+
+        if (this.editForm.id) {
+          axios.post('/api/isoqf_assessments/', updatedItem)
+            .then(response => {
+              console.log('Referencia actualizada:', response.data)
+            })
+            .catch(error => {
+              console.error('Error al actualizar la referencia:', error)
+            })
+        } else {
+          axios.patch('/api/isoqf_assessments/', updatedItem)
+            .then(response => {
+              console.log('Referencia creada:', response.data)
+            })
+            .catch(error => {
+              console.error('Error al crear la referencia:', error)
+            })
         }
         console.log('Actualizando referencia:', updatedItem)
         this.$emit('update-reference', updatedItem)
