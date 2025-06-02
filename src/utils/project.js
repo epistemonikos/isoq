@@ -137,6 +137,7 @@ export default class Project {
         params.private = false
         params.is_public = true
       }
+      params.last_update = Date.now()
       const data = await axios.patch('/api/publish', { params })
       return {data: {status: true, ...data}}
     } else {

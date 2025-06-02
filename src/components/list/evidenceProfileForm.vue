@@ -441,12 +441,17 @@
                     query: { tab: 'My-Data', step: 4 }
                   }">My Data</b-link>.
                 </p>
-                <b-table class="table-small-font" responsive head-variant="light" outlined
-                  :fields="methAssessments.fieldsObj" :items="methAssessments.items">
-                  <template v-slot:cell(authors)="data">
-                    <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-                  </template>
-                </b-table>
+                <template v-if="isCamelot">
+                  <assessment-table :assessments="methAssessments" />
+                </template>
+                <template v-else>
+                  <b-table class="table-small-font" responsive head-variant="light" outlined
+                    :fields="methAssessments.fieldsObj" :items="methAssessments.items">
+                    <template v-slot:cell(authors)="data">
+                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                    </template>
+                  </b-table>
+                </template>
               </b-tab>
               <b-tab title="Review Finding">
                 <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permissions="permissions">
@@ -863,7 +868,8 @@ export default {
   name: 'evidenceProfileForm',
   components: {
     videoHelp: () => import('@/components/videoHelp.vue'),
-    'edit-review-finding': () => import('@/components/editReviewFinding.vue')
+    'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
+    'assessment-table': () => import('@/components/camelot/assessment/AssessmentTable.vue')
   },
   props: {
     modalData: Object,
@@ -879,7 +885,11 @@ export default {
     project: Object,
     evidenceProfile: Array,
     selectOptions: Array,
-    permissions: Boolean
+    permissions: Boolean,
+    isCamelot: {
+      type: Boolean,
+      default: true
+    }
   },
   data () {
     return {

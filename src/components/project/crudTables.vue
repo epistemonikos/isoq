@@ -1,21 +1,21 @@
 <template>
   <div>
     <b-row
-      v-if="checkPermissions">
+      v-if="checkPermissions && !useCamelot">
       <b-col
         sm="4">
         <b-button
           block
           variant="outline-primary"
           :disabled="(references.length) ? false : true"
-          v-if="dataTable.fields.length <= 2"
+          v-if="!useCamelot && dataTable.fields.length <= 2"
           @click="openModalDataTable()">
           Create Table
         </b-button>
         <b-button
           block
           variant="outline-primary"
-          v-if="dataTable.fields.length > 2"
+          v-if="!useCamelot && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
           Add or Edit column headings
         </b-button>
@@ -48,6 +48,11 @@
     <b-row>
       <b-col
         cols="12">
+        <b-form-checkbox
+          v-if="useCamelot"
+          v-model="showConcerns"
+          :value="true"
+          :unchecked-value="false">Show concerns</b-form-checkbox>
         <b-table
           sort-by="authors"
           :id="`${prefix}-table`"
@@ -221,33 +226,121 @@
 
       <b-modal
         size="xl"
+        id="open-modal-content-camelot-data"
+        ref="open-modal-content-camelot-data"
+        title="Edit Camelot data"
+        @ok="saveContentDataTable"
+        ok-title="Save"
+        ok-variant="outline-success"
+        cancel-variant="outline-secondary">
+        <b-row>
+          <b-col cols="3">
+            <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
+              <b-list-group-item
+                v-for="field of camelot.categories"
+                :active="modal.selectedOption === field.key"
+                :key="field.key"
+                :href="`#${field.key}`"
+                @click="scrollToSection(field.key)">
+                {{ field.label }}
+              </b-list-group-item>
+            </b-list-group>
+          </b-col>
+          <b-col cols="9">
+            <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
+              <!-- Botón para agregar nuevo campo -->
+              <div class="mb-3">
+                <b-button
+                  variant="outline-success"
+                  size="sm"
+                  @click="agregarCampoCamelot">
+                  <font-awesome-icon icon="plus"></font-awesome-icon> Añadir nuevo campo
+                </b-button>
+              </div>
+
+              <template v-for="(field, fieldIndex) of dataTableFieldsModal.fields">
+                <div
+                  v-if="!camelot.excluded.includes(field.key)"
+                  :key="field.id"
+                  class="mb-3 pb-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <b-form-group class="mb-0 flex-grow-1">
+                      <b-form-input
+                        v-model="field.label"
+                        :disabled="['ref_id', 'authors'].includes(field.key)"
+                        class="font-weight-bold"
+                        placeholder="Nombre del campo">
+                      </b-form-input>
+                    </b-form-group>
+                    <b-button
+                      v-if="!['ref_id', 'authors'].includes(field.key)"
+                      variant="outline-danger"
+                      size="sm"
+                      class="ml-2"
+                      @click="eliminarCampoCamelot(fieldIndex, field)">
+                      <font-awesome-icon icon="trash"></font-awesome-icon>
+                    </b-button>
+                  </div>
+                  <b-form-textarea
+                      v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                      rows="2"
+                      max-rows="100"></b-form-textarea>
+                </div>
+              </template>
+              <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
+                <div>
+                  <div class="bg-light text-dark p-2">
+                    <p class="font-weight-bold mb-0">{{ field.label }}</p>
+                  </div>
+                  <b-row class="p-2">
+                    <b-col v-for="option in field.options" :key="option.key" :id="option.key">
+                      <p>{{ option.label }}</p>
+                      <b-form-textarea
+                        v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
+                        rows="2"
+                        max-rows="100"></b-form-textarea>
+                    </b-col>
+                  </b-row>
+                </div>
+              </div>
+            </div>
+          </b-col>
+        </b-row>
+      </b-modal>
+
+      <b-modal
+        size="lg"
         ref="edit-content-dataTable"
         title="Edit data"
-        scrollable
         @ok="saveContentDataTable"
         ok-title="Save"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <template
-          v-if="dataTableFieldsModal.items.length">
-          <b-form-group
-            v-if="field.key !== 'ref_id'"
-            v-for="field of dataTable.fields"
-            :key="field.id"
-            :label="field.label"
-            label-class="font-weight-bold">
-            <template v-if="['ref_id', 'authors'].includes(field.key)">
-              <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
-            </template>
-            <template v-else>
-              <b-form-textarea
-                v-if="!['ref_id', 'authors'].includes(field.key)"
-                v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                :placeholder="(type === 'isoqf_assessments') ? 'Enter both your assessment and the explanation for your assessment here' : ''"
-                rows="2"
-                max-rows="100"></b-form-textarea>
-            </template>
-          </b-form-group>
+          v-if="dataTableFieldsModal.items.length && dataTableFieldsModal.selected_item_index < dataTableFieldsModal.items.length">
+          <template v-for="field of dataTableFieldsModal.fields">
+            <b-form-group
+              v-if="field.key !== 'ref_id'"
+              :key="field.id"
+              :label="field.label"
+              label-class="font-weight-bold">
+              <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
+                <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
+              </template>
+              <template v-else>
+                <b-form-textarea
+                  v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                  v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                  rows="2"
+                  max-rows="100"></b-form-textarea>
+              </template>
+            </b-form-group>
+          </template>
+        </template>
+        <template v-else>
+          <p class="text-center">No items available for editing.</p>
         </template>
       </b-modal>
 
@@ -352,13 +445,16 @@
 </template>
 
 <script>
+import { dataTableMixin } from '@/mixins/dataTableMixin'
+import { tableImportExportMixin } from '@/mixins/tableImportExportMixin'
+import { camelotMixin } from '@/mixins/camelotMixin'
 import axios from 'axios'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
-const ExportCSV = require('export-to-csv').ExportToCsv
 
 export default {
   name: 'crudTables',
+  mixins: [dataTableMixin, tableImportExportMixin, camelotMixin],
   props: {
     type: {
       type: String,
@@ -374,11 +470,11 @@ export default {
     },
     project: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     ui: {
       type: Object,
-      default: () => {}
+      default: () => ({})
     },
     references: {
       type: Array,
@@ -391,6 +487,10 @@ export default {
     lists: {
       type: Array,
       default: () => []
+    },
+    useCamelot: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
@@ -398,18 +498,29 @@ export default {
     draggable: () => import('vuedraggable'),
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  mounted () {
-    this.getData()
-  },
   data () {
     return {
+      modal: {
+        selectedOption: 'research'
+      },
       dataTable: {
+        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
+          {
+            key: 'authors',
+            label: 'Author(s), Year'
+          }
+        ],
+        fieldsObjOriginal: []
+      },
+      dataTableSettings: {
+        isBusy: false,
+        currentPage: 1,
+        perPage: 10,
+        totalRows: 0
       },
       dataTableFieldsModal: {
         nroColumns: 1,
@@ -423,83 +534,214 @@ export default {
         items: [],
         selected_item_index: 0
       },
-      dataTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
       removeReferenceDataTable: {
         id: null,
         findings: []
       },
-      pre_ImportDataTable: '',
-      importDataTable: {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
+      showConcerns: false
     }
   },
+  mounted () {
+    this.getData()
+  },
   watch: {
-    pre_ImportDataTable: function (data) {
-      let fields = []
-      let items = []
-      const csvData = Papa.parse(data, { skipEmptyLines: true })
-      this.importDataTable.error = null
-      if (csvData.data.length) {
+    pre_ImportDataTable: {
+      handler (data) {
+        if (!data) return
+
+        const csvData = Papa.parse(data, { skipEmptyLines: true })
+        this.importDataTable.error = null
+
+        if (!csvData.data.length) return
+
         if (csvData.data[0].length < 3) {
           this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
-        } else {
-          for (let cnt in csvData.data) {
-            if (parseInt(cnt) === 0) {
-              let cntI = 0
-              for (let i in csvData.data[cnt]) {
-                let obj = {}
-                if (parseInt(i) === 0) {
-                  obj.key = 'ref_id'
-                }
-                if (parseInt(i) === 1) {
-                  obj.key = 'authors'
-                }
-                if (parseInt(i) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
-                  obj.key = 'column_' + cntI
-                  cntI++
-                }
-                obj.label = csvData.data[cnt][i]
-                fields.push(obj)
-              }
-            } else {
-              let cntI = 0
-              let obj = {}
-              for (let i in csvData.data[cnt]) {
-                if (parseInt(i) === 0) {
-                  obj.ref_id = csvData.data[cnt][i]
-                }
-                if (parseInt(i) === 1) {
-                  obj.authors = csvData.data[cnt][i]
-                }
-                if (parseInt(i) > 1) {
-                  obj[`column_${cntI}`] = csvData.data[cnt][i]
-                  cntI++
-                }
-              }
-              items.push(obj)
-            }
-          }
+          return
         }
+
+        this.processImportData(csvData.data)
       }
-      this.importDataTable.fields = fields
-      this.importDataTable.items = items
     },
     references () {
       this.updateMyDataTables()
+    },
+    showConcerns () {
+      if (this.showConcerns) {
+        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal
+      } else {
+        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => !item.key.match(/_concerns$/))
+      }
     }
   },
   methods: {
+    processImportData (data) {
+      const fields = []
+      const items = []
+
+      for (let cnt in data) {
+        if (parseInt(cnt) === 0) {
+          let cntI = 0
+          for (let i in data[cnt]) {
+            let obj = {}
+            if (parseInt(i) === 0) {
+              obj.key = 'ref_id'
+            }
+            if (parseInt(i) === 1) {
+              obj.key = 'authors'
+            }
+            if (parseInt(i) > 1) {
+              this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': data[cnt][i] })
+              obj.key = 'column_' + cntI
+              cntI++
+            }
+            obj.label = data[cnt][i]
+            fields.push(obj)
+          }
+        } else {
+          let cntI = 0
+          let obj = {}
+          for (let i in data[cnt]) {
+            if (parseInt(i) === 0) {
+              obj.ref_id = data[cnt][i]
+            }
+            if (parseInt(i) === 1) {
+              obj.authors = data[cnt][i]
+            }
+            if (parseInt(i) > 1) {
+              obj[`column_${cntI}`] = data[cnt][i]
+              cntI++
+            }
+          }
+          items.push(obj)
+        }
+      }
+
+      this.importDataTable.fields = fields
+      this.importDataTable.items = items
+    },
+    updateMyDataTables () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      // Handle case when there are no references
+      if (!this.references || this.references.length === 0) {
+        this.getData()
+        return
+      }
+
+      axios.get(`/api/${this.type}`, { params })
+        .then((response) => {
+          if (!response.data.length) {
+            this.getData()
+            return
+          }
+          const responseData = JSON.parse(JSON.stringify(response.data[0]))
+          const tableId = responseData.id
+
+          // Process items regardless of whether there are existing items or not
+          // This ensures we handle both new uploads and deleted references properly
+          const activeReferenceIds = this.references.map(ref => ref.id)
+          let currentItems = responseData.items || []
+
+          // Special handling for methodological assessments
+          if (this.type === 'isoqf_assessments') {
+            // For assessments, make sure we keep all items but update them with current reference data
+            // First, remove items that don't have corresponding active references
+            currentItems = currentItems.filter(item => activeReferenceIds.includes(item.ref_id))
+
+            // Then add any new references that aren't in the items
+            const existingRefIds = currentItems.map(item => item.ref_id)
+            const newItems = this.references
+              .filter(ref => !existingRefIds.includes(ref.id))
+              .map(ref => ({
+                ref_id: ref.id,
+                authors: this.parseReference(ref, true, false)
+              }))
+
+            // Combine existing and new items
+            currentItems.push(...newItems)
+
+            // Sort items by authors for consistency
+            currentItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+          } else {
+            // For other table types, use the standard processItems method
+            currentItems = this.processItems(currentItems)
+          }
+
+          const patchParams = {
+            items: currentItems
+          }
+
+          axios.patch(`/api/${this.type}/${tableId}`, patchParams)
+            .then(() => {
+              this.getData()
+            })
+            .catch((error) => {
+              console.error('Error updating tables:', error)
+              this.$emit('print-errors', error)
+            })
+        })
+        .catch((error) => {
+          console.error('Error fetching tables data:', error)
+          this.getData()
+        })
+    },
+
+    processItems (dataItems) {
+      let items = JSON.parse(JSON.stringify(dataItems))
+      let existingRefIds = []
+      let activeRefIds = this.references.map(ref => ref.id)
+      let newItems = []
+
+      // Create a list of existing reference IDs
+      for (const item of items) {
+        existingRefIds.push(item.ref_id)
+      }
+
+      // Filter out items that don't have a corresponding active reference
+      items = items.filter(item => activeRefIds.includes(item.ref_id))
+
+      // Add any new references that aren't already in the items list
+      for (const reference of this.references) {
+        if (!existingRefIds.includes(reference.id)) {
+          newItems.push({
+            ref_id: reference.id,
+            authors: this.parseReference(reference, true, false)
+          })
+        }
+      }
+
+      items.push(...newItems)
+      return items
+    },
+
+    parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
+      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
+    },
+
+    getAuthorsFormat (authors = [], pubYear = '') {
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0].split(',')[0] + ' ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        } else {
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        }
+      } else {
+        return 'author(s) not found'
+      }
+    },
+
+    addFieldsObjects: function (fieldsObj) {
+      for (let field of this.camelot.fields) {
+        fieldsObj.push(field)
+      }
+    },
+
     getData: function () {
       this.dataTableSettings.isBusy = true
       const params = {
@@ -508,37 +750,75 @@ export default {
       }
       axios.get(`/api/${this.type}`, { params })
         .then((response) => {
-          if (response.data.length) {
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
-            this.dataTable = dataTable
-            if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
+            this.dataTable = {
+              ...this.dataTable,
+              ...dataTable
+            }
+
+            if (this.dataTable && this.dataTable.fields && Array.isArray(this.dataTable.fields)) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              if (this.checkPermissions) {
-                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
+              let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+              const items = Array.isArray(this.dataTable.items) ? JSON.parse(JSON.stringify(this.dataTable.items)) : []
+
+              // Filter items to include only those with references that currently exist in the references array
+              const activeReferenceIds = this.references.map(ref => ref.id)
+              const filteredItems = items.filter(item => activeReferenceIds.includes(item.ref_id))
+
+              // Special handling for assessments to ensure we don't lose data
+              let _items
+              if (this.type === 'isoqf_assessments') {
+                // Make sure we're not removing any special assessment data
+                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+
+                // Check if any references are missing from the assessment items
+                const existingRefIds = _items.map(item => item.ref_id)
+                const missingRefs = this.references.filter(ref => !existingRefIds.includes(ref.id))
+
+                // Add any missing references with empty data
+                if (missingRefs.length > 0) {
+                  const newItems = missingRefs.map(ref => ({
+                    ref_id: ref.id,
+                    authors: this.parseReference(ref, true, false)
+                  }))
+                  _items.push(...newItems)
+                  _items.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
+                }
+              } else {
+                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
               }
 
-              const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
-              const items = JSON.parse(JSON.stringify(this.dataTable.items))
-
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
               this.dataTable.items = _items
 
               this.dataTableFieldsModal.fields = []
               for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  this.dataTableFieldsModal.fields.push(f.label)
-                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
+                if (f && f.key && !['ref_id', 'authors', 'actions'].includes(f.key)) {
+                  this.dataTableFieldsModal.fields.push(f.label || '')
+                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label || '' })
                 }
               }
 
-              this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
-
-              for (let item of _items) {
-                this.dataTableFieldsModal.items.push(item)
+              if (this.useCamelot) {
+                this.addFieldsObjects(this.dataTable.fieldsObj)
               }
+
+              if (this.checkPermissions) {
+                this.dataTable.fieldsObj.push({'key': 'actions', 'label': '', stickyColumn: true})
+              }
+
+              const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
+              this.dataTable.fieldsObjOriginal = original
+
+              if (this.useCamelot && !this.showConcerns) {
+                this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
+              }
+
+              this.dataTableFieldsModal.items = _items
             }
           } else {
             this.dataTable = {
+              id: null,
               fields: [],
               items: [],
               authors: '',
@@ -547,12 +827,19 @@ export default {
                   key: 'authors',
                   label: 'Author(s), Year'
                 }
-              ]
+              ],
+              fieldsObjOriginal: []
             }
+            console.log('No data found for', this.type, this.dataTable)
           }
           this.$emit('updateDataTable', this.dataTable, this.type)
+        })
+        .catch((error) => {
+          console.error('Error fetching data:', error)
+          this.$emit('print-errors', error.response.data.message || 'An error occurred')
+        })
+        .finally(() => {
           this.dataTableSettings.isBusy = false
-          // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
         })
     },
     openModalDataTable: function () {
@@ -564,6 +851,8 @@ export default {
           editFields.push(field.label)
         }
       }
+
+      this.dataTableFieldsModal.nroColumns = editFields.length + 1
       this.dataTableFieldsModal.fields = editFields
       this.$refs['open-dataTable-modal'].show()
     },
@@ -584,7 +873,10 @@ export default {
     saveDataTableFields: function () {
       this.dataTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModal.fields))
+
+      // Make sure we're using the latest references
       let references = JSON.parse(JSON.stringify(this.references))
+
       let params = {
         fields: [
           {'key': 'ref_id', 'label': 'Reference ID'},
@@ -597,48 +889,47 @@ export default {
         is_public: false
       }
 
-      for (const index in fields) {
-        let objField = {
+      const createFields = (fields) => {
+        return fields.map((field, index) => ({
           key: `column_${index}`,
-          label: fields[index]
-        }
-        params.fields.push(objField)
+          label: field
+        }))
       }
 
-      for (const ref of references) {
-        let objItem = {
-          ref_id: ref.id,
-          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
-        }
-
-        for (const cnt in fields) {
-          objItem[`column_${cnt}`] = ''
-        }
-
-        params.items.push(objItem)
+      const createItems = (references, fields) => {
+        // Make sure we only include active references
+        return references.map((ref) => {
+          const item = {
+            ref_id: ref.id,
+            authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
+          }
+          fields.forEach((_, index) => {
+            item[`column_${index}`] = ''
+          })
+          return item
+        })
       }
+
+      params.fields.push(...createFields(fields))
+      params.items = createItems(references, fields)
 
       if (this.project.is_public) {
         params.is_public = true
       }
 
-      if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
-        axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
-          .then(() => {
-            this.$emit('get-project')
-            this.dataTableSettings.isBusy = false
-          }).catch((error) => {
-            this.$emit('print-errors', error)
-          })
-      } else {
-        axios.post(`/api/${this.type}`, params)
-          .then(() => {
-            this.getData()
-          })
-          .catch((error) => {
-            this.$emit('print-errors', error)
-          })
-      }
+      const request = this.dataTable.id
+        ? axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+        : axios.post(`/api/${this.type}`, params)
+
+      request
+        .then(() => {
+          this.$emit('get-project')
+          this.getData()
+          this.dataTableSettings.isBusy = false
+        })
+        .catch((error) => {
+          this.$emit('print-errors', error)
+        })
     },
     updateDataTableFields: function () {
       this.dataTableSettings.isBusy = true
@@ -657,7 +948,6 @@ export default {
       for (let item of _items) {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
             item[field.key] = ''
           }
         }
@@ -689,7 +979,6 @@ export default {
             fields.push(field)
           }
         }
-        // sort fields by key
         fields.sort((a, b) => {
           if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
             return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
@@ -716,22 +1005,50 @@ export default {
     },
     addContentDataTable: function (index = 0) {
       const items = JSON.parse(JSON.stringify(this.dataTable.items))
+      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
 
+      if (this.useCamelot) {
+        fields = JSON.parse(JSON.stringify(this.dataTable.fieldsObjOriginal))
+      }
+
+      this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
-      this.dataTableFieldsModal.selected_item_index = index
-      this.$refs['edit-content-dataTable'].show()
+
+      // Ensure the index is valid by checking it against the actual items array length
+      this.dataTableFieldsModal.selected_item_index = index < items.length ? index : 0
+
+      if (this.useCamelot) {
+        this.$refs['open-modal-content-camelot-data'].show()
+      } else {
+        this.$refs['edit-content-dataTable'].show()
+      }
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
+
+      // Additional validation to ensure we have a valid selected_item_index
+      if (this.dataTableFieldsModal.selected_item_index < 0 ||
+          this.dataTableFieldsModal.selected_item_index >= this.dataTableFieldsModal.items.length) {
+        this.dataTableFieldsModal.selected_item_index = 0
+      }
+
       const params = {
         items: this.dataTableFieldsModal.items
       }
 
       axios.patch(`/api/${this.type}/${id}`, params)
         .then(() => {
-          this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
+          // Only try to emit set-item-data if we have a valid selected item
+          if (this.dataTableFieldsModal.items.length &&
+              this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]) {
+            this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
+          }
           this.$emit('get-project')
+          const currentShowConcerns = this.showConcerns
           this.getData()
+          if (currentShowConcerns !== this.showConcerns) {
+            this.showConcerns = currentShowConcerns
+          }
           this.$refs['edit-content-dataTable'].hide()
         })
         .catch((error) => {
@@ -775,6 +1092,8 @@ export default {
       for (let item of _items) {
         if (item.ref_id === removedId) {
           let obj = {}
+
+          // Create a copy of the object with basic properties
           for (let k in keys) {
             if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
               if (keys[k] === 'ref_id' || keys[k] === 'authors') {
@@ -786,6 +1105,30 @@ export default {
               obj[keys[k]] = ''
             }
           }
+
+          // Special handling for assessments to preserve any complex structure
+          if (this.type === 'isoqf_assessments') {
+            // Preserve any special properties that might be needed for assessments
+            for (const key in item) {
+              if (!keys.includes(key) && key !== 'ref_id' && key !== 'authors') {
+                if (typeof item[key] === 'object' && item[key] !== null) {
+                  // For complex objects like stages, preserve structure but clear content
+                  if (key === 'stages' && Array.isArray(item[key])) {
+                    obj[key] = item[key].map(stage => ({
+                      key: stage.key,
+                      options: stage.options.map(() => ({ option: null, text: '' }))
+                    }))
+                  } else {
+                    // For other objects, copy the structure
+                    obj[key] = JSON.parse(JSON.stringify(item[key]))
+                  }
+                } else {
+                  obj[key] = item[key]
+                }
+              }
+            }
+          }
+
           items.push(obj)
         } else {
           items.push(item)
@@ -803,192 +1146,6 @@ export default {
         .catch((error) => {
           this.$emit('print-errors', error)
         })
-    },
-    generateTemplate: function () {
-      const _refs = JSON.parse(JSON.stringify(this.refs))
-      let obj = {
-        fields: ['Reference ID', 'Author(s), Year'],
-        data: []
-      }
-
-      for (let ref of _refs) {
-        obj.data.push([ref.id, ref.content.split(';')[0]])
-      }
-
-      const data = Papa.unparse(obj)
-
-      var csvData = new Blob([data], {type: 'text/csv;charset=utf-8;'})
-      var csvURL = window.URL.createObjectURL(csvData)
-
-      let link = document.createElement('a')
-      link.setAttribute('href', csvURL)
-      link.setAttribute('download', 'my_data.csv')
-      document.body.appendChild(link)
-
-      link.click()
-    },
-    loadTableImportData: function (event) {
-      const file = event.target.files[0]
-      if (!file) {
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.pre_ImportDataTable = e.target.result
-      }
-      reader.readAsText(file)
-    },
-    cleanVars: function (isCancel = false) {
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-      this.$refs['import-file'].reset()
-      if (isCancel) {
-        this.$refs[`import-table-${this.type}`].hide()
-      }
-    },
-    openModalImportTable: function () {
-      this.$refs[`import-table-${this.type}`].show()
-    },
-    exportTableToCSV: function (type) {
-      let _headers = JSON.parse(JSON.stringify(this.dataTable.fields))
-      let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let headers = []
-      let items = []
-      let keys = []
-
-      for (const field of _headers) {
-        if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push(`"${field.label}"`)
-          keys.push(field.key)
-        }
-      }
-
-      for (const i of _items) {
-        let item = {}
-        for (const k in keys) {
-          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-            item[keys[k]] = i[keys[k]]
-          } else {
-            item[keys[k]] = ''
-          }
-        }
-        items.push(item)
-      }
-
-      const options = {
-        filename: 'exportable_table',
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
-    },
-    saveImportedData: function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        fields: this.importDataTable.fields,
-        items: this.importDataTable.items
-      }
-      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
-        if (this.dataTable.items.length) {
-          this.cleanImportedData(this.dataTable.id, params)
-        } else {
-          this.insertImportedData(params)
-        }
-      }
-      this.importDataTable = {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      }
-      this.pre_ImportDataTable = ''
-    },
-    cleanImportedData: function (id = '', params = {}) {
-      axios.delete(`/api/${this.type}/${id}`)
-        .then(() => {
-          this.pre_ImportDataTable = ''
-          this.insertImportedData(params)
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
-    },
-    insertImportedData: function (params = {}) {
-      if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
-        return
-      }
-      axios.post(`/api/${this.type}/`, params)
-        .then(() => {
-          this.getData()
-          this.$refs[`import-table-${this.type}`].hide()
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
-    },
-    updateMyDataTables: function () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-
-      axios.get(`/api/${this.type}`, {params})
-        .then((response) => {
-          if (!response.data.length) {
-            this.getData()
-            return
-          }
-          const responseData = JSON.parse(JSON.stringify(response.data[0]))
-          const charId = responseData.id
-
-          if (responseData.items.length) {
-            const items = this.processItems(responseData.items)
-            let params = {
-              items: items
-            }
-            axios.patch(`/api/${this.type}/${charId}`, params)
-              .then(() => {
-                this.getData()
-              })
-          }
-        })
-    },
-    processItems: function (dataItems) {
-      let items = JSON.parse(JSON.stringify(dataItems))
-      let references = []
-      let newItems = []
-      for (const item of items) {
-        references.push(item.ref_id)
-      }
-      for (const reference of this.references) {
-        if (!references.includes(reference.id)) {
-          console.log('this.processItems')
-          newItems.push({
-            ref_id: reference.id,
-            authors: this.parseReference(reference, true, false)
-          })
-        }
-      }
-      items.push(...newItems)
-      return items
-    },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     deleteFieldFromCharsSudiesEdit: function (index) {
       let params = {}
@@ -1029,19 +1186,76 @@ export default {
           this.$emit('print-errors', error)
         })
     },
-    getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
+    scrollToSection (sectionId) {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        this.modal.selectedOption = sectionId
+        const camelotContainer = document.getElementById('camelot')
+        const offset = element.offsetTop - camelotContainer.offsetTop
+        camelotContainer.scrollTo({
+          top: offset,
+          behavior: 'smooth'
+        })
       }
+    },
+    agregarCampoCamelot () {
+      // Generar una clave única para el nuevo campo
+      const newKey = `column_${Date.now()}`
+
+      // Crear el nuevo campo
+      const newField = {
+        key: newKey,
+        label: 'Nuevo campo',
+        id: `field_${Date.now()}`
+      }
+
+      // Añadir el nuevo campo al principio de los campos disponibles
+      this.dataTableFieldsModal.fields.unshift(newField)
+
+      // Inicializar el valor para todos los items
+      if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
+        this.dataTableFieldsModal.items.forEach(item => {
+          this.$set(item, newKey, '')
+        })
+      }
+    },
+
+    eliminarCampoCamelot (index, field) {
+      // No permitir eliminar campos especiales como ref_id o authors
+      if (['ref_id', 'authors'].includes(field.key)) {
+        return
+      }
+
+      // Confirmar antes de eliminar
+      this.$bvModal.msgBoxConfirm('¿Estás seguro que deseas eliminar este campo?', {
+        title: 'Confirmar eliminación',
+        okVariant: 'danger',
+        okTitle: 'Eliminar',
+        cancelTitle: 'Cancelar',
+        hideHeaderClose: false,
+        centered: true
+      })
+        .then(value => {
+          if (value) {
+            // Obtener la clave del campo que vamos a eliminar
+            const fieldKey = field.key
+
+            // Eliminar el campo de los campos disponibles
+            this.dataTableFieldsModal.fields.splice(index, 1)
+
+            // Eliminar los datos de este campo en todos los items
+            if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
+              this.dataTableFieldsModal.items.forEach(item => {
+                if (Object.prototype.hasOwnProperty.call(item, fieldKey)) {
+                  this.$delete(item, fieldKey)
+                }
+              })
+            }
+          }
+        })
+        .catch(err => {
+          console.error('Error en la confirmación:', err)
+        })
     }
   }
 }
