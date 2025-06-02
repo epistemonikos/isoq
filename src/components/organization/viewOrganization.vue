@@ -540,36 +540,6 @@ export default {
       }
     },
 
-    getProjects: function () {
-      axios.get('/api/getProjects')
-        .then((response) => {
-          this.projects = []
-          let _projects = []
-          for (const project of response.data) {
-            const processProject = this.processProject(project)
-            if (Object.keys(processProject).length) {
-              _projects.push(processProject)
-            }
-          }
-          const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
-          this.projects.push(...finalList)
-
-          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash') || this.hashId !== null) {
-            const hash = (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) ? `#${this.$route.query.hash}` : `#p-${this.hashId}`
-            this.$router.push({
-              name: 'viewOrganization',
-              params: {
-                organization: this.$route.params.org_id
-              },
-              hash: `${hash}`
-            })
-            this.hashId = null
-          }
-        }).catch((error) => {
-          console.log(error)
-        })
-      this.ui.projectTable.isBusy = false
-    },
     processProject: function (project) {
       if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
         project.can_write = []
@@ -630,13 +600,9 @@ export default {
           } else {
             throw new Error('No se pudo eliminar el proyecto')
           }
-        } catch (error) {
-          console.error('Error al eliminar proyecto:', error)
-          alert('Error al eliminar el proyecto. Por favor, intente nuevamente.')
-        } finally {
-          this.isLoading = false
         }
-      },
+      }
+    },
 
     async deleteProject (projectId) {
       if (confirm('¿Está seguro de eliminar este proyecto?')) {
