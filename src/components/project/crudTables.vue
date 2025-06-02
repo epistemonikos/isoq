@@ -228,7 +228,11 @@
         size="xl"
         id="open-modal-content-camelot-data"
         ref="open-modal-content-camelot-data"
-        title="Edit Camelot data">
+        title="Edit Camelot data"
+        @ok="saveContentDataTable"
+        ok-title="Save"
+        ok-variant="outline-success"
+        cancel-variant="outline-secondary">
         <b-row>
           <b-col cols="3">
             <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
@@ -244,19 +248,44 @@
           </b-col>
           <b-col cols="9">
             <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
-              <template v-for="field of dataTableFieldsModal.fields">
+              <!-- Botón para agregar nuevo campo -->
+              <div class="mb-3">
+                <b-button
+                  variant="outline-success"
+                  size="sm"
+                  @click="agregarCampoCamelot">
+                  <font-awesome-icon icon="plus"></font-awesome-icon> Añadir nuevo campo
+                </b-button>
+              </div>
+
+              <template v-for="(field, fieldIndex) of dataTableFieldsModal.fields">
                 <div
                   v-if="!camelot.excluded.includes(field.key)"
-                  :key="field.id">
-                  <b-form-group
-                    :label="field.label"
-                    label-class="font-weight-bold">
-                    <b-form-textarea
-                        v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                        rows="2"
-                        max-rows="100"></b-form-textarea>
-                  </b-form-group>
+                  :key="field.id"
+                  class="mb-3 pb-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <b-form-group class="mb-0 flex-grow-1">
+                      <b-form-input
+                        v-model="field.label"
+                        :disabled="['ref_id', 'authors'].includes(field.key)"
+                        class="font-weight-bold"
+                        placeholder="Nombre del campo">
+                      </b-form-input>
+                    </b-form-group>
+                    <b-button
+                      v-if="!['ref_id', 'authors'].includes(field.key)"
+                      variant="outline-danger"
+                      size="sm"
+                      class="ml-2"
+                      @click="eliminarCampoCamelot(fieldIndex, field)">
+                      <font-awesome-icon icon="trash"></font-awesome-icon>
+                    </b-button>
+                  </div>
+                  <b-form-textarea
+                      v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
+                      rows="2"
+                      max-rows="100"></b-form-textarea>
                 </div>
               </template>
               <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
@@ -1168,6 +1197,65 @@ export default {
           behavior: 'smooth'
         })
       }
+    },
+    agregarCampoCamelot () {
+      // Generar una clave única para el nuevo campo
+      const newKey = `column_${Date.now()}`
+
+      // Crear el nuevo campo
+      const newField = {
+        key: newKey,
+        label: 'Nuevo campo',
+        id: `field_${Date.now()}`
+      }
+
+      // Añadir el nuevo campo al principio de los campos disponibles
+      this.dataTableFieldsModal.fields.unshift(newField)
+
+      // Inicializar el valor para todos los items
+      if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
+        this.dataTableFieldsModal.items.forEach(item => {
+          this.$set(item, newKey, '')
+        })
+      }
+    },
+
+    eliminarCampoCamelot (index, field) {
+      // No permitir eliminar campos especiales como ref_id o authors
+      if (['ref_id', 'authors'].includes(field.key)) {
+        return
+      }
+
+      // Confirmar antes de eliminar
+      this.$bvModal.msgBoxConfirm('¿Estás seguro que deseas eliminar este campo?', {
+        title: 'Confirmar eliminación',
+        okVariant: 'danger',
+        okTitle: 'Eliminar',
+        cancelTitle: 'Cancelar',
+        hideHeaderClose: false,
+        centered: true
+      })
+        .then(value => {
+          if (value) {
+            // Obtener la clave del campo que vamos a eliminar
+            const fieldKey = field.key
+
+            // Eliminar el campo de los campos disponibles
+            this.dataTableFieldsModal.fields.splice(index, 1)
+
+            // Eliminar los datos de este campo en todos los items
+            if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
+              this.dataTableFieldsModal.items.forEach(item => {
+                if (Object.prototype.hasOwnProperty.call(item, fieldKey)) {
+                  this.$delete(item, fieldKey)
+                }
+              })
+            }
+          }
+        })
+        .catch(err => {
+          console.error('Error en la confirmación:', err)
+        })
     }
   }
 }

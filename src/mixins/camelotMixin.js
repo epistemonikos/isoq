@@ -129,7 +129,6 @@ export const camelotMixin = {
         excluded: [
           'ref_id',
           'authors',
-          'actions',
           'research_extractedData',
           'research_concerns',
           'stakeholders_extractedData',
@@ -153,7 +152,8 @@ export const camelotMixin = {
           'analysis_extractedData',
           'analysis_concerns',
           'presentation_extractedData',
-          'presentation_concerns'
+          'presentation_concerns',
+          'actions'
         ]
       }
     }
