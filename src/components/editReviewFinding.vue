@@ -41,8 +41,8 @@ export default {
     list: Object,
     finding: Object,
     permissions: {
-      type: Object,
-      default: () => { return true }
+      type: Boolean,
+      default: () => true
     }
   },
   data: function () {
