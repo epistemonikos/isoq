@@ -540,6 +540,104 @@ export default {
       }
     },
 
+    getProjects: function () {
+      axios.get('/api/getProjects')
+        .then((response) => {
+          this.projects = []
+          let _projects = []
+          for (const project of response.data) {
+            const processProject = this.processProject(project)
+            if (Object.keys(processProject).length) {
+              _projects.push(processProject)
+            }
+          }
+          const finalList = _projects.sort(function (a, b) { return ((a.created_at < b.created_at) ? -1 : ((a.created_at > b.created_at) ? 1 : 0)) * -1 })
+          this.projects.push(...finalList)
+
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash') || this.hashId !== null) {
+            const hash = (Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) ? `#${this.$route.query.hash}` : `#p-${this.hashId}`
+            this.$router.push({
+              name: 'viewOrganization',
+              params: {
+                organization: this.$route.params.org_id
+              },
+              hash: `${hash}`
+            })
+            this.hashId = null
+          }
+        }).catch((error) => {
+          console.log(error)
+        })
+      this.ui.projectTable.isBusy = false
+    },
+    processProject: function (project) {
+      if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+        project.can_write = []
+      }
+      if (!Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+        project.can_read = []
+      }
+      if (!Object.prototype.hasOwnProperty.call(project, 'created_at')) {
+        project.created_at = 0
+      }
+      if (
+        project.organization === this.$store.state.user.personal_organization ||
+        project.can_read.includes(this.$store.state.user.id) ||
+        project.can_write.includes(this.$store.state.user.id)
+      ) {
+        if (!Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
+          project.sharedToken = ''
+        }
+        if (project.sharedToken === null || project.sharedToken === undefined) {
+          project.sharedToken = ''
+        }
+        if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+            project.sharedTokenOnOff = true
+          } else {
+            project.sharedTokenOnOff = false
+          }
+        } else {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+            project.sharedTokenOnOff = true
+          } else {
+            project.sharedTokenOnOff = false
+          }
+        }
+        if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
+          project.tmp_invite_emails = []
+        }
+        project.is_owner = false
+        project.allow_to_write = false
+        project.allow_to_read = false
+        if (project.organization === this.$store.state.user.personal_organization) {
+          project.is_owner = true
+          project.allow_to_write = true
+          project.allow_to_read = true
+        } else {
+          if (project.organization !== this.$store.state.user.personal_organization) {
+            project.is_owner = false
+          }
+          if (Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+            if (project.can_read.includes(this.$store.state.user.id)) {
+              project.allow_to_read = true
+            }
+          }
+          if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
+            if (project.can_write.includes(this.$store.state.user.id)) {
+              project.allow_to_write = true
+            }
+          } else {
+            throw new Error('No se pudo eliminar el proyecto')
+          }
+        } catch (error) {
+          console.error('Error al eliminar proyecto:', error)
+          alert('Error al eliminar el proyecto. Por favor, intente nuevamente.')
+        } finally {
+          this.isLoading = false
+        }
+      },
+
     async deleteProject (projectId) {
       if (confirm('¿Está seguro de eliminar este proyecto?')) {
         try {
