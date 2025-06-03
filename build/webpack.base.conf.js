@@ -3,21 +3,11 @@ const path = require('path')
 const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
+const { VueLoaderPlugin } = require('vue-loader')
 
-function resolve (dir) {
+function resolve(dir) {
   return path.join(__dirname, '..', dir)
 }
-
-const createLintingRule = () => ({
-  test: /\.(js|vue)$/,
-  loader: 'eslint-loader',
-  enforce: 'pre',
-  include: [resolve('src'), resolve('test')],
-  options: {
-    formatter: require('eslint-friendly-formatter'),
-    emitWarning: !config.dev.showEslintErrorsInOverlay
-  }
-})
 
 module.exports = {
   context: path.resolve(__dirname, '../'),
@@ -40,7 +30,6 @@ module.exports = {
   },
   module: {
     rules: [
-      ...(config.dev.useEslint ? [createLintingRule()] : []),
       {
         test: /\.vue$/,
         loader: 'vue-loader',
@@ -56,7 +45,8 @@ module.exports = {
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: utils.assetsPath('img/[name].[hash:7].[ext]')
+          name: utils.assetsPath('img/[name].[hash:7].[ext]'),
+          esModule: false
         }
       },
       {
@@ -83,10 +73,26 @@ module.exports = {
     setImmediate: false,
     // prevent webpack from injecting mocks to Node native modules
     // that does not make sense for the client
-    dgram: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty'
-  }
+    dgram: false,
+    fs: false,
+    net: false,
+    tls: false,
+    child_process: false,
+    path: false,
+    crypto: false,
+    stream: false,
+    http: false,
+    https: false,
+    os: false,
+    zlib: false,
+    assert: false,
+    url: false,
+    buffer: false,
+    process: false,
+    util: false,
+    events: false
+  },
+  plugins: [
+    new VueLoaderPlugin()
+  ]
 }

@@ -33,23 +33,17 @@ Vue.prototype.$i18nRoute = Trans.i18nRoute.bind(Trans)
 Vue.config.productionTip = false
 
 const router = new Router({
-  mode: 'history',
-  scrollBehavior (to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition
-    }
-    if (to.hash) {
-      return {
-        selector: to.hash,
-        behavior: 'smooth'
-      }
-    } else {
-      return { x: 0, y: 0 }
-    }
-  },
-  routes
+  mode: 'hash',
+  routes,
+  scrollBehavior: () => ({ x: 0, y: 0 })
 })
 
+// Manejar errores de navegación
+router.onError((error) => {
+  console.error('Error de navegación:', error)
+})
+
+// Asegurarse que el router esté listo antes de crear la instancia de Vue
 router.beforeEach((to, from, next) => {
   store.dispatch('getLogginInfo', {})
   store.state.promise.then(() => {
@@ -63,7 +57,7 @@ router.beforeEach((to, from, next) => {
       }
       next({
         name: 'Login',
-        query: {redirect: to.fullPath}
+        query: { redirect: to.fullPath }
       })
     } else {
       next()
@@ -72,7 +66,7 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       next({
         name: 'Login',
-        query: {redirect: to.fullPath}
+        query: { redirect: to.fullPath }
       })
     } else {
       next()
@@ -80,12 +74,11 @@ router.beforeEach((to, from, next) => {
   })
 })
 
-/* eslint-disable no-new */
+// Esperar a que el router esté listo antes de crear la instancia de Vue
 new Vue({
   el: '#app',
   router,
   store,
   i18n,
-  components: { App },
-  template: '<App/>'
+  render: h => h(App)
 })

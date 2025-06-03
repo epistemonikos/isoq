@@ -196,7 +196,7 @@
 import axios from 'axios'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
+const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const Criteria = () => import(/* webpackChunkName: "criteria" */'../Criteria')
 const tablePrintFindings = () => import(/* webpackChunkName: "tableprintfindings" */'../project/tablePrintFindings')
 const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')

@@ -1,8 +1,9 @@
-@import 'node_modules/bootstrap/scss/bootstrap';
-@import 'node_modules/bootstrap-vue/src/index.scss';
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-vue/src/index.scss';
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital@0;1&display=swap');
 
-html, body {
+html,
+body {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
@@ -13,13 +14,14 @@ html, body {
 #main-navbar {
   color: #a7a9ac;
   font-size: 16px;
-  box-shadow: 0 5px 3px rgba(0,0,0,.25);
+  box-shadow: 0 5px 3px rgba(0, 0, 0, .25);
+
   .navbar-brand {
     font-style: italic;
   }
 }
 
-.custom-control-input:checked ~ .custom-control-label::before {
+.custom-control-input:checked~.custom-control-label::before {
   background-color: #337ab7;
   border-color: #337ab7;
 }
@@ -48,23 +50,23 @@ html, body {
   border-color: #286090;
 }
 
-.btn-success:not(:disabled):not(.disabled):active, 
-.btn-success:not(:disabled):not(.disabled).active, 
+.btn-success:not(:disabled):not(.disabled):active,
+.btn-success:not(:disabled):not(.disabled).active,
 .show>.btn-success.dropdown-toggle {
   color: #fff;
   background-color: #337ab7;
   border-color: #337ab7;
 }
 
-.btn-success:not(:disabled):not(.disabled):active, 
-.btn-success:not(:disabled):not(.disabled).active, 
+.btn-success:not(:disabled):not(.disabled):active,
+.btn-success:not(:disabled):not(.disabled).active,
 .show>.btn-success.dropdown-toggle {
   -webkit-box-shadow: 0 0 0 .2rem #28609040;
   box-shadow: 0 0 0 .2rem #28609040;
 }
 
-.btn-success:not(:disabled):not(.disabled):active:focus, 
-.btn-success:not(:disabled):not(.disabled).active:focus, 
+.btn-success:not(:disabled):not(.disabled):active:focus,
+.btn-success:not(:disabled):not(.disabled).active:focus,
 .show>.btn-success.dropdown-toggle {
   -webkit-box-shadow: 0 0 0 .2rem #28609040;
   box-shadow: 0 0 0 .2rem #28609040;
@@ -76,9 +78,10 @@ html, body {
   color: #337ab7;
   border-color: #337ab7;
 }
+
 .btn-outline-success:not(:disabled):not(.disabled):active,
 .btn-outline-success:not(:disabled):not(.disabled).active,
-.show > .btn-outline-success.dropdown-toggle {
+.show>.btn-outline-success.dropdown-toggle {
   color: #fff;
   border-color: #337ab7;
   background-color: #286090;
@@ -86,7 +89,7 @@ html, body {
 
 .btn-outline-success:not(:disabled):not(.disabled):active:focus,
 .btn-outline-success:not(:disabled):not(.disabled).active:focus,
-.show > .btn-outline-success.dropdown-toggle:focus {
+.show>.btn-outline-success.dropdown-toggle:focus {
   -webkit-box-shadow: 0 0 0 .2rem #28609040;
   box-shadow: 0 0 0 .2rem #28609040;
 }
@@ -104,21 +107,23 @@ html, body {
   color: #fff;
   background-color: #337ab7;
   border-color: #337ab7;
-  box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
+  box-shadow: 0 0 0 0.2rem rgba(51, 122, 183, 0.5);
 }
 
 .btn-outline-info:focus,
 .btn-outline-primary:focus,
 .btn-outline-success:focus {
-  box-shadow: 0 0 0 0.2rem rgba(51,122,183,0.5);
+  box-shadow: 0 0 0 0.2rem rgba(51, 122, 183, 0.5);
 }
 
 .tabs.link-steps.nowrap {
   flex-wrap: nowrap;
 }
+
 .tabs.link-steps {
   .w-15 {
     width: 15%;
+
     ul.card-header {
       padding: 0.25rem;
     }
@@ -129,16 +134,18 @@ html, body {
   width: 85%;
 }
 
-#ch-table.table.b-table, #as-table.table.b-table {
+#ch-table.table.b-table,
+#as-table.table.b-table {
   tbody tr {
     td:first-child {
       width: 6%;
     }
+
     td:nth-child(2) {
       width: 20%;
     }
   }
-} 
+}
 
 #modal-evidence-profile-form {
   .modal-dialog {
