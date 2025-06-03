@@ -351,7 +351,7 @@
 <script>
 import axios from 'axios'
 
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
+const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
