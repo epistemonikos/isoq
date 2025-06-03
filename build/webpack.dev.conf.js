@@ -28,43 +28,12 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html') },
       ],
     },
-    hot: 'only',
+    hot: true,
     compress: true,
     host: HOST || config.dev.host,
     port: PORT || config.dev.port,
     open: config.dev.autoOpenBrowser,
     proxy: config.dev.proxyTable,
-    // Optimizaciones de rendimiento
-    client: {
-      overlay: false,
-      progress: true
-    },
-    static: {
-      directory: path.join(__dirname, '../static'),
-      publicPath: config.dev.assetsPublicPath,
-      watch: {
-        ignored: /node_modules/,
-        usePolling: false
-      }
-    },
-    watchFiles: {
-      paths: ['src/**/*'],
-      options: {
-        usePolling: false,
-        ignored: /node_modules/
-      }
-    },
-    // Optimizaciones de memoria
-    devMiddleware: {
-      writeToDisk: false,
-      stats: {
-        colors: true,
-        modules: false,
-        children: false,
-        chunks: false,
-        chunkModules: false
-      }
-    }
   },
   plugins: [
     new webpack.DefinePlugin({
