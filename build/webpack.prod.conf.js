@@ -31,24 +31,28 @@ const webpackConfig = merge(baseWebpackConfig, {
   optimization: {
     splitChunks: {
       chunks: 'all',
+      minSize: 30000,
+      maxSize: 0,
+      minChunks: 1,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      automaticNameDelimiter: '~',
+      name: true,
       cacheGroups: {
-        vendor: {
-          name: 'vendor',
+        vendors: {
+          name: 'chunk-vendors',
           test: /[\\/]node_modules[\\/]/,
           priority: -10,
           chunks: 'initial'
         },
         common: {
-          name: 'common',
+          name: 'chunk-common',
           minChunks: 2,
           priority: -20,
           chunks: 'initial',
           reuseExistingChunk: true
         }
       }
-    },
-    runtimeChunk: {
-      name: 'manifest'
     },
     minimizer: [
       new TerserPlugin({
@@ -62,11 +66,8 @@ const webpackConfig = merge(baseWebpackConfig, {
       }),
       new OptimizeCSSPlugin({
         cssProcessorOptions: config.build.productionSourceMap
-          ? { map: { inline: false } }
-          : {},
-        cssProcessorPluginOptions: {
-          preset: ['default', { discardComments: { removeAll: true } }]
-        }
+          ? { safe: true, map: { inline: false } }
+          : { safe: true }
       })
     ]
   },
@@ -78,8 +79,7 @@ const webpackConfig = merge(baseWebpackConfig, {
     // extract css into its own file
     new MiniCssExtractPlugin({
       filename: utils.assetsPath('css/[name].[contenthash].css'),
-      chunkFilename: utils.assetsPath('css/[id].[contenthash].css'),
-      ignoreOrder: false
+      chunkFilename: utils.assetsPath('css/[id].[contenthash].css')
     }),
     // generate dist index.html with correct asset hash for caching.
     // you can customize output by editing /index.html
@@ -92,11 +92,8 @@ const webpackConfig = merge(baseWebpackConfig, {
         removeComments: true,
         collapseWhitespace: true,
         removeAttributeQuotes: true
-        // more options:
-        // https://github.com/kangax/html-minifier#options-quick-reference
       },
-      // necessary to consistently work with multiple chunks via CommonsChunkPlugin
-      chunksSortMode: 'dependency'
+      chunksSortMode: 'auto'
     }),
     // keep module.id stable when vendor modules does not change
     new webpack.HashedModuleIdsPlugin(),
@@ -115,12 +112,7 @@ const webpackConfig = merge(baseWebpackConfig, {
         }
       ]
     })
-  ],
-  node: {
-    __dirname: false,
-    __filename: false,
-    global: true
-  }
+  ]
 })
 
 if (config.build.productionGzip) {
@@ -128,7 +120,7 @@ if (config.build.productionGzip) {
 
   webpackConfig.plugins.push(
     new CompressionWebpackPlugin({
-      filename: '[path][base].gz',
+      filename: '[path].gz[query]',
       algorithm: 'gzip',
       test: new RegExp(
         '\\.(' +

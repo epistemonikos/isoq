@@ -9,17 +9,6 @@ function resolve(dir) {
   return path.join(__dirname, '..', dir)
 }
 
-const createLintingRule = () => ({
-  test: /\.(js|vue)$/,
-  loader: 'eslint-loader',
-  enforce: 'pre',
-  include: [resolve('src'), resolve('test')],
-  options: {
-    formatter: require('eslint-friendly-formatter'),
-    emitWarning: !config.dev.showEslintErrorsInOverlay
-  }
-})
-
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
@@ -30,24 +19,17 @@ module.exports = {
     filename: '[name].js',
     publicPath: process.env.NODE_ENV === 'production'
       ? config.build.assetsPublicPath
-      : config.dev.assetsPublicPath,
-    chunkFilename: '[name].js',
-    clean: true
+      : config.dev.assetsPublicPath
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
-    },
-    fallback: {
-      "path": false,
-      "fs": false
     }
   },
   module: {
     rules: [
-      ...(config.dev.useEslint ? [createLintingRule()] : []),
       {
         test: /\.vue$/,
         loader: 'vue-loader',
@@ -56,58 +38,61 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')],
-        exclude: /node_modules\/(?!(bootstrap-vue|@babel\/runtime-corejs3)\/).*/
+        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10 * 1024 // 10kb
-          }
-        },
-        generator: {
-          filename: utils.assetsPath('img/[name].[hash:7][ext]')
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          name: utils.assetsPath('img/[name].[hash:7].[ext]'),
+          esModule: false
         }
       },
       {
         test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10 * 1024 // 10kb
-          }
-        },
-        generator: {
-          filename: utils.assetsPath('media/[name].[hash:7][ext]')
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          name: utils.assetsPath('media/[name].[hash:7].[ext]')
         }
       },
       {
         test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10 * 1024 // 10kb
-          }
-        },
-        generator: {
-          filename: utils.assetsPath('fonts/[name].[hash:7][ext]')
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
         }
       }
     ]
   },
+  node: {
+    // prevent webpack from injecting useless setImmediate polyfill because Vue
+    // source contains it (although only uses it if it's native).
+    setImmediate: false,
+    // prevent webpack from injecting mocks to Node native modules
+    // that does not make sense for the client
+    dgram: false,
+    fs: false,
+    net: false,
+    tls: false,
+    child_process: false,
+    path: false,
+    crypto: false,
+    stream: false,
+    http: false,
+    https: false,
+    os: false,
+    zlib: false,
+    assert: false,
+    url: false,
+    buffer: false,
+    process: false,
+    util: false,
+    events: false
+  },
   plugins: [
     new VueLoaderPlugin()
-  ],
-  optimization: {
-    moduleIds: 'deterministic',
-    chunkIds: 'deterministic',
-    removeEmptyChunks: true,
-    mergeDuplicateChunks: true,
-    removeAvailableModules: true
-  },
-  performance: {
-    hints: false
-  }
+  ]
 }
