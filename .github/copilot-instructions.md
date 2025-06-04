@@ -1,0 +1,13 @@
+- responde el chat en español
+- el código debe ser en inglés
+- usa Vue2 y vue-Bootstrap
+- usa la sintaxis de Vue2
+- no uses Vue3 ni Composition API
+- no uses la sintaxis de Vue3
+- antes de ejecutarlo, revisa que no haya errores
+- antes de ejecutarlo, explicame los cambios que harás
+- antes de ejecutar un comando en la terminal, cambiate de version usando 'nvm use'
+- antes de instalar las nuevas dependencias, asegurate que las librerías del proyecto sean compatibles entre si
+- si hay conflictos de versiones, resuélvelos antes de continuar
+- antes de actualizar el archivo package.json, asegurate que las versiones de las dependencias sean compatibles con Vue2 y vue-Bootstrap
+- antes de actualizar o instalar nuevas dependencias, borra la carpeta node_modules y el archivo package-lock.json
