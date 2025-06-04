@@ -17,3 +17,4 @@ config/prod.env.js
 *.ntvs*
 *.njsproj
 *.sln
+src/components/camelot/char_demo.json
