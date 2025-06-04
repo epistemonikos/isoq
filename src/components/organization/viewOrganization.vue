@@ -383,7 +383,9 @@
 
 <script>
 import axios from 'axios'
-import organizationForm from '@/components/organization/organizationForm.vue'
+
+const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
   components: {
