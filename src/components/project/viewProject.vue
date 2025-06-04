@@ -409,7 +409,7 @@ import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
 
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
+const organizationForm = () => import(/* webpackChunkName: "organizationForm" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp.vue')
