@@ -1,5 +1,9 @@
 <template>
-  <div id="mainContainer" class="vh-100">
+  <div
+    id="mainContainer"
+    class="vh-100"
+    :style="{ backgroundImage: `url(${require('@/assets/a.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', color: '#FFF' }"
+  >
     <div class="d-flex flex-column h-100">
       <b-container fluid class="mb-auto">
         <b-row>
@@ -56,10 +60,6 @@ export default {
 
 <style scoped>
   #mainContainer {
-    background: url('../assets/a.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     color: #FFF;
   }
   div >>>
@@ -77,15 +77,6 @@ export default {
     .slogan a {
       color: #FFF;
       text-decoration: underline;
-    }
-    li {
-      font-size: 20px;
-    }
-    li a {
-      color: white;
-    }
-    li a:hover {
-      text-decoration: none;
     }
     .uea {
       font-size: 12px;
