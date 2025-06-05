@@ -483,10 +483,10 @@ export default {
       this.$nextTick(() => {
         // Scrolleamos al último campo agregado
         const newIndex = this.customFields.length - 1
-        this.scrollToSection('custom-field-' + newIndex)
-        // Enfocamos el primer input del nuevo campo
+        this.scrollToSection('column-field-' + newIndex)
+        // Enfocamos el primer input del nuevo campo (el input del título)
         setTimeout(() => {
-          const inputElement = document.getElementById('customField-title-' + newIndex)
+          const inputElement = document.getElementById('label_' + newIndex)
           if (inputElement) {
             inputElement.focus()
           }
