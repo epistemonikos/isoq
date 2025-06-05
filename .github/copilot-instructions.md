@@ -1,5 +1,6 @@
 - responde el chat en español
 - el código debe ser en inglés
+- manten la consistencia en el estilo de código
 - usa Vue2 y vue-Bootstrap
 - usa la sintaxis de Vue2
 - no uses Vue3 ni Composition API
