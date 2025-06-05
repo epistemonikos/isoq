@@ -508,6 +508,7 @@ export default {
 
         if (this.useCamelot) {
           await this.handleCamelotAssessments(_references)
+          await this.handleCamelotCharacteristics(_references)
         }
 
         await this.prefetchDataForExtractedDataUpdate(_references)
@@ -648,7 +649,18 @@ export default {
         axiosRequests.push(await this.requestImportReferences(index))
       }
       Promise.all(axiosRequests)
-        .then(() => {
+        .then(async (responses) => {
+          // Si es un proyecto CAMELOT, manejar las estructuras automáticamente
+          if (this.useCamelot && responses.length > 0) {
+            const _references = responses.map(response => response.data)
+            try {
+              await this.handleCamelotAssessments(_references)
+              await this.handleCamelotCharacteristics(_references)
+            } catch (error) {
+              console.error('Error manejando estructuras CAMELOT:', error)
+            }
+          }
+
           this.pubmed_request = ''
           this.pubmed_requested = []
           this.pubmed_selected = []
@@ -906,6 +918,57 @@ export default {
         }
       } catch (error) {
         console.error('Error en la actualización de calificaciones:', error)
+      }
+    },
+
+    handleCamelotCharacteristics: async function (references) {
+      try {
+        const response = await axios.get('/api/isoqf_characteristics?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
+
+        // Create the characteristics object structure
+        const createCharacteristicItem = (reference) => ({
+          ref_id: reference.id,
+          authors: this.parseReference(reference, true)
+        })
+
+        if (response.data.length) {
+          // Update existing characteristics
+          const _characteristics = response.data[0]
+          const charId = _characteristics.id
+
+          // Get existing reference IDs
+          const existingRefIds = _characteristics.items.map(item => item.ref_id)
+
+          // Only add references that don't already exist
+          const newReferences = references.filter(ref => !existingRefIds.includes(ref.id))
+
+          if (newReferences.length > 0) {
+            // Create new characteristic items for the new references
+            const newItems = newReferences.map(ref => createCharacteristicItem(ref))
+
+            // Add new items to the characteristics
+            _characteristics.items.push(...newItems)
+
+            // Update the characteristics table
+            await axios.patch(`/api/isoqf_characteristics/${charId}`, _characteristics)
+          }
+        } else {
+          // Create new characteristics table
+          const items = references.map(ref => createCharacteristicItem(ref))
+
+          // Post new characteristics table
+          await axios.post('/api/isoqf_characteristics/', {
+            organization: this.$route.params.org_id,
+            project_id: this.$route.params.id,
+            fields: [
+              { key: 'ref_id', label: 'Reference ID' },
+              { key: 'authors', label: 'Author(s), Year' }
+            ],
+            items: items
+          })
+        }
+      } catch (error) {
+        console.error('Error en la actualización de características:', error)
       }
     }
   },

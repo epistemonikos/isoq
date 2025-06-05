@@ -1,11 +1,14 @@
 <template>
   <div>
-    <b-alert show variant="info" v-if="references.length === 0">
+    <b-alert show variant="info" v-if="isLoading">
+      Cargando datos...
+    </b-alert>
+    <b-alert show variant="info" v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
       No hay registros disponibles
     </b-alert>
     <b-table
       v-else
-      :items="references"
+      :items="tableItems"
       :fields="tableFields"
       striped
       hover
@@ -13,6 +16,17 @@
       <template v-slot:cell(authors)="data">
         {{ formatAuthors(data.item.authors) }}
       </template>
+
+      <!-- Plantilla genérica para todos los campos -->
+      <template v-slot:cell()="data">
+        <!-- Para los campos personalizados, mostramos su contenido -->
+        <span v-if="isCustomField(data.field.key)">
+          {{ data.item[data.field.key] || '' }}
+        </span>
+        <!-- Para campos normales, mostramos el valor predeterminado -->
+        <span v-else>{{ data.value }}</span>
+      </template>
+
       <template v-slot:cell(actions)="data">
         <b-button
           size="sm"
@@ -205,6 +219,7 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import commons from '../../utils/commons'
 import draggable from 'vuedraggable'
 import axios from 'axios'
+import { isCustomField, extractCustomFields, processCustomFields } from '@/utils/customFieldsHelper'
 
 export default {
   name: 'StepThree',
@@ -216,6 +231,10 @@ export default {
     references: {
       type: Array,
       default: () => []
+    },
+    type: {
+      type: String,
+      default: 'isoqf_characteristics'
     }
   },
   data () {
@@ -233,14 +252,45 @@ export default {
       currentItem: null,
       editForm: {},
       customFields: [],
-      drag: false
+      drag: false,
+      charsData: {
+        fields: [],
+        items: [],
+        id: null,
+        _id: null,
+        organization: '',
+        project_id: ''
+      },
+      isLoading: true
     }
   },
   computed: {
+    tableItems () {
+      // Si tenemos datos cargados desde la API, los usamos
+      if (this.charsData && this.charsData.items && this.charsData.items.length > 0) {
+        return this.charsData.items.map(item => {
+          const matchingRef = this.references.find(ref => ref.id === item.ref_id)
+          if (matchingRef) {
+            return { ...matchingRef, ...item }
+          }
+          return item
+        })
+      }
+      // Si no hay datos cargados, usamos las referencias como respaldo
+      return this.references
+    },
     tableFields () {
+      // Campos base (autores)
       let baseFields = this.fields
       const categoryFields = []
-      // Creamos un nuevo array sin modificar el estado
+
+      // Obtenemos los campos personalizados y les añadimos la propiedad customField=true
+      const customFields = this.getCustomFields().map(field => ({
+        ...field,
+        customField: true
+      }))
+
+      // Añadimos los campos de categorías (CAMELOT)
       if (this.camelot && Array.isArray(this.camelot.categories)) {
         this.camelot.categories.forEach(category => {
           if (category.options && Array.isArray(category.options)) {
@@ -253,17 +303,19 @@ export default {
           }
         })
       }
-      // a baseFields remueve el campo 'actions' para evitar duplicados
+
+      // Eliminamos el campo 'actions' de los campos base para evitar duplicados
       const baseFieldsWithoutActions = baseFields.filter(field => field.key !== 'actions')
-      console.log('baseFieldsWithoutActions:', baseFieldsWithoutActions)
       baseFields = baseFieldsWithoutActions
+
+      // Agregamos el campo de acciones al final
       categoryFields.push({
         key: 'actions',
         label: 'Acciones'
       })
-      console.log('tableFields:', [...baseFields, ...categoryFields])
-      // Retornamos la combinación de campos base y campos de categorías
-      return [...baseFields, ...categoryFields]
+
+      // Retornamos la combinación de campos base, campos personalizados, y campos de categorías
+      return [...baseFields, ...customFields, ...categoryFields]
     },
     tableFieldsForEdit () {
       // Usamos los campos de la tabla sin la columna de acciones para editar
@@ -275,17 +327,20 @@ export default {
       return commons.getAuthorsFormat(authors)
     },
     editReference (item) {
+      console.log('Editando referencia:', item)
       // Guardamos la referencia actual para editar
       this.currentItem = {...item}
       // Inicializamos el formulario de edición con los valores de la referencia
       this.editForm = {...item}
-      // Si los autores son un array, los convertimos a string para el campo de texto
-      // if (Array.isArray(this.editForm.authors)) {
-      //   this.editForm.authors = this.editForm.authors.join(', ')
-      // }
 
-      // Inicializamos los campos personalizados si existen
-      this.customFields = item.customFields ? [...item.customFields] : []
+      // Inicializamos los campos personalizados con los valores del ítem
+      this.initializeCustomFields(item)
+
+      // Aseguramos que charsData tenga los datos necesarios
+      if (!this.charsData || !this.charsData.fields) {
+        this.loadCharacteristicsData()
+      }
+
       // Abrimos el modal
       this.$bvModal.show('modal-edit-reference')
     },
@@ -296,36 +351,42 @@ export default {
     handleModalOk (bvModalEvent) {
       bvModalEvent.preventDefault()
       if (this.validateForm()) {
-        // Procesar autores si es un string
-        // if (typeof this.editForm.authors === 'string') {
-        //   this.editForm.authors = this.editForm.authors
-        //     .split(',')
-        //     .map(author => author.trim())
-        //     .filter(author => author !== '')
-        // }
-
         // Procesamos los campos personalizados para fields (estructura con key y label)
         const customFieldsArray = this.processCustomFields()
+
         // Creamos el objeto item que contiene ref_id, authors y los campos personalizados
         const item = {
           ref_id: this.editForm.id || '',
           authors: this.editForm.authors || []
         }
+
+        // Obtenemos los campos personalizados existentes
+        const existingFields = this.charsData.fields || []
+        const existingCustomFields = existingFields.filter(field => isCustomField(field.key))
+
         // Agregamos los campos personalizados al objeto item
-        // El nombre de la columna es el valor de la key (column_X) y el valor es el contenido
         this.customFields.forEach((field, index) => {
-          if (field.title.trim() !== '') {
-            item[`column_${index}`] = field.value || ''
+          if (field.title && field.title.trim() !== '') {
+            // Buscamos si el campo ya existe
+            const existingField = existingCustomFields.find(ef => ef.label === field.title)
+            if (existingField) {
+              // Si existe, usamos su key original
+              item[existingField.key] = field.value || ''
+            } else {
+              // Si es nuevo, calculamos la nueva key correlativa
+              const lastIndex = existingCustomFields.length > 0
+                ? Math.max(...existingCustomFields.map(ef => parseInt(ef.key.split('_')[1])))
+                : -1
+              item[`column_${lastIndex + 1 + index}`] = field.value || ''
+            }
           }
         })
 
         // Agregamos los campos de CAMELOT al objeto item
-        // El key corresponde al option.key y el value al valor del form-textarea
         if (this.camelot && Array.isArray(this.camelot.categories)) {
           this.camelot.categories.forEach(category => {
             if (category.options && Array.isArray(category.options)) {
               category.options.forEach(option => {
-                // Solo agregamos si existe un valor en el formulario para ese campo
                 if (this.editForm[option.key]) {
                   item[option.key] = this.editForm[option.key]
                 }
@@ -333,35 +394,73 @@ export default {
             }
           })
         }
-        // Creamos el objeto updatedItem con la estructura requerida
-        // const base = {authors: item.authors}
-        const updatedItem = {
-          ...this.editForm,
-          // Agregamos los campos personalizados como un arreglo de objetos con key y label
-          fields: customFieldsArray,
-          // Agregamos el arreglo items que contiene los valores procesados
-          items: [item]
-        }
 
-        if (this.editForm.id) {
-          axios.post('/api/isoqf_assessments/', updatedItem)
+        console.log('Item a actualizar:', item)
+
+        // Verificamos si existe un ID en charsData para determinar si es una actualización o inserción
+        if (this.charsData && this.charsData.id) {
+          // Para actualización: actualizar solo el item específico en los items existentes
+          const updatedCharsData = { ...this.charsData }
+
+          // Encontrar el índice del item que se está editando
+          const itemIndex = updatedCharsData.items.findIndex(existingItem =>
+            existingItem.ref_id === item.ref_id
+          )
+
+          if (itemIndex !== -1) {
+            // Actualizar el item existente
+            updatedCharsData.items[itemIndex] = { ...updatedCharsData.items[itemIndex], ...item }
+          } else {
+            // Si no existe, agregarlo
+            updatedCharsData.items.push(item)
+          }
+
+          // Actualizar los fields si han cambiado
+          updatedCharsData.fields = customFieldsArray
+
+          console.log('Datos completos a enviar para actualización:', updatedCharsData)
+
+          // Si existe ID, actualizamos
+          axios.patch(`/api/isoqf_characteristics/${this.charsData.id}/`, updatedCharsData)
             .then(response => {
               console.log('Referencia actualizada:', response.data)
+              // Actualizamos los datos locales
+              this.charsData = response.data
+              // Recargamos los datos de características para reflejar los cambios
+              this.loadCharacteristicsData()
+              // Forzamos la actualización de la tabla
+              this.$forceUpdate()
             })
             .catch(error => {
               console.error('Error al actualizar la referencia:', error)
             })
         } else {
-          axios.patch('/api/isoqf_assessments/', updatedItem)
+          // Si no existe ID, insertamos - construimos el objeto completo para la API
+          const newCharacteristics = {
+            organization: this.$route.params.org_id || '',
+            project_id: this.$route.params.id || '',
+            fields: customFieldsArray,
+            items: [item]
+          }
+
+          console.log('Datos completos a enviar para inserción:', newCharacteristics)
+
+          axios.post('/api/isoqf_characteristics/', newCharacteristics)
             .then(response => {
               console.log('Referencia creada:', response.data)
+              // Actualizamos los datos locales
+              this.charsData = response.data
+              // Recargamos los datos de características para reflejar los cambios
+              this.loadCharacteristicsData()
+              // Forzamos la actualización de la tabla
+              this.$forceUpdate()
             })
             .catch(error => {
               console.error('Error al crear la referencia:', error)
             })
         }
-        console.log('Actualizando referencia:', updatedItem)
-        this.$emit('update-reference', updatedItem)
+
+        this.$emit('update-reference', item)
         this.$nextTick(() => {
           this.$bvModal.hide('modal-edit-reference')
         })
@@ -433,13 +532,28 @@ export default {
      * @returns {Array} Arreglo de objetos con key y label
      */
     processCustomFields () {
-      // Obtenemos los campos personalizados
-      const customFields = this.customFields
-        .filter(field => field.title.trim() !== '')
+      // Obtenemos los campos personalizados existentes
+      const existingFields = this.charsData.fields || []
+      const existingCustomFields = existingFields.filter(field => isCustomField(field.key))
+
+      // Procesamos los nuevos campos personalizados
+      const newCustomFields = this.customFields
+        .filter(field => field.title && field.title.trim() !== '')
         .map((field, index) => {
-          // Generamos la clave usando el índice, cambiando 'label_X' por 'column_X'
+          // Si el campo ya existe, mantenemos su key original
+          const existingField = existingCustomFields.find(ef => ef.label === field.title)
+          if (existingField) {
+            return {
+              key: existingField.key,
+              label: field.title
+            }
+          }
+          // Si es un campo nuevo, generamos una nueva key correlativa
+          const lastIndex = existingCustomFields.length > 0
+            ? Math.max(...existingCustomFields.map(ef => parseInt(ef.key.split('_')[1])))
+            : -1
           return {
-            key: `column_${index}`,
+            key: `column_${lastIndex + 1 + index}`,
             label: field.title
           }
         })
@@ -451,11 +565,158 @@ export default {
 
       // Combinamos todos los campos en un solo arreglo
       const base = [{key: 'ref_id', label: 'Reference ID'}, {key: 'authors', label: 'Author(s), Year'}]
-      return [...base, ...customFields, ...camelotFields]
+      return [...base, ...newCustomFields, ...camelotFields]
+    },
+
+    /**
+     * Obtiene los campos personalizados de los datos cargados
+     * @returns {Array} Arreglo de objetos con key y label para los campos personalizados
+     */
+    getCustomFields () {
+      // Utilizamos el helper para extraer los campos personalizados
+      return extractCustomFields(this.charsData.fields)
+    },
+
+    // Método auxiliar para verificar si un campo es personalizado
+    isCustomField (fieldKey) {
+      return isCustomField(fieldKey)
+    },
+
+    /**
+     * Carga los datos de características desde la API
+     */
+    loadCharacteristicsData () {
+      this.isLoading = true
+
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      axios.get('/api/isoqf_characteristics', { params })
+        .then(response => {
+          if (response.data && response.data.length > 0) {
+            // Guardamos los datos recibidos
+            this.charsData = response.data[0] || { fields: [], items: [] }
+
+            // Procesamos los datos para el formato requerido
+            this.processCharacteristicsData()
+
+            // Forzamos la actualización de la tabla
+            this.$forceUpdate()
+          } else {
+            // Si no hay datos, inicializamos con estructura vacía
+            this.charsData = {
+              fields: [],
+              items: [],
+              organization: this.$route.params.org_id,
+              project_id: this.$route.params.id
+            }
+          }
+
+          this.isLoading = false
+
+          // Asegurar actualización final después del cambio de estado de loading
+          this.$nextTick(() => {
+            this.$forceUpdate()
+          })
+        })
+        .catch(error => {
+          console.error('Error al cargar los datos de características:', error)
+          this.isLoading = false
+        })
+    },
+
+    /**
+     * Procesa los datos recibidos de la API
+     */
+    processCharacteristicsData () {
+      // Aquí procesaríamos los datos de características según sea necesario
+      // Por ejemplo, transformar el formato de los campos o añadir campos adicionales
+
+      if (this.charsData && this.charsData.items && this.charsData.items.length) {
+        // Procesamos cada item si es necesario pero no realizamos transformaciones por ahora
+        // Dejamos el código comentado como referencia para futuras implementaciones
+        /*
+        const processedItems = this.charsData.items.map(item => {
+          // Transformaciones necesarias
+          return item
+        })
+        */
+
+        // Si necesitamos actualizar las referencias con estos datos, podríamos hacerlo aquí
+        // this.references = [...this.references, ...items]
+      }
+
+      // Inicializar campos personalizados para el formulario de edición si es necesario
+      if (this.charsData && this.charsData.fields) {
+        this.initializeCustomFields()
+      }
+    },
+
+    /**
+     * Inicializa los campos personalizados basados en los fields existentes
+     * @param {Object} [itemValues=null] - Objeto con valores para los campos personalizados
+     */
+    initializeCustomFields (itemValues = null) {
+      console.log('Inicializando campos personalizados con valores:', itemValues)
+      console.log('Fields actuales:', this.charsData.fields)
+
+      // Obtenemos los campos personalizados existentes
+      const customFields = this.charsData.fields
+        .filter(field => isCustomField(field.key))
+        .map(field => {
+          return {
+            title: field.label || '',
+            value: (itemValues && itemValues[field.key]) || '',
+            key: field.key
+          }
+        })
+
+      // Si hay valores específicos para este item, los agregamos
+      if (itemValues) {
+        Object.keys(itemValues).forEach(key => {
+          if (isCustomField(key) && !customFields.find(cf => cf.key === key)) {
+            customFields.push({
+              title: key,
+              value: itemValues[key] || '',
+              key: key
+            })
+          }
+        })
+      }
+
+      this.customFields = customFields
+      console.log('Campos personalizados inicializados:', this.customFields)
+    }
+  },
+  watch: {
+    references: {
+      handler(newReferences, oldReferences) {
+        // Solo recargar si realmente hay cambios en las referencias
+        if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
+          console.log('Referencias cambiaron, recargando datos de características')
+          this.loadCharacteristicsData()
+        }
+      },
+      immediate: false
+    },
+    charsData: {
+      handler(newVal) {
+        if (newVal && newVal.fields) {
+          // Forzamos la actualización de la tabla cuando cambian los datos
+          this.$nextTick(() => {
+            this.$forceUpdate()
+          })
+        }
+      },
+      deep: true
     }
   },
   mounted () {
     console.log('StepThree mounted')
+    // Cargamos los datos de características al montar el componente
+    this.loadCharacteristicsData()
   }
 }
 </script>
