@@ -409,7 +409,6 @@ import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
 
-const organizationForm = () => import(/* webpackChunkName: "organizationForm" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp.vue')
@@ -422,7 +421,6 @@ const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './
 export default {
   components: {
     draggable,
-    organizationForm,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
     videoHelp,
@@ -430,7 +428,6 @@ export default {
     propertiesProject,
     UploadReferences,
     InclusionExclusioCriteria,
-    CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
     ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue'),
