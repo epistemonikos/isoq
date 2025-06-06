@@ -767,14 +767,39 @@ export default {
       }
     },
 
-    confirmRemoveReferenceById: function (refId) {
+    confirmRemoveReferenceById: async function (refId) {
       if (!refId) return
+
+      console.log('=== ELIMINANDO REFERENCIA ===')
+      console.log('Referencia ID a eliminar:', refId)
+
       const lists = JSON.parse(JSON.stringify(this.lists))
       const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
       const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      let objs = []
       let requests = []
 
+      console.log('=== VERIFICANDO DATOS RECIBIDOS ===')
+      console.log('Props charsOfStudies completo:', this.charsOfStudies)
+      console.log('Props methodologicalTableRefs completo:', this.methodologicalTableRefs)
+
+      console.log('=== ESTRUCTURA DE DATOS ===')
+      if (this.charsOfStudies) {
+        console.log('charsOfStudies.id:', this.charsOfStudies.id)
+        console.log('charsOfStudies.items:', this.charsOfStudies.items)
+        console.log('charsOfStudies.fields:', this.charsOfStudies.fields)
+      } else {
+        console.log('charsOfStudies es null/undefined')
+      }
+
+      if (this.methodologicalTableRefs) {
+        console.log('methodologicalTableRefs.id:', this.methodologicalTableRefs.id)
+        console.log('methodologicalTableRefs.items:', this.methodologicalTableRefs.items)
+        console.log('methodologicalTableRefs.fields:', this.methodologicalTableRefs.fields)
+      } else {
+        console.log('methodologicalTableRefs es null/undefined')
+      }
+
+      // Manejar listas
       for (const list of lists) {
         let obj = { id: null, references: [] }
         for (const rr of list.raw_ref) {
@@ -783,67 +808,110 @@ export default {
           }
           if (rr.id === refId) {
             obj.id = list.id
-            objs.push(obj)
+            console.log('Eliminando referencia de lista:', list.id)
+            requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, { references: obj.references }))
           }
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
+      // Eliminar entrada de isoqf_characteristics
+      if (charsOfStudies && Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
+        console.log('=== PROCESANDO CHARACTERISTICS ===')
+        console.log('ID de characteristics:', charsOfStudies.id)
+
         if (charsOfStudies.items && charsOfStudies.items.length) {
           let items = JSON.parse(JSON.stringify(charsOfStudies.items))
+          const originalLength = items.length
 
-          // Instead of removing items, clear their content but keep the reference
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].ref_id === refId) {
-              const item = items[i]
-              for (let key in item) {
-                if (key !== 'ref_id' && key !== 'authors') {
-                  item[key] = ''
-                }
-              }
-            }
-          }
+          console.log('Items originales en characteristics:', items)
+          console.log('Buscando items con ref_id:', refId)
+
+          // Buscar qué items van a ser eliminados
+          const itemsToDelete = items.filter(item => item.ref_id === refId)
+          console.log('Items que serán eliminados:', itemsToDelete)
+
+          // Filtrar para eliminar completamente el item con el refId
+          items = items.filter(item => {
+            const shouldKeep = item.ref_id !== refId
+            console.log(`Item ${item.ref_id}: ${shouldKeep ? 'MANTENER' : 'ELIMINAR'}`)
+            return shouldKeep
+          })
           charsOfStudies.items = items
 
+          console.log(`Characteristics: Items antes: ${originalLength}, después: ${items.length}`)
+          console.log('Items finales en characteristics:', items)
+          console.log('Objeto completo a enviar:', charsOfStudies)
+
           requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
+        } else {
+          console.log('No hay items en characteristics o está vacío')
         }
+      } else {
+        console.log('No se encontró ID en charsOfStudies o charsOfStudies es null')
       }
 
-      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+      // Eliminar entrada de isoqf_assessments
+      if (_assessments && Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
+        console.log('=== PROCESANDO ASSESSMENTS ===')
+        console.log('ID de assessments:', _assessments.id)
+
         if (_assessments.items && _assessments.items.length) {
           let items = JSON.parse(JSON.stringify(_assessments.items))
+          const originalLength = items.length
 
-          // Instead of removing items, clear their content but keep the reference
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].ref_id === refId) {
-              const item = items[i]
-              for (let key in item) {
-                if (key !== 'ref_id' && key !== 'authors') {
-                  item[key] = ''
-                }
-              }
-            }
-          }
+          console.log('Items originales en assessments:', items)
+          console.log('Buscando items con ref_id:', refId)
+
+          // Buscar qué items van a ser eliminados
+          const itemsToDelete = items.filter(item => item.ref_id === refId)
+          console.log('Items que serán eliminados:', itemsToDelete)
+
+          // Filtrar para eliminar completamente el item con el refId
+          items = items.filter(item => {
+            const shouldKeep = item.ref_id !== refId
+            console.log(`Item ${item.ref_id}: ${shouldKeep ? 'MANTENER' : 'ELIMINAR'}`)
+            return shouldKeep
+          })
           _assessments.items = items
 
+          console.log(`Assessments: Items antes: ${originalLength}, después: ${items.length}`)
+          console.log('Items finales en assessments:', items)
+          console.log('Objeto completo a enviar:', _assessments)
+
           requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
+        } else {
+          console.log('No hay items en assessments o está vacío')
         }
+      } else {
+        console.log('No se encontró ID en _assessments o _assessments es null')
       }
 
-      for (let o of objs) {
-        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, { references: o.references }))
-      }
+      console.log('Total de requests a ejecutar:', requests.length)
 
-      if (requests.length) {
-        Promise.all(requests)
-      }
+      try {
+        // Esperar a que todas las requests de actualización se completen
+        if (requests.length > 0) {
+          console.log('Ejecutando requests de actualización...')
+          const responses = await Promise.all(requests)
+          console.log('Respuestas de las requests:', responses.map(r => ({ status: r.status, data: r.data })))
+          console.log('Todas las requests de actualización completadas')
+        }
 
-      axios.delete(`/api/isoqf_references/${refId}`)
-        .then(() => {
-          this.$emit('CallGetReferences', false)
-          this.openModalReferencesSingle(false)
-          this.$emit('CallGetProject')
-        })
+        // Ahora eliminar la referencia principal
+        console.log('Eliminando referencia principal...')
+        const deleteResponse = await axios.delete(`/api/isoqf_references/${refId}`)
+        console.log('Respuesta del DELETE:', deleteResponse.status)
+
+        // Actualizar la UI
+        this.$emit('CallGetReferences', false)
+        this.openModalReferencesSingle(false)
+        this.$emit('CallGetProject')
+
+        console.log('=== ELIMINACIÓN COMPLETADA ===')
+      } catch (error) {
+        console.error('Error durante la eliminación:', error)
+        console.error('Detalles del error:', error.response?.data)
+      }
     },
 
     resetFileUpload: function () {
