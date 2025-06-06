@@ -14,7 +14,7 @@
       hover
       responsive>
       <template v-slot:cell(authors)="data">
-        {{ formatAuthors(data.item.authors) }}
+        {{ data.item.authors }}
       </template>
 
       <!-- Plantilla genérica para todos los campos -->
@@ -216,7 +216,6 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
-import commons from '../../utils/commons'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { isCustomField, extractCustomFields, processCustomFields } from '@/utils/customFieldsHelper'
@@ -323,9 +322,6 @@ export default {
     }
   },
   methods: {
-    formatAuthors (authors) {
-      return commons.getAuthorsFormat(authors)
-    },
     editReference (item) {
       console.log('Editando referencia:', item)
       // Guardamos la referencia actual para editar
