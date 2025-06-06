@@ -653,6 +653,8 @@ export default {
     await this.getListCategories()
     await this.getReferences()
     await this.getProject()
+    await this.getCharacteristicsData()
+    await this.getAssessmentsData()
   },
   methods: {
     setBusy: function (value) {
@@ -719,7 +721,7 @@ export default {
         organization: this.$route.params.org_id
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
-        .then((response) => {
+        .then(async (response) => {
           let _project = JSON.parse(JSON.stringify(response.data))
           if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {
             _project.inclusion = ''
@@ -737,6 +739,11 @@ export default {
           }
           this.project = _project
           this.ui.project.show_criteria = true
+
+          // Cargar datos de characteristics y assessments después de cargar el proyecto
+          await this.getCharacteristicsData()
+          await this.getAssessmentsData()
+
           this.getLists()
         })
         .catch((error) => {
@@ -1573,6 +1580,70 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    getCharacteristicsData: async function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      try {
+        const response = await axios.get('/api/isoqf_characteristics', { params })
+        if (response.data && response.data.length > 0) {
+          console.log('Características cargadas:', response.data[0])
+          this.charsOfStudies = response.data[0]
+        } else {
+          console.log('No se encontraron características, manteniendo estructura vacía')
+          // Mantener la estructura vacía pero con IDs nulos
+          this.charsOfStudies = {
+            id: null,
+            fields: [],
+            items: [],
+            authors: '',
+            fieldsObj: [
+              {
+                key: 'authors',
+                label: 'Author(s), Year'
+              }
+            ],
+            fieldsObjOriginal: []
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando características:', error)
+      }
+    },
+    getAssessmentsData: async function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      try {
+        const response = await axios.get('/api/isoqf_assessments', { params })
+        if (response.data && response.data.length > 0) {
+          console.log('Evaluaciones cargadas:', response.data[0])
+          this.methodologicalTableRefs = response.data[0]
+        } else {
+          console.log('No se encontraron evaluaciones, manteniendo estructura vacía')
+          // Mantener la estructura vacía pero con IDs nulos
+          this.methodologicalTableRefs = {
+            id: null,
+            fields: [],
+            items: [],
+            authors: '',
+            fieldsObj: [
+              {
+                key: 'authors',
+                label: 'Author(s), Year'
+              }
+            ],
+            fieldsObjOriginal: []
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando evaluaciones:', error)
+      }
     }
   },
   computed: {
