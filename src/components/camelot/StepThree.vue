@@ -45,6 +45,11 @@
       <template v-slot:thead-top>
         <tr>
           <th colspan="1">Referencias</th>
+          <th v-if="getCustomFields().length > 0"
+            :colspan="getCustomFields().length"
+            class="text-center">
+            &nbsp;
+          </th>
           <th v-for="category in camelot.categories"
             :key="category.key"
             :colspan="category.options.length"
