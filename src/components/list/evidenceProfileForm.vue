@@ -441,7 +441,7 @@
                     query: { tab: 'My-Data', step: 4 }
                   }">My Data</b-link>.
                 </p>
-                <template v-if="isCamelot">
+                <template v-if="project.use_camelot">
                   <assessment-table :assessments="methAssessments" />
                 </template>
                 <template v-else>
@@ -885,11 +885,7 @@ export default {
     project: Object,
     evidenceProfile: Array,
     selectOptions: Array,
-    permissions: Boolean,
-    isCamelot: {
-      type: Boolean,
-      default: true
-    }
+    permissions: Boolean
   },
   data () {
     return {
