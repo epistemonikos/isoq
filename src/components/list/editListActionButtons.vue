@@ -48,9 +48,11 @@
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 import { displayExplanation } from '../utils/commons'
+import { camelotMixin } from '@/mixins/camelotMixin'
 
 export default {
   name: 'editListActionsButtons',
+  mixins: [camelotMixin],
   props: {
     mode: String,
     permission: Boolean,
@@ -85,7 +87,7 @@ export default {
       return ''
     },
     exportToWord: function () {
-      const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
+      const filename = (this.project.use_camelot ? 'CAMELOT - ' : '') + (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
       const doc = new Document()
 
       doc.addSection({
@@ -499,7 +501,7 @@ export default {
               })
             ]
           }),
-          this.generateTable(JSON.parse(JSON.stringify(this.characteristicStudies))),
+          this.generateTable(JSON.parse(JSON.stringify(this.characteristicStudies)), 'characteristic_studies'),
           new Paragraph(''),
           new Paragraph({
             children: [
@@ -510,7 +512,7 @@ export default {
               })
             ]
           }),
-          this.generateTable(JSON.parse(JSON.stringify(this.methodologicalAssessments))),
+          this.generateTable(JSON.parse(JSON.stringify(this.methodologicalAssessments)), 'isoqf_assessments'),
           new Paragraph(''),
           new Paragraph({
             children: [
@@ -538,9 +540,252 @@ export default {
 
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
+        // Liberar recursos
+        doc = null;
+        blob = null;
       })
     },
-    generateTable: function (data) {
+    generateTable: function (data, type='') {
+      // Si es methodologicalAssessments, usar una estructura diferente
+
+      if (type === 'characteristic_studies' && this.project.use_camelot) {
+        return this.generateCharacteristicsTable(data);
+      }
+
+      if (type === 'isoqf_assessments' && this.project.use_camelot) {
+        return this.generateMethodologicalTable(data);
+      }
+
+      // Para otros tipos de tablas, mantener la lógica existente
+      return this.generateStandardTable(data);
+    },
+    generateCharacteristicsTable: function (data) {
+      // Crear las filas de la tabla
+      const rows = [];
+
+      // Primera fila de encabezado: Categorías con colspan 2
+      const categoryHeaderRow = new TableRow({
+        tableHeader: true,
+        children: [
+          // Primera columna: Authors
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            width: {
+              size: '20%',
+              type: WidthType.PERCENTAGE
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: 'Author(s), Year',
+                    bold: true,
+                    size: 22
+                  })
+                ]
+              })
+            ]
+          }),
+          // Columnas para cada categoría CAMELOT con colspan 2
+          ...this.camelot.categories.map(category =>
+            new TableCell({
+              columnSpan: 2,
+              verticalAlign: VerticalAlign.CENTER,
+              width: {
+                size: '40%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: category.label,
+                      bold: true,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            })
+          )
+        ]
+      });
+      rows.push(categoryHeaderRow);
+
+      // Segunda fila de encabezado: Subtítulos Extracted Data y Concerns
+      const subHeaderRow = new TableRow({
+        tableHeader: true,
+        children: [
+          // Celda vacía para alinear con Authors
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: '',
+                    size: 22
+                  })
+                ]
+              })
+            ]
+          }),
+          // Subtítulos para cada categoría
+          ...this.camelot.categories.flatMap(category => [
+            // Extracted Data
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: 'Extracted data',
+                      bold: true,
+                      size: 20
+                    })
+                  ]
+                })
+              ]
+            }),
+            // Concerns
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: 'Concerns',
+                      bold: true,
+                      size: 20
+                    })
+                  ]
+                })
+              ]
+            })
+          ])
+        ]
+      });
+      rows.push(subHeaderRow);
+
+      // Generar filas para cada item
+      if (data.items && data.items.length > 0) {
+        data.items.forEach(item => {
+          const itemRow = new TableRow({
+            children: [
+              // Celda de autores
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: item.authors || '',
+                        size: 20
+                      })
+                    ]
+                  })
+                ]
+              }),
+              // Celdas para cada categoría CAMELOT
+              ...this.camelot.categories.flatMap(category => {
+                const extractedDataKey = category.options[0].key;
+                const concernsKey = category.options[1].key;
+
+                return [
+                  // Extracted Data
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: item[extractedDataKey] || '',
+                            size: 20
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  // Concerns
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: item[concernsKey] || '',
+                            size: 20
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ];
+              })
+            ]
+          });
+          rows.push(itemRow);
+        });
+      }
+
+      return new Table({
+        borders: {
+          top: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          bottom: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          left: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          right: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          insideHorizontal: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          },
+          insideVertical: {
+            size: 1,
+            color: '000000',
+            style: BorderStyle.SINGLE
+          }
+        },
+        width: {
+          size: '100%',
+          type: WidthType.PERCENTAGE
+        },
+        rows: rows
+      });
+    },
+    generateStandardTable: function (data) {
+      // Asegurarnos de que data.fields y data.items existan
+      if (!data.fields) {
+        data.fields = [];
+      }
+      if (!data.items) {
+        data.items = [];
+      }
+
+      // Obtener los campos personalizados actuales
+      const customFields = [...data.fields];
+
+      // Crear una copia de data con los campos y items actualizados
+      const updatedData = {
+        ...data,
+        fields: customFields,
+        items: data.items
+      };
+
       return new Table({
         borders: {
           top: {
@@ -577,10 +822,336 @@ export default {
           type: WidthType.PERCENTAGE
         },
         rows: [
-          this.generateHeaderRow(JSON.parse(JSON.stringify(data.fields))),
-          ...this.generateBodyRow(JSON.parse(JSON.stringify(data.items)))
+          this.generateHeaderRow(JSON.parse(JSON.stringify(updatedData.fields))),
+          ...this.generateBodyRow(JSON.parse(JSON.stringify(updatedData.items)))
         ]
-      })
+      });
+    },
+    generateMethodologicalTable: function (data) {
+      const rows = [];
+
+      // Primera fila de encabezado: Grupos principales
+      const mainHeaderRow = new TableRow({
+        tableHeader: true,
+        children: [
+          // Authors vacio
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            width: {
+              size: '15%',
+              type: WidthType.PERCENTAGE
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: '',
+                    bold: true,
+                    size: 22
+                  })
+                ]
+              })
+            ]
+          }),
+          // Overall assessment vacio
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            width: {
+              size: '15%',
+              type: WidthType.PERCENTAGE
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: ''
+                  })
+                ]
+              })
+            ]
+          }),
+          // Research design (colspan 4)
+          new TableCell({
+            columnSpan: 4,
+            verticalAlign: VerticalAlign.CENTER,
+            width: {
+              size: '35%',
+              type: WidthType.PERCENTAGE
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: 'Research design',
+                    bold: true,
+                    size: 22
+                  })
+                ]
+              })
+            ]
+          }),
+          // Research conduct (colspan 4)
+          new TableCell({
+            columnSpan: 4,
+            verticalAlign: VerticalAlign.CENTER,
+            width: {
+              size: '35%',
+              type: WidthType.PERCENTAGE
+            },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: 'Research conduct',
+                    bold: true,
+                    size: 22
+                  })
+                ]
+              })
+            ]
+          }),
+          // Researchers domain vacio
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: '',
+                  bold: true,
+                  size: 22
+                })
+              ]
+            })]
+          })
+        ]
+      });
+      rows.push(mainHeaderRow);
+
+      // Segunda fila de encabezado: Subtítulos
+      const subHeaderRow = new TableRow({
+        tableHeader: true,
+        children: [
+          // Authors
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: 'Author(s), Year',
+                  bold: true,
+                  size: 22
+                })
+              ]
+            })]
+          }),
+          // Overall assessment
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: 'Overall assessment',
+                  bold: true,
+                  size: 22
+                })
+              ]
+            })]
+          }),
+          // Research design columns
+          ...['Research', 'Stakeholders', 'Researchers', 'Context'].map(label =>
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: label,
+                      bold: true,
+                      size: 20
+                    })
+                  ]
+                })
+              ]
+            })
+          ),
+          // Research conduct columns
+          ...['Research', 'Stakeholders', 'Researchers', 'Context'].map(label =>
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: label,
+                      bold: true,
+                      size: 20
+                    })
+                  ]
+                })
+              ]
+            })
+          ),
+          //
+          // Researchers domain
+          new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: 'Researchers domain',
+                  bold: true,
+                  size: 22
+                })
+              ]
+            })]
+          })
+        ]
+      });
+      rows.push(subHeaderRow);
+
+      // Filtrar items basados en las referencias
+      const activeReferenceIds = this.list.references;
+      const filteredItems = data.items ? data.items.filter(item => activeReferenceIds.includes(item.ref_id)) : [];
+
+      // Generar filas para cada item filtrado
+      if (filteredItems.length > 0) {
+        filteredItems.forEach(item => {
+          const itemRow = new TableRow({
+            children: [
+              // Authors
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: item.authors || '',
+                        size: 20
+                      })
+                    ]
+                  })
+                ]
+              }),
+              // Overall assessment
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: this.getOptionText(item.stages?.[3]?.options[0].option) || '',
+                        size: 20
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: item.stages?.[3]?.options[0].text || '',
+                            size: 20
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              }),
+              // Research design cells
+              ...this.generateStageCells(item.stages?.[0]),
+              // Research conduct cells
+              ...this.generateStageCells(item.stages?.[1]),
+              // Researchers domain
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: this.getOptionText(item.stages?.[2]?.options[0].option) || '',
+                        size: 20
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: item.stages?.[2]?.options[0].text || '',
+                            size: 20
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          });
+          rows.push(itemRow);
+        });
+      }
+
+      return new Table({
+        borders: {
+          top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+          bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+          left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+          right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+          insideHorizontal: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+          insideVertical: { size: 1, color: '000000', style: BorderStyle.SINGLE }
+        },
+        width: {
+          size: '100%',
+          type: WidthType.PERCENTAGE
+        },
+        rows: rows
+      });
+    },
+
+    // Función auxiliar para generar las celdas de cada etapa
+    generateStageCells: function(stage) {
+      if (!stage || !stage.options) {
+        return Array(4).fill(new TableCell({
+          children: [new Paragraph('')]
+        }));
+      }
+
+      return stage.options.map(option =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: this.getOptionText(option.option) || '',
+                  size: 20
+                })
+              ]
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: option.text || '',
+                  size: 20
+                })
+              ]
+            })
+          ]
+        })
+      );
+    },
+
+    // Función auxiliar para obtener el texto de la opción
+    getOptionText: function(option) {
+      const optionsMap = {
+        'A': 'No or minimal concern',
+        'B': 'Minor concerns',
+        'C': 'Moderate concerns',
+        'D': 'Serious concerns',
+        'E': 'Unclear'
+      };
+      return optionsMap[option] || option;
     },
     generateHeaderRow: function (data) {
       return new TableRow({
@@ -625,32 +1196,54 @@ export default {
       if (Object.prototype.hasOwnProperty.call(data, 'index')) {
         delete data.index
       }
+
       let arr = []
       const keys = Object.keys(data)
-      let numbers = []
+
+      // Separar las claves en tres categorías
+      const columnKeys = [] // Para campos column_X
+      const camelotKeys = [] // Para campos CAMELOT
+      const specialKeys = ['ref_id', 'authors'] // Claves especiales
+
+      // Clasificar las claves
       for (let key of keys) {
-        if (key !== 'ref_id' && key !== 'authors') {
-          const newKey = parseInt(key.split('_')[1])
-          numbers.push(newKey)
+        if (key.startsWith('column_')) {
+          columnKeys.push(key)
+        } else if (this.camelot && this.camelot.fields &&
+                   this.camelot.fields.some(field => field.key === key)) {
+          camelotKeys.push(key)
         }
       }
-      const len = numbers.sort((a, b) => { return a - b }).slice(-1)[0]
-      if (len !== undefined) {
-        if (len) {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          for (var cnt = 0; cnt <= len; cnt++) {
-            if (Object.prototype.hasOwnProperty.call(data, 'column_' + cnt.toString())) {
-              arr.push(this.generateBodyCell(data['column_' + cnt.toString()], false, 20))
-            }
-          }
-        } else {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          arr.push(this.generateBodyCell(data['column_0'], false, 20))
-        }
-      } else {
-        arr.push(this.generateBodyCell(data.authors, true, 20))
-        arr.push(this.generateBodyCell(' ', false, 20))
+
+      // Ordenar las claves column_X numéricamente
+      columnKeys.sort((a, b) => {
+        const numA = parseInt(a.split('_')[1])
+        const numB = parseInt(b.split('_')[1])
+        return numA - numB
+      })
+
+      // Ordenar las claves CAMELOT según el orden en camelot.fields
+      if (this.camelot && this.camelot.fields) {
+        camelotKeys.sort((a, b) => {
+          const indexA = this.camelot.fields.findIndex(field => field.key === a)
+          const indexB = this.camelot.fields.findIndex(field => field.key === b)
+          return indexA - indexB
+        })
       }
+
+      // Agregar la celda de autores primero
+      arr.push(this.generateBodyCell(data.authors, true, 20))
+
+      // Agregar las celdas de column_X
+      for (const key of columnKeys) {
+        arr.push(this.generateBodyCell(data[key], false, 20))
+      }
+
+      // Agregar las celdas CAMELOT
+      for (const key of camelotKeys) {
+        arr.push(this.generateBodyCell(data[key], false, 20))
+      }
+
       return arr
     },
     generateBodyCell: function (data, isBold, size) {
@@ -668,15 +1261,23 @@ export default {
       })
     },
     generateText: function (data, isBold = false, size = 20) {
+      if (data === undefined) {
+        return new TextRun({
+          text: '',
+          bold: isBold,
+          size: size
+        })
+      }
+
       if (Object.prototype.hasOwnProperty.call(data, 'label')) {
         return new TextRun({
-          text: data.label,
+          text: data.label || '',
           bold: isBold,
           size: size
         })
       } else {
         return new TextRun({
-          text: data,
+          text: data || '',
           bold: isBold,
           size: size
         })
