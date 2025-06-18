@@ -563,6 +563,14 @@ export default {
       // Crear las filas de la tabla
       const rows = [];
 
+      // Obtener y ordenar los campos personalizados
+      const customFields = data.fields ? data.fields.filter(field => field.key.startsWith('column_')) : [];
+      customFields.sort((a, b) => {
+        const numA = parseInt(a.key.split('_')[1]);
+        const numB = parseInt(b.key.split('_')[1]);
+        return numA - numB;
+      });
+
       // Primera fila de encabezado: Categorías con colspan 2
       const categoryHeaderRow = new TableRow({
         tableHeader: true,
@@ -571,7 +579,7 @@ export default {
           new TableCell({
             verticalAlign: VerticalAlign.CENTER,
             width: {
-              size: '20%',
+              size: '15%',
               type: WidthType.PERCENTAGE
             },
             children: [
@@ -587,13 +595,35 @@ export default {
               })
             ]
           }),
+          // Columnas para campos personalizados
+          ...customFields.map(field =>
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              width: {
+                size: '10%',
+                type: WidthType.PERCENTAGE
+              },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [
+                    new TextRun({
+                      text: field.label || field.key,
+                      bold: true,
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            })
+          ),
           // Columnas para cada categoría CAMELOT con colspan 2
           ...this.camelot.categories.map(category =>
             new TableCell({
               columnSpan: 2,
               verticalAlign: VerticalAlign.CENTER,
               width: {
-                size: '40%',
+                size: '15%',
                 type: WidthType.PERCENTAGE
               },
               children: [
@@ -632,6 +662,22 @@ export default {
               })
             ]
           }),
+          // Celdas vacías para campos personalizados
+          ...customFields.map(() =>
+            new TableCell({
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '',
+                      size: 22
+                    })
+                  ]
+                })
+              ]
+            })
+          ),
           // Subtítulos para cada categoría
           ...this.camelot.categories.flatMap(category => [
             // Extracted Data
@@ -687,6 +733,21 @@ export default {
                   })
                 ]
               }),
+              // Celdas para campos personalizados
+              ...customFields.map(field =>
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: item[field.key] || '',
+                          size: 20
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ),
               // Celdas para cada categoría CAMELOT
               ...this.camelot.categories.flatMap(category => {
                 const extractedDataKey = category.options[0].key;
