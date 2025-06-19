@@ -162,6 +162,7 @@
           />
 
           <table-chars-of-studies
+            :useCamelot="project.use_camelot"
             :ui="ui"
             :show="show"
             :mode="mode"

@@ -17,7 +17,11 @@
       <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">My Data</b-link>
       section of iSoQ
     </p>
-    <template v-if="charsOfStudies.fields.length">
+    <template v-if="useCamelot">
+      <camelot-characteristics-table
+        :charsOfStudies="charsOfStudies" />
+    </template>
+    <template v-if="!useCamelot && charsOfStudies.fields.length">
       <bc-filters
         v-if="mode==='edit' && charsOfStudies.items.length && permission"
         class="d-print-none"
@@ -64,6 +68,7 @@
 <script>
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
+const CamelotCharacteristicsTable = () => import(/* webpackChunkName: "camelot-characteristics-table" */'../camelot/characteristics/CharacteristicsTable.vue')
 
 export default {
   name: 'editListCharsOfStudies',
@@ -78,11 +83,16 @@ export default {
     showParagraph: {
       type: Boolean,
       default: false
+    },
+    useCamelot: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
     'back-to-top': backToTop,
-    'bc-filters': bCardFilters
+    'bc-filters': bCardFilters,
+    'camelot-characteristics-table': CamelotCharacteristicsTable
   },
   data () {
     return {
