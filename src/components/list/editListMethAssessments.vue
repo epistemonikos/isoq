@@ -13,7 +13,7 @@
       </span>
     </h3>
     <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">My Data</b-link> section of iSoQ</p>
-    <template v-if="isCamelot">
+    <template v-if="useCamelot">
       <assessment-table
         :assessments="methAssessments"
         :references="list.references" />
@@ -101,7 +101,7 @@ export default {
       type: Boolean,
       default: false
     },
-    isCamelot: {
+    useCamelot: {
       type: Boolean,
       default: false
     }
