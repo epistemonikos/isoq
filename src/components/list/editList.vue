@@ -173,7 +173,7 @@
           />
 
           <table-meth-assessments
-            :isCamelot="project.use_camelot"
+            :useCamelot="project.use_camelot"
             :ui="ui"
             :show="show"
             :mode="mode"
