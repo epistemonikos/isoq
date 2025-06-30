@@ -442,7 +442,7 @@
                   }">My Data</b-link>.
                 </p>
                 <template v-if="project.use_camelot">
-                  <assessment-table :assessments="methAssessments" />
+                  <assessment-table :assessments="methAssessments" :references="list.references" />
                 </template>
                 <template v-else>
                   <b-table class="table-small-font" responsive head-variant="light" outlined
