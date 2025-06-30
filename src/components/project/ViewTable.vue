@@ -199,7 +199,7 @@
     </b-table>
     <!-- modals -->
     <b-modal
-      size="xl"
+      size="lg"
       id="edit-finding-name"
       ref="edit-finding-name"
       title="Edit Summarised review finding"
