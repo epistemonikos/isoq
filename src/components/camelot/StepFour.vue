@@ -736,10 +736,25 @@ export default {
         .then(response => {
           if (response.data.length) {
             this.assessments = {...response.data[0]}
+            // Ordenar los items por autores alfabéticamente
+            if (this.assessments.items && this.assessments.items.length > 0) {
+              this.assessments.items.sort((a, b) => {
+                const authorsA = a.authors || '';
+                const authorsB = b.authors || '';
+                return authorsA.localeCompare(authorsB);
+              });
+            }
           } else {
+            // Crear items ordenados por autores
+            const sortedReferences = [...this.references].sort((a, b) => {
+              const authorsA = this.getReferenceData(a) || '';
+              const authorsB = this.getReferenceData(b) || '';
+              return authorsA.localeCompare(authorsB);
+            });
+
             // Inicializar con estructura vacía si no hay datos
             this.assessments = {
-              items: this.references.map(ref => ({
+              items: sortedReferences.map(ref => ({
                 ref_id: ref.id,
                 authors: this.getReferenceData(ref),
                 stages: [
