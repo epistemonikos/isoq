@@ -272,16 +272,27 @@ export default {
     tableItems () {
       // Si tenemos datos cargados desde la API, los usamos
       if (this.charsData && this.charsData.items && this.charsData.items.length > 0) {
-        return this.charsData.items.map(item => {
+        const items = this.charsData.items.map(item => {
           const matchingRef = this.references.find(ref => ref.id === item.ref_id)
           if (matchingRef) {
             return { ...matchingRef, ...item }
           }
           return item
         })
+
+        // Ordenamos alfabéticamente por el campo authors
+        return items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString().toLowerCase()
+          const authorsB = (b.authors || '').toString().toLowerCase()
+          return authorsA.localeCompare(authorsB)
+        })
       }
       // Si no hay datos cargados, usamos las referencias como respaldo
-      return this.references
+      return this.references.sort((a, b) => {
+        const authorsA = (a.authors || '').toString().toLowerCase()
+        const authorsB = (b.authors || '').toString().toLowerCase()
+        return authorsA.localeCompare(authorsB)
+      })
     },
     tableFields () {
       // Campos base (autores)
