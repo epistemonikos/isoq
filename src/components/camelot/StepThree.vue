@@ -6,216 +6,226 @@
     <b-alert show variant="info" v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
       No hay registros disponibles
     </b-alert>
-    <b-table
-      v-else
-      :items="tableItems"
-      :fields="tableFields"
-      striped
-      hover
-      responsive>
-      <template v-slot:cell(authors)="data">
-        {{ data.item.authors }}
-      </template>
+    <div v-else>
+      <!-- Checkbox para mostrar/ocultar Concerns -->
+      <div class="mb-3">
+        <b-form-checkbox
+          v-model="showConcerns"
+          @change="toggleConcerns">
+          Show Concerns
+        </b-form-checkbox>
+      </div>
 
-      <!-- Plantilla genérica para todos los campos -->
-      <template v-slot:cell()="data">
-        <!-- Para los campos personalizados, mostramos su contenido -->
-        <span v-if="isCustomField(data.field.key)">
-          {{ data.item[data.field.key] || '' }}
-        </span>
-        <!-- Para campos normales, mostramos el valor predeterminado -->
-        <span v-else>{{ data.value }}</span>
-      </template>
+      <b-table
+        :items="tableItems"
+        :fields="tableFields"
+        striped
+        hover
+        responsive>
+        <template v-slot:cell(authors)="data">
+          {{ data.item.authors }}
+        </template>
 
-      <template v-slot:cell(actions)="data">
-        <b-button
-          size="sm"
-          variant="primary"
-          class="mr-1"
-          @click="editReference(data.item)">
-          Editar
-        </b-button>
-        <b-button
-          size="sm"
-          variant="danger"
-          @click="deleteReference(data.item)">
-          Eliminar
-        </b-button>
-      </template>
-      <template v-slot:thead-top>
-        <tr>
-          <th colspan="1">Referencias</th>
-          <th v-if="getCustomFields().length > 0"
-            :colspan="getCustomFields().length"
-            class="text-center">
-            &nbsp;
-          </th>
-          <th v-for="category in camelot.categories"
-            :key="category.key"
-            :colspan="category.options.length"
-            class="text-center">
-            {{ category.label }}
-          </th>
-          <th colspan="1">Acciones</th>
-        </tr>
-      </template>
-    </b-table>
+        <!-- Plantilla genérica para todos los campos -->
+        <template v-slot:cell()="data">
+          <!-- Para los campos personalizados, mostramos su contenido -->
+          <span v-if="isCustomField(data.field.key)">
+            {{ data.item[data.field.key] || '' }}
+          </span>
+          <!-- Para campos normales, mostramos el valor predeterminado -->
+          <span v-else>{{ data.value }}</span>
+        </template>
 
-    <!-- Modal para editar referencias -->
-    <b-modal
-      id="modal-edit-reference"
-      title="Editar Referencia"
-      size="xl"
-      @ok="handleModalOk"
-      @hide="resetModal">
-      <template v-if="currentItem">
-        <b-row>
-          <!-- Menú flotante a la izquierda -->
-          <b-col cols="3" class="menu-sidebar">
-            <div class="sticky-menu p-2">
-              <div class="menu-section mb-3" v-if="customFields.length > 0">
-                <div
-                  v-for="(field, index) in customFields"
-                  :key="'menu-custom-' + index"
-                  class="menu-item"
-                  @click="scrollToSection('custom-field-' + index)">
-                  {{ field.title || 'Sin título' }}
-                </div>
-              </div>
+        <template v-slot:cell(actions)="data">
+          <b-button
+            size="sm"
+            variant="primary"
+            class="mr-1"
+            @click="editReference(data.item)">
+            Editar
+          </b-button>
+          <b-button
+            size="sm"
+            variant="danger"
+            @click="deleteReference(data.item)">
+            Eliminar
+          </b-button>
+        </template>
+        <template v-slot:thead-top>
+          <tr>
+            <th colspan="1">Referencias</th>
+            <th v-if="getCustomFields().length > 0"
+              :colspan="getCustomFields().length"
+              class="text-center">
+              &nbsp;
+            </th>
+            <th v-for="category in camelot.categories"
+              :key="category.key"
+              :colspan="getVisibleCategoryOptions(category).length"
+              class="text-center">
+              {{ category.label }}
+            </th>
+            <th colspan="1">Acciones</th>
+          </tr>
+        </template>
+      </b-table>
 
-              <div class="menu-section">
-                <div class="menu-section-title mb-1">CAMELOT fields</div>
-                <div
-                  v-for="(category, catIndex) in camelot.categories"
-                  :key="'menu-category-' + catIndex"
-                  class="menu-item"
-                  @click="scrollToSection('category-' + catIndex)">
-                  {{ category.label }}
-                </div>
-              </div>
-            </div>
-          </b-col>
-
-          <!-- Contenido del formulario -->
-          <b-col cols="9">
-            <div id="authors-section" class="mb-3">
-              <label for="authors">reference id</label>
-              <b-form-input
-                id="authors"
-                v-model="editForm.id"
-                placeholder="Autores separados por coma">
-              </b-form-input>
-            </div>
-
-            <!-- Campos personalizados -->
-            <div class="mb-4">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">Customs fields</h5>
-                <b-button
-                  size="sm"
-                  variant="success"
-                  @click="addCustomField">
-                  <i class="fas fa-plus"></i> Add new field
-                </b-button>
-              </div>
-              <b-card v-if="customFields.length === 0" body-class="text-center py-3">
-                <p class="mb-0 text-muted">No hay campos personalizados. Haz clic en "Agregar campo" para crear uno.</p>
-              </b-card>
-              <div v-else class="custom-fields-container">
-                <p class="text-muted small mb-2">
-                  <i class="fas fa-arrows-alt mr-1"></i>Usa el botón "Mover" para reorganizar los campos
-                </p>
-                <draggable
-                  v-model="customFields"
-                  :options="{handle:'.drag-handle'}"
-                  ghost-class="ghost"
-                  animation="300"
-                  group="customFields"
-                  drag-class="sortable-drag"
-                  chosen-class="sortable-chosen"
-                  @start="onDragStart"
-                  @end="onDragEnd">
+      <!-- Modal para editar referencias -->
+      <b-modal
+        id="modal-edit-reference"
+        title="Editar Referencia"
+        size="xl"
+        @ok="handleModalOk"
+        @hide="resetModal">
+        <template v-if="currentItem">
+          <b-row>
+            <!-- Menú flotante a la izquierda -->
+            <b-col cols="3" class="menu-sidebar">
+              <div class="sticky-menu p-2">
+                <div class="menu-section mb-3" v-if="customFields.length > 0">
                   <div
                     v-for="(field, index) in customFields"
-                    :key="'column_' + index"
-                    class="mb-3">
-                    <div :id="'column-field-' + index">
-                      <b-card>
-                        <div class="d-flex justify-content-between mb-2">
-                          <div class="d-flex align-items-center">
-                            <label :for="'column_' + index">Título</label>
-                          </div>
-                          <div>
-                            <b-button
-                              size="sm"
-                              variant="outline-secondary"
-                              class="drag-handle mr-1 py-0">
-                              <i class="fas fa-grip-vertical"></i> Mover
-                            </b-button>
-                            <b-button
-                              size="sm"
-                              variant="danger"
-                              @click="removeCustomField(index)"
-                              class="py-0">
-                              <i class="fas fa-trash"></i> Eliminar
-                            </b-button>
-                          </div>
-                        </div>
-                        <b-form-input
-                          :id="'label_' + index"
-                          v-model="field.title"
-                          placeholder="Título del campo"
-                          class="mb-2">
-                        </b-form-input>
-                        <label :for="'column_' + index">Contenido</label>
-                        <b-form-textarea
-                          :id="'column_' + index"
-                          v-model="field.value"
-                          placeholder="Contenido del campo"
-                          rows="3">
-                        </b-form-textarea>
-                      </b-card>
-                    </div>
+                    :key="'menu-custom-' + index"
+                    class="menu-item"
+                    @click="scrollToSection('custom-field-' + index)">
+                    {{ field.title || 'Sin título' }}
                   </div>
-                </draggable>
-              </div>
-            </div>
+                </div>
 
-            <h5 class="mt-4">Camelot fields</h5>
-            <b-row>
-              <b-col v-for="(category, catIndex) in camelot.categories"
-                :key="'category-' + catIndex"
-                :id="'category-' + catIndex"
-                cols="12"
-                class="mb-3">
-                <h6>{{ category.label }}</h6>
-                <b-card no-body class="mb-3">
-                  <b-card-body>
-                    <b-row>
-                      <b-col v-for="(option, optIndex) in category.options"
-                        :key="'option-' + catIndex + '-' + optIndex"
-                        cols="12"
-                        md="6"
-                        class="mb-3">
-                        <label :for="option.key">{{ option.label }} ({{ option.key }})</label>
-                        <b-form-textarea
-                          :id="option.key"
-                          v-model="editForm[option.key]"
-                          :placeholder="option.label">
-                        </b-form-textarea>
-                      </b-col>
-                    </b-row>
-                  </b-card-body>
+                <div class="menu-section">
+                  <div class="menu-section-title mb-1">CAMELOT fields</div>
+                  <div
+                    v-for="(category, catIndex) in camelot.categories"
+                    :key="'menu-category-' + catIndex"
+                    class="menu-item"
+                    @click="scrollToSection('category-' + catIndex)">
+                    {{ category.label }}
+                  </div>
+                </div>
+              </div>
+            </b-col>
+
+            <!-- Contenido del formulario -->
+            <b-col cols="9">
+              <div id="authors-section" class="mb-3">
+                <label for="authors">reference id</label>
+                <b-form-input
+                  id="authors"
+                  v-model="editForm.id"
+                  placeholder="Autores separados por coma">
+                </b-form-input>
+              </div>
+
+              <!-- Campos personalizados -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="mb-0">Customs fields</h5>
+                  <b-button
+                    size="sm"
+                    variant="success"
+                    @click="addCustomField">
+                    <i class="fas fa-plus"></i> Add new field
+                  </b-button>
+                </div>
+                <b-card v-if="customFields.length === 0" body-class="text-center py-3">
+                  <p class="mb-0 text-muted">No hay campos personalizados. Haz clic en "Agregar campo" para crear uno.</p>
                 </b-card>
-              </b-col>
-            </b-row>
-          </b-col>
-        </b-row>
-      </template>
-      <template v-else>
-        <b-alert show variant="info">No se ha seleccionado ninguna referencia para editar</b-alert>
-      </template>
-    </b-modal>
+                <div v-else class="custom-fields-container">
+                  <p class="text-muted small mb-2">
+                    <i class="fas fa-arrows-alt mr-1"></i>Usa el botón "Mover" para reorganizar los campos
+                  </p>
+                  <draggable
+                    v-model="customFields"
+                    :options="{handle:'.drag-handle'}"
+                    ghost-class="ghost"
+                    animation="300"
+                    group="customFields"
+                    drag-class="sortable-drag"
+                    chosen-class="sortable-chosen"
+                    @start="onDragStart"
+                    @end="onDragEnd">
+                    <div
+                      v-for="(field, index) in customFields"
+                      :key="'column_' + index"
+                      class="mb-3">
+                      <div :id="'column-field-' + index">
+                        <b-card>
+                          <div class="d-flex justify-content-between mb-2">
+                            <div class="d-flex align-items-center">
+                              <label :for="'column_' + index">Título</label>
+                            </div>
+                            <div>
+                              <b-button
+                                size="sm"
+                                variant="outline-secondary"
+                                class="drag-handle mr-1 py-0">
+                                <i class="fas fa-grip-vertical"></i> Mover
+                              </b-button>
+                              <b-button
+                                size="sm"
+                                variant="danger"
+                                @click="removeCustomField(index)"
+                                class="py-0">
+                                <i class="fas fa-trash"></i> Eliminar
+                              </b-button>
+                            </div>
+                          </div>
+                          <b-form-input
+                            :id="'label_' + index"
+                            v-model="field.title"
+                            placeholder="Título del campo"
+                            class="mb-2">
+                          </b-form-input>
+                          <label :for="'column_' + index">Contenido</label>
+                          <b-form-textarea
+                            :id="'column_' + index"
+                            v-model="field.value"
+                            placeholder="Contenido del campo"
+                            rows="3">
+                          </b-form-textarea>
+                        </b-card>
+                      </div>
+                    </div>
+                  </draggable>
+                </div>
+              </div>
+
+              <h5 class="mt-4">Camelot fields</h5>
+              <b-row>
+                <b-col v-for="(category, catIndex) in camelot.categories"
+                  :key="'category-' + catIndex"
+                  :id="'category-' + catIndex"
+                  cols="12"
+                  class="mb-3">
+                  <h6>{{ category.label }}</h6>
+                  <b-card no-body class="mb-3">
+                    <b-card-body>
+                      <b-row>
+                        <b-col v-for="(option, optIndex) in category.options"
+                          :key="'option-' + catIndex + '-' + optIndex"
+                          cols="12"
+                          md="6"
+                          class="mb-3">
+                          <label :for="option.key">{{ option.label }} ({{ option.key }})</label>
+                          <b-form-textarea
+                            :id="option.key"
+                            v-model="editForm[option.key]"
+                            :placeholder="option.label">
+                          </b-form-textarea>
+                        </b-col>
+                      </b-row>
+                    </b-card-body>
+                  </b-card>
+                </b-col>
+              </b-row>
+            </b-col>
+          </b-row>
+        </template>
+        <template v-else>
+          <b-alert show variant="info">No se ha seleccionado ninguna referencia para editar</b-alert>
+        </template>
+      </b-modal>
+    </div>
   </div>
 </template>
 
@@ -265,7 +275,8 @@ export default {
         organization: '',
         project_id: ''
       },
-      isLoading: true
+      isLoading: true,
+      showConcerns: false
     }
   },
   computed: {
@@ -310,10 +321,13 @@ export default {
         this.camelot.categories.forEach(category => {
           if (category.options && Array.isArray(category.options)) {
             category.options.forEach(option => {
-              categoryFields.push({
-                key: option.key,
-                label: option.label
-              })
+              // Solo agregamos campos "Concerns" si showConcerns es true
+              if (!option.key.endsWith('_concerns') || this.showConcerns) {
+                categoryFields.push({
+                  key: option.key,
+                  label: option.label
+                })
+              }
             })
           }
         })
@@ -700,6 +714,16 @@ export default {
 
       this.customFields = customFields
       console.log('Campos personalizados inicializados:', this.customFields)
+    },
+    toggleConcerns () {
+      // Implementa la lógica para mostrar/ocultar los campos "Concerns"
+      console.log('Mostrar/ocultar campos "Concerns":', this.showConcerns)
+    },
+    getVisibleCategoryOptions (category) {
+      if (!this.showConcerns) {
+        return category.options.filter(option => !option.key.endsWith('_concerns'))
+      }
+      return category.options
     }
   },
   watch: {
