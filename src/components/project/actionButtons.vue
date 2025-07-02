@@ -160,7 +160,7 @@
 import axios from 'axios'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
-import { displayExplanation } from '../utils/commons'
+import Commons from '@/utils/commons.js'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
@@ -1249,17 +1249,7 @@ export default {
       })
     },
     displaySelectedOption: function (option, type = '') {
-      if (option === null) {
-        return ''
-      } else if (option >= 0) {
-        if (type === 'cerqual') {
-          return this.cerqualConfidence[option].text
-        } else {
-          return this.selectOptions[option].text
-        }
-      } else {
-        return ''
-      }
+      return Commons.displaySelectedOption(option, type)
     },
     returnRefWithNames: function (array) {
       let authorsList = []
@@ -1278,18 +1268,7 @@ export default {
       return authors
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
+      return Commons.getAuthorsFormat(authors, pubYear)
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)

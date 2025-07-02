@@ -450,7 +450,7 @@ import { tableImportExportMixin } from '@/mixins/tableImportExportMixin'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import axios from 'axios'
 import Papa from 'papaparse'
-import Commmons from '@/utils/commons.js'
+import Commons from '@/utils/commons.js'
 
 export default {
   name: 'crudTables',
@@ -718,22 +718,11 @@ export default {
     },
 
     parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
-      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
 
     getAuthorsFormat (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
+      return Commons.getAuthorsFormat(authors, pubYear)
     },
 
     addFieldsObjects: function (fieldsObj) {

@@ -243,6 +243,7 @@
 
 <script>
 import Project from '@/utils/project'
+import Commons from '@/utils/commons.js'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
@@ -376,10 +377,10 @@ export default {
       }
     },
     validEmail: function (email) {
-      return Project.validEmail(email)
+      return Commons.validEmail(email)
     },
     validUrl: function (url) {
-      return Project.validUrl(url)
+      return Commons.validUrl(url)
     },
     setMsgUpdateProject: function (msg) {
       this.msgUpdateProject = msg

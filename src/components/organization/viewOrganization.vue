@@ -383,6 +383,7 @@
 
 <script>
 import axios from 'axios'
+import Commons from '@/utils/commons.js'
 
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
@@ -696,23 +697,9 @@ export default {
     },
 
     validateEmails () {
-      if (!this.emailInput.trim()) {
-        this.emailInputState = null
-        this.emailInputError = ''
-        return
-      }
-
-      const emails = this.emailInput.split(',').map(email => email.trim())
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      const invalidEmails = emails.filter(email => !emailRegex.test(email))
-
-      if (invalidEmails.length > 0) {
-        this.emailInputState = false
-        this.emailInputError = 'Invalid email format'
-      } else {
-        this.emailInputState = true
-        this.emailInputError = ''
-      }
+      const result = Commons.validateEmails(this.emailInput)
+      this.emailInputState = result.isValid
+      this.emailInputError = result.error
     },
 
     addEmail () {
