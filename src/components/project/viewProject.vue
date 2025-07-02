@@ -883,25 +883,7 @@ export default {
       return Commons.displaySelectedOption(option, type)
     },
     parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else if (reference.authors.length === 2) {
-            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else {
-            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-          }
-          if (!onlyAuthors) {
-            result = result + reference.title
-          }
-        } else {
-          return 'author(s) not found'
-        }
-      }
-      return result
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
@@ -1297,18 +1279,7 @@ export default {
       })
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
+      return Commons.getAuthorsFormat(authors, pubYear)
     },
     saveListCategoryName: function () {
       const params = {

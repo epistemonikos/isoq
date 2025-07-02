@@ -347,6 +347,7 @@
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import Papa from 'papaparse'
+import Commons from '@/utils/commons.js'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
 export default {
@@ -745,18 +746,7 @@ export default {
       this.$refs['open-char-of-studies-table-modal-edit'].show()
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
+      return Commons.getAuthorsFormat(authors, pubYear)
     },
     getReferenceInfo: function (refId) {
       for (let ref of this.refs) {

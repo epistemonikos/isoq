@@ -1,5 +1,66 @@
 export default class Commons {
-  static referencesWithNames (data, references) {
+  // Funciones de validación
+  static validEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    return re.test(email)
+  }
+
+  static validUrl(url) {
+    const re = /^(http|https):\/\/[^ "]+$/
+    return re.test(url)
+  }
+
+  static validateEmails(emails) {
+    if (!emails.trim()) {
+      return { isValid: null, error: '' }
+    }
+
+    const emailList = emails.split(',').map(email => email.trim())
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const invalidEmails = emailList.filter(email => !emailRegex.test(email))
+
+    if (invalidEmails.length > 0) {
+      return { isValid: false, error: 'Invalid email format' }
+    } else {
+      return { isValid: true, error: '' }
+    }
+  }
+
+  static comparePassword(password, password2) {
+    if (password !== password2) {
+      return false
+    }
+    if (password === null || password2 === null) {
+      return false
+    }
+    if (password.length < 8 || password2.length < 8) {
+      return false
+    }
+    return true
+  }
+
+  // Funciones de ordenamiento
+  static orderKeys(obj) {
+    const keys = Object.keys(obj).sort(function keyOrder(k1, k2) {
+      if (k1 < k2) return -1
+      else if (k1 > k2) return +1
+      else return 0
+    })
+
+    const after = {}
+    for (let i = 0; i < keys.length; i++) {
+      after[keys[i]] = obj[keys[i]]
+      delete obj[keys[i]]
+    }
+
+    for (let i = 0; i < keys.length; i++) {
+      obj[keys[i]] = after[keys[i]]
+    }
+    return obj
+  }
+
+  // Funciones de referencias
+  static referencesWithNames(data, references) {
     let authorsList = []
     for (const i in data) {
       for (const r of references) {
@@ -16,7 +77,7 @@ export default class Commons {
     return authors
   }
 
-  static parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
+  static parseReference(reference, onlyAuthors = false, hasSemicolon = true) {
     let result = ''
     const semicolon = hasSemicolon ? '; ' : ''
     if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
@@ -38,7 +99,7 @@ export default class Commons {
     return result
   }
 
-  static getAuthorsFormat (authors = [], pubYear = '') {
+  static getAuthorsFormat(authors = [], pubYear = '') {
     if (authors.length) {
       const nroAuthors = authors.length
       if (nroAuthors === 1) {
@@ -53,7 +114,8 @@ export default class Commons {
     }
   }
 
-  static displaySelectedOption (option, type = '') {
+  // Funciones de opciones de selección
+  static displaySelectedOption(option, type = '') {
     const selectOptions = [
       { value: 0, text: 'No/Very minor concerns' },
       { value: 1, text: 'Minor concerns' },
@@ -81,7 +143,8 @@ export default class Commons {
     }
   }
 
-  static printErrors (error) {
+  // Funciones de manejo de errores
+  static printErrors(error) {
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
@@ -106,5 +169,33 @@ export default class Commons {
     }
     // console.log(error.config)
     // return { config: error.config }
+  }
+
+  // Funciones de utilidad
+  static debounce(func, wait) {
+    let timeout
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout)
+        func(...args)
+      }
+      clearTimeout(timeout)
+      timeout = setTimeout(later, wait)
+    }
+  }
+
+  static sanitizeInput(input) {
+    if (typeof input !== 'string') return input
+    return input.replace(/[<>]/g, '')
+  }
+
+  static formatDate(timestamp) {
+    if (!timestamp) return ''
+    const date = new Date(timestamp)
+    return date.toLocaleDateString()
+  }
+
+  static generateId() {
+    return Math.random().toString(36).substr(2, 9)
   }
 }

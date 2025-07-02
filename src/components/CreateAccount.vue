@@ -239,7 +239,7 @@
 
 <script>
 import axios from 'axios'
-import _debounce from 'lodash.debounce'
+import Commons from '@/utils/commons.js'
 import subscribe from '@/components/commons/subscribe.vue'
 
 export default {
@@ -301,12 +301,11 @@ export default {
     this.getOrganizations()
   },
   created: function () {
-    this.checkEmail = _debounce(this.checkEmailExist, 500)
+    this.checkEmail = Commons.debounce(this.checkEmailExist, 500)
   },
   methods: {
     validEmail: function (email) {
-      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      if (re.test(email)) {
+      if (Commons.validEmail(email)) {
         this.ui.username_validation = true
       } else {
         this.ui.username_validation = false
@@ -401,19 +400,7 @@ export default {
         })
     },
     comparePassword: function () {
-      if (this.user.password !== this.user.password_2) {
-        this.ui.password_validation = false
-        return
-      }
-      if (this.user.password === null || this.user.password_2 === null) {
-        this.ui.password_validation = false
-        return
-      }
-      if (this.user.password.length < 8 || this.user.password_2 < 8) {
-        this.ui.password_validation = false
-        return
-      }
-      this.ui.password_validation = true
+      this.ui.password_validation = Commons.comparePassword(this.user.password, this.user.password_2)
     },
     getOrganizations: function () {
       axios.get('/api/organizations?personal_organization=false')
