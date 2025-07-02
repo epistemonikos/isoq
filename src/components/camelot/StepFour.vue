@@ -9,20 +9,72 @@
       </template>
       <template
         v-slot:cell(stepOne)="data">
-        <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+          <div>
+            <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <div v-if="getStepSummary(0, data.index)" class="mt-2">
+              <small class="text-muted">
+                <div v-for="(value, key) in getStepSummary(0, data.index)" :key="key">
+                  <strong>{{ key }}:</strong>
+                  <span :style="{ color: value.color }">{{ value.text }}</span>
+                </div>
+              </small>
+            </div>
+            <div v-else class="mt-2">
+              <small class="text-muted">Not assigned</small>
+            </div>
+          </div>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
-        <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+          <div>
+            <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <div v-if="getStepSummary(1, data.index)" class="mt-2">
+              <small class="text-muted">
+                <div v-for="(value, key) in getStepSummary(1, data.index)" :key="key">
+                  <strong>{{ key }}:</strong>
+                  <span :style="{ color: value.color }">{{ value.text }}</span>
+                </div>
+              </small>
+            </div>
+            <div v-else class="mt-2">
+              <small class="text-muted">Not assigned</small>
+            </div>
+          </div>
       </template>
       <template
         v-slot:cell(stepThree)="data">
-        <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-      </template>
-      <template
-        v-slot:cell(stepFour)="data">
-        <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-      </template>
+          <div>
+            <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <div v-if="getStepSummary(2, data.index)" class="mt-2">
+              <small class="text-muted">
+                <div v-for="(value, key) in getStepSummary(2, data.index)" :key="key">
+                  <strong>{{ key }}:</strong>
+                  <span :style="{ color: value.color }">{{ value.text }}</span>
+                </div>
+              </small>
+            </div>
+            <div v-else class="mt-2">
+              <small class="text-muted">Not assigned</small>
+            </div>
+          </div>
+        </template>
+        <template
+          v-slot:cell(stepFour)="data">
+            <div>
+              <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+              <div v-if="getStepSummary(3, data.index)" class="mt-2">
+                <small class="text-muted">
+                  <div v-for="(value, key) in getStepSummary(3, data.index)" :key="key">
+                    <strong>{{ key }}:</strong>
+                    <span :style="{ color: value.color }">{{ value.text }}</span>
+                  </div>
+                </small>
+              </div>
+              <div v-else class="mt-2">
+                <small class="text-muted">Not assigned</small>
+              </div>
+            </div>
+        </template>
     </b-table>
 
     <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
@@ -547,7 +599,14 @@ export default {
           { key: 'stepThree', label: 'Fit between Research design and Research conduct' },
           { key: 'stepFour', label: 'Overall assessment' }
         ],
-        authors: ''
+        authors: '',
+        responses: [
+          { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
+          { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
+          { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
+          { text: 'Serious concerns', value: 'D', color: '#B31529' },
+          { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+        ]
       },
       characteristics: [],
       assessments: {
@@ -842,6 +901,43 @@ export default {
         }
       }
       return cnt === 0
+    },
+        getStepSummary: function (stage, index) {
+      if (!this.assessments ||
+          !this.assessments.items ||
+          !this.assessments.items[index] ||
+          !this.assessments.items[index].stages ||
+          !this.assessments.items[index].stages[stage] ||
+          !this.assessments.items[index].stages[stage].options) {
+        return null
+      }
+
+      const options = this.assessments.items[index].stages[stage].options
+      const summary = {}
+
+      // Definir los nombres de los dominios para cada etapa
+      const domainNames = {
+        0: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 1: Meta domains
+        1: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 2: Meta domains
+        2: ['Fit assessment'], // Step 3: Single assessment
+        3: ['Overall assessment'] // Step 4: Single assessment
+      }
+
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].option !== null) {
+          const domainName = domainNames[stage] && domainNames[stage][i] ? domainNames[stage][i] : `Option ${i + 1}`
+
+          // Buscar la respuesta correspondiente en ui.responses
+          const response = this.ui.responses.find(r => r.value === options[i].option)
+
+          summary[domainName] = {
+            text: response ? response.text : options[i].option,
+            color: response ? response.color : '#000000'
+          }
+        }
+      }
+
+      return Object.keys(summary).length > 0 ? summary : null
     }
   }
 }
