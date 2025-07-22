@@ -16,8 +16,12 @@
               block
               variant="outline-secondary"
               right
+              :disabled="exportState.isLoading"
               text="Export">
-              <b-dropdown-item @click="ExportToWord(project.name)">to MS Word</b-dropdown-item>
+              <b-dropdown-item @click="ExportToWord(project.name)" :disabled="exportState.isLoading">
+                <b-spinner small v-show="exportState.isLoading"></b-spinner>
+                {{ exportState.isLoading ? 'Exportando...' : 'to MS Word' }}
+              </b-dropdown-item>
               <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
             </b-dropdown>
           </b-col>
@@ -80,6 +84,33 @@
         </b-row>
       </b-col>
     </b-row>
+
+    <!-- Indicador de progreso -->
+    <b-row v-if="exportState.isLoading" class="mt-2">
+      <b-col cols="12">
+        <b-progress
+          :value="exportState.progress"
+          :max="100"
+          show-progress
+          animated>
+          {{ exportState.currentStep }}
+        </b-progress>
+      </b-col>
+    </b-row>
+
+    <!-- Mensaje de error -->
+    <b-row v-if="exportState.error" class="mt-2">
+      <b-col cols="12">
+        <b-alert
+          show
+          variant="danger"
+          dismissible
+          @dismissed="setError(null)">
+          {{ exportState.error }}
+        </b-alert>
+      </b-col>
+    </b-row>
+
     <b-modal
       ref="modal-change-status"
       id="modal-change-status"
@@ -107,7 +138,7 @@
       </template>
 
       <p class="font-weight-light">
-        By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click “publish”. Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+        By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click "publish". Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
       </p>
       <b-form-group>
         <b-form-radio-group
@@ -161,10 +192,15 @@ import axios from 'axios'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
 import Commons from '@/utils/commons.js'
+import { documentExportMixin } from '@/mixins/documentExportMixin'
+import { useExportState } from '@/composables/useExportState'
+import { ExportStrategyFactory } from '@/strategies/exportStrategies'
+import { DocumentGenerator } from '@/utils/documentGenerator'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   name: 'actionButtons',
+  mixins: [documentExportMixin, useExportState()],
   props: {
     mode: String,
     preview: {
@@ -187,6 +223,7 @@ export default {
   components: {
     videoHelp
   },
+
   data () {
     return {
       modalProject: {name: ''},
@@ -225,7 +262,8 @@ export default {
       errorsResponse: {
         message: '',
         items: []
-      }
+      },
+
     }
   },
   watch: {
@@ -233,391 +271,47 @@ export default {
       this.state.name = val.length > 0 ? null : false
     }
   },
-  methods: {
-    ExportToWord: function (filename = '') {
-      filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
-      const doc = new Document()
+    methods: {
+    ExportToWord: async function (filename = '') {
+      try {
+        this.startExport(3) // 3 pasos: validación, generación, descarga
 
-      doc.addSection({
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: this.project.name,
-                bold: true,
-                size: 36,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: 'Summary of Qualitative Findings Table',
-                bold: true,
-                size: 36,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Review question',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.review_question,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Authors of the review',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.authors,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Corresponding author',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              this.generateAuthorInfo()
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Has the review been published?',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length) ? ' | DOI: ' + this.project.url_doi : '') : 'No',
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Additional Information',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.description,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          ...this.generateLicense(this.project),
-          ...this.generateFindingsTable()
-        ]
-      })
-      if (this.findings.length && (this.$route.name === 'viewProject' || (this.$route.name === 'previewContentSoQf' && this.project.public_type !== 'minimally'))) {
-        doc.addSection({
-          size: {
-            orientation: PageOrientation.LANDSCAPE
-          },
-          margins: {
-            top: 720,
-            right: 720,
-            bottom: 720,
-            left: 720
-          },
-          children: [
-            new Paragraph({
-              heading: HeadingLevel.HEADING_3,
-              children: [
-                new TextRun({
-                  text: 'Evidence Profile Table',
-                  bold: true,
-                  size: 32,
-                  font: { name: 'Times New Roman' },
-                  color: '000000'
-                })
-              ]
-            }),
-            new Paragraph(''),
-            new Table({
-              borders: {
-                top: {
-                  size: 1,
-                  color: '000000',
-                  style: BorderStyle.NONE
-                },
-                bottom: {
-                  size: 1,
-                  color: '000000',
-                  style: BorderStyle.NONE
-                },
-                left: {
-                  size: 1,
-                  color: '000000',
-                  style: BorderStyle.NONE
-                },
-                right: {
-                  size: 1,
-                  color: '000000',
-                  style: BorderStyle.NONE
-                },
-                insideHorizontal: {
-                  size: 1,
-                  color: '000000',
-                  style: BorderStyle.NONE
-                },
-                insideVertical: {
-                  style: BorderStyle.NONE
-                }
-              },
-              width: {
-                size: '100%',
-                type: WidthType.PERCENTAGE
-              },
-              rows: [
-                new TableRow({
-                  tableHeader: true,
-                  height: {
-                    height: 1444,
-                    rule: HeightRule.EXACT
-                  },
-                  children: [
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '5%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: '#',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '40%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'Summarised review finding',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      width: {
-                        size: '10%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'Methodological limitations',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      width: {
-                        size: '10%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'Coherence',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '10%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'Adequacy',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '10%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'Relevance',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '10%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'GRADE-CERQual assessment of confidence',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      verticalAlign: VerticalAlign.CENTER,
-                      shading: {
-                        fill: '#DDDDDD'
-                      },
-                      width: {
-                        size: '5%',
-                        type: WidthType.PERCENTAGE
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: 'References',
-                              size: 22,
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    })
-                  ]
-                }),
-                ...this.generateEvidenceProfileTable2()
-              ]
-            })
-          ]
-        })
+        filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
+
+        this.updateProgress(1, 'Validando datos...')
+
+        // Validar datos antes de proceder
+        const data = {
+          findings: this.findings,
+          references: this.references,
+          listsPrintVersion: this.listsPrintVersion,
+          printableItems: this.printableItems
+        }
+
+        const documentGenerator = new DocumentGenerator()
+        const errors = documentGenerator.validateData(data, ['findings'])
+        if (errors.length > 0) {
+          this.setError(errors.join(', '))
+          return
+        }
+
+        this.updateProgress(2, 'Generando documento...')
+
+        // Usar la estrategia de exportación
+        const strategyType = this.project.use_camelot ? 'camelot' : 'isoq'
+        const strategy = ExportStrategyFactory.createStrategy(strategyType, this.project, data)
+        const success = await strategy.generateAndDownload(filename)
+
+        if (success) {
+          this.finishExport()
+        } else {
+          this.setError('Error al generar el documento')
+        }
+
+      } catch (error) {
+        console.error('Error en ExportToWord:', error)
+        this.setError('Error inesperado al exportar el documento')
       }
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, filename)
-      })
     },
     generateFindingsTable () {
       if (this.findings.length === 0) {
