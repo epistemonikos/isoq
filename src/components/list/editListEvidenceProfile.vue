@@ -438,7 +438,10 @@
       title="References"
       size="xl"
       scrollable
-      @ok="saveReferencesList"
+      @ok="checkReferencesBeforeSaving"
+      @hidden="handleReferencesModalHidden"
+      :no-close-on-backdrop="pendingSaveReferences"
+      :no-close-on-esc="pendingSaveReferences"
       :ok-disabled="!permission">
       <b-alert
         v-if="list.cerqual.option"
@@ -461,6 +464,20 @@
           </b-form-checkbox>
         </template>
       </b-table>
+    </b-modal>
+
+    <b-modal
+      id="modal-no-references-warning"
+      ref="modal-no-references-warning"
+      title="Warning"
+      @ok="confirmSaveNoReferences"
+      @cancel="cancelNoReferencesWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
     </b-modal>
 
     <!-- modal -->
@@ -544,6 +561,8 @@ export default {
   },
   data () {
     return {
+      original_references: [],
+      pendingSaveReferences: false,
       evidenceProfileFields: [
         { key: 'isoqf_id', label: '#' },
         { key: 'methodological-limit', label: 'Methodological limitations' },
@@ -587,6 +606,48 @@ export default {
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
     },
+    checkReferencesBeforeSaving: function (bvModalEvent) {
+      // Prevenir que el modal se cierre automáticamente si no hay referencias seleccionadas
+      // y había referencias originalmente
+      if (this.list.references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+        bvModalEvent.preventDefault()
+        this.pendingSaveReferences = true
+        this.$refs['modal-no-references-warning'].show()
+        return
+      }
+
+      // Si no se necesita mostrar la advertencia, proceder con el guardado
+      this.saveReferencesList()
+    },
+
+    handleReferencesModalHidden: function () {
+      // Solo limpiar si no hay una operación pendiente
+      if (!this.pendingSaveReferences) {
+        this.cleanReferencesList()
+      }
+    },
+
+    confirmSaveNoReferences: function () {
+      // El usuario confirmó que desea continuar sin referencias
+      this.saveReferencesList()
+      // Cerrar ambos modales
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modalReferences'].hide()
+      })
+    },
+
+    cancelNoReferencesWarning: function () {
+      // El usuario canceló - restaurar las referencias originales
+      this.list.references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    cleanReferencesList: function () {
+      this.original_references = []
+      this.pendingSaveReferences = false
+    },
+
     saveReferencesList: function () {
       this.evidenceProfileTableSettings.isBusy = true
       const params = {
@@ -595,6 +656,7 @@ export default {
       axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
         .then(() => {
           this.updateReferencesInFindings()
+          this.cleanReferencesList()
         })
     },
     updateReferencesInFindings: function () {
@@ -679,6 +741,8 @@ export default {
       }
     },
     openModalReferences: function () {
+      // Guardar el estado original de las referencias
+      this.original_references = [...this.list.references]
       this.$refs['modalReferences'].show()
     },
     editStageTwo: function (data, type) {
