@@ -14,42 +14,44 @@
       </b-thead>
       <b-tbody>
         <b-tr v-for="(item, index) of local_data" :key="index">
-          <template v-if="item.is_category">
-            <b-td
-              colspan="5"
-              class="text-center text-uppercase font-weight-bolder"
-              style="font-weight: bold; text-align: center; text-transform: uppercase;">
-              {{ item.name }}
-            </b-td>
-          </template>
-          <template v-else>
-            <b-td
-              style="vertical-align: top;">
-              <p>{{ item.isoqf_id }}</p>
-            </b-td>
-            <b-td
-              style="vertical-align: top;">
-              <template v-if="local_project.public_type !== 'minimally'">
-                <p>
-                  <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
-                </p>
-              </template>
-              <template v-else>
-                <p>{{ item.name }}</p>
-              </template>
-            </b-td>
-            <b-td
-              style="vertical-align: top;">
-              <p>{{ item.cerqual_option }}</p>
-            </b-td>
-            <b-td
-              style="vertical-align: top;">
-              <p>{{ item.cerqual_explanation }}</p>
-            </b-td>
-            <b-td
-              style="vertical-align: top;">
-              <p class="references">{{ item.ref_list }}</p>
-            </b-td>
+          <template v-if="item.references.length">
+            <template v-if="item.is_category">
+              <b-td
+                colspan="5"
+                class="text-center text-uppercase font-weight-bolder"
+                style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                {{ item.name }}
+              </b-td>
+            </template>
+            <template v-else>
+              <b-td
+                style="vertical-align: top;">
+                <p>{{ item.isoqf_id }}</p>
+              </b-td>
+              <b-td
+                style="vertical-align: top;">
+                <template v-if="local_project.public_type !== 'minimally'">
+                  <p>
+                    <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
+                  </p>
+                </template>
+                <template v-else>
+                  <p>{{ item.name }}</p>
+                </template>
+              </b-td>
+              <b-td
+                style="vertical-align: top;">
+                <p>{{ item.cerqual_option }}</p>
+              </b-td>
+              <b-td
+                style="vertical-align: top;">
+                <p>{{ item.cerqual_explanation }}</p>
+              </b-td>
+              <b-td
+                style="vertical-align: top;">
+                <p class="references">{{ item.ref_list }}</p>
+              </b-td>
+            </template>
           </template>
         </b-tr>
       </b-tbody>
