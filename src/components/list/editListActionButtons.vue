@@ -11,8 +11,10 @@
           id="exportButton"
           variant="outline-secondary"
           block
+          :disabled="exportState.isLoading"
           @click="exportToWord()">
-          Export to MS-Word
+          <b-spinner small v-show="exportState.isLoading"></b-spinner>
+          {{ exportState.isLoading ? 'Exportando...' : 'Export to MS-Word' }}
         </b-button>
     </b-col>
     <b-col
@@ -41,6 +43,32 @@
         </b-button>
     </b-col>
   </b-row>
+
+  <!-- Indicador de progreso -->
+  <b-row v-if="exportState.isLoading" class="mt-2">
+    <b-col cols="12">
+      <b-progress
+        :value="exportState.progress"
+        :max="100"
+        show-progress
+        animated>
+        {{ exportState.currentStep }}
+      </b-progress>
+    </b-col>
+  </b-row>
+
+  <!-- Mensaje de error -->
+  <b-row v-if="exportState.error" class="mt-2">
+    <b-col cols="12">
+      <b-alert
+        show
+        variant="danger"
+        dismissible
+        @dismissed="setError(null)">
+        {{ exportState.error }}
+      </b-alert>
+    </b-col>
+  </b-row>
   </div>
 </template>
 
@@ -49,10 +77,14 @@ import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
 import { displayExplanation } from '../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
+import { documentExportMixin } from '@/mixins/documentExportMixin'
+import { useExportState } from '@/composables/useExportState'
+import { ExportStrategyFactory } from '@/strategies/exportStrategies'
+import { DocumentGenerator } from '@/utils/documentGenerator'
 
 export default {
   name: 'editListActionsButtons',
-  mixins: [camelotMixin],
+  mixins: [camelotMixin, documentExportMixin, useExportState()],
   props: {
     mode: String,
     permission: Boolean,
@@ -67,7 +99,9 @@ export default {
     extractedData: Object,
     license: String
   },
-  methods: {
+
+
+    methods: {
     changeMode: function () {
       this.$emit('changeMode')
     },
@@ -86,464 +120,49 @@ export default {
       }
       return ''
     },
-    exportToWord: function () {
-      const filename = (this.project.use_camelot ? 'CAMELOT - ' : '') + (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
-      const doc = new Document()
+    exportToWord: async function () {
+      try {
+        this.startExport(3) // 3 pasos: validación, generación, descarga
 
-      doc.addSection({
-        size: {
-          orientation: PageOrientation.LANDSCAPE
-        },
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: this.project.name,
-                size: 24,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-            children: [
-              new TextRun({
-                text: 'GRADE-CERQual Assessment Worksheet',
-                bold: true,
-                size: 28,
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            alignment: AlignmentType.LEFT,
-            heading: HeadingLevel.HEADING_1,
-            children: [
-              new TextRun({
-                text: 'Evidence Profile',
-                bold: true,
-                size: 24,
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Table({
-            borders: {
-              top: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              bottom: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              left: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              right: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideHorizontal: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideVertical: {
-                style: BorderStyle.NONE
-              }
-            },
-            width: {
-              size: '100%',
-              type: WidthType.PERCENTAGE
-            },
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '2%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: '#',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '28%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Summarized Review Finding',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Methodological limitations',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Coherence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Adequacy',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Relevance',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'GRADE-CERQual assessment of confidence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'References',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidenceProfile[0].isoqf_id,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidenceProfile[0].name,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidenceProfile[0].methodological_limitations.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: displayExplanation('methodological-limitations', this.evidenceProfile[0].methodological_limitations.option, this.evidenceProfile[0].methodological_limitations.explanation),
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidenceProfile[0].coherence.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: displayExplanation('coherence', this.evidenceProfile[0].coherence.option, this.evidenceProfile[0].coherence.explanation), // (this.evidenceProfile[0].coherence.explanation.length) ? this.evidenceProfile[0].coherence.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidenceProfile[0].adequacy.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: displayExplanation('adequacy', this.evidenceProfile[0].adequacy.option, this.evidenceProfile[0].adequacy.explanation), // (this.evidenceProfile[0].adequacy.explanation.length) ? this.evidenceProfile[0].adequacy.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidenceProfile[0].relevance.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: displayExplanation('relevance', this.evidenceProfile[0].relevance.option, this.evidenceProfile[0].relevance.explanation), // (this.evidenceProfile[0].relevance.explanation.length) ? this.evidenceProfile[0].relevance.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displayLevelConfidence(this.evidenceProfile[0].cerqual.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidenceProfile[0].cerqual.explanation.length) ? this.evidenceProfile[0].cerqual.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      ...this.generateReferences()
-                    ]
-                  })
-                ]
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Characteristics of Studies',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.characteristicStudies)), 'characteristic_studies'),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Methodological Assessments',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.methodologicalAssessments)), 'isoqf_assessments'),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Extracted Data',
-                size: 24,
-                bold: true
-              })
-            ]
-          }),
-          this.generateTable(JSON.parse(JSON.stringify(this.extractedData))),
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.license : '',
-                size: 20,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          })
-        ]
-      })
+        const filename = (this.project.use_camelot ? 'CAMELOT - ' : '') + (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
 
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, filename)
-        // Liberar recursos
-        doc = null;
-        blob = null;
-      })
+        this.updateProgress(1, 'Validando datos...')
+
+        // Validar datos antes de proceder
+        const data = {
+          evidenceProfile: this.evidenceProfile,
+          characteristicStudies: this.characteristicStudies,
+          methodologicalAssessments: this.methodologicalAssessments,
+          extractedData: this.extractedData,
+          references: this.references,
+          list: this.list,
+          selectOptions: this.selectOptions,
+          levelConfidence: this.levelConfidence
+        }
+
+        const documentGenerator = new DocumentGenerator()
+        const errors = documentGenerator.validateData(data, ['evidenceProfile'])
+        if (errors.length > 0) {
+          this.setError(errors.join(', '))
+          return
+        }
+
+        this.updateProgress(2, 'Generando documento...')
+
+        // Usar la estrategia de exportación CAMELOT
+        const strategy = ExportStrategyFactory.createStrategy('camelot', this.project, data)
+        const success = await strategy.generateAndDownload(filename)
+
+        if (success) {
+          this.finishExport()
+        } else {
+          this.setError('Error al generar el documento')
+        }
+
+      } catch (error) {
+        console.error('Error en exportToWord:', error)
+        this.setError('Error inesperado al exportar el documento')
+      }
     },
     generateTable: function (data, type='') {
       // Si es methodologicalAssessments, usar una estructura diferente
