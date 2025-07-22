@@ -14,7 +14,7 @@
       </b-thead>
       <b-tbody>
         <b-tr v-for="(item, index) of local_data" :key="index">
-          <template v-if="item.references.length">
+          <template v-if="item.references.length && item.cerqual.option !== null">
             <template v-if="item.is_category">
               <b-td
                 colspan="5"
