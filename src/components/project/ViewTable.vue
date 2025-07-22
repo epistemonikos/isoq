@@ -276,9 +276,12 @@
       id="modal-references-list"
       ref="modal-references-list"
       title="References"
-      @ok="saveReferencesList"
+      @ok="checkReferencesBeforeSaving"
+      @hidden="handleReferencesModalHidden"
       @cancel="cancelReferencesList"
       :ok-disabled="(selected_list_index === null) ? true : false"
+      :no-close-on-backdrop="pendingSaveReferences"
+      :no-close-on-esc="pendingSaveReferences"
       ok-title="Save"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
@@ -320,6 +323,20 @@
           <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
         </div>
       </template>
+    </b-modal>
+
+    <b-modal
+      id="modal-no-references-warning"
+      ref="modal-no-references-warning"
+      title="Warning"
+      @ok="confirmSaveNoReferences"
+      @cancel="cancelNoReferencesWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
     </b-modal>
   </div>
 </template>
@@ -435,7 +452,9 @@ export default {
       selected_list_index: null,
       showBanner: false,
       selected_references: [],
-      finding: {}
+      original_references: [],
+      finding: {},
+      pendingSaveReferences: false
     }
   },
   props: {
@@ -603,6 +622,7 @@ export default {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
             await this.$emit('get-references', false)
             this.selected_references = data.item.references
+            this.original_references = [...data.item.references]
             this.showBanner = false
             if (data.item.cerqual_option !== '') {
               this.showBanner = true
@@ -691,9 +711,45 @@ export default {
         })
     },
     cancelReferencesList: function () {
-      this.cleanReferencesList()
       this.$refs['modal-references-list'].hide()
     },
+    checkReferencesBeforeSaving: function (bvModalEvent) {
+      // Prevent modal from closing automatically
+      // Only show warning if there were original references and all have been removed
+      if (this.selected_references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+        bvModalEvent.preventDefault()
+        this.pendingSaveReferences = true
+        this.$refs['modal-no-references-warning'].show()
+        return
+      }
+
+      // If no warning is needed, proceed with saving
+      this.saveReferencesList()
+    },
+
+    handleReferencesModalHidden: function () {
+      // Only clean up if not pending save from warning dialog
+      if (!this.pendingSaveReferences) {
+        this.cleanReferencesList()
+      }
+    },
+
+    confirmSaveNoReferences: function () {
+      // User confirmed they want to proceed with no references
+      this.saveReferencesList()
+      // Close both modals
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modal-references-list'].hide()
+      })
+    },
+
+    cancelNoReferencesWarning: function () {
+      // User cancelled - restore original references selection
+      this.selected_references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
     saveReferencesList: function () {
       this.$emit('set-load-references', true)
       this.$emit('set-busy', true)
@@ -710,9 +766,12 @@ export default {
           console.log(Commons.printErrors(error))
         })
     },
+
     cleanReferencesList: function () {
       this.selected_references = []
+      this.original_references = []
       this.finding = {}
+      this.pendingSaveReferences = false
     },
     updateFindingReferences: function (references) {
       const params = {
