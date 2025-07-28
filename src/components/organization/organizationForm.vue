@@ -218,6 +218,17 @@
           </b-button>
         </b-col>
       </b-row>
+
+      <!-- Warning modal for reverting to private -->
+      <b-modal
+        id="publish-warning-modal"
+        title="Warning!"
+        ok-title="Continue"
+        cancel-title="Cancel"
+        @ok="handlePublishWarningContinue"
+        @cancel="handlePublishWarningCancel">
+        <p>By removing this content your project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+      </b-modal>
     </template>
   </div>
 </template>
@@ -250,6 +261,8 @@ export default {
       }
       this.global_status = newData
     }
+    // Store the initial form data for comparison
+    this.originalFormData = JSON.parse(JSON.stringify(this.formData))
   },
   data: function () {
     return {
@@ -286,7 +299,9 @@ export default {
         lists_authors: null,
         license: null,
         can_publish: null
-      }
+      },
+      originalFormData: null,
+      pendingData: null
     }
   },
   methods: {
@@ -308,9 +323,56 @@ export default {
     dismissAlertProject: function () {
       this.msgUpdateProject = null
     },
-    save: async function () {
+    handlePublishWarningContinue: function () {
+      // User confirmed they want to make the project private
+      const data = this.pendingData
+      data.public_type = 'private'
+      data.license_type = ''
+
+      // Reset the state since fields are no longer required in private mode
+      this.resetState()
+
+      // Continue with save operation
+      this.executeSave(data)
+      this.pendingData = null
+    },
+    handlePublishWarningCancel: function () {
+      // User wants to cancel the changes, restore previous values
+      Object.assign(this.formData, this.originalFormData)
+      this.pendingData = null
+    },
+    checkRequiredFieldsRemoved: function (data) {
+      // Check if project is currently published (not private)
+      if (this.originalFormData.public_type !== 'private') {
+        const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
+
+        // Check if any required field was removed
+        for (const field of requiredFields) {
+          const originalValue = this.originalFormData[field]
+          const newValue = data[field]
+
+          if (originalValue && (!newValue || newValue.trim() === '')) {
+            return true
+          }
+        }
+      }
+      return false
+    },
+    save: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
       data.organization = this.$store.state.user.personal_organization
+
+      // Check if required fields were removed from a published project
+      if (this.checkRequiredFieldsRemoved(data)) {
+        // Store the pending data and show warning modal
+        this.pendingData = data
+        this.$bvModal.show('publish-warning-modal')
+      } else {
+        // Proceed with normal save
+        this.executeSave(data)
+      }
+    },
+    executeSave: async function (data) {
       if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
         const response = await Project.update(data)
         if (response.data.status) {
@@ -323,10 +385,12 @@ export default {
             window.scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('update-form-data', data)
           }
+          // Update the original form data to reflect the new state
+          this.originalFormData = JSON.parse(JSON.stringify(data))
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = response.data.message // 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.'
+          this.msgUpdateProject = response.data.message
           if (this.isModal) {
             document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
           } else {
@@ -339,6 +403,8 @@ export default {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been created'
           this.$emit('modal-notification', response)
+          // Update the original form data to reflect the new state
+          this.originalFormData = JSON.parse(JSON.stringify(data))
         } else {
           this.variant = 'danger'
           this.msgUpdateProject = response.data.message
@@ -375,6 +441,11 @@ export default {
           newData.push(i)
         }
         this.global_status = newData
+      }
+
+      // When formData changes externally, update the original data
+      if (JSON.stringify(this.originalFormData) !== JSON.stringify(data)) {
+        this.originalFormData = JSON.parse(JSON.stringify(data))
       }
     }
   }
