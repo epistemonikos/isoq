@@ -599,21 +599,18 @@ export default {
 
           let cnt = 0
           for (const el of this.lists) {
-            if (document.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
+            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
               cnt++
             }
           }
-          if (!this.project.private) { // false
-            if (cnt) {
-              if (cnt === 1) {
-                if (this.editFindingName.evidence_profile.cerqual.option !== null) {
-                  this.ui.project.showExtendedExplanationTextForDeleting = true
-                } else {
-                  this.ui.project.showExtendedExplanationTextForDeleting = false
-                }
-              }
-            }
+
+          // Only show extended warning if the project is currently public and would become private
+          if (!this.project.private && cnt === 1 && this.editFindingName.evidence_profile.cerqual.option !== null) {
+            this.ui.project.showExtendedExplanationTextForDeleting = true
+          } else {
+            this.ui.project.showExtendedExplanationTextForDeleting = false
           }
+
           this.$refs['remove-finding'].show()
         })
         .catch((error) => {
