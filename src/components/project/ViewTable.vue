@@ -338,6 +338,20 @@
       no-close-on-esc>
       <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
     </b-modal>
+
+    <b-modal
+      id="modal-private-project-warning"
+      ref="modal-private-project-warning"
+      title="Warning"
+      @ok="confirmSavePrivateProject"
+      @cancel="cancelPrivateProjectWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+    </b-modal>
   </div>
 </template>
 
@@ -719,7 +733,13 @@ export default {
       if (this.selected_references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
-        this.$refs['modal-no-references-warning'].show()
+
+        // Special case: if there's only one item in the list, removing all references will make the project private
+        if (this.lists.length === 1) {
+          this.$refs['modal-private-project-warning'].show()
+        } else {
+          this.$refs['modal-no-references-warning'].show()
+        }
         return
       }
 
@@ -748,6 +768,42 @@ export default {
       // User cancelled - restore original references selection
       this.selected_references = [...this.original_references]
       this.pendingSaveReferences = false
+    },
+
+    confirmSavePrivateProject: function () {
+      // User confirmed they want to proceed, making the project private
+      this.saveProjectAsPrivate()
+      // Save the references (which will be empty)
+      this.saveReferencesList()
+      // Close both modals
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modal-references-list'].hide()
+      })
+    },
+
+    cancelPrivateProjectWarning: function () {
+      // User cancelled - restore original references selection
+      this.selected_references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    saveProjectAsPrivate: function () {
+      // Update the project to be private
+      const params = {
+        is_public: false,
+        private: true,
+        license_type: '',
+        public_type: 'private'
+      }
+      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        .then(() => {
+          // Emit an event to notify the parent component that the project status changed
+          this.$emit('update-project-status')
+        })
+        .catch((error) => {
+          console.log(Commons.printErrors(error))
+        })
     },
 
     saveReferencesList: function () {

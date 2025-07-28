@@ -594,6 +594,7 @@
                 @set-busy="setBusy"
                 @set-load-references="statusLoadReferences"
                 @get-references="getReferences"
+                @update-project-status="getProject"
                  />
             </template>
             <!-- printed version -->
