@@ -1,7 +1,6 @@
 <template>
   <div>
     <b-table
-      :selectable="(mode==='view')?true:false"
       select-mode="multi"
       selected-variant="warning"
       bordered
@@ -112,12 +111,18 @@
           <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
         </span>
         <span v-else>
-          {{ data.item.name }}
+          <template v-if="mode==='view' && data.item.references.length">
+            <b-link class="table-edit-list" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+          </template>
+          <template v-else>
+            {{ data.item.name }}
+          </template>
         </span>
       </template>
       <template v-slot:cell(category_name)="data">
         <template v-if="data.item.category !== null">
           <b-button
+            v-if="mode==='edit'"
             block
             variant="outline-info"
             @click="editModalFindingName(data)">Edit group</b-button>
@@ -455,8 +460,8 @@ export default {
     },
     mode: {
       type: String,
-      required: true,
-      default: 'view'
+      required: false,
+      default: ''
     },
     isBusy: {
       type: Boolean,

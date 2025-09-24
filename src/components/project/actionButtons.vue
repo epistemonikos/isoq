@@ -166,7 +166,11 @@ const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp
 export default {
   name: 'actionButtons',
   props: {
-    mode: String,
+    mode: {
+      type: String,
+      required: false,
+      default: ''
+    },
     preview: {
       type: Boolean,
       default: false
