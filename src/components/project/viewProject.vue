@@ -164,7 +164,7 @@
       </div>
       <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
         <action-buttons
-          :mode="mode"
+          :mode="effectiveMode"
           :permissions="checkPermissions()"
           :project="project"
           :ui="ui"
@@ -253,7 +253,7 @@
             <b-row
               class="mb-2">
               <b-col
-                v-if="mode!=='view'"
+                v-if="effectiveMode === 'edit'"
                 md="3"
                 cols="12">
                 <b-button
@@ -266,7 +266,7 @@
                 </b-button>
               </b-col>
               <b-col
-                v-if="mode!=='view'"
+                v-if="effectiveMode === 'edit'"
                 md="4"
                 cols="12">
                 <b-button
@@ -279,7 +279,7 @@
                 </b-button>
               </b-col>
               <b-col
-                v-if="mode!=='view' && lists.length > 1"
+                v-if="effectiveMode === 'edit' && lists.length > 1"
                 md="3"
                 cols="12">
                 <b-button
@@ -321,7 +321,7 @@
                 </b-modal>
               </b-col>
               <b-col
-                v-if="mode!=='view' && lists.length > 1"
+                v-if="effectiveMode === 'edit' && lists.length > 1"
                 md="2"
                 cols="12">
                 <b-button
@@ -333,7 +333,7 @@
             </b-row>
           </b-col>
           <b-col
-            v-if="mode==='edit' && this.lists.length && ui.project.displaySearch"
+            v-if="effectiveMode === 'edit' && lists.length && ui.project.displaySearch"
             cols="12"
             class="my-2 d-print-none">
             <b-card
@@ -373,13 +373,13 @@
           </b-col>
           <b-col cols="12" class="toDoc">
             <template
-              v-if="mode==='edit' && checkPermissions()">
+              v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable
                 :lists="lists"
                 :list_categories="list_categories"
                 :fields="fields"
                 :project="project"
-                :mode="mode"
+                :mode="effectiveMode"
                 :isBusy="table_settings.isBusy"
                 :references="references"
                 :refs="refs"
@@ -752,7 +752,7 @@ export default {
       fileReferences: [],
       selected_list_index: null,
       lastId: 1,
-      mode: 'edit',
+      mode: '',
       msgUploadReferences: '',
       charsOfStudies: {
         fields: [],
@@ -888,6 +888,14 @@ export default {
             }
           }
           this.project = _project
+          // set mode based on permissions: prefer write -> edit, otherwise read -> view
+          if (this.checkPermissions('can_write')) {
+            this.mode = 'edit'
+          } else if (this.checkPermissions('can_read')) {
+            this.mode = 'view'
+          } else {
+            this.mode = ''
+          }
           this.ui.project.show_criteria = true
           this.getLists()
         })
@@ -1688,16 +1696,41 @@ export default {
       this.clickTab(2)
     },
     checkPermissions: function (type = 'can_write') {
-      if (this.$store.state.user.personal_organization === this.$route.params.org_id) {
-        return true
+      // normalize input to an array of permission keys
+      let perms = []
+      if (Array.isArray(type)) {
+        perms = type
+      } else if (typeof type === 'string') {
+        perms = type.split(',').map(t => t.trim()).filter(Boolean)
       } else {
-        if (!Object.prototype.hasOwnProperty.call(this.project, type)) {
-          return false
+        perms = ['can_write']
+      }
+
+      // if the current user belongs to the same personal organization, allow
+      if (this.$store && this.$store.state && this.$store.state.user && this.$store.state.user.personal_organization === this.$route.params.org_id) {
+        return true
+      }
+
+      // check any of the requested permissions on the project
+      for (const perm of perms) {
+        if (!Object.prototype.hasOwnProperty.call(this.project, perm)) {
+          continue
         }
-        if (this.project[type].includes(this.$store.state.user.id)) {
-          return true
+
+        const val = this.project[perm]
+        // val is expected to be an array of user ids, but could be a comma-separated string
+        if (Array.isArray(val)) {
+          if (val.includes(this.$store.state.user.id)) {
+            return true
+          }
+        } else if (typeof val === 'string') {
+          const arr = val.split(',').map(x => x.trim()).filter(Boolean)
+          if (arr.includes(String(this.$store.state.user.id))) {
+            return true
+          }
         }
       }
+
       return false
     },
     updateModificationTime: function () {
@@ -1719,6 +1752,18 @@ export default {
       }
       txt = txt + 'Summary of Qualitative Findings Table'
       return txt
+    },
+    effectiveMode: function () {
+      // If explicit mode is set to edit or view, use it
+      if (this.mode === 'edit') return 'edit'
+      if (this.mode === 'view') return 'view'
+
+      // If mode is empty, derive from permissions: prefer write
+      if (this.checkPermissions('can_write')) return 'edit'
+      if (this.checkPermissions('can_read')) return 'view'
+
+      // safe default: empty string when user has no read/write permissions
+      return ''
     }
   }
 }
