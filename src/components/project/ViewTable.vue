@@ -1,7 +1,6 @@
 <template>
   <div>
     <b-table
-      select-mode="multi"
       selected-variant="warning"
       bordered
       head-variant="light"
