@@ -32,7 +32,7 @@
             </p>
             <p class="font-weight-light">
               <b><u>Remember</u></b> this is an assessment of the whole body of
-              evidence supporting this finding, not an assessment of an individual
+              evidence supporting this review finding, not an assessment of an individual
               contributing study. (guidance available
               <b-link :to="{
                 name: 'viewProject',
@@ -464,7 +464,7 @@
                   ui.methodological_assessments.extracted_data.display_warning
                 " class="text-danger">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                  Some or all of the extracted data for this finding are missing.
+                  Some or all of the extracted data for this review finding are missing.
                   Add them into the table below using the edit button for each
                   included study.
                 </p>
@@ -520,7 +520,7 @@
             <h4>Extracted Data</h4>
             <p v-if="ui.adequacy.extracted_data.display_warning" class="text-danger">
               <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-              Some or all of the extracted data for this finding are missing. Add
+              Some or all of the extracted data for this review finding are missing. Add
               them into the table below using the edit button for each included
               study.
             </p>
@@ -575,7 +575,7 @@
                 <h4>Extracted Data</h4>
                 <p v-if="ui.adequacy.extracted_data.display_warning" class="text-danger">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
-                  Some or all of the extracted data for this finding are missing.
+                  Some or all of the extracted data for this review finding are missing.
                   Add them into the table below using the edit button for each
                   included study.
                 </p>
