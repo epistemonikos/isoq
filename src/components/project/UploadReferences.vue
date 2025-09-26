@@ -326,7 +326,7 @@ export default {
       tableFields: [
         {
           key: 'authors',
-          label: 'Authors',
+          label: 'Author(s)',
           formatter: (value, key, item) => this.formatAuthors(item.authors)
         },
         { key: 'title', label: 'Title' },
