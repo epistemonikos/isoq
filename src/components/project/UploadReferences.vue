@@ -5,7 +5,7 @@
     You must import only the references for your final list of included studies
     </p>
 
-    <!-- Mensaje de recuperación de operación incompleta -->
+    <!-- Incomplete operation recovery message -->
     <b-alert
       v-if="showRestorePrompt"
       show
