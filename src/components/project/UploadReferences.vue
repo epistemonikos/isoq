@@ -317,7 +317,7 @@ export default {
       btnCleanDisabled: true,
       disableBtnRemoveAllRefs: false,
       appearMsgRemoveReferences: false,
-      // Nuevos campos para control de operación
+      // New fields for operation control
       operationId: null,
       uploadProgress: '',
       showRestorePrompt: false,
