@@ -843,36 +843,36 @@ export default {
             'authors': this.parseReference(reference, true),
             'column_0': ''
           }
-        }).filter(item => item.ref_id); // Filtrar elementos sin ID
+        }).filter(item => item.ref_id) // Filtrar elementos sin ID
 
-        if (!itemsReferences.length) return;
+        if (!itemsReferences.length) return
 
         // Preparar las promesas de actualización sin await en el bucle
         const patchPromises = [];
 
         for (const response of extractedDataQuerys) {
-          if (!response || !response.data || !response.data[0]) continue;
+          if (!response || !response.data || !response.data[0]) continue
 
-          const responseData = response.data[0];
-          const responseItems = Array.isArray(responseData.items) ? responseData.items : [];
+          const responseData = response.data[0]
+          const responseItems = Array.isArray(responseData.items) ? responseData.items : []
 
           // Añadir nuevas referencias a items existentes
-          responseItems.push(...itemsReferences);
+          responseItems.push(...itemsReferences)
 
           const params = {
             items: responseItems
-          };
+          }
 
           // Agregar la promesa sin await
-          patchPromises.push(this.axiosPatchExtractedData(responseData.id, params));
+          patchPromises.push(this.axiosPatchExtractedData(responseData.id, params))
         }
 
         // Ejecutar todas las actualizaciones en paralelo
         if (patchPromises.length > 0) {
-          await Promise.all(patchPromises);
+          await Promise.all(patchPromises)
         }
       } catch (error) {
-        console.error('Error updating extracted data references:', error);
+        console.error('Error updating extracted data references:', error)
       }
     },
     openModalReferencesSingle: function (showModal) {
@@ -908,78 +908,38 @@ export default {
       this.disableBtnRemoveAllRefs = true
     },
     removeAllReferences: function () {
-      axios.post(`/api/remove/references/all?project_id=${this.$route.params.id}`)
+      axios.post('/api/isoqf_references/batch-delete', {
+        delete_all: true,
+        project_id: this.$route.params.id,
+        organization: this.$route.params.org_id,
+        confirmation: `DELETE_ALL_REFERENCES_${this.$route.params.id}` // Confirmación explícita
+      })
         .then(() => {
           this.$emit('loadReferences', true)
           this.$emit('CallGetReferences')
           this.$emit('CallGetProject')
           this.appearMsgRemoveReferences = false
         })
+        .catch(error => {
+          console.error('Error deleting all references:', error)
+          this.disableBtnRemoveAllRefs = false
+        })
     },
     confirmRemoveReferenceById: function (refId) {
       if (!refId) return
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      let objs = []
-      let requests = []
 
-      for (const list of lists) {
-        let obj = {id: null, references: []}
-        for (const rr of list.raw_ref) {
-          if (rr.id !== refId) {
-            obj.references.push(rr.id)
-          }
-          if (rr.id === refId) {
-            obj.id = list.id
-            objs.push(obj)
-          }
-        }
-      }
-
-      if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
-        if (charsOfStudies.items.length) {
-          let items = []
-
-          for (const item of charsOfStudies.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
-            }
-          }
-          charsOfStudies.items = items
-
-          requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
-        }
-      }
-
-      if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-        if (_assessments.items.length) {
-          let items = []
-
-          for (const item of _assessments.items) {
-            if (item.ref_id !== refId) {
-              items.push(item)
-            }
-          }
-          _assessments.items = items
-
-          requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
-        }
-      }
-
-      for (let o of objs) {
-        requests.push(axios.patch(`/api/isoqf_lists/${o.id}`, {references: o.references}))
-      }
-
-      if (requests.length) {
-        Promise.all(requests)
-      }
-
-      axios.delete(`/api/isoqf_references/${refId}`)
+      axios.post('/api/isoqf_references/batch-delete', {
+        reference_ids: [refId],
+        project_id: this.$route.params.id,
+        organization: this.$route.params.org_id
+      })
         .then(() => {
           this.$emit('CallGetReferences', false)
           this.openModalReferencesSingle(false)
           this.$emit('CallGetProject')
+        })
+        .catch(error => {
+          console.error('Error deleting reference:', error)
         })
     },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
