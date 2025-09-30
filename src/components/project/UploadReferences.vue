@@ -1075,7 +1075,7 @@ export default {
             }
           }
         })
-        // Al finalizar:
+        // At the end:
         this.uploadProgress = `${this.fileReferences.length} referencias procesadas localmente`
         console.log('Referencias procesadas:', this.fileReferences.length)
       } catch (error) {
