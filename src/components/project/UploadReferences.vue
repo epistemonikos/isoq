@@ -959,7 +959,7 @@ export default {
         // Agregar año a los autores formateados si hay autores válidos
         result = authorPart + ' ' + reference.publication_year + semicolon
 
-        // Agregar título si se requiere
+        // Add title if required
         if (!onlyAuthors) {
           result = result + reference.title
         }
