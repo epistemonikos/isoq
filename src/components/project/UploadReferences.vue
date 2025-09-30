@@ -951,7 +951,7 @@ export default {
         // Obtener formato de autores
         const authorPart = this.formatAuthors(reference.authors)
 
-        // Si no se encontraron autores, devolver mensaje
+        // If no authors are found, return message
         if (authorPart === 'author(s) not found') {
           return authorPart
         }
