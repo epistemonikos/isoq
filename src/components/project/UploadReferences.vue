@@ -81,7 +81,7 @@
               striped
               responsive
               class="mt-3">
-              <!-- La lógica de formato ahora está en el formatter del tableFields -->
+              <!-- The formatting logic is now in the formatter of tableFields -->
             </b-table>
           </div>
         </b-tab>
