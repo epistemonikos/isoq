@@ -311,7 +311,7 @@ export default {
       pubmed_loading: false,
       pubmed_error: false,
       pubmedErrorImported: [],
-      pubmed_response: [], // Añadido campo que faltaba
+      pubmed_response: [], // Added missing field
       btnSearchPubMed: false,
       localReferences: [],
       btnCleanDisabled: true,
