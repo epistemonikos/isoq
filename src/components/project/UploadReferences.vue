@@ -980,7 +980,7 @@ export default {
         this.fileReferences = []
         this.uploadProgress = 'Procesando referencias...'
 
-        // Código existente de procesamiento...
+        // Existing processing code...
         const file = data
         const allLines = file.split(/\r\n|\n/)
         // Reading line by line
