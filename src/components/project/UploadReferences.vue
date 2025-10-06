@@ -68,7 +68,7 @@
           </p>
 
           <!-- Preview message and table -->
-          <div v-if="fileReferences.length > 0">
+          <!-- <div v-if="fileReferences.length > 0">
             <b-alert show variant="info" class="mt-3">
               <strong>Preview only:</strong> This is a preview of the references that will be uploaded. Click the Upload button to save them to the system.
             </b-alert>
@@ -81,9 +81,8 @@
               striped
               responsive
               class="mt-3">
-              <!-- The formatting logic is now in the formatter of tableFields -->
             </b-table>
-          </div>
+          </div> -->
         </b-tab>
         <b-tab title="Import from PubMed">
           <b-row>
