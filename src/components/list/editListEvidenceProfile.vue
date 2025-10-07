@@ -480,6 +480,20 @@
       <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
     </b-modal>
 
+    <b-modal
+      id="modal-private-project-warning"
+      ref="modal-private-project-warning"
+      title="Warning"
+      @ok="confirmSavePrivateProject"
+      @cancel="cancelPrivateProjectWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+    </b-modal>
+
     <!-- modal -->
     <evidence-profile-form
       ref="evidenceProfileForm"
@@ -612,12 +626,39 @@ export default {
       if (this.list.references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
-        this.$refs['modal-no-references-warning'].show()
+
+        // Verificar si hay otros lists en el proyecto con referencias
+        this.checkOtherListsWithReferences()
         return
       }
 
       // Si no se necesita mostrar la advertencia, proceder con el guardado
       this.saveReferencesList()
+    },
+
+    checkOtherListsWithReferences: function () {
+      // Hacer una consulta para obtener todos los lists del proyecto
+      axios.get(`/api/isoqf_lists?project_id=${this.project.id}`)
+        .then((response) => {
+          const allLists = response.data
+          // Filtrar el list actual y verificar si hay otros con referencias
+          const otherListsWithReferences = allLists.filter(list =>
+            list.id !== this.list.id && list.references && list.references.length > 0
+          )
+
+          if (otherListsWithReferences.length === 0) {
+            // Si no hay otros lists con referencias, el proyecto se vuelve privado
+            this.$refs['modal-private-project-warning'].show()
+          } else {
+            // Si hay otros lists con referencias, solo este finding desaparece
+            this.$refs['modal-no-references-warning'].show()
+          }
+        })
+        .catch((error) => {
+          console.log('Error checking other lists:', error)
+          // En caso de error, mostrar el modal estándar por seguridad
+          this.$refs['modal-no-references-warning'].show()
+        })
     },
 
     handleReferencesModalHidden: function () {
@@ -641,6 +682,42 @@ export default {
       // El usuario canceló - restaurar las referencias originales
       this.list.references = [...this.original_references]
       this.pendingSaveReferences = false
+    },
+
+    confirmSavePrivateProject: function () {
+      // El usuario confirmó que desea continuar, haciendo el proyecto privado
+      this.saveProjectAsPrivate()
+      // Guardar las referencias (que estarán vacías)
+      this.saveReferencesList()
+      // Cerrar ambos modales
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modalReferences'].hide()
+      })
+    },
+
+    cancelPrivateProjectWarning: function () {
+      // El usuario canceló - restaurar las referencias originales
+      this.list.references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    saveProjectAsPrivate: function () {
+      // Actualizar el proyecto para que sea privado
+      const params = {
+        is_public: false,
+        private: true,
+        license_type: '',
+        public_type: 'private'
+      }
+      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        .then(() => {
+          // Emitir un evento para notificar al componente padre que el estado del proyecto cambió
+          this.$emit('update-project-status')
+        })
+        .catch((error) => {
+          console.log('Error updating project status:', error)
+        })
     },
 
     cleanReferencesList: function () {
