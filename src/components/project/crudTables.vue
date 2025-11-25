@@ -326,12 +326,44 @@
           :show="importDataTable.error !== null">
           {{ importDataTable.error }}
         </b-alert>
+        
+        <!-- Invalid references alert -->
+        <b-alert 
+          v-if="importDataTable.invalidItems.length" 
+          variant="warning"
+          show>
+          <strong>⚠️ {{ importDataTable.invalidItems.length }} references will not be imported:</strong>
+          <ul class="mt-2 mb-0">
+            <li v-for="inv in importDataTable.invalidItems" :key="inv.ref_id">
+              <code>{{ inv.ref_id }}</code> - {{ inv.authors }}
+              <small class="text-muted">({{ inv.reason }})</small>
+            </li>
+          </ul>
+        </b-alert>
+
+        <!-- Valid references alert -->
+        <b-alert 
+          v-if="importDataTable.validItems.length" 
+          variant="success"
+          show>
+          ✅ {{ importDataTable.validItems.length }} of {{ importDataTable.stats.total }} references will be imported
+        </b-alert>
+
+        <!-- No valid references alert -->
+        <b-alert 
+          v-if="importDataTable.stats.total > 0 && importDataTable.validItems.length === 0" 
+          variant="danger"
+          show>
+          ❌ No valid references found. Please check the IDs in your CSV file.
+        </b-alert>
+        
         <b-table
           v-if="importDataTable.items.length"
           sticky-header
           responsive
           :fields="importDataTable.fieldsObj"
-          :items="importDataTable.items"></b-table>
+          :items="importDataTable.items"
+          :tbody-tr-class="getRowClass"></b-table>
         <template v-slot:modal-footer>
           <b-button
             variant="outline-secondary"
@@ -342,7 +374,7 @@
             @click="cleanVars()">Reject</b-button>
           <b-button
             variant="outline-success"
-            :disabled="!importDataTable.items.length"
+            :disabled="!importDataTable.validItems.length"
             @click="saveImportedData()">Save</b-button>
         </template>
       </b-modal>
@@ -437,9 +469,16 @@ export default {
         error: null,
         fields: [],
         items: [],
+        validItems: [],
+        invalidItems: [],
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ]
+        ],
+        stats: {
+          total: 0,
+          valid: 0,
+          invalid: 0
+        }
       }
     }
   },
@@ -487,6 +526,8 @@ export default {
                   cntI++
                 }
               }
+              // Agregar índice único para diferenciar duplicados
+              obj._rowIndex = parseInt(cnt) - 1
               items.push(obj)
             }
           }
@@ -835,17 +876,65 @@ export default {
       const reader = new FileReader()
       reader.onload = (e) => {
         this.pre_ImportDataTable = e.target.result
+        // Llamar a validación después de parsear
+        this.$nextTick(() => {
+          if (this.importDataTable.items.length > 0) {
+            this.validateImportData()
+          }
+        })
       }
       reader.readAsText(file)
+    },
+    validateImportData: async function () {
+      try {
+        // Preparar datos para validación
+        const params = {
+          project_id: this.$route.params.id,
+          organization: this.$route.params.org_id,
+          items: this.importDataTable.items
+        }
+
+        // Llamar al endpoint de validación
+        const response = await axios.post(`/api/${this.type}/validate-import`, params)
+        
+        if (response.data) {
+          // Actualizar datos de validación
+          this.importDataTable.validItems = response.data.valid || []
+          this.importDataTable.invalidItems = response.data.invalid || []
+          this.importDataTable.stats = response.data.stats || {
+            total: 0,
+            valid: 0,
+            invalid: 0
+          }
+          
+          // Si hay error en la respuesta, mostrarlo
+          if (response.data.error) {
+            this.importDataTable.error = `Validation error: ${response.data.error}`
+          }
+        }
+      } catch (error) {
+        console.error('Error validating import data:', error)
+        this.importDataTable.error = 'Error validating data. Please try again.'
+        this.importDataTable.validItems = []
+        this.importDataTable.invalidItems = []
+        this.importDataTable.stats = { total: 0, valid: 0, invalid: 0 }
+      }
     },
     cleanVars: function (isCancel = false) {
       this.importDataTable = {
         error: null,
         fields: [],
         items: [],
+        validItems: [],
+        invalidItems: [],
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ]
+        ],
+        stats: {
+          total: 0,
+          valid: 0,
+          invalid: 0
+        }
       }
       this.pre_ImportDataTable = ''
       this.$refs['import-file'].reset()
@@ -899,9 +988,9 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         fields: this.importDataTable.fields,
-        items: this.importDataTable.items
+        items: this.importDataTable.validItems // Solo enviar items válidos
       }
-      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
+      if (this.importDataTable.fields.length && this.importDataTable.validItems.length) {
         if (this.dataTable.items.length) {
           this.cleanImportedData(this.dataTable.id, params)
         } else {
@@ -912,9 +1001,16 @@ export default {
         error: null,
         fields: [],
         items: [],
+        validItems: [],
+        invalidItems: [],
         fieldsObj: [
           { key: 'authors', label: 'Author(s), Year' }
-        ]
+        ],
+        stats: {
+          total: 0,
+          valid: 0,
+          invalid: 0
+        }
       }
       this.pre_ImportDataTable = ''
     },
@@ -1042,6 +1138,16 @@ export default {
       } else {
         return 'author(s) not found'
       }
+    },
+    getRowClass: function (item, type) {
+      // Usar _rowIndex para comparación exacta
+      // Esto permite diferenciar entre la primera ocurrencia (válida) 
+      // y duplicados subsiguientes (inválidos) del mismo ref_id
+      const isInvalid = this.importDataTable.invalidItems.some(
+        inv => inv._rowIndex === item._rowIndex
+      )
+      
+      return isInvalid ? 'table-danger' : 'table-success'
     }
   }
 }
