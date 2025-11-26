@@ -948,26 +948,43 @@ export default {
     exportTableToCSV: function (type) {
       let _headers = JSON.parse(JSON.stringify(this.dataTable.fields))
       let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let headers = []
-      let items = []
-      let keys = []
+      
+      // Define headers exactly as they will appear in the CSV
+      const headerRefId = '"Reference ID"'
+      const headerAuthors = '"Author(s), Year"'
+      
+      let headers = [headerRefId, headerAuthors]
+      
+      // Map for custom fields: key -> label (quoted)
+      let customFieldMap = []
 
       for (const field of _headers) {
-        if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push(`"${field.label}"`)
-          keys.push(field.key)
+        if (!['ref_id', 'authors', 'id', 'actions'].includes(field.key)) {
+          const label = `"${field.label}"`
+          headers.push(label)
+          customFieldMap.push({ key: field.key, label: label })
         }
       }
 
+      let items = []
       for (const i of _items) {
         let item = {}
-        for (const k in keys) {
-          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-            item[keys[k]] = i[keys[k]]
-          } else {
-            item[keys[k]] = ''
-          }
+        
+        // 1. Map Reference ID
+        // Check ref_id, fallback to id
+        let refIdValue = (i.ref_id !== undefined && i.ref_id !== null) ? i.ref_id : ((i.id !== undefined && i.id !== null) ? i.id : '')
+        item[headerRefId] = refIdValue
+
+        // 2. Map Authors
+        let authorsValue = (i.authors !== undefined && i.authors !== null) ? i.authors : ''
+        item[headerAuthors] = authorsValue
+
+        // 3. Map Custom Fields
+        for (const field of customFieldMap) {
+          let value = (i[field.key] !== undefined && i[field.key] !== null) ? i[field.key] : ''
+          item[field.label] = value
         }
+        
         items.push(item)
       }
 
