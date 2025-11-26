@@ -67,6 +67,24 @@
               Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
           </p>
 
+          <!-- Duplicates alert -->
+          <b-alert
+            v-if="showDuplicatesAlert"
+            variant="warning"
+            show
+            dismissible
+            @dismissed="showDuplicatesAlert = false"
+            class="mt-3">
+            <strong>⚠️ {{ duplicateReferences.length }} duplicate reference(s) were not imported:</strong>
+            <p class="mb-2 mt-2">These references already exist in your project and were skipped to avoid duplicates.</p>
+            <ul class="mb-0" style="max-height: 300px; overflow-y: auto;">
+              <li v-for="(dup, index) in duplicateReferences" :key="index" class="mb-2">
+                <strong>{{ dup.title }}</strong><br>
+                <small class="text-muted">{{ dup.authors }} ({{ dup.year }})</small>
+              </li>
+            </ul>
+          </b-alert>
+
           <!-- Preview message and table -->
           <div v-if="fileReferences.length > 0">
             <b-alert show variant="info" class="mt-3">
@@ -322,6 +340,9 @@ export default {
       uploadProgress: '',
       showRestorePrompt: false,
       savedProgress: null,
+      // Duplicate references tracking
+      duplicateReferences: [],
+      showDuplicatesAlert: false,
       // Preview table fields
       tableFields: [
         {
@@ -475,6 +496,10 @@ export default {
       if (!file) return
 
       this.$emit('statusLoadReferences', true)
+      // Reset duplicates info
+      this.duplicateReferences = []
+      this.showDuplicatesAlert = false
+      
       const formData = new FormData()
       formData.append('risFile', file)
       formData.append('projectId', this.$route.params.id)
@@ -488,6 +513,12 @@ export default {
           const _references = JSON.parse(JSON.stringify(this.localReferences))
           await this.prefetchDataForExtractedDataUpdate(_references)
           this.msgUploadReferences = response.data.message || `${response.data.references.length} references have been added.`
+        }
+        
+        // Handle duplicates information
+        if (response.data && response.data.duplicate_list && response.data.duplicate_list.length > 0) {
+          this.duplicateReferences = response.data.duplicate_list
+          this.showDuplicatesAlert = true
         }
 
         this.pre_references = ''
