@@ -813,7 +813,7 @@
       title="Warning"
       :hide-footer="true">
       <p>
-        By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.
+        {{ clearCerqualWarningMessage }}
       </p>
       <p>
         Do you wish to continue?
@@ -938,6 +938,15 @@ export default {
   mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     this.localExtractedData = JSON.parse(JSON.stringify(this.extractedData))
+  },
+  computed: {
+    clearCerqualWarningMessage: function () {
+      if (this.checkIfIsTheOnlyPublished()) {
+        return 'By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.'
+      } else {
+        return 'By clearing this assessment, this review finding will no longer appear in your published iSoQ project.'
+      }
+    }
   },
   methods: {
     commonGenerateCerqualExplanation: function () {
