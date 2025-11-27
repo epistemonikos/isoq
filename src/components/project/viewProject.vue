@@ -375,6 +375,7 @@
             <template
               v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable
+                class="d-print-none"
                 :lists="lists"
                 :list_categories="list_categories"
                 :fields="fields"
@@ -392,14 +393,13 @@
                  />
             </template>
             <!-- printed version -->
-            <template v-else>
-              <PrintViewTable
-                :dataPrintVersion="lists_print_version"
-                :references="references"
-                :categories="list_categories"
-                :printableItems="printableItems"
-                :hasPermission="checkPermissions('can_read')"></PrintViewTable>
-            </template>
+            <PrintViewTable
+              :class="{'d-none d-print-block': checkPermissions(['can_read', 'can_write'])}"
+              :dataPrintVersion="lists_print_version"
+              :references="references"
+              :categories="list_categories"
+              :printableItems="printableItems"
+              :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             <!-- eopv -->
             <b-modal
               size="xl"
