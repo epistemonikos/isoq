@@ -375,7 +375,7 @@
             <template
               v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable
-                class="d-print-none"
+                :class="{'d-none': effectiveMode === 'view', 'd-print-none': true}"
                 :lists="lists"
                 :list_categories="list_categories"
                 :fields="fields"
@@ -394,7 +394,7 @@
             </template>
             <!-- printed version -->
             <PrintViewTable
-              :class="{'d-none d-print-block': checkPermissions(['can_read', 'can_write'])}"
+              :class="{'d-none': effectiveMode === 'edit', 'd-print-block': true}"
               :dataPrintVersion="lists_print_version"
               :references="references"
               :categories="list_categories"
@@ -1192,6 +1192,7 @@ export default {
           this.lists_print_version = data
         }
 
+        this.printableItems = []
         for (let items of this.lists_print_version) {
           this.printableItems.push(items.id)
         }
