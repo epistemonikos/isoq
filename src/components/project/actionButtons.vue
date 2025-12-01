@@ -159,7 +159,7 @@
 <script>
 import axios from 'axios'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule, TableLayoutType } from 'docx'
 import { displayExplanation } from '../utils/commons'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
@@ -424,8 +424,15 @@ export default {
                 }
               },
               width: {
-                size: '100%',
+                size: 5000,
                 type: WidthType.PERCENTAGE
+              },
+              layout: {
+                type: TableLayoutType.FIXED,
+                width: {
+                  size: 5000,
+                  type: WidthType.PERCENTAGE
+                }
               },
               rows: [
                 new TableRow({
@@ -441,7 +448,7 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '5%',
+                        size: 250,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
@@ -463,12 +470,12 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '40%',
+                        size: 1500,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.CENTER,
+                          alignment: AlignmentType.LEFT,
                           children: [
                             new TextRun({
                               text: 'Summarised review finding',
@@ -482,7 +489,7 @@ export default {
                     new TableCell({
                       verticalAlign: VerticalAlign.CENTER,
                       width: {
-                        size: '10%',
+                        size: 500,
                         type: WidthType.PERCENTAGE
                       },
                       shading: {
@@ -504,7 +511,7 @@ export default {
                     new TableCell({
                       verticalAlign: VerticalAlign.CENTER,
                       width: {
-                        size: '10%',
+                        size: 500,
                         type: WidthType.PERCENTAGE
                       },
                       shading: {
@@ -529,7 +536,7 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '10%',
+                        size: 500,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
@@ -551,7 +558,7 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '10%',
+                        size: 500,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
@@ -573,7 +580,7 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '10%',
+                        size: 500,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
@@ -595,12 +602,12 @@ export default {
                         fill: '#DDDDDD'
                       },
                       width: {
-                        size: '5%',
+                        size: 750,
                         type: WidthType.PERCENTAGE
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.CENTER,
+                          alignment: AlignmentType.LEFT,
                           children: [
                             new TextRun({
                               text: 'References',
@@ -659,8 +666,15 @@ export default {
           }
         },
         width: {
-          size: '100%',
+          size: 5000,
           type: WidthType.PERCENTAGE
+        },
+        layout: {
+          type: TableLayoutType.FIXED,
+          width: {
+            size: 5000,
+            type: WidthType.PERCENTAGE
+          }
         },
         rows: [
           new TableRow({
@@ -676,7 +690,7 @@ export default {
                   fill: '#DDDDDD'
                 },
                 width: {
-                  size: '5%',
+                  size: 250,
                   type: WidthType.PERCENTAGE
                 },
                 children: [
@@ -695,7 +709,7 @@ export default {
               new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
                 width: {
-                  size: '40%',
+                  size: 2000,
                   type: WidthType.PERCENTAGE
                 },
                 shading: {
@@ -703,7 +717,7 @@ export default {
                 },
                 children: [
                   new Paragraph({
-                    alignment: AlignmentType.CENTER,
+                    alignment: AlignmentType.LEFT,
                     children: [
                       new TextRun({
                         text: 'Summarised review finding',
@@ -717,7 +731,7 @@ export default {
               new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
                 width: {
-                  size: '20%',
+                  size: 1000,
                   type: WidthType.PERCENTAGE
                 },
                 shading: {
@@ -742,7 +756,7 @@ export default {
                   fill: '#DDDDDD'
                 },
                 width: {
-                  size: '20%',
+                  size: 1000,
                   type: WidthType.PERCENTAGE
                 },
                 children: [
@@ -764,12 +778,12 @@ export default {
                   fill: '#DDDDDD'
                 },
                 width: {
-                  size: '15%',
+                  size: 750,
                   type: WidthType.PERCENTAGE
                 },
                 children: [
                   new Paragraph({
-                    alignment: AlignmentType.CENTER,
+                    alignment: AlignmentType.LEFT,
                     children: [
                       new TextRun({
                         text: 'References',
@@ -992,11 +1006,11 @@ export default {
         } else {
           return new TableRow({
             children: [
-              this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
+              this.generateTableCell({width_size: 250, text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: 2000, text: item.name, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: 1000, text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: 1000, text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: 750, text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
             ]
           })
         }
@@ -1104,17 +1118,17 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 250,
                     text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
+                    width_size: 1500, text: item.name, font_size: 22, align: AlignmentType.CENTER
                   }),
                   new TableCell({
                     columnSpan: 5,
-                    width_size: '40%',
+                    width_size: 2500,
                     children: [
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
@@ -1128,7 +1142,7 @@ export default {
                     ]
                   }),
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 750,
                     text: this.returnRefWithNames(item.references),
                     font_size: 16,
                     align: AlignmentType.LEFT
@@ -1139,20 +1153,20 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 250,
                     text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '40%',
+                    width_size: 1500,
                     text: item.name,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell(
                     {
-                      width_size: '10%',
+                      width_size: 500,
                       text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
                       explanation: (item.evidence_profile.methodological_limitations.option.length) ? this.getExplanation('methodological-limitations', item.evidence_profile.methodological_limitations.option, item.evidence_profile.methodological_limitations.explanation) : '',
                       font_size: 22,
@@ -1160,35 +1174,35 @@ export default {
                     }
                   ),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.coherence.option),
                     explanation: (item.evidence_profile.coherence.explanation.length) ? this.getExplanation('coherence', item.evidence_profile.coherence.option, item.evidence_profile.coherence.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
                     explanation: (item.evidence_profile.adequacy.explanation.length) ? this.getExplanation('adequacy', item.evidence_profile.adequacy.option, item.evidence_profile.adequacy.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.relevance.option),
                     explanation: (item.evidence_profile.relevance.explanation.length) ? this.getExplanation('relevance', item.evidence_profile.relevance.option, item.evidence_profile.relevance.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual'),
                     explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 750,
                     text: this.returnRefWithNames(item.references),
                     font_size: 16,
                     align: AlignmentType.LEFT
@@ -1200,20 +1214,20 @@ export default {
             return new TableRow({
               children: [
                 this.generateTableCell({
-                  width_size: '40%',
+                  width_size: 250,
                   text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
                 this.generateTableCell({
-                  width_size: '40%',
+                  width_size: 1500,
                   text: item.name,
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
                 new TableCell({
                   columnSpan: 5,
-                  width_size: '40%',
+                  width_size: 2500,
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,
@@ -1227,7 +1241,7 @@ export default {
                   ]
                 }),
                 this.generateTableCell({
-                  width_size: '10%',
+                  width_size: 750,
                   text: this.returnRefWithNames(item.references),
                   font_size: 16,
                   align: AlignmentType.LEFT
@@ -1243,11 +1257,11 @@ export default {
         return new TableRow({
           tableHeader: true,
           children: [
-            this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '15%', text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
+            this.generateTableCell({width_size: 250, text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: 2000, text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: 1000, text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: 1000, text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: 750, text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
           ]
         })
       })
