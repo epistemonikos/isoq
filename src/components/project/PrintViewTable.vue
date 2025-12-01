@@ -72,7 +72,7 @@
     <backToTop></backToTop>
     <div class="mt-5">
       <h3>Evidence Profile Table</h3>
-      <b-table-simple>
+      <b-table-simple style="table-layout: fixed; width: 100%;">
         <b-thead>
           <b-tr>
             <b-th style="width: 5%">#</b-th>
