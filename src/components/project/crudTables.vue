@@ -8,14 +8,14 @@
           block
           variant="outline-primary"
           :disabled="(references.length) ? false : true"
-          v-if="dataTable.fields.length <= 2"
+          v-if="!dataTable.id"
           @click="openModalDataTable()">
           Create Table
         </b-button>
         <b-button
           block
           variant="outline-primary"
-          v-if="dataTable.fields.length > 2"
+          v-if="dataTable.id"
           @click="openModalDataTableEdit">
           Add or Edit column headings
         </b-button>
@@ -36,7 +36,7 @@
       </b-col>
       <b-col
         sm="3"
-        v-if="dataTable.fields.length > 2">
+        v-if="dataTable.id && dataTable.fields.length > 2">
         <b-button
           variant="outline-secondary"
           block
@@ -512,13 +512,32 @@ export default {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
-              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              if (this.checkPermissions) {
-                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
-              }
+              // Construir fieldsObj de forma reactiva
+              const newFieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year', tdClass: 'text-left' }]
 
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
+
+              // Contar columnas personalizadas
+              let customFieldsCount = 0
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  customFieldsCount++
+                }
+              }
+
+              // Agregar columna actions con ancho mínimo si no hay columnas personalizadas
+              if (this.checkPermissions) {
+                const actionsConfig = {
+                  'key': 'actions',
+                  'label': '',
+                  stickyColumn: true,
+                  thClass: customFieldsCount === 0 ? 'actions-column-minimal' : '',
+                  tdClass: customFieldsCount === 0 ? 'actions-column-minimal' : ''
+                }
+
+                newFieldsObj.unshift(actionsConfig)
+              }
 
               const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
               this.dataTable.items = _items
@@ -527,9 +546,12 @@ export default {
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
                   this.dataTableFieldsModal.fields.push(f.label)
-                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
+                  newFieldsObj.push({ key: f.key, label: f.label })
                 }
               }
+
+              // Usar $set para forzar reactividad
+              this.$set(this.dataTable, 'fieldsObj', newFieldsObj)
 
               this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
 
@@ -625,10 +647,19 @@ export default {
       if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
         axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
           .then(() => {
+            // Actualizar directamente dataTable.fields con los nuevos campos
+            this.$set(this.dataTable, 'fields', params.fields)
+
+            return this.getData()
+          })
+          .then(() => {
             this.$emit('get-project')
             this.dataTableSettings.isBusy = false
-          }).catch((error) => {
+            this.$forceUpdate()
+          })
+          .catch((error) => {
             this.$emit('print-errors', error)
+            this.dataTableSettings.isBusy = false
           })
       } else {
         axios.post(`/api/${this.type}`, params)
@@ -671,11 +702,18 @@ export default {
 
       axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
         .then(() => {
-          this.getData()
+          // Actualizar directamente dataTable.fields con los nuevos campos
+          this.$set(this.dataTable, 'fields', fields)
+
+          return this.getData()
+        })
+        .then(() => {
           this.dataTableSettings.isBusy = false
+          this.$forceUpdate()
         })
         .catch((error) => {
           this.$emit('print-errors', error)
+          this.dataTableSettings.isBusy = false
         })
     },
     dataTableNewColumn: function () {
@@ -1023,6 +1061,11 @@ export default {
 
           this.dataTableFieldsModalEdit.fields = editFields
           this.dataTableFieldsModalEdit.nroColumns = editFields.length
+
+          // Forzar recarga completa antes de emitir get-project
+          return this.getData()
+        })
+        .then(() => {
           this.$emit('get-project')
         })
         .catch((error) => {
@@ -1048,5 +1091,10 @@ export default {
 
 </script>
 
-<styles lang="scss" scoped>
-</styles>
+<style lang="scss" scoped>
+::v-deep .actions-column-minimal {
+  width: 1% !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
+}
+</style>
