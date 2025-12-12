@@ -1,0 +1,1199 @@
+<template>
+  <div>
+    <action-buttons
+      :mode="effectiveMode"
+      :permissions="checkPermissions()"
+      :project="project"
+      :ui="ui"
+      :lists="lists"
+      :findings="findings"
+      :references="references"
+      :charsOfStudies="charsOfStudies"
+      :methodologicalTableRefs="methodologicalTableRefs"
+      :listsPrintVersion="lists_print_version"
+      :selectOptions="select_options"
+      :cerqualConfidence="cerqual_confidence"
+      :printableItems="printableItems"
+      @uiPublishShowLoader="$emit('ui-publish-show-loader', $event)"
+      @getProject="$emit('get-project')"
+      @changeMode="$emit('change-mode', $event)"
+      @changeTableSettings="changeTableSettings"></action-buttons>
+    <b-row class="mb-3">
+      <b-col cols="12" class="toDoc">
+        <videoHelp
+          :txt="title"
+          :tag="'h2'"
+          :urlId="'449743080'"></videoHelp>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col cols="12">
+        <b-card header-tag="header">
+          <template v-slot:header>
+            <b-container fluid>
+              <b-row v-b-toggle.info-project>
+                <b-col
+                  cols="11">
+                  <p
+                  class="mb-0 text-left"
+                  >See more information</p>
+                </b-col>
+                <b-col
+                  cols="1"
+                  align-self="end">
+                  <p class="text-right">
+                    <span v-if="!infoProjectOpen">+</span><span v-else>-</span>
+                  </p>
+                </b-col>
+              </b-row>
+            </b-container>
+          </template>
+          <b-collapse id="info-project" v-model="infoProjectOpen">
+            <b-row>
+              <b-col cols="12" md="8" class="toDoc">
+                <h5>Review question</h5>
+                <p>{{project.review_question}}</p>
+
+                <h5>Has the review been published?</h5>
+                <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+
+                <h5 v-if="project.description">Additional Information</h5>
+                <p v-if="project.description">{{project.description}}</p>
+
+                <template v-if="project.public_type !== 'private'">
+                  <h5>License</h5>
+                  <p>{{ project.license_type }}</p>
+                </template>
+              </b-col>
+              <b-col cols="12" md="4" class="toDoc">
+                <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                  <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
+                </ul>
+
+                <h5>Corresponding author</h5>
+                <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+
+                <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
+                <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+              </b-col>
+            </b-row>
+          </b-collapse>
+        </b-card>
+      </b-col>
+    </b-row>
+    <b-row
+      class="mt-2">
+      <b-col
+        v-if="checkPermissions()"
+        cols="12">
+        <b-row
+          class="mb-2">
+          <b-col
+            v-if="effectiveMode === 'edit'"
+            md="3"
+            cols="12">
+            <b-button
+              class="mt-1"
+              v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
+              :variant="(lists.length) ? 'outline-success' : 'success'"
+              @click="modalAddList"
+              block>
+              Add review finding to the table
+            </b-button>
+          </b-col>
+          <b-col
+            v-if="effectiveMode === 'edit'"
+            md="4"
+            cols="12">
+            <b-button
+              class="mt-1"
+              v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
+              variant="outline-secondary"
+              @click="modalListCategories"
+              block>
+              Organise review findings into groups
+            </b-button>
+          </b-col>
+          <b-col
+            v-if="effectiveMode === 'edit' && lists.length > 1"
+            md="3"
+            cols="12">
+            <b-button
+              class="mt-1"
+              block
+              variant="outline-secondary"
+              @click="modalSortFindings">Re-order your review findings</b-button>
+
+            <b-modal
+              ref="modal-sort-findings"
+              id="modal-sort-findings"
+              size="xl"
+              ok-title="Save"
+              ok-variant="outline-success"
+              cancel-variant="outline-primary"
+              scrollable
+              @ok="saveSortedLists">
+              <template v-slot:modal-title>
+                <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
+              </template>
+              <p class="font-weight-light">
+                Drag and drop findings to re-order them in the iSoQ table
+              </p>
+              <b-list-group>
+                <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
+                  <b-list-group-item
+                    v-for="(item, index) of sorted_lists"
+                    :key="index"
+                    class="flex-column align-items-start"
+                    style="cursor: move">
+                    <div
+                      class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">{{ item.name }}</h5>
+                    </div>
+                    <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
+                  </b-list-group-item>
+                </draggable>
+              </b-list-group>
+            </b-modal>
+          </b-col>
+          <b-col
+            v-if="effectiveMode === 'edit' && lists.length > 1"
+            md="2"
+            cols="12">
+            <b-button
+              class="mt-1"
+              block
+              variant="outline-secondary"
+              @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+          </b-col>
+        </b-row>
+      </b-col>
+      <b-col
+        v-if="effectiveMode === 'edit' && lists.length && ui.project.displaySearch"
+        cols="12"
+        class="my-2 d-print-none">
+        <b-card
+          id="card-search"
+          bg-variant="light">
+          <b-row>
+            <b-col
+              cols="11">
+              <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
+            </b-col>
+            <b-col
+              cols="1">
+              <b-button
+                class="close mb-1"
+                @click="toggleSearch(ui.project.displaySearch)">×</b-button>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col
+              cols="12">
+              <b-form-group>
+                <b-input-group>
+                  <b-form-input
+                    v-model="table_settings.filter"
+                    type="search"
+                    id="filterInput"
+                    placeholder="Type to search the text in the table below"></b-form-input>
+                  <b-input-group-append>
+                    <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+
+        </b-card>
+      </b-col>
+      <b-col cols="12" class="toDoc">
+        <template
+          v-if="checkPermissions(['can_read', 'can_write'])">
+          <ViewTable
+            :lists="lists"
+            :list_categories="list_categories"
+            :fields="fields"
+            :project="project"
+            :mode="effectiveMode"
+            :isBusy="table_settings.isBusy"
+            :references="references"
+            :refs="refs"
+            @update-modification-time="$emit('update-modification')"
+            @get-lists="$emit('get-lists')"
+            @add-list="modalAddList"
+            @set-busy="setBusy"
+            @set-load-references="$emit('status-load-references', $event)"
+            @get-references="$emit('get-references', $event)"
+             />
+        </template>
+        <!-- printed version -->
+        <template v-else>
+          <PrintViewTable
+            :dataPrintVersion="lists_print_version"
+            :references="references"
+            :categories="list_categories"
+            :printableItems="printableItems"
+            :hasPermission="checkPermissions('can_read')"></PrintViewTable>
+        </template>
+        <!-- eopv -->
+        <b-modal
+          size="xl"
+          id="add-summarized"
+          ref="add-summarized"
+          title="Add Summarised review finding"
+          :ok-disabled="(summarized_review)?false:true"
+          @ok="createList"
+          ok-title="Save"
+          ok-variant="outline-success"
+          cancel-variant="outline-secondary">
+          <b-form-group
+            label="Summarised review finding"
+            label-for="summarized-review">
+            <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
+            <b-form-textarea
+              id="summarized-review"
+              v-model="summarized_review"
+              rows="6"
+              max-rows="100"></b-form-textarea>
+          </b-form-group>
+          <b-form-group
+            v-if="list_categories.options.length"
+            label="Select review finding group"
+            description="You can leave this option blank. You can always assign a finding to a group later.">
+            <b-form-select
+              v-model="list_categories.selected"
+              value-field="id"
+              text-field="text"
+              :options="list_categories.options"></b-form-select>
+          </b-form-group>
+        </b-modal>
+
+        <b-modal
+          size="xl"
+          id="modalEditListCategories"
+          ref="modalEditListCategories"
+          scrollable>
+          <template v-slot:modal-title>
+            <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
+          </template>
+          <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+            <p class="font-weight-light">
+              Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+            </p>
+            <p class="text-danger">
+              Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+            </p>
+          </template>
+          <template
+            v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+            <b-table
+              head-variant="highlight"
+              striped
+              :fields="modal_edit_list_categories.fields"
+              :items="modal_edit_list_categories.options">
+              <template v-slot:cell(actions)="data">
+                <b-button
+                  block
+                  variant="outline-success"
+                  @click="editListCategoryName(data.index)">Edit</b-button>
+                <b-button
+                  block
+                  variant="outline-danger"
+                  class="mt-1"
+                  @click="removeListCategory(data)">Remove</b-button>
+              </template>
+            </b-table>
+          </template>
+          <template
+            v-if="modal_edit_list_categories.new">
+            <p class="text-danger">
+              Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+            </p>
+            <b-form-group
+              class="mt-3"
+              label="Add group name">
+              <b-form-input
+                v-model="modal_edit_list_categories.text"></b-form-input>
+            </b-form-group>
+            <b-form-group
+              class="mt-3"
+              label="Describe this group for the user viewing this table">
+              <b-form-input
+                v-model="modal_edit_list_categories.extra_info"></b-form-input>
+            </b-form-group>
+          </template>
+          <template
+            class="mt-3"
+            v-if="modal_edit_list_categories.edit">
+            <p class="text-danger">
+              Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+            </p>
+            <b-form-group
+              label="Edit group name">
+              <b-form-input
+                v-model="modal_edit_list_categories.text"></b-form-input>
+            </b-form-group>
+            <b-form-group
+              class="mt-3"
+              label="Describe this group for the user viewing this table">
+              <b-form-input
+                v-model="modal_edit_list_categories.extra_info"></b-form-input>
+            </b-form-group>
+          </template>
+          <template
+            class="mt-3"
+            v-if="modal_edit_list_categories.remove">
+            <p>
+              Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
+            </p>
+          </template>
+          <template
+            v-slot:modal-footer>
+            <div
+              v-if="modal_edit_list_categories.remove">
+              <b-button
+                variant="outline-primary"
+                @click="modalCancelCategoryButtons">Cancel</b-button>
+              <b-button
+                variant="outline-danger"
+                @click="removeCategory()">Confirm</b-button>
+            </div>
+            <div
+              v-if="modal_edit_list_categories.new">
+              <b-button
+                variant="outline-primary"
+                @click="modalCancelCategoryButtons">Cancel</b-button>
+              <b-button
+                variant="outline-success"
+                :disabled="modal_edit_list_categories.text === ''"
+                @click="saveNewCategory">Save</b-button>
+            </div>
+            <div
+              v-if="!modal_edit_list_categories.new">
+              <b-button
+                v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
+                variant="outline-primary"
+                @click="modal_edit_list_categories.new=true">
+                Add new review finding group
+              </b-button>
+            </div>
+            <div
+              v-if="modal_edit_list_categories.edit">
+              <b-button
+                variant="outline-primary"
+                @click="modalCancelCategoryButtons">Cancel</b-button>
+              <b-button
+                variant="outline-success"
+                :disabled="modal_edit_list_categories.text === ''"
+                @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
+            </div>
+          </template>
+        </b-modal>
+        <back-to-top></back-to-top>
+      </b-col>
+    </b-row>
+  </div>
+</template>
+
+<script>
+import axios from 'axios'
+import draggable from 'vuedraggable'
+import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
+import Commons from '../../utils/commons.js'
+
+const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
+const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp.vue')
+const actionButtons = () => import(/* webpackChunkName: 'actionButtons' */'./actionButtons.vue')
+const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './PrintViewTable.vue')
+
+export default {
+  name: 'IsoqTab',
+  components: {
+    draggable,
+    'back-to-top': backToTop,
+    videoHelp,
+    'action-buttons': actionButtons,
+    PrintViewTable,
+    ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue')
+  },
+  props: {
+    mode: { type: String, default: '' },
+    project: { type: Object, required: true },
+    ui: { type: Object, required: true },
+    lists: { type: Array, default: () => [] },
+    findings: { type: Array, default: () => [] },
+    references: { type: Array, default: () => [] },
+    charsOfStudies: { type: Object, default: () => ({}) },
+    methodologicalTableRefs: { type: Object, default: () => ({}) },
+    lists_print_version: { type: Array, default: () => [] },
+    select_options: { type: Array, required: true },
+    cerqual_confidence: { type: Array, required: true },
+    printableItems: { type: Array, default: () => [] },
+    list_categories: { type: Object, required: true },
+    refs: { type: Array, default: () => [] }
+  },
+  data () {
+    return {
+      table_settings: {
+        isBusy: true,
+        currentPage: 1,
+        perPage: 5,
+        filter: null,
+        totalRows: 1,
+        filterOn: ['filter_cerqual', 'category_name', 'explanation', 'status']
+      },
+      summarized_review: '',
+      modal_edit_list_categories: {
+        id: null,
+        fields: [
+          { key: 'text', label: 'Name of group' },
+          { key: 'actions', label: '' }
+        ],
+        options: [],
+        new: false,
+        edit: false,
+        remove: false,
+        text: '',
+        extra_info: '',
+        index: null
+      },
+      list_category: {
+        name: '',
+        extra_info: ''
+      },
+      sorted_lists: [],
+      fields: {
+        with_categories: [
+          { key: 'sort', label: '#' },
+          { key: 'name', label: 'Summarised review finding' },
+          { key: 'category_name', label: 'Review Finding Groups' },
+          { key: 'cerqual_option', label: 'GRADE-CERQual assessment of confidence' },
+          { key: 'cerqual_explanation', label: 'Explanation of GRADE-CERQual assessment' },
+          { key: 'ref_list', label: 'References' }
+        ],
+        without_categories: [
+          { key: 'sort', label: '#' },
+          { key: 'name', label: 'Summarised review finding' },
+          { key: 'cerqual_option', label: 'GRADE-CERQual assessment of confidence' },
+          { key: 'cerqual_explanation', label: 'Explanation of GRADE-CERQual assessment' },
+          { key: 'ref_list', label: 'References' }
+        ]
+      },
+      editFindingName: {
+        index: null,
+        id: null,
+        finding_id: null,
+        name: null,
+        notes: null,
+        editing: false
+      },
+      lastId: 1, // Note: initialized in watcher/computed usually
+      infoProjectOpen: false,
+      Commons: Commons
+    }
+  },
+  computed: {
+    effectiveMode: function () {
+      if (this.mode === 'edit') return 'edit'
+      if (this.mode === 'view') return 'view'
+      if (this.checkPermissions('can_write')) return 'edit'
+      if (this.checkPermissions('can_read')) return 'view'
+      return ''
+    },
+    title: function () {
+      let txt = ''
+      if (this.effectiveMode === 'edit') {
+        txt = 'Interactive '
+      }
+      txt = txt + 'Summary of Qualitative Findings Table'
+      return txt
+    }
+  },
+  watch: {
+    lists: {
+      handler (val) {
+        this.table_settings.totalRows = val.length
+        this.lastId = val.length + 1
+        this.table_settings.isBusy = false
+      },
+      immediate: true
+    },
+    'list_categories.options': {
+      handler (val) {
+        // sync modal options
+        this.modal_edit_list_categories.options = JSON.parse(JSON.stringify(val)).sort((a, b) => a.text.localeCompare(b.text))
+      },
+      deep: true,
+      immediate: true
+    }
+  },
+  methods: {
+    checkPermissions: function (type = 'can_write') {
+      let perms = []
+      if (Array.isArray(type)) {
+        perms = type
+      } else if (typeof type === 'string') {
+        perms = type.split(',').map(t => t.trim()).filter(Boolean)
+      } else {
+        perms = ['can_write']
+      }
+
+      if (this.$store && this.$store.state && this.$store.state.user && this.$store.state.user.personal_organization === this.$route.params.org_id) {
+        return true
+      }
+
+      for (const perm of perms) {
+        if (!Object.prototype.hasOwnProperty.call(this.project, perm)) {
+          continue
+        }
+
+        const val = this.project[perm]
+        if (Array.isArray(val)) {
+          if (val.includes(this.$store.state.user.id)) {
+            return true
+          }
+        } else if (typeof val === 'string') {
+          const arr = val.split(',').map(x => x.trim()).filter(Boolean)
+          if (arr.includes(String(this.$store.state.user.id))) {
+            return true
+          }
+        }
+      }
+
+      return false
+    },
+    setBusy: function (value) {
+      this.table_settings.isBusy = value
+    },
+    changeTableSettings: function (params) {
+      this.table_settings.perPage = params.perPage
+      this.table_settings.currentPage = params.currentPage
+    },
+    toggleSearch (show) {
+      if (show) {
+        this.ui.project.displaySearch = false
+      } else {
+        this.ui.project.displaySearch = true
+      }
+      this.table_settings.filter = ''
+      window.scrollTo({ top: 500, behavior: 'smooth' })
+    },
+    printErrors: function (error) {
+       Commons.printErrors(error)
+       this.$emit('print-errors', error)
+    },
+    getCategoryName: function (id) {
+      const _categories = JSON.parse(JSON.stringify(this.list_categories))
+      let _category = ''
+      for (let category of _categories.options) {
+        if (category.value === id) {
+          _category = category.text
+        }
+      }
+      return _category
+    },
+    modalAddList: function () {
+      this.list_categories.selected = null
+      this.$refs['add-summarized'].show()
+    },
+    createList: function () {
+      this.table_settings.isBusy = true
+      let sort = 1
+      if (this.lists.length) {
+        sort = this.lists.slice(-1)[0].sort + 1
+      }
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        name: this.summarized_review,
+        cerqual: { option: null, explanation: '' },
+        references: [],
+        category: this.list_categories.selected,
+        editing: false,
+        is_public: isPublic,
+        sort: sort
+      }
+      axios.post('/api/isoqf_lists', params)
+        .then((response) => {
+          const listId = response.data.id
+          const listName = response.data.name
+
+          this.createFinding(listId, listName)
+          this.summarized_review = ''
+          this.list_categories.selected = null
+          this.$emit('update-modification')
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    createFinding: function (listId, listName) {
+      let isPublic = false
+      if (this.project.is_public) {
+        isPublic = true
+      }
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: listId,
+        name: listName,
+        isoqf_id: this.lastId,
+        evidence_profile: {
+          name: listName,
+          isoqf_id: this.lastId,
+          relevance: {
+            explanation: '',
+            option: null
+          },
+          adequacy: {
+            explanation: '',
+            option: null
+          },
+          coherence: {
+            explanation: '',
+            option: null
+          },
+          methodological_limitations: {
+            explanation: '',
+            option: null
+          },
+          cerqual: {
+            explanation: '',
+            option: null
+          },
+          references: []
+        },
+        references: [],
+        is_public: isPublic
+      }
+      axios.post('/api/isoqf_findings', params)
+        .then(async (response) => {
+          await this.createExtractedData(response.data.id)
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    createExtractedData: async function (findingID) {
+      const _references = JSON.parse(JSON.stringify(this.references))
+      let params = {
+        fields: [
+          { key: 'ref_id', label: 'Reference ID' },
+          { key: 'authors', label: 'Author(s), Year' },
+          { key: 'column_0', label: 'Extracted data supporting the review finding' }
+        ],
+        items: [],
+        organization: this.$route.params.org_id,
+        finding_id: findingID
+      }
+
+      for (let reference of _references) {
+        params.items.push({ 'ref_id': reference.id, 'authors': await this.parseReference(reference, true), 'column_0': '' })
+      }
+
+      axios.post('/api/isoqf_extracted_data', params)
+        .then(() => {
+          this.$emit('get-lists')
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
+      let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        if (reference.authors.length) {
+          if (reference.authors.length === 1) {
+            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else if (reference.authors.length === 2) {
+            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          } else {
+            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          }
+          if (!onlyAuthors) {
+            result = result + reference.title
+          }
+        } else {
+          return 'author(s) not found'
+        }
+      }
+      return result
+    },
+    modalListCategories: function () {
+      this.$emit('get-lists');
+      this.$emit('refresh-categories');
+      this.$refs['modalEditListCategories'].show()
+    },
+    saveNewCategory: function () {
+      const params = {
+        text: this.modal_edit_list_categories.text,
+        extra_info: this.modal_edit_list_categories.extra_info,
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+
+      axios.post('/api/isoqf_list_categories', params)
+        .then(async () => {
+          this.$emit('refresh-categories')
+          this.$emit('get-lists')
+          this.modal_edit_list_categories.new = false
+          this.modal_edit_list_categories.text = ''
+          this.modal_edit_list_categories.extra_info = ''
+        })
+        .catch((error) => {
+          this.printErrors(error)
+        })
+    },
+    editListCategoryName: function (index) {
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      this.modal_edit_list_categories.text = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
+      this.modal_edit_list_categories.edit = true
+      this.modal_edit_list_categories.index = index
+      this.modal_edit_list_categories.id = _options[index].id
+    },
+    updateCategoryName: function () {
+      const objID = this.modal_edit_list_categories.id
+
+      if (objID) {
+        const params = {
+          text: this.modal_edit_list_categories.text,
+          extra_info: this.modal_edit_list_categories.extra_info
+        }
+        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
+          .then(async () => {
+             this.$emit('refresh-categories')
+             this.$emit('get-lists')
+            this.modal_edit_list_categories.edit = false
+            this.modal_edit_list_categories.text = ''
+            this.modal_edit_list_categories.extra_info = ''
+            this.modal_edit_list_categories.index = null
+            this.modal_edit_list_categories.id = null
+          })
+          .catch((error) => {
+            this.printErrors(error)
+          })
+      }
+    },
+    removeListCategory: function (data) {
+      const index = data.index
+      let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+
+      this.modal_edit_list_categories.text = _options[index].text
+      this.modal_edit_list_categories.extra_info = _options[index].extra_info
+      this.modal_edit_list_categories.remove = true
+      this.modal_edit_list_categories.index = index
+      this.modal_edit_list_categories.id = data.item.id
+    },
+    removeCategory: function () {
+      const objID = this.modal_edit_list_categories.id
+      const index = this.modal_edit_list_categories.index
+      const _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
+      const deletedItem = _options.splice(index, 1)
+
+      if (objID) {
+        axios.delete(`/api/isoqf_list_categories/${objID}`)
+          .then(async () => {
+             this.$emit('refresh-categories')
+            this.updateLists(deletedItem)
+            this.modal_edit_list_categories.remove = false
+            this.modal_edit_list_categories.text = ''
+            this.modal_edit_list_categories.extra_info = ''
+            this.modal_edit_list_categories.index = null
+            this.modal_edit_list_categories.id = null
+          })
+          .catch((error) => {
+            this.printErrors(error)
+          })
+      }
+    },
+    modalCancelCategoryButtons: function () {
+      this.modal_edit_list_categories.new = false
+      this.modal_edit_list_categories.edit = false
+      this.modal_edit_list_categories.remove = false
+      this.modal_edit_list_categories.text = ''
+      this.modal_edit_list_categories.extra_info = ''
+      this.modal_edit_list_categories.index = null
+      this.modal_edit_list_categories.id = null
+    },
+    updateLists: function (deletedCategoryValue) {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      let _request = []
+      for (let list of _lists) {
+        if (list.category === deletedCategoryValue[0].id) {
+          list.category = null
+          _request.push(axios.patch(`/api/isoqf_lists/${list.id}`, list))
+        }
+      }
+      axios.all(_request)
+        .then(axios.spread(() => {
+          this.$emit('get-lists')
+        }))
+    },
+    modalSortFindings: function () {
+      let _lists = JSON.parse(JSON.stringify(this.lists))
+      _lists.sort(function (a, b) {
+        if (a.sort < b.sort) {
+          return -1
+        }
+        if (a.sort > b.sort) {
+          return 1
+        }
+        return 0
+      })
+      this.sorted_lists = _lists
+      this.$refs['modal-sort-findings'].show()
+    },
+    saveSortedLists: function () {
+      let cnt = 1
+      let requests = []
+      this.table_settings.isBusy = true
+      for (const list of this.sorted_lists) {
+        const params = {
+          'sort': cnt
+        }
+        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
+        cnt++
+      }
+
+      Promise.all(requests)
+        .then((responses) => {
+          for (const response of responses) {
+            this.updateFindingSort(response.data.id, response.data.$set.sort)
+          }
+        })
+        .catch((error) => {
+          this.table_settings.isBusy = false
+          this.printErrors(error)
+        })
+    },
+    updateFindingSort: function (listId, sort, getList = false) {
+      const params = {
+        organization: this.$route.params.org_id,
+        list_id: listId
+      }
+      axios.get('/api/isoqf_findings', {params})
+        .then((reponse) => {
+          const findingId = reponse.data[0].id
+          const params = {
+            'isoqf_id': sort,
+            'evidence_profile.isoqf_id': sort
+          }
+          axios.patch(`/api/isoqf_findings/${findingId}`, params)
+            .then(() => {
+              this.$emit('get-lists')
+            })
+            .catch((error) => {
+              this.table_settings.isBusy = false
+              this.printErrors(error)
+            })
+        })
+    },
+    generateEvidenceProfileTableWithCategories: function (findings) {
+      let content = []
+      for (const position in findings) {
+        let rowTitle = 'Uncategorised findings'
+        for (const category of this.list_categories.options) {
+          if (findings[position].length) {
+            if (findings[position][0].category === null) {
+              break
+            }
+            if (findings[position][0].category === category.id) {
+              rowTitle = category.text
+            }
+          }
+        }
+        if (findings[position].length) {
+          content.push(
+            new TableRow({
+              children: [
+                new TableCell({
+                  columnSpan: 5,
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      children: [
+                        new TextRun({
+                          text: rowTitle.toUpperCase(),
+                          bold: true,
+                          size: 22
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          )
+          content.push(...this.generateEvidenceProfileTableWithoutCategories(findings[position]))
+        }
+      }
+      return content
+    },
+    generateEvidenceProfileTable: function (findings) {
+      let categories = JSON.parse(JSON.stringify(this.list_categories.options)).filter((category) => { return category.id !== null })
+      categories.sort(function (a, b) {
+        if (a.text < b.text) { return -1 }
+        if (a.text > b.text) { return 1 }
+        return 0
+      })
+
+      let _findings = {}
+      for (let category of categories) {
+        _findings[category.id] = []
+      }
+      if (categories.length) {
+        _findings['uncategorised'] = []
+        for (let finding of findings) {
+          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
+            if (finding.category !== null) {
+              if (Object.prototype.hasOwnProperty.call(_findings, finding.category.toString())) {
+                _findings[finding.category].push(finding)
+              } else {
+                _findings[finding.category] = []
+                _findings[finding.category].push(finding)
+              }
+            } else {
+              _findings['uncategorised'].push(finding)
+            }
+          }
+        }
+        return this.generateEvidenceProfileTableWithCategories(_findings)
+      } else {
+        return this.generateEvidenceProfileTableWithoutCategories(findings)
+      }
+    },
+    generateEvidenceProfileTableWithoutCategories: function (findings) {
+      return findings.map((finding) => {
+        if (Object.prototype.hasOwnProperty.call(finding, 'evidence_profile')) {
+          return new TableRow({
+            tableHeader: true,
+            children: [
+              this.generateTableCell({
+                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.CENTER
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
+              }),
+              this.generateTableCell({
+                width_size: '10%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT
+              })
+            ]
+          })
+        } else {
+          return new TableRow({
+            children: [
+              this.generateTableCell({
+                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT
+              }),
+              new TableCell({
+                columnSpan: 5,
+                width_size: '40%',
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: '',
+                        size: 22
+                      })
+                    ]
+                  })
+                ]
+              }),
+              this.generateTableCell({
+                width_size: '10%',
+                text: this.returnRefWithNames(finding.references),
+                font_size: 16,
+                align: AlignmentType.LEFT
+              })
+            ]
+          })
+        }
+      })
+    },
+    generateTableCell: function (data) {
+       return new TableCell({
+        width: {
+          size: data.width_size,
+          type: 'pct'
+        },
+        children: [
+          new Paragraph({
+            alignment: data.align,
+            children: [
+              new TextRun({
+                text: data.text,
+                size: data.font_size
+              })
+            ]
+          })
+        ]
+      })
+    },
+    returnRefWithNames: function (array) {
+      let authorsList = []
+      for (const i in array) {
+        for (const r of this.references) {
+          if (r.id === array[i]) {
+            authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
+          }
+        }
+      }
+      authorsList.sort()
+      let authors = ''
+      for (let x in authorsList) {
+        authors = authors + authorsList[x] + '; '
+      }
+      return authors
+    },
+    getAuthorsFormat: function (authors = [], pubYear = '') {
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0].split(',')[0] + ' ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        } else {
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        }
+      } else {
+        return 'author(s) not found'
+      }
+    },
+    displaySelectedOption: function (option, type) {
+      return Commons.displaySelectedOption(option, type)
+    }
+  }
+}
+</script>
+
+<style scoped>
+  div >>>
+    a.table-edit-list {
+      color: #000;
+      text-decoration: underline;
+    }
+  div >>>
+    #extracted-data-table thead th:first-child {
+      width: 25%;
+    }
+  div >>>
+    #findings.table thead th {
+      width: 15%;
+    }
+  div >>>
+    #findings.table thead th:nth-child(2) {
+      width: 45%;
+    }
+  div >>>
+    #findings.table thead th:first-child {
+      width: 5%;
+    }
+  div >>>
+    #findings.table thead th:last-child {
+      width: 5%;
+    }
+  div >>>
+    .text-danger.remove-opt {
+      cursor: pointer;
+    }
+  div >>>
+    #findings-print.table thead th {
+      width: 15%;
+    }
+  div >>>
+    #findings-print.table thead th:nth-child(2) {
+      width: 35%;
+    }
+  div >>>
+    #findings-print.table thead th:first-child {
+      width: 5%;
+    }
+  div >>>
+    #findings-print.table thead th:last-child {
+      width: 15%;
+    }
+  div >>>
+    table#findings-print tbody tr td a {
+      color: #000;
+    }
+  div >>>
+    table .references {
+      font-size: 12px;
+    }
+  div >>>
+    #export-button button:first-child {
+      width: 100%;
+    }
+  div >>>
+    #export-button ul {
+      width: 100%;
+    }
+  div >>>
+    #findings.table tbody td li {
+      font-size: 0.8rem;
+      padding-top: 0.4rem;
+      list-style-type: none;
+    }
+  div >>>
+    #dropdown-categories .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-option .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+  div >>>
+    #dropdown-cerqual-explanation .btn-secondary {
+      color: #495057;
+      background-color: transparent;
+      border-color: transparent;
+    }
+    .card-header {
+      padding: .5rem .5rem 0 .5rem;
+    }
+    b.cerqual-explanation {
+      font-size: 13px;
+    }
+    #card-search .card-body {
+      padding: .3rem;
+    }
+  div >>>
+    #modal-publish-license > .custom-control-inline {
+      padding-bottom: 0.6rem;
+    }
+  @media print {
+    div >>>
+      #info-project {
+        display: block !important;
+      }
+    div >>>
+      #findings tbody tr:not(.b-table-row-selected) {
+        display: none !important;
+      }
+  }
+</style>
