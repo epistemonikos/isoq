@@ -226,6 +226,7 @@ export default {
       // Estado para carga de archivos
       pre_references: '',
       fileReferences: [],
+      episte_selected: [],
 
       // Estado para PubMed
       pubmed_request: '',
@@ -657,6 +658,7 @@ export default {
       }
     },
 
+
     // Métodos para eliminación
     confirmRemoveAllReferences (event) {
       event.preventDefault()
@@ -755,14 +757,6 @@ export default {
       return _r
     },
 
-    requestImportReferences: async function (index) {
-      return axios({
-        method: 'POST',
-        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-        data: this.pubmed_requested[index]
-      })
-    },
-
     importReferences: async function () {
       if (!this.pubmed_selected.length) return
 
@@ -770,7 +764,7 @@ export default {
       let axiosRequests = []
 
       for (const index of this.pubmed_selected) {
-        axiosRequests.push(this.requestImportReferences(index))
+        axiosRequests.push(this.requestsImportReferences(this.pubmed_requested[index]))
       }
 
       try {
@@ -797,6 +791,7 @@ export default {
         this.$emit('statusLoadReferences', false)
         console.log('error', error)
       }
+
     },
 
     axiosGetFindings: async function (listId) {
@@ -927,6 +922,7 @@ export default {
       const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
       let requests = []
 
+
       // Manejar listas
       for (const list of lists) {
         let obj = { id: null, references: [] }
@@ -958,7 +954,11 @@ export default {
           console.log(`Characteristics: Items antes: ${originalLength}, después: ${items.length}`)
 
           requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
+        } else {
+          console.log('No hay items en characteristics o está vacío')
         }
+      } else {
+        console.log('No se encontró ID en charsOfStudies o charsOfStudies es null')
       }
 
       // Eliminar entrada de isoqf_assessments
@@ -977,7 +977,11 @@ export default {
           console.log(`Assessments: Items antes: ${originalLength}, después: ${items.length}`)
 
           requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
+        } else {
+          console.log('No hay items en assessments o está vacío')
         }
+      } else {
+        console.log('No se encontró ID en _assessments o _assessments es null')
       }
 
       console.log('Total de requests a ejecutar:', requests.length)
