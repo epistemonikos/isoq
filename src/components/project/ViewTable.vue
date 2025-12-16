@@ -1,8 +1,6 @@
 <template>
   <div>
     <b-table
-      :selectable="(mode==='view')?true:false"
-      select-mode="multi"
       selected-variant="warning"
       bordered
       head-variant="light"
@@ -112,12 +110,18 @@
           <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
         </span>
         <span v-else>
-          {{ data.item.name }}
+          <template v-if="mode==='view' && data.item.references.length">
+            <b-link class="table-edit-list" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+          </template>
+          <template v-else>
+            {{ data.item.name }}
+          </template>
         </span>
       </template>
       <template v-slot:cell(category_name)="data">
         <template v-if="data.item.category !== null">
           <b-button
+            v-if="mode==='edit'"
             block
             variant="outline-info"
             @click="editModalFindingName(data)">Edit group</b-button>
@@ -137,34 +141,36 @@
       </template>
       <template v-slot:cell(cerqual_option)="data">
         <b-button
-          v-if="mode==='edit' && data.item.references.length"
+          v-if="data.item.references.length"
           class="d-print-none mb-3"
           :disabled="(data.item.references.length) ? false : true"
           block
           :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
           :to="{name: 'editList', params: {id: data.item.id}}">
             <font-awesome-icon
-              v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+              v-if="mode==='edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
               icon="comments"></font-awesome-icon>
-            <span v-if="data.item.cerqual_option===''">Complete</span>
-            <span v-if="data.item.cerqual_option!=''">Edit</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_option===''">Complete</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_option!=''">Edit</span>
+            <span v-if="mode !== 'edit'">View</span>
             GRADE-CERQual Assessment
           </b-button>
         <b>{{ data.item.cerqual_option }}</b>
       </template>
       <template v-slot:cell(cerqual_explanation)="data">
         <b-button
-          v-if="mode==='edit' && data.item.references.length"
+          v-if="data.item.references.length"
           class="d-print-none mb-3"
           :disabled="(data.item.references.length) ? false : true"
           block
           :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
           :to="{name: 'editList', params: {id: data.item.id}}">
             <font-awesome-icon
-              v-if="Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+              v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
               icon="comments"></font-awesome-icon>
-            <span v-if="data.item.cerqual_explanation===''">Complete</span>
-            <span v-if="data.item.cerqual_explanation!=''">Edit</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_explanation===''">Complete</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_explanation!=''">Edit</span>
+            <span v-if="mode !== 'edit'">View</span>
             GRADE-CERQual Assessment
         </b-button>
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
@@ -455,8 +461,8 @@ export default {
     },
     mode: {
       type: String,
-      required: true,
-      default: 'view'
+      required: false,
+      default: ''
     },
     isBusy: {
       type: Boolean,

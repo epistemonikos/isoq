@@ -139,7 +139,7 @@
         </p>
         <ul class="font-weight-light text-danger">
           <li>Do not add columns for author or year (these will be added automatically)</li>
-          <li>Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+          <li v-if="type !== 'isoqf_assessments'">Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
         </ul>
         <b-form-group
           label="Number of columns">

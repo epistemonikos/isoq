@@ -202,7 +202,11 @@ export default {
   name: 'actionButtons',
   mixins: [documentExportMixin, useExportState()],
   props: {
-    mode: String,
+    mode: {
+      type: String,
+      required: false,
+      default: ''
+    },
     preview: {
       type: Boolean,
       default: false

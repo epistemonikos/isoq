@@ -61,18 +61,19 @@ export default class Commons {
 
   // Funciones de referencias
   static referencesWithNames(data, references) {
+    if (!data) return ''
     let authorsList = []
-    for (const i in data) {
+    for (const id of data) {
       for (const r of references) {
-        if (r.id === data[i]) {
+        if (r.id === id) {
           authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
         }
       }
     }
     authorsList.sort()
     let authors = ''
-    for (let x in authorsList) {
-      authors = authors + authorsList[x] + '; '
+    for (const author of authorsList) {
+      authors += author + '; '
     }
     return authors
   }
