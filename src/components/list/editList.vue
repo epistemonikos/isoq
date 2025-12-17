@@ -353,6 +353,7 @@ export default {
           items: []
         },
         cerqual: {},
+        cerqual_lists: [],
         references: []
       },
       buffer_meth_assessments: {

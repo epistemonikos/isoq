@@ -1013,7 +1013,7 @@ export default {
       }
     },
     checkIfIsTheOnlyPublished: function () {
-      if (this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.project.private === false) {
+      if (this.list && this.list.cerqual_lists && this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.project.private === false) {
         return true
       }
       return false
