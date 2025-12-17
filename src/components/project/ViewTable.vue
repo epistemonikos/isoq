@@ -732,8 +732,15 @@ export default {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
 
+        let findingsWithRefsCount = 0
+        for (const item of this.lists) {
+          if (item.references && item.references.length > 0) {
+            findingsWithRefsCount++
+          }
+        }
+
         // Special case: if there's only one item in the list, removing all references will make the project private
-        if (this.lists.length === 1) {
+        if (findingsWithRefsCount <= 1) {
           this.$refs['modal-private-project-warning'].show()
         } else {
           this.$refs['modal-no-references-warning'].show()
