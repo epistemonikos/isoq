@@ -206,6 +206,7 @@
       ok-title="Save"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
+      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length"
       @ok="updateListName">
       <b-alert
         :show="editingUser.show"

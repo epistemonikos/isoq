@@ -20,6 +20,7 @@
         <template v-if="permissions">
           <b-button
             class="mt-2"
+            :disabled="!reviewContent.trim().length"
             variant="outline-primary"
             @click="updateReview">Update</b-button>
           <b-button
