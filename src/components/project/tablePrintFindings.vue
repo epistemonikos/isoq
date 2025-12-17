@@ -26,7 +26,7 @@
             <template v-else>
               <b-td
                 style="vertical-align: top;">
-                <p>{{ item.isoqf_id }}</p>
+                <p>{{ item.isoqf_id || item.sort }}</p>
               </b-td>
               <b-td
                 style="vertical-align: top;">
