@@ -55,6 +55,7 @@
               required
               :placeholder="$t('Title of review')"
               :state="state.name"
+              @input="state.name = (formData.name !== '' && formData.name.length > 2) ? null : state.name"
               @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
               v-model="formData.name"></b-form-input>
             <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
@@ -68,6 +69,7 @@
               id="input-project-authors"
               :placeholder="$t('Authors of review')"
               :state="state.authors"
+              @input="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : state.authors"
               @blur="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : false"
               v-model="formData.authors"></b-form-input>
             <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
@@ -80,6 +82,7 @@
               :disabled="!canWrite"
               id="input-project-author"
               :state="state.author"
+              @input="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : state.author"
               @blur="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : false"
               v-model="formData.author"></b-form-input>
               <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author') }}</b-form-invalid-feedback>
@@ -92,6 +95,7 @@
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
+              @input="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email"
               @blur="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false"
               v-model="formData.author_email"></b-form-input>
               <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
@@ -106,6 +110,7 @@
               rows="6"
               max-rows="100"
               :state="state.review_question"
+              @input="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : state.review_question"
               @blur="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : false"
               v-model="formData.review_question"></b-form-textarea>
             <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 2 characters') }}</b-form-invalid-feedback>
@@ -129,6 +134,7 @@
               type="url"
               id="select-project-list-url-doi"
               :state="state.url_doi"
+              @input="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi)) ? null : state.url_doi"
               @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
               v-model="formData.url_doi"></b-input>
             <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
@@ -151,6 +157,7 @@
               :disabled="!canWrite"
               id="input-project-list-authors"
               :state="state.lists_authors"
+              @input="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : state.lists_authors"
               @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : (formData.public_type !== 'private') ? false : null"
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
@@ -337,8 +344,23 @@ export default {
       this.pendingData = null
     },
     handlePublishWarningCancel: function () {
-      // User wants to cancel the changes, restore previous values
-      Object.assign(this.formData, this.originalFormData)
+      // User wants to cancel the unpublish action
+      // Only restore the required fields that were removed, keep other valid changes
+      const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
+
+      for (const field of requiredFields) {
+        const originalValue = this.originalFormData[field]
+        const currentValue = this.formData[field]
+
+        // Only restore if the field was removed (empty or whitespace only)
+        if (originalValue && (!currentValue || currentValue.trim() === '')) {
+          this.formData[field] = originalValue
+        }
+      }
+
+      // Also restore the public_type if it was changed
+      this.formData.public_type = this.originalFormData.public_type
+
       this.pendingData = null
     },
     checkRequiredFieldsRemoved: function (data) {
