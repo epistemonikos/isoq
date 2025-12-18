@@ -294,7 +294,7 @@
                   size="xl"
                   ok-title="Save"
                   ok-variant="outline-success"
-                  cancel-variant="outline-primary"
+                  cancel-variant="outline-danger"
                   scrollable
                   @ok="saveSortedLists">
                   <template v-slot:modal-title>
@@ -314,7 +314,12 @@
                           class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
-                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
+                        <p class="font-weight-bold">
+                          <template v-if="item.category">
+                            {{ getCategoryName(item.category) }}&nbsp;-&nbsp;
+                          </template>
+                          {{ item.cerqual_option }}
+                        </p>
                       </b-list-group-item>
                     </draggable>
                   </b-list-group>
@@ -385,10 +390,12 @@
                 :refs="refs"
                 @update-modification-time="updateModificationTime"
                 @get-lists="getLists"
+                @get-project="getProject"
                 @add-list="modalAddList"
                 @set-busy="setBusy"
                 @set-load-references="statusLoadReferences"
                 @get-references="getReferences"
+                @update-project-status="getProject"
                  />
             </template>
             <!-- printed version -->
@@ -1638,7 +1645,7 @@ export default {
       const _categories = JSON.parse(JSON.stringify(this.list_categories))
       let _category = ''
       for (let category of _categories.options) {
-        if (category.value === id) {
+        if (category.id === id) {
           _category = category.text
         }
       }

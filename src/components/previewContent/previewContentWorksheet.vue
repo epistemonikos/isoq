@@ -52,8 +52,13 @@
             :project="{}"
             :permission="true"
             :selectOptions="select_options"
-            :levelConfidence="level_confidence"></evidence-profile>
-
+            :levelConfidence="level_confidence"
+            :findings="{}"
+            :methAssessments="meth_assessments"
+            :extractedData="extracted_data"
+            :showEditExtractedDataInPlace="{}"
+            :modalData="modalData()"
+            :charsOfStudies="characteristics_studies"></evidence-profile>
           <div
             v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
             <chars-of-studies
@@ -91,6 +96,12 @@
               :modePrintFieldObject="mode_print_fieldsObj"
               :refsWithTitle="[]"></extracted-data>
           </div>
+          <div v-if="list.is_public">
+            <div class="mt-5 alert alert-info" role="alert">
+              <h5>License type</h5>
+              <p>{{ theLicense(list.license_type) }}</p>
+            </div>
+          </div>
         </b-col>
       </b-row>
     </b-container>
@@ -106,6 +117,7 @@ import evidenceProfile from '../list/editListEvidenceProfile.vue'
 import charsOfStudies from '../list/editListCharsOfStudies.vue'
 import methAssessments from '../list/editListMethAssessments.vue'
 import extractedData from '../list/editListExtractedData.vue'
+import Commons from '../../utils/commons'
 
 export default {
   components: {
@@ -280,6 +292,48 @@ export default {
     this.getList()
   },
   methods: {
+    modalData: function () {
+      const data = {
+        'methodological_limitations': {
+          'option': null,
+          'example': '',
+          'explanation': '',
+          'notes': '',
+          'title': ''
+        },
+        'coherence': {
+          'option': null,
+          'example': '',
+          'explanation': '',
+          'notes': '',
+          'title': ''
+        },
+        'adequacy': {
+          'option': null,
+          'example': '',
+          'explanation': '',
+          'notes': '',
+          'title': ''
+        },
+        'relevance': {
+          'option': null,
+          'example': '',
+          'explanation': '',
+          'notes': '',
+          'title': ''
+        },
+        'cerqual': {
+          'option': null,
+          'example': '',
+          'explanation': '',
+          'notes': '',
+          'title': ''
+        },
+        'type': '',
+        'title ': ''
+      }
+      return data
+    },
     getList: function (fromModal = false) {
       axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
@@ -1240,6 +1294,9 @@ export default {
           size: size
         })
       }
+    },
+    theLicense: function (license) {
+      return Commons.theLicense(license)
     }
   }
 }

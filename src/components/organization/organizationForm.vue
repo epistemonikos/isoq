@@ -55,6 +55,7 @@
               required
               :placeholder="$t('Title of review')"
               :state="state.name"
+              @input="state.name = (formData.name !== '' && formData.name.length > 2) ? null : state.name"
               @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
               v-model="formData.name"></b-form-input>
             <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
@@ -68,6 +69,7 @@
               id="input-project-authors"
               :placeholder="$t('Authors of review')"
               :state="state.authors"
+              @input="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : state.authors"
               @blur="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : false"
               v-model="formData.authors"></b-form-input>
             <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
@@ -80,6 +82,7 @@
               :disabled="!canWrite"
               id="input-project-author"
               :state="state.author"
+              @input="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : state.author"
               @blur="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : false"
               v-model="formData.author"></b-form-input>
               <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author') }}</b-form-invalid-feedback>
@@ -92,6 +95,7 @@
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
+              @input="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email"
               @blur="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false"
               v-model="formData.author_email"></b-form-input>
               <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
@@ -106,6 +110,7 @@
               rows="6"
               max-rows="100"
               :state="state.review_question"
+              @input="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : state.review_question"
               @blur="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : false"
               v-model="formData.review_question"></b-form-textarea>
             <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 2 characters') }}</b-form-invalid-feedback>
@@ -129,6 +134,7 @@
               type="url"
               id="select-project-list-url-doi"
               :state="state.url_doi"
+              @input="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi)) ? null : state.url_doi"
               @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
               v-model="formData.url_doi"></b-input>
             <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
@@ -151,6 +157,7 @@
               :disabled="!canWrite"
               id="input-project-list-authors"
               :state="state.lists_authors"
+              @input="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : state.lists_authors"
               @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : (formData.public_type !== 'private') ? false : null"
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
@@ -208,7 +215,10 @@
       </b-row>
       <b-row align-h="end" v-if="canWrite && !isModal">
         <b-col
-          cols="6"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
           class="mb-3">
           <b-button
             block
@@ -218,6 +228,17 @@
           </b-button>
         </b-col>
       </b-row>
+
+      <!-- Warning modal for reverting to private -->
+      <b-modal
+        id="publish-warning-modal"
+        title="Warning!"
+        ok-title="Continue"
+        cancel-title="Cancel"
+        @ok="handlePublishWarningContinue"
+        @cancel="handlePublishWarningCancel">
+        <p>By removing this content your project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+      </b-modal>
     </template>
   </div>
 </template>
@@ -250,6 +271,8 @@ export default {
       }
       this.global_status = newData
     }
+    // Store the initial form data for comparison
+    this.originalFormData = JSON.parse(JSON.stringify(this.formData))
   },
   data: function () {
     return {
@@ -286,7 +309,9 @@ export default {
         lists_authors: null,
         license: null,
         can_publish: null
-      }
+      },
+      originalFormData: null,
+      pendingData: null
     }
   },
   methods: {
@@ -308,9 +333,71 @@ export default {
     dismissAlertProject: function () {
       this.msgUpdateProject = null
     },
-    save: async function () {
+    handlePublishWarningContinue: function () {
+      // User confirmed they want to make the project private
+      const data = this.pendingData
+      data.public_type = 'private'
+      data.license_type = ''
+
+      // Reset the state since fields are no longer required in private mode
+      this.resetState()
+
+      // Continue with save operation
+      this.executeSave(data)
+      this.pendingData = null
+    },
+    handlePublishWarningCancel: function () {
+      // User wants to cancel the unpublish action
+      // Only restore the required fields that were removed, keep other valid changes
+      const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
+
+      for (const field of requiredFields) {
+        const originalValue = this.originalFormData[field]
+        const currentValue = this.formData[field]
+
+        // Only restore if the field was removed (empty or whitespace only)
+        if (originalValue && (!currentValue || currentValue.trim() === '')) {
+          this.formData[field] = originalValue
+        }
+      }
+
+      // Also restore the public_type if it was changed
+      this.formData.public_type = this.originalFormData.public_type
+
+      this.pendingData = null
+    },
+    checkRequiredFieldsRemoved: function (data) {
+      // Check if project is currently published (not private)
+      if (this.originalFormData.public_type !== 'private') {
+        const requiredFields = ['name', 'authors', 'author', 'author_email', 'review_question']
+
+        // Check if any required field was removed
+        for (const field of requiredFields) {
+          const originalValue = this.originalFormData[field]
+          const newValue = data[field]
+
+          if (originalValue && (!newValue || newValue.trim() === '')) {
+            return true
+          }
+        }
+      }
+      return false
+    },
+    save: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
       data.organization = this.$store.state.user.personal_organization
+
+      // Check if required fields were removed from a published project
+      if (this.checkRequiredFieldsRemoved(data)) {
+        // Store the pending data and show warning modal
+        this.pendingData = data
+        this.$bvModal.show('publish-warning-modal')
+      } else {
+        // Proceed with normal save
+        this.executeSave(data)
+      }
+    },
+    executeSave: async function (data) {
       if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
         const response = await Project.update(data)
         if (response.data.status) {
@@ -323,10 +410,12 @@ export default {
             window.scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('update-form-data', data)
           }
+          // Update the original form data to reflect the new state
+          this.originalFormData = JSON.parse(JSON.stringify(data))
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = response.data.message // 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.'
+          this.msgUpdateProject = response.data.message
           if (this.isModal) {
             document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
           } else {
@@ -339,6 +428,8 @@ export default {
           this.variant = 'success'
           this.msgUpdateProject = 'The project has been created'
           this.$emit('modal-notification', response)
+          // Update the original form data to reflect the new state
+          this.originalFormData = JSON.parse(JSON.stringify(data))
         } else {
           this.variant = 'danger'
           this.msgUpdateProject = response.data.message
@@ -375,6 +466,11 @@ export default {
           newData.push(i)
         }
         this.global_status = newData
+      }
+
+      // When formData changes externally, update the original data
+      if (JSON.stringify(this.originalFormData) !== JSON.stringify(data)) {
+        this.originalFormData = JSON.parse(JSON.stringify(data))
       }
     }
   }
