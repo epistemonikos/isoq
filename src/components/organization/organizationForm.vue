@@ -215,7 +215,10 @@
       </b-row>
       <b-row align-h="end" v-if="canWrite && !isModal">
         <b-col
-          cols="6"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
           class="mb-3">
           <b-button
             block
