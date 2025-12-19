@@ -942,7 +942,7 @@ export default {
   computed: {
     clearCerqualWarningMessage: function () {
       if (this.checkIfIsTheOnlyPublished()) {
-        return 'By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment.'
+        return 'By clearing this assessment, this iSoQ project will revert to "private" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment and associated references.'
       } else {
         return 'By clearing this assessment, this review finding will no longer appear in your published iSoQ project.'
       }
@@ -1013,7 +1013,10 @@ export default {
       }
     },
     checkIfIsTheOnlyPublished: function () {
-      if (this.list && this.list.cerqual_lists && this.list.cerqual_lists.includes(this.list.id) && this.list.cerqual_lists.length === 1 && this.list.project.private === false) {
+      // Use publishable_lists (findings with both cerqual AND references) if available
+      // Otherwise fall back to cerqual_lists for backwards compatibility
+      const publishableLists = this.list.publishable_lists || this.list.cerqual_lists || []
+      if (this.list && publishableLists && publishableLists.includes(this.list.id) && publishableLists.length === 1 && this.list.project.private === false) {
         return true
       }
       return false
