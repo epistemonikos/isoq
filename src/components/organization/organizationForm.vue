@@ -69,8 +69,8 @@
               id="input-project-authors"
               :placeholder="$t('Authors of review')"
               :state="state.authors"
-              @input="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : state.authors"
-              @blur="state.authors = (formData.public_type === 'private') ? null : (formData.authors !== '' && formData.authors.split(',').length) ? null : false"
+              @input="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : state.authors : null"
+              @blur="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : false : null"
               v-model="formData.authors"></b-form-input>
             <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -82,10 +82,10 @@
               :disabled="!canWrite"
               id="input-project-author"
               :state="state.author"
-              @input="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : state.author"
-              @blur="state.author = (formData.public_type === 'private') ? null : (formData.author !== '' && formData.author.length > 2) ? null : false"
+              @input="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : state.author : null"
+              @blur="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : false : null"
               v-model="formData.author"></b-form-input>
-              <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author') }}</b-form-invalid-feedback>
+              <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author with at least 3 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             label="Corresponding author's email address"
@@ -95,8 +95,8 @@
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
-              @input="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email"
-              @blur="state.author_email = (formData.public_type === 'private') ? null : (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false"
+              @input="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email : null"
+              @blur="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false : null"
               v-model="formData.author_email"></b-form-input>
               <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -110,10 +110,10 @@
               rows="6"
               max-rows="100"
               :state="state.review_question"
-              @input="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : state.review_question"
-              @blur="state.review_question = (formData.public_type === 'private') ? null : (formData.review_question !== '' && formData.review_question.length > 2) ? null : false"
+              @input="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : state.review_question : null"
+              @blur="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : false : null"
               v-model="formData.review_question"></b-form-textarea>
-            <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 2 characters') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 3 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('Has this review been published?')"
@@ -157,8 +157,8 @@
               :disabled="!canWrite"
               id="input-project-list-authors"
               :state="state.lists_authors"
-              @input="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : state.lists_authors"
-              @blur="state.lists_authors = (formData.lists_authors !== '' && formData.lists_authors.split(',').length) ? null : (formData.public_type !== 'private') ? false : null"
+              @input="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : state.lists_authors : null"
+              @blur="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : false : null"
               v-model="formData.lists_authors"></b-form-input>
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
           </b-form-group>
@@ -452,6 +452,14 @@ export default {
       this.msgUpdateProject = msg
       this.variant = 'danger'
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  },
+  computed: {
+    isProjectPublished () {
+      // Check if the project is currently published (either original state or current selection)
+      // A project requires validation if it's not private
+      return this.formData.public_type !== 'private' ||
+             (this.originalFormData && this.originalFormData.public_type !== 'private')
     }
   },
   watch: {
