@@ -212,6 +212,7 @@
       ok-title="Save"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
+      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length"
       @ok="updateListName">
       <b-alert
         :show="editingUser.show"
@@ -266,7 +267,10 @@
         variant="danger">
         The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
       </b-alert>
-      <p class="text-danger">
+      <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
+        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to "Private" because it will no longer meet the requirements for being published to the iSoQ database.
+      </p>
+      <p v-else class="text-danger">
         Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
       </p>
       <p>
@@ -279,9 +283,12 @@
       id="modal-references-list"
       ref="modal-references-list"
       title="References"
-      @ok="saveReferencesList"
+      @ok="checkReferencesBeforeSaving"
+      @hidden="handleReferencesModalHidden"
       @cancel="cancelReferencesList"
       :ok-disabled="(selected_list_index === null) ? true : false"
+      :no-close-on-backdrop="pendingSaveReferences"
+      :no-close-on-esc="pendingSaveReferences"
       ok-title="Save"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
@@ -323,6 +330,34 @@
           <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
         </div>
       </template>
+    </b-modal>
+
+    <b-modal
+      id="modal-no-references-warning"
+      ref="modal-no-references-warning"
+      title="Warning"
+      @ok="confirmSaveNoReferences"
+      @cancel="cancelNoReferencesWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
+    </b-modal>
+
+    <b-modal
+      id="modal-private-project-warning"
+      ref="modal-private-project-warning"
+      title="Warning"
+      @ok="confirmSavePrivateProject"
+      @cancel="cancelPrivateProjectWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
     </b-modal>
   </div>
 </template>
@@ -373,7 +408,8 @@ export default {
           showFilterOne: false,
           showFilterTwo: false,
           showFilterThree: false,
-          show_criteria: false
+          show_criteria: false,
+          showExtendedExplanationTextForDeleting: false
         },
         itemData: null,
         publish: {
@@ -399,12 +435,47 @@ export default {
         finding_id: null,
         name: null,
         notes: null,
-        editing: false
+        editing: false,
+        organization: null,
+        list_id: null,
+        isoqf_id: null,
+        evidence_profile: {
+          name: '',
+          isoqf_id: null,
+          relevance: {
+            explanation: '',
+            option: null
+          },
+          adequacy: {
+            explanation: '',
+            option: null
+          },
+          coherence: {
+            explanation: '',
+            option: null
+          },
+          methodological_limitations: {
+            explanation: '',
+            option: null
+          },
+          cerqual: {
+            explanation: '',
+            option: null
+          },
+          references: []
+        },
+        references: [],
+        is_public: null,
+        license_type: null,
+        private: null,
+        public_type: null
       },
       selected_list_index: null,
       showBanner: false,
       selected_references: [],
-      finding: {}
+      original_references: [],
+      finding: {},
+      pendingSaveReferences: false
     }
   },
   props: {
@@ -525,20 +596,33 @@ export default {
     },
     removeModalFinding: function (data) {
       this.editFindingName.index = data.index
-      this.editFindingName.name = data.item.name
-      this.editFindingName.id = data.item.id
       const params = {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
       axios.get('/api/isoqf_findings', {params})
         .then((response) => {
-          this.editFindingName.finding_id = response.data[0].id
+          this.editFindingName = {...response.data[0]}
+
+          let cnt = 0
+          for (const el of this.lists) {
+            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
+              cnt++
+            }
+          }
+
+          // Only show extended warning if the project is currently public and would become private
+          if (!this.project.private && cnt === 1 && this.editFindingName.evidence_profile.cerqual.option !== null) {
+            this.ui.project.showExtendedExplanationTextForDeleting = true
+          } else {
+            this.ui.project.showExtendedExplanationTextForDeleting = false
+          }
+
+          this.$refs['remove-finding'].show()
         })
         .catch((error) => {
           console.log(Commons.printErrors(error))
         })
-      this.$refs['remove-finding'].show()
     },
     modalAddList: function () {
       this.$emit('add-list')
@@ -556,6 +640,7 @@ export default {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
             await this.$emit('get-references', false)
             this.selected_references = data.item.references
+            this.original_references = [...data.item.references]
             this.showBanner = false
             if (data.item.cerqual_option !== '') {
               this.showBanner = true
@@ -630,70 +715,13 @@ export default {
         return
       }
       this.$emit('set-busy', true)
-      axios.delete(`/api/isoqf_lists/${this.editFindingName.id}`)
-        .then(() => {
-          this.confirmRemoveFinding()
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    confirmRemoveFinding: function () {
-      if (!this.editFindingName.finding_id) {
-        return
-      }
-      axios.delete(`/api/isoqf_findings/${this.editFindingName.finding_id}`)
-        .then(() => {
-          this.deleteExtractedData()
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    deleteExtractedData: function () {
       const params = {
-        organization: this.$route.params.org_id,
-        finding_id: this.editFindingName.finding_id
+        project_id: this.$route.params.id,
+        finding_id: this.editFindingName.id
       }
-      axios.get('/api/isoqf_extracted_data', {params})
-        .then((response) => {
-          axios.delete(`/api/isoqf_extracted_data/${response.data[0].id}`)
-            .then(() => {
-              this.updateSortList(JSON.parse(JSON.stringify(this.editFindingName)))
-              this.editFindingName = {
-                index: null,
-                finding_id: null,
-                id: null,
-                name: null,
-                notes: null,
-                editing: false
-              }
-            })
-            .catch((error) => {
-              this.$emit('set-busy', false)
-              console.log(Commons.printErrors(error))
-            })
-        })
-        .catch((error) => {
-          this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
-        })
-    },
-    updateSortList: function (data) {
-      const index = data.index
-      let lists = JSON.parse(JSON.stringify(this.lists))
-      lists.splice(index, 1)
-      let querys = []
-      let cnt = 1
-      for (const list of lists) {
-        querys.push(axios.patch(`/api/isoqf_lists/${list.id}`, {sort: cnt}))
-        cnt++
-      }
-      Promise.all(querys)
+      axios.post('/api/finding/remove', params)
         .then(() => {
-          this.$emit('get-lists')
+          this.$emit('get-project')
         })
         .catch((error) => {
           this.$emit('set-busy', false)
@@ -701,9 +729,94 @@ export default {
         })
     },
     cancelReferencesList: function () {
-      this.cleanReferencesList()
       this.$refs['modal-references-list'].hide()
     },
+    checkReferencesBeforeSaving: function (bvModalEvent) {
+      // Prevent modal from closing automatically
+      // Only show warning if there were original references and all have been removed
+      if (this.selected_references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+        bvModalEvent.preventDefault()
+        this.pendingSaveReferences = true
+
+        let findingsWithRefsCount = 0
+        for (const item of this.lists) {
+          if (item.references && item.references.length > 0) {
+            findingsWithRefsCount++
+          }
+        }
+
+        // Special case: if there's only one item in the list, removing all references will make the project private
+        if (findingsWithRefsCount <= 1) {
+          this.$refs['modal-private-project-warning'].show()
+        } else {
+          this.$refs['modal-no-references-warning'].show()
+        }
+        return
+      }
+
+      // If no warning is needed, proceed with saving
+      this.saveReferencesList()
+    },
+
+    handleReferencesModalHidden: function () {
+      // Only clean up if not pending save from warning dialog
+      if (!this.pendingSaveReferences) {
+        this.cleanReferencesList()
+      }
+    },
+
+    confirmSaveNoReferences: function () {
+      // User confirmed they want to proceed with no references
+      this.saveReferencesList()
+      // Close both modals
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modal-references-list'].hide()
+      })
+    },
+
+    cancelNoReferencesWarning: function () {
+      // User cancelled - restore original references selection
+      this.selected_references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    confirmSavePrivateProject: function () {
+      // User confirmed they want to proceed, making the project private
+      this.saveProjectAsPrivate()
+      // Save the references (which will be empty)
+      this.saveReferencesList()
+      // Close both modals
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modal-references-list'].hide()
+      })
+    },
+
+    cancelPrivateProjectWarning: function () {
+      // User cancelled - restore original references selection
+      this.selected_references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    saveProjectAsPrivate: function () {
+      // Update the project to be private
+      const params = {
+        is_public: false,
+        private: true,
+        license_type: '',
+        public_type: 'private'
+      }
+      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        .then(() => {
+          // Emit an event to notify the parent component that the project status changed
+          this.$emit('update-project-status')
+        })
+        .catch((error) => {
+          console.log(Commons.printErrors(error))
+        })
+    },
+
     saveReferencesList: function () {
       this.$emit('set-load-references', true)
       this.$emit('set-busy', true)
@@ -720,9 +833,12 @@ export default {
           console.log(Commons.printErrors(error))
         })
     },
+
     cleanReferencesList: function () {
       this.selected_references = []
+      this.original_references = []
       this.finding = {}
+      this.pendingSaveReferences = false
     },
     updateFindingReferences: function (references) {
       const params = {

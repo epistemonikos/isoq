@@ -29,7 +29,7 @@
           You will now find a +A and -A in the top right corner of the screen so that you can adjust the size of the font throughout iSoQ.
         </li>
       </ul>
-       <p class="font-weight-bold">Prompt to check your references, success starts here!</p>
+      <p class="font-weight-bold">Prompt to check your references, success starts here!</p>
       <ul>
         <li>
           When you import your references in Step 1 of the MyData section of iSoQ, your imported studies are now displayed, thus prompting you to look them over before manually moving to Step 2. It is important to make sure that your references have imported correctly and are complete. You cannot currently edit your references within iSoQ.
@@ -40,7 +40,7 @@
       <p class="font-weight-bold">Narrower margins = easier viewing of content</p>
       <ul>
         <li>
-            The margins have been reduced throughout the platform to maximize what you are able to see in tables and modals.
+          The margins have been reduced throughout the platform to maximize what you are able to see in tables and modals.
         </li>
       </ul>
       <p class="font-weight-bold">New section in help tab – iSoQ training</p>
@@ -49,6 +49,7 @@
           We have added links to iSoQ training webinars on the Help page
         </li>
       </ul>
+
       <h3>May 2024</h3>
       <!-- acá escribes tu comentario -->
       <p class="font-weight-bold">Facilitating access to information on iSoQ development </p>

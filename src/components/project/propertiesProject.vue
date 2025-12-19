@@ -10,6 +10,7 @@
     <organizationForm
       :formData="project"
       :canWrite="canWrite"
+      :highlight="highlight"
       @update-form-data="updateFormData"></organizationForm>
   </div>
 </template>
@@ -28,6 +29,10 @@ export default {
     canWrite: {
       type: Boolean,
       required: true
+    },
+    highlight: {
+      type: String,
+      default: ''
     }
   },
   methods: {

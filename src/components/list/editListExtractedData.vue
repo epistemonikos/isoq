@@ -7,20 +7,21 @@
       <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
     </template>
     <template v-else>
-      <h3>Extracted data</h3>
+      <h3 v-if="showTitle">Extracted data</h3>
     </template>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
       It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
     </p>
-    <template v-if="extractedData.fields.length">
+    <template v-if="localExtractedData.fields.length">
       <bc-filters
         v-if="mode==='edit'"
+        :showFilters="showFilters"
         class="d-print-none"
         idname="extracted-data-filter"
         :tableSettings="tableSettings"
         type="extracted_data"
         :fields="modePrintFieldObject"
-        :items="extractedData.items">
+        :items="localExtractedData.items">
       </bc-filters>
       <b-table
         class="toDoc extracted-data-table"
@@ -29,8 +30,8 @@
         head-variant="light"
         outlined
         :filter="tableSettings.filter"
-        :fields="(mode==='view') ? modePrintFieldObject : extractedData.fieldsObj"
-        :items="extractedData.items"
+        :fields="(mode==='view') ? modePrintFieldObject : localExtractedData.fieldsObj"
+        :items="localExtractedData.items"
         :current-page="tableSettings.currentPage">
         <template v-slot:cell(authors)="data">
           <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
@@ -114,6 +115,11 @@ export default {
     showParagraph: {
       type: Boolean,
       default: false
+    },
+    showFilters: Boolean,
+    showTitle: {
+      type: Boolean,
+      default: true
     }
   },
   components: {
@@ -135,6 +141,10 @@ export default {
         currentPage: 1,
         perPage: 10,
         pageOptions: [10, 50, 100]
+      },
+      localExtractedData: {
+        fields: [],
+        items: []
       }
     }
   },
@@ -147,10 +157,10 @@ export default {
       }
     },
     openModalExtractedDataEditDataItem: function (data) {
-      this.extractedData.edit_index_item = data.index
-      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.extractedData.fields))
+      this.localExtractedData.edit_index_item = data.index
+      this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.localExtractedData.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
-      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.extractedData.items[data.index]))
+      this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.localExtractedData.items[data.index]))
       this.$refs['modal-extracted-data-data'].show()
     },
     openModalExtractedDataRemoveDataItem: function (data) {
@@ -158,14 +168,14 @@ export default {
       this.$refs['modal-extracted-data-remove-data-item'].show()
     },
     extractedDataRemoveDataItem: function () {
-      let items = JSON.parse(JSON.stringify(this.extractedData.items))
+      let items = JSON.parse(JSON.stringify(this.localExtractedData.items))
       const item = items[this.buffer_extracted_data.remove_index_item]
       let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
       items[this.buffer_extracted_data.remove_index_item] = newItem
 
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, {items: items})
+      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, {items: items})
         .then(() => {
-          this.$emit('getExtractedData')
+          this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
         })
         .catch((error) => {
@@ -174,7 +184,7 @@ export default {
     },
     saveDataExtractedData: function () {
       let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
-      let _originalItems = JSON.parse(JSON.stringify(this.extractedData.original_items))
+      let _originalItems = JSON.parse(JSON.stringify(this.localExtractedData.original_items))
 
       for (let index in _originalItems) {
         if (_item.ref_id === _originalItems[index].ref_id) {
@@ -191,15 +201,26 @@ export default {
         list_id: this.$route.params.id,
         items: _originalItems
       }
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
+      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, params)
         .then(() => {
-          this.$emit('getExtractedData')
+          this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}
           this.buffer_extracted_data_items = {}
         })
         .catch((error) => {
           this.$emit('printErrors', error)
         })
+    }
+  },
+  mounted () {
+    this.localExtractedData = this.extractedData
+  },
+  watch: {
+    extractedData: {
+      handler: function (val) {
+        this.localExtractedData = val
+      },
+      deep: true
     }
   }
 }

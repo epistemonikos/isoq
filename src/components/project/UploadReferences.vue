@@ -580,7 +580,6 @@ export default {
               }
             }
           } catch (error) {
-            console.error(`Error en lote ${i+1}:`, error)
             failedItems = [...failedItems, ...batches[i].map(r => r.title || 'Referencia sin título')]
           }
         }
@@ -847,7 +846,7 @@ export default {
         if (!itemsReferences.length) return
 
         // Preparar las promesas de actualización sin await en el bucle
-        const patchPromises = [];
+        const patchPromises = []
 
         for (const response of extractedDataQuerys) {
           if (!response || !response.data || !response.data[0]) continue

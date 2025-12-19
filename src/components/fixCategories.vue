@@ -78,7 +78,6 @@ export default {
             organization: response.data.organization,
             project_id: response.data.project_id
           }
-          console.log(`category id ${response.data.id} created!`)
           this.getLists(newCategory)
           // this.counter++
         })
@@ -103,7 +102,6 @@ export default {
         })
     },
     removeOldCategoryContainer: function () {
-      console.log('remove: ', this.oldCategoryId)
       axios.delete('/api/isoqf_list_categories/' + this.oldCategoryId)
     }
   },
