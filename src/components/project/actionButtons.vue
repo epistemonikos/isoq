@@ -102,7 +102,7 @@
           variant="danger"
           dismissible
           @dismissed="errorsResponse.message = ''">
-          <p class="mb-0" v-html="errorsResponse.message"></p>
+          <p class="mb-0" v-html="errorsResponse.message" @click="handleErrorClick"></p>
         </b-alert>
       </template>
 
@@ -1297,6 +1297,11 @@ export default {
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
+    },
+    handleErrorClick: function (event) {
+      if (event.target.tagName === 'A') {
+        this.$refs['modal-change-status'].hide()
+      }
     }
   },
   computed: {

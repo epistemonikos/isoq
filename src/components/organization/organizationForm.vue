@@ -257,20 +257,13 @@ export default {
     isModal: {
       type: Boolean,
       default: false
+    },
+    highlight: {
+      type: String,
+      default: ''
     }
   },
   mounted () {
-    if (this.formData.id) {
-      let data = JSON.parse(JSON.stringify(this.global_status))
-      let newData = []
-      for (let i of data) {
-        if (i.disabled) {
-          i.disabled = false
-        }
-        newData.push(i)
-      }
-      this.global_status = newData
-    }
     // Store the initial form data for comparison
     this.originalFormData = JSON.parse(JSON.stringify(this.formData))
   },
@@ -317,9 +310,9 @@ export default {
   methods: {
     resetState: function () {
       this.state = {
-        id: null,
         name: null,
         authors: null,
+        author: null,
         author_email: null,
         review_question: null,
         published_status: null,
@@ -412,6 +405,11 @@ export default {
           }
           // Update the original form data to reflect the new state
           this.originalFormData = JSON.parse(JSON.stringify(data))
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
+            const query = { ...this.$route.query }
+            delete query.highlight
+            this.$router.push({ query }).catch(() => {})
+          }
         } else {
           this.variant = 'danger'
           this.state = { ...this.state, ...response.data.state }
@@ -430,6 +428,11 @@ export default {
           this.$emit('modal-notification', response)
           // Update the original form data to reflect the new state
           this.originalFormData = JSON.parse(JSON.stringify(data))
+          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
+            const query = { ...this.$route.query }
+            delete query.highlight
+            this.$router.push({ query }).catch(() => {})
+          }
         } else {
           this.variant = 'danger'
           this.msgUpdateProject = response.data.message
@@ -463,23 +466,38 @@ export default {
     }
   },
   watch: {
-    formData: function (data) {
-      if (data.id) {
-        let data = JSON.parse(JSON.stringify(this.global_status))
-        let newData = []
-        for (let i of data) {
-          if (i.disabled) {
-            i.disabled = false
+    highlight: {
+      handler: function (val) {
+        if (val && val.length > 0) {
+          const fields = val.split(',')
+          for (const field of fields) {
+            let fieldName = field
+            if (field === 'license_type') {
+              fieldName = 'license'
+            }
+            if (Object.prototype.hasOwnProperty.call(this.state, fieldName)) {
+              this.state[fieldName] = false
+            }
           }
-          newData.push(i)
         }
-        this.global_status = newData
-      }
+      },
+      immediate: true
+    },
+    formData: {
+      handler (newFormData) {
+        if (newFormData.id) {
+          this.global_status = this.global_status.map(item => ({
+            ...item,
+            disabled: false
+          }))
+        }
 
-      // When formData changes externally, update the original data
-      if (JSON.stringify(this.originalFormData) !== JSON.stringify(data)) {
-        this.originalFormData = JSON.parse(JSON.stringify(data))
-      }
+        // When formData changes externally, update the original data
+        if (JSON.stringify(this.originalFormData) !== JSON.stringify(newFormData)) {
+          this.originalFormData = JSON.parse(JSON.stringify(newFormData))
+        }
+      },
+      immediate: true
     }
   }
 }
