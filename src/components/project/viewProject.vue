@@ -381,6 +381,7 @@
             <template
               v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable
+                :class="{'d-none': effectiveMode === 'view', 'd-print-none': true}"
                 :lists="lists"
                 :list_categories="list_categories"
                 :fields="fields"
@@ -400,14 +401,13 @@
                  />
             </template>
             <!-- printed version -->
-            <template v-else>
-              <PrintViewTable
-                :dataPrintVersion="lists_print_version"
-                :references="references"
-                :categories="list_categories"
-                :printableItems="printableItems"
-                :hasPermission="checkPermissions('can_read')"></PrintViewTable>
-            </template>
+            <PrintViewTable
+              :class="{'d-none': effectiveMode === 'edit', 'd-print-block': true}"
+              :dataPrintVersion="lists_print_version"
+              :references="references"
+              :categories="list_categories"
+              :printableItems="printableItems"
+              :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             <!-- eopv -->
             <b-modal
               size="xl"
@@ -1206,6 +1206,7 @@ export default {
           this.lists_print_version = data
         }
 
+        this.printableItems = []
         for (let items of this.lists_print_version) {
           this.printableItems.push(items.id)
         }
