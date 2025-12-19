@@ -589,7 +589,24 @@ export default {
         if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
           this.evidence_profile.push(this.findings.evidence_profile)
           this.evidence_profile[0].isoqf_id = this.list.sort
+        } else {
+          // Create a default evidence_profile structure if it doesn't exist
+          this.evidence_profile.push({
+            isoqf_id: this.list.sort,
+            cerqual: { explanation: '', option: null },
+            name: '',
+            title: '',
+            notes: '',
+            coherence: { explanation: '', option: null },
+            methodological_limitations: { explanation: '', option: null },
+            references: [],
+            relevance: { explanation: '', option: null },
+            adequacy: { explanation: '', option: null }
+          })
         }
+        // Sync references from list.references to evidence_profile.references
+        // The source of truth for references is list.references
+        this.evidence_profile[0].references = this.list.references || []
         if (fromModal) {
           const title = this.buffer_modal_stage_two.title
           const type = this.buffer_modal_stage_two.type
