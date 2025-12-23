@@ -1,6 +1,7 @@
 <template>
   <div>
     <b-row
+      v-if="showFilters"
       align-h="end">
       <b-col
         cols="12"
@@ -56,7 +57,11 @@ export default {
     idname: String,
     type: String,
     fields: Array,
-    items: Array
+    items: Array,
+    showFilters: {
+      type: Boolean,
+      default: true
+    }
   },
   data () {
     return {

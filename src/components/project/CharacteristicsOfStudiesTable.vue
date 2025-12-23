@@ -435,7 +435,6 @@ export default {
   },
   watch: {
     references () {
-      console.log('watch references')
       this.updateMyDataTables()
     },
     pre_ImportDataTable: function (data) {
@@ -499,10 +498,8 @@ export default {
   methods: {
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
-      console.log('getCharacteristics')
       axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
-          console.log('response: ', response)
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
@@ -541,7 +538,6 @@ export default {
       this.$emit('generate-template')
     },
     saveCharacteristicsStudiesFields: function () {
-      console.log('saveCharacteristicsStudiesFields')
       this.charsOfStudiesTableSettings.isBusy = true
       let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let references = JSON.parse(JSON.stringify(this.references))
@@ -891,7 +887,6 @@ export default {
       this.$refs['import-characteristics-table'].hide()
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
-      console.log('cleanImportedData', id, endpoint, params)
       axios.delete(`/api/${endpoint}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
@@ -899,7 +894,6 @@ export default {
         })
     },
     insertImportedData: function (endpoint = '', params = {}) {
-      console.log('insertImportedData', endpoint, params)
       axios.post(`/api/${endpoint}/`, params)
         .then(() => {
           this.getCharacteristics()
@@ -977,9 +971,7 @@ export default {
           }
           const responseData = JSON.parse(JSON.stringify(response.data[0]))
           const charId = responseData.id
-          console.log(responseData.items.length, this.references.length, responseData.items.length)
           if (responseData.items.length) {
-            console.log('aca')
             let items = JSON.parse(JSON.stringify(responseData.items))
             let references = []
             for (const item of items) {
@@ -999,36 +991,10 @@ export default {
             }
             axios.patch(`/api/isoqf_characteristics/${charId}`, params)
               .then(() => {
-                console.log('patch characteristics')
                 this.getCharacteristics()
               })
           }
         })
-
-      // let _itemsMeth = []
-        // axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
-      //   .then((response) => {
-      //     if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-      //       let _items = response.data[0].items
-      //       let _itemsChecks = []
-      //       for (let item of _items) {
-      //         _itemsChecks.push(item.ref_id)
-      //       }
-      //       for (let reference of this.references) {
-      //         if (!_itemsChecks.includes(reference.id)) {
-      //           _itemsMeth.push({ref_id: reference.id, authors: this.parseReference(reference, true, false)})
-      //         }
-      //       }
-      //       _items.push(..._itemsMeth)
-      //       let params = {
-      //         items: _items
-      //       }
-      //       axios.patch(`/api/isoqf_assessments/${response.data[0].id}`, params)
-      //         .then(() => {
-      //           this.getMethodological()
-      //         })
-      //     }
-      //   })
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       let result = ''
