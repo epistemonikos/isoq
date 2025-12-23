@@ -351,7 +351,7 @@
 <script>
 import axios from 'axios'
 
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */'../organization/organizationForm')
+const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 
 export default {
@@ -628,15 +628,17 @@ export default {
           project.sharedToken = ''
         }
         if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken !== null && project.sharedToken.length) {
             project.sharedTokenOnOff = true
           } else {
+            project.sharedToken = ''
             project.sharedTokenOnOff = false
           }
         } else {
-          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken !== null && project.sharedToken.length) {
             project.sharedTokenOnOff = true
           } else {
+            project.sharedToken = ''
             project.sharedTokenOnOff = false
           }
         }

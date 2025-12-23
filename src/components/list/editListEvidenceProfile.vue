@@ -438,7 +438,10 @@
       title="References"
       size="xl"
       scrollable
-      @ok="saveReferencesList"
+      @ok="checkReferencesBeforeSaving"
+      @hidden="handleReferencesModalHidden"
+      :no-close-on-backdrop="pendingSaveReferences"
+      :no-close-on-esc="pendingSaveReferences"
       :ok-disabled="!permission">
       <b-alert
         v-if="list.cerqual.option"
@@ -463,23 +466,53 @@
       </b-table>
     </b-modal>
 
+    <b-modal
+      id="modal-no-references-warning"
+      ref="modal-no-references-warning"
+      title="Warning"
+      @ok="confirmSaveNoReferences"
+      @cancel="cancelNoReferencesWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
+    </b-modal>
+
+    <b-modal
+      id="modal-private-project-warning"
+      ref="modal-private-project-warning"
+      title="Warning"
+      @ok="confirmSavePrivateProject"
+      @cancel="cancelPrivateProjectWarning"
+      ok-title="Continue"
+      ok-variant="outline-danger"
+      cancel-variant="outline-secondary"
+      no-close-on-backdrop
+      no-close-on-esc>
+      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+    </b-modal>
+
     <!-- modal -->
     <evidence-profile-form
       ref="evidenceProfileForm"
       :modalData="modalData"
       :list="list"
       :ui="ui"
+      :show="show"
       :methAssessments="methAssessments"
       :findings="findings"
       :mode="mode"
-      :extractedData="extractedData"
+      :extractedData="localExtractedData"
       :refsWithTitle="refsWithTitle"
       :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
       :charsOfStudies="charsOfStudies"
       :project="project"
       :evidenceProfile="evidenceProfile"
       :selectOptions="selectOptions"
-      :permissions="permission"
+      :permission="permission"
+      :modePrintFieldObject="modePrintFieldObject"
       @update-list-data="getList"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
@@ -520,15 +553,30 @@ export default {
     extractedData: Object,
     showEditExtractedDataInPlace: Object,
     modalData: Object,
-    charsOfStudies: Object
+    charsOfStudies: Object,
+    show: Object,
+    modePrintFieldObject: Array
   },
   components: {
     'back-to-top': backToTop,
     'evidence-profile-form': () => import('./evidenceProfileForm.vue'),
     'videoHelp': () => import('../videoHelp')
   },
+  mounted: function () {
+    this.localExtractedData = this.extractedData
+  },
+  watch: {
+    extractedData: {
+      handler: function (val) {
+        this.localExtractedData = val
+      },
+      deep: true
+    }
+  },
   data () {
     return {
+      original_references: [],
+      pendingSaveReferences: false,
       evidenceProfileFields: [
         { key: 'isoqf_id', label: '#' },
         { key: 'methodological-limit', label: 'Methodological limitations' },
@@ -561,13 +609,122 @@ export default {
             return references
           }
         }
-      ]
+      ],
+      localExtractedData: {
+        fields: [],
+        items: []
+      }
     }
   },
   methods: {
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
     },
+    checkReferencesBeforeSaving: function (bvModalEvent) {
+      // Prevenir que el modal se cierre automáticamente si no hay referencias seleccionadas
+      // y había referencias originalmente
+      if (this.list.references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+        bvModalEvent.preventDefault()
+        this.pendingSaveReferences = true
+
+        // Verificar si hay otros lists en el proyecto con referencias
+        this.checkOtherListsWithReferences()
+        return
+      }
+
+      // Si no se necesita mostrar la advertencia, proceder con el guardado
+      this.saveReferencesList()
+    },
+
+    checkOtherListsWithReferences: function () {
+      // Hacer una consulta para obtener todos los lists del proyecto
+      axios.get(`/api/isoqf_lists?project_id=${this.project.id}`)
+        .then((response) => {
+          const allLists = response.data
+          // Filtrar el list actual y verificar si hay otros con referencias
+          const otherListsWithReferences = allLists.filter(list =>
+            list.id !== this.list.id && list.references && list.references.length > 0
+          )
+
+          if (otherListsWithReferences.length === 0) {
+            // Si no hay otros lists con referencias, el proyecto se vuelve privado
+            this.$refs['modal-private-project-warning'].show()
+          } else {
+            // Si hay otros lists con referencias, solo este finding desaparece
+            this.$refs['modal-no-references-warning'].show()
+          }
+        })
+        .catch((error) => {
+          console.log('Error checking other lists:', error)
+          // En caso de error, mostrar el modal estándar por seguridad
+          this.$refs['modal-no-references-warning'].show()
+        })
+    },
+
+    handleReferencesModalHidden: function () {
+      // Solo limpiar si no hay una operación pendiente
+      if (!this.pendingSaveReferences) {
+        this.cleanReferencesList()
+      }
+    },
+
+    confirmSaveNoReferences: function () {
+      // El usuario confirmó que desea continuar sin referencias
+      this.saveReferencesList()
+      // Cerrar ambos modales
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modalReferences'].hide()
+      })
+    },
+
+    cancelNoReferencesWarning: function () {
+      // El usuario canceló - restaurar las referencias originales
+      this.list.references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    confirmSavePrivateProject: function () {
+      // El usuario confirmó que desea continuar, haciendo el proyecto privado
+      this.saveProjectAsPrivate()
+      // Guardar las referencias (que estarán vacías)
+      this.saveReferencesList()
+      // Cerrar ambos modales
+      this.$nextTick(() => {
+        this.pendingSaveReferences = false
+        this.$refs['modalReferences'].hide()
+      })
+    },
+
+    cancelPrivateProjectWarning: function () {
+      // El usuario canceló - restaurar las referencias originales
+      this.list.references = [...this.original_references]
+      this.pendingSaveReferences = false
+    },
+
+    saveProjectAsPrivate: function () {
+      // Actualizar el proyecto para que sea privado
+      const params = {
+        is_public: false,
+        private: true,
+        license_type: '',
+        public_type: 'private'
+      }
+      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+        .then(() => {
+          // Emitir un evento para notificar al componente padre que el estado del proyecto cambió
+          this.$emit('update-project-status')
+        })
+        .catch((error) => {
+          console.log('Error updating project status:', error)
+        })
+    },
+
+    cleanReferencesList: function () {
+      this.original_references = []
+      this.pendingSaveReferences = false
+    },
+
     saveReferencesList: function () {
       this.evidenceProfileTableSettings.isBusy = true
       const params = {
@@ -576,6 +733,7 @@ export default {
       axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
         .then(() => {
           this.updateReferencesInFindings()
+          this.cleanReferencesList()
         })
     },
     updateReferencesInFindings: function () {
@@ -660,6 +818,8 @@ export default {
       }
     },
     openModalReferences: function () {
+      // Guardar el estado original de las referencias
+      this.original_references = [...this.list.references]
       this.$refs['modalReferences'].show()
     },
     editStageTwo: function (data, type) {
@@ -683,13 +843,13 @@ export default {
       this.$emit('busyEvidenceProfileTable', status)
     },
     callGetStageOneData: function (status) {
-      this.$emit('callGetStageOneData', status)
+      this.$emit('callGetFinding', status)
     },
     setShowEditExtractedDataInPlace: function (data) {
       this.$emit('setShowEditExtractedDataInPlace', data)
     },
-    getExtractedData: function () {
-      this.$emit('getExtractedData')
+    getExtractedData: function (status) {
+      this.$emit('getExtractedData', status)
     }
   }
 }

@@ -38,6 +38,7 @@
           :project="project"
           @update-modification="updateModificationTime()"
           :canWrite="checkPermissions()"
+          :highlight="$route.query.highlight"
           @update-project="updateDataProject">
         </propertiesProject>
       </div>
@@ -294,7 +295,7 @@
                   size="xl"
                   ok-title="Save"
                   ok-variant="outline-success"
-                  cancel-variant="outline-primary"
+                  cancel-variant="outline-danger"
                   scrollable
                   @ok="saveSortedLists">
                   <template v-slot:modal-title>
@@ -314,7 +315,12 @@
                           class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
-                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option }}</b></p>
+                        <p class="font-weight-bold">
+                          <template v-if="item.category">
+                            {{ getCategoryName(item.category) }}&nbsp;-&nbsp;
+                          </template>
+                          {{ item.cerqual_option }}
+                        </p>
                       </b-list-group-item>
                     </draggable>
                   </b-list-group>
@@ -386,10 +392,12 @@
                 :refs="refs"
                 @update-modification-time="updateModificationTime"
                 @get-lists="getLists"
+                @get-project="getProject"
                 @add-list="modalAddList"
                 @set-busy="setBusy"
                 @set-load-references="statusLoadReferences"
                 @get-references="getReferences"
+                @update-project-status="getProject"
                  />
             </template>
             <!-- printed version -->
@@ -571,7 +579,6 @@ import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
 
-const organizationForm = () => import(/* webpackChunkName: "organizationform" */ '../organization/organizationForm.vue')
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp.vue')
@@ -584,7 +591,6 @@ const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './
 export default {
   components: {
     draggable,
-    organizationForm,
     'content-guidance': contentGuidance,
     'back-to-top': backToTop,
     videoHelp,
@@ -592,7 +598,6 @@ export default {
     propertiesProject,
     UploadReferences,
     InclusionExclusioCriteria,
-    CharacteristicsOfStudiesTable: () => import(/* webpackChunkName: "characteristicsOfStudiesTable" */ './CharacteristicsOfStudiesTable.vue'),
     crudTables: () => import(/* webpackChunkName: "crudTables" */ '@/components/project/crudTables.vue'),
     PrintViewTable,
     ViewTable: () => import(/* webpackChunkName: "viewTable" */ '@/components/project/ViewTable.vue')
@@ -1002,7 +1007,16 @@ export default {
       this.loadReferences = status
     },
     clickTab: function (option) {
-      this.tabOpened = option
+      const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+      if (this.$route.query.tab !== tabs[option]) {
+        const query = { ...this.$route.query, tab: tabs[option] }
+        if (Object.prototype.hasOwnProperty.call(query, 'highlight')) {
+          delete query.highlight
+        }
+        this.$router.push({
+          query: query
+        }).catch(() => {})
+      }
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
@@ -1639,7 +1653,7 @@ export default {
       const _categories = JSON.parse(JSON.stringify(this.list_categories))
       let _category = ''
       for (let category of _categories.options) {
-        if (category.value === id) {
+        if (category.id === id) {
           _category = category.text
         }
       }
@@ -1743,6 +1757,20 @@ export default {
         .catch((error) => {
           this.printErrors(error)
         })
+    }
+  },
+  watch: {
+    '$route.query.tab': function (val) {
+      const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+      const index = tabs.indexOf(val)
+      if (index !== -1) {
+        this.tabOpened = index
+      }
+    },
+    '$route.query.step': function (val) {
+      if (val) {
+        this.stepStage = parseInt(val) - 1
+      }
     }
   },
   computed: {
