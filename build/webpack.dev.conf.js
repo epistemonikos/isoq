@@ -21,7 +21,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   devtool: 'eval-cheap-module-source-map',
   target: 'web',
 
-  // Optimizaciones para el servidor de desarrollo
+  // Optimizaciones para el servidor de desarrollo (webpack-dev-server v4)
   devServer: {
     historyApiFallback: {
       rewrites: [
@@ -34,6 +34,14 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     port: PORT || config.dev.port,
     open: config.dev.autoOpenBrowser,
     proxy: config.dev.proxyTable,
+    client: {
+      overlay: {
+        warnings: false,
+        errors: true
+      },
+      logging: 'warn'
+    },
+    webSocketServer: 'ws'
   },
   plugins: [
     new webpack.DefinePlugin({
