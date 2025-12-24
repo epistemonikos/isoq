@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="d-flex flex-row justify-content-start">
+    <div v-if="hasSelection()" class="d-flex flex-row justify-content-start">
       <div class="circle rounded-circle" :style="`background-color: ${getColor()};`"></div>
       <div class="ml-2">
         <strong>{{ getText() }}</strong>
@@ -135,10 +135,14 @@ export default {
     }
   },
   methods: {
-    // Define any methods here if needed
+    hasSelection: function () {
+      if (!this.option) return false
+      const option = this.options[this.stage][this.index].values.find(item => item.value === this.option)
+      return !!option
+    },
     getColor: function () {
       const option = this.options[this.stage][this.index].values.find(item => item.value === this.option)
-      return option ? option.color : '#B3B3B3'
+      return option ? option.color : ''
     },
     getText: function () {
       const option = this.options[this.stage][this.index].values.find(item => item.value === this.option)
