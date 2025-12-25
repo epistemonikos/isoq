@@ -2,13 +2,13 @@
   <div>
     <b-container fluid class="workspace-header">
       <div class="py-5">
-        <h2>What's New</h2>
+        <h2>{{ $t('whats_new.title') }}</h2>
       </div>
     </b-container>
     <b-container fluid class="py-5">
       <!-- desde aqui -->
-      <h3>What's new in iSoQ?</h3>
-      <p>Here you will find the latest updates and improvements to iSoQ Version 1.0.0.</p>
+      <h3>{{ $t('whats_new.subtitle') }}</h3>
+      <p>{{ $t('whats_new.desc') }}</p>
       <!-- acá escribes tu comentario -->
       <h3>February 2025</h3>
       <p class="font-weight-bold">Changing your assessment won’t delete your explanation</p>

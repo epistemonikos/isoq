@@ -4,7 +4,7 @@
     v-if="show.selected.includes('ma')">
     <a name="methodological-assessments"></a>
     <h3 class="toDoc">
-      {{ $t('Methodological Assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
+      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
       <span
         v-if="ui.methodological_assessments.display_warning"
         class="text-danger d-print-none"

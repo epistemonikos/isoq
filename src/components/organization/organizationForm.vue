@@ -6,7 +6,7 @@
           cols="12">
             <p><b>{{ $t('Title of review') }}</b></p>
             <p>{{ formData.name }}</p>
-            <p><b>{{ $t('Authors') }}</b></p>
+            <p><b>{{ $t('project.authors') }}</b></p>
             <p>{{ formData.authors }}</p>
             <p><b>{{ $t('Corresponding author') }}</b></p>
             <p>{{ formData.author }}</p>
@@ -61,7 +61,7 @@
             <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Authors')"
+            :label="$t('project.authors')"
             label-for="input-project-authors"
             description="First then last name of all authors separated by commas">
             <b-form-input

@@ -5,17 +5,17 @@
         <b-col class="mt-4" cols="12" md="7" offset-md="3">
           <b-form @submit.prevent="login">
             <b-card
-              header="Login">
+              :header="$t('common.login')">
                 <b-alert
                   :show="$store.state.status === 'error'"
                   variant="warning"
                   dismissible
                   @dismissed="changeStatus">
-                    The user or password are wrong or doesn't exist. try again.
+                    {{ $t('auth.login_error') }}
                 </b-alert>
                 <b-form-group
                   id="input_group_email"
-                  label="Email:"
+                  :label="$t('auth.email')"
                   label-for="input_email">
                   <b-form-input
                     id="input_email"
@@ -25,7 +25,7 @@
                 </b-form-group>
                 <b-form-group
                   id="input_group_password"
-                  label="Password:"
+                  :label="$t('auth.password')"
                   label-for="input_password">
                   <b-form-input
                     id="input_password"
@@ -33,12 +33,12 @@
                     type="password"
                     required></b-form-input>
                 </b-form-group>
-                <p>Would you like to subscribe to the GRADE-CERQual mailing list? <br><b>Yes! <a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">I want to subscribe!</a></b></p>
+                <p>{{ $t('auth.subscribe_text') }} <br><b><a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">{{ $t('auth.subscribe_link') }}</a></b></p>
                 <b-card-text class="text-center text-forgot-create">
-                  <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link> | <router-link :to="{name: 'CreateAccount'}">new account</router-link>
+                  <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link> | <router-link :to="{name: 'CreateAccount'}">{{ $t('auth.new_account') }}</router-link>
                 </b-card-text>
                 <div slot="footer" class="text-right">
-                  <b-button type="submit" variant="outline-primary">Login</b-button>
+                  <b-button type="submit" variant="outline-primary">{{ $t('common.login') }}</b-button>
                 </div>
             </b-card>
           </b-form>

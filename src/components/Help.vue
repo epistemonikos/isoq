@@ -2,21 +2,27 @@
   <div>
     <b-container fluid class="workspace-header">
       <div class="py-5">
-        <h2>Help</h2>
+        <h2>{{ $t('help.title') }}</h2>
       </div>
     </b-container>
     <b-container fluid class="py-5">
-      <h3>You need help?</h3>
-      <p>Have you encountered a technological problem or glitch that’s stopping you from moving forward? For these urgent issues, please report your issues using <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank">this form</a>.
-        <br>If you cannot access the form email us at isoq [at] epistemonikos.org</p>
+      <h3>{{ $t('help.need_help') }}</h3>
+      <i18n path="help.need_help_desc" tag="p">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLScVstt7-452TRn9ku8c-aml7mY5QOqBccB06I6xpyx13Yam3Q/viewform" target="_blank" place="0">{{ $t('help.this_form') }}</a>
+      </i18n>
+      <p>{{ $t('help.email_us') }}</p>
 
-      <h3>You’ve got feedback to share?</h3>
-      <p>To feedback to us your experience of using iSoQ (positive or negative!) or ideas of useful additional features or how to make it more user-friendly, please use <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank">the following form</a></p>
+      <h3>{{ $t('help.feedback') }}</h3>
+      <i18n path="help.feedback_desc" tag="p">
+        <a href="https://docs.google.com/forms/d/1uIqAenD-giNJqRDUJSH9Jyg_AdxaIFIDz8zvVzgGufM/edit" target="_blank" place="0">{{ $t('help.the_following_form') }}</a>
+      </i18n>
 
-      <h3>iSoQ drop-in support webinars</h3>
-      <p>Visit the <a href="https://www.cerqual.org/upcoming-events/" target="_blank">Upcoming Events</a> page on the GRADE-CERQual website to sign-up.</p>
+      <h3>{{ $t('help.support_webinars') }}</h3>
+      <i18n path="help.support_webinars_desc" tag="p">
+        <a href="https://www.cerqual.org/upcoming-events/" target="_blank" place="0">{{ $t('help.upcoming_events') }}</a>
+      </i18n>
 
-      <h3>Help Resources: Videos</h3>
+      <h3>{{ $t('help.videos') }}</h3>
       <ol start="0">
         <li><a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video - The Essentials [8:58 min]</a></li>
         <li><a href="https://vimeo.com/449741356" target="_blank">Sharing an iSoQ project [1:45 min]</a></li>
@@ -43,14 +49,14 @@
         <li><a href="https://vimeo.com/462180668" target="_blank">Leaving notes about GRADE-CERQual assessments [1:33 min]</a></li>
       </ol>
 
-      <h3>iSoQ Training Webinars</h3>
+      <h3>{{ $t('help.training_webinars') }}</h3>
       <ul>
         <li><a href="https://vimeo.com/737300971" target="_blank">Watch a presentation on iSoQ</a></li>
         <li><a href="https://vimeo.com/738892529" target="_blank">Watch a demo of the iSoQ tool</a></li>
         <li><a href="https://training.cochrane.org/resource/how-the-isoq-tool-can-help-you-apply-grade-cerqual-in-your-qes" target="_blank">Access the Cochrane Learning Live training on iSoQ</a></li>
       </ul>
 
-      <h3>GRADE-CERQual Webinars</h3>
+      <h3>{{ $t('help.gc_webinars') }}</h3>
       <ul>
         <li><a href="https://training.cochrane.org/resource/grade-cerqual-webinar" target="_blank">Access the Cochrane Training Webinar on GRADE-CERQual</a></li>
         <li><a href="https://www.cerqual.org/upcoming-events/" target="_blank">Information on upcoming live GRADE-CERQual webinars</a></li>

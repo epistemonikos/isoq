@@ -4,7 +4,7 @@
     v-if="show.selected.includes('cs')">
     <a name="characteristics-of-studies"></a>
     <h3 class="toDoc">
-      {{ $t('Characteristics of Studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
+      {{ $t('worksheet.characteristics_of_studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
       <span
         v-if="ui.adequacy.chars_of_studies.display_warning"
         class="text-danger d-print-none"

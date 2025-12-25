@@ -7,14 +7,14 @@
     </b-container>
     <b-container fluid>
       <div class="my-4">
-        <h3>{{ $t("Projects") }}</h3>
+        <h3>{{ $t("menu.projects") }}</h3>
         <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
           <b-col cols="12" class="text-right">
             <b-button
               v-b-tooltip.hover
               title="Create a new Interactive Summary of Qualitative Findings Table"
               variant="success"
-              @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
+              @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
           </b-col>
         </b-row>
         <b-row

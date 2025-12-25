@@ -564,7 +564,7 @@
                     </template>
                     <template v-else>
                       <b-button v-if="permission" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
-                        <font-awesome-icon icon="edit" :title="$t('Edit')" />
+                        <font-awesome-icon icon="edit" :title="$t('common.edit')" />
                       </b-button>
                     </template>
                   </template>
@@ -572,11 +572,11 @@
               </b-tab>
               <b-tab>
                 <template slot="title">
-                  Characteristics of Studies
+                  {{ $t('worksheet.characteristics_of_studies') }}
                   <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger"
                     icon="exclamation-circle"></font-awesome-icon>
                 </template>
-                <h4>Characteristics of Studies</h4>
+                <h4>{{ $t('worksheet.characteristics_of_studies') }}</h4>
                 <p v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger">
                   <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                   The Characteristics of Studies table, or some data within it,
@@ -664,11 +664,11 @@
               </b-tab>
               <b-tab>
                 <template slot="title">
-                  Characteristics of Studies
+                  {{ $t('worksheet.characteristics_of_studies') }}
                   <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger"
                     icon="exclamation-circle"></font-awesome-icon>
                 </template>
-                <h4>Characteristics of Studies</h4>
+                <h4>{{ $t('worksheet.characteristics_of_studies') }}</h4>
                 <p v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger">
                   The Characteristics of Studies table, or some data within it,
                   are missing. Add missing table/data in
@@ -699,7 +699,7 @@
           <div v-if="selectedOptions.type === 'cerqual'">
             <b-tabs content-class="mt-3">
               <b-tab title="Component assessments">
-                <h5>Methodological limitations</h5>
+                <h5>{{ $t('worksheet.methodological_limitations') }}</h5>
                 <p>
                   <b>{{ displaySelectedOption(evidenceProfile[0].methodological_limitations.option) }}</b>
                   <template v-if="parseInt( evidenceProfile[0].methodological_limitations.option ) > 0">
@@ -709,7 +709,7 @@
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
-                <h5>Coherence</h5>
+                <h5>{{ $t('worksheet.coherence') }}</h5>
                 <p>
                   <b>{{ displaySelectedOption(evidenceProfile[0].coherence.option) }}</b>
                   <template v-if="parseInt(evidenceProfile[0].coherence.option) > 0">
@@ -719,7 +719,7 @@
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
-                <h5>Adequacy</h5>
+                <h5>{{ $t('worksheet.adequacy') }}</h5>
                 <p>
                   <b>{{ displaySelectedOption(evidenceProfile[0].adequacy.option) }}</b>
                   <template v-if="parseInt(evidenceProfile[0].adequacy.option) > 0">
@@ -729,7 +729,7 @@
                     <span v-else>Explanation not yet added</span>
                   </template>
                 </p>
-                <h5>Relevance</h5>
+                <h5>{{ $t('worksheet.relevance') }}</h5>
                 <p>
                   <b>{{ displaySelectedOption(evidenceProfile[0].relevance.option) }}</b>
                   <template v-if="parseInt(evidenceProfile[0].relevance.option) > 0">

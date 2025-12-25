@@ -2,7 +2,7 @@
   <div>
     <b-navbar id="main-navbar" toggleable="lg">
       <b-navbar-brand :to="{name: 'MainPage'}">
-        <p><img :src="iconUrl" alt="GRADE-CERQual">
+        <p><img :src="iconUrl" :alt="$t('menu.logo_alt')">
         <span class="subtitle mt-2 d-none d-sm-block">interactive Summary of Qualitative Findings</span>
         <span class="subtitle mt-2 d-block d-sm-none">iSoF</span>
       </p>
@@ -12,8 +12,8 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav class="ml-auto">
-          <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("About") }}</b-nav-item>
-          <b-nav-item :to="$i18nRoute({ name: 'Browse'})">{{ $t("Browse") }}</b-nav-item>
+          <b-nav-item :to="$i18nRoute({ name: 'About'})">{{ $t("menu.about") }}</b-nav-item>
+          <b-nav-item :to="$i18nRoute({ name: 'Browse'})">{{ $t("menu.browse") }}</b-nav-item>
           <b-nav-item :to="{ name: 'Help' }">Help</b-nav-item>
           <template v-if="!$store.getters.isLoggedIn">
             <b-nav-item :to="{ name: 'WhatsNew' }">What's new</b-nav-item>
@@ -31,7 +31,7 @@
             </b-nav-item-dropdown>
           </template>
           <template v-else>
-            <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("Login") }}</b-nav-item>
+            <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("common.login") }}</b-nav-item>
           </template>
           <accessibility v-if="$route.name !== 'MainPage'" :isMenu="true"/>
           <!-- <switch-language/> -->

@@ -523,7 +523,7 @@
   <div v-else>
     <div class="text-center my-5">
       <p>
-        {{ $t('No evidence profile has been created') }} <b-link v-b-modal.modal-evidence-profile-form>{{ $t('add a evidence profile') }}</b-link>
+        {{ $t('worksheet.no_evidence_profile') }} <b-link v-b-modal.modal-evidence-profile-form>{{ $t('worksheet.add_evidence_profile') }}</b-link>
       </p>
     </div>
   </div>
@@ -579,20 +579,20 @@ export default {
       pendingSaveReferences: false,
       evidenceProfileFields: [
         { key: 'isoqf_id', label: '#' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
+        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
+        { key: 'coherence', label: this.$t('worksheet.coherence') },
+        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
+        { key: 'relevance', label: this.$t('worksheet.relevance') },
         { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         { key: 'references', label: 'References' }
       ],
       evidenceProfileFieldsPrintVersion: [
         { key: 'isoqf_id', label: '#' },
         { key: 'name', label: 'Summarised review finding' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
+        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
+        { key: 'coherence', label: this.$t('worksheet.coherence') },
+        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
+        { key: 'relevance', label: this.$t('worksheet.relevance') },
         { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         {
           key: 'references',

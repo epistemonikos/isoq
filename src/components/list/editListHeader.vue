@@ -6,7 +6,7 @@
           <!-- disabled for v1 -->
           <!--<b-link class="return" @click="returnTo()">-->
           <b-link class="return" :to="{name: 'viewProject', params: {org_id: organizationId, id: projectId}, query: {hash: `a-${list.id}`}}">
-            <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
+            <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
             return to ISoQ table
           </b-link>
         </b-col>

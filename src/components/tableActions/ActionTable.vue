@@ -53,7 +53,7 @@
             @click="modalCreateContent"
             variant="outline-success">
               <font-awesome-icon icon="plus" />
-              {{$t('Add data')}}
+              {{$t('table.add_data')}}
           </b-button>
         </b-col>
         <b-col

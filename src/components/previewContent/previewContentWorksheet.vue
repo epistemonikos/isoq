@@ -5,7 +5,7 @@
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
             <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: project.organization, isoqf_id: project.id, token: $route.params.token }}">
-              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
+              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
               return to ISoQ table
             </b-link>
           </b-col>
@@ -187,10 +187,10 @@ export default {
       evidence_profile_fields_print_version: [
         { key: 'isoqf_id', label: '#' },
         { key: 'name', label: 'Summarised review finding' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
+        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
+        { key: 'coherence', label: this.$t('worksheet.coherence') },
+        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
+        { key: 'relevance', label: this.$t('worksheet.relevance') },
         { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         {
           key: 'references',

@@ -128,7 +128,7 @@ export default {
             heading: HeadingLevel.HEADING_1,
             children: [
               new TextRun({
-                text: 'Evidence Profile',
+                text: this.$t('worksheet.evidence_profile'),
                 bold: true,
                 size: 24,
                 color: '000000'
@@ -229,7 +229,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Methodological limitations',
+                            text: this.$t('worksheet.methodological_limitations'),
                             bold: true,
                             size: 22
                           })
@@ -250,7 +250,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Coherence',
+                            text: this.$t('worksheet.coherence'),
                             bold: true,
                             size: 22
                           })
@@ -271,7 +271,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Adequacy',
+                            text: this.$t('worksheet.adequacy'),
                             bold: true,
                             size: 22
                           })
@@ -292,7 +292,7 @@ export default {
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Relevance',
+                            text: this.$t('worksheet.relevance'),
                             bold: true,
                             size: 22
                           })
@@ -493,7 +493,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Characteristics of Studies',
+                text: this.$t('worksheet.characteristics_of_studies'),
                 size: 24,
                 bold: true
               })
@@ -504,7 +504,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Methodological Assessments',
+                text: this.$t('worksheet.methodological_assessments'),
                 size: 24,
                 bold: true
               })
@@ -515,7 +515,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Extracted Data',
+                text: this.$t('worksheet.extracted_data'),
                 size: 24,
                 bold: true
               })

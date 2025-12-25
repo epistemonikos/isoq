@@ -4,10 +4,10 @@
     v-if="show.selected.includes('ed')">
     <a name="extracted-data"></a>
     <template v-if="showParagraph">
-      <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
+      <videoHelp :txt="$t('worksheet.extracted_data')" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
     </template>
     <template v-else>
-      <h3 v-if="showTitle">Extracted data</h3>
+      <h3 v-if="showTitle">{{ $t('worksheet.extracted_data') }}</h3>
     </template>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
       It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
@@ -45,7 +45,7 @@
             variant="outline-success">
             <font-awesome-icon
               icon="edit"
-              :title="$t('Edit')" />
+              :title="$t('common.edit')" />
           </b-button>
           <b-button
             class="d-print-none"
@@ -53,7 +53,7 @@
             variant="outline-danger">
             <font-awesome-icon
               icon="trash"
-              :title="$t('Remove')" />
+              :title="$t('common.remove')" />
           </b-button>
         </template>
       </b-table>
