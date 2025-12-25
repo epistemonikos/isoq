@@ -58,6 +58,8 @@
     "edit_isoq_table": "Edit iSoQ table",
     "new_summarized_finding": "New summarised review finding",
     "invite": "Invite",
+    "leave_project": "Leave project",
+    "leave_project_confirm": "Leave the project",
     "delete_project": "Delete project",
     "confirm_remove_project": "Are you sure you wanna remove",
     "and_all_data": "and all the data related",

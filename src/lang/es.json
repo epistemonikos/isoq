@@ -58,6 +58,8 @@
     "edit_isoq_table": "Editar tabla iSoQ",
     "new_summarized_finding": "Nuevo hallazgo de revisión resumido",
     "invite": "Invitar",
+    "leave_project": "Dejar el proyecto",
+    "leave_project_confirm": "Dejar el proyecto",
     "delete_project": "Eliminar proyecto",
     "confirm_remove_project": "¿Estás seguro de querer eliminar",
     "and_all_data": "y todos los datos relacionados",
