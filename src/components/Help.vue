@@ -24,42 +24,42 @@
 
       <h3>{{ $t('help.videos') }}</h3>
       <ol start="0">
-        <li><a href="https://vimeo.com/505239646" target="_blank">iSoQ Welcome Video - The Essentials [8:58 min]</a></li>
-        <li><a href="https://vimeo.com/449741356" target="_blank">Sharing an iSoQ project [1:45 min]</a></li>
-        <li><a href="https://vimeo.com/504176899" target="_blank">Visibility Settings on the iSoQ Database [3:19 min]</a></li>
-        <li><a href="https://vimeo.com/449265292" target="_blank">Overview of the My Data page [1:30 min]</a></li>
-        <li><a href="https://vimeo.com/449247762" target="_blank">Importing references for included studies [3:00 min]</a></li>
-        <li><a href="https://vimeo.com/449248998" target="_blank">Importing references from PubMed [1:08 min]</a></li>
-        <li><a href="https://vimeo.com/449742512" target="_blank">Creating a characteristics of studies table [1:50 min]</a></li>
-        <li><a href="https://vimeo.com/450046545" target="_blank">Importing a characteristics of studies table [8:54 min]</a></li>
-        <li><a href="https://vimeo.com/449764545" target="_blank">Creating a methodological assessments table [2:20 min]</a></li>
-        <li><a href="https://vimeo.com/451099168" target="_blank">Importing a methodological assessments table [9:52 min]</a></li>
-        <li><a href="https://vimeo.com/449743080" target="_blank">Overview of the Interactive Summary of Qualitative Findings Table [5:26 min]</a></li>
-        <li><a href="https://vimeo.com/451100564" target="_blank">Organising review findings into groups [3:38 min]</a></li>
-        <li><a href="https://vimeo.com/462176102" target="_blank">Re-ordering review findings [1:35 min]</a></li>
-        <li><a href="https://vimeo.com/462176356" target="_blank">Searching the iSoQ table [0:44 min]</a></li>
-        <li><a href="https://vimeo.com/462176506" target="_blank">Leaving notes about review findings [1:02 min]</a></li>
-        <li><a href="https://vimeo.com/451100482" target="_blank">Overview of the GRADE-CERQual Assessment Worksheet [2:35 min]</a></li>
-        <li><a href="https://vimeo.com/450836795" target="_blank">Adding Extracted Data [5:02 min]</a></li>
-        <li><a href="https://vimeo.com/450835272" target="_blank">Overview of assessing Methodological Limitations [3:13 min]</a></li>
-        <li><a href="https://vimeo.com/450835237" target="_blank">Overview of assessing Coherence [2:20 min]</a></li>
-        <li><a href="https://vimeo.com/450835188" target="_blank">Overview of assessing Adequacy [2:40 min]</a></li>
-        <li><a href="https://vimeo.com/450835406" target="_blank">Overview of assessing Relevance [2:18 min]</a></li>
-        <li><a href="https://vimeo.com/450835499" target="_blank">Overview of the Overall Assessment of Confidence [2:33 min]</a></li>
-        <li><a href="https://vimeo.com/462180668" target="_blank">Leaving notes about GRADE-CERQual assessments [1:33 min]</a></li>
+        <li><a href="https://vimeo.com/505239646" target="_blank">{{ $t('help.video_list.welcome') }}</a></li>
+        <li><a href="https://vimeo.com/449741356" target="_blank">{{ $t('help.video_list.sharing') }}</a></li>
+        <li><a href="https://vimeo.com/504176899" target="_blank">{{ $t('help.video_list.visibility') }}</a></li>
+        <li><a href="https://vimeo.com/449265292" target="_blank">{{ $t('help.video_list.my_data') }}</a></li>
+        <li><a href="https://vimeo.com/449247762" target="_blank">{{ $t('help.video_list.importing_references') }}</a></li>
+        <li><a href="https://vimeo.com/449248998" target="_blank">{{ $t('help.video_list.importing_pubmed') }}</a></li>
+        <li><a href="https://vimeo.com/449742512" target="_blank">{{ $t('help.video_list.creating_characteristics') }}</a></li>
+        <li><a href="https://vimeo.com/450046545" target="_blank">{{ $t('help.video_list.importing_characteristics') }}</a></li>
+        <li><a href="https://vimeo.com/449764545" target="_blank">{{ $t('help.video_list.creating_methodological') }}</a></li>
+        <li><a href="https://vimeo.com/451099168" target="_blank">{{ $t('help.video_list.importing_methodological') }}</a></li>
+        <li><a href="https://vimeo.com/449743080" target="_blank">{{ $t('help.video_list.isoq_overview') }}</a></li>
+        <li><a href="https://vimeo.com/451100564" target="_blank">{{ $t('help.video_list.organising_findings') }}</a></li>
+        <li><a href="https://vimeo.com/462176102" target="_blank">{{ $t('help.video_list.reordering_findings') }}</a></li>
+        <li><a href="https://vimeo.com/462176356" target="_blank">{{ $t('help.video_list.searching_table') }}</a></li>
+        <li><a href="https://vimeo.com/462176506" target="_blank">{{ $t('help.video_list.leaving_notes_findings') }}</a></li>
+        <li><a href="https://vimeo.com/451100482" target="_blank">{{ $t('help.video_list.cerqual_worksheet_overview') }}</a></li>
+        <li><a href="https://vimeo.com/450836795" target="_blank">{{ $t('help.video_list.adding_extracted_data') }}</a></li>
+        <li><a href="https://vimeo.com/450835272" target="_blank">{{ $t('help.video_list.assessing_methodological') }}</a></li>
+        <li><a href="https://vimeo.com/450835237" target="_blank">{{ $t('help.video_list.assessing_coherence') }}</a></li>
+        <li><a href="https://vimeo.com/450835188" target="_blank">{{ $t('help.video_list.assessing_adequacy') }}</a></li>
+        <li><a href="https://vimeo.com/450835406" target="_blank">{{ $t('help.video_list.assessing_relevance') }}</a></li>
+        <li><a href="https://vimeo.com/450835499" target="_blank">{{ $t('help.video_list.overall_confidence') }}</a></li>
+        <li><a href="https://vimeo.com/462180668" target="_blank">{{ $t('help.video_list.leaving_notes_cerqual') }}</a></li>
       </ol>
 
-      <h3>{{ $t('help.training_webinars') }}</h3>
+      <h3>{{ $t('help.train_webinars') }}</h3>
       <ul>
-        <li><a href="https://vimeo.com/737300971" target="_blank">Watch a presentation on iSoQ</a></li>
-        <li><a href="https://vimeo.com/738892529" target="_blank">Watch a demo of the iSoQ tool</a></li>
-        <li><a href="https://training.cochrane.org/resource/how-the-isoq-tool-can-help-you-apply-grade-cerqual-in-your-qes" target="_blank">Access the Cochrane Learning Live training on iSoQ</a></li>
+        <li><a href="https://vimeo.com/737300971" target="_blank">{{ $t('help.training_webinars_list.presentation') }}</a></li>
+        <li><a href="https://vimeo.com/738892529" target="_blank">{{ $t('help.training_webinars_list.demo') }}</a></li>
+        <li><a href="https://training.cochrane.org/resource/how-the-isoq-tool-can-help-you-apply-grade-cerqual-in-your-qes" target="_blank">{{ $t('help.training_webinars_list.cochrane_training') }}</a></li>
       </ul>
 
       <h3>{{ $t('help.gc_webinars') }}</h3>
       <ul>
-        <li><a href="https://training.cochrane.org/resource/grade-cerqual-webinar" target="_blank">Access the Cochrane Training Webinar on GRADE-CERQual</a></li>
-        <li><a href="https://www.cerqual.org/upcoming-events/" target="_blank">Information on upcoming live GRADE-CERQual webinars</a></li>
+        <li><a href="https://training.cochrane.org/resource/grade-cerqual-webinar" target="_blank">{{ $t('help.gc_webinars_list.webinar') }}</a></li>
+        <li><a href="https://www.cerqual.org/upcoming-events/" target="_blank">{{ $t('help.gc_webinars_list.upcoming') }}</a></li>
       </ul>
     </b-container>
   </div>

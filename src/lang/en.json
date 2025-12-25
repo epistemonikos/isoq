@@ -161,7 +161,13 @@
     "create_new_isoq": "Create a new Interactive Summary of Qualitative Findings Table",
     "project_options": "Project Options",
     "temp_link_warning": "You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off",
-    "inclusion_exclusion": "Study inclusion and exclusion criteria used in the review"
+    "inclusion_exclusion": "Study inclusion and exclusion criteria used in the review",
+    "corresponding_author": "Corresponding author",
+    "corresponding_author_email": "Corresponding author's email address",
+    "list_authors_isoq": "Please list the authors of this iSoQ",
+    "additional_info": "Additional information",
+    "warning": "Warning!",
+    "revert_private_warning": "By removing this content your project will revert to \"private\" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?"
   },
   "references": {
     "step_title": "STEP 1: Upload the <b>references</b> for your included studies (required)",
@@ -259,7 +265,68 @@
     "no_evidence_profile": "No evidence profile has been created",
     "add_evidence_profile": "add a evidence profile",
     "no_isoqf": "no isoqf has been created",
-    "add_finding": "add a finding"
+    "add_finding": "add a finding",
+    "options": {
+      "no_concerns": "No/Very minor concerns",
+      "minor_concerns": "Minor concerns",
+      "moderate_concerns": "Moderate concerns",
+      "serious_concerns": "Serious concerns",
+      "high_confidence": "High confidence",
+      "moderate_confidence": "Moderate confidence",
+      "low_confidence": "Low confidence",
+      "very_low_confidence": "Very low confidence"
+    },
+    "tooltips": {
+      "methodological_limitations": {
+        "no_concerns": "No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding",
+        "minor_concerns": "Minor concerns regarding methodological limitations that may reduce confidence in the review finding",
+        "moderate_concerns": "Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding",
+        "serious_concerns": "Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding"
+      },
+      "coherence": {
+        "no_concerns": "No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding",
+        "minor_concerns": "Minor concerns regarding coherence that may reduce confidence in the review finding",
+        "moderate_concerns": "Moderate concerns regarding coherence that will probably reduce confidence in the review finding",
+        "serious_concerns": "Serious concerns regarding coherence that are very likely to reduce confidence in the review finding"
+      },
+      "adequacy": {
+        "no_concerns": "No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding",
+        "minor_concerns": "Minor concerns regarding adequacy that may reduce confidence in the review finding",
+        "moderate_concerns": "Moderate concerns regarding adequacy that will probably reduce confidence in the review finding",
+        "serious_concerns": "Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding"
+      },
+      "relevance": {
+        "no_concerns": "No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding",
+        "minor_concerns": "Minor concerns regarding relevance that may reduce confidence in the review finding",
+        "moderate_concerns": "Moderate concerns regarding relevance that will probably reduce confidence in the review finding",
+        "serious_concerns": "Serious concerns regarding relevance that are very likely to reduce confidence in the review finding"
+      },
+      "cerqual": {
+        "high": "It is highly likely that the review finding is a reasonable representation of the phenomenon of interest",
+        "moderate": "It is likely that the review finding is a reasonable representation of the phenomenon of interest",
+        "low": "It is possible that the review finding is a reasonable representation of the phenomenon of interest",
+        "very_low": "It is not clear whether the review finding is a reasonable representation of the phenomenon of interest"
+      }
+    },
+    "warnings": {
+      "incomplete_explanation": "It looks like you have not finished writing an explanation for your judgement",
+      "changed_option": "By changing this assessment, you will need to redo your overall GRADE-CERQual assessment of confidence. Your confidence level selection will be cleared, and your explanation erased. Your notes will be maintained.",
+      "revert_private": "Your project will revert to \"private\" and be removed from the iSoQ database. You can publish the project to the database once you have completed your GRADE-CERQual assessment of confidence."
+    },
+    "actions": {
+      "clear_selection": "clear my selection",
+      "do_it_now": "Do it now",
+      "do_it_later": "Do it later",
+      "show_example": "Show example",
+      "hide_example": "Hide example"
+    },
+    "labels": {
+      "explanation_required": "The GRADE-CERQual approach requires you to include an explanation for your judgement. Click here to see an example.",
+      "select_level": "Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)",
+      "explanation_not_added": "Explanation not yet added",
+      "cerqual_question": "To what extent is the review finding a reasonable representation of the phenomenon of interest?",
+      "cerqual_explanation_instruction": "Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment."
+    }
   },
   "table": {
     "no_studies": "No studies has been created,",
@@ -334,8 +401,42 @@
     "support_webinars_desc": "Visit the {0} page on the GRADE-CERQual website to sign-up.",
     "upcoming_events": "Upcoming Events",
     "videos": "Help Resources: Videos",
-    "training_webinars": "iSoQ Training Webinars",
-    "gc_webinars": "GRADE-CERQual Webinars"
+    "train_webinars": "iSoQ Training Webinars",
+    "gc_webinars": "GRADE-CERQual Webinars",
+    "video_list": {
+      "welcome": "iSoQ Welcome Video - The Essentials [8:58 min]",
+      "sharing": "Sharing an iSoQ project [1:45 min]",
+      "visibility": "Visibility Settings on the iSoQ Database [3:19 min]",
+      "my_data": "Overview of the My Data page [1:30 min]",
+      "importing_references": "Importing references for included studies [3:00 min]",
+      "importing_pubmed": "Importing references from PubMed [1:08 min]",
+      "creating_characteristics": "Creating a characteristics of studies table [1:50 min]",
+      "importing_characteristics": "Importing a characteristics of studies table [8:54 min]",
+      "creating_methodological": "Creating a methodological assessments table [2:20 min]",
+      "importing_methodological": "Importing a methodological assessments table [9:52 min]",
+      "isoq_overview": "Overview of the Interactive Summary of Qualitative Findings Table [5:26 min]",
+      "organising_findings": "Organising review findings into groups [3:38 min]",
+      "reordering_findings": "Re-ordering review findings [1:35 min]",
+      "searching_table": "Searching the iSoQ table [0:44 min]",
+      "leaving_notes_findings": "Leaving notes about review findings [1:02 min]",
+      "cerqual_worksheet_overview": "Overview of the GRADE-CERQual Assessment Worksheet [2:35 min]",
+      "adding_extracted_data": "Adding Extracted Data [5:02 min]",
+      "assessing_methodological": "Overview of assessing Methodological Limitations [3:13 min]",
+      "assessing_coherence": "Overview of assessing Coherence [2:20 min]",
+      "assessing_adequacy": "Overview of assessing Adequacy [2:40 min]",
+      "assessing_relevance": "Overview of assessing Relevance [2:18 min]",
+      "overall_confidence": "Overview of the Overall Assessment of Confidence [2:33 min]",
+      "leaving_notes_cerqual": "Leaving notes about GRADE-CERQual assessments [1:33 min]"
+    },
+    "training_webinars_list": {
+      "presentation": "Watch a presentation on iSoQ",
+      "demo": "Watch a demo of the iSoQ tool",
+      "cochrane_training": "Access the Cochrane Learning Live training on iSoQ"
+    },
+    "gc_webinars_list": {
+      "webinar": "Access the Cochrane Training Webinar on GRADE-CERQual",
+      "upcoming": "Information on upcoming live GRADE-CERQual webinars"
+    }
   },
   "whats_new": {
     "title": "What's New",
@@ -359,7 +460,12 @@
     "training_webinar": "Watch the {0} here at your convenience.",
     "training_webinar_link": "Cochrane Training GRADE-CERQual Webinar",
     "mailing_list": "To hear about upcoming in-person training workshops, join the {0}",
-    "mailing_list_link": "GRADE-CERQual Mailing List here"
+    "mailing_list_link": "GRADE-CERQual Mailing List here",
+    "full_text": "FULL TEXT",
+    "more_info": "For more information on where GRADE-CERQual fits into the review process please see the",
+    "epoc_protocol": "EPOC QES protocol and review template",
+    "portuguese_version": "A Portuguese version of the guidance can be",
+    "found_here": "found here"
   },
   "soqf_table": {
     "auto_numbering": "Automatic numbering of summarised review findings",
@@ -511,5 +617,9 @@
     "leave_project_title": "Leaving a project simplified",
     "leave_project_li1": "Users can now leave a project that was shared with them by clicking the \"leave\" button in My Workspace",
     "leave_project_li2": "This will remove the project entirely from My Workspace"
+  },
+  "accessibility": {
+    "increase_font": "+A",
+    "decrease_font": "-A"
   }
 }

@@ -334,8 +334,42 @@
     "support_webinars_desc": "Visite la página de {0} en el sitio web de GRADE-CERQual para registrarse.",
     "upcoming_events": "Próximos Eventos",
     "videos": "Recursos de ayuda: Videos",
-    "training_webinars": "Seminarios web de capacitación de iSoQ",
-    "gc_webinars": "Seminarios web GRADE-CERQual"
+    "train_webinars": "Seminarios web de capacitación de iSoQ",
+    "gc_webinars": "Seminarios web GRADE-CERQual",
+    "video_list": {
+      "welcome": "iSoQ Welcome Video - The Essentials [8:58 min]",
+      "sharing": "Sharing an iSoQ project [1:45 min]",
+      "visibility": "Visibility Settings on the iSoQ Database [3:19 min]",
+      "my_data": "Overview of the My Data page [1:30 min]",
+      "importing_references": "Importing references for included studies [3:00 min]",
+      "importing_pubmed": "Importing references from PubMed [1:08 min]",
+      "creating_characteristics": "Creating a characteristics of studies table [1:50 min]",
+      "importing_characteristics": "Importing a characteristics of studies table [8:54 min]",
+      "creating_methodological": "Creating a methodological assessments table [2:20 min]",
+      "importing_methodological": "Importing a methodological assessments table [9:52 min]",
+      "isoq_overview": "Overview of the Interactive Summary of Qualitative Findings Table [5:26 min]",
+      "organising_findings": "Organising review findings into groups [3:38 min]",
+      "reordering_findings": "Re-ordering review findings [1:35 min]",
+      "searching_table": "Searching the iSoQ table [0:44 min]",
+      "leaving_notes_findings": "Leaving notes about review findings [1:02 min]",
+      "cerqual_worksheet_overview": "Overview of the GRADE-CERQual Assessment Worksheet [2:35 min]",
+      "adding_extracted_data": "Adding Extracted Data [5:02 min]",
+      "assessing_methodological": "Overview of assessing Methodological Limitations [3:13 min]",
+      "assessing_coherence": "Overview of assessing Coherence [2:20 min]",
+      "assessing_adequacy": "Overview of assessing Adequacy [2:40 min]",
+      "assessing_relevance": "Overview of assessing Relevance [2:18 min]",
+      "overall_confidence": "Overview of the Overall Assessment of Confidence [2:33 min]",
+      "leaving_notes_cerqual": "Leaving notes about GRADE-CERQual assessments [1:33 min]"
+    },
+    "training_webinars_list": {
+      "presentation": "Watch a presentation on iSoQ",
+      "demo": "Watch a demo of the iSoQ tool",
+      "cochrane_training": "Access the Cochrane Learning Live training on iSoQ"
+    },
+    "gc_webinars_list": {
+      "webinar": "Access the Cochrane Training Webinar on GRADE-CERQual",
+      "upcoming": "Information on upcoming live GRADE-CERQual webinars"
+    }
   },
   "whats_new": {
     "title": "Novedades",
@@ -359,7 +393,12 @@
     "training_webinar": "Mire el {0} aquí a su conveniencia.",
     "training_webinar_link": "Seminario web de capacitación Cochrane sobre GRADE-CERQual",
     "mailing_list": "Para conocer los próximos talleres de capacitación presenciales, únase a la {0}",
-    "mailing_list_link": "Lista de correo de GRADE-CERQual aquí"
+    "mailing_list_link": "Lista de correo de GRADE-CERQual aquí",
+    "full_text": "FULL TEXT",
+    "more_info": "For more information on where GRADE-CERQual fits into the review process please see the",
+    "epoc_protocol": "EPOC QES protocol and review template",
+    "portuguese_version": "A Portuguese version of the guidance can be",
+    "found_here": "found here"
   },
   "soqf_table": {
     "auto_numbering": "Numeración automática de hallazgos de revisión resumidos",
@@ -511,5 +550,9 @@
     "leave_project_title": "Abandonar un proyecto simplificado",
     "leave_project_li1": "Los usuarios ahora pueden abandonar un proyecto que se compartió con ellos haciendo clic en el botón \"abandonar\" en Mi Espacio de Trabajo",
     "leave_project_li2": "Esto eliminará el proyecto completamente de Mi Espacio de Trabajo"
+  },
+  "accessibility": {
+    "increase_font": "+A",
+    "decrease_font": "-A"
   }
 }

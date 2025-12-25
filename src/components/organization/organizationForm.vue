@@ -75,7 +75,7 @@
             <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            label="Corresponding author"
+            :label="$t('project.corresponding_author')"
             label-for="input-project-author"
             description="First then last name">
             <b-form-input
@@ -88,7 +88,7 @@
               <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author with at least 3 characters') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            label="Corresponding author's email address"
+            :label="$t('project.corresponding_author_email')"
             label-for="input-project-author-email">
             <b-form-input
               :disabled="!canWrite"
@@ -151,7 +151,7 @@
           </b-form-group>
           <b-form-group
             v-if="!formData.complete_by_author"
-            label="Please list the authors of this iSoQ"
+            :label="$t('project.list_authors_isoq')"
             label-for="input-project-list-authors">
             <b-form-input
               :disabled="!canWrite"
@@ -201,7 +201,7 @@
             </p>
           </template>
           <b-form-group
-            label="Additional information"
+            :label="$t('project.additional_info')"
             label-for="input-project-list-description">
             <b-form-textarea
               :disabled="!canWrite"
@@ -232,12 +232,12 @@
       <!-- Warning modal for reverting to private -->
       <b-modal
         id="publish-warning-modal"
-        title="Warning!"
+        :title="$t('project.warning')"
         ok-title="Continue"
         cancel-title="Cancel"
         @ok="handlePublishWarningContinue"
         @cancel="handlePublishWarningCancel">
-        <p>By removing this content your project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+        <p>{{ $t('project.revert_private_warning') }}</p>
       </b-modal>
     </template>
   </div>

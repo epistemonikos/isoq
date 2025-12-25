@@ -46,35 +46,35 @@
             <b-form-radio-group v-model="selectedOptions.methodological_limitations.option"
               name="methodological-limitations" stacked :disabled="!permission">
               <b-form-radio value="0">
-                No/Very minor concerns
+                {{ $t('worksheet.options.no_concerns') }}
                 <small v-b-tooltip.hover
-                  title="No or very minor concerns regarding methodological limitations that are unlikely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.methodological_limitations.no_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="1">
-                Minor concerns
+                {{ $t('worksheet.options.minor_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Minor concerns regarding methodological limitations that may reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.methodological_limitations.minor_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="2">
-                Moderate concerns
+                {{ $t('worksheet.options.moderate_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Moderate concerns regarding methodological limitations that will probably reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.methodological_limitations.moderate_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="3">
-                Serious concerns
+                {{ $t('worksheet.options.serious_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Serious concerns regarding methodological limitations that are very likely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.methodological_limitations.serious_concerns')">*</small>
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="clearMySelection('methodological_limitations')"
                 v-if="selectedOptions.methodological_limitations.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
-                clear my selection
+                {{ $t('worksheet.actions.clear_selection') }}
               </a>
             </p>
             <p class="pt-3">
-              Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)
+              {{ $t('worksheet.labels.select_level') }}
             </p>
             <b-form-group v-if="selectedOptions.methodological_limitations.option !== null"
               class="mt-4 font-weight-light" label-for="input-ml-explanation">
@@ -133,34 +133,34 @@
             </p>
             <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked :disabled="!permission">
               <b-form-radio value="0">
-                No/Very minor concerns
+                {{ $t('worksheet.options.no_concerns') }}
                 <small v-b-tooltip.hover
-                  title="No or very minor concerns regarding coherence that are unlikely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.coherence.no_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="1">
-                Minor concerns
+                {{ $t('worksheet.options.minor_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Minor concerns regarding coherence that may reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.coherence.minor_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="2">
-                Moderate concerns
+                {{ $t('worksheet.options.moderate_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Moderate concerns regarding coherence that will probably reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.coherence.moderate_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="3">
-                Serious concerns
+                {{ $t('worksheet.options.serious_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Serious concerns regarding coherence that are very likely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.coherence.serious_concerns')">*</small>
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="clearMySelection('coherence')" v-if="selectedOptions.coherence.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
-                clear my selection
+                {{ $t('worksheet.actions.clear_selection') }}
               </a>
             </p>
             <p class="pt-3">
-              Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)
+              {{ $t('worksheet.labels.select_level') }}
             </p>
             <b-form-group v-if="selectedOptions.coherence.option !== null" class="mt-4 font-weight-light" label-for="input-coherence-explanation">
               <template slot="label">
@@ -205,30 +205,30 @@
             </p>
             <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked :disabled="!permission">
               <b-form-radio value="0">
-                No/Very minor concerns
+                {{ $t('worksheet.options.no_concerns') }}
                 <small v-b-tooltip.hover
-                  title="No or very minor concerns regarding adequacy that are unlikely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.adequacy.no_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="1">
-                Minor concerns
+                {{ $t('worksheet.options.minor_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Minor concerns regarding adequacy that may reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.adequacy.minor_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="2">
-                Moderate concerns
+                {{ $t('worksheet.options.moderate_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Moderate concerns regarding adequacy that will probably reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.adequacy.moderate_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="3">
-                Serious concerns
+                {{ $t('worksheet.options.serious_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Serious concerns regarding adequacy that are very likely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.adequacy.serious_concerns')">*</small>
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="clearMySelection('adequacy')" v-if="selectedOptions.adequacy.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
-                clear my selection
+                {{ $t('worksheet.actions.clear_selection') }}
               </a>
             </p>
             <b-form-group v-if="selectedOptions.adequacy.option !== null" class="mt-4 font-weight-light" label-for="input-adequacy-explanation">
@@ -278,30 +278,30 @@
             </p>
             <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked :disabled="!permission">
               <b-form-radio value="0">
-                No/Very minor concerns
+                {{ $t('worksheet.options.no_concerns') }}
                 <small v-b-tooltip.hover
-                  title="No or very minor concerns regarding relevance that are unlikely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.relevance.no_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="1">
-                Minor concerns
+                {{ $t('worksheet.options.minor_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Minor concerns regarding relevance that may reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.relevance.minor_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="2">
-                Moderate concerns
+                {{ $t('worksheet.options.moderate_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Moderate concerns regarding relevance that will probably reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.relevance.moderate_concerns')">*</small>
               </b-form-radio>
               <b-form-radio value="3">
-                Serious concerns
+                {{ $t('worksheet.options.serious_concerns') }}
                 <small v-b-tooltip.hover
-                  title="Serious concerns regarding relevance that are very likely to reduce confidence in the review finding">*</small>
+                  :title="$t('worksheet.tooltips.relevance.serious_concerns')">*</small>
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="clearMySelection('relevance')" v-if="selectedOptions.relevance.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
-                clear my selection
+                {{ $t('worksheet.actions.clear_selection') }}
               </a>
             </p>
             <b-form-group v-if="selectedOptions.relevance.option !== null" class="mt-4 font-weight-light"
@@ -332,8 +332,7 @@
 
           <div id="left-cerqual" v-if="selectedOptions.type === 'cerqual'">
             <p class="font-weight-bold">
-              To what extent is the review finding a reasonable representation of
-              the phenomenon of interest?
+              {{ $t('worksheet.labels.cerqual_question') }}
             </p>
             <p>
               Click
@@ -344,44 +343,42 @@
             </p>
             <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked :disabled="!permission">
               <b-form-radio value="0">
-                High confidence
+                {{ $t('worksheet.options.high_confidence') }}
                 <small v-b-tooltip.hover
-                  title="It is highly likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                  :title="$t('worksheet.tooltips.cerqual.high')">*</small>
               </b-form-radio>
               <b-form-radio value="1">
-                Moderate confidence
+                {{ $t('worksheet.options.moderate_confidence') }}
                 <small v-b-tooltip.hover
-                  title="It is likely that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                  :title="$t('worksheet.tooltips.cerqual.moderate')">*</small>
               </b-form-radio>
               <b-form-radio value="2">
-                Low confidence
+                {{ $t('worksheet.options.low_confidence') }}
                 <small v-b-tooltip.hover
-                  title="It is possible that the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                  :title="$t('worksheet.tooltips.cerqual.low')">*</small>
               </b-form-radio>
               <b-form-radio value="3">
-                Very low confidence
+                {{ $t('worksheet.options.very_low_confidence') }}
                 <small v-b-tooltip.hover
-                  title="It is not clear whether the review finding is a reasonable representation of the phenomenon of interest">*</small>
+                  :title="$t('worksheet.tooltips.cerqual.very_low')">*</small>
               </b-form-radio>
             </b-form-radio-group>
             <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
               <a @click="clearMySelection('cerqual')" v-if="selectedOptions.cerqual.option !== null">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
-                clear my selection
+                {{ $t('worksheet.actions.clear_selection') }}
               </a>
             </p>
             <b-form-group v-if="selectedOptions.cerqual.option !== null" class="mt-4 font-weight-light"
               label-for="input-cerqual"
               description="The GRADE-CERQual approach requires you to include an explanation for your judgement.">
               <template slot="label">
-                Below is the minimum text required for an explanation. Now add
-                detail about the specific concerns for the component(s) that most
-                contributed to your assessment.
+                {{ $t('worksheet.labels.cerqual_explanation_instruction') }}
                 <a href="#" @click="
                   ui.showExample
                     ? (ui.showExample = false)
                     : (ui.showExample = true)
-                  ">{{ ui.showExample ? "Hide" : "Show" }} example</a>
+                  ">{{ ui.showExample ? $t('worksheet.actions.hide_example') : $t('worksheet.actions.show_example') }} example</a>
                 <!-- Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.-->
                 <div class="mt-2 bg-light text-dark p-1" v-if="ui.showExample">
                   <p class="font-italic">
@@ -706,7 +703,7 @@
                     <br />
                     Explanation:
                     <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ getExplanation('methodological-limitations', evidenceProfile[0].methodological_limitations.option, evidenceProfile[0].methodological_limitations.explanation) }}</span>
-                    <span v-else>Explanation not yet added</span>
+                    <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                   </template>
                 </p>
                 <h5>{{ $t('worksheet.coherence') }}</h5>
@@ -716,7 +713,7 @@
                     <br />
                     Explanation:
                     <span v-if="evidenceProfile[0].coherence.explanation">{{ getExplanation('coherence', evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
-                    <span v-else>Explanation not yet added</span>
+                    <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                   </template>
                 </p>
                 <h5>{{ $t('worksheet.adequacy') }}</h5>
@@ -726,7 +723,7 @@
                     <br />
                     Explanation:
                     <span v-if="evidenceProfile[0].adequacy.explanation">{{ getExplanation('adequacy', evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
-                    <span v-else>Explanation not yet added</span>
+                    <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                   </template>
                 </p>
                 <h5>{{ $t('worksheet.relevance') }}</h5>
@@ -736,7 +733,7 @@
                     <br />
                     Explanation:
                     <span v-if="evidenceProfile[0].relevance.explanation">{{ getExplanation('relevance', evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
-                    <span v-else>Explanation not yet added</span>
+                    <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                   </template>
                 </p>
               </b-tab>
