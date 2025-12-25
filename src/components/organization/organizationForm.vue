@@ -45,7 +45,7 @@
         <b-col
           cols="12">
           <b-form-group
-            :label="$t('Title of review')"
+            :label="$t('project.title_of_review')"
             label-for="input-project-list-name"
             :description="$t('project.insert_title_desc')">
             <b-form-input
@@ -58,7 +58,7 @@
               @input="state.name = (formData.name !== '' && formData.name.length > 2) ? null : state.name"
               @blur="state.name = (formData.name !== '' && formData.name.length > 2) ? null : false"
               v-model="formData.name"></b-form-input>
-            <b-form-invalid-feedback :state="state.name">{{ $t('The project must have a title that contain at least 3 characters') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.name">{{ $t('project.validation.title_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('project.authors')"
@@ -72,7 +72,7 @@
               @input="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : state.authors : null"
               @blur="state.authors = isProjectPublished ? (formData.authors !== '' && formData.authors.trim().length > 0) ? null : false : null"
               v-model="formData.authors"></b-form-input>
-            <b-form-invalid-feedback :state="state.authors">{{ $t('The project must have at least one author') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.authors">{{ $t('project.validation.at_least_one_author') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('project.corresponding_author')"
@@ -85,7 +85,7 @@
               @input="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : state.author : null"
               @blur="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : false : null"
               v-model="formData.author"></b-form-input>
-              <b-form-invalid-feedback :state="state.author">{{ $t('The project must have a corresponding author with at least 3 characters') }}</b-form-invalid-feedback>
+              <b-form-invalid-feedback :state="state.author">{{ $t('project.validation.corresponding_author_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             :label="$t('project.corresponding_author_email')"
@@ -98,10 +98,10 @@
               @input="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : state.author_email : null"
               @blur="state.author_email = isProjectPublished ? (formData.author_email !== '' && validEmail(formData.author_email)) ? null : false : null"
               v-model="formData.author_email"></b-form-input>
-              <b-form-invalid-feedback :state="state.author_email">{{ $t('The project must have a valid author email address') }}</b-form-invalid-feedback>
+              <b-form-invalid-feedback :state="state.author_email">{{ $t('project.validation.valid_email') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Review question')"
+            :label="$t('project.review_question')"
             label-for="input-project-review-question">
             <b-form-textarea
               :disabled="!canWrite"
@@ -113,10 +113,10 @@
               @input="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : state.review_question : null"
               @blur="state.review_question = isProjectPublished ? (formData.review_question !== '' && formData.review_question.trim().length >= 3) ? null : false : null"
               v-model="formData.review_question"></b-form-textarea>
-            <b-form-invalid-feedback :state="state.review_question">{{ $t('The project must have a review question with at least 3 characters') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.review_question">{{ $t('project.validation.question_min_length') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Has this review been published?')"
+            :label="$t('project.published_status')"
             label-for="select-project-list-published-status">
             <b-select
               :disabled="!canWrite"
@@ -126,7 +126,7 @@
           </b-form-group>
           <b-form-group
             v-if="formData.published_status"
-            :label="$t('URL or DOI')"
+            :label="$t('project.url_doi')"
             label-for="select-project-list-url-doi">
             <b-input
               :disabled="!canWrite"
@@ -137,10 +137,10 @@
               @input="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi)) ? null : state.url_doi"
               @blur="state.url_doi = (formData.url_doi !== '' && validUrl(formData.url_doi) || formData.public_type !== 'private') ? null : false"
               v-model="formData.url_doi"></b-input>
-            <b-form-invalid-feedback :state="state.url_doi">{{ $t('The project must have a valid URL or DOI') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.url_doi">{{ $t('project.validation.valid_url_doi') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('Is the iSoQ being completed by the review authors?')"
+            :label="$t('project.completed_by_authors')"
             label-for="select-project-list-completed-by-author-status">
             <b-select
               :disabled="!canWrite"
@@ -160,7 +160,7 @@
               @input="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : state.lists_authors : null"
               @blur="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : false : null"
               v-model="formData.lists_authors"></b-form-input>
-            <b-form-invalid-feedback :state="state.lists_authors">{{ $t('The project must have a list of authors') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
             label-for="select-project-list-status"
@@ -177,7 +177,7 @@
               v-model="formData.public_type"
               @change="resetState()"
               :options="global_status"></b-select>
-            <b-form-invalid-feedback :state="state.can_publish">{{ $t('The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select “Private” until you are finished.') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.can_publish">{{ $t('project.validation.publish_requirement') }}</b-form-invalid-feedback>
           </b-form-group>
           <template v-if="formData.public_type !== 'private'">
             <b-form-group
@@ -193,7 +193,7 @@
                 v-model="formData.license_type"
                 :options="global_licenses"></b-select>
             </b-form-group>
-            <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a license') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.license">{{ $t('project.validation.license_required') }}</b-form-invalid-feedback>
             <p v-for="license of global_licenses" :key="license.value">
               <span v-if="license.value === formData.license_type">
                 <b>{{ $t('project.explanation') }}</b> {{ license.explanation }}

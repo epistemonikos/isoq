@@ -142,6 +142,17 @@
     "plan_contact": "Entre em contato"
   },
   "project": {
+    "validation": {
+      "title_min_length": "O projeto deve ter um título com pelo menos 3 caracteres",
+      "at_least_one_author": "O projeto deve ter pelo menos um autor",
+      "corresponding_author_min_length": "O projeto deve ter um autor correspondente com pelo menos 3 caracteres",
+      "valid_email": "O projeto deve ter um endereço de e-mail de autor válido",
+      "question_min_length": "O projeto deve ter uma pergunta de revisão com pelo menos 3 caracteres",
+      "valid_url_doi": "O projeto deve ter uma URL ou DOI válido",
+      "list_authors_required": "O projeto deve ter uma lista de autores",
+      "publish_requirement": "O projeto deve ter pelo menos uma descoberta de revisão com uma avaliação GRADE-CERQual completa para ser publicado no banco de dados iSoQ. Selecione 'Privado' até terminar.",
+      "license_required": "O projeto deve ter uma licença"
+    },
     "title_of_review": "Título da revisão",
     "review_question": "Pergunta da revisão",
     "published_status": "Esta revisão foi publicada?",
@@ -289,7 +300,68 @@
     "no_evidence_profile": "Nenhum perfil de evidência foi criado",
     "add_evidence_profile": "adicionar um perfil de evidência",
     "no_isoqf": "nenhum isoqf foi criado",
-    "add_finding": "adicionar uma descoberta"
+    "add_finding": "adicionar uma descoberta",
+    "options": {
+      "no_concerns": "Sem/Mínimas preocupações",
+      "minor_concerns": "Preocupações menores",
+      "moderate_concerns": "Preocupações moderadas",
+      "serious_concerns": "Preocupações sérias",
+      "high_confidence": "Confiança alta",
+      "moderate_confidence": "Confiança moderada",
+      "low_confidence": "Confiança baixa",
+      "very_low_confidence": "Confiança muito baixa"
+    },
+    "tooltips": {
+      "methodological_limitations": {
+        "no_concerns": "Sem ou mínimas preocupações quanto a limitações metodológicas que provavelmente não reduzirão a confiança na descoberta da revisão",
+        "minor_concerns": "Preocupações menores quanto a limitações metodológicas que podem reduzir a confiança na descoberta da revisão",
+        "moderate_concerns": "Preocupações moderadas quanto a limitações metodológicas que provavelmente reduzirão a confiança na descoberta da revisão",
+        "serious_concerns": "Preocupações sérias quanto a limitações metodológicas que muito provavelmente reduzirão a confiança na descoberta da revisão"
+      },
+      "coherence": {
+        "no_concerns": "Sem ou mínimas preocupações quanto à coerência que provavelmente não reduzirão a confiança na descoberta da revisão",
+        "minor_concerns": "Preocupações menores quanto à coerência que podem reduzir a confiança na descoberta da revisão",
+        "moderate_concerns": "Preocupações moderadas quanto à coerência que provavelmente reduzirão a confiança na descoberta da revisão",
+        "serious_concerns": "Preocupações sérias quanto à coerência que muito provavelmente reduzirão a confiança na descoberta da revisão"
+      },
+      "adequacy": {
+        "no_concerns": "Sem ou mínimas preocupações quanto à adequação que provavelmente não reduzirão a confiança na descoberta da revisão",
+        "minor_concerns": "Preocupações menores quanto à adequação que podem reduzir a confiança na descoberta da revisão",
+        "moderate_concerns": "Preocupações moderadas quanto à adequação que provavelmente reduzirão a confiança na descoberta da revisão",
+        "serious_concerns": "Preocupações sérias quanto à adequação que muito provavelmente reduzirão a confiança na descoberta da revisão"
+      },
+      "relevance": {
+        "no_concerns": "Sem ou mínimas preocupações quanto à relevância que provavelmente não reduzirão a confiança na descoberta da revisão",
+        "minor_concerns": "Preocupações menores quanto à relevância que podem reduzir a confiança na descoberta da revisão",
+        "moderate_concerns": "Preocupações moderadas quanto à relevância que provavelmente reduzirão a confiança na descoberta da revisão",
+        "serious_concerns": "Preocupações sérias quanto à relevância que muito provavelmente reduzirão a confiança na descoberta da revisão"
+      },
+      "cerqual": {
+        "high": "É altamente provável que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
+        "moderate": "É provável que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
+        "low": "É possível que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
+        "very_low": "Não está claro se a descoberta da revisão é uma representação razoável do fenômeno de interesse"
+      }
+    },
+    "warnings": {
+      "incomplete_explanation": "Parece que você não terminou de escrever uma explicação para seu julgamento",
+      "changed_option": "Ao alterar esta avaliação, você precisará refazer sua avaliação geral de confiança GRADE-CERQual. Sua escolha de nível de confiança será apagada e sua explicação excluída. Suas notas serão mantidas.",
+      "revert_private": "Seu projeto voltará a ser 'privado' e será removido do banco de dados iSoQ. Você pode publicar o projeto no banco de dados assim que concluir sua avaliação de confiança GRADE-CERQual."
+    },
+    "actions": {
+      "clear_selection": "limpar minha seleção",
+      "do_it_now": "Fazer agora",
+      "do_it_later": "Fazer mais tarde",
+      "show_example": "Mostrar exemplo",
+      "hide_example": "Ocultar exemplo"
+    },
+    "labels": {
+      "explanation_required": "A abordagem GRADE-CERQual exige que você inclua uma explicação para seu julgamento. Clique aqui para ver um exemplo.",
+      "select_level": "Selecione um nível de preocupação acima e complete a frase que aparece abaixo para explicar suas preocupações (não obrigatório para sem/mínimas preocupações)",
+      "explanation_not_added": "Explicação ainda não adicionada",
+      "cerqual_question": "Em que medida a descoberta da revisão é uma representação razoável do fenômeno de interesse?",
+      "cerqual_explanation_instruction": "Abaixo está o texto mínimo necessário para uma explicação. Agora adicione detalhes sobre as preocupações específicas do(s) componente(s) que mais contribuíram para sua avaliação."
+    }
   },
   "table": {
     "no_studies": "Nenhum estudo foi criado,",

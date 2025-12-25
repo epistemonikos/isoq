@@ -142,6 +142,17 @@
     "plan_contact": "Contact us"
   },
   "project": {
+    "validation": {
+      "title_min_length": "The project must have a title that contain at least 3 characters",
+      "at_least_one_author": "The project must have at least one author",
+      "corresponding_author_min_length": "The project must have a corresponding author with at least 3 characters",
+      "valid_email": "The project must have a valid author email address",
+      "question_min_length": "The project must have a review question with at least 3 characters",
+      "valid_url_doi": "The project must have a valid URL or DOI",
+      "list_authors_required": "The project must have a list of authors",
+      "publish_requirement": "The project must have at least one review finding with a complete GRADE-CERQual assessment to be published to the iSoQ database. Select “Private” until you are finished.",
+      "license_required": "The project must have a license"
+    },
     "title_of_review": "Title of review",
     "review_question": "Review question",
     "published_status": "Has this review been published?",
