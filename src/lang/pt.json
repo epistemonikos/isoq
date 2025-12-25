@@ -61,6 +61,11 @@
     "enter_summarized_finding": "Insira uma descoberta de revisão resumida",
     "add_review_finding_tooltip": "Copie e cole uma descoberta de revisão resumida por vez no iSoQ",
     "add_summarized_finding": "Adicionar descoberta de revisão resumida",
+    "duplicate_project": "Duplicar um projeto",
+    "duplicate_instruction_1": "Clique no botão \"duplicar\" para começar a fazer uma cópia do projeto",
+    "duplicate_instruction_2": "O conteúdo da duplicata será idêntico ao original, mas não será compartilhado com outros usuários automaticamente.",
+    "duplicate_instruction_3": "Use o botão \"compartilhar\" para compartilhar o projeto duplicado.",
+    "duplicate_complete": "Duplicata completa. Agora você pode fechar este modal.",
     "click": "Clique",
     "here": "aqui"
   },

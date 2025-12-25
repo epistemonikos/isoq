@@ -61,6 +61,11 @@
     "enter_summarized_finding": "Ingrese un hallazgo de revisión resumido",
     "add_review_finding_tooltip": "Copie y pegue un hallazgo de revisión resumido a la vez en el iSoQ",
     "add_summarized_finding": "Agregar hallazgo de revisión resumido",
+    "duplicate_project": "Duplicar un proyecto",
+    "duplicate_instruction_1": "Haga clic en el botón \"duplicar\" para comenzar a hacer una copia del proyecto",
+    "duplicate_instruction_2": "El contenido del duplicado será idéntico al original, pero no se compartirá con otros usuarios automáticamente.",
+    "duplicate_instruction_3": "Utilice el botón \"compartir\" para compartir el proyecto duplicado.",
+    "duplicate_complete": "Duplicado completo. Ahora puede cerrar este modal.",
     "click": "Haga clic",
     "here": "aquí"
   },

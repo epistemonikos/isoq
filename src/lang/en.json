@@ -61,6 +61,11 @@
     "enter_summarized_finding": "Enter a summarised review finding",
     "add_review_finding_tooltip": "Copy and paste one summarised review finding at a time into the iSoQ",
     "add_summarized_finding": "Add Summarised review finding",
+    "duplicate_project": "Duplicate a project",
+    "duplicate_instruction_1": "Click on the \"duplicate\" button to start making a copy of the project",
+    "duplicate_instruction_2": "The content of the duplicate will be identical to the original but it will not be shared with other users automatically.",
+    "duplicate_instruction_3": "Use the \"share\" button to share the duplicated project.",
+    "duplicate_complete": "Duplicate complete. You can now close this modal.",
     "click": "Click",
     "here": "here"
   },

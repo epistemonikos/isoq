@@ -315,13 +315,13 @@
         no-close-on-backdrop
         no-close-on-esc>
         <template v-if="modalCloneId != null">
-          <p>
-            Click on the "duplicate" button to start making a copy of the project "<b>{{buffer_project.name}}</b>".
-            <br>
-            The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
-            <br>
-            Use the "share" button to share the duplicated project.
-          </p>
+            <p>
+              {{ $t('common.duplicate_instruction_1') }} "<b>{{buffer_project.name}}</b>".
+              <br>
+              {{ $t('common.duplicate_instruction_2') }}
+              <br>
+              {{ $t('common.duplicate_instruction_3') }}
+            </p>
         </template>
         <template v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
           <div
