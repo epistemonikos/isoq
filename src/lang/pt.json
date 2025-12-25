@@ -53,7 +53,16 @@
     "recover": "Recuperar",
     "sent": "Enviado",
     "match": "Coincide",
-    "notes": "Notas"
+    "notes": "Notas",
+    "new_isoq_table": "Nova tabela iSoQ",
+    "edit_isoq_table": "Editar tabela iSoQ",
+    "new_summarized_finding": "Nova descoberta de revisão resumida",
+    "edit_summarized_finding": "Editar descoberta de revisão resumida",
+    "enter_summarized_finding": "Insira uma descoberta de revisão resumida",
+    "add_review_finding_tooltip": "Copie e cole uma descoberta de revisão resumida por vez no iSoQ",
+    "add_summarized_finding": "Adicionar descoberta de revisão resumida",
+    "click": "Clique",
+    "here": "aqui"
   },
   "menu": {
     "about": "Sobre",
