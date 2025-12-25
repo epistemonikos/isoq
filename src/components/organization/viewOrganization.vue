@@ -170,13 +170,13 @@
       <b-modal
         id="modal-remove-project"
         ref="modal-remove-project"
-        :title="$t('common.delete_project') || 'Delete project'"
+        :title="$t('common.delete_project')"
         @ok="removeProject"
         @cancel="cleanProject"
         :ok-title="$t('common.remove')"
         ok-variant="outline-danger"
         cancel-variant="outline-secondary">
-        <p>{{ $t('common.confirm_remove_project') || 'Are you sure you wanna remove' }} "<b>{{this.buffer_project.name}}</b>" {{ $t('common.and_all_data') || 'and all the data related' }}?</p>
+        <p>{{ $t('common.confirm_remove_project') }} "<b>{{this.buffer_project.name}}</b>" {{ $t('common.and_all_data') }}?</p>
       </b-modal>
       <b-modal
         size="xl"
@@ -186,14 +186,14 @@
         :ok-title="$t('common.close')"
         scrollable>
         <template v-slot:modal-title>
-          <videoHelp txt="Share" tag="none" urlId="449741356"></videoHelp>
+          <videoHelp :txt="$t('common.share')" tag="none" urlId="449741356"></videoHelp>
         </template>
         <b-tabs v-model="ui.tabIndex">
           <b-tab
             :title="$t('common.invite') || 'Invite'">
             <b-container class="pt-3">
               <b-form-group
-                :label="$t('common.insert_emails_add') || 'Insert emails separated by commas and click \"add\"'"
+                :label="$t('common.insert_emails_add')"
                 label-for="input-emails-invite">
                 <b-input
                   type="email"
@@ -210,7 +210,7 @@
               <div
                 class="my-3"
                 v-if="buffer_project.tmp_invite_emails.length">
-                <p class="mb-1 font-weight-light">{{ $t('common.project_will_be_shared') || 'This project will be shared with:' }}</p>
+                <p class="mb-1 font-weight-light">{{ $t('common.project_will_be_shared') }}</p>
                 <b-badge
                 class="mx-1"
                 v-for="(email, index) in buffer_project.tmp_invite_emails"
@@ -221,21 +221,20 @@
                 </b-badge>
               </div>
               <b-form-group
-                :label="$t('common.can') || 'Can:'">
+                :label="$t('common.can')">
                 <b-form-select
                   v-model="buffer_project.sharedType"
-                  :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
+                  :options="[{value: 0, text: $t('common.can_view_project') || 'View the project'}, {value: 1, text: $t('common.can_view_edit_project') || 'View and edit the project'}]"></b-form-select>
               </b-form-group>
               <b-button
-                :disabled="!buffer_project.tmp_invite_emails.length"
                 variant="success"
-                @click="saveSharedProject(buffer_project.id)">{{ $t('common.invite') || 'Invite' }}</b-button>
+                @click="saveSharedProject(buffer_project.id)">{{ $t('common.invite') }}</b-button>
             </b-container>
           </b-tab>
           <b-tab
             :title="$t('common.users_with_access') || 'Users with access'">
             <b-container class="pt-3">
-              <h4>{{ $t('common.users_with_access') || 'Users with Access' }}</h4>
+              <h4>{{ $t('common.users_with_access')}}</h4>
               <b-table
                 show-empty
                 responsive
@@ -244,27 +243,27 @@
                 <template v-slot:cell(actions)="data">
                   <b-button
                     variant="danger"
-                    @click="unshare(data.index, data.item.id)">{{ $t('common.unshare') || 'unshare' }}</b-button>
+                    @click="unshare(data.index, data.item.id)">{{ $t('common.unshare') }}</b-button>
                 </template>
                 <template v-slot:cell(user_can)="data">
                   <b-form-select
                     v-model="data.item.user_can"
-                    :options="[{value: 0, text: 'Can view'}, {value: 1, text: 'Can view and edit'}]"
+                    :options="[{value: 0, text: $t('common.can_view') || 'Can view'}, {value: 1, text: $t('common.can_view_edit') || 'Can view and edit'}]"
                     @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
                 </template>
                 <template v-slot:empty>
-                  <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') || 'No users have access to this project' }}</p>
+                  <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') }}</p>
                 </template>
               </b-table>
               <div
                 v-if="buffer_project.invite_emails.length">
-                <h4>{{ $t('common.pending_access') || 'Pending access' }}</h4>
+                <h4>{{ $t('common.pending_access') }}</h4>
                 <b-table-simple
                   v-if="buffer_project.invite_emails.length">
                   <b-thead>
                     <b-tr>
                       <b-th>{{ $t('common.email') }}</b-th>
-                      <b-th>{{ $t('common.actions') || 'Actions' }}</b-th>
+                      <b-th>{{ $t('common.actions') }}</b-th>
                     </b-tr>
                   </b-thead>
                   <b-tbody>
@@ -274,7 +273,7 @@
                         <b-button
                           variant="danger"
                           @click="unshareInvited(email)">
-                          {{ $t('common.unshare') || 'unshare' }}
+                          {{ $t('common.unshare') }}
                         </b-button>
                       </b-td>
                     </b-tr>
@@ -284,18 +283,18 @@
             </b-container>
           </b-tab>
           <b-tab
-            :title="$t('common.temporary_sharing') || 'Temporary sharing'">
+            :title="$t('common.temporary_sharing')">
             <b-container class="pt-3">
-              <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.</p>
+              <p>{{ $t('common.temporary_sharing_description') }}</p>
               <b-form-checkbox
                 switch
                 v-model="buffer_project.sharedTokenOnOff"
                 :value="true"
-                :unchecked-value="false">Generate a temporary URL. <span class="text-danger">This link will not expire automatically. You must switch it off manually to disable it.</span></b-form-checkbox>
+                :unchecked-value="false">{{ $t('common.generate_temporary_url') }} <span class="text-danger">{{ $t('common.temporary_url_warning') }}</span></b-form-checkbox>
               <div
                 v-if="buffer_project.sharedTokenOnOff"
                 class="mt-2">
-                <p>{{ $t('common.copy_share_url') || 'Copy and Share this URL' }}</p>
+                <p>{{ $t('common.copy_share_url') }}</p>
                 <b-form-input
                   :value="buffer_project.temporaryUrl"></b-form-input>
               </div>
@@ -338,11 +337,11 @@
       <b-modal
         ref="unlink-project"
         id="unlink-project"
-        :title="$t('common.leave_project') || 'Leave project'"
+        :title="$t('common.leave_project')"
         @ok="leaveProject"
         @cancel="cancelLeaveProject"
         :ok-title="$t('common.leave')">
-        <p>{{ $t('common.leave_project_confirm') || 'Leave the project' }} <b>{{buffer_project.name}}</b></p>
+        <p>{{ $t('common.leave_project_confirm') }} <b>{{buffer_project.name}}</b></p>
       </b-modal>
     </b-container>
   </div>
