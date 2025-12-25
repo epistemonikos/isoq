@@ -271,10 +271,6 @@ export default {
     return {
       variant: 'info',
       msgUpdateProject: null,
-      yes_or_no: [
-        { value: false, text: this.$t('common.no') },
-        { value: true, text: this.$t('common.yes') }
-      ],
       state: {
         id: null,
         name: null,
