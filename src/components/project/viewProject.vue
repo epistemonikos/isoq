@@ -6,8 +6,8 @@
           <b-col
             class="text-right">
             <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: {hash: `p-${this.project.id}`}}" class="d-print-none return">
-              <font-awesome-icon icon="long-arrow-alt-left" title="return to My Workspace" />
-              return to My Workspace
+              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('project.return_workspace')" />
+              {{ $t('project.return_workspace') }}
             </b-link>
           </b-col>
           <b-col
@@ -18,17 +18,17 @@
         <b-nav id="tabsTitle" tabs fill class="pt-5">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
-            @click="clickTab(0)">Project properties</b-nav-item>
+            @click="clickTab(0)">{{ $t('project.properties') }}</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 1) ? true : false"
-            @click="clickTab(1)">My Data</b-nav-item>
+            @click="clickTab(1)">{{ $t('project.my_data') }}</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 2) ? true : false"
             :disabled="(references.length) ? false : true"
-            @click="clickTab(2)">iSoQ</b-nav-item>
+            @click="clickTab(2)">{{ $t('project.isoq') }}</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="clickTab(3)">Guidance on applying GRADE-CERQual</b-nav-item>
+            @click="clickTab(3)">{{ $t('project.guidance_applying') }}</b-nav-item>
         </b-nav>
       </div>
     </b-container>
@@ -48,7 +48,7 @@
             cols="12">
             <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
             <p>
-              To optimise the functionality of iSoQ, and save you time, please add the following information organised into 4 steps.
+              {{ $t('project.optimize_info') }}
             </p>
           </b-col>
           <b-card no-body class="col-12">
@@ -69,7 +69,7 @@
                     <b-col cols="auto" class="mr-auto">
                     </b-col>
                     <b-col cols="auto">
-                      <a class="btn btn-success text-white" @click="stepStage++">Step 2</a>
+                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2' }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -84,19 +84,19 @@
                   <div class="mt-3">
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
-                        <a class="btn btn-success text-white" @click="stepStage--">Step 1</a>
+                        <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1' }}</a>
                       </b-col>
                       <b-col cols="auto">
-                        <a class="btn btn-success text-white" @click="stepStage++">Step 3</a>
+                        <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3' }}</a>
                       </b-col>
                     </b-row>
                   </div>
                 </div>
               </b-tab>
               <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
-                <h4>STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+                <h4 v-html="$t('characteristics.step_title')"></h4>
                 <p class="font-weight-light">
-                  Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+                  {{ $t('characteristics.description') }}
                 </p>
                 <crudTables
                   type="isoqf_characteristics"
@@ -115,10 +115,10 @@
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
-                      <a class="btn btn-success text-white" @click="stepStage--">Step 2</a>
+                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2' }}</a>
                     </b-col>
                     <b-col cols="auto">
-                      <a class="btn btn-success text-white" @click="stepStage++">Step 4</a>
+                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4' }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -145,7 +145,7 @@
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
-                      <a class="btn btn-success text-white" @click="stepStage--">Step 3</a>
+                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3' }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <b-button
@@ -153,7 +153,7 @@
                         variant="success"
                         class="mb-3"
                         @click="continueToIsoq">
-                        Continue to iSoQ
+                        {{ $t('common.continue_to_isoq') || 'Continue to iSoQ' }}
                       </b-button>
                     </b-col>
                   </b-row>
@@ -200,7 +200,7 @@
                       cols="11">
                       <p
                       class="mb-0 text-left"
-                      >See more information</p>
+                      >{{ $t('common.see_more_info') || 'See more information' }}</p>
                     </b-col>
                     <b-col
                       cols="1"
@@ -215,31 +215,31 @@
               <b-collapse id="info-project">
                 <b-row>
                   <b-col cols="12" md="8" class="toDoc">
-                    <h5>Review question</h5>
+                    <h5>{{ $t('publish.review_question') }}</h5>
                     <p>{{project.review_question}}</p>
 
-                    <h5>Has the review been published?</h5>
-                    <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                    <h5>{{ $t('publish.review_published') }}</h5>
+                    <p>{{(project.published_status) ? $t('common.yes'): $t('common.no')}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
-                    <h5 v-if="project.description">Additional Information</h5>
+                    <h5 v-if="project.description">{{ $t('publish.additional_info') }}</h5>
                     <p v-if="project.description">{{project.description}}</p>
 
                     <template v-if="project.public_type !== 'private'">
-                      <h5>License</h5>
+                      <h5>{{ $t('common.license') || 'License' }}</h5>
                       <p>{{ project.license_type }}</p>
                     </template>
                   </b-col>
                   <b-col cols="12" md="4" class="toDoc">
-                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review') }}</h5>
                     <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                       <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
                     </ul>
 
-                    <h5>Corresponding author</h5>
+                    <h5>{{ $t('publish.corresponding_author') }}</h5>
                     <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
 
-                    <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
-                    <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                    <h5 v-if="!project.complete_by_author">{{ $t('common.completed_by_authors') || 'Is the iSoQ being completed by the review authors?' }}</h5>
+                    <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? $t('common.yes') : $t('common.no')}}</p>
                   </b-col>
                 </b-row>
               </b-collapse>
@@ -259,11 +259,11 @@
                 cols="12">
                 <b-button
                   class="mt-1"
-                  v-b-tooltip.hover title="Copy and paste one summarised review finding at a time into the iSoQ"
+                  v-b-tooltip.hover :title="$t('common.add_review_finding_tooltip') || 'Copy and paste one summarised review finding at a time into the iSoQ'"
                   :variant="(lists.length) ? 'outline-success' : 'success'"
                   @click="modalAddList"
                   block>
-                  Add review finding to the table
+                  {{ $t('common.add_review_finding_table') || 'Add review finding to the table' }}
                 </b-button>
               </b-col>
               <b-col
@@ -272,11 +272,11 @@
                 cols="12">
                 <b-button
                   class="mt-1"
-                  v-b-tooltip.hover title="If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here."
+                  v-b-tooltip.hover :title="$t('common.organize_groups_tooltip') || 'If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.'"
                   variant="outline-secondary"
                   @click="modalListCategories"
                   block>
-                  Organise review findings into groups
+                  {{ $t('common.organize_groups') || 'Organise review findings into groups' }}
                 </b-button>
               </b-col>
               <b-col
@@ -287,7 +287,7 @@
                   class="mt-1"
                   block
                   variant="outline-secondary"
-                  @click="modalSortFindings">Re-order your review findings</b-button>
+                  @click="modalSortFindings">{{ $t('common.reorder_findings') || 'Re-order your review findings' }}</b-button>
 
                 <b-modal
                   ref="modal-sort-findings"
@@ -334,7 +334,7 @@
                   class="mt-1"
                   block
                   variant="outline-secondary"
-                  @click="toggleSearch(ui.project.displaySearch)">Search</b-button>
+                  @click="toggleSearch(ui.project.displaySearch)">{{ $t('common.search') }}</b-button>
               </b-col>
             </b-row>
           </b-col>
@@ -348,7 +348,7 @@
               <b-row>
                 <b-col
                   cols="11">
-                  <videoHelp txt="Search" tag="h4" urlId="462176356"></videoHelp>
+                  <videoHelp :txt="$t('common.search')" tag="h4" urlId="462176356"></videoHelp>
                 </b-col>
                 <b-col
                   cols="1">
@@ -366,9 +366,9 @@
                         v-model="table_settings.filter"
                         type="search"
                         id="filterInput"
-                        placeholder="Type to search the text in the table below"></b-form-input>
+                        :placeholder="$t('action_table.search_placeholder')"></b-form-input>
                       <b-input-group-append>
-                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">Clear</b-button>
+                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">{{ $t('common.clear') }}</b-button>
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
@@ -413,16 +413,16 @@
               size="xl"
               id="add-summarized"
               ref="add-summarized"
-              title="Add Summarised review finding"
+              :title="$t('common.add_summarized_finding') || 'Add Summarised review finding'"
               :ok-disabled="(summarized_review)?false:true"
               @ok="createList"
-              ok-title="Save"
+              :ok-title="$t('common.save')"
               ok-variant="outline-success"
               cancel-variant="outline-secondary">
               <b-form-group
-                label="Summarised review finding"
+                :label="$t('soqf_table.summarised_finding')"
                 label-for="summarized-review">
-                <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
+                <template slot="description">{{ $t('common.click') || 'Click' }} <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">{{ $t('common.here') || 'here' }}</a> {{ $t('soqf_table.tips_writing') || 'for tips for writing a summarised review finding' }}</template>
                 <b-form-textarea
                   id="summarized-review"
                   v-model="summarized_review"
@@ -431,8 +431,8 @@
               </b-form-group>
               <b-form-group
                 v-if="list_categories.options.length"
-                label="Select review finding group"
-                description="You can leave this option blank. You can always assign a finding to a group later.">
+                :label="$t('soqf_table.select_group')"
+                :description="$t('soqf_table.group_optional')">
                 <b-form-select
                   v-model="list_categories.selected"
                   value-field="id"
@@ -468,12 +468,12 @@
                     <b-button
                       block
                       variant="outline-success"
-                      @click="editListCategoryName(data.index)">Edit</b-button>
+                      @click="editListCategoryName(data.index)">{{ $t('common.edit') }}</b-button>
                     <b-button
                       block
                       variant="outline-danger"
                       class="mt-1"
-                      @click="removeListCategory(data)">Remove</b-button>
+                      @click="removeListCategory(data)">{{ $t('common.remove') }}</b-button>
                   </template>
                 </b-table>
               </template>
@@ -484,13 +484,13 @@
                 </p>
                 <b-form-group
                   class="mt-3"
-                  label="Add group name">
+                  :label="$t('common.add_group_name') || 'Add group name'">
                   <b-form-input
                     v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
                 <b-form-group
                   class="mt-3"
-                  label="Describe this group for the user viewing this table">
+                  :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
                   <b-form-input
                     v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
@@ -502,13 +502,13 @@
                   Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
                 </p>
                 <b-form-group
-                  label="Edit group name">
+                  :label="$t('common.edit_group_name') || 'Edit group name'">
                   <b-form-input
                     v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
                 <b-form-group
                   class="mt-3"
-                  label="Describe this group for the user viewing this table">
+                  :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
                   <b-form-input
                     v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
@@ -526,20 +526,20 @@
                   v-if="modal_edit_list_categories.remove">
                   <b-button
                     variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
                   <b-button
                     variant="outline-danger"
-                    @click="removeCategory()">Confirm</b-button>
+                    @click="removeCategory()">{{ $t('common.confirm') || 'Confirm' }}</b-button>
                 </div>
                 <div
                   v-if="modal_edit_list_categories.new">
                   <b-button
                     variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
                   <b-button
                     variant="outline-success"
                     :disabled="modal_edit_list_categories.text === ''"
-                    @click="saveNewCategory">Save</b-button>
+                    @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
                 <div
                   v-if="!modal_edit_list_categories.new">
@@ -547,18 +547,18 @@
                     v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
                     variant="outline-primary"
                     @click="modal_edit_list_categories.new=true">
-                    Add new review finding group
+                    {{ $t('common.add_new_finding_group') || 'Add new review finding group' }}
                   </b-button>
                 </div>
                 <div
                   v-if="modal_edit_list_categories.edit">
                   <b-button
                     variant="outline-primary"
-                    @click="modalCancelCategoryButtons">Cancel</b-button>
+                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
                   <b-button
                     variant="outline-success"
                     :disabled="modal_edit_list_categories.text === ''"
-                    @click="updateCategoryName(modal_edit_list_categories.index)">Update</b-button>
+                    @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
               </template>
             </b-modal>

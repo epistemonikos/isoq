@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+    <h4 class="mt-5" v-html="$t('characteristics.step_title')"></h4>
     <p class="font-weight-light">
-      Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+      {{ $t('characteristics.description') }}
     </p>
     <b-row
       v-if="checkPermissions">

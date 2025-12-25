@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <div class="py-5">
-        <h2>Workspaces</h2>
+        <h2>{{ $t('menu.workspaces') }}</h2>
       </div>
     </b-container>
     <b-container fluid class="mt-5">
@@ -10,7 +10,7 @@
         <b-col
           sm="6"
           cols="12">
-          <h3>My Workspace</h3>
+          <h3>{{ $t('menu.my_workspace') }}</h3>
           <b-table
             id="my-workspace"
             striped

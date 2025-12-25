@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h4>STEP 1: Upload the <b>references</b> for your included studies (required)</h4>
+    <h4 v-html="$t('references.step_title')"></h4>
     <p class="font-weight-light">
-    You must import only the references for your final list of included studies
+    {{ $t('references.must_import') }}
     </p>
 
     <!-- Incomplete operation recovery message -->
@@ -182,13 +182,13 @@
             <b-row v-if="!references.length">
               <b-col
                 cols="12">
-                <p class="text-center my-0">No references have been uploaded</p>
+                <p class="text-center my-0">{{ $t('references.no_references') }}</p>
               </b-col>
             </b-row>
             <b-row v-else>
               <b-col
                 cols="12">
-                <p class="text-center my-0">You have <b>{{ references.length }}</b> references loaded listed below</p>
+                <p class="text-center my-0" v-html="$t('references.references_loaded', { count: references.length })"></p>
               </b-col>
             </b-row>
           </template>

@@ -12,7 +12,7 @@
               {{ msgBanner }}
             </b-alert>
             <b-form-group
-              label="Password"
+              :label="$t('common.password')"
               label-for="password">
               <b-form-input
                 id="password"
@@ -20,7 +20,7 @@
                 v-model="password"></b-form-input>
             </b-form-group>
             <b-form-group
-              label="Repeat password"
+              :label="$t('account.repeat_password_label')"
               label-for="repassword"
               :state="state"
               :valid-feedback="validMatch"
@@ -34,7 +34,7 @@
             <b-button
               variant="success"
               :disabled="!state"
-              @click="changePassword">Change</b-button>
+              @click="changePassword">{{ $t('common.change') }}</b-button>
           </b-form>
         </b-col>
       </b-row>
@@ -67,13 +67,13 @@ export default {
       if (this.password.length > 7) {
         return ''
       } else if (this.password !== this.repassword) {
-        return 'Password mismatch'
+        return this.$t('account.password_mismatch')
       } else {
-        return 'Enter a password with at least 8 characters'
+        return this.$t('account.password_min_chars')
       }
     },
     validMatch () {
-      return this.state ? 'Match' : ''
+      return this.state ? this.$t('common.match') : ''
     }
   },
   methods: {
@@ -88,11 +88,11 @@ export default {
           const data = response.data
           if (data.status === 'password_changed') {
             this.showBanner = true
-            this.msgBanner = 'Password has been changed. Please login with your new password.'
+            this.msgBanner = this.$t('account.password_changed')
             this.classBanner = 'success'
           } else {
             this.showBanner = true
-            this.msgBanner = 'Invalid username or Token'
+            this.msgBanner = this.$t('account.invalid_token')
             this.classBanner = 'warning'
           }
         })

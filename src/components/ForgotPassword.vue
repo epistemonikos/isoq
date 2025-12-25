@@ -6,10 +6,10 @@
           <b-form @submit.stop.prevent>
             <b-card
               v-if="ui.main"
-              header="Reset your password">
+              :header="$t('account.reset_password')">
               <b-form-group
                 id="recovery_input_email"
-                label="Email:"
+                :label="$t('account.email_label')"
                 label-for="recovery_email">
                 <b-form-input
                   id="recovery_email"
@@ -17,28 +17,28 @@
                   required
                   :state="ui.error"
                   aria-describedby="input-live-feedback"
-                  placeholder="Enter a valid email"
+                  :placeholder="$t('account.email_placeholder')"
                   v-model="username">
                 </b-form-input>
                 <b-form-invalid-feedback
                   v-if="!ui.error"
                   id="input-live-feedback">
-                  This email is not registered
+                  {{ $t('account.email_not_registered') }}
                 </b-form-invalid-feedback>
               </b-form-group>
               <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link> -->
+                <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link><!-- | <router-link :to="{name: 'CreateAccount'}">new account</router-link> -->
               </b-card-text>
               <div slot="footer" class="text-right">
                 <b-button
                   variant="outline-primary"
-                  @click="recoverPass">Recover</b-button>
+                  @click="recoverPass">{{ $t('common.recover') }}</b-button>
               </div>
             </b-card>
             <b-card
               v-if="ui.sent"
-              header="Sent">
-              <p>An email was sent to you with instructions for resetting your password.</p>
+              :header="$t('common.sent')">
+              <p>{{ $t('account.email_sent') }}</p>
             </b-card>
           </b-form>
         </b-col>

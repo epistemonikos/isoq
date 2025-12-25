@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)</h4>
+    <h4 v-html="$t('inclusion.step_title')"></h4>
     <b-container fluid>
       <b-row>
         <b-col
@@ -8,8 +8,8 @@
           class="pl-0">
           <criteria
             v-if="ui.project.show_criteria"
-            label="Inclusion criteria"
-            description="Please enter the study inclusion criteria used in the review"
+            :label="$t('inclusion.inclusion_criteria')"
+            :description="$t('inclusion.inclusion_placeholder')"
             :isDisabled="checkPermissions"
             criteria="inclusion"
             :dataTxt="project.inclusion"
@@ -21,8 +21,8 @@
           class="pr-0">
           <criteria
             v-if="ui.project.show_criteria"
-            label="Exclusion criteria"
-            description="Please enter the study exclusion criteria used in the review"
+            :label="$t('inclusion.exclusion_criteria')"
+            :description="$t('inclusion.exclusion_placeholder')"
             :isDisabled="checkPermissions"
             criteria="exclusion"
             :dataTxt="project.exclusion"

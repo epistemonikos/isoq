@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <div class="py-5">
-        <h2>My Workspace</h2>
+        <h2>{{ $t('menu.my_workspace') }}</h2>
       </div>
     </b-container>
     <b-container fluid>
@@ -12,7 +12,7 @@
           <b-col cols="12" class="text-right">
             <b-button
               v-b-tooltip.hover
-              title="Create a new Interactive Summary of Qualitative Findings Table"
+              :title="$t('project.create_new_isoq')"
               variant="success"
               @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
           </b-col>
@@ -51,19 +51,19 @@
               </template>
               <template v-slot:cell(actions)="data">
                 <div class="d-block d-lg-none">
-                  <b-dropdown id="dropdown-1" text="Project Options" class="m-md-2" variant="outline-secondary">
-                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> Duplicate</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> Shared</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> Share</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>Edit</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> Remove</b-dropdown-item>
-                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> Leave</b-dropdown-item>
+                  <b-dropdown id="dropdown-1" :text="$t('project.project_options')" class="m-md-2" variant="outline-secondary">
+                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> {{ $t('common.duplicate') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> {{ $t('common.shared') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> {{ $t('common.share') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>{{ $t('common.edit') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> {{ $t('common.remove') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> {{ $t('common.leave') }}</b-dropdown-item>
                   </b-dropdown>
                 </div>
                 <div class="d-none d-lg-block">
                   <b-button
                     v-if="data.item.is_owner || data.item.allow_to_write"
-                    title="Duplicate"
+                    :title="$t('common.duplicate')"
                     variant="outline-secondary"
                     @click="openCloneModal(data.item.id)">
                     <font-awesome-icon
@@ -71,7 +71,7 @@
                   </b-button>
                   <b-button
                     v-if="data.item.is_owner && (data.item.sharedToken.length)"
-                    title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
+                    :title="$t('project.temp_link_warning')"
                     variant="outline-secondary"
                     @click="modalShareOptions(data.item.id, 2)">
                     <font-awesome-icon
@@ -79,7 +79,7 @@
                   </b-button>
                   <b-button
                     v-if="data.item.is_owner"
-                    title="Share"
+                    :title="$t('common.share')"
                     variant="outline-secondary"
                     @click="modalShareOptions(data.item.id)">
                     <font-awesome-icon
@@ -87,7 +87,7 @@
                   </b-button>
                   <b-button
                     v-if="data.item.allow_to_write"
-                    title="Edit"
+                    :title="$t('common.edit')"
                     variant="outline-success"
                     @click="openModalEditProject(data.item)">
                     <font-awesome-icon
@@ -95,7 +95,7 @@
                   </b-button>
                   <b-button
                     v-if="data.item.is_owner"
-                    title="Remove"
+                    :title="$t('common.remove')"
                     variant="outline-danger"
                     @click="modalRemoveProject(data.item)">
                     <font-awesome-icon
@@ -103,7 +103,7 @@
                   </b-button>
                   <b-button
                     v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
-                    title="Leave"
+                    :title="$t('common.leave')"
                     variant="outline-success"
                     @click="openModalLeaveProject(data.item)">
                     <font-awesome-icon
@@ -114,7 +114,7 @@
               <template v-slot:table-busy>
                 <div class="text-center text-danger my-2">
                   <b-spinner class="align-middle"></b-spinner>
-                  <strong>Loading...</strong>
+                  <strong>{{ $t('common.loading') }}</strong>
                 </div>
               </template>
             </b-table>
@@ -126,11 +126,11 @@
         id="new-project"
         ref="new-project"
         size="xl"
-        :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
+        :title="(buffer_project.id) ? $t('common.edit_isoq_table') || 'Edit iSoQ table' : $t('common.new_isoq_table') || 'New iSoQ table'"
         @ok="save"
         @cancel="closeModalProject"
         :ok-disabled="!buffer_project.name"
-        ok-title="Save"
+        :ok-title="$t('common.save')"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <b-alert
@@ -152,48 +152,48 @@
         size="xl"
         id="new-project-list"
         ref="new-project-list"
-        :title="(buffer_project_list.id) ? 'Edit summarised review finding' : 'New summarised review finding'"
+        :title="(buffer_project_list.id) ? $t('common.edit_summarized_finding') || 'Edit summarised review finding' : $t('common.new_summarized_finding') || 'New summarised review finding'"
         @ok="AddOrUpdateProjectList"
         @hidden="cleanProjectList"
-        ok-title="Save"
+        :ok-title="$t('common.save')"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <b-form-group
-          label="Summarised review"
+          :label="$t('common.summarized_review') || 'Summarised review'"
           label-for="summarized-review">
           <b-form-input
             id="summarized-review"
-            placeholder="Enter a summarised review finding"
+            :placeholder="$t('common.enter_summarized_finding') || 'Enter a summarised review finding'"
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
       <b-modal
         id="modal-remove-project"
         ref="modal-remove-project"
-        title="Delete project"
+        :title="$t('common.delete_project') || 'Delete project'"
         @ok="removeProject"
         @cancel="cleanProject"
-        ok-title="Remove"
+        :ok-title="$t('common.remove')"
         ok-variant="outline-danger"
         cancel-variant="outline-secondary">
-        <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
+        <p>{{ $t('common.confirm_remove_project') || 'Are you sure you wanna remove' }} "<b>{{this.buffer_project.name}}</b>" {{ $t('common.and_all_data') || 'and all the data related' }}?</p>
       </b-modal>
       <b-modal
         size="xl"
         id="modal-share-options"
         ref="modal-share-options"
         ok-only
-        ok-title="Close"
+        :ok-title="$t('common.close')"
         scrollable>
         <template v-slot:modal-title>
           <videoHelp txt="Share" tag="none" urlId="449741356"></videoHelp>
         </template>
         <b-tabs v-model="ui.tabIndex">
           <b-tab
-            title="Invite">
+            :title="$t('common.invite') || 'Invite'">
             <b-container class="pt-3">
               <b-form-group
-                label='Insert emails separated by commas and click "add"'
+                :label="$t('common.insert_emails_add') || 'Insert emails separated by commas and click \"add\"'"
                 label-for="input-emails-invite">
                 <b-input
                   type="email"
@@ -206,11 +206,11 @@
               </p>
               <b-button
                 :disabled="!ui.sharedProject.enabledToShare"
-                @click="addEmailForShare">add</b-button>
+                @click="addEmailForShare">{{ $t('common.add') }}</b-button>
               <div
                 class="my-3"
                 v-if="buffer_project.tmp_invite_emails.length">
-                <p class="mb-1 font-weight-light">This project will be shared with:</p>
+                <p class="mb-1 font-weight-light">{{ $t('common.project_will_be_shared') || 'This project will be shared with:' }}</p>
                 <b-badge
                 class="mx-1"
                 v-for="(email, index) in buffer_project.tmp_invite_emails"
@@ -221,7 +221,7 @@
                 </b-badge>
               </div>
               <b-form-group
-                label="Can:">
+                :label="$t('common.can') || 'Can:'">
                 <b-form-select
                   v-model="buffer_project.sharedType"
                   :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
@@ -229,13 +229,13 @@
               <b-button
                 :disabled="!buffer_project.tmp_invite_emails.length"
                 variant="success"
-                @click="saveSharedProject(buffer_project.id)">Invite</b-button>
+                @click="saveSharedProject(buffer_project.id)">{{ $t('common.invite') || 'Invite' }}</b-button>
             </b-container>
           </b-tab>
           <b-tab
-            title="Users with access">
+            :title="$t('common.users_with_access') || 'Users with access'">
             <b-container class="pt-3">
-              <h4>Users with Access</h4>
+              <h4>{{ $t('common.users_with_access') || 'Users with Access' }}</h4>
               <b-table
                 show-empty
                 responsive
@@ -244,7 +244,7 @@
                 <template v-slot:cell(actions)="data">
                   <b-button
                     variant="danger"
-                    @click="unshare(data.index, data.item.id)">unshare</b-button>
+                    @click="unshare(data.index, data.item.id)">{{ $t('common.unshare') || 'unshare' }}</b-button>
                 </template>
                 <template v-slot:cell(user_can)="data">
                   <b-form-select
@@ -253,18 +253,18 @@
                     @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
                 </template>
                 <template v-slot:empty>
-                  <p class="font-weight-light text-center my-3">No users have access to this project</p>
+                  <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') || 'No users have access to this project' }}</p>
                 </template>
               </b-table>
               <div
                 v-if="buffer_project.invite_emails.length">
-                <h4>Pending access</h4>
+                <h4>{{ $t('common.pending_access') || 'Pending access' }}</h4>
                 <b-table-simple
                   v-if="buffer_project.invite_emails.length">
                   <b-thead>
                     <b-tr>
-                      <b-th>Email</b-th>
-                      <b-th>Actions</b-th>
+                      <b-th>{{ $t('common.email') }}</b-th>
+                      <b-th>{{ $t('common.actions') || 'Actions' }}</b-th>
                     </b-tr>
                   </b-thead>
                   <b-tbody>
@@ -274,7 +274,7 @@
                         <b-button
                           variant="danger"
                           @click="unshareInvited(email)">
-                          unshare
+                          {{ $t('common.unshare') || 'unshare' }}
                         </b-button>
                       </b-td>
                     </b-tr>
@@ -284,7 +284,7 @@
             </b-container>
           </b-tab>
           <b-tab
-            title="Temporary sharing">
+            :title="$t('common.temporary_sharing') || 'Temporary sharing'">
             <b-container class="pt-3">
               <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.</p>
               <b-form-checkbox
@@ -295,7 +295,7 @@
               <div
                 v-if="buffer_project.sharedTokenOnOff"
                 class="mt-2">
-                <p>Copy and Share this URL</p>
+                <p>{{ $t('common.copy_share_url') || 'Copy and Share this URL' }}</p>
                 <b-form-input
                   :value="buffer_project.temporaryUrl"></b-form-input>
               </div>
@@ -305,9 +305,9 @@
       </b-modal>
       <b-modal
         id="clone-modal"
-        title="Duplicate a project"
-        ok-title="Duplicate"
-        cancel-title="Close"
+        :title="$t('common.duplicate_project') || 'Duplicate a project'"
+        :ok-title="$t('common.duplicate')"
+        :cancel-title="$t('common.close')"
         @ok="startCloning"
         @cancel="closeCloneModal"
         :cancel-disabled="this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable"
@@ -332,17 +332,17 @@
           </div>
         </template>
         <template v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
-          <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
+          <p class="text-center text-success">{{ $t('common.duplicate_complete') || 'Duplicate complete. You can now close this modal.' }}</p>
         </template>
       </b-modal>
       <b-modal
         ref="unlink-project"
         id="unlink-project"
-        title="Leave project"
+        :title="$t('common.leave_project') || 'Leave project'"
         @ok="leaveProject"
         @cancel="cancelLeaveProject"
-        ok-title="Leave">
-        <p>Leave the project <b>{{buffer_project.name}}</b></p>
+        :ok-title="$t('common.leave')">
+        <p>{{ $t('common.leave_project_confirm') || 'Leave the project' }} <b>{{buffer_project.name}}</b></p>
       </b-modal>
     </b-container>
   </div>

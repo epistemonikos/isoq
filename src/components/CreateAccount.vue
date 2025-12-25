@@ -6,81 +6,81 @@
           <b-form>
             <b-card
               v-if="ui.display_create_account"
-              header="Create an account">
+              :header="$t('account.create_account')">
               <b-form-group
                 id="input_group_name"
-                label="Name:"
+                :label="$t('account.name_label')"
                 label-for="input_name">
                 <b-form-input
                   id="input_name"
                   type="text"
-                  placeholder="Name"
+                  :placeholder="$t('account.name_placeholder')"
                   v-model="user.first_name"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_surname"
-                label="Surname:"
+                :label="$t('account.surname_label')"
                 label-for="input_surname">
                 <b-form-input
                   id="input_surname"
                   type="text"
-                  placeholder="Surname"
+                  :placeholder="$t('account.surname_placeholder')"
                   v-model="user.last_name"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_email"
-                label="Email:"
+                :label="$t('account.email_label')"
                 label-for="input_email">
                 <b-form-input
                   id="input_email"
                   :state="ui.username_validation"
                   required
                   aria-describedby="input-live-help input-live-feedback"
-                  placeholder="Enter a valid email"
+                  :placeholder="$t('account.email_placeholder')"
                   v-model.trim="user.username">
                 </b-form-input>
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address or the email is wrong formatted</b-form-text>
+                  v-if="!ui.username_validation && ui.username_validation !== null">{{ $t('account.email_exists_error') }}</b-form-text>
                 <b-form-text
-                  id="input-live-help">Your email address is your username for logging-in to iSoQ.</b-form-text>
+                  id="input-live-help">{{ $t('account.email_username_hint') }}</b-form-text>
               </b-form-group>
               <b-form-group
                 v-if="false"
                 id="input_group_affiliation"
-                label="Affiliation:"
+                :label="$t('account.affiliation_label')"
                 label-for="input_affiliation">
                 <b-form-input
                   id="input_affiliation"
                   type="text"
-                  placeholder="Your affiliation"
+                  :placeholder="$t('account.affiliation_placeholder')"
                   v-model="user.affiliation"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_password"
-                label="Password:"
+                :label="$t('account.password_label')"
                 label-for="input_password">
                 <b-form-input
                   id="input_password"
                   type="password"
                   required
-                  placeholder="Write a strong password with at least 8 alpha-numeric characters"
+                  :placeholder="$t('account.password_placeholder')"
                   v-model="user.password"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_repeat_password"
-                label="Repeat the password:"
+                :label="$t('account.repeat_password_label')"
                 label-for="input_repeat_password">
                 <b-form-input
                   id="input_repeat_password"
                   type="password"
                   required
-                  placeholder="Write the same password as above"
+                  :placeholder="$t('account.repeat_password_placeholder')"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
 
               <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
+                <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link> | <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link>
               </b-card-text>
               <div
                 slot="footer"
@@ -88,7 +88,7 @@
                 <b-button
                   variant="outline-primary"
                   :disabled="!(ui.username_validation && ui.password_validation)"
-                  @click="createAccount">Create account</b-button>
+                  @click="createAccount">{{ $t('account.create_account_btn') }}</b-button>
               </div>
             </b-card>
           </b-form>
@@ -96,12 +96,12 @@
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_join_org_or_create_org"
-            header="Your account has been created.">
+            :header="$t('account.account_created')">
             <p>
-              As an individual, you will be able to create iSoQ tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
+              {{ $t('account.individual_info') }}
             </p>
             <p>
-              In order to share iSoQ tables with others you need to join an existing organisation or create a new one.
+              {{ $t('account.share_info') }}
             </p>
             <b-row>
               <b-col cols="12" sm="6" class="text-center">
@@ -109,14 +109,14 @@
                   variant="outline-success"
                   block
                   size="lg"
-                  @click="showJoinOrgCard">Join</b-button>
+                  @click="showJoinOrgCard">{{ $t('common.join') }}</b-button>
               </b-col>
               <b-col cols="12" sm="6" class="text-center">
                 <b-button
                   variant="outline-success"
                   block
                   size="lg"
-                  @click="showCreateOrgCard">Create</b-button>
+                  @click="showCreateOrgCard">{{ $t('common.create') }}</b-button>
               </b-col>
             </b-row>
           </b-card>
@@ -124,9 +124,9 @@
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_join_org"
-            header="Join to an a organisation">
+            :header="$t('account.join_organization')">
             <b-form-group
-              label="Organisation"
+              :label="$t('account.organization_label')"
               label-for="input-select-organization">
               <b-form-select
                 v-model="org_selected"
@@ -139,19 +139,19 @@
               class="text-right">
               <b-button
                 variant="outline-danger"
-                @click="cancelCardShowOptions">Cancel</b-button>
+                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
               <b-button
                 variant="outline-primary"
-                @click="jointToOrg">Join</b-button>
+                @click="jointToOrg">{{ $t('common.join') }}</b-button>
             </div>
           </b-card>
         </b-col>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_create_org"
-            header="Create an organisation">
+            :header="$t('account.create_organization')">
             <b-form-group
-              label="Name"
+              :label="$t('common.name')"
               label-for="organization-name">
               <b-form-input
                 id="organization-name"
@@ -160,12 +160,12 @@
               </b-form-input>
             </b-form-group>
             <b-form-group
-              label="Website"
+              :label="$t('account.website_label')"
               label-for="organization-website">
               <b-form-input
                 id="organization-website"
                 type="url"
-                placeholder="https://myorganization.org"
+                :placeholder="$t('account.website_placeholder')"
                 v-model="organization.website">
               </b-form-input>
             </b-form-group>
@@ -173,9 +173,9 @@
               <b-form-checkbox
                 v-model="organization.nonprofit"
                 value="false"
-                unchecked-value="true">confirm this is a non-profit organisation</b-form-checkbox>
+                unchecked-value="true">{{ $t('account.nonprofit_confirm') }}</b-form-checkbox>
             </b-form-group>
-            <b-form-group label="Plan">
+            <b-form-group :label="$t('account.plan_label')">
               <b-form-radio-group
                 id="option-plans"
                 v-model="organization.selected_plan"
@@ -189,9 +189,9 @@
                 <b-card
                   :header="plan.text">
                   <ul class="list-unstyled">
-                    <li>users: {{plan.specs.users}}</li>
-                    <li>tables: {{plan.specs.tables}}</li>
-                    <li>price: {{plan.specs.price}}</li>
+                    <li>{{ $t('account.users_label') }}: {{plan.specs.users}}</li>
+                    <li>{{ $t('account.tables_label') }}: {{plan.specs.tables}}</li>
+                    <li>{{ $t('account.price_label') }}: {{plan.specs.price}}</li>
                   </ul>
                 </b-card>
               </b-col>
@@ -201,32 +201,32 @@
               class="text-right">
               <b-button
                 variant="outline-danger"
-                @click="cancelCardShowOptions">Cancel</b-button>
+                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
               <b-button
                 variant="outline-primary"
-                @click="organizationRequest">Create an Join</b-button>
+                @click="organizationRequest">{{ $t('account.create_and_join') }}</b-button>
             </div>
           </b-card>
         </b-col>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_end_affiliation"
-            header="You are done!">
-            <p>Now, you can create and share iSoQ tables with your organisation.</p>
+            :header="$t('account.you_are_done')">
+            <p>{{ $t('account.can_create_share') }}</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
-                :to="{name: 'Organizations'}">Go to organisations</b-button>
+                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
             </div>
           </b-card>
           <b-card
             v-if="ui.display_end_org_creation"
-            header="Many thanks for registering your organisation">
-            <p>You can star using iSoQ right now and move your work to the organisation when created.</p>
+            :header="$t('account.thanks_registering')">
+            <p>{{ $t('account.start_using_now') }}</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
-                :to="{name: 'Organizations'}">Go to organisations</b-button>
+                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
             </div>
           </b-card>
         </b-col>
@@ -275,16 +275,33 @@ export default {
         nonprofit: true,
         selected_plan: false
       },
-      plans: [
-        {text: 'Small', value: 'small', specs: {users: 10, tables: 20, price: 'free'}},
-        {text: 'Medium', value: 'medium', specs: {users: 50, tables: 200, price: '1000 USD a year'}},
-        {text: 'Large', value: 'large', specs: {users: 'Contact us', tables: 'Contact us', price: 'Contact us'}}
+      plansData: [
+        {value: 'small', specs: {users: 10, tables: 20, priceKey: 'plan_free'}},
+        {value: 'medium', specs: {users: 50, tables: 200, priceKey: 'plan_1000'}},
+        {value: 'large', specs: {usersKey: 'plan_contact', tablesKey: 'plan_contact', priceKey: 'plan_contact'}}
       ],
       showSubscribe: false
     }
   },
   components: {
     subscribe
+  },
+  computed: {
+    plans () {
+      return this.plansData.map(plan => {
+        const textKey = `account.plan_${plan.value}`
+        const specs = {
+          users: plan.specs.usersKey ? this.$t(`account.${plan.specs.usersKey}`) : plan.specs.users,
+          tables: plan.specs.tablesKey ? this.$t(`account.${plan.specs.tablesKey}`) : plan.specs.tables,
+          price: this.$t(`account.${plan.specs.priceKey}`)
+        }
+        return {
+          text: this.$t(textKey),
+          value: plan.value,
+          specs: specs
+        }
+      })
+    }
   },
   watch: {
     'user.username': function () {
