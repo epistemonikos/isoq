@@ -328,6 +328,7 @@
   "import_modal": {
     "beware": "Atenção:",
     "beware_text": "O recurso de importação do iSoQ não importa dados formatados de nenhuma maneira. Por exemplo, se sua tabela tiver células formatadas com texto em negrito, sobrescrito, subscrito, recuo, marcadores, etc., estes não serão exibidos.",
+    "overwrite_warning": "Os dados recém-importados e salvos excluirão e substituirão quaisquer dados anteriores inseridos manualmente ou por meio de importação.",
     "steps_title": "Para enviar uma tabela, siga estas etapas:",
     "step1": "ETAPA 1: Baixe o modelo (arquivo Excel), salve-o em seu computador e preencha-o com suas informações.",
     "save_as_csv": "Ao salvar o arquivo, escolha 'CSV-UTF-8 (Delimitado por vírgulas) (*.csv)' como \"Tipo de arquivo\"",

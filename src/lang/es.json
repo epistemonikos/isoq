@@ -328,6 +328,7 @@
   "import_modal": {
     "beware": "Atención:",
     "beware_text": "La función de importación de iSoQ no importa datos con formato. Por ejemplo, si su tabla tiene celdas con texto en negrita, superíndice, subíndice, sangría, viñetas, etc., estos no se mostrarán.",
+    "overwrite_warning": "Los datos recién importados y guardados eliminarán y reemplazarán cualquier dato anterior ingresado manualmente o mediante importación.",
     "steps_title": "Para subir una tabla, siga estos pasos:",
     "step1": "PASO 1: Descargue la plantilla (archivo Excel), guárdela en su computadora y complétela con su información.",
     "save_as_csv": "Al guardar el archivo, elija 'CSV-UTF-8 (Delimitado por comas) (*.csv)' como \"Tipo de archivo\"",

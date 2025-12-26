@@ -10,19 +10,19 @@
           :disabled="(references.length) ? false : true"
           v-if="dataTable.fields.length <= 2"
           @click="openModalDataTable()">
-          Create Table
+          {{ $t('characteristics.create_table') }}
         </b-button>
         <b-button
           block
           variant="outline-primary"
           v-if="dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
-          Add or Edit column headings
+          {{ $t('characteristics.edit_columns') }}
         </b-button>
       </b-col>
       <b-col
         sm="1">
-        <p class="text-center pt-1">OR</p>
+        <p class="text-center pt-1">{{ $t('common.or') }}</p>
       </b-col>
       <b-col
         sm="4">
@@ -31,7 +31,7 @@
           variant="outline-info"
           :disabled="(references.length) ? false : true"
           @click="openModalImportTable()">
-          Import table
+          {{ $t('characteristics.import_table') }}
         </b-button>
       </b-col>
       <b-col
@@ -41,7 +41,7 @@
           variant="outline-secondary"
           block
           @click="exportTableToCSV()">
-          Export to XLS file
+          {{ $t('characteristics.export_xls') }}
         </b-button>
       </b-col>
     </b-row>
@@ -93,7 +93,7 @@
           <template v-slot:table-busy>
             <div class="text-center text-danger my-2">
               <b-spinner class="align-middle"></b-spinner>
-              <strong>Loading...</strong>
+              <strong>{{ $t('common.loading') }}</strong>
             </div>
           </template>
         </b-table>
@@ -123,21 +123,21 @@
         scrollable
         :ok-disabled="(dataTableFieldsModal.fields[0])?false:true"
         @ok="saveDataTableFields"
-        ok-title="Save"
+        :ok-title="$t('common.save')"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <template v-slot:modal-title>
-          <videoHelp txt="Column Headers" tag="none" urlId="449742512"></videoHelp>
+          <videoHelp :txt="$t('characteristics.column_headers')" tag="none" urlId="449742512"></videoHelp>
         </template>
         <p class="font-weight-light">
-          Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+          {{ $t('characteristics.column_help') }}
         </p>
         <ul class="font-weight-light text-danger">
-          <li>Do not add columns for author or year (these will be added automatically)</li>
-          <li v-if="type !== 'isoqf_assessments'">Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+          <li>{{ $t('characteristics.no_author_year') }}</li>
+          <li v-if="type !== 'isoqf_assessments'">{{ $t('characteristics.no_meth_here') }}</li>
         </ul>
         <b-form-group
-          label="Number of columns">
+          :label="$t('characteristics.num_columns')">
           <b-form-input
             id="nro-columns"
             v-model="dataTableFieldsModal.nroColumns"
@@ -146,7 +146,7 @@
         <b-form-group
           v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)"
           :key="cnt"
-          :label="`Column #${cnt}`">
+          :label="$t('characteristics.column_n', {n: cnt})">
           <b-input-group>
             <b-form-input
               :id="`column_${cnt}`"
@@ -173,19 +173,19 @@
         :ok-disabled="(dataTableFieldsModalEdit.fields.length)?((dataTableFieldsModalEdit.fields[0].label)?false:true):false"
         @ok="updateDataTableFields"
         ok-variant="outline-success"
-        ok-title="Save"
+        :ok-title="$t('common.save')"
         cancel-variant="outline-secondary">
         <template v-slot:modal-title>
-          <videoHelp txt="Edit column headers" tag="none" urlId="449742512"></videoHelp>
+          <videoHelp :txt="$t('characteristics.edit_columns')" tag="none" urlId="449742512"></videoHelp>
         </template>
         <p class="font-weight-light">
-          Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+          {{ $t('characteristics.column_help') }}
         </p>
         <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
           <b-form-group
             v-for="(field, index) in dataTableFieldsModalEdit.fields"
             :key="index"
-            :label="`Column #${index}`">
+            :label="$t('characteristics.column_n', {n: index})">
             <b-input-group>
               <b-form-input
                 :id="`column_${index}`"
@@ -197,7 +197,7 @@
                   :id="`drag-button-chars-${index}`"
                   variant="outline-secondary"
                   v-b-tooltip
-                  title="Drag to sort">
+                  :title="$t('characteristics.drag_sort')">
                   <font-awesome-icon
                     icon="arrows-alt"></font-awesome-icon>
                 </b-button>
@@ -215,17 +215,17 @@
           class="mb-2"
           @click="dataTableNewColumn"
           variant="outline-success">
-          Add new column
+          {{ $t('characteristics.add_new_column') }}
         </b-button>
       </b-modal>
 
       <b-modal
         size="xl"
         ref="edit-content-dataTable"
-        title="Edit data"
+        :title="$t('characteristics.edit_data')"
         scrollable
         @ok="saveContentDataTable"
-        ok-title="Save"
+        :ok-title="$t('common.save')"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <template
@@ -243,7 +243,7 @@
               <b-form-textarea
                 v-if="!['ref_id', 'authors'].includes(field.key)"
                 v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                :placeholder="(type === 'isoqf_assessments') ? 'Enter both your assessment and the explanation for your assessment here' : ''"
+                :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''"
                 rows="2"
                 max-rows="100"></b-form-textarea>
             </template>
@@ -255,23 +255,23 @@
         size="xl"
         id="removeContentModalDataTable"
         ref="removeContentModalDataTable"
-        title="Remove content"
-        ok-title="Confirm"
+        :title="$t('characteristics.remove_content')"
+        :ok-title="$t('common.confirm')"
         ok-variant="outline-danger"
         cancel-variant="outline-success"
         @cancel="cleanRemoveContentCharsOfStudies"
         @ok="removeDataFromLists">
-        <p>Are you sure you want to delete all the content for this row?</p>
+        <p>{{ $t('characteristics.confirm_delete_row') }}</p>
         <p
           v-if="removeReferenceDataTable.findings.length === 0">
-          <b>No findings will be affected</b>
+          <b>{{ $t('characteristics.no_findings_affected') }}</b>
         </p>
         <p
           v-if="removeReferenceDataTable.findings.length">
-          <b>Findings that will be affected</b>
+          <b>{{ $t('characteristics.findings_affected') }}</b>
           <ul>
             <li v-for="(finding, index) in removeReferenceDataTable.findings" :key="index">
-              {{ `finding # ${finding}`}}
+              {{ $t('characteristics.finding_n', {n: finding}) }}
             </li>
           </ul>
         </p>
@@ -280,47 +280,47 @@
       <b-modal
         :no-close-on-backdrop="true"
         :no-close-on-esc="true"
-        ok-title="Save"
-        cancel-title="Close"
+        :ok-title="$t('common.save')"
+        :cancel-title="$t('common.close')"
         size="xl"
         id="`import-table-${this.type}`"
         :ref="`import-table-${this.type}`">
         <template v-slot:modal-title>
-          <videoHelp txt="Import table" tag="none" urlId="450046545"></videoHelp>
+          <videoHelp :txt="$t('characteristics.import_table')" tag="none" urlId="450046545"></videoHelp>
         </template>
         <b-alert show variant="danger">
-          <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
+          <b>{{ $t('import_modal.beware') }}</b> {{ $t('import_modal.overwrite_warning') }}
         </b-alert>
         <p
         class="font-weight-light">
-          To upload a table, follow these steps:
+          {{ $t('import_modal.steps_title') }}
         </p>
-        <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
+        <h4>{{ $t('import_modal.step1') }}</h4>
         <p
           class="text-danger">
-          <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
+          <b>{{ $t('import_modal.save_as_csv') }}</b>
         </p>
         <p class="text-danger">
-          <b>If you have problems with the template this may be due to the version of Excel you are using or your settings. We recommend you work on the table in Google Sheets (Gdrive)</b>
+          <b>{{ $t('import_modal.template_problems') }}</b>
         </p>
         <p
           class="text-danger">
-          <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
+          <b>{{ $t('import_modal.columns_warning') }}</b>
         </p>
         <b-button
           variant="info"
           @click="generateTemplate">
-          Download template
+          {{ $t('import_modal.download_template') }}
         </b-button>
-        <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
+        <h4 class="mt-5">{{ $t('import_modal.step2') }}</h4>
         <b-form-file
           ref="import-file"
           id="input-template-chars-file"
           plain
           @change="loadTableImportData($event)"></b-form-file>
-        <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
-        <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-        <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-450046545`'>See help video</a> for support.</p>
+        <h4 class="mt-5">{{ $t('import_modal.step3') }}</h4>
+        <p>{{ $t('import_modal.accept_info') }}</p>
+        <p>{{ $t('import_modal.reject_info') }} <a href="#" v-b-modal='`videoHelp-450046545`'>{{ $t('import_modal.see_help') }}</a></p>
         <b-alert
           variant="info"
           :show="importDataTable.error !== null">
@@ -335,15 +335,15 @@
         <template v-slot:modal-footer>
           <b-button
             variant="outline-secondary"
-            @click="cleanVars(true)">Close</b-button>
+            @click="cleanVars(true)">{{ $t('common.close') }}</b-button>
           <b-button
             variant="outline-info"
             :disabled="!importDataTable.items.length"
-            @click="cleanVars()">Reject</b-button>
+            @click="cleanVars()">{{ $t('common.reject') }}</b-button>
           <b-button
             variant="outline-success"
             :disabled="!importDataTable.items.length"
-            @click="saveImportedData()">Save</b-button>
+            @click="saveImportedData()">{{ $t('common.save') }}</b-button>
         </template>
       </b-modal>
 
@@ -399,6 +399,7 @@ export default {
     videoHelp: () => import('@/components/videoHelp.vue')
   },
   mounted () {
+    this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
     this.getData()
   },
   data () {
@@ -408,7 +409,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       },
       dataTableFieldsModal: {
@@ -451,7 +452,7 @@ export default {
       this.importDataTable.error = null
       if (csvData.data.length) {
         if (csvData.data[0].length < 3) {
-          this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
+          this.importDataTable.error = this.$t('import_modal.format_error')
         } else {
           for (let cnt in csvData.data) {
             if (parseInt(cnt) === 0) {
@@ -512,9 +513,9 @@ export default {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
-              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
               if (this.checkPermissions) {
-                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': 'Author(s), Year' }]
+                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
               }
 
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
@@ -545,7 +546,7 @@ export default {
               fieldsObj: [
                 {
                   key: 'authors',
-                  label: 'Author(s), Year'
+                  label: this.$t('table_headers.author_year')
                 }
               ]
             }
@@ -587,8 +588,8 @@ export default {
       let references = JSON.parse(JSON.stringify(this.references))
       let params = {
         fields: [
-          {'key': 'ref_id', 'label': 'Reference ID'},
-          {'key': 'authors', 'label': 'Author(s), Year'}
+          {'key': 'ref_id', 'label': this.$t('table_headers.reference_id')},
+          {'key': 'authors', 'label': this.$t('table_headers.author_year')}
         ],
         items: [],
         organization: this.$route.params.org_id,
@@ -647,8 +648,8 @@ export default {
       }
       let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
 
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
+      fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
+      fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
 
       params.fields = fields
 
@@ -807,7 +808,7 @@ export default {
     generateTemplate: function () {
       const _refs = JSON.parse(JSON.stringify(this.refs))
       let obj = {
-        fields: ['Reference ID', 'Author(s), Year'],
+        fields: [this.$t('table_headers.reference_id'), this.$t('table_headers.author_year')],
         data: []
       }
 
@@ -844,7 +845,7 @@ export default {
         fields: [],
         items: [],
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       }
       this.pre_ImportDataTable = ''
@@ -913,7 +914,7 @@ export default {
         fields: [],
         items: [],
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       }
       this.pre_ImportDataTable = ''
@@ -998,8 +999,8 @@ export default {
 
       let removedField = _fields.splice(index, 1)[0]
 
-      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
+      _fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
+      _fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
 
       for (let item of _items) {
         if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
@@ -1040,7 +1041,7 @@ export default {
           return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
         }
       } else {
-        return 'author(s) not found'
+        return this.$t('references.author_not_found')
       }
     }
   }

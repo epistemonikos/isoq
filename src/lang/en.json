@@ -328,6 +328,7 @@
   "import_modal": {
     "beware": "Beware:",
     "beware_text": "The iSoQ import feature does not import data that is formatted in any way. For example, if your table has cells formatted with bold text, superscript, subscript, indentation, bullet points etc. these will not be displayed.",
+    "overwrite_warning": "The newly imported and saved data will delete and replace any previous data entered manually or through import.",
     "steps_title": "To upload a table, follow these steps:",
     "step1": "STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.",
     "save_as_csv": "When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the \"Save as type\"",
