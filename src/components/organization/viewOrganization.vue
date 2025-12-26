@@ -149,25 +149,6 @@
           @modal-notification="modalNotification"></organizationForm>
       </b-modal>
       <b-modal
-        size="xl"
-        id="new-project-list"
-        ref="new-project-list"
-        :title="(buffer_project_list.id) ? $t('common.edit_summarized_finding') || 'Edit summarised review finding' : $t('common.new_summarized_finding') || 'New summarised review finding'"
-        @ok="AddOrUpdateProjectList"
-        @hidden="cleanProjectList"
-        :ok-title="$t('common.save')"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <b-form-group
-          :label="$t('common.summarized_review') || 'Summarised review'"
-          label-for="summarized-review">
-          <b-form-input
-            id="summarized-review"
-            :placeholder="$t('common.enter_summarized_finding') || 'Enter a summarised review finding'"
-            v-model="buffer_project_list.name"></b-form-input>
-        </b-form-group>
-      </b-modal>
-      <b-modal
         id="modal-remove-project"
         ref="modal-remove-project"
         :title="$t('common.delete_project')"
@@ -684,36 +665,6 @@ export default {
     countDownChanged (dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
     },
-    ModalAddList: function (idProject) {
-      this.buffer_project_list.project_id = idProject
-      this.$refs['new-project-list'].show()
-    },
-    AddOrUpdateProjectList: function () {
-      if (this.buffer_project_list.id) {
-        this.updateProjectList()
-      } else {
-        axios.post('/api/isoqf_lists', this.buffer_project_list)
-          .then((response) => {
-            this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-            this.$refs['new-project-list'].hide()
-            // get project lists
-            this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-            this.getProjects()
-          })
-          .catch((error) => {
-            this.ui.dismissCounters.dismissCountDown = this.ui.dismissCounters.dismisSec
-            console.log('error list', error)
-            this.$refs['new-project-list'].show()
-          })
-      }
-    },
-    editProjectList: function (projectPosition, listPosition) {
-      this.buffer_project_list = JSON.parse(JSON.stringify(this.projects[projectPosition].lists[listPosition]))
-      this.$refs['new-project-list'].show()
-    },
-    cleanProjectList: function () {
-      this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-    },
     cleanProject: function () {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
@@ -1082,14 +1033,6 @@ export default {
     table#organizations thead th:last-child {
       width: 30%;
     }
-  /* div >>>
-    table#organizations tbody tr td button {
-      display: none;
-    }
-  div >>>
-    table#organizations tbody tr:hover td button {
-      display: inline;
-    } */
   div >>>
     table#organizations tbody td:last-child {
       text-align: right;

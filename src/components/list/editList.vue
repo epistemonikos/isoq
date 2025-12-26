@@ -548,38 +548,6 @@ export default {
         this.project.exclusion = ''
       }
     },
-    renderReference: function (reference) {
-      let authors = ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length === 1) {
-          authors = reference.authors[0] + '. ' + reference.publication_year + '; '
-        } else if (reference.authors.length < 3) {
-          authors = reference.authors[0] + ', ' + reference.authors[1] + '. ' + reference.publication_year + '; '
-        } else {
-          authors = reference.authors[0] + ' et al., ' + reference.publication_year + '; '
-        }
-      }
-      return authors
-    },
-    getReferences: function () {
-      let promises = []
-      for (let ref of this.list.references) {
-        promises.push(axios.get(`/api/isoqf_references/${ref}`))
-      }
-      axios.all(promises)
-        .then(axios.spread((...responses) => {
-          let authors = []
-          for (let response of responses) {
-            const reference = response.data
-
-            authors.push(this.renderReference(reference))
-          }
-          this.evidence_profile = [Object.assign({}, this.evidence_profile, { references: authors })]
-        }))
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
     getFinding: function (fromModal = false) {
       const finding = this.list.findings
       if (finding.length) {
