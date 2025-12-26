@@ -88,7 +88,24 @@
     "temporary_sharing_description": "Habilite esta opción para compartir el proyecto con un usuario que no tiene una cuenta iSoQ. Cualquiera a quien envíe el enlace podrá ver el proyecto pero no editarlo.",
     "generate_temporary_url": "Generar una URL temporal.",
     "temporary_url_warning": "Este enlace no caducará automáticamente. Debe desactivarlo manualmente para inhabilitarlo.",
-    "copy_share_url": "Copie y comparta esta URL"
+    "copy_share_url": "Copie y comparta esta URL",
+    "step_1": "Paso 1",
+    "step_2": "Paso 2",
+    "step_3": "Paso 3",
+    "step_4": "Paso 4",
+    "add_review_finding_table": "Agregar hallazgo de revisión a la tabla",
+    "organize_groups": "Organizar hallazgos de revisión en grupos",
+    "organize_groups_tooltip": "Si desea organizar sus hallazgos de revisión en grupos, por ejemplo por tema o tópico, puede hacerlo creando grupos de hallazgos de revisión aquí.",
+    "reorder_findings": "Reordenar sus hallazgos de revisión",
+    "see_more_info": "Ver más información",
+    "add_group_name": "Agregar nombre del grupo",
+    "edit_group_name": "Editar nombre del grupo",
+    "describe_group": "Describa este grupo para el usuario que visualiza esta tabla",
+    "add_new_finding_group": "Agregar nuevo grupo de hallazgos de revisión",
+    "completed_by_authors": "¿Está el iSoQ siendo completado por los autores de la revisión?",
+    "continue_to_isoq": "Continuar a iSoQ",
+    "license": "Licencia",
+    "confirm": "Confirmar"
   },
   "menu": {
     "about": "Acerca de",
@@ -697,5 +714,52 @@
   "accessibility": {
     "increase_font": "+A",
     "decrease_font": "-A"
+  },
+  "steps": {
+    "step_1_references": "PASO 1: Referencias",
+    "step_2_inclusion_exclusion": "PASO 2: Criterios de inclusión y exclusión",
+    "step_3_characteristics": "PASO 3: Tabla de características de los estudios",
+    "step_4_methodological": "PASO 4: Tabla de evaluaciones metodológicas",
+    "step_4_description": "PASO 4: Cree o importe su tabla de evaluaciones metodológicas (recomendado)",
+    "step_4_long_description": "Evaluaciones metodológicas de cada estudio incluido utilizando una herramienta de evaluación crítica/de calidad existente (ej. CASP)"
+  },
+  "modals": {
+    "drag_drop_instruction": "Arrastre y suelte los hallazgos para reordenarlos en la tabla iSoQ",
+    "categories_long_description": "Algunos revisores eligen organizar sus hallazgos de revisión en diferentes grupos, por ejemplo, por temas o tópicos. Para hacerlo, agregue los nombres de los grupos aquí. Después de crear grupos para sus hallazgos de revisión, se le pedirá que asigne cada nuevo hallazgo de revisión a un grupo. Puede optar por no asignar un hallazgo de revisión a un grupo, o asignarlo más tarde.",
+    "categories_numbering_instruction": "Use números (1,2,3) o letras (a,b,c) antes del nombre del grupo para establecer el orden de visualización en las tablas exportadas/impresas de Resumen de Hallazgos Cualitativos y Perfil de Evidencia. Por ejemplo, 1. Factibilidad, 2. Aceptabilidad.",
+    "confirm_delete_group": "¿Está seguro de que desea eliminar el grupo de hallazgos de revisión",
+    "group_name_label": "Nombre del grupo",
+    "review_finding_groups": "Grupos de hallazgos de revisión",
+    "add_data_title": "Agregue datos necesarios para realizar evaluaciones GRADE-CERQual",
+    "reorder_findings_title": "Reordenar sus hallazgos de revisión"
+  },
+  "table_headers": {
+    "summarised_finding": "Hallazgo de revisión resumido",
+    "review_finding_groups": "Grupos de Hallazgos de Revisión",
+    "cerqual_assessment": "Evaluación de confianza GRADE-CERQual",
+    "cerqual_explanation": "Explicación de la evaluación GRADE-CERQual",
+    "references": "Referencias",
+    "author_year": "Autor(es), Año",
+    "reference_id": "ID de Referencia",
+    "extracted_data": "Datos extraídos que apoyan el hallazgo de revisión"
+  },
+  "cerqual_options": {
+    "no_very_minor_concerns": "Sin/Muy menores preocupaciones",
+    "minor_concerns": "Preocupaciones menores",
+    "moderate_concerns": "Preocupaciones moderadas",
+    "serious_concerns": "Preocupaciones serias",
+    "undefined": "Sin definir",
+    "high_confidence": "Confianza alta",
+    "moderate_confidence": "Confianza moderada",
+    "low_confidence": "Confianza baja",
+    "very_low_confidence": "Confianza muy baja"
+  },
+  "categories": {
+    "no_group": "Sin grupo",
+    "uncategorised_findings": "Hallazgos sin categorizar"
+  },
+  "yes_no": {
+    "yes": "sí",
+    "no": "no"
   }
 }

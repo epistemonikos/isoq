@@ -88,7 +88,24 @@
     "temporary_sharing_description": "Ative esta opção para compartilhar o projeto com um usuário que não tem uma conta iSoQ. Qualquer pessoa para quem você enviar o link poderá ver o projeto, mas não editá-lo.",
     "generate_temporary_url": "Gerar um URL temporário.",
     "temporary_url_warning": "Este link não expirará automaticamente. Você deve desativá-lo manualmente para desabilitá-lo.",
-    "copy_share_url": "Copie e compartilhe este URL"
+    "copy_share_url": "Copie e compartilhe este URL",
+    "step_1": "Etapa 1",
+    "step_2": "Etapa 2",
+    "step_3": "Etapa 3",
+    "step_4": "Etapa 4",
+    "add_review_finding_table": "Adicionar descoberta de revisão à tabela",
+    "organize_groups": "Organizar descobertas de revisão em grupos",
+    "organize_groups_tooltip": "Se você deseja organizar suas descobertas de revisão em grupos, por exemplo por tema ou tópico, você pode fazer isso criando grupos de descobertas de revisão aqui.",
+    "reorder_findings": "Reordenar suas descobertas de revisão",
+    "see_more_info": "Ver mais informações",
+    "add_group_name": "Adicionar nome do grupo",
+    "edit_group_name": "Editar nome do grupo",
+    "describe_group": "Descreva este grupo para o usuário que visualiza esta tabela",
+    "add_new_finding_group": "Adicionar novo grupo de descobertas de revisão",
+    "completed_by_authors": "O iSoQ está sendo preenchido pelos autores da revisão?",
+    "continue_to_isoq": "Continuar para iSoQ",
+    "license": "Licença",
+    "confirm": "Confirmar"
   },
   "menu": {
     "about": "Sobre",
@@ -697,5 +714,52 @@
   "accessibility": {
     "increase_font": "+A",
     "decrease_font": "-A"
+  },
+  "steps": {
+    "step_1_references": "ETAPA 1: Referências",
+    "step_2_inclusion_exclusion": "ETAPA 2: Critérios de inclusão e exclusão",
+    "step_3_characteristics": "ETAPA 3: Tabela de características dos estudos",
+    "step_4_methodological": "ETAPA 4: Tabela de avaliações metodológicas",
+    "step_4_description": "ETAPA 4: Crie ou importe sua tabela de avaliações metodológicas (recomendado)",
+    "step_4_long_description": "Avaliações metodológicas de cada estudo incluído usando uma ferramenta de avaliação crítica/de qualidade existente (ex. CASP)"
+  },
+  "modals": {
+    "drag_drop_instruction": "Arraste e solte as descobertas para reordená-las na tabela iSoQ",
+    "categories_long_description": "Alguns revisores optam por organizar suas descobertas de revisão em diferentes grupos, por exemplo, por temas ou tópicos. Para fazer isso, adicione os nomes dos grupos aqui. Depois de criar grupos para suas descobertas de revisão, você será solicitado a atribuir cada nova descoberta de revisão a um grupo. Você pode optar por não atribuir uma descoberta de revisão a um grupo, ou atribuí-la mais tarde.",
+    "categories_numbering_instruction": "Use números (1,2,3) ou letras (a,b,c) antes do nome do grupo para definir a ordem de exibição nas tabelas exportadas/impressas de Resumo de Descobertas Qualitativas e Perfil de Evidência. Por exemplo, 1. Viabilidade, 2. Aceitabilidade.",
+    "confirm_delete_group": "Tem certeza de que deseja remover o grupo de descobertas de revisão",
+    "group_name_label": "Nome do grupo",
+    "review_finding_groups": "Grupos de descobertas de revisão",
+    "add_data_title": "Adicione dados necessários para fazer avaliações GRADE-CERQual",
+    "reorder_findings_title": "Reordenar suas descobertas de revisão"
+  },
+  "table_headers": {
+    "summarised_finding": "Descoberta de revisão resumida",
+    "review_finding_groups": "Grupos de Descobertas de Revisão",
+    "cerqual_assessment": "Avaliação de confiança GRADE-CERQual",
+    "cerqual_explanation": "Explicação da avaliação GRADE-CERQual",
+    "references": "Referências",
+    "author_year": "Autor(es), Ano",
+    "reference_id": "ID da Referência",
+    "extracted_data": "Dados extraídos que apoiam a descoberta de revisão"
+  },
+  "cerqual_options": {
+    "no_very_minor_concerns": "Sem/Mínimas preocupações",
+    "minor_concerns": "Preocupações menores",
+    "moderate_concerns": "Preocupações moderadas",
+    "serious_concerns": "Preocupações sérias",
+    "undefined": "Indefinido",
+    "high_confidence": "Confiança alta",
+    "moderate_confidence": "Confiança moderada",
+    "low_confidence": "Confiança baixa",
+    "very_low_confidence": "Confiança muito baixa"
+  },
+  "categories": {
+    "no_group": "Sem grupo",
+    "uncategorised_findings": "Descobertas não categorizadas"
+  },
+  "yes_no": {
+    "yes": "sim",
+    "no": "não"
   }
 }

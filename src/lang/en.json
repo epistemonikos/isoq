@@ -88,7 +88,24 @@
     "temporary_sharing_description": "Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.",
     "generate_temporary_url": "Generate a temporary URL.",
     "temporary_url_warning": "This link will not expire automatically. You must switch it off manually to disable it.",
-    "copy_share_url": "Copy and Share this URL"
+    "copy_share_url": "Copy and Share this URL",
+    "step_1": "Step 1",
+    "step_2": "Step 2",
+    "step_3": "Step 3",
+    "step_4": "Step 4",
+    "add_review_finding_table": "Add review finding to the table",
+    "organize_groups": "Organise review findings into groups",
+    "organize_groups_tooltip": "If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.",
+    "reorder_findings": "Re-order your review findings",
+    "see_more_info": "See more information",
+    "add_group_name": "Add group name",
+    "edit_group_name": "Edit group name",
+    "describe_group": "Describe this group for the user viewing this table",
+    "add_new_finding_group": "Add new review finding group",
+    "completed_by_authors": "Is the iSoQ being completed by the review authors?",
+    "continue_to_isoq": "Continue to iSoQ",
+    "license": "License",
+    "confirm": "Confirm"
   },
   "menu": {
     "about": "About",
@@ -697,5 +714,52 @@
   "accessibility": {
     "increase_font": "+A",
     "decrease_font": "-A"
+  },
+  "steps": {
+    "step_1_references": "STEP 1: References",
+    "step_2_inclusion_exclusion": "STEP 2: Inclusion & Exclusion criteria",
+    "step_3_characteristics": "STEP 3: Characteristics of studies table",
+    "step_4_methodological": "STEP 4: Methodological assessments table",
+    "step_4_description": "STEP 4: Create or import your methodological assessments table (recommended)",
+    "step_4_long_description": "Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)"
+  },
+  "modals": {
+    "drag_drop_instruction": "Drag and drop findings to re-order them in the iSoQ table",
+    "categories_long_description": "Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.",
+    "categories_numbering_instruction": "Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.",
+    "confirm_delete_group": "Are you sure you want to remove the review finding group",
+    "group_name_label": "Name of group",
+    "review_finding_groups": "Review finding groups",
+    "add_data_title": "Add data needed to make GRADE-CERQual assessments",
+    "reorder_findings_title": "Re-order your review findings"
+  },
+  "table_headers": {
+    "summarised_finding": "Summarised review finding",
+    "review_finding_groups": "Review Finding Groups",
+    "cerqual_assessment": "GRADE-CERQual assessment of confidence",
+    "cerqual_explanation": "Explanation of GRADE-CERQual assessment",
+    "references": "References",
+    "author_year": "Author(s), Year",
+    "reference_id": "Reference ID",
+    "extracted_data": "Extracted data supporting the review finding"
+  },
+  "cerqual_options": {
+    "no_very_minor_concerns": "No/Very minor concerns",
+    "minor_concerns": "Minor concerns",
+    "moderate_concerns": "Moderate concerns",
+    "serious_concerns": "Serious concerns",
+    "undefined": "Undefined",
+    "high_confidence": "High confidence",
+    "moderate_confidence": "Moderate confidence",
+    "low_confidence": "Low confidence",
+    "very_low_confidence": "Very low confidence"
+  },
+  "categories": {
+    "no_group": "No group",
+    "uncategorised_findings": "Uncategorised findings"
+  },
+  "yes_no": {
+    "yes": "yes",
+    "no": "no"
   }
 }

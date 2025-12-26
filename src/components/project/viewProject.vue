@@ -46,14 +46,14 @@
         <b-row>
           <b-col
             cols="12">
-            <videoHelp txt="Add data needed to make GRADE-CERQual assessments" tag="h3" urlId="449265292"></videoHelp>
+            <videoHelp :txt="$t('modals.add_data_title')" tag="h3" urlId="449265292"></videoHelp>
             <p>
               {{ $t('project.optimize_info') }}
             </p>
           </b-col>
           <b-card no-body class="col-12">
             <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
-              <b-tab title="STEP 1: References">
+              <b-tab :title="$t('steps.step_1_references')">
                 <UploadReferences
                   :checkPermissions="checkPermissions()"
                   :loadReferences="loadReferences"
@@ -74,7 +74,7 @@
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 2: Inclusion & Exclusion criteria" :disabled="references.length?false:true">
+              <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length?false:true">
                 <div>
                   <InclusionExclusioCriteria
                     :checkPermissions="checkPermissions()"
@@ -93,7 +93,7 @@
                   </div>
                 </div>
               </b-tab>
-              <b-tab title="STEP 3: Characteristics of studies table" :disabled="references.length?false:true">
+              <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length?false:true">
                 <h4 v-html="$t('characteristics.step_title')"></h4>
                 <p class="font-weight-light">
                   {{ $t('characteristics.description') }}
@@ -123,10 +123,10 @@
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab title="STEP 4: Methodological assessments table" :disabled="references.length?false:true">
-                <h4>STEP 4: Create or import your <b>methodological assessments table</b> (recommended)</h4>
+              <b-tab :title="$t('steps.step_4_methodological')" :disabled="references.length?false:true">
+                <h4 v-html="$t('steps.step_4_description')"></h4>
                 <p class="font-weight-light">
-                  Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)
+                  {{ $t('steps.step_4_long_description') }}
                 </p>
                 <crudTables
                   type="isoqf_assessments"
@@ -175,8 +175,8 @@
           :charsOfStudies="charsOfStudies"
           :methodologicalTableRefs="methodologicalTableRefs"
           :listsPrintVersion="lists_print_version"
-          :selectOptions="select_options"
-          :cerqualConfidence="cerqual_confidence"
+          :selectOptions="translatedSelectOptions"
+          :cerqualConfidence="translatedCerqualConfidence"
           :printableItems="printableItems"
           @uiPublishShowLoader="uiShowLoaders"
           @getProject="getProject"
@@ -293,16 +293,16 @@
                   ref="modal-sort-findings"
                   id="modal-sort-findings"
                   size="xl"
-                  ok-title="Save"
+                  :ok-title="$t('common.save')"
                   ok-variant="outline-success"
                   cancel-variant="outline-danger"
                   scrollable
                   @ok="saveSortedLists">
                   <template v-slot:modal-title>
-                    <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
+                    <videoHelp :txt="$t('modals.reorder_findings_title')" tag="none" urlId="462176102"></videoHelp>
                   </template>
                   <p class="font-weight-light">
-                    Drag and drop findings to re-order them in the iSoQ table
+                    {{ $t('modals.drag_drop_instruction') }}
                   </p>
                   <b-list-group>
                     <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
@@ -384,7 +384,7 @@
                 :class="{'d-none': effectiveMode === 'view', 'd-print-none': true}"
                 :lists="lists"
                 :list_categories="list_categories"
-                :fields="fields"
+                :fields="translatedTableFields"
                 :project="project"
                 :mode="effectiveMode"
                 :isBusy="table_settings.isBusy"
@@ -447,14 +447,14 @@
               ref="modalEditListCategories"
               scrollable>
               <template v-slot:modal-title>
-                <videoHelp txt="Review finding groups" tag="none" urlId="451100564"></videoHelp>
+                <videoHelp :txt="$t('modals.review_finding_groups')" tag="none" urlId="451100564"></videoHelp>
               </template>
               <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                 <p class="font-weight-light">
-                  Some reviewers choose to organise their review findings into different groups, for example into themes or topics. To do so, add the names of the groups here. After you have created groups for your review findings you will be prompted to assign each new review finding to a group. You can choose not to assign a review finding to a group, or assign it later.
+                  {{ $t('modals.categories_long_description') }}
                 </p>
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  {{ $t('modals.categories_numbering_instruction') }}
                 </p>
               </template>
               <template
@@ -462,7 +462,7 @@
                 <b-table
                   head-variant="highlight"
                   striped
-                  :fields="modal_edit_list_categories.fields"
+                  :fields="translatedModalFields"
                   :items="modal_edit_list_categories.options">
                   <template v-slot:cell(actions)="data">
                     <b-button
@@ -480,7 +480,7 @@
               <template
                 v-if="modal_edit_list_categories.new">
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group
                   class="mt-3"
@@ -499,7 +499,7 @@
                 class="mt-3"
                 v-if="modal_edit_list_categories.edit">
                 <p class="text-danger">
-                  Use numbers (1,2,3) or letters (a,b,c) before the name of the group to set the display order for the exported/printed Summary of Qualitative Findings and Evidence Profile tables. For example, 1. Feasibility, 2. Acceptability.
+                  {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group
                   :label="$t('common.edit_group_name') || 'Edit group name'">
@@ -517,7 +517,7 @@
                 class="mt-3"
                 v-if="modal_edit_list_categories.remove">
                 <p>
-                  Are you sure you want to remove the review finding group <b>{{ modal_edit_list_categories.text }}</b>?
+                  {{ $t('modals.confirm_delete_group') }} <b>{{ modal_edit_list_categories.text }}</b>?
                 </p>
               </template>
               <template
@@ -920,7 +920,7 @@ export default {
         }
         options.sort((a, b) => a.text.localeCompare(b.text))
         let modalOptions = JSON.parse(JSON.stringify(options))
-        options.splice(0, 0, {id: null, text: 'No group'})
+        options.splice(0, 0, {id: null, text: this.$t('categories.no_group')})
         this.list_categories.options = options
         this.modal_edit_list_categories.options = modalOptions
       }
@@ -1063,7 +1063,7 @@ export default {
             result = result + reference.title
           }
         } else {
-          return 'author(s) not found'
+          return this.$t('references.author_not_found')
         }
       }
       return result
@@ -1116,25 +1116,12 @@ export default {
           }
           list.cerqual_option = ''
           if (list.cerqual.option != null) {
-            list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+            list.cerqual_option = this.translatedCerqualConfidence[list.cerqual.option].text
           }
           list.filter_cerqual = ''
-          switch (list.cerqual_option) {
-            case 'High confidence':
-              list.filter_cerqual = 'hc'
-              break
-            case 'Moderate confidence':
-              list.filter_cerqual = 'mc'
-              break
-            case 'Low confidence':
-              list.filter_cerqual = 'lc'
-              break
-            case 'Very low confidence':
-              list.filter_cerqual = 'vc'
-              break
-            default:
-              list.filter_cerqual = ''
-              break
+          if (list.cerqual.option != null) {
+            const optionValue = this.translatedCerqualConfidence[list.cerqual.option].value
+            list.filter_cerqual = optionValue || ''
           }
           list.cerqual_explanation = list.cerqual.explanation
           list.ref_list = ''
@@ -1163,7 +1150,7 @@ export default {
               })
             }
           }
-          categories.push({'name': 'Uncategorised findings', 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
+          categories.push({'name': this.$t('categories.uncategorised_findings'), 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
 
           for (let list of data) {
             if (categories.length) {
@@ -1316,7 +1303,7 @@ export default {
     generateEvidenceProfileTableWithCategories: function (findings) {
       let content = []
       for (const position in findings) {
-        let rowTitle = 'Uncategorised findings'
+        let rowTitle = this.$t('categories.uncategorised_findings')
         for (const category of this.list_categories.options) {
           if (findings[position].length) {
             if (findings[position][0].category === null) {
@@ -1459,7 +1446,7 @@ export default {
           return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
         }
       } else {
-        return 'author(s) not found'
+        return this.$t('references.author_not_found')
       }
     },
     saveListCategoryName: function () {
@@ -1781,6 +1768,49 @@ export default {
       }
       txt = txt + 'Summary of Qualitative Findings Table'
       return txt
+    },
+    translatedSelectOptions: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.no_very_minor_concerns') },
+        { value: 1, text: this.$t('cerqual_options.minor_concerns') },
+        { value: 2, text: this.$t('cerqual_options.moderate_concerns') },
+        { value: 3, text: this.$t('cerqual_options.serious_concerns') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
+    translatedCerqualConfidence: function () {
+      return [
+        { value: 'hc', text: this.$t('cerqual_options.high_confidence') },
+        { value: 'mc', text: this.$t('cerqual_options.moderate_confidence') },
+        { value: 'lc', text: this.$t('cerqual_options.low_confidence') },
+        { value: 'vc', text: this.$t('cerqual_options.very_low_confidence') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
+    translatedTableFields: function () {
+      return {
+        with_categories: [
+          { key: 'sort', label: '#' },
+          { key: 'name', label: this.$t('table_headers.summarised_finding') },
+          { key: 'category_name', label: this.$t('table_headers.review_finding_groups') },
+          { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
+          { key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation') },
+          { key: 'ref_list', label: this.$t('table_headers.references') }
+        ],
+        without_categories: [
+          { key: 'sort', label: '#' },
+          { key: 'name', label: this.$t('table_headers.summarised_finding') },
+          { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
+          { key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation') },
+          { key: 'ref_list', label: this.$t('table_headers.references') }
+        ]
+      }
+    },
+    translatedModalFields: function () {
+      return [
+        { key: 'text', label: this.$t('modals.group_name_label') },
+        { key: 'actions', label: '' }
+      ]
     },
     effectiveMode: function () {
       // If explicit mode is set to edit or view, use it
