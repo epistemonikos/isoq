@@ -6,10 +6,10 @@
       <b-thead>
         <b-tr>
           <b-th>#</b-th>
-          <b-th>Summarised review finding</b-th>
-          <b-th>GRADE-CERQual assessment of confidence</b-th>
-          <b-th>Explanation of GRADE-CERQual assessment</b-th>
-          <b-th>References</b-th>
+          <b-th>{{ $t('soqf_table.summarised_finding') }}</b-th>
+          <b-th>{{ $t('soqf_table.cerqual_assessment') }}</b-th>
+          <b-th>{{ $t('soqf_table.cerqual_explanation') }}</b-th>
+          <b-th>{{ $t('soqf_table.references') }}</b-th>
         </b-tr>
       </b-thead>
       <b-tbody>
@@ -76,13 +76,13 @@
         <b-thead>
           <b-tr>
             <b-th style="width: 5%">#</b-th>
-            <b-th style="width: 35%">Summarised review finding</b-th>
+            <b-th style="width: 35%">{{ $t('soqf_table.summarised_finding') }}</b-th>
             <b-th style="width: 10%">{{ $t('worksheet.methodological_limitations') }}</b-th>
             <b-th style="width: 10%">{{ $t('worksheet.coherence') }}</b-th>
             <b-th style="width: 10%">{{ $t('worksheet.adequacy') }}</b-th>
             <b-th style="width: 10%">{{ $t('worksheet.relevance') }}</b-th>
-            <b-th style="width: 10%">GRADE-CERQual assessment of confidence</b-th>
-            <b-th style="width: 10%">References</b-th>
+            <b-th style="width: 10%">{{ $t('soqf_table.cerqual_assessment') }}</b-th>
+            <b-th style="width: 10%">{{ $t('soqf_table.references') }}</b-th>
           </b-tr>
         </b-thead>
         <b-tbody>
