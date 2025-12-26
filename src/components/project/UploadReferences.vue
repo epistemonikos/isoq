@@ -11,18 +11,18 @@
       show
       variant="info"
       dismissible>
-      <h5>Incomplete upload detected</h5>
-      <p>We found a previous upload that didn't complete. Would you like to restore it?</p>
+      <h5>{{ $t('references.incomplete_upload') }}</h5>
+      <p>{{ $t('references.restore_upload') }}</p>
       <b-button
         variant="outline-primary"
         class="mr-2"
         @click="restoreSavedProgress">
-        Yes, restore my upload
+        {{ $t('references.restore_yes') }}
       </b-button>
       <b-button
         variant="outline-secondary"
         @click="clearSavedProgress">
-        No, start new
+        {{ $t('references.start_new') }}
       </b-button>
     </b-alert>
 
@@ -36,18 +36,18 @@
 
     <b-card no-body>
       <b-tabs id="import-data" card>
-        <b-tab title="File upload" active>
+        <b-tab :title="$t('references.file_upload')" active>
           <b-row>
             <b-col
               cols="12">
-              <videoHelp txt="File upload" tag="h4" urlId="449247762"></videoHelp>
+              <videoHelp :txt="$t('references.file_upload')" tag="h4" urlId="449247762"></videoHelp>
             </b-col>
           </b-row>
           <p class="font-weight-light">
-            <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g. Endnote). You must select RIS as the output style.
+            {{ $t('references.export_step') }}
           </p>
           <p class="font-weight-light">
-            <b>STEP 2:</b> Import the .ris/.txt file into iSoQ.
+            {{ $t('references.import_step') }}
           </p>
           <b-form-file
             id="input-ris-file-key"
@@ -61,10 +61,10 @@
             class="mt-2"
             variant="success"
             @click="saveReferences()">
-            Upload
+            {{ $t('common.upload') }}
           </b-button>
           <p>
-              Reminder: If you later add studies to your review, you can do a second import of these and they will be added to your existing list.
+              {{ $t('references.reminder') }}
           </p>
 
           <!-- Preview message and table -->
@@ -84,22 +84,22 @@
             </b-table>
           </div> -->
         </b-tab>
-        <b-tab title="Import from PubMed">
+        <b-tab :title="$t('references.import_pubmed')">
           <b-row>
             <b-col
               cols="12">
-                <videoHelp txt="Import from PubMed" tag="h4" urlId="449248998"></videoHelp>
+                <videoHelp :txt="$t('references.import_pubmed')" tag="h4" urlId="449248998"></videoHelp>
             </b-col>
           </b-row>
           <b-row>
             <b-col
               sm="6">
               <p class="font-weight-light">
-                You can import individual references from PubMed by pasting the references PMID below. The PMID is the 8-digit identification number appearing at the end of the web address for the article on PubMed. Add one PMID per line below and click Find.
+                {{ $t('references.pubmed_instructions') }}
               </p>
               <b-form-textarea
                 v-model="pubmed_request"
-                placeholder="Ej: 17253524"
+                :placeholder="$t('references.pmid_example')"
                 rows="6"
                 max-rows="100"></b-form-textarea>
               <b-button
@@ -108,14 +108,14 @@
                 class="mt-2"
                 block
                 variant="outline-primary"
-                @click="PubmedRequest">Find</b-button>
+                @click="PubmedRequest">{{ $t('common.find') }}</b-button>
               <b-button
                 v-if="checkPermissions && (pubmed_requested.length || pubmedErrorImported.length)"
                 :disabled="btnCleanDisabled"
                 class="mt-1"
                 block
                 variant="outline-secondary"
-                @click="PubmedRequestClean">Clean</b-button>
+                @click="PubmedRequestClean">{{ $t('common.clean') }}</b-button>
             </b-col>
             <b-col
               sm="6">
@@ -123,18 +123,18 @@
                 v-if="pubmed_loading">
                 <div class="text-center text-danger my-2">
                   <b-spinner class="align-middle"></b-spinner>
-                  <strong>Loading...</strong>
+                  <strong>{{ $t('common.loading') }}</strong>
                 </div>
               </template>
               <template
                 v-else-if="pubmed_error">
                 <p class="font-weight-light">
-                  The reference could not be reached, try again or using other ID
+                  {{ $t('references.ref_not_found') }}
                   </p>
               </template>
               <template v-else>
                 <template v-if="pubmed_requested.length">
-                  <p>Select the references to import</p>
+                  <p>{{ $t('references.select_to_import') }}</p>
                   <ul class="list-unstyled">
                     <li v-for="(r, index) in pubmed_requested" :key="index">
                       <b-form-checkbox
@@ -149,7 +149,7 @@
                   </ul>
                 </template>
                 <template v-if="pubmedErrorImported.length">
-                  <p>The following PubMed IDs are invalid</p>
+                  <p>{{ $t('references.invalid_pmids') }}</p>
                   <ul v-for="(id, index) in pubmedErrorImported" :key="index">
                     <li>{{ id }}</li>
                   </ul>
@@ -158,7 +158,7 @@
                   v-if="pubmed_selected.length && checkPermissions"
                   variant="outline-success"
                   block
-                  @click="importReferences()">Import references</b-button>
+                  @click="importReferences()">{{ $t('references.import_references') }}</b-button>
               </template>
             </b-col>
           </b-row>
@@ -175,7 +175,7 @@
             v-if="loadReferences">
             <div class="text-center text-danger my-2">
               <b-spinner class="align-middle"></b-spinner>
-              <strong>Loading...</strong>
+              <strong>{{ $t('common.loading') }}</strong>
             </div>
           </template>
           <template v-else>
@@ -202,7 +202,7 @@
           <b-row>
             <b-col
               cols="12">
-              <p class="alert text-danger">This action will delete all the references and all the data linked to them, including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables, and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Qualitative Findings Table.<br><b>Are you sure you want to delete all the references?</b></p>
+              <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
             </b-col>
           </b-row>
           <b-row align-h="center">
@@ -212,7 +212,7 @@
                 block
                 @click="removeAllReferences"
                 variant="outline-danger">
-                Yes
+                {{ $t('common.yes') }}
               </b-button>
             </b-col>
             <b-col
@@ -221,7 +221,7 @@
                 block
                 @click="appearMsgRemoveReferences = false"
                 variant="outline-success">
-                No
+                {{ $t('common.no') }}
               </b-button>
             </b-col>
           </b-row>
@@ -234,7 +234,7 @@
             bordered
             borderless
             striped
-            :fields="fields_references_table"
+            :fields="translatedReferencesTableFields"
             :items="references"
             head-variant="light"
             outlined>
@@ -249,22 +249,22 @@
             </template>
             <template v-slot:row-details="data">
               <b-card>
-                <p>You are about to exclude a study from your review. This will delete it, and all associated information, from all tables in iSoQ. If you exclude this study please remember to redo your GRADE-CERQual assessments for all review findings that it supported.</p>
+                <p>{{ $t('references.exclude_study_warning') }}</p>
                 <p>{{ findRelatedFindings(data.item.id) }}</p>
-                <p>Are you sure you want to delete this reference?</p>
+                <p>{{ $t('references.confirm_delete') }}</p>
                 <div>
                   <b-row align-h="center">
                     <b-col cols="3">
                       <b-button
                         block
                         variant="outline-success"
-                        @click="data.toggleDetails">No</b-button>
+                        @click="data.toggleDetails">{{ $t('common.no') }}</b-button>
                     </b-col>
                     <b-col cols="3">
                       <b-button
                         block
                         variant="outline-danger"
-                        @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                        @click="confirmRemoveReferenceById(data.item.id)">{{ $t('common.yes') }}</b-button>
                     </b-col>
                   </b-row>
                 </div>
@@ -274,7 +274,7 @@
           <div v-if="checkPermissions" class="mt-2">
             <b-button
             @click="confirmRemoveAllReferences($event)"
-              >Delete all references</b-button>
+              >{{ $t('references.delete_all') }}</b-button>
           </div>
         </template>
         </b-card>
@@ -367,10 +367,43 @@ export default {
     // Verificar si hay operaciones incompletas al cargar el componente
     this.checkIncompleteOperations()
   },
+  computed: {
+    translatedReferencesTableFields: function () {
+      return [
+        {
+          key: 'authors',
+          label: this.$t('table_headers.authors'),
+          formatter: (value, key, item) => this.formatAuthors(item.authors)
+        },
+        { key: 'title', label: this.$t('table_headers.title') },
+        { key: 'publication_year', label: this.$t('table_headers.year') },
+        {
+          key: 'id',
+          label: this.$t('table_headers.related_to_findings'),
+          formatter: value => {
+            let findings = []
+            for (let list of this.lists) {
+              for (let ref of list.raw_ref) {
+                if (ref.id === value) {
+                  if (Object.prototype.hasOwnProperty.call(list, 'cnt')) {
+                    findings.push(`#${list.cnt}`)
+                  } else {
+                    findings.push(`#${list.sort}`)
+                  }
+                }
+              }
+            }
+            return findings.join(', ')
+          }
+        },
+        { key: 'action', label: this.$t('table_headers.action') }
+      ]
+    }
+  },
   methods: {
     // Método auxiliar para formatear autores (reutilizable)
     formatAuthors (authors) {
-      if (!authors || !authors.length) return 'author(s) not found'
+      if (!authors || !authors.length) return this.$t('references.author_not_found')
 
       if (authors.length === 1) {
         return authors[0].split(',')[0]
@@ -895,9 +928,9 @@ export default {
         }
       }
       if (findings.length) {
-        return 'The findings affected are: ' + findings.join(', ')
+        return this.$t('references.findings_affected', { findings: findings.join(', ') })
       } else {
-        return 'No review findings will be affected.'
+        return this.$t('references.no_findings_affected')
       }
     },
     confirmRemoveAllReferences: function (event) {
@@ -950,7 +983,7 @@ export default {
         const authorPart = this.formatAuthors(reference.authors)
 
         // If no authors are found, return message
-        if (authorPart === 'author(s) not found') {
+        if (authorPart === this.$t('references.author_not_found')) {
           return authorPart
         }
 

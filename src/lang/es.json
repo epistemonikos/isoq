@@ -740,8 +740,13 @@
     "cerqual_explanation": "Explicación de la evaluación GRADE-CERQual",
     "references": "Referencias",
     "author_year": "Autor(es), Año",
+    "authors": "Autor(es)",
+    "title": "Título",
+    "year": "Año",
     "reference_id": "ID de Referencia",
-    "extracted_data": "Datos extraídos que apoyan el hallazgo de revisión"
+    "extracted_data": "Datos extraídos que apoyan el hallazgo de revisión",
+    "related_to_findings": "Relacionado con hallazgo(s) de revisión",
+    "action": ""
   },
   "cerqual_options": {
     "no_very_minor_concerns": "Sin/Muy menores preocupaciones",

@@ -740,8 +740,13 @@
     "cerqual_explanation": "Explanation of GRADE-CERQual assessment",
     "references": "References",
     "author_year": "Author(s), Year",
+    "authors": "Author(s)",
+    "title": "Title",
+    "year": "Year",
     "reference_id": "Reference ID",
-    "extracted_data": "Extracted data supporting the review finding"
+    "extracted_data": "Extracted data supporting the review finding",
+    "related_to_findings": "Related to review finding(s)",
+    "action": ""
   },
   "cerqual_options": {
     "no_very_minor_concerns": "No/Very minor concerns",
