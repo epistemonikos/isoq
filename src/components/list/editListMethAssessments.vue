@@ -12,8 +12,6 @@
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <pre>- {{ methAssessments }}</pre>
-    <pre>- {{ list.project_id }}</pre>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
       {{ $t('help.instructions.add_data_link_pre') }}<b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">{{ $t('common.my_data') }}</b-link>{{ $t('help.instructions.add_data_link_post') }}
     </p>
