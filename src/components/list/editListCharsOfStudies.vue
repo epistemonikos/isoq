@@ -4,18 +4,23 @@
     v-if="show.selected.includes('cs')">
     <a name="characteristics-of-studies"></a>
     <h3 class="toDoc">
-      {{ $t('worksheet.characteristics_of_studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)">*</small>
+      {{ $t('worksheet.characteristics_of_studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.chars_tooltip')">*</small>
       <span
         v-if="ui.adequacy.chars_of_studies.display_warning"
         class="text-danger d-print-none"
-        v-b-tooltip.hover title="The Characteristics of Studies table, or some data within it, are missing.">
+        v-b-tooltip.hover :title="$t('worksheet.warnings.chars_missing')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p v-if="showParagraph" class="d-print-none font-weight-light">
-      To add data or make changes to this table do so in the
-      <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">My Data</b-link>
-      section of iSoQ
+    <p
+      v-if="showParagraph"
+      class="d-print-none font-weight-light">
+      {{ $t('help.instructions.add_data_link_pre') }}
+      <b-link
+        :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">
+        {{ $t('project.my_data') }}
+      </b-link>
+      {{ $t('help.instructions.add_data_link_post') }}
     </p>
     <template v-if="charsOfStudies.fields.length">
       <bc-filters

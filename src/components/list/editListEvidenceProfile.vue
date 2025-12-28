@@ -2,11 +2,11 @@
   <div v-if="evidenceProfile.length">
     <a name="evidence-profile"></a>
     <h3 class="mt-4">
-      Evidence Profile
+      {{ $t('worksheet_nav.evidence_profile') }}
       <span
         v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
         class="text-danger d-print-none"
-        v-b-tooltip.hover title="Data are missing.">
+        v-b-tooltip.hover :title="$t('worksheet.warnings.data_missing_link')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
@@ -22,49 +22,49 @@
       :filter="evidenceProfileTableSettings.filter"
       :busy="evidenceProfileTableSettings.isBusy">
       <template v-slot:head(isoqf_id)="data">
-        <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('table_headers.auto_numbering')">{{data.label}}</span>
       </template>
       <template v-slot:head(methodological-limit)="data">
-        <span v-b-tooltip.hover title="The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.methodological_limitations')">{{data.label}}</span>
         <span
           v-if="ui.methodological_assessments.display_warning || ui.methodological_assessments.extracted_data.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
+          v-b-tooltip.hover :title="$t('worksheet.warnings.data_missing_assessment')">
           <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
         </span>
       </template>
       <template v-slot:head(coherence)="data">
-        <span v-b-tooltip.hover title="An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.coherence')">{{data.label}}</span>
         <span
           v-if="ui.coherence.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
+          v-b-tooltip.hover :title="$t('worksheet.warnings.data_missing_assessment')">
           <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
         </span>
       </template>
       <template v-slot:head(adequacy)="data">
-        <span v-b-tooltip.hover title="An overall determination of the degree of richness and quantity of data supporting a review finding">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.adequacy')">{{data.label}}</span>
         <span
           v-if="ui.adequacy.extracted_data.display_warning || ui.adequacy.chars_of_studies.display_warning"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
+          v-b-tooltip.hover :title="$t('worksheet.warnings.data_missing_assessment')">
           <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
         </span>
       </template>
       <template v-slot:head(relevance)="data">
-        <span v-b-tooltip.hover title="The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.relevance')">{{data.label}}</span>
         <span
           v-if="ui.relevance.chars_of_studies.display_warning || ((project.inclusion.length) ? false : true) || ((project.exclusion.length) ? false : true) || ((project.review_question.length) ? false : true)"
           class="text-danger"
-          v-b-tooltip.hover title="Data needed to make this assessment are missing. Click button below to see what's missing.">
+          v-b-tooltip.hover :title="$t('worksheet.warnings.data_missing_assessment')">
           <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
         </span>
       </template>
       <template v-slot:head(cerqual)="data">
-        <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.cerqual')">{{data.label}}</span>
       </template>
       <template v-slot:head(references)="data">
-        <span v-b-tooltip.hover title="Studies that contribute to this review finding">{{data.label}}</span>
+        <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.references')">{{data.label}}</span>
       </template>
       <!-- content -->
       <template v-slot:cell(isoqf_id)="data">
@@ -78,8 +78,8 @@
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'methodological-limitations')">
-              <template v-if="permission">Edit</template>
-              <template v-else>View</template>
+              <template v-if="permission">{{ $t('common.edit') }}</template>
+              <template v-else>{{ $t('common.view') }}</template>
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
                 icon="comments"></font-awesome-icon>
@@ -87,12 +87,12 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
+            <span class="font-weight-bolder text-black-50">{{ $t('worksheet_nav.explanation') }}:</span> {{ getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation) }}
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
+              :title="$t('worksheet.warnings.incomplete_explanation')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
             </span>
           </p>
@@ -100,13 +100,13 @@
             <span
               v-if="data.item.methodological_limitations.option !== '0'"
               v-b-tooltip.hover
-              title="Provide an explanation for your assessment"
-              variant="info">Explanation not yet added</span>
+              :title="$t('worksheet.tooltips.provide_explanation')"
+              variant="info">{{ $t('worksheet.labels.explanation_not_added') }}</span>
             <span
               v-if="displayExclamationAlert('methodological-limitations')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
+              :title="$t('worksheet.tooltips.incomplete_explanation')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
             </span>
           </p>
@@ -118,7 +118,7 @@
               class="d-print-none"
               variant="info"
               @click="editStageTwo(data.item, 'methodological-limitations')">
-              Assessment not completed
+              {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
                 icon="comments"></font-awesome-icon>
@@ -134,8 +134,8 @@
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'coherence')">
-              <template v-if="permission">Edit</template>
-              <template v-else>View</template>
+              <template v-if="permission">{{ $t('common.edit') }}</template>
+              <template v-else>{{ $t('common.view') }}</template>
               <font-awesome-icon
                 v-if="data.item.coherence.notes"
                 icon="comments"></font-awesome-icon>
@@ -143,7 +143,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
           <p v-if="data.item.coherence.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
+            <span class="font-weight-bolder text-black-50">{{ $t('worksheet_nav.explanation') }}:</span> {{ getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation) }}
             <span
               v-if="displayExclamationAlert('coherence')"
               class="text-danger"
@@ -156,13 +156,13 @@
             <span
               v-if="data.item.coherence.option !== '0'"
               v-b-tooltip.hover
-              title="Provide an explanation for your assessment"
-              variant="info">Explanation not yet added</span>
+              :title="$t('worksheet.tooltips.provide_explanation')"
+              variant="info">{{ $t('worksheet.labels.explanation_not_added') }}</span>
             <span
               v-if="displayExclamationAlert('coherence')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
+              :title="$t('worksheet.tooltips.incomplete_explanation')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
             </span>
           </p>
@@ -174,7 +174,7 @@
               class="d-print-none"
               variant="info"
               @click="editStageTwo(data.item, 'coherence')">
-              Assessment not completed
+              {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.coherence.notes"
                 icon="comments"></font-awesome-icon>
@@ -190,8 +190,8 @@
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'adequacy')">
-              <template v-if="permission">Edit</template>
-              <template v-else>View</template>
+              <template v-if="permission">{{ $t('common.edit') }}</template>
+              <template v-else>{{ $t('common.view') }}</template>
               <font-awesome-icon
                 v-if="data.item.adequacy.notes"
                 icon="comments"></font-awesome-icon>
@@ -199,7 +199,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
           <p v-if="data.item.adequacy.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
+            <span class="font-weight-bolder text-black-50">{{ $t('worksheet_nav.explanation') }}:</span> {{ getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation) }}
             <span
               v-if="displayExclamationAlert('adequacy')"
               class="text-danger"
@@ -212,13 +212,13 @@
             <span
               v-if="data.item.adequacy.option !== '0'"
               v-b-tooltip.hover
-              title="Provide an explanation for your assessment"
-              variant="info">Explanation not yet added</span>
+              :title="$t('worksheet.tooltips.provide_explanation')"
+              variant="info">{{ $t('worksheet.labels.explanation_not_added') }}</span>
             <span
               v-if="displayExclamationAlert('adequacy')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
+              :title="$t('worksheet.tooltips.incomplete_explanation')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
             </span>
           </p>
@@ -230,7 +230,7 @@
               class="d-print-none"
               variant="info"
               @click="editStageTwo(data.item, 'adequacy')">
-              Assessment not completed
+              {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.adequacy.notes"
                 icon="comments"></font-awesome-icon>
@@ -246,8 +246,8 @@
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'relevance')">
-              <template v-if="permission">Edit</template>
-              <template v-else>View</template>
+              <template v-if="permission">{{ $t('common.edit') }}</template>
+              <template v-else>{{ $t('common.view') }}</template>
               <font-awesome-icon
                 v-if="data.item.relevance.notes"
                 icon="comments"></font-awesome-icon>
@@ -255,7 +255,7 @@
           </template>
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
           <p v-if="data.item.relevance.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
+            <span class="font-weight-bolder text-black-50">{{ $t('worksheet_nav.explanation') }}:</span> {{ getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation) }}
             <span
               v-if="displayExclamationAlert('relevance')"
               class="text-danger"
@@ -268,13 +268,13 @@
             <span
               v-if="data.item.relevance.option !== '0'"
               v-b-tooltip.hover
-              title="Provide an explanation for your assessment"
-              variant="info">Explanation not yet added</span>
+              :title="$t('worksheet.tooltips.provide_explanation')"
+              variant="info">{{ $t('worksheet.labels.explanation_not_added') }}</span>
             <span
               v-if="displayExclamationAlert('relevance')"
               class="text-danger"
               v-b-tooltip.hover
-              title="This explanation is incomplete">
+              :title="$t('worksheet.tooltips.incomplete_explanation')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
             </span>
           </p>
@@ -286,7 +286,7 @@
               class="d-print-none"
               variant="info"
               @click="editStageTwo(data.item, 'relevance')">
-              Assessment not completed
+              {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.relevance.notes"
                 icon="comments"></font-awesome-icon>
@@ -302,8 +302,8 @@
               class="d-print-none mb-3"
               variant="outline-info"
               @click="editStageTwo(data.item, 'cerqual')">
-              <template v-if="permission">Edit</template>
-              <template v-else>View</template>
+              <template v-if="permission">{{ $t('common.edit') }}</template>
+              <template v-else>{{ $t('common.view') }}</template>
               <font-awesome-icon
                 v-if="data.item.cerqual.notes"
                 icon="comments"></font-awesome-icon>
@@ -311,10 +311,10 @@
           </template>
           <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
           <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">
-            <span class="font-weight-bolder text-black-50">Explanation:</span> {{data.item.cerqual.explanation}}
+            <span class="font-weight-bolder text-black-50">{{ $t('worksheet_nav.explanation') }}:</span> {{data.item.cerqual.explanation}}
           </p>
-          <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: 'Provide an explanation for your assessment', placement: 'bottom'}">
-            Explanation not yet added
+          <p v-else class="text-muted font-weight-light" v-b-tooltip.hover="{title: $t('worksheet.tooltips.provide_explanation'), placement: 'bottom'}">
+            {{ $t('worksheet.labels.explanation_not_added') }}
           </p>
         </div>
         <div v-else>
@@ -325,7 +325,7 @@
               class="d-print-none"
               variant="info"
               @click="editStageTwo(data.item, 'cerqual')">
-              Assessment not completed
+              {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.cerqual.notes"
                 icon="comments"></font-awesome-icon>
@@ -340,16 +340,16 @@
             class="d-print-none mb-3"
             variant="outline-info"
             @click="openModalReferences">
-            <template v-if="permission">Edit references</template>
-            <template v-else>View references</template>
+            <template v-if="permission">{{ $t('soqf_table.edit_references') }}</template>
+            <template v-else>{{ $t('soqf_table.view_references') }}</template>
           </b-button>
         </template>
-        There are <b>{{ data.item.references.length }}</b> references.
+        <span v-html="$t('soqf_table.refs_count', {count: data.item.references.length})"></span>
       </template>
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
           <b-spinner class="align-middle"></b-spinner>
-          <strong>Loading...</strong>
+          <strong>{{ $t('common.loading') }}</strong>
         </div>
       </template>
     </b-table>
@@ -395,31 +395,31 @@
       <template v-slot:cell(methodological-limit)="data">
         <div v-if="data.item.methodological_limitations.option !== null">
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
-          <p v-if="data.item.methodological_limitations.explanation">Explanation: {{getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation)}}</p>
+          <p v-if="data.item.methodological_limitations.explanation">{{ $t('worksheet_nav.explanation') }}: {{getExplanation('methodological-limitations', data.item.methodological_limitations.option, data.item.methodological_limitations.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(coherence)="data">
         <div v-if="data.item.coherence.option !== null">
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
-          <p v-if="data.item.coherence.explanation">Explanation: {{getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation)}}</p>
+          <p v-if="data.item.coherence.explanation">{{ $t('worksheet_nav.explanation') }}: {{getExplanation('coherence', data.item.coherence.option, data.item.coherence.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(adequacy)="data">
         <div v-if="data.item.adequacy.option !== null">
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
-          <p v-if="data.item.adequacy.explanation">Explanation: {{getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation)}}</p>
+          <p v-if="data.item.adequacy.explanation">{{ $t('worksheet_nav.explanation') }}: {{getExplanation('adequacy', data.item.adequacy.option, data.item.adequacy.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(relevance)="data">
         <div v-if="data.item.relevance.option !== null">
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
-          <p v-if="data.item.relevance.explanation">Explanation: {{getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation)}}</p>
+          <p v-if="data.item.relevance.explanation">{{ $t('worksheet_nav.explanation') }}: {{getExplanation('relevance', data.item.relevance.option, data.item.relevance.explanation)}}</p>
         </div>
       </template>
       <template v-slot:cell(cerqual)="data">
         <div v-if="data.item.cerqual.option !== null">
           <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
-          <p v-if="data.item.cerqual.explanation">Explanation: {{data.item.cerqual.explanation}}</p>
+          <p v-if="data.item.cerqual.explanation">{{ $t('worksheet_nav.explanation') }}: {{data.item.cerqual.explanation}}</p>
         </div>
       </template>
       <template v-slot:cell(references)="data">
@@ -435,7 +435,7 @@
     <b-modal
       id="modalReferences"
       ref="modalReferences"
-      title="References"
+      :title="$t('soqf_table.references')"
       size="xl"
       scrollable
       @ok="checkReferencesBeforeSaving"
@@ -447,12 +447,12 @@
         v-if="list.cerqual.option"
         show
         variant="danger">
-        <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+        <span v-html="$t('soqf_table.remove_ref_warning')"></span>
       </b-alert>
       <b-table
         striped
         responsive
-        :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
+        :fields="[{key: 'checkbox', label: ''}, {key: 'content', label: $t('soqf_table.author_year_title')}]"
         :items="refsWithTitle">
         <template v-slot:cell(checkbox)="data">
           <b-form-checkbox
@@ -469,29 +469,29 @@
     <b-modal
       id="modal-no-references-warning"
       ref="modal-no-references-warning"
-      title="Warning"
+      :title="$t('common.warning')"
       @ok="confirmSaveNoReferences"
       @cancel="cancelNoReferencesWarning"
-      ok-title="Continue"
+      :ok-title="$t('common.continue')"
       ok-variant="outline-danger"
       cancel-variant="outline-secondary"
       no-close-on-backdrop
       no-close-on-esc>
-      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
+      <p>{{ $t('soqf_table.remove_all_unpublish') }}</p>
     </b-modal>
 
     <b-modal
       id="modal-private-project-warning"
       ref="modal-private-project-warning"
-      title="Warning"
+      :title="$t('common.warning')"
       @ok="confirmSavePrivateProject"
       @cancel="cancelPrivateProjectWarning"
-      ok-title="Continue"
+      :ok-title="$t('common.continue')"
       ok-variant="outline-danger"
       cancel-variant="outline-secondary"
       no-close-on-backdrop
       no-close-on-esc>
-      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+      <p>{{ $t('soqf_table.remove_all_revert') }}</p>
     </b-modal>
 
     <!-- modal -->
@@ -577,26 +577,36 @@ export default {
     return {
       original_references: [],
       pendingSaveReferences: false,
-      evidenceProfileFields: [
+      localExtractedData: {
+        fields: [],
+        items: []
+      }
+    }
+  },
+  computed: {
+    evidenceProfileFields () {
+      return [
         { key: 'isoqf_id', label: '#' },
         { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
         { key: 'coherence', label: this.$t('worksheet.coherence') },
         { key: 'adequacy', label: this.$t('worksheet.adequacy') },
         { key: 'relevance', label: this.$t('worksheet.relevance') },
-        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
-        { key: 'references', label: 'References' }
-      ],
-      evidenceProfileFieldsPrintVersion: [
+        { key: 'cerqual', label: this.$t('soqf_table.print_confidence') },
+        { key: 'references', label: this.$t('soqf_table.references') }
+      ]
+    },
+    evidenceProfileFieldsPrintVersion () {
+      return [
         { key: 'isoqf_id', label: '#' },
-        { key: 'name', label: 'Summarised review finding' },
+        { key: 'name', label: this.$t('soqf_table.summarised_finding') },
         { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
         { key: 'coherence', label: this.$t('worksheet.coherence') },
         { key: 'adequacy', label: this.$t('worksheet.adequacy') },
         { key: 'relevance', label: this.$t('worksheet.relevance') },
-        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
+        { key: 'cerqual', label: this.$t('soqf_table.print_confidence') },
         {
           key: 'references',
-          label: 'References',
+          label: this.$t('soqf_table.references'),
           formatter: value => {
             let references = ''
             for (let item of value) {
@@ -609,11 +619,7 @@ export default {
             return references
           }
         }
-      ],
-      localExtractedData: {
-        fields: [],
-        items: []
-      }
+      ]
     }
   },
   methods: {
@@ -753,7 +759,7 @@ export default {
     displaySelectedOption: function (option) {
       if (option === null) {
         return ''
-      } else if (option >= 0) {
+      } else if (option >= 0 && this.selectOptions && this.selectOptions[option]) {
         return this.selectOptions[option].text
       } else {
         return ''
@@ -786,7 +792,7 @@ export default {
       return false
     },
     displayLevelConfidence: function (option) {
-      if (option !== null) {
+      if (option !== null && this.levelConfidence && this.levelConfidence[option]) {
         return this.levelConfidence[option].text
       }
       return ''

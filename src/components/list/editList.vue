@@ -7,11 +7,12 @@
       variant="danger"
       dismissible
     >
-      The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+      <span v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
     </b-alert>
+
     <edit-header-list
-      :organizationId="list.organization"
-      :projectId="list.project_id"
+      :organizationId="project.organization"
+      :projectId="project.id"
       :name="list.name"
       :mode="mode"
       :list="list"></edit-header-list>
@@ -39,40 +40,40 @@
           class="d-print-none"
           cols="12">
           <b-nav class="mt-2">
-            <b-nav-item disabled>Navigate this page:</b-nav-item>
+            <b-nav-item disabled>{{ $t('worksheet_nav.navigate_page') }}</b-nav-item>
             <b-nav-item href="#evidence-profile">
-              Evidence Profile
+              {{ $t('worksheet_nav.evidence_profile') }}
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
                 class="text-danger"
-                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#characteristics-of-studies">
-              Characteristics of Studies
+              {{ $t('worksheet.characteristics_of_studies') }}
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#methodological-assessments">
-              Methodological Assessments
+              {{ $t('worksheet.methodological_assessments') }}
               <span
                 v-if="ui.methodological_assessments.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#extracted-data">
-              Extracted Data
+              {{ $t('worksheet.extracted_data') }}
               <span
                 v-if="ui.adequacy.extracted_data.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover title="Data are missing. Click link to see what's missing.">
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
@@ -90,7 +91,7 @@
               @click="changeMode"
               variant="outline-success"
               block>
-              Print or Export
+              {{ $t('publish.print_export') }}
             </b-button>
         </b-col>
       </b-row>
@@ -103,9 +104,9 @@
               <div id="progress-status"
                 v-if="mode==='edit'"
                 class="d-print-none">
-                <h5>Progress status <span v-b-tooltip.hover title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment.">*</span></h5>
+                <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
                 <p v-if="list.cerqual.option !== null">
-                  Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it
+                  {{ $t('worksheet.assessment_added_isoq') }}
                 </p>
                 <b-progress
                   :value="status_evidence_profile.value"
@@ -179,7 +180,7 @@
 
             <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
               <div class="mt-5 alert alert-info" role="alert">
-                <h5>License type</h5>
+                <h5>{{ $t('project.license_type') }}</h5>
                 <p>{{ theLicense(this.project.license_type) }}</p>
               </div>
             </template>
@@ -265,28 +266,12 @@ export default {
       },
       show: {
         selected: ['cs', 'ma', 'ed'],
-        options: [
-          { text: 'Characteristics Studies', value: 'cs' },
-          { text: 'Methodological Assessments', value: 'ma' },
-          { text: 'Extracted Data', value: 'ed' }
-        ]
+        options: []
       },
       /** filters **/
       /** selectors **/
-      select_options: [
-        { value: 0, text: 'No/Very minor concerns' },
-        { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' },
-        { value: null, text: 'Undefined' }
-      ],
-      level_confidence: [
-        { value: 0, text: 'High confidence' },
-        { value: 1, text: 'Moderate confidence' },
-        { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' },
-        { value: null, text: 'Undefined' }
-      ],
+      select_options: [],
+      level_confidence: [],
       /** selectors **/
       /** tables fields **/
       /** tables fields **/
@@ -340,6 +325,10 @@ export default {
         },
         type: '',
         title: ''
+      },
+      editingUser: {
+        first_name: '',
+        last_name: ''
       },
       list: {
         id: '',
@@ -425,9 +414,36 @@ export default {
     }
   },
   mounted () {
+    this.updateTranslations()
     this.getList()
   },
+  watch: {
+    '$i18n.locale' (val) {
+      this.updateTranslations()
+    }
+  },
   methods: {
+    updateTranslations: function () {
+      this.show.options = [
+        { text: this.$t('worksheet.characteristics_of_studies'), value: 'cs' },
+        { text: this.$t('worksheet.methodological_assessments'), value: 'ma' },
+        { text: this.$t('worksheet.extracted_data'), value: 'ed' }
+      ]
+      this.select_options = [
+        { value: 0, text: this.$t('worksheet.options.no_concerns') },
+        { value: 1, text: this.$t('worksheet.options.minor_concerns') },
+        { value: 2, text: this.$t('worksheet.options.moderate_concerns') },
+        { value: 3, text: this.$t('worksheet.options.serious_concerns') },
+        { value: null, text: this.$t('worksheet.options.undefined') }
+      ]
+      this.level_confidence = [
+        { value: 0, text: this.$t('worksheet.options.high_confidence') },
+        { value: 1, text: this.$t('worksheet.options.moderate_confidence') },
+        { value: 2, text: this.$t('worksheet.options.low_confidence') },
+        { value: 3, text: this.$t('worksheet.options.very_low_confidence') },
+        { value: null, text: this.$t('worksheet.options.undefined') }
+      ]
+    },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true
@@ -443,18 +459,18 @@ export default {
     changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length < 1) {
-          result = 'no autho(s)'
+          result = ' ' + this.$t('common.no_authors')
         } else if (reference.authors.length === 1) {
           result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
           result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + this.$t('common.et_al') + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -484,7 +500,11 @@ export default {
     getList: function (fromModal = false) {
       axios.get('/api/getLists', {params: {list_id: this.$route.params.id}})
         .then((response) => {
-          this.list = JSON.parse(JSON.stringify(response.data[0]))
+          if (response.data && response.data.length > 0) {
+            this.list = JSON.parse(JSON.stringify(response.data[0]))
+          } else {
+             // console.log('Empty list response')
+          }
           // this.list.sources = []
           // this.evidence_profile = []
           // this.extracted_data = {
@@ -816,7 +836,7 @@ export default {
     displaySelectedOption: function (option) {
       if (option === null) {
         return ''
-      } else if (option >= 0) {
+      } else if (option >= 0 && this.select_options && this.select_options[option]) {
         return this.select_options[option].text
       } else {
         return ''
@@ -843,8 +863,7 @@ export default {
     },
     modalDataChanged: function (data) {
       this.buffer_modal_stage_two = JSON.parse(JSON.stringify(data))
-    },
-    busyEvidenceProfileTable: function (status) {
+    },    busyEvidenceProfileTable: function (status) {
       this.evidence_profile_table_settings.isBusy = status
     },
     callGetFinding: function (status) {

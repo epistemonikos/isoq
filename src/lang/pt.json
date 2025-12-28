@@ -2,6 +2,12 @@
   "common": {
     "hello": "Olá",
     "edit": "Editar",
+    "click": "Clique",
+    "here": "aqui",
+    "warning": "Aviso",
+    "continue_question": "Deseja continuar?",
+    "because": "porque",
+    "regarding": "em relação a",
     "remove": "Remover",
     "add": "Adicionar",
     "save": "Salvar",
@@ -54,6 +60,10 @@
     "sent": "Enviado",
     "match": "Coincide",
     "notes": "Notas",
+    "interactive": "Interativo",
+    "my_data": "Meus Dados",
+    "project_properties": "Propriedades do Projeto",
+    "explanation_colon": "Explicação:",
     "new_isoq_table": "Nova tabela iSoQ",
     "edit_isoq_table": "Editar tabela iSoQ",
     "new_summarized_finding": "Nova descoberta de revisão resumida",
@@ -141,6 +151,8 @@
     "subscribe_text": "Você gostaria de se inscrever na lista de e-mail do GRADE-CERQual?",
     "subscribe_link": "Sim! Eu quero me inscrever!",
     "forgot_password": "esqueceu sua senha?",
+    "et_al": " et al. ",
+    "no_authors": "Sem autor(es)",
     "new_account": "nova conta"
   },
   "account": {
@@ -211,6 +223,7 @@
     "url_doi": "URL ou DOI",
     "completed_by_authors": "O iSoQ está sendo preenchido pelos autores da revisão?",
     "license_label": "Licença",
+    "license_type": "Tipo de licença",
     "add_new": "Adicionar novo projeto",
     "clone": "Clonar",
     "public": "Público",
@@ -348,6 +361,8 @@
     "enter_assessment": "Insira tanto sua avaliação quanto a explicação da sua avaliação aqui"
   },
   "worksheet": {
+    "grade_cerqual_worksheet": "Planilha de Avaliação GRADE-CERQual",
+    "meth_assessments_intro": "Para adicionar dados ou fazer alterações nesta tabela, faça-o na seção {link} do iSoQ",
     "methodological_limitations": "Limitações Metodológicas",
     "coherence": "Coerência",
     "adequacy": "Adequação",
@@ -399,13 +414,81 @@
         "high": "É altamente provável que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
         "moderate": "É provável que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
         "low": "É possível que a descoberta da revisão seja uma representação razoável do fenômeno de interesse",
-        "very_low": "Não está claro se a descoberta da revisão é uma representação razoável do fenômeno de interesse"
-      }
+        "very_low": "Não está claro se a descoberta da revisão é uma representação razoável do fenômeno de interesse",
+        "progress_bar": "Esta barra de progresso mostra o quanto você avançou na sua avaliação GRADE-CERQual de confiança. Você tem 5 avaliações para fazer no total. Primeiramente, uma avaliação para cada um dos 4 componentes GRADE-CERQual, e por último a avaliação geral."
+      },
+      "definitions": {
+        "methodological_limitations": "A extensão em que existem preocupações sobre o desenho ou a condução dos estudos primários que contribuíram com evidências para um achado de revisão individual",
+        "coherence": "Uma avaliação de quão claro e convincente é o ajuste entre os dados dos estudos primários e um achado de revisão que sintetiza esses dados. Por ‘convincente’, queremos dizer bem fundamentado ou persuasivo",
+        "adequacy": "Uma determinação geral do grau de riqueza e quantidade de dados que apoiam um achado de revisão",
+        "relevance": "A extensão em que o corpo de evidências dos estudos primarios que apoiam um achado de revisão é aplicável ao contexto (perspectiva ou população, fenômeno de interesse, cenário) especificado na pergunta de revisão",
+        "cerqual": "Avaliação da extensão em que um achado de revisão é uma representação razoável do fenômeno de interesse",
+        "references": "Estudos que contribuem para este achado de revisão",
+        "chars_tooltip": "Informações descritivas extraídas dos estudos contribuintes (por exemplo, país, participantes, tópico, cenário, etc.)",
+        "meth_tooltip": "Tabela com suas avaliações metodológicas de cada estudo contribuinte usando uma ferramenta de avaliação de qualidade/crítica existente (por exemplo, CASP)"
+      },
+      "data_missing": "Faltam dados. Clique no link para ver o que está faltando.",
+      "incomplete_explanation": "Esta explicação está incompleta",
+      "provide_explanation": "Forneça uma explicação para sua avaliação"
+    },
+    "progress_status": "Status de progresso",
+    "assessment_added_isoq": "Sua avaliação GRADE-CERQual foi adicionada ao iSoQ para este achado. Clique em “voltar para a tabela iSoQ” acima para vê-lo",
+    "questions": {
+      "methodological_limitations": "Você tem alguma preocupação sobre a qualidade metodológica dos estudos contribuintes como um todo que poderia diminuir sua confiança no achado da revisão?",
+      "coherence": "Você tem alguma preocupação sobre a coerência entre o achado da revisão e os dados subjacentes que poderia diminuir sua confiança no achado da revisão?",
+      "adequacy": "Você tem alguma preocupação sobre a adequação dos dados (riqueza e/ou quantidade) que apoiam o achado da revisão que poderia diminuir sua confiança no achado da revisão?",
+      "relevance": "Você tem alguma preocupação sobre a relevância dos estudos subjacentes para sua pergunta de revisão que poderia diminuir sua confiança no achado da revisão?",
+      "adequacy_bold": "Você tem alguma preocupação sobre a adequação dos dados (riqueza e/ou quantidade) que sustentam a conclusão da revisão que poderia diminuir sua confiança na conclusão da revisão?"
+    },
+    "domains": {
+      "methodological_limitations": "Limitações metodológicas",
+      "coherence": "Coerência",
+      "adequacy": "Adequação",
+      "relevance": "Relevância",
+      "cerqual": "CERQual"
+    },
+    "domains_lc": {
+      "methodological_limitations": "limitações metodológicas",
+      "coherence": "coerência",
+      "adequacy": "adequação",
+      "relevance": "relevância"
+    },
+    "generated_text": {
+      "no_concerns": "Sem/muito poucas preocupações em relação a",
+      "minor_concerns": "Preocupações menores em relação a",
+      "moderate_concerns": "Preocupações moderadas em relação a",
+      "serious_concerns": "Preocupações sérias em relação a"
+    },
+    "titles": {
+      "review_finding": "Achado da revisão",
+      "review_question": "Pergunta de revisão",
+      "inclusion_criteria": "Critérios de inclusão",
+      "exclusion_criteria": "Critérios de exclusão",
+      "component_assessments": "Avaliações de componentes",
+      "question_criteria": "Pergunta e Critérios"
+    },
+    "reminders": {
+      "whole_body": "Lembre-se de que esta é uma avaliação de todo o corpo de evidências que apoia este achado de revisão, não uma avaliação de um estudo contribuinte individual.",
+      "coherence": "Lembre-se, a coerência não é sobre a consistência dos achados entre os estudos, mas sobre o ajuste entre os dados extraídos e o achado da revisão como você o escreveu.",
+      "coherence_concerns": "Você pode ter preocupações se alguns dos dados dos estudos incluídos contradizem a descoberta de revisão, se não está claro se alguns dos dados subjacentes apoiam a descoberta de revisão, ou se há descrições, interpretações ou explicações alternativas plausíveis que poderiam ser usadas para sintetizar os dados.",
+      "relevance_concerns": "Você pode ter preocupações se alguns dos dados subjacentes são de relevância indireta, de relevância parcial, ou se não está claro se os dados subjacentes são relevantes."
     },
     "warnings": {
+      "data_missing_link": "Faltan datos. Haga clic en el enlace para ver lo que falta.",
+      "data_missing_assessment": "Faltam dados necessários para fazer essa avaliação. Clique no botão abaixo para ver o que falta.",
+      "chars_missing": "A tabela de Características dos Estudos, ou alguns dados nela, estão faltando.",
+      "meth_missing": "A tabela de Avaliações Metodológicas, ou alguns dados nela, estão faltando.",
+      "extracted_data_missing": "A tabela de Dados Extraídos, ou alguns dados nela, estão faltando.",
       "incomplete_explanation": "Parece que você não terminou de escrever uma explicação para seu julgamento",
       "changed_option": "Ao alterar esta avaliação, você precisará refazer sua avaliação geral de confiança GRADE-CERQual. Sua escolha de nível de confiança será apagada e sua explicação excluída. Suas notas serão mantidas.",
-      "revert_private": "Seu projeto voltará a ser 'privado' e será removido do banco de dados iSoQ. Você pode publicar o projeto no banco de dados assim que concluir sua avaliação de confiança GRADE-CERQual."
+      "revert_private": "Seu projeto voltará a ser 'privado' e será removido do banco de dados iSoQ. Você pode publicar o projeto no banco de dados assim que concluir sua avaliação de confiança GRADE-CERQual.",
+      "clear_cerqual_revert": "Ao limpar esta avaliação, este projeto iSoQ reverterá para \"privado\" e não aparecerá mais no banco de dados iSoQ. Você pode republicá-lo quando tiver pelo menos uma conclusão de revisão com uma avaliação GRADE-CERQual completa e referências associadas.",
+      "clear_cerqual_simple": "Ao limpar esta avaliação, esta conclusão de revisão não aparecerá mais no seu projeto iSoQ publicado.",
+      "review_question_missing": "A pergunta de revisão está faltando. Adicione-a em",
+      "inclusion_missing": "Os critérios de inclusão estão faltando. Adicione-os em",
+      "exclusion_missing": "Os critérios de exclusão estão faltando. Adicione-os em",
+      "extracted_data_missing_detail": "Alguns ou todos os dados extraídos para esta descoberta de revisão estão faltando. Adicione-os na tabela abaixo usando o botão editar para cada estudo incluído.",
+      "chars_of_studies_missing": "A tabela de Características dos Estudos, ou alguns dados nela, estão faltando. Adicione a tabela/dados faltantes em"
     },
     "actions": {
       "clear_selection": "limpar minha seleção",
@@ -415,12 +498,25 @@
       "hide_example": "Ocultar exemplo"
     },
     "labels": {
-      "explanation_required": "A abordagem GRADE-CERQual exige que você inclua uma explicação para seu julgamento. Clique aqui para ver um exemplo.",
+      "explanation_required": "A abordagem GRADE-CERQual exige que você inclua uma explicação para o seu julgamento.",
+      "example_intro": "Se preocupações sobre coerência e relevância contribuírem mais para minha decisão de rebaixar para “baixa confiança”, resumirei brevemente essas preocupações específicas entre colchetes, p. ex.",
+      "example_body_1": "Sem/muito poucas preocupações sobre limitações metodológicas, Preocupações moderadas sobre coerência",
+      "example_body_bold_1": "(algumas opiniões contraditórias expressas nos dados subjacentes, mas não refletidas no achado)",
+      "example_body_2": ", Sem/muito poucas preocupações sobre adequação, e Preocupações sérias sobre relevância",
+      "example_body_bold_2": "(indiretamente relevante porque os estudos são todos de alta renda em vez de LMICs)",
+      "example_footer": "[texto não em negrito é o texto mínimo necessário gerado automaticamente e o texto em negrito são os detalhes que adicionei]",
       "select_level": "Selecione um nível de preocupação acima e complete a frase que aparece abaixo para explicar suas preocupações (não obrigatório para sem/mínimas preocupações)",
       "explanation_not_added": "Explicação ainda não adicionada",
       "cerqual_question": "Em que medida a descoberta da revisão é uma representação razoável do fenômeno de interesse?",
-      "cerqual_explanation_instruction": "Abaixo está o texto mínimo necessário para uma explicação. Agora adicione detalhes sobre as preocupações específicas do(s) componente(s) que mais contribuíram para sua avaliação."
-    }
+      "cerqual_explanation_instruction": "Abaixo está o texto mínimo necessário para uma explicação. Agora adicione detalhes sobre as preocupações específicas do(s) componente(s) que mais contribuíram para sua avaliação.",
+      "notes_description": "Espaço opcional para revisores deixarem notas uns para os outros enquanto trabalham nas avaliações GRADE-CERQual",
+      "guidance_available": "orientação disponível",
+      "click_here_example": "para ver um exemplo",
+      "explanation_required_with_link": "A abordagem GRADE-CERQual exige que você inclua uma explicação para o seu julgamento. Clique {link} para ver um exemplo",
+      "cerqual_guidance_link": "para orientação prática sobre como fazer uma avaliação geral de confiança para uma descoberta de revisão."
+    },
+    "extracted_data_intro": "É aqui que você insere os dados extraídos dos estudos incluídos que apoiam este achado de revisão. Esses dados são necessários para fazer uma avaliação GRADE-CERQual.",
+    "add_extracted_data_label": "Adicione os dados extraídos deste estudo que apoiam a descoberta de revisão"
   },
   "table": {
     "no_studies": "Nenhum estudo foi criado,",
@@ -522,6 +618,10 @@
       "overall_confidence": "Overview of the Overall Assessment of Confidence [2:33 min]",
       "leaving_notes_cerqual": "Leaving notes about GRADE-CERQual assessments [1:33 min]"
     },
+    "instructions": {
+      "add_data_link_pre": "Para adicionar dados ou fazer alterações nesta tabela, faça-o na seção ",
+      "add_data_link_post": " do iSoQ"
+    },
     "training_webinars_list": {
       "presentation": "Watch a presentation on iSoQ",
       "demo": "Watch a demo of the iSoQ tool",
@@ -599,7 +699,80 @@
     "remove_all_revert": "Ao remover todas as referências para esta descoberta de revisão, este projeto iSoQ voltará a \"privado\" pois não atenderá mais aos requisitos para ser publicado no banco de dados iSoQ. Deseja continuar?",
     "print_finding": "Descoberta de revisão resumida",
     "print_confidence": "Avaliação de confiança GRADE-CERQual",
-    "print_explanation": "Explicação da avaliação GRADE-CERQual"
+    "print_explanation": "Explicação da avaliação GRADE-CERQual",
+    "assessment_not_completed": "Avaliação não concluída",
+    "edit_references": "Editar referências",
+    "view_references": "Ver referências"
+  },
+  "commons": {
+    "et_al": "et al.",
+    "author_not_found": "autor(es) não encontrado(s)",
+    "and": "e",
+    "concerns": {
+      "0": "Nenhuma/Muito pouca preocupação",
+      "1": "Preocupações menores",
+      "2": "Preocupações moderadas",
+      "3": "Preocupações sérias",
+      "null": "Indefinido"
+    },
+    "confidence": {
+      "0": "Alta confiança",
+      "1": "Confiança moderada",
+      "2": "Baixa confiança",
+      "3": "Confiança muito baixa",
+      "null": "Indefinido"
+    },
+    "explanation_prefix": {
+      "methodological_limitations": {
+        "0": "Nenhuma/muito pouca preocupação com limitações metodológicas porque",
+        "1": "Preocupações menores com limitações metodológicas porque",
+        "2": "Preocupações moderadas com limitações metodológicas porque",
+        "3": "Preocupações sérias com limitações metodológicas porque"
+      },
+      "coherence": {
+        "0": "Nenhuma/muito pouca preocupação com coerência porque",
+        "1": "Preocupações menores com coerência porque",
+        "2": "Preocupações moderadas com coerência porque",
+        "3": "Preocupações sérias com coerência porque"
+      },
+      "adequacy": {
+        "0": "Nenhuma/muito pouca preocupação com adequação porque",
+        "1": "Preocupações menores com adequação porque",
+        "2": "Preocupações moderadas com adequação porque",
+        "3": "Preocupações sérias com adequação porque"
+      },
+      "relevance": {
+        "0": "Nenhuma/muito pouca preocupação com relevância porque",
+        "1": "Preocupações menores com relevância porque",
+        "2": "Preocupações moderadas com relevância porque",
+        "3": "Preocupações sérias com relevância porque"
+      }
+    },
+    "cerqual_fragments": {
+      "methodological_limitations": " com relação a limitações metodológicas, ",
+      "coherence": " com relação a coerência, ",
+      "adequacy": " com relação a adequação, e ",
+      "relevance": " com relação a relevância"
+    },
+    "licenses": {
+      "CC-BY-NC-ND": "CC BY-NC-ND: Esta licença permite que reutilizadores copiem e distribuam o material em qualquer meio ou formato apenas na forma não adaptada, apenas para fins não comerciais e desde que a atribuição seja dada ao criador.",
+      "CC-BY-ND": "CC BY-ND: Esta licença permite que reutilizadores copiem e distribuam o material em qualquer meio ou formato apenas na forma não adaptada e desde que a atribuição seja dada ao criador. A licença permite o uso comercial.",
+      "CC-BY-NC-SA": "CC BY-NC-SA: Esta licença permite que reutilizadores distribuam, remixem, adaptem e desenvolvam o material em qualquer meio ou formato apenas para fins não comerciais e desde que a atribuição seja dada ao criador. Se você remixar, adaptar ou desenvolver o material, deve licenciar o material modificado sob termos idênticos.",
+      "CC-BY-NC": "CC BY-NC: Esta licença permite que reutilizadores distribuam, remixem, adaptem e desenvolvam o material em qualquer meio ou formato apenas para fins não comerciais e desde que a atribuição seja dada ao criador.",
+      "CC-BY-SA": "CC BY-SA: Esta licença permite que reutilizadores distribuam, remixem, adaptem e desenvolvam o material em qualquer meio ou formato, desde que a atribuição seja dada ao criador. A licença permite o uso comercial. Se você remixar, adaptar ou desenvolver o material, deve licenciar o material modificado sob termos idênticos.",
+      "CC-BY": "CC BY: Esta licença permite que reutilizadores distribuam, remixem, adaptem e desenvolvam o material em qualquer meio ou formato, desde que a atribuição seja dada ao criador. A licença permite o uso comercial."
+    }
+  },
+  "table_head": {
+    "summarised_finding": "Descoberta de revisão resumida",
+    "cerqual_assessment": "Avaliação de confiança GRADE-CERQual",
+    "cerqual_explanation": "Explicação da avaliação GRADE-CERQual",
+    "references": "Referências",
+    "evidence_profile": "Perfil de Evidência",
+    "methodological_limitations": "Limitações Metodológicas",
+    "coherence": "Coerência",
+    "adequacy": "Adequação",
+    "relevance": "Relevância"
   },
   "publish": {
     "to_word": "para MS Word",
@@ -653,6 +826,7 @@
   },
   "worksheet_nav": {
     "navigate": "Navegar nesta página:",
+    "navigate_page": "Navegar nesta página:",
     "finding_statement": "Declaração da Descoberta",
     "select_studies": "Selecionar Estudos que Contribuem para a Descoberta de Revisão",
     "evidence_profile": "Perfil de Evidência",
@@ -663,7 +837,8 @@
     "overall_assessment": "Avaliação Geral",
     "soqf_row": "Linha SoQF",
     "explanation": "Explicação",
-    "extracted_data": "Dados Extraídos"
+    "extracted_data": "Dados Extraídos",
+    "return_isoq": "voltar à tabela iSoQ"
   },
   "profile": {
     "title": "Perfil",

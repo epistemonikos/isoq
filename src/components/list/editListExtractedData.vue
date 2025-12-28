@@ -10,7 +10,7 @@
       <h3 v-if="showTitle">{{ $t('worksheet.extracted_data') }}</h3>
     </template>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
-      It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
+      {{ $t('worksheet.extracted_data_intro') }}
     </p>
     <template v-if="localExtractedData.fields.length">
       <bc-filters
@@ -60,26 +60,26 @@
       <b-modal
         id="modal-extracted-data-remove-data-item"
         ref="modal-extracted-data-remove-data-item"
-        title="Remove data content"
+        :title="$t('characteristics.remove_content')"
         @ok="extractedDataRemoveDataItem"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
-        <p>Are you sure you want to delete all the content for this row?</p>
+        <p>{{ $t('characteristics.confirm_delete_row') }}</p>
       </b-modal>
       <b-modal
         size="xl"
-        title="Edit data"
+        :title="$t('characteristics.edit_data')"
         id="modal-extracted-data-data"
         ref="modal-extracted-data-data"
         @ok="saveDataExtractedData"
         cancel-variant="outline-secondary"
         ok-variant="outline-success"
-        ok-title="Save">
+        :ok-title="$t('common.save')">
         <b-form-group
           v-for="(field, index) in buffer_extracted_data.fields"
           :key="index"
           :id="`label-field-${index}`"
-          :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : ''"
+          :label="(field.key === 'column_0') ? $t('worksheet.add_extracted_data_label') : ''"
           :label-for="`input-field-${index}`">
           <b-form-textarea
             :id="`input-field-${index}`"

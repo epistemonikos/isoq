@@ -2,6 +2,12 @@
   "common": {
     "hello": "Hello",
     "edit": "Edit",
+    "click": "Click",
+    "here": "here",
+    "warning": "Warning",
+    "continue_question": "Do you wish to continue?",
+    "because": "because",
+    "regarding": "regarding",
     "remove": "Remove",
     "add": "Add",
     "save": "Save",
@@ -54,6 +60,10 @@
     "sent": "Sent",
     "match": "Match",
     "notes": "Notes",
+    "interactive": "Interactive",
+    "my_data": "My Data",
+    "project_properties": "Project Properties",
+    "explanation_colon": "Explanation:",
     "new_isoq_table": "New iSoQ table",
     "edit_isoq_table": "Edit iSoQ table",
     "new_summarized_finding": "New summarised review finding",
@@ -141,6 +151,8 @@
     "subscribe_text": "Would you like to subscribe to the GRADE-CERQual mailing list?",
     "subscribe_link": "Yes! I want to subscribe!",
     "forgot_password": "forgot your password?",
+    "et_al": " et al. ",
+    "no_authors": "No author(s)",
     "new_account": "new account"
   },
   "account": {
@@ -211,6 +223,7 @@
     "url_doi": "URL or DOI",
     "completed_by_authors": "Is the iSoQ being completed by the review authors?",
     "license_label": "License",
+    "license_type": "License type",
     "add_new": "Add new project",
     "clone": "Clone",
     "public": "Public",
@@ -348,6 +361,8 @@
     "enter_assessment": "Enter both your assessment and the explanation for your assessment here"
   },
   "worksheet": {
+    "grade_cerqual_worksheet": "GRADE-CERQual Assessment Worksheet",
+    "meth_assessments_intro": "To add data or make changes to this table do so in the {link} section of iSoQ",
     "methodological_limitations": "Methodological Limitations",
     "coherence": "Coherence",
     "adequacy": "Adequacy",
@@ -399,13 +414,81 @@
         "high": "It is highly likely that the review finding is a reasonable representation of the phenomenon of interest",
         "moderate": "It is likely that the review finding is a reasonable representation of the phenomenon of interest",
         "low": "It is possible that the review finding is a reasonable representation of the phenomenon of interest",
-        "very_low": "It is not clear whether the review finding is a reasonable representation of the phenomenon of interest"
-      }
+        "very_low": "It is not clear whether the review finding is a reasonable representation of the phenomenon of interest",
+        "progress_bar": "This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment. "
+      },
+      "definitions": {
+        "methodological_limitations": "The extent to which there are concerns about the design or conduct of the primary studies that contributed evidence to an individual review finding",
+        "coherence": "An assessment of how clear and cogent the fit is between the data from the primary studies and a review finding that synthesises that data. By ‘cogent’, we mean well supported or compelling",
+        "adequacy": "An overall determination of the degree of richness and quantity of data supporting a review finding",
+        "relevance": "The extent to which the body of evidence from the primary studies supporting a review finding is applicable to the context (perspective or population, phenomenon of interest, setting) specified in the review question",
+        "cerqual": "Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest",
+        "references": "Studies that contribute to this review finding",
+        "chars_tooltip": "Descriptive information extracted from the contributing studies (e.g. country, participants, topic, setting, etc.)",
+        "meth_tooltip": "Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)"
+      },
+      "data_missing": "Data are missing. Click link to see what's missing.",
+      "incomplete_explanation": "This explanation is incomplete",
+      "provide_explanation": "Provide an explanation for your assessment"
+    },
+    "progress_status": "Progress status",
+    "assessment_added_isoq": "Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click “return to iSoQ table” above to view it",
+    "questions": {
+      "methodological_limitations": "Do you have any concerns about the methodological quality of contributing studies as a whole that could lower your confidence in the review finding?",
+      "coherence": "Do you have any concerns about the coherence between the review finding and the underlying data that could lower your confidence in the review finding?",
+      "adequacy": "Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?",
+      "relevance": "Do you have any concerns about the relevance of the underlying studies to your review question that could lower your confidence in the review finding?",
+      "adequacy_bold": "Do you have any concerns about the adequacy of the data (richness and /or quantity) supporting the review finding that could lower your confidence in the review finding?"
+    },
+    "domains": {
+      "methodological_limitations": "Methodological limitations",
+      "coherence": "Coherence",
+      "adequacy": "Adequacy",
+      "relevance": "Relevance",
+      "cerqual": "CERQual"
+    },
+    "domains_lc": {
+      "methodological_limitations": "methodological limitations",
+      "coherence": "coherence",
+      "adequacy": "adequacy",
+      "relevance": "relevance"
+    },
+    "generated_text": {
+      "no_concerns": "No/very minor concerns regarding",
+      "minor_concerns": "Minor concerns regarding",
+      "moderate_concerns": "Moderate concerns regarding",
+      "serious_concerns": "Serious concerns regarding"
+    },
+    "titles": {
+      "review_finding": "Review Finding",
+      "review_question": "Review Question",
+      "inclusion_criteria": "Inclusion criteria",
+      "exclusion_criteria": "Exclusion criteria",
+      "component_assessments": "Component assessments",
+      "question_criteria": "Question and Criteria"
+    },
+    "reminders": {
+      "whole_body": "Remember this is an assessment of the whole body of evidence supporting this review finding, not an assessment of an individual contributing study.",
+      "coherence": "Remember, coherence is not about the consistency of findings between studies, but is about the fit between the extracted data and the review finding as you have written it.",
+      "coherence_concerns": "You may have concerns if some of the data from included studies contradict the review finding, if it's not clear if some of the underlying data support the review finding, or if there are plausible alternative descriptions, interpretations or explanations that could be used to synthesise the data.",
+      "relevance_concerns": "You may have concerns if some of the underlying data are of indirect relevance, of partial relevance, or if it is unclear whether the underlying data is relevant."
     },
     "warnings": {
+      "data_missing_link": "Data are missing. Click link to see what's missing.",
+      "data_missing_assessment": "Data needed to make this assessment are missing. Click button below to see what's missing.",
+      "chars_missing": "The Characteristics of Studies table, or some data within it, are missing.",
+      "meth_missing": "The Methodological Assessments table, or some data within it, are missing.",
+      "extracted_data_missing": "The Extracted Data table, or some data within it, are missing.",
       "incomplete_explanation": "It looks like you have not finished writing an explanation for your judgement",
       "changed_option": "By changing this assessment, you will need to redo your overall GRADE-CERQual assessment of confidence. Your confidence level selection will be cleared, and your explanation erased. Your notes will be maintained.",
-      "revert_private": "Your project will revert to \"private\" and be removed from the iSoQ database. You can publish the project to the database once you have completed your GRADE-CERQual assessment of confidence."
+      "revert_private": "Your project will revert to \"private\" and be removed from the iSoQ database. You can publish the project to the database once you have completed your GRADE-CERQual assessment of confidence.",
+      "clear_cerqual_revert": "By clearing this assessment, this iSoQ project will revert to \"private\" and no longer appear on the iSoQ database. You can republish it when you have at least one review finding with a complete GRADE-CERQual assessment and associated references.",
+      "clear_cerqual_simple": "By clearing this assessment, this review finding will no longer appear in your published iSoQ project.",
+      "review_question_missing": "The review question is missing. Add it in",
+      "inclusion_missing": "The inclusion criteria are missing. Add them in",
+      "exclusion_missing": "The exclusion criteria are missing. Add them in",
+      "extracted_data_missing_detail": "Some or all of the extracted data for this review finding are missing. Add them into the table below using the edit button for each included study.",
+      "chars_of_studies_missing": "The Characteristics of Studies table, or some data within it, are missing. Add missing table/data in"
     },
     "actions": {
       "clear_selection": "clear my selection",
@@ -415,12 +498,25 @@
       "hide_example": "Hide example"
     },
     "labels": {
-      "explanation_required": "The GRADE-CERQual approach requires you to include an explanation for your judgement. Click here to see an example.",
+      "explanation_required": "The GRADE-CERQual approach requires you to include an explanation for your judgement.",
+      "example_intro": "If concerns about coherence and relevance contribute most to my decision to downgrade to “low confidence” then I will briefly summarise these specific concerns in brackets e.g.",
+      "example_body_1": "No/very minor concerns regarding methodological limitations, Moderate concerns regarding coherence",
+      "example_body_bold_1": "(some contradictory opinions expressed in the underlying data but not reflected in finding)",
+      "example_body_2": ", No/Very minor concerns regarding adequacy, and Serious concerns regarding relevance",
+      "example_body_bold_2": "(indirectly relevant because studies are all from high income rather than LMICs)",
+      "example_footer": "[non bolded text is the minimum required text generated automatically and the bolded text are the details I have added]",
       "select_level": "Select a level of concern above and complete the sentence that appears below to explain your concerns (not required for no/very minor concerns)",
       "explanation_not_added": "Explanation not yet added",
       "cerqual_question": "To what extent is the review finding a reasonable representation of the phenomenon of interest?",
-      "cerqual_explanation_instruction": "Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment."
-    }
+      "cerqual_explanation_instruction": "Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment.",
+      "notes_description": "Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments",
+      "guidance_available": "guidance available",
+      "click_here_example": "to see an example",
+      "explanation_required_with_link": "The GRADE-CERQual approach requires you to include an explanation for your judgement. Click {link} to see an example",
+      "cerqual_guidance_link": "for practical guidance on making an overall assessment of confidence for a review finding."
+    },
+    "extracted_data_intro": "It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.",
+    "add_extracted_data_label": "Add the extracted data from this study that supports the review finding"
   },
   "table": {
     "no_studies": "No studies has been created,",
@@ -522,6 +618,10 @@
       "overall_confidence": "Overview of the Overall Assessment of Confidence [2:33 min]",
       "leaving_notes_cerqual": "Leaving notes about GRADE-CERQual assessments [1:33 min]"
     },
+    "instructions": {
+      "add_data_link_pre": "To add data or make changes to this table do so in the ",
+      "add_data_link_post": " section of iSoQ"
+    },
     "training_webinars_list": {
       "presentation": "Watch a presentation on iSoQ",
       "demo": "Watch a demo of the iSoQ tool",
@@ -599,7 +699,80 @@
     "remove_all_revert": "By removing all references for this review finding this iSoQ project will revert to \"private\" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?",
     "print_finding": "Summarised review finding",
     "print_confidence": "GRADE-CERQual assessment of confidence",
-    "print_explanation": "Explanation of GRADE-CERQual assessment"
+    "print_explanation": "Explanation of GRADE-CERQual assessment",
+    "assessment_not_completed": "Assessment not completed",
+    "edit_references": "Edit references",
+    "view_references": "View references"
+  },
+  "commons": {
+    "et_al": "et al.",
+    "author_not_found": "author(s) not found",
+    "and": "and",
+    "concerns": {
+      "0": "No/Very minor concerns",
+      "1": "Minor concerns",
+      "2": "Moderate concerns",
+      "3": "Serious concerns",
+      "null": "Undefined"
+    },
+    "confidence": {
+      "0": "High confidence",
+      "1": "Moderate confidence",
+      "2": "Low confidence",
+      "3": "Very low confidence",
+      "null": "Undefined"
+    },
+    "explanation_prefix": {
+      "methodological_limitations": {
+        "0": "No/very minor concerns regarding methodological limitations because",
+        "1": "Minor concerns regarding methodological limitations because",
+        "2": "Moderate concerns regarding methodological limitations because",
+        "3": "Serious concerns regarding methodological limitations because"
+      },
+      "coherence": {
+        "0": "No/very minor concerns regarding coherence because",
+        "1": "Minor concerns regarding coherence because",
+        "2": "Moderate concerns regarding coherence because",
+        "3": "Serious concerns regarding coherence because"
+      },
+      "adequacy": {
+        "0": "No/very minor concerns regarding adequacy because",
+        "1": "Minor concerns regarding adequacy because",
+        "2": "Moderate concerns regarding adequacy because",
+        "3": "Serious concerns regarding adequacy because"
+      },
+      "relevance": {
+        "0": "No/very minor concerns regarding relevance because",
+        "1": "Minor concerns regarding relevance because",
+        "2": "Moderate concerns regarding relevance because",
+        "3": "Serious concerns regarding relevance because"
+      }
+    },
+    "cerqual_fragments": {
+      "methodological_limitations": " regarding methodological limitations, ",
+      "coherence": " regarding coherence, ",
+      "adequacy": " regarding adequacy, and ",
+      "relevance": " regarding relevance"
+    },
+    "licenses": {
+      "CC-BY-NC-ND": "CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.",
+      "CC-BY-ND": "CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.",
+      "CC-BY-NC-SA": "CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.",
+      "CC-BY-NC": "CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.",
+      "CC-BY-SA": "CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.",
+      "CC-BY": "CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use."
+    }
+  },
+  "table_head": {
+    "summarised_finding": "Summarised review finding",
+    "cerqual_assessment": "GRADE-CERQual assessment of confidence",
+    "cerqual_explanation": "Explanation of GRADE-CERQual assessment",
+    "references": "References",
+    "evidence_profile": "Evidence profile",
+    "methodological_limitations": "Methodological Limitations",
+    "coherence": "Coherence",
+    "adequacy": "Adequacy",
+    "relevance": "Relevance"
   },
   "publish": {
     "to_word": "to MS Word",
@@ -653,6 +826,7 @@
   },
   "worksheet_nav": {
     "navigate": "Navigate this page:",
+    "navigate_page": "Navigate this page:",
     "finding_statement": "Finding Statement",
     "select_studies": "Select Studies Contributing to Review Finding",
     "evidence_profile": "Evidence Profile",
@@ -663,7 +837,8 @@
     "overall_assessment": "Overall Assessment",
     "soqf_row": "SoQF Row",
     "explanation": "Explanation",
-    "extracted_data": "Extracted Data"
+    "extracted_data": "Extracted Data",
+    "return_isoq": "return to ISoQ table"
   },
   "profile": {
     "title": "Profile",

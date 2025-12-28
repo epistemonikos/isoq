@@ -1047,7 +1047,7 @@ export default {
     displaySelectedOption: function (option, type) {
       return Commons.displaySelectedOption(option, type)
     },
-    parseReference: async (reference, onlyAuthors = false, hasSemicolon = true) => {
+    parseReference: async function (reference, onlyAuthors = false, hasSemicolon = true) {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
       if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
@@ -1653,9 +1653,9 @@ export default {
       const _references = JSON.parse(JSON.stringify(this.references))
       let params = {
         fields: [
-          { key: 'ref_id', label: 'Reference ID' },
-          { key: 'authors', label: 'Author(s), Year' },
-          { key: 'column_0', label: 'Extracted data supporting the review finding' }
+          { key: 'ref_id', label: this.$t('table_headers.reference_id') },
+          { key: 'authors', label: this.$t('table_headers.author_year') },
+          { key: 'column_0', label: this.$t('table_headers.extracted_data') }
         ],
         items: [],
         organization: this.$route.params.org_id,
@@ -1764,9 +1764,9 @@ export default {
     title: function () {
       let txt = ''
       if (this.mode === 'edit') {
-        txt = 'Interactive '
+        txt = this.$t('common.interactive') + ' '
       }
-      txt = txt + 'Summary of Qualitative Findings Table'
+      txt = txt + this.$t('publish.soqf_table_title')
       return txt
     },
     translatedSelectOptions: function () {

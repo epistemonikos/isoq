@@ -7,12 +7,12 @@
           <!--<b-link class="return" @click="returnTo()">-->
           <b-link class="return" :to="{name: 'viewProject', params: {org_id: organizationId, id: projectId}, query: {hash: `a-${list.id}`}}">
             <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
-            return to ISoQ table
+            {{ $t('worksheet_nav.return_isoq') }}
           </b-link>
         </b-col>
       </b-row>
-      <videoHelp txt="GRADE-CERQual Assessment Worksheet" tag="h2-worksheet" urlId="451100482"></videoHelp>
-      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">Review finding:</span> <span class="title-finding">{{name}}</span></h3>
+      <videoHelp :txt="$t('worksheet.grade_cerqual_worksheet')" tag="h2-worksheet" urlId="451100482"></videoHelp>
+      <h3 class="mt-4 mt-sm-2" v-if="mode==='edit'"><span class="pre-title">{{ $t('review_finding.title') }}:</span> <span class="title-finding">{{name}}</span></h3>
       <h3 class="mt-4 mt-sm-2" v-if="mode==='view'">&nbsp;</h3>
     </div>
   </b-container>

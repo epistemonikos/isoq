@@ -1,3 +1,5 @@
+import { i18n } from '@/plugins/i18n'
+
 export default class Commons {
   static referencesWithNames (data, references) {
     if (!data) return ''
@@ -25,15 +27,15 @@ export default class Commons {
         if (reference.authors.length === 1) {
           result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + ' ' + i18n.t('commons.and') + ' ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + ' ' + i18n.t('commons.et_al') + ' ' + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
         }
       } else {
-        return 'author(s) not found'
+        return i18n.t('commons.author_not_found')
       }
     }
     return result
@@ -45,37 +47,23 @@ export default class Commons {
       if (nroAuthors === 1) {
         return authors[0].split(',')[0] + ' ' + pubYear
       } else if (nroAuthors === 2) {
-        return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        return authors[0].split(',')[0] + ' ' + i18n.t('commons.and') + ' ' + authors[1].split(',')[0] + ' ' + pubYear
       } else {
-        return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        return authors[0].split(',')[0] + ' ' + i18n.t('commons.et_al') + ' ' + pubYear
       }
     } else {
-      return 'author(s) not found'
+      return i18n.t('commons.author_not_found')
     }
   }
 
   static displaySelectedOption (option, type = '') {
-    const selectOptions = [
-      { value: 0, text: 'No/Very minor concerns' },
-      { value: 1, text: 'Minor concerns' },
-      { value: 2, text: 'Moderate concerns' },
-      { value: 3, text: 'Serious concerns' },
-      { value: null, text: 'Undefined' }
-    ]
-    const cerqualConfidence = [
-      { value: 'hc', text: 'High confidence' },
-      { value: 'mc', text: 'Moderate confidence' },
-      { value: 'lc', text: 'Low confidence' },
-      { value: 'vc', text: 'Very low confidence' },
-      { value: null, text: 'Undefined' }
-    ]
     if (option === null) {
       return ''
-    } else if (option >= 0) {
+    } else if (option >= 0 || option === 'hc' || option === 'mc' || option === 'lc' || option === 'vc') {
       if (type === 'cerqual') {
-        return cerqualConfidence[option].text
+        return i18n.t(`commons.confidence.${option}`)
       } else {
-        return selectOptions[option].text
+        return i18n.t(`commons.concerns.${option}`)
       }
     } else {
       return ''
@@ -110,29 +98,12 @@ export default class Commons {
   }
 
   static theLicense (license = '') {
-    const globalLicenses = [
-      {
-        value: 'CC-BY-NC-ND',
-        text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.',
-        image: 'by-nc-nd-88x31.png'
-      },
-      { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-nd-88x31.png' },
-      { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-nc-sa-88x31.png' },
-      { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.', image: 'by-nc-88x31.png' },
-      { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-sa-88x31.png' },
-      { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-88x31.png' }
-    ]
-
     if (license.length) {
-      for (const lic of globalLicenses) {
-        if (lic.value === license) {
-          this.licenseUrl = require(`../assets/${lic.image}`)
-          return lic.text
-        }
-      }
+      this.licenseUrl = require(`../assets/${license.toLowerCase().replace('cc-', '') + '-88x31.png'}`)
+      return i18n.t(`commons.licenses.${license}`)
     } else {
-      this.licenseUrl = require(`../assets/${globalLicenses[0].image}`)
-      return globalLicenses[0].text
+      this.licenseUrl = require(`../assets/by-nc-nd-88x31.png`)
+      return i18n.t(`commons.licenses.CC-BY-NC-ND`)
     }
   }
 }

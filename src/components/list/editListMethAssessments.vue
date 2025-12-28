@@ -4,15 +4,19 @@
     v-if="show.selected.includes('ma')">
     <a name="methodological-assessments"></a>
     <h3 class="toDoc">
-      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover title="Table with your methodological assessments of each contributing study using an existing quality/critical appraisal tool (e.g. CASP)">*</small>
+      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.meth_tooltip')">*</small>
       <span
         v-if="ui.methodological_assessments.display_warning"
         class="text-danger d-print-none"
-        v-b-tooltip.hover title="The Methodological Assessments table, or some data within it, are missing.">
+        v-b-tooltip.hover :title="$t('worksheet.warnings.meth_missing')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p v-if="showParagraph" class="d-print-none font-weight-light">To add data or make changes to this table do so in the <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">My Data</b-link> section of iSoQ</p>
+    <pre>- {{ methAssessments }}</pre>
+    <pre>- {{ list.project_id }}</pre>
+    <p v-if="showParagraph" class="d-print-none font-weight-light">
+      {{ $t('help.instructions.add_data_link_pre') }}<b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">{{ $t('common.my_data') }}</b-link>{{ $t('help.instructions.add_data_link_post') }}
+    </p>
     <template v-if="methAssessments.fields.length">
       <bc-filters
         v-if="mode==='edit' && methAssessments.items.length && permission"

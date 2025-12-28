@@ -12,7 +12,7 @@
           variant="outline-secondary"
           block
           @click="exportToWord()">
-          Export to MS-Word
+          {{ $t('publish.export') }} MS-Word
         </b-button>
     </b-col>
     <b-col
@@ -24,7 +24,7 @@
           @click="print"
           variant="outline-info"
           block>
-          Print or save as PDF
+          {{ $t('publish.print_pdf') }}
         </b-button>
     </b-col>
     <b-col
@@ -37,7 +37,7 @@
           variant="primary"
           v-b-tooltip:editButton.top="'Click to edit'"
           block>
-          Edit
+          {{ $t('common.edit') }}
         </b-button>
     </b-col>
   </b-row>
