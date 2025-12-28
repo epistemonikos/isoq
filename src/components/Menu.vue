@@ -26,7 +26,7 @@
                 {{username}}
               </template>
               <b-dropdown-item :to="{ name: 'WhatsNew' }">{{ $t('menu.whats_new') }}</b-dropdown-item>
-              <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">{{ $t('menu.change_password') }}</b-dropdown-item>
+              <b-dropdown-item :to="$i18nRoute({ name: 'Profile'})">{{ $t('menu.profile') }}</b-dropdown-item>
               <b-dropdown-item @click="logout">{{ $t('menu.logout') }}</b-dropdown-item>
             </b-nav-item-dropdown>
           </template>
