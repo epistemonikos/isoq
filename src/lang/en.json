@@ -942,5 +942,73 @@
   "yes_no": {
     "yes": "yes",
     "no": "no"
+  },
+  "actionButtons": {
+    "export": "Export",
+    "to_ms_word": "to MS Word",
+    "the_references": "the references",
+    "print_save_pdf": "Print or save as PDF",
+    "edit": "Edit",
+    "published": "Published",
+    "publish": "Publish",
+    "publish_tooltip": "Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database",
+    "print_or_export": "Print or Export",
+    "view_mode_tooltip": "Click to enter view mode where you can export or print",
+    "modal": {
+      "title": "Publish to the iSoQ Database",
+      "save": "Save",
+      "close": "Close",
+      "publish_info": "By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click \"publish\". Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.",
+      "choose_license": "Choose a license",
+      "license_info": "Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND.",
+      "license_info_link_text": "Read more about Creative Commons licenses here",
+      "license_responsibility": "It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.",
+      "must_select_license": "You must select a Creative Commons license."
+    },
+    "status": {
+      "private": "Private - Your iSoQ is not publicly available on the iSoQ database",
+      "fully": "Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database",
+      "partially": "Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database",
+      "minimally": "Minimally Public - Your iSoQ table is available on the iSoQ database"
+    },
+    "licenses": {
+      "cc_by_nc_nd": "CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.",
+      "cc_by_nd": "CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.",
+      "cc_by_nc_sa": "CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.",
+      "cc_by_nc": "CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.",
+      "cc_by_sa": "CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.",
+      "cc_by": "CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use."
+    },
+    "yes_no": {
+      "yes": "yes",
+      "no": "no"
+    },
+    "word_export": {
+      "filename_suffix": "Summary of Qualitative Findings Table",
+      "soqf_table_title": "Summary of Qualitative Findings Table",
+      "review_question": "Review question",
+      "authors_of_review": "Authors of the review",
+      "corresponding_author": "Corresponding author",
+      "review_published_question": "Has the review been published?",
+      "review_published_yes": "Yes",
+      "review_published_no": "No",
+      "doi_separator": " | DOI: ",
+      "additional_information": "Additional Information",
+      "license": "License",
+      "evidence_profile_table": "Evidence Profile Table",
+      "table_headers": {
+        "number": "#",
+        "summarised_finding": "Summarised review finding",
+        "methodological_limitations": "Methodological limitations",
+        "coherence": "Coherence",
+        "adequacy": "Adequacy",
+        "relevance": "Relevance",
+        "cerqual_assessment": "GRADE-CERQual assessment of confidence",
+        "cerqual_explanation": "Explanation of GRADE-CERQual Assessment",
+        "references": "References"
+      },
+      "explanation_label": "Explanation: ",
+      "author_not_found": "author(s) not found"
+    }
   }
 }

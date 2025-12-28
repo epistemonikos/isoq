@@ -942,5 +942,73 @@
   "yes_no": {
     "yes": "sí",
     "no": "no"
+  },
+  "actionButtons": {
+    "export": "Exportar",
+    "to_ms_word": "a MS Word",
+    "the_references": "las referencias",
+    "print_save_pdf": "Imprimir o guardar como PDF",
+    "edit": "Editar",
+    "published": "Publicado",
+    "publish": "Publicar",
+    "publish_tooltip": "Haga clic aquí cuando haya terminado su iSoQ para seleccionar qué desea publicar en la base de datos pública de iSoQ",
+    "print_or_export": "Imprimir o Exportar",
+    "view_mode_tooltip": "Haga clic para entrar en modo de visualización donde puede exportar o imprimir",
+    "modal": {
+      "title": "Publicar en la base de datos iSoQ",
+      "save": "Guardar",
+      "close": "Cerrar",
+      "publish_info": "Al publicar su iSoQ en la base de datos en línea, su contribución se vuelve buscable, legible y descargable por el público. Seleccione una configuración de visibilidad a continuación y haga clic en \"publicar\". Haga clic en el icono junto a cada opción para ver un ejemplo. Recomendamos a los usuarios elegir Totalmente Público para maximizar la transparencia. Puede cambiar su configuración de visibilidad en cualquier momento en Propiedades del Proyecto.",
+      "choose_license": "Elija una licencia",
+      "license_info": "Por favor elija una licencia Creative Commons bajo la cual le gustaría publicar su trabajo en la base de datos iSoQ. El valor predeterminado es CC-BY-NC-ND.",
+      "license_info_link_text": "Lea más sobre las licencias Creative Commons aquí",
+      "license_responsibility": "Es su responsabilidad asegurarse de que la publicación de su trabajo en la base de datos iSoQ no viole ningún acuerdo de licencia existente, por ejemplo, con revistas académicas o financiadores.",
+      "must_select_license": "Debe seleccionar una licencia Creative Commons."
+    },
+    "status": {
+      "private": "Privado - Su iSoQ no está disponible públicamente en la base de datos iSoQ",
+      "fully": "Totalmente Público - Su tabla iSoQ, Perfil de Evidencia y Hojas de Trabajo GRADE-CERQual están disponibles públicamente en la base de datos iSoQ",
+      "partially": "Parcialmente Público - Su tabla iSoQ y Perfil de Evidencia están disponibles públicamente en la base de datos iSoQ",
+      "minimally": "Mínimamente Público - Su tabla iSoQ está disponible en la base de datos iSoQ"
+    },
+    "licenses": {
+      "cc_by_nc_nd": "CC BY-NC-ND: Esta licencia permite a los reutilizadores copiar y distribuir el material en cualquier medio o formato únicamente en forma no adaptada, solo para fines no comerciales, y solo siempre que se otorgue atribución al creador.",
+      "cc_by_nd": "CC BY-ND: Esta licencia permite a los reutilizadores copiar y distribuir el material en cualquier medio o formato únicamente en forma no adaptada, y solo siempre que se otorgue atribución al creador. La licencia permite el uso comercial.",
+      "cc_by_nc_sa": "CC BY-NC-SA: Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato solo para fines no comerciales, y solo siempre que se otorgue atribución al creador. Si remezcla, adapta o construye sobre el material, debe licenciar el material modificado bajo términos idénticos.",
+      "cc_by_nc": "CC BY-NC: Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato solo para fines no comerciales, y solo siempre que se otorgue atribución al creador.",
+      "cc_by_sa": "CC BY-SA: Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato, siempre que se otorgue atribución al creador. La licencia permite el uso comercial. Si remezcla, adapta o construye sobre el material, debe licenciar el material modificado bajo términos idénticos.",
+      "cc_by": "CC BY: Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato, siempre que se otorgue atribución al creador. La licencia permite el uso comercial."
+    },
+    "yes_no": {
+      "yes": "sí",
+      "no": "no"
+    },
+    "word_export": {
+      "filename_suffix": "Tabla de Resumen de Hallazgos Cualitativos",
+      "soqf_table_title": "Tabla de Resumen de Hallazgos Cualitativos",
+      "review_question": "Pregunta de revisión",
+      "authors_of_review": "Autores de la revisión",
+      "corresponding_author": "Autor de contacto",
+      "review_published_question": "¿Se ha publicado la revisión?",
+      "review_published_yes": "Sí",
+      "review_published_no": "No",
+      "doi_separator": " | DOI: ",
+      "additional_information": "Información Adicional",
+      "license": "Licencia",
+      "evidence_profile_table": "Tabla de Perfil de Evidencia",
+      "table_headers": {
+        "number": "#",
+        "summarised_finding": "Hallazgo de revisión resumido",
+        "methodological_limitations": "Limitaciones metodológicas",
+        "coherence": "Coherencia",
+        "adequacy": "Adecuación",
+        "relevance": "Relevancia",
+        "cerqual_assessment": "Evaluación de confianza GRADE-CERQual",
+        "cerqual_explanation": "Explicación de la evaluación GRADE-CERQual",
+        "references": "Referencias"
+      },
+      "explanation_label": "Explicación: ",
+      "author_not_found": "autor(es) no encontrado(s)"
+    }
   }
 }
