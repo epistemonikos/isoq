@@ -115,7 +115,8 @@
     "completed_by_authors": "O iSoQ está sendo preenchido pelos autores da revisão?",
     "continue_to_isoq": "Continuar para iSoQ",
     "license": "Licença",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "privacy": "Privacidade"
   },
   "menu": {
     "about": "Sobre",
@@ -274,7 +275,11 @@
     "license_cc_by_nc_sa_exp": "Esta licença permite que reutilizadores distribuam, remixem, adaptem e construam sobre o material em qualquer meio ou formato apenas para fins não comerciais, e apenas desde que a atribuição seja dada ao criador. Se você remixar, adaptar ou construir sobre o material, deve licenciar o material modificado sob termos idénticos.",
     "license_cc_by_nc_exp": "Esta licença permite que reutilizadores distribuam, remixem, adaptem e construam sobre o material em qualquer meio ou formato apenas para fins não comerciais, e apenas desde que a atribuição seja dada ao criador.",
     "license_cc_by_sa_exp": "Esta licença permite que reutilizadores distribuam, remixem, adaptem e construam sobre o material em qualquer meio ou formato, desde que a atribuição seja dada ao criador. A licença permite uso comercial. Se você remixar, adaptar ou construir sobre o material, deve licenciar o material modificado sob termos idênticos.",
-    "license_cc_by_exp": "Esta licença permite que reutilizadores distribuam, remixem, adaptem e construam sobre o material em qualquer meio ou formato, desde que a atribuição seja dada ao criador. A licença permite uso comercial."
+    "license_cc_by_exp": "Esta licença permite que reutilizadores distribuam, remixem, adaptem e construam sobre o material em qualquer meio ou formato, desde que a atribuição seja dada ao criador. A licença permite uso comercial.",
+    "status_private": "Privado",
+    "status_fully": "Público",
+    "status_partially": "Parcial",
+    "status_minimally": "Mínimo"
   },
   "references": {
     "step_title": "ETAPA 1: Envie as <b>referências</b> dos seus estudos incluídos (obrigatório)",

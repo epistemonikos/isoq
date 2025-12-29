@@ -115,7 +115,8 @@
     "completed_by_authors": "¿Está el iSoQ siendo completado por los autores de la revisión?",
     "continue_to_isoq": "Continuar a iSoQ",
     "license": "Licencia",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "privacy": "Privacidad"
   },
   "menu": {
     "about": "Acerca de",
@@ -274,7 +275,11 @@
     "license_cc_by_nc_sa_exp": "Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato solo para fines no comerciales, y solo siempre que se otorgue atribución al creador. Si remezcla, adapta o construye sobre el material, debe licenciar el material modificado bajo términos idénticos.",
     "license_cc_by_nc_exp": "Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato solo para fines no comerciales, y solo siempre que se otorgue atribución al creador.",
     "license_cc_by_sa_exp": "Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato, siempre que se otorgue atribución al creador. La licencia permite el uso comercial. Si remezcla, adapta o construye sobre el material, debe licenciar el material modificado bajo términos idénticos.",
-    "license_cc_by_exp": "Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato, siempre que se otorgue atribución al creador. La licencia permite el uso comercial."
+    "license_cc_by_exp": "Esta licencia permite a los reutilizadores distribuir, remezclar, adaptar y construir sobre el material en cualquier medio o formato, siempre que se otorgue atribución al creador. La licencia permite el uso comercial.",
+    "status_private": "Privado",
+    "status_fully": "Público",
+    "status_partially": "Parcial",
+    "status_minimally": "Mínimo"
   },
   "references": {
     "step_title": "PASO 1: Suba las <b>referencias</b> de sus estudios incluidos (requerido)",

@@ -37,8 +37,8 @@
                   variant="light"
                   class="publish-status"
                   v-b-tooltip.hover
-                  :title="global_status.map((obj)=>{ if (obj.value === data.item.public_type) { return obj.text } })">
-                  {{ data.item.public_type }}
+                  :title="(global_status.find(obj => obj.value === data.item.public_type) || {}).text">
+                  {{ (global_status.find(obj => obj.value === data.item.public_type) || {}).transValue }}
                 </b-badge>
               </template>
               <template v-slot:cell(name)="data">
@@ -359,8 +359,8 @@ export default {
         },
         projectTable: {
           fields: [
-            { key: 'private', label: 'Privacy' },
-            { key: 'name', label: 'Title' },
+            { key: 'private', label: this.$t('common.privacy') },
+            { key: 'name', label: this.$t('common.title') },
             { key: 'actions', label: '' }
           ],
           isBusy: true
@@ -379,14 +379,14 @@ export default {
         }
       },
       global_status: [
-        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
+        { value: 'private', text: this.$t('project.status_private_text'), transValue: this.$t('project.status_private') },
+        { value: 'fully', text: this.$t('project.status_fully_text'), transValue: this.$t('project.status_fully') },
+        { value: 'partially', text: this.$t('project.status_partially_text'), transValue: this.$t('project.status_partially') },
+        { value: 'minimally', text: this.$t('project.status_minimally_text'), transValue: this.$t('project.status_minimally') }
       ],
       yes_or_no: [
-        { value: false, text: 'no' },
-        { value: true, text: 'yes' }
+        { value: false, text: this.$t('common.no') },
+        { value: true, text: this.$t('common.yes') }
       ],
       tmp_buffer_project: {
         id: null,
