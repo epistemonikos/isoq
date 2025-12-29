@@ -75,10 +75,12 @@ router.beforeEach((to, from, next) => {
 })
 
 // Esperar a que el router esté listo antes de crear la instancia de Vue
-new Vue({
-  el: '#app',
-  router,
-  store,
-  i18n,
-  render: h => h(App)
+Trans.changeLanguage(Trans.getUserSupportedLang()).then(() => {
+  new Vue({
+    el: '#app',
+    router,
+    store,
+    i18n,
+    render: h => h(App)
+  })
 })
