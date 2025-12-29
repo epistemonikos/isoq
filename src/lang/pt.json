@@ -116,7 +116,11 @@
     "continue_to_isoq": "Continuar para iSoQ",
     "license": "Licença",
     "confirm": "Confirmar",
-    "privacy": "Privacidade"
+    "privacy": "Privacidade",
+    "username": "Nome de usuário",
+    "first_name": "Nome",
+    "last_name": "Sobrenome",
+    "user_can": "O usuário pode"
   },
   "menu": {
     "about": "Sobre",

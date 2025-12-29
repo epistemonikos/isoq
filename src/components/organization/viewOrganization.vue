@@ -219,7 +219,7 @@
               <b-table
                 show-empty
                 responsive
-                :fields="['username', 'first_name', 'last_name', 'user_can', 'actions']"
+                :fields="[{key: 'username', label: $t('common.username')}, {key: 'first_name', label: $t('common.first_name')}, {key: 'last_name', label: $t('common.last_name')}, {key: 'user_can', label: $t('common.user_can')}, {key: 'actions', label: $t('common.actions')}]"
                 :items="users_allowed">
                 <template v-slot:cell(actions)="data">
                   <b-button
