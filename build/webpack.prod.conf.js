@@ -10,6 +10,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
+const { GenerateSW } = require('workbox-webpack-plugin')
 
 const env = require('../config/prod.env')
 
@@ -108,6 +109,60 @@ const webpackConfig = merge(baseWebpackConfig, {
           to: config.build.assetsSubDirectory,
           globOptions: {
             ignore: ['.*']
+          }
+        }
+      ]
+    }),
+
+    // PWA Service Worker - Workbox
+    new GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true,
+      swDest: 'service-worker.js',
+      // Cache de assets estáticos generados por webpack
+      include: [/\.html$/, /\.js$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.jpg$/, /\.svg$/],
+      // No precachear archivos muy grandes
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+      // Runtime caching para API y recursos externos
+      runtimeCaching: [
+        {
+          // Cache de imágenes
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images-cache',
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 30 * 24 * 60 * 60 // 30 días
+            }
+          }
+        },
+        {
+          // Cache de fuentes
+          urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'fonts-cache',
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 365 * 24 * 60 * 60 // 1 año
+            }
+          }
+        },
+        {
+          // Network first para API (con fallback a cache)
+          urlPattern: /\/api\//,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 10,
+            expiration: {
+              maxEntries: 200,
+              maxAgeSeconds: 24 * 60 * 60 // 1 día
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
           }
         }
       ]

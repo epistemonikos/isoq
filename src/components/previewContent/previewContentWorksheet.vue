@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import backToTop from '../backToTop'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
@@ -335,7 +335,7 @@ export default {
       return data
     },
     getList: function (fromModal = false) {
-      axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
+      Api.get(`/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
           this.list = JSON.parse(JSON.stringify(response.data))
           this.list.sources = []
@@ -357,7 +357,7 @@ export default {
         })
     },
     getProject: function (projectId) {
-      axios.get(`/api/isoqf_projects/${projectId}`)
+      Api.get(`/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken !== this.$route.params.token && this.project.public_type === 'private') {
@@ -369,7 +369,7 @@ export default {
         })
     },
     getAllReferences: function () {
-      axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+      Api.get(`/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
           let _references = response.data
           let _refs = []
@@ -391,7 +391,7 @@ export default {
         organization: this.list.organization,
         list_id: this.list.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
@@ -420,7 +420,7 @@ export default {
         finding_id: this.findings.id
       }
 
-      axios.get('/api/isoqf_extracted_data', {params})
+      Api.get('/isoqf_extracted_data', params)
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
@@ -486,7 +486,7 @@ export default {
         organization: this.list.organization,
         project_id: this.list.project_id
       }
-      axios.get('/api/isoqf_characteristics', {params})
+      Api.get('/isoqf_characteristics', params)
         .then((response) => {
           if (response.data.length) {
             let data = response.data[0]
@@ -565,7 +565,7 @@ export default {
         organization: this.list.organization,
         project_id: this.list.project_id
       }
-      axios.get('/api/isoqf_assessments', {params})
+      Api.get('/isoqf_assessments', params)
         .then((response) => {
           if (response.data.length) {
             const _references = JSON.parse(JSON.stringify(this.list.references))

@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
 
 export default {
@@ -139,7 +139,7 @@ export default {
         }
       }
       if (this.ui.isDisabled) {
-        axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+        Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
           .then((response) => {
             if (type === 'inclusion') {
               this.ui.project.inclusion.loading = false

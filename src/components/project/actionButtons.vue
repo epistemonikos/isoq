@@ -157,7 +157,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule, TableLayoutType } from 'docx'
 import { displayExplanation } from '../utils/commons'
@@ -853,9 +853,9 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
+        const canPublish = await Api.get('/api/project/can_publish', {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal})
         if (canPublish.data.status) {
-          axios.patch('/api/publish', {params})
+          Api.patch('/api/publish', {params})
             .then(() => {
               this.modalProject = {name: ''}
               this.$emit('getProject')
@@ -871,7 +871,7 @@ export default {
           this.$emit('uiPublishShowLoader', false)
         }
       } else {
-        axios.patch('/api/publish', {params})
+        Api.patch('/api/publish', {params})
           .then(() => {
             this.modalProject = {name: ''}
             this.$emit('getProject')

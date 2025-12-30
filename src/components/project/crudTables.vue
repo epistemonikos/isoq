@@ -352,7 +352,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
 const ExportCSV = require('export-to-csv').ExportToCsv
@@ -507,7 +507,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get(`/api/${this.type}`, { params })
+      Api.get(`/${this.type}`, params)
         .then((response) => {
           if (response.data.length) {
             const dataTable = JSON.parse(JSON.stringify(response.data[0]))
@@ -624,7 +624,7 @@ export default {
       }
 
       if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
-        axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+        Api.patch(`/${this.type}/${this.dataTable.id}`, params)
           .then(() => {
             this.$emit('get-project')
             this.dataTableSettings.isBusy = false
@@ -632,7 +632,7 @@ export default {
             this.$emit('print-errors', error)
           })
       } else {
-        axios.post(`/api/${this.type}`, params)
+        Api.post(`/${this.type}`, params)
           .then(() => {
             this.getData()
           })
@@ -670,7 +670,7 @@ export default {
         params.is_public = true
       }
 
-      axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+      Api.patch(`/${this.type}/${this.dataTable.id}`, params)
         .then(() => {
           this.getData()
           this.dataTableSettings.isBusy = false
@@ -728,7 +728,7 @@ export default {
         items: this.dataTableFieldsModal.items
       }
 
-      axios.patch(`/api/${this.type}/${id}`, params)
+      Api.patch(`/${this.type}/${id}`, params)
         .then(() => {
           this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
           this.$emit('get-project')
@@ -797,7 +797,7 @@ export default {
         items: items
       }
 
-      axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+      Api.patch(`/${this.type}/${this.dataTable.id}`, params)
         .then(() => {
           this.getData()
         })
@@ -920,7 +920,7 @@ export default {
       this.pre_ImportDataTable = ''
     },
     cleanImportedData: function (id = '', params = {}) {
-      axios.delete(`/api/${this.type}/${id}`)
+      Api.delete(`/${this.type}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
           this.insertImportedData(params)
@@ -933,7 +933,7 @@ export default {
       if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
         return
       }
-      axios.post(`/api/${this.type}/`, params)
+      Api.post(`/${this.type}/`, params)
         .then(() => {
           this.getData()
           this.$refs[`import-table-${this.type}`].hide()
@@ -948,7 +948,7 @@ export default {
         project_id: this.$route.params.id
       }
 
-      axios.get(`/api/${this.type}`, {params})
+      Api.get(`/${this.type}`, params)
         .then((response) => {
           if (!response.data.length) {
             this.getData()
@@ -962,7 +962,7 @@ export default {
             let params = {
               items: items
             }
-            axios.patch(`/api/${this.type}/${charId}`, params)
+            Api.patch(`/${this.type}/${charId}`, params)
               .then(() => {
                 this.getData()
               })
@@ -1011,7 +1011,7 @@ export default {
       params.fields = _fields
       params.items = _items
 
-      axios.patch(`/api/${this.type}/${dataTableId}`, params)
+      Api.patch(`/${this.type}/${dataTableId}`, params)
         .then((response) => {
           let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
           const excluded = ['ref_id', 'authors', 'actions']

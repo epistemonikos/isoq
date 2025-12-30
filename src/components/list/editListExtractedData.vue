@@ -96,7 +96,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -173,7 +173,7 @@ export default {
       let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
       items[this.buffer_extracted_data.remove_index_item] = newItem
 
-      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, {items: items})
+      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}`, {items: items})
         .then(() => {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
@@ -201,7 +201,7 @@ export default {
         list_id: this.$route.params.id,
         items: _originalItems
       }
-      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, params)
+      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}`, params)
         .then(() => {
           this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}

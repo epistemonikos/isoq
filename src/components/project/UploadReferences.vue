@@ -284,7 +284,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -513,7 +513,7 @@ export default {
       formData.append('organization', this.$route.params.org_id)
 
       try {
-        const response = await axios.post('/api/isoqf_references/process-ris', formData)
+        const response = await Api.post('/isoqf_references/process-ris', formData)
 
         if (response.data && response.data.references) {
           this.localReferences = response.data.references
@@ -534,11 +534,7 @@ export default {
     },
 
     requestsImportReferences: function (ref) {
-      return axios({
-        method: 'POST',
-        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-        data: ref
-      })
+      return Api.post(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`, ref)
     },
 
     saveReferences: async function (from = '') {
@@ -729,7 +725,7 @@ export default {
     apiPubMed: async function (id) {
       try {
         // Usar el endpoint proxy en el backend para ocultar la API key
-        return await axios.get(`/api/pubmed/fetch?id=${id}`)
+        return await Api.get(`/pubmed/fetch?id=${id}`)
       } catch (error) {
         console.error('Error fetching PubMed data', error)
         throw error
@@ -771,11 +767,7 @@ export default {
       this.pubmed_requested.push(reference)
     },
     requestImportReferences: async function (index) {
-      return axios({
-        method: 'POST',
-        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-        data: this.pubmed_requested[index]
-      })
+      return Api.post(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`, this.pubmed_requested[index])
     },
     importReferences: async function () {
       if (!this.pubmed_selected.length) return
@@ -794,7 +786,7 @@ export default {
         })
 
         // Usando el nuevo endpoint para importación por lotes con idempotencia
-        const response = await axios.post('/api/isoqf_references/batch-import', {
+        const response = await Api.post('/isoqf_references/batch-import', {
           references: refsToImport,
           operation_id: operationId,
           organization: this.$route.params.org_id,
@@ -822,13 +814,13 @@ export default {
       }
     },
     axiosGetFindings: async function (listId) {
-      return axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
+      return Api.get(`/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
     },
     axiosGetExtractedData: async function (organization, findingId) {
-      return axios.get(`/api/isoqf_extracted_data?organization=${organization}&finding_id=${findingId}`)
+      return Api.get(`/isoqf_extracted_data?organization=${organization}&finding_id=${findingId}`)
     },
     axiosPatchExtractedData: async function (id, params) {
-      return axios.patch(`/api/isoqf_extracted_data/${id}`, params)
+      return Api.patch(`/isoqf_extracted_data/${id}`, params)
     },
     prefetchDataForExtractedDataUpdate: async function (references) {
       try {
@@ -939,7 +931,7 @@ export default {
       this.disableBtnRemoveAllRefs = true
     },
     removeAllReferences: function () {
-      axios.post('/api/isoqf_references/batch-delete', {
+      Api.post('/isoqf_references/batch-delete', {
         delete_all: true,
         project_id: this.$route.params.id,
         organization: this.$route.params.org_id,
@@ -959,7 +951,7 @@ export default {
     confirmRemoveReferenceById: function (refId) {
       if (!refId) return
 
-      axios.post('/api/isoqf_references/batch-delete', {
+      Api.post('/api/isoqf_references/batch-delete', {
         reference_ids: [refId],
         project_id: this.$route.params.id,
         organization: this.$route.params.org_id

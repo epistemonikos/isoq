@@ -329,7 +329,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
@@ -528,7 +528,7 @@ export default {
           temporaryUrl: project.temporaryUrl,
           project_id: project.id
         }
-        axios.patch('/api/sharedLink', { params })
+        Api.patch('/sharedLink', { params })
           .then(() => {})
           .catch((error) => {
             console.log(error)
@@ -539,7 +539,7 @@ export default {
   methods: {
     getProjectById: async function (params) {
       try {
-        const response = await axios.get('/api/isoqf_projects', {params: params})
+        const response = await Api.get('/isoqf_projects', params)
         return response
       } catch (error) {
         console.log(error)
@@ -547,17 +547,15 @@ export default {
     },
     axiosGetProjects: async function (organizationId) {
       try {
-        return axios.get('/api/isoqf_projects', {
-          params: {
-            organization: organizationId
-          }
+        return Api.get('/isoqf_projects', {
+          organization: organizationId
         })
       } catch (error) {
         console.log(error)
       }
     },
     getProjects: function () {
-      axios.get('/api/getProjects')
+      Api.get('/getProjects')
         .then((response) => {
           this.projects = []
           let _projects = []
@@ -669,7 +667,7 @@ export default {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
     updateProjectList: function () {
-      axios.patch(`/api/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
+      Api.patch(`/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
         .then((response) => {
           this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
           this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
@@ -708,7 +706,7 @@ export default {
     },
     removeProject: function () {
       this.ui.projectTable.isBusy = true
-      axios.get(`/api/remove/project/${this.buffer_project.id}`)
+      Api.delete(`/remove/project/${this.buffer_project.id}`)
         .then((response) => {
           if (response.data.status) {
             this.getProjects()
@@ -728,14 +726,14 @@ export default {
         organization: this.$route.params.id,
         list_id: id
       }
-      axios.get('/api/isoqf_findings', { params })
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           if (response.data.length) {
             let requestsFindings = []
             const findings = response.data
             for (let finding of findings) {
               this.getExtractedData(finding.id)
-              requestsFindings.push(axios.delete(`/api/isoqf_findings/${finding.id}`))
+              requestsFindings.push(Api.delete(`/isoqf_findings/${finding.id}`))
             }
             this.processRequests(requestsFindings)
           }
@@ -746,12 +744,12 @@ export default {
         organization: this.$route.params.id,
         finding_id: id
       }
-      axios.get('/api/isoqf_extracted_data', { params })
+      Api.get('/isoqf_extracted_data', params)
         .then((response) => {
           let requestsExtractedData = []
           const extractedData = response.data
           for (let data of extractedData) {
-            requestsExtractedData.push(axios.delete(`/api/isoqf_extracted_data/${data.id}`))
+            requestsExtractedData.push(Api.delete(`/isoqf_extracted_data/${data.id}`))
           }
           this.processRequests(requestsExtractedData)
         })
@@ -760,7 +758,7 @@ export default {
         })
     },
     processRequests: function (requests) {
-      axios.all(requests)
+      Promise.all(requests)
         .then(() => {
           // console.log(responses)
         })
@@ -773,7 +771,7 @@ export default {
       let _project = JSON.parse(JSON.stringify(this.buffer_project))
       if (Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
         for (let user of _project.can_read) {
-          axios.get(`/users/${user}`)
+          Api.get(`/users/${user}`)
             .then((response) => {
               const _user = response.data
               if (_user.status) {
@@ -787,7 +785,7 @@ export default {
       }
       if (Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
         for (let user of _project.can_write) {
-          axios.get(`/users/${user}`)
+          Api.get(`/users/${user}`)
             .then((response) => {
               const _user = response.data
               if (_user.status) {
@@ -832,7 +830,7 @@ export default {
         user_can: this.buffer_project.sharedType,
         org: this.$route.params.id
       }
-      await axios.post(`/share/project/${projectId}`, params)
+      await Api.post(`/share/project/${projectId}`, params)
         .then((response) => {
           if (response.status === 200) {
             const project = this.processProject(response.data[0])
@@ -859,7 +857,7 @@ export default {
     },
     removeUser: async function (project, params) {
       try {
-        const data = await axios.post(`/share/project/${project}/unshare`, null, {params: params})
+        const data = await Api.post(`/share/project/${project}/unshare`, null, {params: params})
         return data
       } catch (error) {
         console.log('errors: => ', error)
@@ -900,7 +898,7 @@ export default {
     },
     unshareInvited: function (email) {
       const projectId = this.buffer_project.id
-      axios.post(`/share/project/${projectId}/unshare?email=${email}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
+      Api.post(`/share/project/${projectId}/unshare?email=${email}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
         .then((response) => {
           let _response = response.data
           _response.tmp_invite_emails = []
@@ -928,7 +926,7 @@ export default {
         'user_id': userId,
         'option': option
       }
-      axios.patch(`/share/project/${projectId}/options-update`, params)
+      Api.patch(`/share/project/${projectId}/options-update`, params)
         .then((response) => {
           const project = response.data[0]
           // this.projects[index] = project
@@ -940,7 +938,7 @@ export default {
     },
     generateACopyOfAProject: async function () {
       this.ui.copy.project = true
-      axios.get(`/api/clone/project/${this.buffer_project.id}/org/${this.$route.params.id}`)
+      Api.get(`/clone/project/${this.buffer_project.id}/org/${this.$route.params.id}`)
         .then(() => {
           this.ui.copy.project = false
           this.getProjects()
@@ -998,7 +996,7 @@ export default {
     },
     leaveProject: function () {
       const userId = this.$store.state.user.id
-      axios.post(`/project/${this.buffer_project.id}/unsubscribe?userId=${userId}`)
+      Api.post(`/project/${this.buffer_project.id}/unsubscribe?userId=${userId}`)
         .then((r) => {
           this.getProjects()
         })

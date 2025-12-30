@@ -574,7 +574,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
@@ -830,7 +830,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_list_categories', { params })
+      Api.get('/isoqf_list_categories', params)
         .then((response) => {
           this.processGetListCategories(response.data)
         })
@@ -843,7 +843,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get(`/api/isoqf_references`, { params })
+      Api.get(`/isoqf_references`, params)
         .then(async (response) => {
           this.references = await this.processGetReferencesRaw(response.data)
           this.refs = await this.processGetReferencesWithNames(response.data)
@@ -875,7 +875,7 @@ export default {
       const params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.id}`, { params })
+      Api.get(`/isoqf_projects/${this.$route.params.id}`, params)
         .then((response) => {
           let _project = JSON.parse(JSON.stringify(response.data))
           if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {
@@ -953,7 +953,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_lists', { params })
+      Api.get('/isoqf_lists', params)
         .then(async (response) => {
           this.lists = await this.processLists(response)
           const lists = response.data.map((list) => { return list.id })
@@ -1205,7 +1205,7 @@ export default {
       const params = {
         'list_ids': listIds
       }
-      axios.get('/api/findings', {params})
+      Api.get('/findings', params)
         .then((response) => {
           if (response.data.length) {
             this.findings.push(...response.data)
@@ -1240,7 +1240,7 @@ export default {
         is_public: isPublic,
         sort: sort
       }
-      axios.post('/api/isoqf_lists', params)
+      Api.post('/isoqf_lists', params)
         .then((response) => {
           const listId = response.data.id
           const listName = response.data.name
@@ -1292,7 +1292,7 @@ export default {
         references: [],
         is_public: isPublic
       }
-      axios.post('/api/isoqf_findings', params)
+      Api.post('/isoqf_findings', params)
         .then(async (response) => {
           await this.createExtractedData(response.data.id)
         })
@@ -1456,7 +1456,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.post('/api/isoqf_list_categories', params)
+      Api.post('/isoqf_list_categories', params)
         .then((response) => {
           this.list_categories.options = response.data
           this.list_categories.selected = null
@@ -1478,7 +1478,7 @@ export default {
         project_id: this.$route.params.id
       }
 
-      axios.post('/api/isoqf_list_categories', params)
+      Api.post('/isoqf_list_categories', params)
         .then(async () => {
           await this.getListCategories()
           this.getLists()
@@ -1507,7 +1507,7 @@ export default {
           text: this.modal_edit_list_categories.text,
           extra_info: this.modal_edit_list_categories.extra_info
         }
-        axios.patch(`/api/isoqf_list_categories/${objID}`, params)
+        Api.patch(`/isoqf_list_categories/${objID}`, params)
           .then(async () => {
             await this.getListCategories()
             this.getLists()
@@ -1539,7 +1539,7 @@ export default {
       const deletedItem = _options.splice(index, 1)
 
       if (objID) {
-        axios.delete(`/api/isoqf_list_categories/${objID}`)
+        Api.delete(`/isoqf_list_categories/${objID}`)
           .then(async () => {
             await this.getListCategories()
             this.updateLists(deletedItem)
@@ -1569,13 +1569,13 @@ export default {
       for (let list of _lists) {
         if (list.category === deletedCategoryValue[0].id) {
           list.category = null
-          _request.push(axios.patch(`/api/isoqf_lists/${list.id}`, list))
+          _request.push(Api.patch(`/isoqf_lists/${list.id}`, list))
         }
       }
-      axios.all(_request)
-        .then(axios.spread(() => {
+      Promise.all(_request)
+        .then(() => {
           this.getLists()
-        }))
+        })
     },
     modalSortFindings: function () {
       let _lists = JSON.parse(JSON.stringify(this.lists))
@@ -1599,7 +1599,7 @@ export default {
         const params = {
           'sort': cnt
         }
-        requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, params))
+        requests.push(Api.patch(`/isoqf_lists/${list.id}`, params))
         cnt++
       }
 
@@ -1619,14 +1619,14 @@ export default {
         organization: this.$route.params.org_id,
         list_id: listId
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((reponse) => {
           const findingId = reponse.data[0].id
           const params = {
             'isoqf_id': sort,
             'evidence_profile.isoqf_id': sort
           }
-          axios.patch(`/api/isoqf_findings/${findingId}`, params)
+          Api.patch(`/isoqf_findings/${findingId}`, params)
             .then(() => {
               this.getLists()
             })
@@ -1666,7 +1666,7 @@ export default {
         params.items.push({ 'ref_id': reference.id, 'authors': await this.parseReference(reference, true), 'column_0': '' })
       }
 
-      axios.post('/api/isoqf_extracted_data', params)
+      Api.post('/isoqf_extracted_data', params)
         .then(() => {
           this.getLists()
         })
@@ -1739,7 +1739,7 @@ export default {
       const params = {
         last_update: Date.now()
       }
-      axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+      Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
         .then()
         .catch((error) => {
           this.printErrors(error)

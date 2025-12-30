@@ -345,7 +345,7 @@
 
 <script>
 import draggable from 'vuedraggable'
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Papa from 'papaparse'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
@@ -497,7 +497,7 @@ export default {
   methods: {
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+      Api.get(`/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
@@ -578,7 +578,7 @@ export default {
       }
 
       if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
-        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
           .then(() => {
             this.$emit('get-project')
             this.charsOfStudiesTableSettings.isBusy = false
@@ -586,7 +586,7 @@ export default {
             console.log('error: ', error)
           })
       } else {
-        axios.post('/api/isoqf_characteristics', params)
+        Api.post('/isoqf_characteristics', params)
           .then(() => {
             this.getCharacteristics()
           })
@@ -624,7 +624,7 @@ export default {
         params.is_public = true
       }
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then(() => {
           this.getCharacteristics()
           this.charsOfStudiesTableSettings.isBusy = false
@@ -655,7 +655,7 @@ export default {
       let characteristicId = this.charsOfStudies.id
       params.items = this.charsOfStudiesFieldsModal.items
 
-      axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
+      Api.patch(`/isoqf_characteristics/${characteristicId}`, params)
         .then(() => {
           this.$emit('get-project')
           this.getCharacteristics()
@@ -706,7 +706,7 @@ export default {
 
       params.items = items
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then(() => {
           this.getCharacteristics()
         })
@@ -806,7 +806,7 @@ export default {
       params.fields = _fields
       params.items = _items
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
           let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
           const excluded = ['ref_id', 'authors', 'actions']
@@ -897,14 +897,14 @@ export default {
       this.$refs['import-characteristics-table'].hide()
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
-      axios.delete(`/api/${endpoint}/${id}`)
+      Api.delete(`/${endpoint}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
           this.insertImportedData(endpoint, params)
         })
     },
     insertImportedData: function (endpoint = '', params = {}) {
-      axios.post(`/api/${endpoint}/`, params)
+      Api.post(`/${endpoint}/`, params)
         .then(() => {
           this.getCharacteristics()
         })
@@ -974,7 +974,7 @@ export default {
         project_id: this.$route.params.id
       }
 
-      axios.get(`/api/isoqf_characteristics`, {params})
+      Api.get(`/isoqf_characteristics`, params)
         .then((response) => {
           if (!response.data.length) {
             return
@@ -999,7 +999,7 @@ export default {
             let params = {
               items: items
             }
-            axios.patch(`/api/isoqf_characteristics/${charId}`, params)
+            Api.patch(`/isoqf_characteristics/${charId}`, params)
               .then(() => {
                 this.getCharacteristics()
               })
@@ -1041,7 +1041,7 @@ export default {
         params.fields.push(objField)
       }
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
           this.getProject()
           this.$emit('get-project')

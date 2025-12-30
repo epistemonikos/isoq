@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   data () {
@@ -83,7 +83,7 @@ export default {
         username: this.$route.params.username,
         password: this.password
       }
-      axios.post('/auth/new_password', params)
+      Api.post('/auth/new_password', params)
         .then((response) => {
           const data = response.data
           if (data.status === 'password_changed') {

@@ -530,7 +530,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import { displayExplanation } from '../utils/commons'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
@@ -644,7 +644,7 @@ export default {
 
     checkOtherListsWithReferences: function () {
       // Hacer una consulta para obtener todos los lists del proyecto
-      axios.get(`/api/isoqf_lists?project_id=${this.project.id}`)
+      Api.get(`/isoqf_lists`, { project_id: this.project.id })
         .then((response) => {
           const allLists = response.data
           // Filtrar el list actual y verificar si hay otros con referencias
@@ -716,7 +716,7 @@ export default {
         license_type: '',
         public_type: 'private'
       }
-      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+      Api.patch(`/isoqf_projects/${this.project.id}`, params)
         .then(() => {
           // Emitir un evento para notificar al componente padre que el estado del proyecto cambió
           this.$emit('update-project-status')
@@ -736,7 +736,7 @@ export default {
       const params = {
         references: this.list.references
       }
-      axios.patch(`/api/isoqf_lists/${this.list.id}`, params)
+      Api.patch(`/isoqf_lists/${this.list.id}`, params)
         .then(() => {
           this.updateReferencesInFindings()
           this.cleanReferencesList()
@@ -746,7 +746,7 @@ export default {
       let params = {
         'evidence_profile.references': this.list.references
       }
-      axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
+      Api.patch(`/isoqf_findings/${this.findings.id}`, params)
         .then((response) => {
           this.$emit('update-list-data')
           // this.getList()

@@ -79,6 +79,15 @@
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
 
+              <b-alert
+                v-if="errorMessage"
+                show
+                variant="danger"
+                dismissible
+                @dismissed="errorMessage = ''">
+                {{ errorMessage }}
+              </b-alert>
+
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link> | <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link>
               </b-card-text>
@@ -87,8 +96,11 @@
                 class="text-right">
                 <b-button
                   variant="outline-primary"
-                  :disabled="!(ui.username_validation && ui.password_validation)"
-                  @click="createAccount">{{ $t('account.create_account_btn') }}</b-button>
+                  :disabled="!(ui.username_validation && ui.password_validation) || ui.isProcessing"
+                  @click="createAccount">
+                  <b-spinner small v-if="ui.isProcessing" class="mr-1"></b-spinner>
+                  {{ $t('account.create_account_btn') }}
+                </b-button>
               </div>
             </b-card>
           </b-form>
@@ -233,12 +245,12 @@
       </b-row>
     </b-container>
 
-    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login(user.username, user.password)"></subscribe>
+    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login()"></subscribe>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
 import subscribe from '@/components/commons/subscribe.vue'
 
@@ -253,8 +265,11 @@ export default {
         display_join_org: false,
         display_create_org: false,
         display_end_affiliation: false,
-        display_end_org_creation: false
+        display_end_org_creation: false,
+        isProcessing: false
       },
+      errorMessage: '',
+      loginCredentials: null,
       organizations: [
         {id: 'examples', name: 'Examples'},
         {id: 'episte', name: 'Test organisation'}
@@ -330,6 +345,15 @@ export default {
       }
     },
     createAccount: function () {
+      this.ui.isProcessing = true
+      this.errorMessage = ''
+
+      // Guardar credenciales antes de cualquier operación
+      this.loginCredentials = {
+        username: this.user.username,
+        password: this.user.password
+      }
+
       let params = {
         user: this.user,
         organizations: this.organizations
@@ -343,33 +367,61 @@ export default {
           r: this.$route.query['r']
         }
       }
-      axios.post('/create_user', params)
+      Api.post('/create_user', params)
         .then(() => {
-          // this.login(this.user.username, this.user.password)
+          this.ui.isProcessing = false
           this.showSubscribe = true
         })
         .catch((error) => {
+          this.ui.isProcessing = false
+          if (error.response && error.response.data && error.response.data.message) {
+            this.errorMessage = error.response.data.message
+          } else {
+            this.errorMessage = this.$t('account.create_error')
+          }
           console.log(error)
         })
     },
     login (username, password) {
+      // Cancelar cualquier debounce pendiente antes del login
+      if (this.checkEmail && this.checkEmail.cancel) {
+        this.checkEmail.cancel()
+      }
+
+      // Usar credenciales guardadas si no se proporcionan
+      const loginUsername = username || (this.loginCredentials && this.loginCredentials.username)
+      const loginPassword = password || (this.loginCredentials && this.loginCredentials.password)
+
+      if (!loginUsername || !loginPassword) {
+        this.errorMessage = this.$t('account.login_error')
+        return
+      }
+
+      this.ui.isProcessing = true
       this.$store
-        .dispatch('login', {username, password})
+        .dispatch('login', {username: loginUsername, password: loginPassword})
         .then((response) => {
           this.ui.display_create_account = false
           this.ui.display_join_org_or_create_org = false
-          this.user = response.data
           let orgPath = {'id': response.data.personal_organization}
           const path = { 'name': 'viewOrganization', 'params': orgPath }
           this.$router.push(path)
         })
-        .catch((error) => console.log(error))
+        .catch((error) => {
+          this.ui.isProcessing = false
+          if (error.response && error.response.data && error.response.data.message) {
+            this.errorMessage = error.response.data.message
+          } else {
+            this.errorMessage = this.$t('account.login_error')
+          }
+          console.log(error)
+        })
     },
     jointToOrg: function () {
       let params = {
         org_to_join: this.org_selected
       }
-      axios.patch('/users/update_my_profile', params)
+      Api.patch('/users/update_my_profile', params)
         .then((response) => {
           this.ui.display_join_org = false
           this.ui.display_end_affiliation = true
@@ -387,7 +439,7 @@ export default {
         name: this.organization.name,
         website: this.organization.website
       }
-      axios.post('/organizations/request_new', params)
+      Api.post('/organizations/request_new', params)
         .then((response) => {
           this.ui.display_create_org = false
           this.ui.display_end_org_creation = true
@@ -397,8 +449,9 @@ export default {
         })
     },
     checkEmailExist: function () {
+      if (!this.user.username) return
       const email = this.user.username.trim()
-      axios.get(`/users/check_email?email=${email}`)
+      Api.get('/users/check_email', { email: email })
         .then((response) => {
           if (response.data.error === false) {
             this.ui.username_validation = true
@@ -418,22 +471,22 @@ export default {
         })
     },
     comparePassword: function () {
+      if (!this.user.password || !this.user.password_2) {
+        this.ui.password_validation = false
+        return
+      }
       if (this.user.password !== this.user.password_2) {
         this.ui.password_validation = false
         return
       }
-      if (this.user.password === null || this.user.password_2 === null) {
-        this.ui.password_validation = false
-        return
-      }
-      if (this.user.password.length < 8 || this.user.password_2 < 8) {
+      if (this.user.password.length < 8 || this.user.password_2.length < 8) {
         this.ui.password_validation = false
         return
       }
       this.ui.password_validation = true
     },
     getOrganizations: function () {
-      axios.get('/api/organizations?personal_organization=false')
+      Api.get('/api/organizations', { personal_organization: false })
         .then((response) => {
           this.all_organizations = response.data
         })

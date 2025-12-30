@@ -209,7 +209,14 @@
     "plan_large": "Grande",
     "plan_free": "gratis",
     "plan_1000": "1000 USD al año",
-    "plan_contact": "Contáctenos"
+    "plan_contact": "Contáctenos",
+    "create_error": "Ocurrió un error al crear tu cuenta. Por favor, intenta nuevamente.",
+    "login_error": "Ocurrió un error al iniciar sesión. Por favor, intenta nuevamente."
+  },
+  "subscribe": {
+    "title": "Boletín informativo",
+    "question": "¿Te gustaría suscribirte a la lista de correo de GRADE-CERQual?",
+    "description": "Recibirás tres boletines al año con las últimas noticias sobre iSoQ."
   },
   "project": {
     "validation": {
@@ -1020,5 +1027,14 @@
       "explanation_label": "Explicación: ",
       "author_not_found": "autor(es) no encontrado(s)"
     }
+  },
+  "offline": {
+    "noConnection": "Sin conexión a internet",
+    "syncPending": "Cambios pendientes de sincronizar",
+    "connected": "Conectado",
+    "synced": "Cambios sincronizados correctamente",
+    "refresh": "Actualizar",
+    "pendingOperation": "cambio pendiente",
+    "pendingOperations": "cambios pendientes"
   }
 }

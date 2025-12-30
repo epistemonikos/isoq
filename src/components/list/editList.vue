@@ -191,7 +191,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import draggable from 'vuedraggable'
 import Commons from '../../utils/commons'
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -498,24 +498,13 @@ export default {
       this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
     },
     getList: function (fromModal = false) {
-      axios.get('/api/getLists', {params: {list_id: this.$route.params.id}})
+      Api.get('/getLists', {id: this.$route.params.id})
         .then((response) => {
           if (response.data && response.data.length > 0) {
             this.list = JSON.parse(JSON.stringify(response.data[0]))
           } else {
-             // console.log('Empty list response')
+            console.log('Empty list response')
           }
-          // this.list.sources = []
-          // this.evidence_profile = []
-          // this.extracted_data = {
-          //   fields: [],
-          //   items: []
-          // }
-          // const project = JSON.parse(JSON.stringify(response.data[0]['project']))
-          // const references = JSON.parse(JSON.stringify(response.data[0]['fullreferences']))
-          // const characteristics = JSON.parse(JSON.stringify(response.data[0]['characteristics']))
-          // const assessments = JSON.parse(JSON.stringify(response.data[0]['assessments']))
-          // const extractedData = JSON.parse(JSON.stringify(response.data[0]['extracted_data']))
           this.getProject()
           this.getAllReferences()
           this.getFinding(fromModal)
@@ -535,7 +524,7 @@ export default {
         organization: this.list.organization,
         list_id: this.list.id
       }
-      axios.get(`/api/isoqf_extracted_data`, {params})
+      Api.get(`/isoqf_extracted_data`, params)
         .then((response) => {
           if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
             let _items = response.data[0].items
@@ -552,7 +541,7 @@ export default {
             let params = {
               items: _items
             }
-            axios.patch(`/api/isoqf_extracted_data/${response.data[0].id}`, params)
+            Api.patch(`/isoqf_extracted_data/${response.data[0].id}`, params)
               .then(() => {
                 this.getExtractedData()
               })
@@ -757,7 +746,7 @@ export default {
     getExtractedData: function (status = false) {
       let extractedData = JSON.parse(JSON.stringify(this.list.extracted_data))
       if (status) {
-        axios.get(`/api/isoqf_extracted_data`, {params: {finding_id: this.findings.id}})
+        Api.get(`/isoqf_extracted_data`, {finding_id: this.findings.id})
           .then((response) => {
             extractedData = response.data
             this.processExtractedData(extractedData)
@@ -848,19 +837,20 @@ export default {
     returnTo: function () {
       if (this.list.userEditing === this.$store.state.user.id) {
         const params = { editing: false, userEditing: '' }
-        axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+        Api.patch(`/isoqf_lists/${this.$route.params.id}`, params)
           .then((response) => {
             this.list.editing = false
             this.list.userEditing = ''
             this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
           })
           .catch((error) => {
-            console.log(error)
+            this.printErrors(error)
           })
       } else {
         this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
       }
     },
+
     modalDataChanged: function (data) {
       this.buffer_modal_stage_two = JSON.parse(JSON.stringify(data))
     },    busyEvidenceProfileTable: function (status) {
@@ -871,6 +861,16 @@ export default {
     },
     setShowEditExtractedDataInPlace: function (data) {
       this.showEditExtractedDataInPlace = data
+    }
+  },
+  mounted () {
+    this.getList()
+  },
+  watch: {
+    '$route' (to, from) {
+      if (to.params.id !== from.params.id) {
+        this.getList()
+      }
     }
   }
 }

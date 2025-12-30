@@ -798,7 +798,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 
 export default {
@@ -1039,10 +1039,10 @@ export default {
         evidence_profile: selectedOptions
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
-        axios.patch(`/api/isoqf_findings/${this.findings.id}`, params)
+        Api.patch(`/isoqf_findings/${this.findings.id}`, params)
           .then(() => {
             if (status) {
-              axios.post(`/api/unpublish/project/${this.list.project_id}`)
+              Api.post(`/unpublish/project/${this.list.project_id}`)
                 .then(() => {
                   this.$emit('callGetStageOneData', false)
                   this.saveListName()
@@ -1061,7 +1061,7 @@ export default {
             this.printErrors(error)
           })
       } else {
-        axios.post(`/api/isoqf_findings`, params)
+        Api.post(`/isoqf_findings`, params)
           .then(() => {
             this.$emit('callGetStageOneData', false)
             this.$refs['modal-evidence-profile-form'].hide()
@@ -1082,7 +1082,7 @@ export default {
           cerqual: this.selectedOptions.cerqual
         }
       }
-      axios.patch(`/api/isoqf_lists/${this.$route.params.id}`, params)
+      Api.patch(`/isoqf_lists/${this.$route.params.id}`, params)
         .then((response) => {
           this.$emit('update-list-data')
         })
@@ -1179,7 +1179,7 @@ export default {
         finding_id: this.findings.id,
         items: _items
       }
-      axios.patch(`/api/isoqf_extracted_data/${this.extractedData.id}`, params)
+      Api.patch(`/isoqf_extracted_data/${this.extractedData.id}`, params)
         .then(() => {
           this.$emit('getExtractedData', true)
           const data = {

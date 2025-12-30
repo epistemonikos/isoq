@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   data () {
@@ -76,7 +76,7 @@ export default {
       let params = {
         username: this.username
       }
-      axios.post(`/auth/recover`, params)
+      Api.post(`/auth/recover`, params)
         .then((response) => {
           if (response.data.status === 'sent') {
             this.ui.main = false

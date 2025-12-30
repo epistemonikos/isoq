@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   data () {
@@ -110,7 +110,7 @@ export default {
   },
   methods: {
     getPublicTables: function () {
-      axios.get('/api/browse')
+      Api.get('/browse')
         .then((response) => {
           this.public_tables = response.data
           this.table_settings.isBusy = false

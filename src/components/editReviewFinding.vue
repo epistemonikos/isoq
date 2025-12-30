@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   name: 'editReviewFinding',
@@ -63,14 +63,14 @@ export default {
       paramsFindings.name = this.reviewContent
       paramsFindings.evidence_profile.name = this.reviewContent
 
-      let queryLists = axios.patch(`/api/isoqf_lists/${this.list.id}`, paramsList)
-      let queryFindings = axios.patch(`/api/isoqf_findings/${this.finding.id}`, paramsFindings)
+      let queryLists = Api.patch(`/isoqf_lists/${this.list.id}`, paramsList)
+      let queryFindings = Api.patch(`/isoqf_findings/${this.finding.id}`, paramsFindings)
 
-      axios.all([queryLists, queryFindings])
-        .then(axios.spread((responseList, responseFInding) => {
+      Promise.all([queryLists, queryFindings])
+        .then(([responseList, responseFInding]) => {
           this.$emit('update-list-data')
           this.ui.editMode = false
-        }))
+        })
     }
   }
 }

@@ -191,7 +191,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import draggable from 'vuedraggable'
 
 export default {
@@ -272,7 +272,7 @@ export default {
         params.items = this.tsv.items
 
         if (this.importUrl.split('?')[0].split('/').length === 4) {
-          axios.put(`${this.importUrl}`, params)
+          Api.put(`${this.importUrl}`, params)
             .then((response) => {
               this.$emit('response-ok-api')
             })
@@ -280,7 +280,7 @@ export default {
               console.log(error)
             })
         } else {
-          axios.post(`${this.importUrl}`, params)
+          Api.post(`${this.importUrl}`, params)
             .then((response) => {
               this.$emit('response-ok-api')
             })
@@ -324,7 +324,7 @@ export default {
 
       params.items = this.modalContent.items
 
-      axios.patch(`${this.importUrl}`, params)
+      Api.patch(`${this.importUrl}`, params)
         .then((response) => {
           this.newItem = {}
           this.modalContent = {}
@@ -336,7 +336,7 @@ export default {
     },
     createTableOpenModal: function () {},
     dropTable: function () {
-      axios.delete(`${this.importUrl}`)
+      Api.delete(`${this.importUrl}`)
         .then((response) => {
           this.$emit('response-ok-api')
         })
@@ -367,7 +367,7 @@ export default {
         params[key] = value
       }
 
-      axios.post(`${this.importUrl}`, params)
+      Api.post(`${this.importUrl}`, params)
         .then((response) => {
           this.modalCreateFields = {
             nro_of_fields: 1,
@@ -399,7 +399,7 @@ export default {
         params[key] = value
       }
 
-      axios.patch(`${this.importUrl}`, params)
+      Api.patch(`${this.importUrl}`, params)
         .then((response) => {
           this.modalContent = {}
           this.modalEditFields = []

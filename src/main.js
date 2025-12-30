@@ -8,13 +8,17 @@ import App from './App'
 import { store } from './store'
 import routes from './router/index'
 import VueBootstrap from 'bootstrap-vue'
+
+// Setup axios interceptors for offline support
+import { setupAxiosOffline } from './utils/axiosOffline'
+setupAxiosOffline()
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 
-library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt)
+library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
@@ -84,3 +88,29 @@ Trans.changeLanguage(Trans.getUserSupportedLang()).then(() => {
     render: h => h(App)
   })
 })
+
+// Registro del Service Worker para PWA
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(registration => {
+        console.log('SW registered:', registration.scope)
+
+        // Escuchar actualizaciones del service worker
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // Nueva versión disponible
+                console.log('New content available, refresh to update.')
+              }
+            })
+          }
+        })
+      })
+      .catch(error => {
+        console.error('SW registration failed:', error)
+      })
+  })
+}

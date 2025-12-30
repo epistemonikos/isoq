@@ -363,7 +363,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Commons from '../../utils/commons.js'
 
 export default {
@@ -585,7 +585,7 @@ export default {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           this.editFindingName.finding_id = response.data[0].id
         })
@@ -600,7 +600,7 @@ export default {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           this.editFindingName = {...response.data[0]}
 
@@ -634,7 +634,7 @@ export default {
       const params = {
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then(async (response) => {
           if (response.data.length) {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
@@ -664,7 +664,7 @@ export default {
     updateListName: async function () {
       this.$emit('set-busy', true)
       const list = await this.processDataList()
-      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, list)
+      Api.patch(`/isoqf_lists/${this.editFindingName.id}`, list)
         .then(() => {
           this.updateFinding(this.editFindingName)
           this.$emit('update-modification-time')
@@ -702,7 +702,7 @@ export default {
         'evidence_profile.name': finding.name,
         'evidence_profile.notes': finding.notes
       }
-      axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
+      Api.patch(`/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
           this.$emit('get-lists')
         })
@@ -719,7 +719,7 @@ export default {
         project_id: this.$route.params.id,
         finding_id: this.editFindingName.id
       }
-      axios.post('/api/finding/remove', params)
+      Api.post('/finding/remove', params)
         .then(() => {
           this.$emit('get-project')
         })
@@ -807,7 +807,7 @@ export default {
         license_type: '',
         public_type: 'private'
       }
-      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+      Api.patch(`/isoqf_projects/${this.project.id}`, params)
         .then(() => {
           // Emit an event to notify the parent component that the project status changed
           this.$emit('update-project-status')
@@ -824,7 +824,7 @@ export default {
       const params = {
         references: this.selected_references
       }
-      axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
+      Api.patch(`/isoqf_lists/${this.lists[index].id}`, params)
         .then(async () => {
           this.updateFindingReferences(this.selected_references)
           this.$emit('get-lists')
@@ -844,7 +844,7 @@ export default {
       const params = {
         'evidence_profile.references': references
       }
-      axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
+      Api.patch(`/isoqf_findings/${this.finding.id}`, params)
         .then(() => {
           this.cleanReferencesList()
           this.$emit('set-load-references', false)

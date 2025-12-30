@@ -1,4 +1,4 @@
-import axios from 'axios'
+import Api from './Api'
 
 function validEmail (email) {
   var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
@@ -9,7 +9,7 @@ function validUrl (url) {
   return re.test(url)
 }
 async function canPublish (project) {
-  return axios.get('/api/project/can_publish', { params: project })
+  return Api.get('/api/project/can_publish', project)
 }
 
 export default class Project {
@@ -121,7 +121,7 @@ export default class Project {
       const creationDate = Date.now()
       params.created_at = creationDate
       params.last_update = creationDate
-      return axios.post('/api/isoqf_projects', params)
+      return Api.post('/isoqf_projects', params)
     } else {
       return { data: { status: false, message: 'When you create a project you couldnt publish without complete at least one finding', ...validation.data } }
     }
@@ -138,7 +138,7 @@ export default class Project {
         params.private = false
         params.is_public = true
       }
-      const data = await axios.patch('/api/publish', { params })
+      const data = await Api.patch('/api/publish', { params })
       return {data: {status: true, ...data}}
     } else {
       return validation

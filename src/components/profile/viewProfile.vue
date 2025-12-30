@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import subscribe from '@/components/commons/subscribe.vue'
 import { Trans } from '@/plugins/Translation'
 
@@ -128,7 +128,7 @@ export default {
         user_id: this.$store.state.user.id,
         new_password: this.new_password
       }
-      axios.post(`/users/change_password`, params)
+      Api.post(`/users/change_password`, params)
         .then((r) => {
           this.new_password = null
           this.new_password_repeat = null
