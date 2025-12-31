@@ -457,7 +457,7 @@
         <template v-slot:cell(checkbox)="data">
           <b-form-checkbox
             :id="`checkbox-${data.index}`"
-            v-model="list.references"
+            v-model="localReferences"
             :name="`checkbox-${data.index}`"
             :value="data.item.id"
             :disabled="!permission">
@@ -559,8 +559,7 @@ export default {
   },
   components: {
     'back-to-top': backToTop,
-    'evidence-profile-form': () => import('./evidenceProfileForm.vue'),
-    'videoHelp': () => import('../videoHelp')
+    'evidence-profile-form': () => import('./evidenceProfileForm.vue')
   },
   mounted: function () {
     this.localExtractedData = this.extractedData
@@ -575,7 +574,7 @@ export default {
   },
   data () {
     return {
-      original_references: [],
+      localReferences: [],
       pendingSaveReferences: false,
       localExtractedData: {
         fields: [],
@@ -608,15 +607,12 @@ export default {
           key: 'references',
           label: this.$t('soqf_table.references'),
           formatter: value => {
-            let references = ''
-            for (let item of value) {
-              for (let reference of this.references) {
-                if (item === reference.id) {
-                  references = references.concat(reference.content)
-                }
-              }
-            }
-            return references
+            return value
+              .map(refId => {
+                const ref = this.references.find(r => r.id === refId)
+                return ref ? ref.content : ''
+              })
+              .join('')
           }
         }
       ]
@@ -629,7 +625,7 @@ export default {
     checkReferencesBeforeSaving: function (bvModalEvent) {
       // Prevenir que el modal se cierre automáticamente si no hay referencias seleccionadas
       // y había referencias originalmente
-      if (this.list.references.length === 0 && this.original_references.length > 0 && this.project.is_public) {
+      if (this.localReferences.length === 0 && this.list.references.length > 0 && this.project.is_public) {
         bvModalEvent.preventDefault()
         this.pendingSaveReferences = true
 
@@ -685,8 +681,8 @@ export default {
     },
 
     cancelNoReferencesWarning: function () {
-      // El usuario canceló - restaurar las referencias originales
-      this.list.references = [...this.original_references]
+      // El usuario canceló - restaurar localReferences al estado original
+      this.localReferences = [...this.list.references]
       this.pendingSaveReferences = false
     },
 
@@ -703,8 +699,8 @@ export default {
     },
 
     cancelPrivateProjectWarning: function () {
-      // El usuario canceló - restaurar las referencias originales
-      this.list.references = [...this.original_references]
+      // El usuario canceló - restaurar localReferences al estado original
+      this.localReferences = [...this.list.references]
       this.pendingSaveReferences = false
     },
 
@@ -727,14 +723,14 @@ export default {
     },
 
     cleanReferencesList: function () {
-      this.original_references = []
+      this.localReferences = []
       this.pendingSaveReferences = false
     },
 
     saveReferencesList: function () {
-      this.evidenceProfileTableSettings.isBusy = true
+      this.busyEvidenceProfileTable(true)
       const params = {
-        references: this.list.references
+        references: this.localReferences
       }
       Api.patch(`/isoqf_lists/${this.list.id}`, params)
         .then(() => {
@@ -744,7 +740,7 @@ export default {
     },
     updateReferencesInFindings: function () {
       let params = {
-        'evidence_profile.references': this.list.references
+        'evidence_profile.references': this.localReferences
       }
       Api.patch(`/isoqf_findings/${this.findings.id}`, params)
         .then((response) => {
@@ -824,8 +820,8 @@ export default {
       }
     },
     openModalReferences: function () {
-      // Guardar el estado original de las referencias
-      this.original_references = [...this.list.references]
+      // Copiar las referencias a la variable local para edición
+      this.localReferences = [...this.list.references]
       this.$refs['modalReferences'].show()
     },
     editStageTwo: function (data, type) {

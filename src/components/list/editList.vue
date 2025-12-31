@@ -192,13 +192,7 @@
 
 <script>
 import Api from '@/utils/Api'
-import draggable from 'vuedraggable'
 import Commons from '../../utils/commons'
-const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
-const bCardActionTable = () => import(/* webpackChunkName: "backtotop" */'../tableActions/ActionTable')
-const editReviewFinding = () => import(/* webpackChunkName: "backtotop" */'../editReviewFinding')
-const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
-const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -208,12 +202,6 @@ const editListExtractedData = () => import('./editListExtractedData.vue')
 
 export default {
   components: {
-    'bc-filters': bCardFilters,
-    'bc-action-table': bCardActionTable,
-    'edit-review-finding': editReviewFinding,
-    'back-to-top': backToTop,
-    draggable,
-    videoHelp,
     'edit-header-list': editHeaderList,
     'edit-list-actions-buttons': editListActionButtons,
     'evidence-profile-table': editListEvidenceProfile,
@@ -281,12 +269,6 @@ export default {
         list_id: '',
         organization: ''
       },
-      // buffer_modal_stage_one: {
-      //   id: null,
-      //   name: '',
-      //   list_id: '',
-      //   organization: ''
-      // },
       buffer_modal_stage_two: {
         methodological_limitations: {
           option: null,
@@ -328,7 +310,8 @@ export default {
       },
       editingUser: {
         first_name: '',
-        last_name: ''
+        last_name: '',
+        show: false
       },
       list: {
         id: '',
@@ -407,19 +390,7 @@ export default {
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
-      },
-      editingUser: {
-        show: false
       }
-    }
-  },
-  mounted () {
-    this.updateTranslations()
-    this.getList()
-  },
-  watch: {
-    '$i18n.locale' (val) {
-      this.updateTranslations()
     }
   },
   methods: {
@@ -443,6 +414,31 @@ export default {
         { value: 3, text: this.$t('worksheet.options.very_low_confidence') },
         { value: null, text: this.$t('worksheet.options.undefined') }
       ]
+    },
+    filterItemsByReferences: function (items, references, fieldsLength) {
+      const referencesSet = new Set(references)
+      const excludedKeys = new Set(['authors', 'ref_id'])
+      let haveContent = 0
+      const filteredItems = []
+
+      for (const item of items) {
+        if (!referencesSet.has(item.ref_id)) continue
+
+        filteredItems.push(item)
+
+        const itemKeys = Object.keys(item)
+        for (const key of itemKeys) {
+          if (!excludedKeys.has(key) && item[key] === '') {
+            haveContent++
+          }
+        }
+
+        if (fieldsLength > itemKeys.length) {
+          haveContent++
+        }
+      }
+
+      return { filteredItems, haveContent }
     },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
@@ -628,38 +624,18 @@ export default {
       const characteristics = JSON.parse(JSON.stringify(this.list.characteristics))
       if (characteristics.length) {
         let data = characteristics[0]
-        let items = []
 
-        let haveContent = 0
-        for (let item of data.items) {
-          for (let reference of this.list.references) {
-            if (reference === item.ref_id) {
-              items.push(item)
-              for (let i in item) {
-                if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                  if (item[i] === '') {
-                    haveContent++
-                  }
-                }
-              }
-              if (data.fields.length > Object.keys(item).length) {
-                haveContent++
-              }
-            }
-          }
-        }
-        if (data.fields.length < 3) {
-          haveContent++
-        }
+        const { filteredItems, haveContent } = this.filterItemsByReferences(
+          data.items,
+          this.list.references,
+          data.fields.length
+        )
 
-        this.ui.adequacy.chars_of_studies.display_warning = true
-        this.ui.relevance.chars_of_studies.display_warning = true
-        if (!haveContent) {
-          this.ui.adequacy.chars_of_studies.display_warning = false
-          this.ui.relevance.chars_of_studies.display_warning = false
-        }
+        const hasWarning = haveContent > 0 || data.fields.length < 3
+        this.ui.adequacy.chars_of_studies.display_warning = hasWarning
+        this.ui.relevance.chars_of_studies.display_warning = hasWarning
 
-        data.items = items
+        data.items = filteredItems
         this.characteristics_studies = data
         if (data.fields.length) {
           let fields = JSON.parse(JSON.stringify(data.fields))
@@ -698,45 +674,19 @@ export default {
     getMethAssessments: function () {
       const assessments = JSON.parse(JSON.stringify(this.list.assessments))
       if (assessments.length) {
-        const _references = JSON.parse(JSON.stringify(this.list.references))
         let data = assessments[0]
-        let items = []
 
-        let haveContent = 0
-        for (let item of data.items) {
-          for (let reference of _references) {
-            if (reference === item.ref_id) {
-              items.push(item)
-              for (let i in item) {
-                if (item[i] !== 'author' && item[i] !== 'ref_id') {
-                  if (item[i] === '') {
-                    haveContent++
-                  }
-                }
-              }
-              if (data.fields.length > Object.keys(item).length) {
-                haveContent++
-              }
-            }
-          }
-        }
-        if (data.fields.length < 3) {
-          haveContent++
-        }
-        this.ui.methodological_assessments.display_warning = true
-        if (!haveContent) {
-          this.ui.methodological_assessments.display_warning = false
-        }
+        const { filteredItems, haveContent } = this.filterItemsByReferences(
+          data.items,
+          this.list.references,
+          data.fields.length
+        )
 
-        data.items = items
+        const hasWarning = haveContent > 0 || data.fields.length < 3
+        this.ui.methodological_assessments.display_warning = hasWarning
 
-        let _fields = data.fields
-        data.fieldsObj = []
-        for (let field of _fields) {
-          if (field.key !== 'ref_id') {
-            data.fieldsObj.push(field)
-          }
-        }
+        data.items = filteredItems
+        data.fieldsObj = data.fields.filter(field => field.key !== 'ref_id')
 
         this.meth_assessments = data
       } else {
@@ -786,27 +736,23 @@ export default {
         })
         localData.original_items = JSON.parse(JSON.stringify(localData.items))
         let haveContent = 0
-        for (let i in _references) {
-          let index = 0
-          for (let item of extractedDataItems) {
-            if (item.ref_id === _references[i]) {
-              _items.push({
-                ref_id: item.ref_id,
-                authors: item.authors,
-                column_0: item.column_0,
-                index: index
-              })
-              if (Object.prototype.hasOwnProperty.call(item, 'column_0')) {
-                if (item.column_0 === '') {
-                  haveContent++
-                }
-              } else {
-                haveContent++
-              }
+        const referencesSet = new Set(_references)
+
+        extractedDataItems.forEach((item, index) => {
+          if (referencesSet.has(item.ref_id)) {
+            _items.push({
+              ref_id: item.ref_id,
+              authors: item.authors,
+              column_0: item.column_0,
+              index: index
+            })
+
+            const hasEmptyOrMissingColumn = !item.column_0
+            if (hasEmptyOrMissingColumn) {
+              haveContent++
             }
-            index++
           }
-        }
+        })
 
         this.ui.coherence.display_warning = true
         this.ui.methodological_assessments.extracted_data.display_warning = true
@@ -853,7 +799,8 @@ export default {
 
     modalDataChanged: function (data) {
       this.buffer_modal_stage_two = JSON.parse(JSON.stringify(data))
-    },    busyEvidenceProfileTable: function (status) {
+    },
+    busyEvidenceProfileTable: function (status) {
       this.evidence_profile_table_settings.isBusy = status
     },
     callGetFinding: function (status) {
@@ -864,9 +811,13 @@ export default {
     }
   },
   mounted () {
+    this.updateTranslations()
     this.getList()
   },
   watch: {
+    '$i18n.locale' (val) {
+      this.updateTranslations()
+    },
     '$route' (to, from) {
       if (to.params.id !== from.params.id) {
         this.getList()
