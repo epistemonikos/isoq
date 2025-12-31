@@ -1647,7 +1647,7 @@ export default {
       return _category
     },
     printErrors: function (error) {
-      this.Commons.printErrors(error)
+      Commons.printErrors(error)
     },
     createExtractedData: async function (findingID) {
       const _references = JSON.parse(JSON.stringify(this.references))
@@ -1711,6 +1711,11 @@ export default {
       // if the current user belongs to the same personal organization, allow
       if (this.$store && this.$store.state && this.$store.state.user && this.$store.state.user.personal_organization === this.$route.params.org_id) {
         return true
+      }
+
+      // Safeguard: if user data is missing (e.g. offline), return false
+      if (!this.$store || !this.$store.state || !this.$store.state.user) {
+        return false
       }
 
       // check any of the requested permissions on the project
