@@ -2,26 +2,29 @@
   "name": "Interactive SoQ",
   "short_name": "iSoQ",
   "description": "Interactive Summary of Qualitative Findings - GRADE-CERQual approach",
-  "start_url": "./",
+  "start_url": "../",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
   "orientation": "any",
   "icons": [
     {
-      "src": "./static/icons/icon-192x192.png",
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./static/icons/icon-512x512.png",
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["productivity", "education"],
+  "categories": [
+    "productivity",
+    "education"
+  ],
   "lang": "en",
   "dir": "ltr"
 }

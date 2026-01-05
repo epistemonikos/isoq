@@ -92,7 +92,7 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(registration => {
-        console.log('SW registered:', registration.scope)
+        // console.log('SW registered:', registration.scope)
 
         // Escuchar actualizaciones del service worker
         registration.addEventListener('updatefound', () => {
@@ -101,7 +101,7 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // Nueva versión disponible
-                console.log('New content available, refresh to update.')
+                // console.log('New content available, refresh to update.')
               }
             })
           }
