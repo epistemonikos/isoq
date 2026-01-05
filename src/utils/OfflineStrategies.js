@@ -22,7 +22,7 @@ import {
 export const strategies = [
   {
     name: 'projects-list',
-    patterns: [/^(\/isoqf_projects|\/getProjects)(\/|$|\?)/],
+    patterns: [/^(\/isoqf_projects|\/getProjects)(\/?$|\?)/],
     save: async (data) => {
       if (Array.isArray(data)) {
         for (const project of data) {
