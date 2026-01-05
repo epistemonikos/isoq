@@ -60,10 +60,10 @@ function createOfflineError (message = 'No internet connection') {
 
 // Patrones de endpoints para cachear
 const CACHE_PATTERNS = {
-  projects: /^\/isoqf_projects(\/|$|\?)/,
+  projects: /^(\/isoqf_projects|\/getProjects)(\/|$|\?)/,
   worksheets: /^\/isoqf_lists(\/|$|\?)|^\/getLists/,
-  singleProject: /^\/isoqf_projects\/(\d+)/,
-  singleWorksheet: /^\/getLists\?id=(\d+)/,
+  singleProject: /^\/isoqf_projects\/([a-zA-Z0-9]+)/,
+  singleWorksheet: /^\/getLists\?id=([a-zA-Z0-9]+)/,
   findings: /^\/isoqf_findings(\/|$|\?)|^\/findings/,
   references: /^\/isoqf_references(\/|$|\?)/,
   characteristics: /^\/isoqf_characteristics(\/|$|\?)/,
@@ -231,7 +231,7 @@ export default class Api {
       // Intentar obtener datos del cache según el patrón
 
       // Lista de proyectos
-      if (path === '/isoqf_projects' || path.startsWith('/isoqf_projects?')) {
+      if (path === '/isoqf_projects' || path.startsWith('/isoqf_projects?') || path.startsWith('/getProjects')) {
         const cached = await getAllProjects()
         if (cached && cached.length > 0) {
           return cached.map(p => p.data)
@@ -239,32 +239,176 @@ export default class Api {
       }
 
       // Proyecto individual
-      const projectMatch = path.match(/\/isoqf_projects\/(\d+)/)
+      const projectMatch = path.match(/\/isoqf_projects\/([a-zA-Z0-9]+)/)
       if (projectMatch) {
-        const projectId = parseInt(projectMatch[1])
+        const projectId = projectMatch[1]
         const cached = await getProject(projectId)
         if (cached) return cached.data
       }
 
       // Worksheet individual via path regex
-      const worksheetMatch = path.match(/getLists\?id=(\d+)/)
+      const worksheetMatch = path.match(/getLists\?id=([a-zA-Z0-9]+)/)
       if (worksheetMatch) {
-        const worksheetId = parseInt(worksheetMatch[1])
+        const worksheetId = worksheetMatch[1]
         const cached = await getWorksheet(worksheetId)
-        if (cached) return cached.data
+        if (cached) {
+            let data = cached.data
+            const pId = data.project_id || cached.projectId
+            
+            // Hydrate project if missing
+            if (!data.project && pId) {
+                const projectRec = await getProject(pId)
+                if (projectRec) data.project = projectRec.data
+            }
+            
+            // Hydrate fullreferences if missing (required by editList.vue)
+            if (!data.fullreferences && pId) {
+                const refs = await getReferencesByProject(pId)
+                if (refs && refs.length > 0) {
+                    data.fullreferences = refs.map(r => r.data)
+                } else {
+                    data.fullreferences = []
+                }
+            } else if (!data.fullreferences) {
+                data.fullreferences = []
+            }
+
+            // Hydrate findings if missing (required by editList.vue)
+            if (!data.findings) {
+                const findingsRec = await getFindingsByWorksheet(data.id)
+                if (findingsRec && findingsRec.length > 0) {
+                    data.findings = findingsRec.map(r => r.data)
+                } else {
+                    data.findings = []
+                }
+            }
+
+            // Hydrate characteristics if missing
+            if (!data.characteristics && pId) {
+                const chars = await getCharacteristicsByProject(pId)
+                if (chars && chars.length > 0) {
+                     data.characteristics = chars
+                } else {
+                     data.characteristics = []
+                }
+            } else if (!data.characteristics) {
+                data.characteristics = []
+            }
+
+            // Hydrate assessments if missing
+            if (!data.assessments && pId) {
+                const assess = await getAssessmentsByProject(pId)
+                if (assess && assess.length > 0) {
+                     data.assessments = assess
+                } else {
+                     data.assessments = []
+                }
+            } else if (!data.assessments) {
+                data.assessments = []
+            }
+
+            // Hydrate extracted_data if missing
+            if (!data.extracted_data) {
+                 if (data.findings && data.findings.length > 0) {
+                      const findingId = data.findings[0].id
+                      const extracted = await getExtractedDataByFinding(findingId)
+                      if (extracted && extracted.length > 0) {
+                          data.extracted_data = extracted
+                      } else {
+                          data.extracted_data = [] // Ensure array if no data found
+                      }
+                 } else {
+                      data.extracted_data = [] // Ensure array if no findings
+                 }
+            }
+
+            return [data]
+        }
       }
 
       // Worksheet individual via params
       if ((path === '/getLists' || path === '/getLists/') && params && params.id) {
-        const worksheetId = parseInt(params.id)
+        const worksheetId = params.id
         const cached = await getWorksheet(worksheetId)
-        if (cached) return cached.data
+        if (cached) {
+            let data = cached.data
+            const pId = data.project_id || cached.projectId
+
+            // Hydrate project if missing
+            if (!data.project && pId) {
+                const projectRec = await getProject(pId)
+                if (projectRec) data.project = projectRec.data
+            }
+            
+            // Hydrate fullreferences if missing
+            if (!data.fullreferences && pId) {
+                const refs = await getReferencesByProject(pId)
+                if (refs && refs.length > 0) {
+                     data.fullreferences = refs.map(r => r.data)
+                } else {
+                     data.fullreferences = []
+                }
+            } else if (!data.fullreferences) {
+                 data.fullreferences = []
+            }
+
+            // Hydrate findings if missing (required by editList.vue)
+            if (!data.findings) {
+                const findingsRec = await getFindingsByWorksheet(data.id)
+                if (findingsRec && findingsRec.length > 0) {
+                    data.findings = findingsRec.map(r => r.data)
+                } else {
+                    data.findings = []
+                }
+            }
+
+            // Hydrate characteristics if missing
+            if (!data.characteristics && pId) {
+                const chars = await getCharacteristicsByProject(pId)
+                if (chars && chars.length > 0) {
+                     data.characteristics = chars
+                } else {
+                     data.characteristics = []
+                }
+            } else if (!data.characteristics) {
+                data.characteristics = []
+            }
+
+            // Hydrate assessments if missing
+            if (!data.assessments && pId) {
+                const assess = await getAssessmentsByProject(pId)
+                if (assess && assess.length > 0) {
+                     data.assessments = assess
+                } else {
+                     data.assessments = []
+                }
+            } else if (!data.assessments) {
+                data.assessments = []
+            }
+
+            // Hydrate extracted_data if missing
+            if (!data.extracted_data) {
+                 if (data.findings && data.findings.length > 0) {
+                      const findingId = data.findings[0].id
+                      const extracted = await getExtractedDataByFinding(findingId)
+                      if (extracted && extracted.length > 0) {
+                          data.extracted_data = extracted
+                      } else {
+                          data.extracted_data = [] // Ensure array if no data found
+                      }
+                 } else {
+                      data.extracted_data = [] // Ensure array if no findings
+                 }
+            }
+
+            return [data]
+        }
       }
 
       // Worksheets por proyecto
-      const worksheetsMatch = path.match(/isoqf_lists\?project_id=(\d+)/)
+      const worksheetsMatch = path.match(/isoqf_lists\?project_id=([a-zA-Z0-9]+)/)
       if (worksheetsMatch) {
-        const projectId = parseInt(worksheetsMatch[1])
+        const projectId = worksheetsMatch[1]
         const cached = await getWorksheetsByProject(projectId)
         if (cached && cached.length > 0) {
           return cached.map(w => w.data)
@@ -273,14 +417,27 @@ export default class Api {
       
       // Fallback: check params object if regex failed
       if ((path === '/isoqf_lists' || path === '/isoqf_lists/') && params && params.project_id) {
-         const cached = await getWorksheetsByProject(parseInt(params.project_id))
+         const cached = await getWorksheetsByProject(params.project_id)
          if (cached && cached.length > 0) return cached.map(w => w.data)
       }
 
       // Findings por worksheet
-      if (CACHE_PATTERNS.findings.test(path) && params && params.list_id) {
-        const cached = await getFindingsByWorksheet(params.list_id)
-        if (cached && cached.length > 0) return cached.map(r => r.data)
+      if (CACHE_PATTERNS.findings.test(path) && params) {
+         if (params.list_id) {
+           const cached = await getFindingsByWorksheet(params.list_id)
+           if (cached && cached.length > 0) return cached.map(r => r.data)
+         } else if (params.list_ids) {
+            // Support comma-separated list_ids
+            const ids = params.list_ids.split(',').map(id => id.trim()).filter(id => id)
+            let allFindings = []
+            for (const id of ids) {
+                const cached = await getFindingsByWorksheet(id)
+                if (cached && cached.length > 0) {
+                    allFindings = allFindings.concat(cached.map(r => r.data))
+                }
+            }
+            if (allFindings.length > 0) return allFindings
+         }
       }
 
       // References por proyecto
@@ -305,10 +462,25 @@ export default class Api {
       }
 
       // Extracted Data por finding
-      if (CACHE_PATTERNS.extractedData.test(path) && params && (params.finding_id || params.findingId)) {
-        const findingId = params.finding_id || params.findingId
-        const cached = await getExtractedDataByFinding(findingId)
-        if (cached && cached.length > 0) return cached
+      if (CACHE_PATTERNS.extractedData.test(path) && params) {
+        if (params.finding_id || params.findingId) {
+            const findingId = params.finding_id || params.findingId
+            const cached = await getExtractedDataByFinding(findingId)
+            if (cached && cached.length > 0) return cached
+        } else if (params.list_id) {
+            // Extracted Data por worksheet (via findings)
+            const findings = await getFindingsByWorksheet(params.list_id)
+            let allExtracted = []
+            if (findings && findings.length > 0) {
+                for (const finding of findings) {
+                    const extracted = await getExtractedDataByFinding(finding.id)
+                    if (extracted && extracted.length > 0) {
+                        allExtracted = allExtracted.concat(extracted)
+                    }
+                }
+            }
+            if (allExtracted.length > 0) return allExtracted
+        }
       }
 
       // List Categories por proyecto
@@ -351,7 +523,7 @@ export default class Api {
     if (!isOnline) {
       const cached = await tryServeFromCache('offline')
       if (cached) return cached
-      throw createOfflineError('No internet connection and no cached data available')
+      throw createOfflineError('No internet connection and no cached data available for: ' + path)
     }
 
     // Intentar la red

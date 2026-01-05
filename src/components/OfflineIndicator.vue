@@ -21,7 +21,12 @@
 </template>
 
 <script>
-import { getOnlineStatus, setOnlineStatus, syncPendingOperations, getPendingOperationsCount } from '@/utils/axiosOffline'
+import Api from '@/utils/Api'
+
+const getOnlineStatus = () => Api.isOnline()
+const setOnlineStatus = (status) => Api.setOnline(status)
+const syncPendingOperations = () => Api.syncPendingOperations()
+const getPendingOperationsCount = () => Api.getPendingCount()
 // Icons are registered globally in main.js
 
 export default {

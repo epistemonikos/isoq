@@ -74,9 +74,17 @@ db.version(3).stores({
  */
 export async function saveProject(project) {
   try {
+    const existing = await db.projects.get(project.id)
+    let dataToSave = project.data || project
+
+    if (existing) {
+      // Safe merge: preserve existing details that might not be in the new data
+      dataToSave = { ...existing.data, ...dataToSave }
+    }
+
     const record = {
       id: project.id,
-      data: project.data || project,
+      data: dataToSave,
       lastSync: new Date().toISOString()
     }
     return await db.projects.put(record)

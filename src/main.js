@@ -9,9 +9,7 @@ import { store } from './store'
 import routes from './router/index'
 import VueBootstrap from 'bootstrap-vue'
 
-// Setup axios interceptors for offline support
-import { setupAxiosOffline } from './utils/axiosOffline'
-setupAxiosOffline()
+
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
