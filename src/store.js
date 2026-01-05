@@ -95,8 +95,12 @@ export const store = new Vuex.Store({
             resolve()
           }).catch((error) => {
             console.log(error)
-            // If offline, try to restore from localStorage
-            if (!navigator.onLine) {
+            // If offline or network error, try to restore from localStorage
+            const isOffline = !navigator.onLine || 
+                              (error.message && error.message.includes('Network Error')) || 
+                              error.isOfflineError === true
+            
+            if (isOffline) {
               const userData = localStorage.getItem('user-data')
               if (userData) {
                 try {

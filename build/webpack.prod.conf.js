@@ -119,6 +119,8 @@ const webpackConfig = merge(baseWebpackConfig, {
       clientsClaim: true,
       skipWaiting: true,
       swDest: 'service-worker.js',
+      // Fallback para navegación (SPA)
+      navigateFallback: 'index.html',
       // Cache de assets estáticos generados por webpack
       include: [/\.html$/, /\.js$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.jpg$/, /\.svg$/],
       // No precachear archivos muy grandes
