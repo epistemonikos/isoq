@@ -1029,12 +1029,13 @@
     }
   },
   "offline": {
-    "noConnection": "No internet connection",
-    "syncPending": "Changes pending sync",
+    "noConnection": "No Internet Connection",
+    "synced": "Changes Synced",
+    "syncPending": "Syncing pending changes...",
     "connected": "Connected",
-    "synced": "Changes synced successfully",
+    "pendingOperation": "pending operation",
+    "pendingOperations": "pending operations",
     "refresh": "Refresh",
-    "pendingOperation": "pending change",
-    "pendingOperations": "pending changes"
+    "noInternetAndNoCache": "No internet connection and no cached data available for"
   }
 }

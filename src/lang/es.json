@@ -1029,12 +1029,13 @@
     }
   },
   "offline": {
-    "noConnection": "Sin conexión a internet",
-    "syncPending": "Cambios pendientes de sincronizar",
+    "noConnection": "Sin conexión a Internet",
+    "synced": "Cambios sincronizados",
+    "syncPending": "Sincronizando cambios pendientes...",
     "connected": "Conectado",
-    "synced": "Cambios sincronizados correctamente",
-    "refresh": "Actualizar",
-    "pendingOperation": "cambio pendiente",
-    "pendingOperations": "cambios pendientes"
+    "pendingOperation": "operación pendiente",
+    "pendingOperations": "operaciones pendientes",
+    "refresh": "Recargar",
+    "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para"
   }
 }

@@ -23,6 +23,7 @@ import {
   removePendingOperation,
   getPendingOperationsCount
 } from '@/services/db'
+import { i18n } from '@/plugins/i18n'
 
 // Estado de conexión
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -30,7 +31,6 @@ let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 // Listeners para cambios de conexión
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    console.log('Browser reports: online')
     // Resetear estado - la próxima petición confirmará si realmente hay conexión
     isOnline = true
     // Intentar sincronizar operaciones pendientes
@@ -40,14 +40,14 @@ if (typeof window !== 'undefined') {
   })
 
   window.addEventListener('offline', () => {
-    console.log('Browser reports: offline')
     isOnline = false
   })
 }
 
 // Crear error compatible con estructura de Axios
-function createOfflineError (message = 'No internet connection') {
-  const error = new Error(message)
+function createOfflineError (message) {
+  const msg = message || i18n.t('offline.noConnection')
+  const error = new Error(msg)
   error.isOfflineError = true
   error.response = {
     status: 0,
@@ -512,7 +512,7 @@ export default class Api {
       if (this.shouldCache(path)) {
         const cachedData = await this.getCachedData(path, data)
         if (cachedData) {
-          console.log(`Serving from cache (${reason}):`, path)
+          // console.log(`Serving from cache (${reason}):`, path)
           return { data: cachedData, fromCache: true, status: 200 }
         }
       }
@@ -523,7 +523,7 @@ export default class Api {
     if (!isOnline) {
       const cached = await tryServeFromCache('offline')
       if (cached) return cached
-      throw createOfflineError('No internet connection and no cached data available for: ' + path)
+      throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
     }
 
     // Intentar la red
@@ -548,14 +548,14 @@ export default class Api {
       if (isNetworkError) {
         // Marcar como offline
         isOnline = false
-        console.log('Network error detected, switching to offline mode')
+        // console.log('Network error detected, switching to offline mode')
 
         // Intentar servir desde cache
         const cached = await tryServeFromCache('network error')
         if (cached) return cached
 
         // No hay cache, lanzar error compatible con Axios
-        throw createOfflineError('Network error - no cached data available for: ' + path)
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
 
       // Error del servidor (4xx, 5xx) - no es offline, propagar el error
@@ -573,7 +573,7 @@ export default class Api {
         method: 'PUT',
         payload: data
       })
-      console.log('Operation queued for sync:', 'PUT', url)
+      // console.log('Operation queued for sync:', 'PUT', url)
       return { data: data, queued: true, status: 200 }
     }
 
@@ -602,7 +602,7 @@ export default class Api {
         method: 'PATCH',
         payload: data
       })
-      console.log('Operation queued for sync:', 'PATCH', url)
+      // console.log('Operation queued for sync:', 'PATCH', url)
       return { data: data, queued: true, status: 200 }
     }
 
@@ -631,7 +631,7 @@ export default class Api {
         method: 'POST',
         payload: data
       })
-      console.log('Operation queued for sync:', 'POST', url)
+      // console.log('Operation queued for sync:', 'POST', url)
       return { data: data, queued: true, status: 200 }
     }
 
@@ -660,7 +660,7 @@ export default class Api {
         method: 'DELETE',
         payload: data
       })
-      console.log('Operation queued for sync:', 'DELETE', url)
+      // console.log('Operation queued for sync:', 'DELETE', url)
       return { data: null, queued: true, status: 200 }
     }
 
@@ -685,7 +685,7 @@ export default class Api {
 
     try {
       const operations = await getPendingOperations()
-      console.log(`Syncing ${operations.length} pending operations...`)
+      // console.log(`Syncing ${operations.length} pending operations...`)
 
       for (const op of operations) {
         try {
@@ -705,7 +705,7 @@ export default class Api {
           }
           // Operación exitosa, remover de la cola
           await removePendingOperation(op.id)
-          console.log('Synced operation:', op.method, op.endpoint)
+          // console.log('Synced operation:', op.method, op.endpoint)
         } catch (error) {
           console.error('Failed to sync operation:', op.method, op.endpoint, error)
           // Mantener en la cola para reintentar después

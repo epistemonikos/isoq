@@ -120,7 +120,7 @@ export default {
       try {
         this.pendingCount = await getPendingOperationsCount()
       } catch (error) {
-        console.warn('Error getting pending count:', error)
+        // console.warn('Error getting pending count:', error)
       }
     },
     async syncNow () {
@@ -132,7 +132,7 @@ export default {
         // Actualizar estado después de sync exitoso
         this.checkOnlineStatus()
       } catch (error) {
-        console.error('Sync error:', error)
+        // console.error('Sync error:', error)
       } finally {
         this.syncing = false
       }
