@@ -150,22 +150,6 @@ const webpackConfig = merge(baseWebpackConfig, {
               maxAgeSeconds: 365 * 24 * 60 * 60 // 1 año
             }
           }
-        },
-        {
-          // Network first para API (con fallback a cache)
-          urlPattern: /\/api\//,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            networkTimeoutSeconds: 10,
-            expiration: {
-              maxEntries: 200,
-              maxAgeSeconds: 24 * 60 * 60 // 1 día
-            },
-            cacheableResponse: {
-              statuses: [0, 200]
-            }
-          }
         }
       ]
     })

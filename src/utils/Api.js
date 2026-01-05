@@ -1,29 +1,12 @@
 import axios from 'axios'
 import {
-  saveProject,
-  getProject,
-  getAllProjects,
-  saveWorksheet,
-  getWorksheet,
-  getWorksheetsByProject,
-  saveFinding,
-  getFindingsByWorksheet,
-  saveReference,
-  getReferencesByProject,
-  saveCharacteristic,
-  getCharacteristicsByProject,
-  saveAssessment,
-  getAssessmentsByProject,
-  saveExtractedData,
-  getExtractedDataByFinding,
-  saveListCategory,
-  getListCategoriesByProject,
   addPendingOperation,
   getPendingOperations,
   removePendingOperation,
   getPendingOperationsCount
 } from '@/services/db'
 import { i18n } from '@/plugins/i18n'
+import { strategies } from '@/utils/OfflineStrategies'
 
 // Estado de conexión
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -56,20 +39,6 @@ function createOfflineError (message) {
   }
   error.request = {}
   return error
-}
-
-// Patrones de endpoints para cachear
-const CACHE_PATTERNS = {
-  projects: /^(\/isoqf_projects|\/getProjects)(\/|$|\?)/,
-  worksheets: /^\/isoqf_lists(\/|$|\?)|^\/getLists/,
-  singleProject: /^\/isoqf_projects\/([a-zA-Z0-9]+)/,
-  singleWorksheet: /^\/getLists\?id=([a-zA-Z0-9]+)/,
-  findings: /^\/isoqf_findings(\/|$|\?)|^\/findings/,
-  references: /^\/isoqf_references(\/|$|\?)/,
-  characteristics: /^\/isoqf_characteristics(\/|$|\?)/,
-  assessments: /^\/isoqf_assessments(\/|$|\?)/,
-  extractedData: /^\/isoqf_extracted_data(\/|$|\?)/,
-  listCategories: /^\/isoqf_list_categories(\/|$|\?)/
 }
 
 // Endpoints que NO deben cachearse
@@ -119,106 +88,19 @@ export default class Api {
     for (const pattern of NO_CACHE_PATTERNS) {
       if (pattern.test(path)) return false
     }
-    // Cachear si coincide con patrones incluidos
-    for (const key of Object.keys(CACHE_PATTERNS)) {
-      if (CACHE_PATTERNS[key].test(path)) return true
+    // Cachear si alguna estrategia coincide
+    for (const strategy of strategies) {
+      if (strategy.patterns.some(p => p.test(path))) return true
     }
     return false
   }
 
   static async cacheResponse (path, data) {
     try {
-      // Cachear proyectos
-      if (CACHE_PATTERNS.projects.test(path)) {
-        if (Array.isArray(data)) {
-          // Lista de proyectos
-          for (const project of data) {
-            await saveProject({ id: project.id, data: project })
-          }
-        } else if (data && data.id) {
-          // Proyecto individual
-          await saveProject({ id: data.id, data })
-        }
-      }
-
-      // Cachear worksheets
-      if (CACHE_PATTERNS.worksheets.test(path)) {
-        if (Array.isArray(data)) {
-          for (const worksheet of data) {
-            await saveWorksheet({
-              id: worksheet.id,
-              projectId: worksheet.project_id,
-              data: worksheet
-            })
-          }
-        } else if (data && data.id) {
-          await saveWorksheet({
-            id: data.id,
-            projectId: data.project_id,
-            data
-          })
-        }
-      }
-
-      // Cachear findings
-      if (CACHE_PATTERNS.findings.test(path)) {
-        if (Array.isArray(data)) {
-          for (const finding of data) {
-            await saveFinding({
-              id: finding.id,
-              worksheetId: finding.list_id,
-              data: finding
-            })
-          }
-        }
-      }
-
-      // Cachear references
-      if (CACHE_PATTERNS.references.test(path)) {
-        if (Array.isArray(data)) {
-          for (const ref of data) {
-            await saveReference({
-              id: ref.id,
-              projectId: ref.project_id,
-              data: ref
-            })
-          }
-        }
-      }
-
-      // Cachear characteristics
-      if (CACHE_PATTERNS.characteristics.test(path)) {
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            await saveCharacteristic(item)
-          }
-        }
-      }
-
-      // Cachear assessments
-      if (CACHE_PATTERNS.assessments.test(path)) {
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            await saveAssessment(item)
-          }
-        }
-      }
-
-      // Cachear extracted data
-      if (CACHE_PATTERNS.extractedData.test(path)) {
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            await saveExtractedData(item)
-          }
-        }
-      }
-
-      // Cachear list categories
-      if (CACHE_PATTERNS.listCategories.test(path)) {
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            await saveListCategory(item)
-          }
+      for (const strategy of strategies) {
+        if (strategy.patterns.some(p => p.test(path))) {
+          await strategy.save(data, path)
+          // No hacemos 'break' aquí por si un path coincide con múltiples estrategias (raro, pero posible)
         }
       }
     } catch (error) {
@@ -228,268 +110,12 @@ export default class Api {
 
   static async getCachedData (path, params = {}) {
     try {
-      // Intentar obtener datos del cache según el patrón
-
-      // Lista de proyectos
-      if (path === '/isoqf_projects' || path.startsWith('/isoqf_projects?') || path.startsWith('/getProjects')) {
-        const cached = await getAllProjects()
-        if (cached && cached.length > 0) {
-          return cached.map(p => p.data)
+      for (const strategy of strategies) {
+        if (strategy.patterns.some(p => p.test(path))) {
+          const data = await strategy.serve(path, params)
+          if (data) return data
         }
       }
-
-      // Proyecto individual
-      const projectMatch = path.match(/\/isoqf_projects\/([a-zA-Z0-9]+)/)
-      if (projectMatch) {
-        const projectId = projectMatch[1]
-        const cached = await getProject(projectId)
-        if (cached) return cached.data
-      }
-
-      // Worksheet individual via path regex
-      const worksheetMatch = path.match(/getLists\?id=([a-zA-Z0-9]+)/)
-      if (worksheetMatch) {
-        const worksheetId = worksheetMatch[1]
-        const cached = await getWorksheet(worksheetId)
-        if (cached) {
-            let data = cached.data
-            const pId = data.project_id || cached.projectId
-            
-            // Hydrate project if missing
-            if (!data.project && pId) {
-                const projectRec = await getProject(pId)
-                if (projectRec) data.project = projectRec.data
-            }
-            
-            // Hydrate fullreferences if missing (required by editList.vue)
-            if (!data.fullreferences && pId) {
-                const refs = await getReferencesByProject(pId)
-                if (refs && refs.length > 0) {
-                    data.fullreferences = refs.map(r => r.data)
-                } else {
-                    data.fullreferences = []
-                }
-            } else if (!data.fullreferences) {
-                data.fullreferences = []
-            }
-
-            // Hydrate findings if missing (required by editList.vue)
-            if (!data.findings) {
-                const findingsRec = await getFindingsByWorksheet(data.id)
-                if (findingsRec && findingsRec.length > 0) {
-                    data.findings = findingsRec.map(r => r.data)
-                } else {
-                    data.findings = []
-                }
-            }
-
-            // Hydrate characteristics if missing
-            if (!data.characteristics && pId) {
-                const chars = await getCharacteristicsByProject(pId)
-                if (chars && chars.length > 0) {
-                     data.characteristics = chars
-                } else {
-                     data.characteristics = []
-                }
-            } else if (!data.characteristics) {
-                data.characteristics = []
-            }
-
-            // Hydrate assessments if missing
-            if (!data.assessments && pId) {
-                const assess = await getAssessmentsByProject(pId)
-                if (assess && assess.length > 0) {
-                     data.assessments = assess
-                } else {
-                     data.assessments = []
-                }
-            } else if (!data.assessments) {
-                data.assessments = []
-            }
-
-            // Hydrate extracted_data if missing
-            if (!data.extracted_data) {
-                 if (data.findings && data.findings.length > 0) {
-                      const findingId = data.findings[0].id
-                      const extracted = await getExtractedDataByFinding(findingId)
-                      if (extracted && extracted.length > 0) {
-                          data.extracted_data = extracted
-                      } else {
-                          data.extracted_data = [] // Ensure array if no data found
-                      }
-                 } else {
-                      data.extracted_data = [] // Ensure array if no findings
-                 }
-            }
-
-            return [data]
-        }
-      }
-
-      // Worksheet individual via params
-      if ((path === '/getLists' || path === '/getLists/') && params && params.id) {
-        const worksheetId = params.id
-        const cached = await getWorksheet(worksheetId)
-        if (cached) {
-            let data = cached.data
-            const pId = data.project_id || cached.projectId
-
-            // Hydrate project if missing
-            if (!data.project && pId) {
-                const projectRec = await getProject(pId)
-                if (projectRec) data.project = projectRec.data
-            }
-            
-            // Hydrate fullreferences if missing
-            if (!data.fullreferences && pId) {
-                const refs = await getReferencesByProject(pId)
-                if (refs && refs.length > 0) {
-                     data.fullreferences = refs.map(r => r.data)
-                } else {
-                     data.fullreferences = []
-                }
-            } else if (!data.fullreferences) {
-                 data.fullreferences = []
-            }
-
-            // Hydrate findings if missing (required by editList.vue)
-            if (!data.findings) {
-                const findingsRec = await getFindingsByWorksheet(data.id)
-                if (findingsRec && findingsRec.length > 0) {
-                    data.findings = findingsRec.map(r => r.data)
-                } else {
-                    data.findings = []
-                }
-            }
-
-            // Hydrate characteristics if missing
-            if (!data.characteristics && pId) {
-                const chars = await getCharacteristicsByProject(pId)
-                if (chars && chars.length > 0) {
-                     data.characteristics = chars
-                } else {
-                     data.characteristics = []
-                }
-            } else if (!data.characteristics) {
-                data.characteristics = []
-            }
-
-            // Hydrate assessments if missing
-            if (!data.assessments && pId) {
-                const assess = await getAssessmentsByProject(pId)
-                if (assess && assess.length > 0) {
-                     data.assessments = assess
-                } else {
-                     data.assessments = []
-                }
-            } else if (!data.assessments) {
-                data.assessments = []
-            }
-
-            // Hydrate extracted_data if missing
-            if (!data.extracted_data) {
-                 if (data.findings && data.findings.length > 0) {
-                      const findingId = data.findings[0].id
-                      const extracted = await getExtractedDataByFinding(findingId)
-                      if (extracted && extracted.length > 0) {
-                          data.extracted_data = extracted
-                      } else {
-                          data.extracted_data = [] // Ensure array if no data found
-                      }
-                 } else {
-                      data.extracted_data = [] // Ensure array if no findings
-                 }
-            }
-
-            return [data]
-        }
-      }
-
-      // Worksheets por proyecto
-      const worksheetsMatch = path.match(/isoqf_lists\?project_id=([a-zA-Z0-9]+)/)
-      if (worksheetsMatch) {
-        const projectId = worksheetsMatch[1]
-        const cached = await getWorksheetsByProject(projectId)
-        if (cached && cached.length > 0) {
-          return cached.map(w => w.data)
-        }
-      }
-      
-      // Fallback: check params object if regex failed
-      if ((path === '/isoqf_lists' || path === '/isoqf_lists/') && params && params.project_id) {
-         const cached = await getWorksheetsByProject(params.project_id)
-         if (cached && cached.length > 0) return cached.map(w => w.data)
-      }
-
-      // Findings por worksheet
-      if (CACHE_PATTERNS.findings.test(path) && params) {
-         if (params.list_id) {
-           const cached = await getFindingsByWorksheet(params.list_id)
-           if (cached && cached.length > 0) return cached.map(r => r.data)
-         } else if (params.list_ids) {
-            // Support comma-separated list_ids
-            const ids = params.list_ids.split(',').map(id => id.trim()).filter(id => id)
-            let allFindings = []
-            for (const id of ids) {
-                const cached = await getFindingsByWorksheet(id)
-                if (cached && cached.length > 0) {
-                    allFindings = allFindings.concat(cached.map(r => r.data))
-                }
-            }
-            if (allFindings.length > 0) return allFindings
-         }
-      }
-
-      // References por proyecto
-      if (CACHE_PATTERNS.references.test(path) && params && (params.project_id || params.projectId)) {
-        const projectId = params.project_id || params.projectId
-        const cached = await getReferencesByProject(projectId)
-        if (cached && cached.length > 0) return cached.map(r => r.data)
-      }
-
-      // Characteristics por proyecto
-      if (CACHE_PATTERNS.characteristics.test(path) && params && (params.project_id || params.projectId)) {
-        const projectId = params.project_id || params.projectId
-        const cached = await getCharacteristicsByProject(projectId)
-        if (cached && cached.length > 0) return cached
-      }
-
-      // Assessments por proyecto
-      if (CACHE_PATTERNS.assessments.test(path) && params && (params.project_id || params.projectId)) {
-        const projectId = params.project_id || params.projectId
-        const cached = await getAssessmentsByProject(projectId)
-        if (cached && cached.length > 0) return cached
-      }
-
-      // Extracted Data por finding
-      if (CACHE_PATTERNS.extractedData.test(path) && params) {
-        if (params.finding_id || params.findingId) {
-            const findingId = params.finding_id || params.findingId
-            const cached = await getExtractedDataByFinding(findingId)
-            if (cached && cached.length > 0) return cached
-        } else if (params.list_id) {
-            // Extracted Data por worksheet (via findings)
-            const findings = await getFindingsByWorksheet(params.list_id)
-            let allExtracted = []
-            if (findings && findings.length > 0) {
-                for (const finding of findings) {
-                    const extracted = await getExtractedDataByFinding(finding.id)
-                    if (extracted && extracted.length > 0) {
-                        allExtracted = allExtracted.concat(extracted)
-                    }
-                }
-            }
-            if (allExtracted.length > 0) return allExtracted
-        }
-      }
-
-      // List Categories por proyecto
-      if (CACHE_PATTERNS.listCategories.test(path) && params && (params.project_id || params.projectId)) {
-        const projectId = params.project_id || params.projectId
-        const cached = await getListCategoriesByProject(projectId)
-        if (cached && cached.length > 0) return cached
-      }
-
       return null
     } catch (error) {
       console.warn('Error getting cached data:', error)
