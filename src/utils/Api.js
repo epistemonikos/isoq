@@ -203,15 +203,38 @@ export default class Api {
       return { data: data, queued: true, status: 200 }
     }
 
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+        try {
+            for (const strategy of strategies) {
+                if (strategy.patterns.some(p => p.test(path))) {
+                    if (strategy.update) {
+                        await strategy.update(data, path)
+                        // console.log('Optimistic update applied for:', path)
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Error applying optimistic update:', error)
+        }
+    }
+
     if (!isOnline) {
+      await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
     try {
-      return await axios.put(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.put(url, data, { headers: this.getHeaders(), withCredentials: true })
+      // También actualizamos cache si estamos online para mantener consistencia
+      if (this.shouldCache(path)) {
+         await tryOptimisticUpdate(path, data)
+      }
+      return response
     } catch (error) {
       if (!error.response) {
         isOnline = false
+        await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
       throw error
@@ -231,16 +254,37 @@ export default class Api {
       // console.log('Operation queued for sync:', 'PATCH', url)
       return { data: data, queued: true, status: 200 }
     }
+    
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+        try {
+            for (const strategy of strategies) {
+                if (strategy.patterns.some(p => p.test(path))) {
+                    if (strategy.update) {
+                        await strategy.update(data, path)
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Error applying optimistic update:', error)
+        }
+    }
 
     if (!isOnline) {
+      await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
     try {
-      return await axios.patch(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.patch(url, data, { headers: this.getHeaders(), withCredentials: true })
+      if (this.shouldCache(path)) {
+         await tryOptimisticUpdate(path, data)
+      }
+      return response
     } catch (error) {
       if (!error.response) {
         isOnline = false
+        await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
       throw error
@@ -260,16 +304,41 @@ export default class Api {
       // console.log('Operation queued for sync:', 'POST', url)
       return { data: data, queued: true, status: 200 }
     }
+    
+    // Helper para intentar actualización optimista local
+    const tryOptimisticUpdate = async (path, data) => {
+        try {
+            for (const strategy of strategies) {
+                if (strategy.patterns.some(p => p.test(path))) {
+                    if (strategy.update) {
+                        await strategy.update(data, path)
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Error applying optimistic update:', error)
+        }
+    }
 
     if (!isOnline) {
+      await tryOptimisticUpdate(path, data)
       return queueOperation()
     }
 
     try {
-      return await axios.post(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.post(url, data, { headers: this.getHeaders(), withCredentials: true })
+      if (this.shouldCache(path)) {
+         // Para POST es más complejo porque el ID puede venir del servidor
+         // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
+         if (data && data.id) {
+            await tryOptimisticUpdate(path, data)
+         }
+      }
+      return response
     } catch (error) {
       if (!error.response) {
         isOnline = false
+        await tryOptimisticUpdate(path, data)
         return queueOperation()
       }
       throw error

@@ -107,6 +107,25 @@ export const strategies = [
       }
       
       return null
+    },
+    update: async (data, url) => {
+      if (data && data.id) {
+        const existing = await getWorksheet(data.id)
+        if (existing) {
+           // Merge existing data with new data
+           const newData = { ...existing.data, ...data }
+           // Ensure project_id is preserved if not in payload (though it should be)
+           const projectId = newData.project_id || existing.projectId
+           
+           await saveWorksheet({
+             id: data.id,
+             projectId: projectId,
+             data: newData
+           })
+           return newData
+        }
+      }
+      return null
     }
   },
   {
@@ -139,6 +158,22 @@ export const strategies = [
             }
         }
         if (allFindings.length > 0) return allFindings
+      }
+      return null
+    },
+    update: async (data, url) => {
+      // Handle PATCH /isoqf_findings/:id where data has id
+      if (data && data.id) {
+        const existing = await getFinding(data.id)
+        if (existing) {
+           const newData = { ...existing.data, ...data }
+           await saveFinding({
+             id: data.id,
+             worksheetId: existing.worksheetId,
+             data: newData
+           })
+           return newData
+        }
       }
       return null
     }
@@ -235,6 +270,35 @@ export const strategies = [
         if (allExtracted.length > 0) return allExtracted
       }
       return null
+    },
+    update: async (data, url) => {
+      // Extracted data updates might be single item or array
+      const items = Array.isArray(data) ? data : [data]
+      
+      for (const item of items) {
+        if (item && item.id) {
+           // We need to find the record first to get findingId if not provided
+           // However, getExtractedDataByFinding needs findingId.
+           // Since we index by id in db.extractedData, we can get it directly if getExtractedData existed by ID
+           // db.extractedData is defined as 'id, findingId, lastSync'
+           
+           // We need a way to get by ID. DB service doesn't expose it directly but we can add it or access db directly
+           // In db.js: export { db }
+           
+           const { db } = require('@/services/db')
+           const existing = await db.extractedData.get(item.id)
+           
+           if (existing) {
+             const newData = { ...existing.data, ...item }
+             await saveExtractedData({
+               id: item.id,
+               finding_id: existing.findingId,
+               ...newData // in case finding_id logic differs
+             })
+           }
+        }
+      }
+      return data
     }
   },
   {
