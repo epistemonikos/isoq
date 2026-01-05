@@ -517,8 +517,7 @@ export default {
     updateMyData: function () {
       let _extractedData = []
       const params = {
-        organization: this.list.organization,
-        list_id: this.list.id
+        finding_id: this.findings.id
       }
       Api.get(`/isoqf_extracted_data`, params)
         .then((response) => {
