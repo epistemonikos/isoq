@@ -259,8 +259,9 @@
                 cols="12">
                 <b-button
                   class="mt-1"
-                  v-b-tooltip.hover :title="$t('common.add_review_finding_tooltip') || 'Copy and paste one summarised review finding at a time into the iSoQ'"
+                  v-b-tooltip.hover :title="(isOnline) ? ($t('common.add_review_finding_tooltip') || 'Copy and paste one summarised review finding at a time into the iSoQ') : $t('offline.action_disabled')"
                   :variant="(lists.length) ? 'outline-success' : 'success'"
+                  :disabled="!isOnline"
                   @click="modalAddList"
                   block>
                   {{ $t('common.add_review_finding_table') || 'Add review finding to the table' }}
@@ -272,8 +273,9 @@
                 cols="12">
                 <b-button
                   class="mt-1"
-                  v-b-tooltip.hover :title="$t('common.organize_groups_tooltip') || 'If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.'"
+                  v-b-tooltip.hover :title="(isOnline) ? ($t('common.organize_groups_tooltip') || 'If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.') : $t('offline.action_disabled')"
                   variant="outline-secondary"
+                  :disabled="!isOnline"
                   @click="modalListCategories"
                   block>
                   {{ $t('common.organize_groups') || 'Organise review findings into groups' }}
@@ -546,6 +548,7 @@
                   <b-button
                     v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
                     variant="outline-primary"
+                    :disabled="!isOnline"
                     @click="modal_edit_list_categories.new=true">
                     {{ $t('common.add_new_finding_group') || 'Add new review finding group' }}
                   </b-button>

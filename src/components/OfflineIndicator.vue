@@ -33,7 +33,6 @@ export default {
   name: 'OfflineIndicator',
   data () {
     return {
-      isOnline: true,
       pendingCount: 0,
       syncing: false,
       checkInterval: null,
@@ -92,13 +91,16 @@ export default {
   },
   methods: {
     checkOnlineStatus () {
-      // Verificar tanto navigator.onLine como el estado interno
-      this.isOnline = navigator.onLine && getOnlineStatus()
+      // Verificar tanto navigator.onLine como el estado interno del API
+      const status = navigator.onLine && getOnlineStatus()
+      if (this.isOnline !== status) {
+        this.$store.commit('SET_ONLINE', status)
+      }
     },
     handleOnline () {
       // Resetear estado
       setOnlineStatus(true)
-      this.isOnline = true
+      this.$store.commit('SET_ONLINE', true)
       this.updatePendingCount()
       // Intentar sincronizar al volver online
       if (this.pendingCount > 0) {
@@ -106,7 +108,7 @@ export default {
       }
     },
     handleOffline () {
-      this.isOnline = false
+      this.$store.commit('SET_ONLINE', false)
       this.showRefresh = false
     },
     handleSyncComplete (event) {

@@ -20,7 +20,17 @@ library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowA
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
-Vue.prototype.$http = axios
+// Listeners globales para actualizar el store
+window.addEventListener('online', () => { store.commit('SET_ONLINE', true) })
+window.addEventListener('offline', () => { store.commit('SET_ONLINE', false) })
+
+Vue.mixin({
+  computed: {
+    isOnline () {
+      return store.state.isOnline
+    }
+  }
+})
 
 /*
 const token = localStorage.getItem('user-token')

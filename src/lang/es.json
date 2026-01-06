@@ -1036,6 +1036,7 @@
     "pendingOperation": "operación pendiente",
     "pendingOperations": "operaciones pendientes",
     "refresh": "Recargar",
-    "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para"
+    "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para",
+    "action_disabled": "Esta acción está deshabilitada sin conexión"
   }
 }

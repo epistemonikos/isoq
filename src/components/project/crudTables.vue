@@ -7,7 +7,8 @@
         <b-button
           block
           variant="outline-primary"
-          :disabled="(references.length) ? false : true"
+          v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
+          :disabled="(references.length > 0 && isOnline) ? false : true"
           v-if="dataTable.fields.length <= 2"
           @click="openModalDataTable()">
           {{ $t('characteristics.create_table') }}
@@ -29,7 +30,8 @@
         <b-button
           block
           variant="outline-info"
-          :disabled="(references.length) ? false : true"
+          v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
+          :disabled="!references.length || !isOnline"
           @click="openModalImportTable()">
           {{ $t('characteristics.import_table') }}
         </b-button>

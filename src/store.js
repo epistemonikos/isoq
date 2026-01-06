@@ -7,9 +7,13 @@ Vue.use(Vuex)
 export const store = new Vuex.Store({
   state: {
     status: '',
-    user: {}
+    user: {},
+    isOnline: navigator.onLine
   },
   mutations: {
+    SET_ONLINE (state, status) {
+      state.isOnline = status
+    },
     auth_request (state) {
       state.status = 'loading'
     },

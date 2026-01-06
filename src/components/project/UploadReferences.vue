@@ -53,11 +53,13 @@
             id="input-ris-file-key"
             ref="file-input"
             plain
-            :disabled="!checkPermissions"
+            :disabled="!checkPermissions || !isOnline"
+            v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
             @change="loadRefs($event)"></b-form-file>
           <b-button
             block
-            :disabled="(fileReferences.length >= 1) ? false : true"
+            :disabled="((fileReferences.length >= 1) ? false : true) || !isOnline"
+            v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
             class="mt-2"
             variant="success"
             @click="saveReferences()">
@@ -108,6 +110,8 @@
                 class="mt-2"
                 block
                 variant="outline-primary"
+                :disabled="!isOnline"
+                v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
                 @click="PubmedRequest">{{ $t('common.find') }}</b-button>
               <b-button
                 v-if="checkPermissions && (pubmed_requested.length || pubmedErrorImported.length)"
@@ -158,6 +162,8 @@
                   v-if="pubmed_selected.length && checkPermissions"
                   variant="outline-success"
                   block
+                  :disabled="!isOnline"
+                  v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
                   @click="importReferences()">{{ $t('references.import_references') }}</b-button>
               </template>
             </b-col>

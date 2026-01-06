@@ -12,8 +12,9 @@
           <b-col cols="12" class="text-right">
             <b-button
               v-b-tooltip.hover
-              :title="$t('project.create_new_isoq')"
+              :title="(isOnline) ? $t('project.create_new_isoq') : $t('offline.action_disabled')"
               variant="success"
+              :disabled="!isOnline"
               @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
           </b-col>
         </b-row>
@@ -186,7 +187,7 @@
                 {{buffer_project.sharedToError}}
               </p>
               <b-button
-                :disabled="!ui.sharedProject.enabledToShare"
+                :disabled="!ui.sharedProject.enabledToShare || !isOnline"
                 @click="addEmailForShare">{{ $t('common.add') }}</b-button>
               <div
                 class="my-3"

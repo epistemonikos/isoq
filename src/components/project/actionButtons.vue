@@ -57,6 +57,7 @@
                 v-if="permissions"
                 class="mt-1"
                 @click="modalChangePublicStatus"
+                :disabled="!isOnline"
                 :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
                 v-b-tooltip.hover :title="$t('actionButtons.publish_tooltip')">

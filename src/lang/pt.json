@@ -1036,6 +1036,7 @@
     "pendingOperation": "operação pendente",
     "pendingOperations": "operações pendentes",
     "refresh": "Atualizar",
-    "noInternetAndNoCache": "Sem conexão com a Internet e sem dados em cache para"
+    "noInternetAndNoCache": "Sem conexão com a Internet e sem dados em cache para",
+    "action_disabled": "Esta ação está desativada enquanto estiver offline"
   }
 }
