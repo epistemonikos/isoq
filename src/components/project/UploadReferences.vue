@@ -53,7 +53,7 @@
             id="input-ris-file-key"
             ref="file-input"
             plain
-            :disabled="!checkPermissions || !isOnline"
+            :disabled="!canEdit || !isOnline"
             v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
             @change="loadRefs($event)"></b-form-file>
           <b-button
@@ -105,7 +105,7 @@
                 rows="6"
                 max-rows="100"></b-form-textarea>
               <b-button
-                v-if="checkPermissions && !btnSearchPubMed && pubmed_request.length"
+                v-if="canEdit && !btnSearchPubMed && pubmed_request.length"
                 id="btnEpisteRequest"
                 class="mt-2"
                 block
@@ -114,7 +114,7 @@
                 v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
                 @click="PubmedRequest">{{ $t('common.find') }}</b-button>
               <b-button
-                v-if="checkPermissions && (pubmed_requested.length || pubmedErrorImported.length)"
+                v-if="canEdit && (pubmed_requested.length || pubmedErrorImported.length)"
                 :disabled="btnCleanDisabled"
                 class="mt-1"
                 block
@@ -159,7 +159,7 @@
                   </ul>
                 </template>
                 <b-button
-                  v-if="pubmed_selected.length && checkPermissions"
+                  v-if="pubmed_selected.length && canEdit"
                   variant="outline-success"
                   block
                   :disabled="!isOnline"
@@ -246,7 +246,7 @@
             outlined>
             <template v-slot:cell(action)="data">
               <b-button
-                v-if="checkPermissions"
+                v-if="canEdit"
                 variant="outline-danger"
                 @click="data.toggleDetails">
                 <font-awesome-icon
@@ -277,7 +277,7 @@
               </b-card>
             </template>
           </b-table>
-          <div v-if="checkPermissions" class="mt-2">
+          <div v-if="canEdit" class="mt-2">
             <b-button
             @click="confirmRemoveAllReferences($event)"
               >{{ $t('references.delete_all') }}</b-button>
@@ -295,7 +295,7 @@ const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
   props: {
-    checkPermissions: Boolean,
+    canEdit: Boolean,
     loadReferences: Boolean,
     references: Array,
     episteResponse: Array,

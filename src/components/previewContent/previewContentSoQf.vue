@@ -54,7 +54,7 @@
               cols="12">
               <organizationForm
                 :formData="project"
-                :canWrite="false">
+                :canEdit="false">
               </organizationForm>
             </b-col>
           </b-row>
@@ -116,7 +116,7 @@
               :mode="'view'"
               :preview="true"
               :project="project"
-              :permissions="true"
+              :canWrite="true"
               :ui="ui"
               :lists="lists"
               :findings="findings"

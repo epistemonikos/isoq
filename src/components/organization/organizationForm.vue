@@ -1,6 +1,6 @@
 <template>
   <div>
-    <template v-if="!canWrite">
+    <template v-if="!canEdit">
       <b-row>
         <b-col
           cols="12">
@@ -29,7 +29,7 @@
         </b-col>
       </b-row>
     </template>
-    <template v-if="canWrite">
+    <template v-if="canEdit">
       <b-row>
         <b-col>
           <b-alert
@@ -49,7 +49,7 @@
             label-for="input-project-list-name"
             :description="$t('project.insert_title_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-name"
               type="text"
               required
@@ -65,7 +65,7 @@
             label-for="input-project-authors"
             :description="$t('project.authors_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-authors"
               :placeholder="$t('project.authors_input_placeholder')"
               :state="state.authors"
@@ -79,7 +79,7 @@
             label-for="input-project-author"
             :description="$t('project.author_desc')">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-author"
               :state="state.author"
               @input="state.author = isProjectPublished ? (formData.author !== '' && formData.author.trim().length >= 3) ? null : state.author : null"
@@ -91,7 +91,7 @@
             :label="$t('project.corresponding_author_email')"
             label-for="input-project-author-email">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               type="email"
               id="input-project-author-email"
               :state="state.author_email"
@@ -104,7 +104,7 @@
             :label="$t('project.review_question')"
             label-for="input-project-review-question">
             <b-form-textarea
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-review-question"
               :placeholder="$t('project.insert_question_placeholder')"
               rows="6"
@@ -119,7 +119,7 @@
             :label="$t('project.published_status')"
             label-for="select-project-list-published-status">
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-published-status"
               v-model="formData.published_status"
               :options="yes_or_no"></b-select>
@@ -129,7 +129,7 @@
             :label="$t('project.url_doi')"
             label-for="select-project-list-url-doi">
             <b-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               :placeholder="$t('project.url_placeholder')"
               type="url"
               id="select-project-list-url-doi"
@@ -143,7 +143,7 @@
             :label="$t('project.completed_by_authors')"
             label-for="select-project-list-completed-by-author-status">
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-completed-by-author-status"
               v-model="formData.complete_by_author"
               :options="yes_or_no"></b-select>
@@ -154,7 +154,7 @@
             :label="$t('project.list_authors_isoq')"
             label-for="input-project-list-authors">
             <b-form-input
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-authors"
               :state="state.lists_authors"
               @input="state.lists_authors = isProjectPublished ? (formData.lists_authors !== '' && formData.lists_authors.trim().length > 0) ? null : state.lists_authors : null"
@@ -172,7 +172,7 @@
               <videoHelp :txt="$t('project.visibility_video_txt')" tag="none" urlId="504176899"></videoHelp>
             </template>
             <b-select
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="select-project-list-status"
               v-model="formData.public_type"
               @change="resetState()"
@@ -186,7 +186,7 @@
                 {{ $t('project.choose_license') }}
               </template>
               <b-select
-                :disabled="!canWrite"
+                :disabled="!canEdit"
                 :state="state.license"
                 @change="state.license = (formData.license_type !== '' && formData.license_type !== null) ? null : false"
                 id="select-project-list-license"
@@ -204,7 +204,7 @@
             :label="$t('project.additional_info')"
             label-for="input-project-list-description">
             <b-form-textarea
-              :disabled="!canWrite"
+              :disabled="!canEdit"
               id="input-project-list-description"
               :placeholder="$t('project.additional_info_placeholder')"
               v-model="formData.description"
@@ -213,7 +213,7 @@
           </b-form-group>
         </b-col>
       </b-row>
-      <b-row align-h="end" v-if="canWrite && !isModal">
+      <b-row align-h="end" v-if="canEdit && !isModal">
         <b-col
           cols="12"
           sm="6"
@@ -253,7 +253,7 @@ export default {
   components: {videoHelp},
   props: {
     formData: Object,
-    canWrite: Boolean,
+    canEdit: Boolean,
     isModal: {
       type: Boolean,
       default: false

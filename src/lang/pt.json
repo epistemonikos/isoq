@@ -218,6 +218,12 @@
     "question": "Você gostaria de se inscrever na lista de e-mails do GRADE-CERQual?",
     "description": "Você receberá três boletins por ano com as últimas novidades sobre o iSoQ."
   },
+  "lock": {
+    "project_locked_by": "O projeto está sendo editado por {user}. Modo somente leitura.",
+    "locked_title": "Projeto Bloqueado",
+    "lock_lost_message": "A conexão com o servidor foi perdida ou outro usuário assumiu o controle da edição. Para evitar perda de dados, recarregue a página.",
+    "idle_message": "Você esteve inativo por um tempo. Para permitir que outros editem, seu acesso de escrita foi liberado. Por favor, recarregue para retomar a edição."
+  },
   "project": {
     "validation": {
       "title_min_length": "O projeto deve ter um título com pelo menos 3 caracteres",

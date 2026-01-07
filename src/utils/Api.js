@@ -38,8 +38,37 @@ function createOfflineError (message) {
     data: { message, offline: true }
   }
   error.request = {}
+  error.request = {}
   return error
 }
+
+// Interceptor para detectar errores de bloqueo (Concurrency Control)
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && (error.response.status === 409 || error.response.status === 403)) {
+        // Verificar si es un error de bloqueo
+        // Excluir la petición de adquisición de bloqueo explícita, ya que esa se maneja en el componente
+        const url = error.config && error.config.url ? error.config.url : ''
+        const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
+        
+        // Check for '/api/lock/' but ensure it's not heartbeat
+        const isLockAcquisition = (error.config && error.config.headers && error.config.headers['X-Suppress-Lock-Error']) || (url.includes('/api/lock/') && method === 'post' && !url.includes('/heartbeat'))
+        
+        console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
+
+        if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
+             if (typeof window !== 'undefined') {
+                console.log('Dispatching axios-refresh-lock event')
+                // Disparar evento para que viewProject lo capture y actualice la UI
+                // Esto es util para cuando user A pierde el lock (e.g. heartbeat falla o guarda sin lock)
+                window.dispatchEvent(new CustomEvent('axios-refresh-lock'))
+             }
+        }
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Endpoints que NO deben cachearse
 const NO_CACHE_PATTERNS = [

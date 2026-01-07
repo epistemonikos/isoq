@@ -130,7 +130,8 @@
         :title="(buffer_project.id) ? $t('common.edit_isoq_table') || 'Edit iSoQ table' : $t('common.new_isoq_table') || 'New iSoQ table'"
         @ok="save"
         @cancel="closeModalProject"
-        :ok-disabled="!buffer_project.name"
+        @hidden="closeModalProject"
+        :ok-disabled="!buffer_project.name || !canEditProject"
         :ok-title="$t('common.save')"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
@@ -142,10 +143,16 @@
             <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
             <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
           </b-alert>
+        <b-alert
+          show
+          variant="warning"
+          v-if="lockedByUser">
+          {{ $t('lock.project_locked_by', { user: lockedByUser }) || `Project is currently being edited by ${lockedByUser}. Read-only mode.` }}
+        </b-alert>
         <organizationForm
           ref="organizationForm"
           :formData="buffer_project"
-          :canWrite="($store.state.user.personal_organization === this.$route.params.id)"
+          :canEdit="canEditProject"
           :isModal="true"
           @modal-notification="modalNotification"></organizationForm>
       </b-modal>
@@ -331,6 +338,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
@@ -479,7 +487,9 @@ export default {
       modalCloneId: null,
       modalCloneNewId: null,
       newReferences: [],
-      hashId: null
+      hashId: null,
+      canEditProject: false,
+      lockedByUser: null
     }
   },
   mounted () {
@@ -685,9 +695,12 @@ export default {
       this.$refs['new-project'].show()
     },
     closeModalProject: function () {
+      LockService.release()
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+      this.canEditProject = false
+      this.lockedByUser = null
     },
-    openModalEditProject: function (project) {
+    openModalEditProject: async function (project) {
       let _project = JSON.parse(JSON.stringify(project))
       if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
         _project.license_type = 'CC-BY-NC-ND'
@@ -699,6 +712,26 @@ export default {
       }
 
       this.buffer_project = _project
+      
+      // Check permissions based on organization ownership OR project permissions
+      let basePermission = (this.$store.state.user.personal_organization === this.$route.params.id) || 
+                           (project.allow_to_write)
+
+      if (basePermission) {
+        // Attempt to acquire lock
+        const res = await LockService.acquire(project.id)
+        if (res.success) {
+          this.canEditProject = true
+        } else {
+          this.canEditProject = false
+          if (res.lockedBy) {
+            this.lockedByUser = res.lockedBy
+          }
+        }
+      } else {
+          this.canEditProject = false
+      }
+
       this.$refs['new-project'].show()
     },
     modalRemoveProject: function (project) {

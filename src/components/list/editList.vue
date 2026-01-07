@@ -1,5 +1,18 @@
 <template>
   <div>
+    <!-- Lock Modals -->
+    <b-modal id="modal-lock-lost-sheet" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+        <div class="text-center">
+            <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
+            <p>{{ $t('lock.lock_lost_message') || 'The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.' }}</p>
+        </div>
+    </b-modal>
+      <b-modal id="modal-lock-idle-sheet" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+        <div class="text-center">
+            <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
+            <p>{{ $t('lock.idle_message') || 'You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.' }}</p>
+        </div>
+    </b-modal>
     <b-alert
       :show="editingUser.show"
       class="position-fixed fixed-bottom m-0 rounded-0"
@@ -192,6 +205,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
@@ -390,8 +404,25 @@ export default {
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
+      },
+      lockInfo: {
+        locked: false,
+        lockedBy: null
       }
     }
+  },
+  mounted () {
+    this.updateTranslations()
+    this.getList()
+    window.addEventListener('lock-lost', this.handleLockLost)
+    window.addEventListener('lock-idle', this.handleIdle)
+    window.addEventListener('axios-refresh-lock', this.handleLockLost)
+  },
+  beforeDestroy () {
+    LockService.release()
+    window.removeEventListener('lock-lost', this.handleLockLost)
+    window.removeEventListener('lock-idle', this.handleIdle)
+    window.removeEventListener('axios-refresh-lock', this.handleLockLost)
   },
   methods: {
     updateTranslations: function () {
@@ -498,6 +529,12 @@ export default {
         .then((response) => {
           if (response.data && response.data.length > 0) {
             this.list = JSON.parse(JSON.stringify(response.data[0]))
+            
+            // Attempt lock if we have write permissions
+            // Note: We need 'project' loaded to check permissions properly, or check list.organization
+            if (this.checkPermissions(this.list.organization)) {
+                 this.attemptLock()
+            }
           } else {
             console.log('Empty list response')
           }
@@ -794,6 +831,42 @@ export default {
       } else {
         this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
       }
+    },
+
+    async attemptLock () {
+      // Use list.project_id if available, otherwise wait for getProject?
+      // list object has project_id
+      if (this.list.project_id) {
+        const res = await LockService.acquire(this.list.project_id)
+        if (res.success) {
+            this.lockInfo.locked = true
+        } else if (res.lockedBy) {
+            this.lockInfo.locked = false
+            this.lockInfo.lockedBy = res.lockedBy
+            this.mode = 'view'
+            this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }), {
+            title: this.$t('lock.locked_title'),
+            variant: 'warning',
+            solid: true,
+            noAutoHide: true
+            })
+        }
+      }
+    },
+    handleLockLost (e) {
+      if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-lost-sheet')
+      }
+    },
+    handleIdle (e) {
+        if (e.detail && e.detail.projectId === this.list.project_id) {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-idle-sheet')
+      }
+    },
+    reloadPage () {
+        window.location.reload()
     },
 
     modalDataChanged: function (data) {

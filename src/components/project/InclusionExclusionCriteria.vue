@@ -10,7 +10,7 @@
             v-if="ui.project.show_criteria"
             :label="$t('inclusion.inclusion_criteria')"
             :description="$t('inclusion.inclusion_placeholder')"
-            :isDisabled="checkPermissions"
+            :canEdit="canEdit"
             criteria="inclusion"
             :dataTxt="project.inclusion"
             @update-modification="updateModificationTime()">
@@ -23,7 +23,7 @@
             v-if="ui.project.show_criteria"
             :label="$t('inclusion.exclusion_criteria')"
             :description="$t('inclusion.exclusion_placeholder')"
-            :isDisabled="checkPermissions"
+            :canEdit="canEdit"
             criteria="exclusion"
             :dataTxt="project.exclusion"
             @update-modification="updateModificationTime()">
@@ -38,7 +38,7 @@
 export default {
   name: 'InclusionExclusionCriteria',
   props: {
-    checkPermissions: {
+    canEdit: {
       type: Boolean,
       required: true
     },

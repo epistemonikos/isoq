@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-row
-      v-if="checkPermissions">
+      v-if="canEdit">
       <b-col
         sm="4">
         <b-button
@@ -68,11 +68,11 @@
           </template>
           <template
             v-slot:cell(actions)="data"
-            v-if="dataTable.fields.length > 2 && checkPermissions">
+            v-if="dataTable.fields.length > 2 && canEdit">
             <b-row>
               <b-col>
                 <b-button
-                  v-if="checkPermissions"
+                  v-if="canEdit"
                   block
                   variant="outline-success"
                   @click="addContentDataTable((dataTableSettings.currentPage > 1) ? (dataTableSettings.perPage * (dataTableSettings.currentPage - 1)) + data.index : data.index)">
@@ -82,7 +82,7 @@
               </b-col>
               <b-col class="pt-2">
                 <b-button
-                  v-if="checkPermissions"
+                  v-if="canEdit"
                   block
                   variant="outline-danger"
                   @click="openModalRemoveContentDataTable(data.item.ref_id)">
@@ -370,7 +370,7 @@ export default {
       type: String,
       default: ''
     },
-    checkPermissions: {
+    canEdit: {
       type: Boolean,
       default: false
     },
@@ -516,7 +516,7 @@ export default {
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
-              if (this.checkPermissions) {
+              if (this.canEdit) {
                 this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
               }
 
@@ -961,13 +961,22 @@ export default {
 
           if (responseData.items.length) {
             const items = this.processItems(responseData.items)
-            let params = {
-              items: items
+            
+            // Fix: Do not patch (auto-save) if user does not have write permissions (e.g. project locked)
+            if (this.checkPermissions) {
+              let params = {
+                items: items
+              }
+              Api.patch(`/${this.type}/${charId}`, params)
+                .then(() => {
+                  this.getData()
+                })
+            } else {
+               // If read-only, just update the local data without saving to DB
+               // effectively "previewing" the processed items but not persisting them
+               // This avoids the 409 Conflict.
+               this.getData()
             }
-            Api.patch(`/${this.type}/${charId}`, params)
-              .then(() => {
-                this.getData()
-              })
           }
         })
     },

@@ -218,6 +218,12 @@
     "question": "Would you like to subscribe to the GRADE-CERQual mailing list?",
     "description": "You will receive three newsletters a year that include the latest news about iSoQ."
   },
+  "lock": {
+    "project_locked_by": "Project is currently being edited by {user}. Read-only mode.",
+    "locked_title": "Project Locked",
+    "lock_lost_message": "The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.",
+    "idle_message": "You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing."
+  },
   "project": {
     "validation": {
       "title_min_length": "The project must have a title that contain at least 3 characters",

@@ -37,7 +37,7 @@
         <propertiesProject
           :project="project"
           @update-modification="updateModificationTime()"
-          :canWrite="checkPermissions()"
+          :canEdit="isEditing"
           :highlight="$route.query.highlight"
           @update-project="updateDataProject">
         </propertiesProject>
@@ -55,7 +55,7 @@
             <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
               <b-tab :title="$t('steps.step_1_references')">
                 <UploadReferences
-                  :checkPermissions="checkPermissions()"
+                  :canEdit="isEditing"
                   :loadReferences="loadReferences"
                   :references="references"
                   :lists="lists"
@@ -77,7 +77,7 @@
               <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length?false:true">
                 <div>
                   <InclusionExclusioCriteria
-                    :checkPermissions="checkPermissions()"
+                    :canEdit="isEditing"
                     :project="project"
                     :ui="ui"
                     @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
@@ -101,7 +101,7 @@
                 <crudTables
                   type="isoqf_characteristics"
                   prefix="ch"
-                  :checkPermissions="checkPermissions()"
+                  :canEdit="isEditing"
                   :project="project"
                   :ui="ui"
                   :references="references"
@@ -131,7 +131,7 @@
                 <crudTables
                   type="isoqf_assessments"
                   prefix="as"
-                  :checkPermissions="checkPermissions()"
+                  :canEdit="isEditing"
                   :project="project"
                   :ui="ui"
                   :references="references"
@@ -166,7 +166,8 @@
       <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
         <action-buttons
           :mode="effectiveMode"
-          :permissions="checkPermissions()"
+          :canWrite="canWrite"
+          :isLocked="isLockedByOther"
           :project="project"
           :ui="ui"
           :lists="lists"
@@ -249,7 +250,7 @@
         <b-row
           class="mt-2">
           <b-col
-            v-if="checkPermissions()"
+            v-if="canWrite"
             cols="12">
             <b-row
               class="mb-2">
@@ -566,6 +567,19 @@
               </template>
             </b-modal>
             <back-to-top></back-to-top>
+            <!-- Lock Modals -->
+            <b-modal id="modal-lock-lost" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+                <div class="text-center">
+                    <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
+                    <p>{{ $t('lock.lock_lost_message') || 'The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.' }}</p>
+                </div>
+            </b-modal>
+             <b-modal id="modal-lock-idle" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+                <div class="text-center">
+                    <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
+                    <p>{{ $t('lock.idle_message') || 'You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.' }}</p>
+                </div>
+            </b-modal>
           </b-col>
         </b-row>
       </div>
@@ -578,6 +592,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
@@ -798,6 +813,11 @@ export default {
       episte_selected: [],
       episte_loading: false,
       episte_error: false,
+      lockInfo: {
+        locked: false,
+        lockedBy: null
+      },
+      lockDataRecovery: null,
       finding: {},
       sorted_lists: [],
       changeTxtProjectProperties: '+',
@@ -810,9 +830,18 @@ export default {
     }
   },
   async mounted () {
+    window.addEventListener('lock-lost', this.handleLockLost)
+    window.addEventListener('lock-idle', this.handleIdle)
+    window.addEventListener('axios-refresh-lock', this.handleLockLost)
     await this.getListCategories()
     await this.getReferences()
     await this.getProject()
+  },
+  beforeDestroy () {
+    LockService.release()
+    window.removeEventListener('lock-lost', this.handleLockLost)
+    window.removeEventListener('lock-idle', this.handleIdle)
+    window.removeEventListener('axios-refresh-lock', this.handleLockLost)
   },
   methods: {
     setBusy: function (value) {
@@ -904,12 +933,50 @@ export default {
           } else {
             this.mode = ''
           }
+
+          // Attempt to acquire lock if in edit mode
+          if (this.mode === 'edit') {
+            this.attemptLock()
+          }
+
           this.ui.project.show_criteria = true
           this.getLists()
         })
         .catch((error) => {
           this.printErrors(error)
         })
+    },
+    async attemptLock () {
+      const res = await LockService.acquire(this.project.id)
+      if (res.success) {
+        this.lockInfo.locked = true
+        this.lockInfo.lockedBy = null
+      } else if (res.lockedBy) {
+        this.lockInfo.locked = false
+        this.lockInfo.lockedBy = res.lockedBy
+        this.mode = 'view'
+        this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }) || `Project is currently being edited by ${res.lockedBy}. Read-only mode.`, {
+          title: this.$t('lock.locked_title') || 'Project Locked',
+          variant: 'warning',
+          solid: true,
+          noAutoHide: true
+        })
+      }
+    },
+    handleLockLost (e) {
+      if ((e.detail && e.detail.projectId === this.project.id) || e.type === 'axios-refresh-lock') {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-lost')
+      }
+    },
+    handleIdle (e) {
+        if (e.detail && e.detail.projectId === this.project.id) {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-idle')
+      }
+    },
+    reloadPage () {
+        window.location.reload()
     },
     processGetListCategories: function (data) {
       this.list_categories.options = []
@@ -1766,6 +1833,17 @@ export default {
       if (val) {
         this.stepStage = parseInt(val) - 1
       }
+    },
+    '$route.params.id': {
+      handler: function (id) {
+        this.lockInfo = {
+          locked: false,
+          lockedBy: null
+        }
+        this.getProject()
+        this.getListCategories()
+        this.getReferences()
+      }
     }
   },
   computed: {
@@ -1831,6 +1909,15 @@ export default {
 
       // safe default: empty string when user has no read/write permissions
       return ''
+    },
+    canWrite: function () {
+      return this.checkPermissions('can_write')
+    },
+    isEditing: function () {
+      return this.effectiveMode === 'edit' && this.canWrite
+    },
+    isLockedByOther: function () {
+      return !!(this.lockInfo && this.lockInfo.lockedBy)
     }
   }
 }

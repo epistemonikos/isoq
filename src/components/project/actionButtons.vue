@@ -35,7 +35,7 @@
               </b-button>
           </b-col>
           <b-col
-            v-if="mode==='view' && !preview"
+            v-if="mode==='view' && !preview && canWrite && !isLocked"
             cols="12"
             md="3"
             xl="3">
@@ -54,7 +54,7 @@
             md="3"
             xl="3">
               <b-button
-                v-if="permissions"
+                v-if="canWrite"
                 class="mt-1"
                 @click="modalChangePublicStatus"
                 :disabled="!isOnline"
@@ -177,7 +177,11 @@ export default {
       default: false
     },
     project: Object,
-    permissions: Boolean,
+    canWrite: Boolean,
+    isLocked: {
+      type: Boolean,
+      default: false
+    },
     ui: Object,
     lists: Array,
     findings: Array,
