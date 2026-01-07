@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   name: 'fixCategories',
@@ -20,7 +20,7 @@ export default {
   },
   methods: {
     getAllCategories: function () {
-      axios.get('/api/isoqf_list_categories')
+      Api.get('/isoqf_list_categories')
         .then((response) => {
           for (let data of response.data) {
             if (Object.prototype.hasOwnProperty.call(data, 'options')) {
@@ -46,7 +46,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_list_categories', {params})
+      Api.get('/isoqf_list_categories', params)
         .then((response) => {
           for (let data of response.data) {
             if (Object.prototype.hasOwnProperty.call(data, 'options')) {
@@ -70,7 +70,7 @@ export default {
         })
     },
     createCategory: function (category) {
-      axios.post('/api/isoqf_list_categories', category)
+      Api.post('/isoqf_list_categories', category)
         .then((response) => {
           const newCategory = {
             id: response.data.id,
@@ -87,12 +87,12 @@ export default {
         organization: newCategory.organization,
         project_id: newCategory.project_id
       }
-      axios.get('/api/isoqf_lists', {params})
+      Api.get('/isoqf_lists', params)
         .then((response) => {
           if (response.data.length) {
             for (let list of response.data) {
               if (list.category === newCategory.value) {
-                axios.patch(`/api/isoqf_lists/${list.id}`, {category: newCategory.id})
+                Api.patch(`/isoqf_lists/${list.id}`, {category: newCategory.id})
                   .then(() => {
                     console.log(`list id ${list.id} updated!`)
                   })
@@ -102,7 +102,7 @@ export default {
         })
     },
     removeOldCategoryContainer: function () {
-      axios.delete('/api/isoqf_list_categories/' + this.oldCategoryId)
+      Api.delete('/isoqf_list_categories/' + this.oldCategoryId)
     }
   },
   watch: {

@@ -15,15 +15,15 @@
               sm="9"
               align-self="center">
               <b-form-group
-                label="Search">
+                :label="$t('common.search')">
                 <b-input-group>
                   <b-form-input
                     v-model="tableSettings.filter"
-                    placeholder="Type to search the text in the table below"></b-form-input>
+                    :placeholder="$t('action_table.search_placeholder')"></b-form-input>
                   <b-input-group-append>
                     <b-button
                       :disabled="!tableSettings.filter"
-                      @click="tableSettings.filter = ''">Clear</b-button>
+                      @click="tableSettings.filter = ''">{{ $t('common.clear') }}</b-button>
                   </b-input-group-append>
                 </b-input-group>
               </b-form-group>
@@ -36,7 +36,7 @@
               <b-button
                 block
                 @click="toCSV(type)">
-                Export to XLS file
+                {{ $t('characteristics.export_xls') }}
               </b-button>
             </b-col>
           </b-row>

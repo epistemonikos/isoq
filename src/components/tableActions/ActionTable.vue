@@ -14,7 +14,7 @@
             @click="modalDropTable"
             variant="outline-danger">
               <font-awesome-icon icon="table" />
-              Delete table
+              {{ $t('action_table.delete_table') }}
           </b-button>
         </b-col>
         <b-col
@@ -27,7 +27,7 @@
             @click="modalEditTable"
             variant="outline-primary">
               <font-awesome-icon icon="table" />
-              Edit columns
+              {{ $t('action_table.edit_columns') }}
           </b-button>
         </b-col>
         <b-col
@@ -40,7 +40,7 @@
             @click="modalImport"
             variant="outline-success">
               <font-awesome-icon icon="file-upload" />
-              {{$t('Import data')}}
+              {{ $t('action_table.import_data') }}
           </b-button>
         </b-col>
         <b-col
@@ -53,7 +53,7 @@
             @click="modalCreateContent"
             variant="outline-success">
               <font-awesome-icon icon="plus" />
-              {{$t('Add data')}}
+              {{ $t('action_table.add_data') }}
           </b-button>
         </b-col>
         <b-col
@@ -66,7 +66,7 @@
             @click="modalCreateTable"
             variant="outline-primary">
               <font-awesome-icon icon="table" />
-              Create table
+              {{ $t('action_table.create_table') }}
           </b-button>
         </b-col>
       </b-row>
@@ -79,10 +79,10 @@
       size="xl"
       @ok="importTSV"
       @cancel="cleanTSV"
-      title="Import data">
-      <b-alert show variant="warning"><b>Important!</b> Import data will destroy the loaded previous data.</b-alert>
+      :title="$t('action_table.import_data')">
+      <b-alert show variant="warning"><b>{{ $t('action_table.important') }}</b> {{ $t('action_table.import_warning') }}</b-alert>
       <b-form-group
-        label="Upload a TSV file"
+        :label="$t('action_table.upload_tsv')"
         label-for="input-tsv-file">
         <b-form-file
           id="input-tsv-file"
@@ -90,7 +90,7 @@
           @change="loadTSV($event)"></b-form-file>
       </b-form-group>
       <div v-if="tsv.fields.length">
-        <h5>Preview</h5>
+        <h5>{{ $t('common.preview') }}</h5>
         <b-table
           :fields="tsv.fields"
           :items="tsv.items"></b-table>
@@ -101,21 +101,21 @@
     <b-modal
       size="xl"
       id="modal-drop-table"
-      title="Drop table"
+      :title="$t('action_table.drop_table')"
       ref="modal-drop-table"
       @ok="dropTable">
-      <p>This action will remove all the data. Are you sure?</p>
+      <p>{{ $t('action_table.confirm_drop') }}</p>
     </b-modal>
     <!-- end modal drop table-->
     <!-- create study tables -->
     <b-modal
       size="xl"
-      title="Add Columns"
+      :title="$t('action_table.add_columns')"
       ref="modal-create-fields"
       @ok="saveCreateFields">
       <b-form-group
         id="nro-of-fields"
-        label="Nro of columns"
+        :label="$t('action_table.nro_columns')"
         label-for="number-of-fields">
         <b-form-input
           id="number-of-fields"
@@ -125,7 +125,7 @@
       <b-form-group
         v-for="item in parseInt(modalCreateFields.nro_of_fields)"
         :key="item"
-        :label="`Column name #${item}`"
+        :label="$t('action_table.column_name_n', {n: item})"
         :label-for="`field-${item}`">
         <b-form-input
         :id="`field-${item}`"
@@ -137,7 +137,7 @@
     <!-- modal edit fields -->
     <b-modal
       size="xl"
-      title="Edit fields"
+      :title="$t('action_table.edit_fields')"
       ref="modal-edit-fields"
       @ok="saveUpdateFields"
       @cancel="cancelModalFields">
@@ -145,7 +145,7 @@
         <b-form-group
           v-for="(item, index) in modalEditFields"
           :key="index"
-          :label="`Column #${index}`"
+          :label="$t('action_table.column_n', {n: index})"
           :label-for="`field-${index}`">
           <b-input-group>
             <b-form-input
@@ -165,13 +165,13 @@
       </draggable>
       <b-button
         variant="outline-success"
-        @click="addNewColumn">Add column</b-button>
+        @click="addNewColumn">{{ $t('action_table.add_column') }}</b-button>
     </b-modal>
     <!-- end of modal edit fields -->
     <!-- create study data -->
     <b-modal
       size="xl"
-      title="Add data"
+      :title="$t('action_table.add_data')"
       ref="modal-add-data"
       @ok="saveNewData">
       <b-form-group
@@ -191,7 +191,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import draggable from 'vuedraggable'
 
 export default {
@@ -272,7 +272,7 @@ export default {
         params.items = this.tsv.items
 
         if (this.importUrl.split('?')[0].split('/').length === 4) {
-          axios.put(`${this.importUrl}`, params)
+          Api.put(`${this.importUrl}`, params)
             .then((response) => {
               this.$emit('response-ok-api')
             })
@@ -280,7 +280,7 @@ export default {
               console.log(error)
             })
         } else {
-          axios.post(`${this.importUrl}`, params)
+          Api.post(`${this.importUrl}`, params)
             .then((response) => {
               this.$emit('response-ok-api')
             })
@@ -324,7 +324,7 @@ export default {
 
       params.items = this.modalContent.items
 
-      axios.patch(`${this.importUrl}`, params)
+      Api.patch(`${this.importUrl}`, params)
         .then((response) => {
           this.newItem = {}
           this.modalContent = {}
@@ -336,7 +336,7 @@ export default {
     },
     createTableOpenModal: function () {},
     dropTable: function () {
-      axios.delete(`${this.importUrl}`)
+      Api.delete(`${this.importUrl}`)
         .then((response) => {
           this.$emit('response-ok-api')
         })
@@ -367,7 +367,7 @@ export default {
         params[key] = value
       }
 
-      axios.post(`${this.importUrl}`, params)
+      Api.post(`${this.importUrl}`, params)
         .then((response) => {
           this.modalCreateFields = {
             nro_of_fields: 1,
@@ -399,7 +399,7 @@ export default {
         params[key] = value
       }
 
-      axios.patch(`${this.importUrl}`, params)
+      Api.patch(`${this.importUrl}`, params)
         .then((response) => {
           this.modalContent = {}
           this.modalEditFields = []

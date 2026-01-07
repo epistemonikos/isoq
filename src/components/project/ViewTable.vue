@@ -16,10 +16,10 @@
       @filtered="onFiltered"
       :filter-included-fields="table_settings.filterOn">
       <template v-slot:head(sort)="data">
-        <span v-b-tooltip.hover title="Automatic numbering of summarised review findings">{{ data.label }}</span>
+        <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
       </template>
       <template v-slot:head(name)="data">
-        <span v-b-tooltip.hover title="Summaries of each review finding produced by the review team">{{ data.label }}</span>
+        <span v-b-tooltip.hover :title="$t('soqf_table.finding_summary')">{{ data.label }}</span>
       </template>
       <template v-slot:head(category_name)="data">
         {{data.label}}
@@ -37,38 +37,38 @@
         <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
       <template v-slot:head(cerqual_option)="data">
-        <span v-b-tooltip.hover title="Assessment of the extent to which a review finding is a reasonable representation of the phenomenon of interest">{{ data.label }}</span>
+        <span v-b-tooltip.hover :title="$t('soqf_table.confidence_desc')">{{ data.label }}</span>
         <b-dropdown
           id="dropdown-cerqual-option"
           text=""
           class="finding-filter"
           :no-caret="false"
           size="sm">
-          <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">High confidence</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">Moderate confidence</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">Low confidence</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">Very low confidence</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">{{ $t('soqf_table.high_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">{{ $t('soqf_table.moderate_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">{{ $t('soqf_table.low_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">{{ $t('soqf_table.very_low_confidence') }}</b-dropdown-item>
           <b-dropdown-divider></b-dropdown-divider>
-          <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">Assessments completed</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">Assessments not completed</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">{{ $t('soqf_table.assessments_completed') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">{{ $t('soqf_table.assessments_not_completed') }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
       <template v-slot:head(cerqual_explanation)="data">
-        <span v-b-tooltip.hover title="Statement explaining concerns with any of the GRADE-CERQual components that justifies the level of confidence chosen">{{ data.label }}</span>
+        <span v-b-tooltip.hover :title="$t('soqf_table.explanation_desc')">{{ data.label }}</span>
         <b-dropdown
           id="dropdown-cerqual-explanation"
           text=""
           class="finding-filter"
           :no-caret="false"
           size="sm">
-          <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">Completed</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">Not completed</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">{{ $t('common.completed') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">{{ $t('common.not_completed') }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
       <template v-slot:head(ref_list)="data">
-        <span v-b-tooltip.hover title="Studies that contribute to each review finding">{{ data.label }}</span>
+        <span v-b-tooltip.hover :title="$t('soqf_table.studies_contribute')">{{ data.label }}</span>
       </template>
       <!-- data -->
       <template v-slot:cell(sort)="data">
@@ -90,7 +90,7 @@
                 <font-awesome-icon
                   v-if=(data.item.notes.length)
                   icon="comments"></font-awesome-icon>
-                Edit
+                {{ $t('common.edit') }}
               </b-button>
             </b-col>
             <b-col
@@ -102,7 +102,7 @@
                 v-if="mode==='edit'"
                 variant="outline-danger"
                 @click="removeModalFinding(data)">
-                Remove
+                {{ $t('common.remove') }}
               </b-button>
             </b-col>
           </b-row>
@@ -124,7 +124,7 @@
             v-if="mode==='edit'"
             block
             variant="outline-info"
-            @click="editModalFindingName(data)">Edit group</b-button>
+            @click="editModalFindingName(data)">{{ $t('soqf_table.edit_group') }}</b-button>
           {{ data.item.category_name }}
           <span
             v-if="data.item.category_extra_info !== ''"
@@ -136,7 +136,7 @@
             v-if="mode==='edit' && data.item.references.length"
             variant="info"
             block
-            @click="editModalFindingName(data)">Assign group</b-button>
+            @click="editModalFindingName(data)">{{ $t('soqf_table.assign_group') }}</b-button>
         </template>
       </template>
       <template v-slot:cell(cerqual_option)="data">
@@ -150,10 +150,10 @@
             <font-awesome-icon
               v-if="mode==='edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
               icon="comments"></font-awesome-icon>
-            <span v-if="mode === 'edit' && data.item.cerqual_option===''">Complete</span>
-            <span v-if="mode === 'edit' && data.item.cerqual_option!=''">Edit</span>
-            <span v-if="mode !== 'edit'">View</span>
-            GRADE-CERQual Assessment
+            <span v-if="mode === 'edit' && data.item.cerqual_option===''">{{ $t('common.complete') }}</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_option!=''">{{ $t('common.edit') }}</span>
+            <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
+            {{ $t('soqf_table.gc_assessment') }}
           </b-button>
         <b>{{ data.item.cerqual_option }}</b>
       </template>
@@ -168,9 +168,9 @@
             <font-awesome-icon
               v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
               icon="comments"></font-awesome-icon>
-            <span v-if="mode === 'edit' && data.item.cerqual_explanation===''">Complete</span>
-            <span v-if="mode === 'edit' && data.item.cerqual_explanation!=''">Edit</span>
-            <span v-if="mode !== 'edit'">View</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_explanation===''">{{ $t('common.complete') }}</span>
+            <span v-if="mode === 'edit' && data.item.cerqual_explanation!=''">{{ $t('common.edit') }}</span>
+            <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
             GRADE-CERQual Assessment
         </b-button>
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
@@ -185,21 +185,21 @@
             class="mb-3 d-print-none"
             :variant="(data.item.references.length) ? 'outline-info' : 'info'"
             @click="openModalReferences(data)">
-            <span v-if="data.item.references.length">View or edit references</span>
-            <span v-else>Select references</span>
+            <span v-if="data.item.references.length">{{ $t('soqf_table.view_edit_refs') }}</span>
+            <span v-else>{{ $t('soqf_table.select_references') }}</span>
           </b-button>
-          There are <b>{{ data.item.raw_ref.length }}</b> references.
+          <span v-html="$t('soqf_table.refs_count', {count: data.item.raw_ref.length})"></span>
         </template>
       </template>
       <template v-slot:empty>
         <p class="text-center my-5">
-          There are no findings to show, <a href="#" @click="modalAddList">add review finding</a>
+          {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding') }}</a>
         </p>
       </template>
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
           <b-spinner class="align-middle"></b-spinner>
-          <strong>Loading...</strong>
+          <strong>{{ $t('common.loading') }}</strong>
         </div>
       </template>
     </b-table>
@@ -208,8 +208,8 @@
       size="lg"
       id="edit-finding-name"
       ref="edit-finding-name"
-      title="Edit Summarised review finding"
-      ok-title="Save"
+      :title="$t('soqf_table.edit_finding')"
+      :ok-title="$t('common.save')"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
       :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length"
@@ -217,12 +217,12 @@
       <b-alert
         :show="editingUser.show"
         variant="danger">
-        The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
       </b-alert>
       <b-form-group
-        label="Summarised review finding"
+        :label="$t('soqf_table.summarised_finding')"
         label-for="finding-name">
-        <template slot="description">Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">here</a> for tips for writing a summarised review finding</template>
+        <template slot="description">{{ $t('soqf_table.tips_writing') }}</template>
         <b-form-textarea
           id="finding-name"
           v-model="editFindingName.name"
@@ -231,8 +231,8 @@
       </b-form-group>
       <b-form-group
         v-if="list_categories.options.length"
-        label="Select review finding group"
-        description="You can leave this option blank. You can always assign a finding to a group later.">
+        :label="$t('soqf_table.select_group')"
+        :description="$t('soqf_table.group_optional')">
         <b-form-select
           v-model="editFindingName.category"
           value-field="id"
@@ -241,9 +241,9 @@
       </b-form-group>
       <b-form-group
         label-for="finding-note"
-        description="Optional space for reviewers to leave notes for each other about this review finding">
+        :description="$t('soqf_table.notes_placeholder')">
         <template v-slot:label>
-          <videoHelp txt="Notes" tag="none" urlId="462176506"></videoHelp>
+          <videoHelp :txt="$t('common.notes')" tag="none" urlId="462176506"></videoHelp>
         </template>
         <b-form-textarea
           id="finding-note"
@@ -257,24 +257,24 @@
       size="xl"
       id="remove-finding"
       ref="remove-finding"
-      title="Remove summarised review finding"
-      ok-title="Confirm"
+      :title="$t('soqf_table.remove_finding')"
+      :ok-title="$t('common.confirm')"
       ok-variant="outline-danger"
       cancel-variant="outline-secondary"
       @ok="confirmRemoveList">
       <b-alert
         :show="editingUser.show"
         variant="danger">
-        The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
       </b-alert>
       <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
-        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet and revert your project to "Private" because it will no longer meet the requirements for being published to the iSoQ database.
+        {{ $t('soqf_table.delete_warning_revert') }}
       </p>
       <p v-else class="text-danger">
-        Warning! Deleting this finding will also delete its associated GRADE-CERQual Assessment Worksheet.
+        {{ $t('soqf_table.delete_warning') }}
       </p>
       <p>
-        Confirm you want to remove <b>{{ this.editFindingName.name }}</b> from the iSoQ table?
+        <span v-html="$t('soqf_table.confirm_remove', {name: this.editFindingName.name})"></span>
       </p>
     </b-modal>
 
@@ -282,14 +282,14 @@
       v-if="selected_list_index >= 0"
       id="modal-references-list"
       ref="modal-references-list"
-      title="References"
+      :title="$t('soqf_table.references')"
       @ok="checkReferencesBeforeSaving"
       @hidden="handleReferencesModalHidden"
       @cancel="cancelReferencesList"
       :ok-disabled="(selected_list_index === null) ? true : false"
       :no-close-on-backdrop="pendingSaveReferences"
       :no-close-on-esc="pendingSaveReferences"
-      ok-title="Save"
+      :ok-title="$t('common.save')"
       ok-variant="outline-success"
       cancel-variant="outline-secondary"
       size="xl"
@@ -297,7 +297,7 @@
       <b-alert
         :show="editingUser.show"
         variant="danger">
-        The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
       </b-alert>
       <template v-if="references.length">
         <div
@@ -306,12 +306,12 @@
             v-if="showBanner"
             show
             variant="danger">
-            <b>Warning!</b> By removing a reference you are modifying the underlining evidence base for this finding and will need to review your GRADE-CERQual assessments. If you remove the reference, the extracted data you inputted from this study to support this finding will be deleted from the GRADE-CERQual Assessment Worksheet.
+            {{ $t('soqf_table.remove_ref_warning') }}
           </b-alert>
           <b-table
             responsive
             striped
-            :fields="[{key: 'checkbox', label: ''}, {key: 'content', label:'Author(s), Year, Title'}]"
+            :fields="[{key: 'checkbox', label: ''}, {key: 'content', label: $t('soqf_table.author_year_title')}]"
             :items="refs">
             <template v-slot:cell(checkbox)="data">
               <b-form-checkbox
@@ -327,7 +327,7 @@
       <template v-else>
         <div
           class="mt-2">
-          <p>To select references, first upload your full reference list by clicking "Import References" next to the search bar.</p>
+          <p>{{ $t('references.select_first') }}</p>
         </div>
       </template>
     </b-modal>
@@ -335,35 +335,35 @@
     <b-modal
       id="modal-no-references-warning"
       ref="modal-no-references-warning"
-      title="Warning"
+      :title="$t('project.warning')"
       @ok="confirmSaveNoReferences"
       @cancel="cancelNoReferencesWarning"
-      ok-title="Continue"
+      :ok-title="$t('common.continue')"
       ok-variant="outline-danger"
       cancel-variant="outline-secondary"
       no-close-on-backdrop
       no-close-on-esc>
-      <p>By removing all references this review finding will no longer appear in your published iSoQ project. Do you wish to continue?</p>
+      <p>{{ $t('soqf_table.remove_all_unpublish') }}</p>
     </b-modal>
 
     <b-modal
       id="modal-private-project-warning"
       ref="modal-private-project-warning"
-      title="Warning"
+      :title="$t('project.warning')"
       @ok="confirmSavePrivateProject"
       @cancel="cancelPrivateProjectWarning"
-      ok-title="Continue"
+      :ok-title="$t('common.continue')"
       ok-variant="outline-danger"
       cancel-variant="outline-secondary"
       no-close-on-backdrop
       no-close-on-esc>
-      <p>By removing all references for this review finding this iSoQ project will revert to "private" as it will no longer meet the requirements for being published to the iSoQ database. Do you wish to continue?</p>
+      <p>{{ $t('soqf_table.remove_all_revert') }}</p>
     </b-modal>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Commons from '../../utils/commons.js'
 
 export default {
@@ -388,7 +388,7 @@ export default {
               dismissCountDown: 0
             },
             loading: false,
-            loading_txt: 'Save'
+            loading_txt: this.$t('common.save')
           },
           exclusion: {
             success: {
@@ -402,7 +402,7 @@ export default {
               dismissCountDown: 0
             },
             loading: false,
-            loading_txt: 'Save'
+            loading_txt: this.$t('common.save')
           },
           displaySearch: false,
           showFilterOne: false,
@@ -498,18 +498,18 @@ export default {
       default: () => ({
         with_categories: [
           {key: 'sort', label: 'No.'},
-          {key: 'name', label: 'Summarised review finding'},
-          {key: 'category_name', label: 'Review finding group'},
-          {key: 'cerqual_option', label: 'GRADE-CERQual Assessment'},
-          {key: 'cerqual_explanation', label: 'Explanation'},
-          {key: 'ref_list', label: 'References'}
+          {key: 'name', label: this.$t('table_headers.summarised_finding')},
+          {key: 'category_name', label: this.$t('table_headers.review_finding_groups')},
+          {key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment')},
+          {key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation')},
+          {key: 'ref_list', label: this.$t('table_headers.references')}
         ],
         without_categories: [
           {key: 'sort', label: 'No.'},
-          {key: 'name', label: 'Summarised review finding'},
-          {key: 'cerqual_option', label: 'GRADE-CERQual Assessment'},
-          {key: 'cerqual_explanation', label: 'Explanation'},
-          {key: 'ref_list', label: 'References'}
+          {key: 'name', label: this.$t('table_headers.summarised_finding')},
+          {key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment')},
+          {key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation')},
+          {key: 'ref_list', label: this.$t('table_headers.references')}
         ]
       })
     },
@@ -585,7 +585,7 @@ export default {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           this.editFindingName.finding_id = response.data[0].id
         })
@@ -600,7 +600,7 @@ export default {
         organization: this.$route.params.org_id,
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           this.editFindingName = {...response.data[0]}
 
@@ -634,7 +634,7 @@ export default {
       const params = {
         list_id: data.item.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then(async (response) => {
           if (response.data.length) {
             this.finding = JSON.parse(JSON.stringify(response.data[0]))
@@ -664,7 +664,7 @@ export default {
     updateListName: async function () {
       this.$emit('set-busy', true)
       const list = await this.processDataList()
-      axios.patch(`/api/isoqf_lists/${this.editFindingName.id}`, list)
+      Api.patch(`/isoqf_lists/${this.editFindingName.id}`, list)
         .then(() => {
           this.updateFinding(this.editFindingName)
           this.$emit('update-modification-time')
@@ -702,7 +702,7 @@ export default {
         'evidence_profile.name': finding.name,
         'evidence_profile.notes': finding.notes
       }
-      axios.patch(`/api/isoqf_findings/${finding.finding_id}`, params)
+      Api.patch(`/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
           this.$emit('get-lists')
         })
@@ -719,7 +719,7 @@ export default {
         project_id: this.$route.params.id,
         finding_id: this.editFindingName.id
       }
-      axios.post('/api/finding/remove', params)
+      Api.post('/finding/remove', params)
         .then(() => {
           this.$emit('get-project')
         })
@@ -807,7 +807,7 @@ export default {
         license_type: '',
         public_type: 'private'
       }
-      axios.patch(`/api/isoqf_projects/${this.project.id}`, params)
+      Api.patch(`/isoqf_projects/${this.project.id}`, params)
         .then(() => {
           // Emit an event to notify the parent component that the project status changed
           this.$emit('update-project-status')
@@ -824,7 +824,7 @@ export default {
       const params = {
         references: this.selected_references
       }
-      axios.patch(`/api/isoqf_lists/${this.lists[index].id}`, params)
+      Api.patch(`/isoqf_lists/${this.lists[index].id}`, params)
         .then(async () => {
           this.updateFindingReferences(this.selected_references)
           this.$emit('get-lists')
@@ -844,7 +844,7 @@ export default {
       const params = {
         'evidence_profile.references': references
       }
-      axios.patch(`/api/isoqf_findings/${this.finding.id}`, params)
+      Api.patch(`/isoqf_findings/${this.finding.id}`, params)
         .then(() => {
           this.cleanReferencesList()
           this.$emit('set-load-references', false)

@@ -1,15 +1,23 @@
-import axios from 'axios'
-import Commons from './commons.js'
-async function canPublish(project) {
-  return axios.get('/api/project/can_publish', { params: project })
+import Api from './Api'
+
+function validEmail (email) {
+  var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  return re.test(email)
+}
+function validUrl (url) {
+  var re = /^(http|https):\/\/[^ "]+$/
+  return re.test(url)
+}
+async function canPublish (project) {
+  return Api.get('/api/project/can_publish', project)
 }
 
 export default class Project {
-  static validEmail = Commons.validEmail
-  static validUrl = Commons.validUrl
+  static validEmail = validEmail
+  static validUrl = validUrl
   static canPublish = canPublish
 
-  static async validations(data) {
+  static async validations (data) {
     if (data.public_type !== 'private') {
       let cnt = 0
       let responses = {
@@ -94,7 +102,7 @@ export default class Project {
     return { data: { status: true } }
   }
 
-  static async create(formData) {
+  static async create (formData) {
     const data = JSON.parse(JSON.stringify(formData))
     let params = {}
     for (let key of Object.keys(data)) {
@@ -113,13 +121,13 @@ export default class Project {
       const creationDate = Date.now()
       params.created_at = creationDate
       params.last_update = creationDate
-      return axios.post('/api/isoqf_projects', params)
+      return Api.post('/isoqf_projects', params)
     } else {
       return { data: { status: false, message: 'When you create a project you couldnt publish without complete at least one finding', ...validation.data } }
     }
   }
 
-  static async update(formData) {
+  static async update (formData) {
     const params = JSON.parse(JSON.stringify(formData))
     const validation = await Project.validations(params)
 
@@ -130,9 +138,8 @@ export default class Project {
         params.private = false
         params.is_public = true
       }
-      params.last_update = Date.now()
-      const data = await axios.patch('/api/publish', { params })
-      return { data: { status: true, ...data } }
+      const data = await Api.patch('/api/publish', { params })
+      return {data: {status: true, ...data}}
     } else {
       return validation
     }

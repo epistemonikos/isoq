@@ -16,13 +16,9 @@
               block
               variant="outline-secondary"
               right
-              :disabled="exportState.isLoading"
-              text="Export">
-              <b-dropdown-item @click="ExportToWord(project.name)" :disabled="exportState.isLoading">
-                <b-spinner small v-show="exportState.isLoading"></b-spinner>
-                {{ exportState.isLoading ? 'Exportando...' : 'to MS Word' }}
-              </b-dropdown-item>
-              <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+              :text="$t('actionButtons.export')">
+              <b-dropdown-item @click="ExportToWord(project.name)">{{ $t('actionButtons.to_ms_word') }}</b-dropdown-item>
+              <b-dropdown-item @click="exportToRIS">{{ $t('actionButtons.the_references') }}</b-dropdown-item>
             </b-dropdown>
           </b-col>
           <b-col
@@ -35,11 +31,11 @@
                 variant="outline-info"
                 block
                 @click="printiSoQ">
-                Print or save as PDF
+                {{ $t('actionButtons.print_save_pdf') }}
               </b-button>
           </b-col>
           <b-col
-            v-if="mode==='view' && !preview"
+            v-if="mode==='view' && !preview && canWrite && !isLocked"
             cols="12"
             md="3"
             xl="3">
@@ -49,7 +45,7 @@
                 variant="primary"
                 block>
                 <font-awesome-icon icon="edit"></font-awesome-icon>
-                Edit
+                {{ $t('actionButtons.edit') }}
               </b-button>
           </b-col>
           <b-col
@@ -58,13 +54,14 @@
             md="3"
             xl="3">
               <b-button
-                v-if="permissions"
+                v-if="canWrite"
                 class="mt-1"
                 @click="modalChangePublicStatus"
+                :disabled="!isOnline"
                 :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
-                v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
-                <span v-if="project.is_public">Published</span><span v-else>Publish</span>
+                v-b-tooltip.hover :title="$t('actionButtons.publish_tooltip')">
+                <span v-if="project.is_public">{{ $t('actionButtons.published') }}</span><span v-else>{{ $t('actionButtons.publish') }}</span>
               </b-button>
           </b-col>
           <b-col
@@ -77,8 +74,8 @@
                 @click="changeMode"
                 variant="outline-success"
                 block
-                v-b-tooltip.hover title="Click to enter view mode where you can export or print">
-                Print or Export
+                v-b-tooltip.hover :title="$t('actionButtons.view_mode_tooltip')">
+                {{ $t('actionButtons.print_or_export') }}
               </b-button>
           </b-col>
         </b-row>
@@ -116,7 +113,7 @@
       id="modal-change-status"
       scrollable
       size="xl"
-      ok-title="Save"
+      :ok-title="$t('actionButtons.modal.save')"
       ok-variant="outline-success"
       @ok="savePublicStatus"
       cancel-variant="outline-secondary"
@@ -124,7 +121,7 @@
       no-close-on-backdrop
       no-close-on-esc>
       <template v-slot:modal-title>
-        <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
+        <videoHelp :txt="$t('actionButtons.modal.title')" tag="none" urlId="504176899-1"></videoHelp>
       </template>
 
       <template v-if="errorsResponse.message !== ''">
@@ -138,7 +135,7 @@
       </template>
 
       <p class="font-weight-light">
-        By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click "publish". Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
+        {{ $t('actionButtons.modal.publish_info') }}
       </p>
       <b-form-group>
         <b-form-radio-group
@@ -150,9 +147,9 @@
       </b-form-group>
 
       <template v-if="modalProject.public_type !== 'private'">
-        <h5>Choose a license</h5>
-        <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
-        <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
+        <h5>{{ $t('actionButtons.modal.choose_license') }}</h5>
+        <p class="font-weight-light">{{ $t('actionButtons.modal.license_info') }} <a href="https://creativecommons.org/about/cclicenses/" target="_blank">{{ $t('actionButtons.modal.license_info_link_text') }}</a>.</p>
+        <p class="font-weight-light">{{ $t('actionButtons.modal.license_responsibility') }}</p>
         <b-form-group>
           <b-form-radio-group
           id="modal-publish-license"
@@ -161,7 +158,7 @@
           @change="state.license_type = null"
           name="modal-radio-license"
           ></b-form-radio-group>
-          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons license.</b-form-invalid-feedback>
+          <b-form-invalid-feedback :state="state.license_type">{{ $t('actionButtons.modal.must_select_license') }}</b-form-invalid-feedback>
         </b-form-group>
       </template>
 
@@ -172,14 +169,14 @@
             class="float-right ml-3"
             @click="savePublicStatus">
             <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
-            Save
+            {{ $t('actionButtons.modal.save') }}
           </b-button>
           <b-button
             v-show="!ui.publish.showLoader"
             variant="outline-secondary"
             class="float-right"
             @click="$refs['modal-change-status'].hide()">
-            Close
+            {{ $t('actionButtons.modal.close') }}
           </b-button>
         </div>
       </template>
@@ -188,7 +185,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
 import Commons from '@/utils/commons.js'
@@ -212,7 +209,11 @@ export default {
       default: false
     },
     project: Object,
-    permissions: Boolean,
+    canWrite: Boolean,
+    isLocked: {
+      type: Boolean,
+      default: false
+    },
     ui: Object,
     lists: Array,
     findings: Array,
@@ -231,24 +232,6 @@ export default {
   data () {
     return {
       modalProject: {name: ''},
-      global_status: [
-        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
-      ],
-      global_licenses: [
-        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ],
-      yes_or_no: [
-        { value: false, text: 'no' },
-        { value: true, text: 'yes' }
-      ],
       errors: [],
       state: {
         name: null,
@@ -275,7 +258,7 @@ export default {
       this.state.name = val.length > 0 ? null : false
     }
   },
-    methods: {
+  methods: {
     ExportToWord: async function (filename = '') {
       try {
         this.startExport(3) // 3 pasos: validación, generación, descarga
@@ -353,8 +336,15 @@ export default {
           }
         },
         width: {
-          size: '100%',
+          size: 5000,
           type: WidthType.PERCENTAGE
+        },
+        layout: {
+          type: TableLayoutType.FIXED,
+          width: {
+            size: 5000,
+            type: WidthType.PERCENTAGE
+          }
         },
         rows: [
           new TableRow({
@@ -370,7 +360,7 @@ export default {
                   fill: '#DDDDDD'
                 },
                 width: {
-                  size: '5%',
+                  size: 250,
                   type: WidthType.PERCENTAGE
                 },
                 children: [
@@ -389,7 +379,7 @@ export default {
               new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
                 width: {
-                  size: '40%',
+                  size: 2000,
                   type: WidthType.PERCENTAGE
                 },
                 shading: {
@@ -400,7 +390,7 @@ export default {
                     alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
-                        text: 'Summarised review finding',
+                        text: this.$t('actionButtons.word_export.table_headers.summarised_finding'),
                         size: 22,
                         bold: true
                       })
@@ -411,7 +401,7 @@ export default {
               new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
                 width: {
-                  size: '20%',
+                  size: 1000,
                   type: WidthType.PERCENTAGE
                 },
                 shading: {
@@ -422,29 +412,7 @@ export default {
                     alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
-                        text: 'GRADE-CERQual Assessment of confidence',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '20%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'Explanation of GRADE-CERQual Assessment',
+                        text: this.$t('actionButtons.word_export.table_headers.cerqual_assessment'),
                         size: 22,
                         bold: true
                       })
@@ -458,7 +426,7 @@ export default {
                   fill: '#DDDDDD'
                 },
                 width: {
-                  size: '15%',
+                  size: 1000,
                   type: WidthType.PERCENTAGE
                 },
                 children: [
@@ -466,7 +434,29 @@ export default {
                     alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
-                        text: 'References',
+                        text: this.$t('actionButtons.word_export.table_headers.cerqual_explanation'),
+                        size: 22,
+                        bold: true
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                shading: {
+                  fill: '#DDDDDD'
+                },
+                width: {
+                  size: 750,
+                  type: WidthType.PERCENTAGE
+                },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: this.$t('actionButtons.word_export.table_headers.references'),
                         size: 22,
                         bold: true
                       })
@@ -487,7 +477,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'License',
+                text: this.$t('actionButtons.word_export.license'),
                 bold: true,
                 size: 24
               })
@@ -550,9 +540,9 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
+        const canPublish = await Api.get('/api/project/can_publish', {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal})
         if (canPublish.data.status) {
-          axios.patch('/api/publish', {params})
+          Api.patch('/api/publish', {params})
             .then(() => {
               this.modalProject = {name: ''}
               this.$emit('getProject')
@@ -568,7 +558,7 @@ export default {
           this.$emit('uiPublishShowLoader', false)
         }
       } else {
-        axios.patch('/api/publish', {params})
+        Api.patch('/api/publish', {params})
           .then(() => {
             this.modalProject = {name: ''}
             this.$emit('getProject')
@@ -748,7 +738,7 @@ export default {
       let text = []
       text.push(
         new TextRun({
-          text: 'Explanation: ',
+          text: this.$t('actionButtons.word_export.explanation_label'),
           size: content.font_size,
           bold: true
         })
@@ -803,9 +793,7 @@ export default {
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
-                  this.generateTableCell({
-                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
-                  }),
+                  this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER}),
                   new TableCell({
                     columnSpan: 5,
                     width_size: '40%',
@@ -970,9 +958,38 @@ export default {
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
+    },
+    handleErrorClick: function (event) {
+      if (event.target.tagName === 'A') {
+        this.$refs['modal-change-status'].hide()
+      }
     }
   },
   computed: {
+    global_status () {
+      return [
+        { value: 'private', text: this.$t('actionButtons.status.private') },
+        { value: 'fully', text: this.$t('actionButtons.status.fully') },
+        { value: 'partially', text: this.$t('actionButtons.status.partially') },
+        { value: 'minimally', text: this.$t('actionButtons.status.minimally') }
+      ]
+    },
+    global_licenses () {
+      return [
+        { value: 'CC-BY-NC-ND', text: this.$t('actionButtons.licenses.cc_by_nc_nd') },
+        { value: 'CC-BY-ND', text: this.$t('actionButtons.licenses.cc_by_nd') },
+        { value: 'CC-BY-NC-SA', text: this.$t('actionButtons.licenses.cc_by_nc_sa') },
+        { value: 'CC-BY-NC', text: this.$t('actionButtons.licenses.cc_by_nc') },
+        { value: 'CC-BY-SA', text: this.$t('actionButtons.licenses.cc_by_sa') },
+        { value: 'CC-BY', text: this.$t('actionButtons.licenses.cc_by') }
+      ]
+    },
+    yes_or_no () {
+      return [
+        { value: false, text: this.$t('actionButtons.yes_no.no') },
+        { value: true, text: this.$t('actionButtons.yes_no.yes') }
+      ]
+    },
     getLicense: {
       get: function () {
         if (!Object.prototype.hasOwnProperty.call(this.modalProject, 'license_type')) {
