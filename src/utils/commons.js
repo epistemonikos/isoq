@@ -172,7 +172,7 @@ export default class Commons {
     // return { config: error.config }
   }
 
-  // Funciones de utilidad
+// Funciones de utilidad
   static debounce(func, wait) {
     let timeout
     return function executedFunction(...args) {
@@ -198,5 +198,32 @@ export default class Commons {
 
   static generateId() {
     return Math.random().toString(36).substr(2, 9)
+  }
+
+  static theLicense (license = '') {
+    const globalLicenses = [
+      {
+        value: 'CC-BY-NC-ND',
+        text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.',
+        image: 'by-nc-nd-88x31.png'
+      },
+      { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-nd-88x31.png' },
+      { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-nc-sa-88x31.png' },
+      { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.', image: 'by-nc-88x31.png' },
+      { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-sa-88x31.png' },
+      { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-88x31.png' }
+    ]
+
+    if (license.length) {
+      for (const lic of globalLicenses) {
+        if (lic.value === license) {
+          this.licenseUrl = require(`../assets/${lic.image}`)
+          return lic.text
+        }
+      }
+    } else {
+      this.licenseUrl = require(`../assets/${globalLicenses[0].image}`)
+      return globalLicenses[0].text
+    }
   }
 }

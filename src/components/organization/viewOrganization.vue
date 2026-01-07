@@ -565,15 +565,17 @@ export default {
           project.sharedToken = ''
         }
         if (!Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken !== null && project.sharedToken.length) {
             project.sharedTokenOnOff = true
           } else {
+            project.sharedToken = ''
             project.sharedTokenOnOff = false
           }
         } else {
-          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken.length) {
+          if (Object.prototype.hasOwnProperty.call(project, 'sharedToken') && project.sharedToken !== null && project.sharedToken.length) {
             project.sharedTokenOnOff = true
           } else {
+            project.sharedToken = ''
             project.sharedTokenOnOff = false
           }
         }

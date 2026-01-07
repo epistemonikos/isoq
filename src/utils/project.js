@@ -31,27 +31,28 @@ export default class Project {
         responses.state.id = false
         cnt++
       }
-      if (data.name === '') {
+      // check if project has a name with at least 3 characters
+      if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
         responses.state.name = false
         cnt++
       }
       // check if project has authors
-      if (data.authors === '') {
+      if (data.authors === '' || data.authors === null || data.authors === undefined || data.authors.trim() === '') {
         responses.state.authors = false
         cnt++
       }
-      // check if project has author
-      if (data.author === '') {
+      // check if project has author with at least 3 characters
+      if (data.author === '' || data.author === null || data.author === undefined || data.author.trim().length < 3) {
         responses.state.author = false
         cnt++
       }
       // check if project has a valid author email address
-      if (data.author_email === '' || !Project.validEmail(data.author_email)) {
+      if (data.author_email === '' || data.author_email === null || data.author_email === undefined || !Project.validEmail(data.author_email)) {
         responses.state.author_email = false
         cnt++
       }
-      // check if project has a review question
-      if (data.review_question === '') {
+      // check if project has a review question with at least 3 characters
+      if (data.review_question === '' || data.review_question === null || data.review_question === undefined || data.review_question.trim().length < 3) {
         responses.state.review_question = false
         cnt++
       }

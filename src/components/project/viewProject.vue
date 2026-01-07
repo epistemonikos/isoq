@@ -27,8 +27,12 @@
     </b-container>
     <b-container fluid class="mb-5">
       <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
-        <propertiesProject :project="project" @update-modification="updateModificationTime()"
-          :canWrite="checkPermissions()" @update-project="updateDataProject">
+        <propertiesProject
+          :project="project"
+          @update-modification="updateModificationTime()"
+          :canWrite="checkPermissions()"
+          :highlight="$route.query.highlight"
+          @update-project="updateDataProject">
         </propertiesProject>
       </div>
       <div :class="{ 'block mt-3': (tabOpened === 1) ? true : false, 'd-none': (tabOpened === 1) ? !true : !false }">
@@ -220,8 +224,15 @@
                 <b-button class="mt-1" block variant="outline-secondary" @click="modalSortFindings">Re-order your review
                   findings</b-button>
 
-                <b-modal ref="modal-sort-findings" id="modal-sort-findings" size="xl" ok-title="Save"
-                  ok-variant="outline-success" cancel-variant="outline-primary" scrollable @ok="saveSortedLists">
+                <b-modal
+                  ref="modal-sort-findings"
+                  id="modal-sort-findings"
+                  size="xl"
+                  ok-title="Save"
+                  ok-variant="outline-success"
+                  cancel-variant="outline-danger"
+                  scrollable
+                  @ok="saveSortedLists">
                   <template v-slot:modal-title>
                     <videoHelp txt="Re-order your review findings" tag="none" urlId="462176102"></videoHelp>
                   </template>
@@ -235,8 +246,11 @@
                         <div class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
-                        <p class="font-weight-light">{{ getCategoryName(item.category) }} - <b>{{ item.cerqual_option
-                            }}</b>
+                        <p class="font-weight-bold">
+                          <template v-if="item.category">
+                            {{ getCategoryName(item.category) }}&nbsp;-&nbsp;
+                          </template>
+                          {{ item.cerqual_option }}
                         </p>
                       </b-list-group-item>
                     </draggable>
@@ -278,18 +292,36 @@
             </b-card>
           </b-col>
           <b-col cols="12" class="toDoc">
-            <template v-if="checkPermissions(['can_read', 'can_write'])">
-              <ViewTable :lists="lists" :list_categories="list_categories" :fields="fields" :project="project"
-                :mode="effectiveMode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
-                @update-modification-time="updateModificationTime" @get-lists="getLists" @add-list="modalAddList"
-                @set-busy="setBusy" @set-load-references="statusLoadReferences" @get-references="getReferences" />
+            <template
+              v-if="checkPermissions(['can_read', 'can_write'])">
+              <ViewTable
+                :class="{'d-none': effectiveMode === 'view', 'd-print-none': true}"
+                :lists="lists"
+                :list_categories="list_categories"
+                :fields="fields"
+                :project="project"
+                :mode="effectiveMode"
+                :isBusy="table_settings.isBusy"
+                :references="references"
+                :refs="refs"
+                @update-modification-time="updateModificationTime"
+                @get-lists="getLists"
+                @get-project="getProject"
+                @add-list="modalAddList"
+                @set-busy="setBusy"
+                @set-load-references="statusLoadReferences"
+                @get-references="getReferences"
+                @update-project-status="getProject"
+                 />
             </template>
             <!-- printed version -->
-            <template v-else>
-              <PrintViewTable :dataPrintVersion="lists_print_version" :references="references"
-                :categories="list_categories" :printableItems="printableItems"
-                :hasPermission="checkPermissions('can_read')"></PrintViewTable>
-            </template>
+            <PrintViewTable
+              :class="{'d-none': effectiveMode === 'edit', 'd-print-block': true}"
+              :dataPrintVersion="lists_print_version"
+              :references="references"
+              :categories="list_categories"
+              :printableItems="printableItems"
+              :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             <!-- eopv -->
             <b-modal size="xl" id="add-summarized" ref="add-summarized" title="Add Summarised review finding"
               :ok-disabled="(summarized_review) ? false : true" @ok="createList" ok-title="Save"
@@ -859,7 +891,16 @@ export default {
       this.loadReferences = status
     },
     clickTab: function (option) {
-      this.tabOpened = option
+      const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+      if (this.$route.query.tab !== tabs[option]) {
+        const query = { ...this.$route.query, tab: tabs[option] }
+        if (Object.prototype.hasOwnProperty.call(query, 'highlight')) {
+          delete query.highlight
+        }
+        this.$router.push({
+          query: query
+        }).catch(() => {})
+      }
     },
     uiShowLoaders: function (status) {
       this.ui.publish.showLoader = status
@@ -1480,7 +1521,7 @@ export default {
       const _categories = JSON.parse(JSON.stringify(this.list_categories))
       let _category = ''
       for (let category of _categories.options) {
-        if (category.value === id) {
+        if (category.id === id) {
           _category = category.text
         }
       }
@@ -1647,6 +1688,20 @@ export default {
         }
       } catch (error) {
         console.error('Error cargando evaluaciones:', error)
+      }
+    }
+  },
+  watch: {
+    '$route.query.tab': function (val) {
+      const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
+      const index = tabs.indexOf(val)
+      if (index !== -1) {
+        this.tabOpened = index
+      }
+    },
+    '$route.query.step': function (val) {
+      if (val) {
+        this.stepStage = parseInt(val) - 1
       }
     }
   },
