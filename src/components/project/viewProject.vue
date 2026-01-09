@@ -886,7 +886,7 @@ export default {
           this.processGetListCategories(response.data)
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     getReferences: async function (changeTab = true) {
@@ -919,7 +919,7 @@ export default {
           this.loadReferences = false
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     getProject: async function () {
@@ -962,7 +962,7 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     getCharacteristicsData: async function () {
@@ -1116,7 +1116,7 @@ export default {
           this.table_settings.isBusy = false
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     routeAnchorHash: function () {
@@ -1365,7 +1365,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     modalAddList: function () {
@@ -1404,7 +1404,7 @@ export default {
           this.updateModificationTime()
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     createFinding: function (listId, listName) {
@@ -1450,7 +1450,7 @@ export default {
           await this.createExtractedData(response.data.id)
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     generateEvidenceProfileTableWithCategories: function (findings) {
@@ -1616,7 +1616,7 @@ export default {
           this.list_categories.skip = false
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     modalListCategories: async function () {
@@ -1640,7 +1640,7 @@ export default {
           this.modal_edit_list_categories.extra_info = ''
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     editListCategoryName: function (index) {
@@ -1671,7 +1671,7 @@ export default {
             this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
-            this.printErrors(error)
+            Commons.printErrors(error)
           })
       }
     },
@@ -1703,7 +1703,7 @@ export default {
             this.modal_edit_list_categories.id = null
           })
           .catch((error) => {
-            this.printErrors(error)
+            Commons.printErrors(error)
           })
       }
     },
@@ -1764,7 +1764,7 @@ export default {
         })
         .catch((error) => {
           this.table_settings.isBusy = false
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     updateFindingSort: function (listId, sort, getList = false) {
@@ -1785,7 +1785,7 @@ export default {
             })
             .catch((error) => {
               this.table_settings.isBusy = false
-              this.printErrors(error)
+              Commons.printErrors(error)
             })
         })
     },
@@ -1824,7 +1824,7 @@ export default {
           this.getLists()
         })
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     },
     countDownChanged (dismissCountDown) {
@@ -1900,7 +1900,7 @@ export default {
       Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
         .then()
         .catch((error) => {
-          this.printErrors(error)
+          Commons.printErrors(error)
         })
     }
   },

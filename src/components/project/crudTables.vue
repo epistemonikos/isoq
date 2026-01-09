@@ -660,7 +660,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+                const authorsA = (a.authors || '').toString()
+                const authorsB = (b.authors || '').toString()
+                return authorsA.localeCompare(authorsB)
+              })
               this.dataTable.items = _items
 
               this.dataTableFieldsModal.fields = []

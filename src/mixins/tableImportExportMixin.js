@@ -1,5 +1,5 @@
 import Papa from 'papaparse'
-import axios from 'axios'
+import Api from '@/utils/Api'
 const ExportCSV = require('export-to-csv').ExportToCsv
 
 export const tableImportExportMixin = {
@@ -124,7 +124,7 @@ export const tableImportExportMixin = {
     },
 
     async cleanImportedData (id, params) {
-      await axios.delete(`/api/${this.type}/${id}`)
+      await Api.delete(`/${this.type}/${id}`)
       this.pre_ImportDataTable = ''
       await this.insertImportedData(params)
     },
@@ -133,7 +133,7 @@ export const tableImportExportMixin = {
       if (!params.organization || !params.project_id || !params.fields || !params.items) {
         return
       }
-      await axios.post(`/api/${this.type}/`, params)
+      await Api.post(`/${this.type}/`, params)
       this.$emit('get-project')
       this.$refs[`import-table-${this.type}`].hide()
     }

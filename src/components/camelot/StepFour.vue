@@ -568,7 +568,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
 import Responses from './Responses.vue'
@@ -791,7 +791,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_assessments', { params })
+      Api.get('/isoqf_assessments', params)
         .then(response => {
           if (response.data.length) {
             this.assessments = {...response.data[0]}
@@ -819,11 +819,11 @@ export default {
                 stages: [
                   {
                     key: 0,
-                    options: Array(4).fill({ option: null, text: '' })
+                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
                   },
                   {
                     key: 1,
-                    options: Array(4).fill({ option: null, text: '' })
+                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
                   },
                   {
                     key: 2,
@@ -847,7 +847,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_characteristics', { params })
+      Api.get('/isoqf_characteristics', params)
         .then(response => {
           const data = response.data[0]
           const items = data.items

@@ -23,7 +23,7 @@
         hover
         responsive>
         <template v-slot:cell(authors)="data">
-          {{ data.item.authors }}
+          {{ formatAuthors(data.item) }}
         </template>
 
         <!-- Plantilla genérica para todos los campos -->
@@ -232,7 +232,8 @@
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
 import draggable from 'vuedraggable'
-import axios from 'axios'
+import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 import { isCustomField, extractCustomFields, processCustomFields } from '@/utils/customFieldsHelper'
 
 export default {
@@ -281,27 +282,28 @@ export default {
   },
   computed: {
     tableItems () {
-      // Si tenemos datos cargados desde la API, los usamos
-      if (this.charsData && this.charsData.items && this.charsData.items.length > 0) {
-        const items = this.charsData.items.map(item => {
-          const matchingRef = this.references.find(ref => ref.id === item.ref_id)
-          if (matchingRef) {
-            return { ...matchingRef, ...item }
-          }
-          return item
-        })
+      // Usamos siempre las referencias como base para asegurar que se muestren todas
+      const items = this.references.map(ref => {
+        // Buscamos si hay datos guardados para esta referencia
+        let charItem = null
+        if (this.charsData && this.charsData.items) {
+          charItem = this.charsData.items.find(item => item.ref_id === ref.id)
+        }
 
-        // Ordenamos alfabéticamente por el campo authors
-        return items.sort((a, b) => {
-          const authorsA = (a.authors || '').toString().toLowerCase()
-          const authorsB = (b.authors || '').toString().toLowerCase()
-          return authorsA.localeCompare(authorsB)
-        })
-      }
-      // Si no hay datos cargados, usamos las referencias como respaldo
-      return this.references.sort((a, b) => {
-        const authorsA = (a.authors || '').toString().toLowerCase()
-        const authorsB = (b.authors || '').toString().toLowerCase()
+        // Si hay datos, los fusionamos con la referencia
+        if (charItem) {
+          return { ...ref, ...charItem }
+        }
+
+        // Si no, devolvemos la referencia tal cual
+        return ref
+      })
+
+      // Ordenamos alfabéticamente por el campo authors usando el helper de formato para consistencia
+      return items.sort((a, b) => {
+        // Intentamos usar el formato procesado si es posible, o el raw si no
+        const authorsA = this.formatAuthors(a).toLowerCase()
+        const authorsB = this.formatAuthors(b).toLowerCase()
         return authorsA.localeCompare(authorsB)
       })
     },
@@ -352,6 +354,9 @@ export default {
     }
   },
   methods: {
+    formatAuthors(item) {
+      return Commons.parseReference(item, true, false)
+    },
     editReference (item) {
       console.log('Editando referencia:', item)
       // Guardamos la referencia actual para editar
@@ -447,7 +452,7 @@ export default {
           console.log('Datos completos a enviar para actualización:', updatedCharsData)
 
           // Si existe ID, actualizamos
-          axios.patch(`/api/isoqf_characteristics/${this.charsData.id}/`, updatedCharsData)
+          Api.patch(`/isoqf_characteristics/${this.charsData.id}/`, updatedCharsData)
             .then(response => {
               console.log('Referencia actualizada:', response.data)
               // Actualizamos los datos locales
@@ -471,7 +476,7 @@ export default {
 
           console.log('Datos completos a enviar para inserción:', newCharacteristics)
 
-          axios.post('/api/isoqf_characteristics/', newCharacteristics)
+          Api.post('/isoqf_characteristics/', newCharacteristics)
             .then(response => {
               console.log('Referencia creada:', response.data)
               // Actualizamos los datos locales
@@ -619,7 +624,7 @@ export default {
         project_id: this.$route.params.id
       }
 
-      axios.get('/api/isoqf_characteristics', { params })
+      Api.get('/isoqf_characteristics', params)
         .then(response => {
           if (response.data && response.data.length > 0) {
             // Guardamos los datos recibidos

@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   name: 'AssessmentForm',
@@ -318,7 +318,7 @@ export default {
           params.items.push(data)
         }
         if (this.assessments.id) {
-          axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
+          Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
             .then(response => {
               console.log('Data updated successfully:', response.data)
               this.$emit('getAssessments')
@@ -327,7 +327,7 @@ export default {
               console.error('Error updating data:', error)
             })
         } else {
-          axios.post('/api/isoqf_assessments', params)
+          Api.post('/isoqf_assessments', params)
             .then(response => {
               this.$emit('getAssessments')
               console.log('Data saved successfully:', response.data)

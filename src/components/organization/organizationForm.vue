@@ -163,6 +163,35 @@
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
+            label="Would you like to use CAMELOT for this project?"
+            label-for="input-project-use-camelot"
+            :description="!formData.id ? 'CAMELOT provides additional tools for quality assessment and data extraction.' : ''">
+            <template v-if="!formData.id">
+              <b-form-radio-group
+                :disabled="!canEdit"
+                id="input-project-use-camelot"
+                v-model="formData.use_camelot"
+                :options="[
+                  { text: 'Yes, use CAMELOT (recommended)', value: true },
+                  { text: 'No, do not use CAMELOT', value: false }
+                ]"
+                buttons
+                button-variant="outline-primary"
+                size="md"
+                name="use-camelot-buttons"></b-form-radio-group>
+            </template>
+            <template v-else>
+              <div class="pt-2">
+                <span v-if="formData.use_camelot" class="align-middle">
+                  Yes, using CAMELOT <b-badge variant="success" class="ml-1">Active</b-badge>
+                </span>
+                <span v-else class="align-middle">
+                  No, not using CAMELOT <b-badge variant="secondary" class="ml-1">Inactive</b-badge>
+                </span>
+              </div>
+            </template>
+          </b-form-group>
+          <b-form-group
             label-for="select-project-list-status"
             :description="$t('project.publish_desc_private')">
             <template v-slot:description v-if="formData.id === null">
@@ -252,7 +281,12 @@ export default {
   name: 'organizationForm',
   components: {videoHelp},
   props: {
-    formData: Object,
+    formData: {
+      type: Object,
+      default: () => ({
+        use_camelot: true
+      })
+    },
     canEdit: Boolean,
     isModal: {
       type: Boolean,

@@ -564,7 +564,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.charsOfStudies.items = _items
 
               this.charsOfStudiesFieldsModal.fields = []
@@ -599,7 +603,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.methodologicalTableRefs.items = _items
 
               this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]

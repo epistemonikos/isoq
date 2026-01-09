@@ -432,7 +432,8 @@ export default {
         },
         temporaryUrl: '',
         invite_emails: [],
-        tmp_invite_emails: []
+        tmp_invite_emails: [],
+        use_camelot: true
       },
       tmp_buffer_project_list: {
         id: null,
@@ -468,7 +469,8 @@ export default {
         },
         temporaryUrl: '',
         invite_emails: [],
-        tmp_invite_emails: []
+        tmp_invite_emails: [],
+        use_camelot: true
       },
       buffer_project_list: {
         id: null,
@@ -700,6 +702,7 @@ export default {
     },
     openModalNewFindingTable: function () {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+      this.canEditProject = true
       this.$refs['new-project'].show()
     },
     closeModalProject: function () {
