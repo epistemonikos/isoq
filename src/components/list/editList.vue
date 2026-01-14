@@ -661,6 +661,14 @@ export default {
       if (characteristics.length) {
         let data = characteristics[0]
 
+        // Add defensive checks for undefined properties
+        if (!data.fields) {
+          data.fields = []
+        }
+        if (!data.items) {
+          data.items = []
+        }
+
         const { filteredItems, haveContent } = this.filterItemsByReferences(
           data.items,
           this.list.references,
@@ -711,6 +719,14 @@ export default {
       const assessments = JSON.parse(JSON.stringify(this.list.assessments))
       if (assessments.length) {
         let data = assessments[0]
+
+        // Add defensive checks for undefined properties
+        if (!data.fields) {
+          data.fields = []
+        }
+        if (!data.items) {
+          data.items = []
+        }
 
         const { filteredItems, haveContent } = this.filterItemsByReferences(
           data.items,

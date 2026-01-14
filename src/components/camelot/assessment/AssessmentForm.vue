@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <h3>Fit assessment</h3>
+      <h3>{{ $t('camelot.assessment_form.title') }}</h3>
     </div>
 
     <p v-html="options[modalStage][selectedMeta].text"></p>
@@ -17,12 +17,12 @@
     </b-form-group>
 
     <b-form-group
-      label="Explain any concerns you have in your own words"
+      :label="$t('camelot.assessment_form.explain_label')"
       label-for="textarea-formatter">
       <b-form-textarea
         id="textarea-formatter"
         v-model="text1"
-        placeholder="Enter your text"></b-form-textarea>
+        :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
     </b-form-group>
 
     <div>
@@ -31,7 +31,7 @@
         :disabled="button.disabled"
         :variant="(button.disabled) ? 'outline-primary' : 'primary'"
         @click="save">
-        save
+        {{ $t('camelot.assessment_form.save_button') }}
       </b-button>
     </div>
   </div>
@@ -45,119 +45,119 @@ export default {
   data () {
     return {
       categories: [
-        'Fit between Meta domains and Research design',
-        'Fit between Meta domains and Research conduct',
-        'Fit between Research design and Research conduct',
-        'Overall assessment'
+        this.$t('camelot.assessment_form.categories.fit_meta_design'),
+        this.$t('camelot.assessment_form.categories.fit_meta_conduct'),
+        this.$t('camelot.assessment_form.categories.fit_design_conduct'),
+        this.$t('camelot.assessment_form.overall_assessment')
       ],
       selected: null,
       text1: '',
       options: [
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: '<b>Research design domains</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.design_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Overall assessment',
+            text: this.$t('camelot.assessment_form.overall_assessment'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ]

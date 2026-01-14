@@ -10,7 +10,7 @@
       <template
         v-slot:cell(stepOne)="data">
           <div>
-            <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">{{ $t('camelot.step_four.assess_button') }}</b-button>
             <div v-if="getStepSummary(0, data.index)" class="mt-2">
               <small class="text-muted">
                 <div v-for="(value, key) in getStepSummary(0, data.index)" :key="key">
@@ -20,14 +20,14 @@
               </small>
             </div>
             <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
+              <small class="text-muted">{{ $t('camelot.step_four.not_assigned') }}</small>
             </div>
           </div>
       </template>
       <template
         v-slot:cell(stepTwo)="data">
           <div>
-            <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">{{ $t('camelot.step_four.assess_button') }}</b-button>
             <div v-if="getStepSummary(1, data.index)" class="mt-2">
               <small class="text-muted">
                 <div v-for="(value, key) in getStepSummary(1, data.index)" :key="key">
@@ -37,14 +37,14 @@
               </small>
             </div>
             <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
+              <small class="text-muted">{{ $t('camelot.step_four.not_assigned') }}</small>
             </div>
           </div>
       </template>
       <template
         v-slot:cell(stepThree)="data">
           <div>
-            <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+            <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">{{ $t('camelot.step_four.assess_button') }}</b-button>
             <div v-if="getStepSummary(2, data.index)" class="mt-2">
               <small class="text-muted">
                 <div v-for="(value, key) in getStepSummary(2, data.index)" :key="key">
@@ -54,14 +54,14 @@
               </small>
             </div>
             <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
+              <small class="text-muted">{{ $t('camelot.step_four.not_assigned') }}</small>
             </div>
           </div>
         </template>
         <template
           v-slot:cell(stepFour)="data">
             <div>
-              <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
+              <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">{{ $t('camelot.step_four.assess_button') }}</b-button>
               <div v-if="getStepSummary(3, data.index)" class="mt-2">
                 <small class="text-muted">
                   <div v-for="(value, key) in getStepSummary(3, data.index)" :key="key">
@@ -71,13 +71,13 @@
                 </small>
               </div>
               <div v-else class="mt-2">
-                <small class="text-muted">Not assigned</small>
+                <small class="text-muted">{{ $t('camelot.step_four.not_assigned') }}</small>
               </div>
             </div>
         </template>
     </b-table>
 
-    <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
+    <b-modal id="modal-1" size="xl" hide-footer :title="$t('camelot.step_four.modal_title')" class="modal-header">
       <b-row>
         <b-col cols="12" class="modal-body">
           <b-tabs nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
@@ -86,11 +86,11 @@
             </template>
             <b-tab title-item-class="align-self-center" :title-link-class="modal.stage === 0 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
-                Fit between <br/>Meta domains and <br/>Research design
+                {{ $t('camelot.step_four.tabs.fit_meta_design') }}
               </template>
               <b-row>
                 <b-col cols="12">
-                  <h2>Fit between Meta domains and Research design</h2>
+                  <h2>{{ $t('camelot.step_four.tabs.fit_meta_design') }}</h2>
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
@@ -104,86 +104,86 @@
                 </b-col>
                 <b-col cols="4">
                   <div>
-                    <h3>Meta domains</h3>
+                    <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-aa', 0)">1 - Research</h4>
+                      <h4 block @click="showFitAssessment('accordion-aa', 0)">1 - {{ $t('camelot.step_four.meta_items.research') }}</h4>
                     </div>
                     <b-collapse id="accordion-aa" visible accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ab', 1)">2 - Stakeholders</h4>
+                      <h4 block @click="showFitAssessment('accordion-ab', 1)">2 - {{ $t('camelot.step_four.meta_items.stakeholders') }}</h4>
                     </div>
                     <b-collapse id="accordion-ab" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ac', 2)">3 - Researchers</h4>
+                      <h4 block @click="showFitAssessment('accordion-ac', 2)">3 - {{ $t('camelot.step_four.meta_items.researchers') }}</h4>
                     </div>
                     <b-collapse id="accordion-ac" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ad', 3)">4 - Context</h4>
+                      <h4 block @click="showFitAssessment('accordion-ad', 3)">4 - {{ $t('camelot.step_four.meta_items.context') }}</h4>
                     </div>
                     <b-collapse id="accordion-ad" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[3]['context_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
                 <b-col cols="4">
                   <div>
-                    <h3>Research design domains</h3>
+                    <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ae>1 - Research strategy</h4>
+                      <h4 block v-b-toggle.accordion-ae>1 - {{ $t('camelot.step_four.design_items.strategy') }}</h4>
                     </div>
                     <b-collapse id="accordion-ae" visible accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[0]['strategy_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-af>2 - Ethical considerations</h4>
+                      <h4 block v-b-toggle.accordion-af>2 - {{ $t('camelot.step_four.design_items.ethical') }}</h4>
                     </div>
                     <b-collapse id="accordion-af" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[1]['ethical_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ag>3 - Equity, diversity & inclusion considerations</h4>
+                      <h4 block v-b-toggle.accordion-ag>3 - {{ $t('camelot.step_four.design_items.equity') }}</h4>
                     </div>
                     <b-collapse id="accordion-ag" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[2]['equity_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ah>4 - Theory</h4>
+                      <h4 block v-b-toggle.accordion-ah>4 - {{ $t('camelot.step_four.design_items.theory') }}</h4>
                     </div>
                     <b-collapse id="accordion-ah" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[3]['theory_concerns'] }}
                     </b-collapse>
                   </div>
@@ -192,11 +192,11 @@
             </b-tab>
             <b-tab :title-link-class="modal.stage === 1 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
-                Fit between <br/>Meta domains and <br/>Research conduct
+                {{ $t('camelot.step_four.tabs.fit_meta_conduct') }}
               </template>
               <b-row>
                 <b-col cols="12">
-                  <h2>Fit between Meta domains and Research conduct</h2>
+                  <h2>{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}</h2>
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
@@ -210,88 +210,88 @@
                 </b-col>
                 <b-col cols="4">
                   <div>
-                    <h3>Meta domains</h3>
+                    <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ba', 0)">1 - Research</h4>
+                      <h4 block @click="showFitAssessment('accordion-ba', 0)">1 - {{ $t('camelot.step_four.meta_items.research') }}</h4>
                     </div>
                     <b-collapse id="accordion-ba" visible accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[0]['research_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bb', 1)">2 - Stakeholders</h4>
+                      <h4 block @click="showFitAssessment('accordion-bb', 1)">2 - {{ $t('camelot.step_four.meta_items.stakeholders') }}</h4>
                     </div>
                     <b-collapse id="accordion-bb" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[1]['stakeholders_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bc', 2)">3 - Researchers</h4>
+                      <h4 block @click="showFitAssessment('accordion-bc', 2)">3 - {{ $t('camelot.step_four.meta_items.researchers') }}</h4>
                     </div>
                     <b-collapse id="accordion-bc" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[2]['researchers_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bd', 3)">4 - Context</h4>
+                      <h4 block @click="showFitAssessment('accordion-bd', 3)">4 - {{ $t('camelot.step_four.meta_items.context') }}</h4>
                     </div>
                     <b-collapse id="accordion-bd" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[0].values[3]['context_concerns'] }}
                     </b-collapse>
                   </div>
                 </b-col>
                 <b-col cols="4">
                   <div>
-                    <h3>Research conduct domains</h3>
+                    <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-be>1 - Participant recruitment & selection</h4>
+                      <h4 block v-b-toggle.accordion-be>1 - {{ $t('camelot.step_four.conduct_items.participant') }}</h4>
                     </div>
                     <b-collapse id="accordion-be" visible accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[0]['participant_concerns'] }}
                     </b-collapse>
 
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bf>2 - Data collection</h4>
+                      <h4 block v-b-toggle.accordion-bf>2 - {{ $t('camelot.step_four.conduct_items.data') }}</h4>
                     </div>
                     <b-collapse id="accordion-bf" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[1]['data_concerns'] }}
                     </b-collapse>
 
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bg>3 - Analysis and interpretation</h4>
+                      <h4 block v-b-toggle.accordion-bg>3 - {{ $t('camelot.step_four.conduct_items.analysis') }}</h4>
                     </div>
                     <b-collapse id="accordion-bg" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[2]['analysis_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bh>4 - Presentation of findings</h4>
+                      <h4 block v-b-toggle.accordion-bh>4 - {{ $t('camelot.step_four.conduct_items.presentation') }}</h4>
                     </div>
                     <b-collapse id="accordion-bh" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[3]['presentation_concerns'] }}
                     </b-collapse>
                   </div>
@@ -300,11 +300,11 @@
             </b-tab>
             <b-tab :title-link-class="modal.stage === 2 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
               <template #title>
-                Fit between <br/>Research design and <br/>Research conduct
+                {{ $t('camelot.step_four.tabs.fit_design_conduct') }}
               </template>
               <b-row>
                 <b-col cols="12">
-                  <h2>Fit between Research design and Research conduct</h2>
+                  <h2>{{ $t('camelot.step_four.tabs.fit_design_conduct') }}</h2>
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="4">
@@ -318,43 +318,43 @@
                 </b-col>
                 <b-col cols="4">
                   <div>
-                    <h3>Research design domains</h3>
+                    <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
                   </div>
                   <div role="tablist">
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ca>1 - Research strategy</h4>
+                      <h4 block v-b-toggle.accordion-ca>1 - {{ $t('camelot.step_four.design_items.strategy') }}</h4>
                     </div>
                     <b-collapse id="accordion-ca" visible accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[0]['strategy_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cb>2 - Ethical considerations</h4>
+                      <h4 block v-b-toggle.accordion-cb>2 - {{ $t('camelot.step_four.design_items.ethical') }}</h4>
                     </div>
                     <b-collapse id="accordion-cb" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[1]['ethical_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cc>3 - Equity, diversity & inclusion considerations</h4>
+                      <h4 block v-b-toggle.accordion-cc>3 - {{ $t('camelot.step_four.design_items.equity') }}</h4>
                     </div>
                     <b-collapse id="accordion-cc" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[2]['equity_concerns'] }}
                     </b-collapse>
                     <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cd>4 - Theory</h4>
+                      <h4 block v-b-toggle.accordion-cd>4 - {{ $t('camelot.step_four.design_items.theory') }}</h4>
                     </div>
                     <b-collapse id="accordion-cd" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
+                      <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[1].values[3]['theory_concerns'] }}
                     </b-collapse>
                   </div>
@@ -362,43 +362,43 @@
                 <b-col cols="4">
                   <div>
                     <div>
-                      <h3>Research conduct domains</h3>
+                      <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
                     </div>
                     <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ce>1 - Participant recruitment & selection</h4>
+                        <h4 block v-b-toggle.accordion-ce>1 - {{ $t('camelot.step_four.conduct_items.participant') }}</h4>
                       </div>
                       <b-collapse id="accordion-ce" visible accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
+                        <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[0]['participant_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cf>2 - Data collection</h4>
+                        <h4 block v-b-toggle.accordion-cf>2 - {{ $t('camelot.step_four.conduct_items.data') }}</h4>
                       </div>
                       <b-collapse id="accordion-cf" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
+                        <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[1]['data_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cg>3 - Analysis and interpretation</h4>
+                        <h4 block v-b-toggle.accordion-cg>3 - {{ $t('camelot.step_four.conduct_items.analysis') }}</h4>
                       </div>
                       <b-collapse id="accordion-cg" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
+                        <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[2]['analysis_concerns'] }}
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ch>4 - Presentation of findings</h4>
+                        <h4 block v-b-toggle.accordion-ch>4 - {{ $t('camelot.step_four.conduct_items.presentation') }}</h4>
                       </div>
                       <b-collapse id="accordion-ch" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
+                        <h5>{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                       {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
+                      <h5>{{ $t('camelot.step_four.common.concerns') }}</h5>
                       {{ this.meta[2].values[3]['presentation_concerns'] }}
                       </b-collapse>
                     </div>
@@ -408,11 +408,11 @@
             </b-tab>
             <b-tab :title-link-class="modal.stage === 3 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']" title-item-class="align-self-end">
               <template #title>
-                Overall assessment
+                {{ $t('camelot.step_four.tabs.overall') }}
               </template>
               <b-row>
                 <b-col cols="12">
-                  <h2>Overall assessment</h2>
+                  <h2>{{ $t('camelot.step_four.tabs.overall') }}</h2>
                   <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
                 </b-col>
                 <b-col cols="3">
@@ -426,11 +426,11 @@
                 </b-col>
                 <b-col cols="3">
                   <div>
-                    <h3>Fit between Research design and each Meta domain</h3>
+                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
                   </div>
                   <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-da>1 - Research</h4>
+                        <h4 block v-b-toggle.accordion-da>1 - {{ $t('camelot.step_four.meta_items.research') }}</h4>
                       </div>
                       <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -442,7 +442,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-db>2 - Stakeholders</h4>
+                        <h4 block v-b-toggle.accordion-db>2 - {{ $t('camelot.step_four.meta_items.stakeholders') }}</h4>
                       </div>
                       <b-collapse id="accordion-db" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -454,7 +454,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dc>3 - Researchers</h4>
+                        <h4 block v-b-toggle.accordion-dc>3 - {{ $t('camelot.step_four.meta_items.researchers') }}</h4>
                       </div>
                       <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -466,7 +466,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dd>4 - Context</h4>
+                        <h4 block v-b-toggle.accordion-dd>4 - {{ $t('camelot.step_four.meta_items.context') }}</h4>
                       </div>
                       <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -482,11 +482,11 @@
                 <b-col cols="3">
                   <div>
                     <div>
-                      <h3>Fit between Research conduct and each Meta domain</h3>
+                      <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
                     </div>
                     <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-de>Research strategy</h4>
+                        <h4 block v-b-toggle.accordion-de>{{ $t('camelot.step_four.design_items.strategy') }}</h4>
                       </div>
                       <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -498,7 +498,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-df>Ethical considerations</h4>
+                        <h4 block v-b-toggle.accordion-df>{{ $t('camelot.step_four.design_items.ethical') }}</h4>
                       </div>
                       <b-collapse id="accordion-df" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -510,7 +510,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dg>Equity, diversity & inclusion  considerations</h4>
+                        <h4 block v-b-toggle.accordion-dg>{{ $t('camelot.step_four.design_items.equity') }}</h4>
                       </div>
                       <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -522,7 +522,7 @@
                         </template>
                       </b-collapse>
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dh>Theory</h4>
+                        <h4 block v-b-toggle.accordion-dh>{{ $t('camelot.step_four.design_items.theory') }}</h4>
                       </div>
                       <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -539,11 +539,11 @@
                 <b-col cols="3">
                   <div>
                     <div>
-                      <h3>Fit between Research design and Research conduct domains</h3>
+                      <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
                     </div>
                     <div role="tablist">
                       <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-di>Fit assessment</h4>
+                        <h4 block v-b-toggle.accordion-di>{{ $t('camelot.step_four.common.fit_assessment') }}</h4>
                       </div>
                       <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
                         <template v-if="assessments.items.length">
@@ -593,19 +593,19 @@ export default {
       // Define any local data properties here if needed
       ui: {
         fields: [
-          { key: 'authors', label: 'Study' },
-          { key: 'stepOne', label: 'Fit between Meta domains and Research design' },
-          { key: 'stepTwo', label: 'Fit between Meta domains and Research conduct' },
-          { key: 'stepThree', label: 'Fit between Research design and Research conduct' },
-          { key: 'stepFour', label: 'Overall assessment' }
+          { key: 'authors', label: this.$t('camelot.step_four.table_headers.authors') },
+          { key: 'stepOne', label: this.$t('camelot.step_four.tabs.fit_meta_design') },
+          { key: 'stepTwo', label: this.$t('camelot.step_four.tabs.fit_meta_conduct') },
+          { key: 'stepThree', label: this.$t('camelot.step_four.tabs.fit_design_conduct') },
+          { key: 'stepFour', label: this.$t('camelot.step_four.tabs.overall') }
         ],
         authors: '',
         responses: [
-          { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-          { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-          { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-          { text: 'Serious concerns', value: 'D', color: '#B31529' },
-          { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+          { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+          { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+          { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+          { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+          { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
         ]
       },
       characteristics: [],
@@ -686,7 +686,7 @@ export default {
       },
       meta: [
         {
-          name: 'Meta Domains',
+          name: this.$t('camelot.step_four.sections.meta_domains'),
           items: ['research_', 'stakeholders_', 'researchers_', 'context_'],
           values: [
             {
@@ -708,7 +708,7 @@ export default {
           ]
         },
         {
-          name: 'Research design domains',
+          name: this.$t('camelot.step_four.sections.research_design'),
           items: ['strategy_', 'ethical_', 'equity_', 'theory_'],
           values: [
             {
@@ -730,7 +730,7 @@ export default {
           ]
         },
         {
-          name: 'Research conduct',
+          name: this.$t('camelot.step_four.sections.research_conduct'),
           items: ['participant_', 'data_', 'analysis_', 'presentation_'],
           values: [
             {
@@ -917,10 +917,10 @@ export default {
 
       // Definir los nombres de los dominios para cada etapa
       const domainNames = {
-        0: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 1: Meta domains
-        1: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 2: Meta domains
-        2: ['Fit assessment'], // Step 3: Single assessment
-        3: ['Overall assessment'] // Step 4: Single assessment
+        0: [this.$t('camelot.step_four.meta_items.research'), this.$t('camelot.step_four.meta_items.stakeholders'), this.$t('camelot.step_four.meta_items.researchers'), this.$t('camelot.step_four.meta_items.context')], // Step 1: Meta domains
+        1: [this.$t('camelot.step_four.meta_items.research'), this.$t('camelot.step_four.meta_items.stakeholders'), this.$t('camelot.step_four.meta_items.researchers'), this.$t('camelot.step_four.meta_items.context')], // Step 2: Meta domains
+        2: [this.$t('camelot.step_four.common.fit_assessment')], // Step 3: Single assessment
+        3: [this.$t('camelot.step_four.tabs.overall')] // Step 4: Single assessment
       }
 
       for (let i = 0; i < options.length; i++) {

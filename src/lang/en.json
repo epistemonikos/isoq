@@ -1044,5 +1044,153 @@
     "refresh": "Refresh",
     "noInternetAndNoCache": "No internet connection and no cached data available for",
     "action_disabled": "This action is disabled while offline"
+  },
+  "camelot": {
+    "step_three": {
+      "loading": "Loading data...",
+      "no_records": "No records available",
+      "show_concerns": "Show Concerns",
+      "edit_button": "Edit",
+      "delete_button": "Delete",
+      "references_header": "References",
+      "actions_header": "Actions",
+      "authors_label": "Authors",
+      "camelot_fields": "CAMELOT fields",
+      "reference_id": "Reference ID",
+      "author_year": "Author(s), Year",
+      "modal": {
+        "title": "Edit Reference",
+        "reference_id_label": "Reference ID",
+        "authors_placeholder": "Authors separated by comma",
+        "custom_fields_title": "Custom fields",
+        "add_field_button": "Add new field",
+        "no_custom_fields": "No custom fields. Click \"Add field\" to create one.",
+        "move_instruction": "Use the \"Move\" button to rearrange the fields",
+        "title_label": "Title",
+        "move_button": "Move",
+        "content_label": "Content",
+        "field_title_placeholder": "Field title",
+        "field_content_placeholder": "Field content",
+        "camelot_fields_title": "Camelot fields",
+        "no_selection": "No reference has been selected for editing"
+      }
+    },
+    "step_four": {
+      "assess_button": "Assess",
+      "not_assigned": "Not assigned",
+      "modal_title": "Methodological assessment",
+      "tabs": {
+        "fit_meta_design": "Fit between Meta domains and Research design",
+        "fit_meta_conduct": "Fit between Meta domains and Research conduct",
+        "fit_design_conduct": "Fit between Research design and Research conduct",
+        "overall": "Overall assessment"
+      },
+      "sections": {
+        "meta_domains": "Meta domains",
+        "research_design": "Research design domains",
+        "research_conduct": "Research conduct domains",
+        "fit_between_design_meta": "Fit between Research design and each Meta domain",
+        "fit_between_conduct_meta": "Fit between Research conduct and each Meta domain",
+        "fit_between_design_conduct": "Fit between Research design and Research conduct domains"
+      },
+      "meta_items": {
+        "research": "Research",
+        "stakeholders": "Stakeholders",
+        "researchers": "Researchers",
+        "context": "Context"
+      },
+      "design_items": {
+        "strategy": "Research strategy",
+        "ethical": "Ethical considerations",
+        "equity": "Equity, diversity & inclusion considerations",
+        "theory": "Theory"
+      },
+      "conduct_items": {
+        "participant": "Participant recruitment & selection",
+        "data": "Data collection",
+        "analysis": "Analysis and interpretation",
+        "presentation": "Presentation of findings"
+      },
+      "common": {
+        "extracted_data": "Extracted data",
+        "concerns": "Concerns",
+        "fit_assessment": "Fit assessment"
+      },
+      "table_headers": {
+        "authors": "Authors",
+        "overall": "Overall assessment",
+        "research": "Research",
+        "stakeholders": "Stakeholders",
+        "researchers": "Researchers",
+        "context": "Context",
+        "researchers_domain": "Researchers domain"
+      },
+      "camelot_mixin": {
+        "extracted_data": "Extracted data",
+        "concerns": "Concerns",
+        "meta_domain_1": "Meta domain 1 - Research",
+        "meta_domain_2": "Meta domain 2 - Stakeholders",
+        "meta_domain_3": "Meta domain 3 - Researchers",
+        "meta_domain_4": "Meta domain 4 - Context",
+        "research_design_1": "Research design 1 - Research strategy",
+        "research_design_2": "Research design 2 - Theory",
+        "research_design_3": "Research design 3 - Ethical considerations",
+        "research_design_4": "Research design 4 - Equity, diversity & inclusion considerations",
+        "research_conduct_1": "Research conduct 1 - Participant recruitment & selection",
+        "research_conduct_2": "Research conduct 2 - Data collection",
+        "research_conduct_3": "Research conduct 3 - Analysis & interpretation",
+        "research_conduct_4": "Research conduct 4 - Presentation of findings"
+      }
+    },
+    "responses": {
+      "no_minimal": "No or minimal concerns",
+      "minor": "Minor concerns",
+      "moderate": "Moderate concerns",
+      "serious": "Serious concerns",
+      "unclear": "Unclear"
+    },
+    "assessment_form": {
+      "title": "Fit assessment",
+      "explain_label": "Explain any concerns you have in your own words",
+      "text_placeholder": "Enter your text",
+      "save_button": "save",
+      "overall_assessment": "Overall assessment",
+      "categories": {
+        "fit_meta_design": "Fit between Meta domains and Research design",
+        "fit_meta_conduct": "Fit between Meta domains and Research conduct",
+        "fit_design_conduct": "Fit between Research design and Research conduct"
+      },
+      "descriptions": {
+        "meta_research_vs_design": "Meta domain <b>Research</b> against <b>Research design domains</b>",
+        "meta_stakeholders_vs_design": "Meta domain <b>Stakeholders</b> against <b>Research design domains</b>",
+        "meta_researchers_vs_design": "Meta domain <b>Researchers</b> against <b>Research design domains</b>",
+        "meta_context_vs_design": "Meta domain <b>Context</b> against <b>Research design domains</b>",
+        "meta_research_vs_conduct": "Meta domain <b>Research</b> against <b>Research conduct domains</b>",
+        "meta_stakeholders_vs_conduct": "Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>",
+        "meta_researchers_vs_conduct": "Meta domain <b>Researchers</b> against <b>Research conduct domains</b>",
+        "meta_context_vs_conduct": "Meta domain <b>Context</b> against <b>Research conduct domains</b>",
+        "design_vs_conduct": "<b>Research design domains</b> against <b>Research conduct domains</b>"
+      }
+    },
+    "assessment_table": {
+      "headers": {
+        "authors": "Authors",
+        "overall_assessment": "Overall assessment",
+        "research_design": "Research design",
+        "research_conduct": "Research conduct",
+        "research": "Research",
+        "stakeholders": "Stakeholders",
+        "researchers": "Researchers",
+        "context": "Context",
+        "researchers_domain": "Researchers domain"
+      },
+      "options": {
+        "no_minimal": "No or minimal concern",
+        "minor": "Minor concerns",
+        "moderate": "Moderate concerns",
+        "serious": "Serious concerns",
+        "unclear": "Unclear"
+      }
+    }
   }
 }

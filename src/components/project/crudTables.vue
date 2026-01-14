@@ -9,14 +9,14 @@
           variant="outline-primary"
           v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
           :disabled="(references.length > 0 && isOnline) ? false : true"
-          v-if="dataTable.fields.length <= 2"
+          v-if="dataTable.fields && dataTable.fields.length <= 2"
           @click="openModalDataTable()">
           {{ $t('characteristics.create_table') }}
         </b-button>
         <b-button
           block
           variant="outline-primary"
-          v-if="dataTable.fields.length > 2"
+          v-if="dataTable.fields && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
           {{ $t('characteristics.edit_columns') }}
         </b-button>
@@ -38,7 +38,7 @@
       </b-col>
       <b-col
         sm="3"
-        v-if="dataTable.fields.length > 2">
+        v-if="dataTable.fields && dataTable.fields.length > 2">
         <b-button
           variant="outline-secondary"
           block
@@ -59,7 +59,7 @@
           sort-by="authors"
           :id="`${prefix}-table`"
           class="table-content-refs mt-3"
-          v-if="dataTable.fieldsObj.length > 1"
+          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > 1"
           :fields="dataTable.fieldsObj"
           :items="dataTable.items"
           :current-page="dataTableSettings.currentPage"
@@ -73,7 +73,7 @@
           </template>
           <template
             v-slot:cell(actions)="data"
-            v-if="dataTable.fields.length > 2 && canEdit">
+            v-if="dataTable.fields && dataTable.fields.length > 2 && canEdit">
             <b-row>
               <b-col>
                 <b-button
@@ -109,10 +109,10 @@
       <b-col
         cols="12">
         <b-pagination
-          v-if="dataTable.items.length && dataTable.items.length > dataTableSettings.perPage"
+          v-if="dataTable.items && dataTable.items.length && dataTable.items.length > dataTableSettings.perPage"
           align="center"
           v-model="dataTableSettings.currentPage"
-          :total-rows="dataTable.items.length"
+          :total-rows="dataTable.items && dataTable.items.length"
           :per-page="dataTableSettings.perPage"
           :aria-controls="`${prefix}-table`">
         </b-pagination>

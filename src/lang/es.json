@@ -1044,5 +1044,153 @@
     "refresh": "Recargar",
     "noInternetAndNoCache": "Sin conexión a Internet y sin datos en caché para",
     "action_disabled": "Esta acción está deshabilitada sin conexión"
+  },
+  "camelot": {
+    "step_three": {
+      "loading": "Cargando datos...",
+      "no_records": "No hay registros disponibles",
+      "show_concerns": "Mostrar Preocupaciones",
+      "edit_button": "Editar",
+      "delete_button": "Eliminar",
+      "references_header": "Referencias",
+      "actions_header": "Acciones",
+      "authors_label": "Autores",
+      "camelot_fields": "Campos CAMELOT",
+      "reference_id": "ID de Referencia",
+      "author_year": "Autor(es), Año",
+      "modal": {
+        "title": "Editar Referencia",
+        "reference_id_label": "ID de referencia",
+        "authors_placeholder": "Autores separados por coma",
+        "custom_fields_title": "Campos personalizados",
+        "add_field_button": "Agregar nuevo campo",
+        "no_custom_fields": "No hay campos personalizados. Haz clic en \"Agregar campo\" para crear uno.",
+        "move_instruction": "Usa el botón \"Mover\" para reorganizar los campos",
+        "title_label": "Título",
+        "move_button": "Mover",
+        "content_label": "Contenido",
+        "field_title_placeholder": "Título del campo",
+        "field_content_placeholder": "Contenido del campo",
+        "camelot_fields_title": "Campos Camelot",
+        "no_selection": "No se ha seleccionado ninguna referencia para editar"
+      }
+    },
+    "step_four": {
+      "assess_button": "Evaluar",
+      "not_assigned": "No asignado",
+      "modal_title": "Evaluación metodológica",
+      "tabs": {
+        "fit_meta_design": "Ajuste entre Dominios Meta y Diseño de investigación",
+        "fit_meta_conduct": "Ajuste entre Dominios Meta y Conducta de investigación",
+        "fit_design_conduct": "Ajuste entre Diseño de investigación y Conducta de investigación",
+        "overall": "Evaluación general"
+      },
+      "sections": {
+        "meta_domains": "Dominios Meta",
+        "research_design": "Dominios de diseño de investigación",
+        "research_conduct": "Dominios de conducta de investigación",
+        "fit_between_design_meta": "Ajuste entre Diseño de investigación y cada Dominio Meta",
+        "fit_between_conduct_meta": "Ajuste entre Conducta de investigación y cada Dominio Meta",
+        "fit_between_design_conduct": "Ajuste entre Diseño de investigación y dominios de Conducta de investigación"
+      },
+      "meta_items": {
+        "research": "Investigación",
+        "stakeholders": "Partes interesadas",
+        "researchers": "Investigadores",
+        "context": "Contexto"
+      },
+      "design_items": {
+        "strategy": "Estrategia de investigación",
+        "ethical": "Consideraciones éticas",
+        "equity": "Consideraciones de equidad, diversidad e inclusión",
+        "theory": "Teoría"
+      },
+      "conduct_items": {
+        "participant": "Reclutamiento y selección de participantes",
+        "data": "Recolección de datos",
+        "analysis": "Análisis e interpretación",
+        "presentation": "Presentación de hallazgos"
+      },
+      "common": {
+        "extracted_data": "Datos extraídos",
+        "concerns": "Preocupaciones",
+        "fit_assessment": "Evaluación de ajuste"
+      },
+      "table_headers": {
+        "authors": "Autores",
+        "overall": "Evaluación general",
+        "research": "Investigación",
+        "stakeholders": "Partes interesadas",
+        "researchers": "Investigadores",
+        "context": "Contexto",
+        "researchers_domain": "Dominio de investigadores"
+      },
+      "camelot_mixin": {
+        "extracted_data": "Datos extraídos",
+        "concerns": "Preocupaciones",
+        "meta_domain_1": "Dominio Meta 1 - Investigación",
+        "meta_domain_2": "Dominio Meta 2 - Partes interesadas",
+        "meta_domain_3": "Dominio Meta 3 - Investigadores",
+        "meta_domain_4": "Dominio Meta 4 - Contexto",
+        "research_design_1": "Diseño de investigación 1 - Estrategia de investigación",
+        "research_design_2": "Diseño de investigación 2 - Teoría",
+        "research_design_3": "Diseño de investigación 3 - Consideraciones éticas",
+        "research_design_4": "Diseño de investigación 4 - Consideraciones de equidad, diversidad e inclusión",
+        "research_conduct_1": "Conducta de investigación 1 - Reclutamiento y selección de participantes",
+        "research_conduct_2": "Conducta de investigación 2 - Recolección de datos",
+        "research_conduct_3": "Conducta de investigación 3 - Análisis e interpretación",
+        "research_conduct_4": "Conducta de investigación 4 - Presentación de hallazgos"
+      }
+    },
+    "responses": {
+      "no_minimal": "Sin preocupaciones o mínimas",
+      "minor": "Preocupaciones menores",
+      "moderate": "Preocupaciones moderadas",
+      "serious": "Preocupaciones serias",
+      "unclear": "No claro"
+    },
+    "assessment_form": {
+      "title": "Evaluación de ajuste",
+      "explain_label": "Explique cualquier preocupación que tenga con sus propias palabras",
+      "text_placeholder": "Ingrese su texto",
+      "save_button": "Guardar",
+      "overall_assessment": "Evaluación general",
+      "categories": {
+        "fit_meta_design": "Ajuste entre Dominios Meta y Diseño de investigación",
+        "fit_meta_conduct": "Ajuste entre Dominios Meta y Conducta de investigación",
+        "fit_design_conduct": "Ajuste entre Diseño de investigación y Conducta de investigación"
+      },
+      "descriptions": {
+        "meta_research_vs_design": "Dominio Meta <b>Investigación</b> contra <b>Dominios de diseño de investigación</b>",
+        "meta_stakeholders_vs_design": "Dominio Meta <b>Partes interesadas</b> contra <b>Dominios de diseño de investigación</b>",
+        "meta_researchers_vs_design": "Dominio Meta <b>Investigadores</b> contra <b>Dominios de diseño de investigación</b>",
+        "meta_context_vs_design": "Dominio Meta <b>Contexto</b> contra <b>Dominios de diseño de investigación</b>",
+        "meta_research_vs_conduct": "Dominio Meta <b>Investigación</b> contra <b>Dominios de conducta de investigación</b>",
+        "meta_stakeholders_vs_conduct": "Dominio Meta <b>Partes interesadas</b> contra <b>Dominios de conducta de investigación</b>",
+        "meta_researchers_vs_conduct": "Dominio Meta <b>Investigadores</b> contra <b>Dominios de conducta de investigación</b>",
+        "meta_context_vs_conduct": "Dominio Meta <b>Contexto</b> contra <b>Dominios de conducta de investigación</b>",
+        "design_vs_conduct": "<b>Dominios de diseño de investigación</b> contra <b>Dominios de conducta de investigación</b>"
+      }
+    },
+    "assessment_table": {
+      "headers": {
+        "authors": "Autores",
+        "overall_assessment": "Evaluación general",
+        "research_design": "Diseño de investigación",
+        "research_conduct": "Conducta de investigación",
+        "research": "Investigación",
+        "stakeholders": "Partes interesadas",
+        "researchers": "Investigadores",
+        "context": "Contexto",
+        "researchers_domain": "Dominio de investigadores"
+      },
+      "options": {
+        "no_minimal": "Sin preocupaciones o mínimas",
+        "minor": "Preocupaciones menores",
+        "moderate": "Preocupaciones moderadas",
+        "serious": "Preocupaciones serias",
+        "unclear": "No claro"
+      }
+    }
   }
 }
