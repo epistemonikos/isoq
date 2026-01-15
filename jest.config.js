@@ -5,7 +5,9 @@ module.exports = {
     '^.+\\.js$': 'babel-jest'
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/utils/api$': '<rootDir>/tests/unit/__mocks__/Api.js',
+    '^@/utils/Api$': '<rootDir>/tests/unit/__mocks__/Api.js'
   },
   testMatch: [
     '**/tests/unit/**/*.spec.js'
