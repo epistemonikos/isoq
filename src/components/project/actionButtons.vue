@@ -258,7 +258,53 @@ export default {
       this.state.name = val.length > 0 ? null : false
     }
   },
+  mounted () {
+    // Listen for modal show event to attach click handler
+    this.$root.$on('bv::modal::shown', this.onModalShown)
+  },
+  beforeDestroy () {
+    // Clean up event listeners
+    this.$root.$off('bv::modal::shown', this.onModalShown)
+    this.removeErrorLinkListener()
+  },
   methods: {
+    onModalShown (bvEvent, modalId) {
+      // Only attach listener for our specific modal
+      if (modalId === 'modal-change-status') {
+        this.$nextTick(() => {
+          const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
+          if (modalBody) {
+            modalBody.addEventListener('click', this.handleErrorLinkClick)
+          }
+        })
+      }
+    },
+    removeErrorLinkListener () {
+      const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
+      if (modalBody) {
+        modalBody.removeEventListener('click', this.handleErrorLinkClick)
+      }
+    },
+    handleErrorLinkClick (event) {
+      // Use closest() to handle clicks on link or its children
+      const link = event.target.closest('a')
+      if (link && link.href) {
+        const href = link.getAttribute('href')
+        if (href && href.startsWith('#/')) {
+          event.preventDefault()
+          event.stopPropagation()
+          
+          // Close the modal using Bootstrap Vue's modal API
+          this.$bvModal.hide('modal-change-status')
+          
+          // Navigate to the route after a small delay to ensure modal closes
+          this.$nextTick(() => {
+            const route = href.substring(1) // Remove the '#' prefix
+            this.$router.push(route)
+          })
+        }
+      }
+    },
     ExportToWord: async function (filename = '') {
       try {
         this.startExport(3) // 3 pasos: validación, generación, descarga
