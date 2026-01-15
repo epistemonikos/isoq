@@ -1,5 +1,5 @@
 <template>
-  <div v-if="mode === 'view'">
+  <div v-if="mode === 'view'" class="export-actions-wrapper">
     <!-- Export Dropdown -->
     <b-col cols="12" md="3" xl="3">
       <b-dropdown
@@ -30,42 +30,38 @@
     </b-col>
 
     <!-- Progress Indicator -->
-    <b-row v-if="exportState.isLoading" class="mt-2">
-      <b-col cols="12">
-        <b-progress
-          :value="exportState.progress"
-          :max="100"
-          show-progress
-          animated>
-          {{ exportState.currentStep }}
-        </b-progress>
-      </b-col>
-    </b-row>
+    <b-col cols="12" v-if="exportState.isLoading" class="mt-2">
+      <b-progress
+        :value="exportState.progress"
+        :max="100"
+        show-progress
+        animated>
+        {{ exportState.currentStep }}
+      </b-progress>
+    </b-col>
 
     <!-- Error Message -->
-    <b-row v-if="exportState.error" class="mt-2">
-      <b-col cols="12">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="setError(null)">
-          {{ exportState.error }}
-        </b-alert>
-      </b-col>
-    </b-row>
+    <b-col cols="12" v-if="exportState.error" class="mt-2">
+      <b-alert
+        show
+        variant="danger"
+        dismissible
+        @dismissed="setError(null)">
+        {{ exportState.error }}
+      </b-alert>
+    </b-col>
   </div>
 </template>
 
 <script>
 import { documentExportMixin } from '@/mixins/documentExportMixin'
-import { useExportState } from '@/composables/useExportState'
 import { ExportStrategyFactory } from '@/strategies/exportStrategies'
 import { DocumentGenerator } from '@/utils/documentGenerator'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 
 export default {
   name: 'ExportActions',
-  mixins: [documentExportMixin, useExportState()],
+  mixins: [documentExportMixin],
   props: {
     mode: {
       type: String,
@@ -100,16 +96,53 @@ export default {
       default: () => []
     }
   },
+  data() {
+    return {
+      exportState: {
+        isLoading: false,
+        error: null,
+        progress: 0,
+        currentStep: '',
+        totalSteps: 0
+      }
+    }
+  },
   methods: {
+    // Export state management methods
+    startExport(totalSteps = 1) {
+      this.exportState.isLoading = true
+      this.exportState.error = null
+      this.exportState.progress = 0
+      this.exportState.currentStep = 'Iniciando exportación...'
+      this.exportState.totalSteps = totalSteps
+    },
+    finishExport() {
+      this.exportState.isLoading = false
+      this.exportState.progress = 100
+      this.exportState.currentStep = 'Exportación completada'
+    },
+    setError(error) {
+      this.exportState.isLoading = false
+      this.exportState.error = error
+      this.exportState.currentStep = 'Error en la exportación'
+    },
+    updateProgress(progress, step = '') {
+      this.exportState.progress = Math.min(progress, 100)
+      if (step) {
+        this.exportState.currentStep = step
+      }
+    },
+
+    // Export methods
     async ExportToWord(filename = '') {
       try {
-        this.startExport(3) // 3 steps: validation, generation, download
+        this.startExport(3)
 
         filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
 
         this.updateProgress(1, 'Validando datos...')
 
-        // Validate data before proceeding
+        // Validar datos antes de proceder
         const data = {
           findings: this.findings,
           references: this.references,
@@ -126,7 +159,7 @@ export default {
 
         this.updateProgress(2, 'Generando documento...')
 
-        // Use export strategy
+        // Usar la estrategia de exportación
         const strategyType = this.project.use_camelot ? 'camelot' : 'isoq'
         const strategy = ExportStrategyFactory.createStrategy(strategyType, this.project, data)
         const success = await strategy.generateAndDownload(filename)
@@ -136,6 +169,7 @@ export default {
         } else {
           this.setError('Error al generar el documento')
         }
+
       } catch (error) {
         console.error('Error en ExportToWord:', error)
         this.setError('Error inesperado al exportar el documento')
@@ -214,4 +248,7 @@ export default {
 </script>
 
 <style scoped>
+.export-actions-wrapper {
+  display: contents;
+}
 </style>

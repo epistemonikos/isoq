@@ -35,7 +35,7 @@
               </b-button>
           </b-col>
           <b-col
-            v-if="mode==='view' && !preview && canWrite && !isLocked"
+            v-if="mode==='view' && !preview"
             cols="12"
             md="3"
             xl="3">
@@ -57,7 +57,6 @@
                 v-if="canWrite"
                 class="mt-1"
                 @click="modalChangePublicStatus"
-                :disabled="!isOnline"
                 :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
                 v-b-tooltip.hover :title="$t('actionButtons.publish_tooltip')">
@@ -81,123 +80,28 @@
         </b-row>
       </b-col>
     </b-row>
-
-    <!-- Indicador de progreso -->
-    <b-row v-if="exportState.isLoading" class="mt-2">
-      <b-col cols="12">
-        <b-progress
-          :value="exportState.progress"
-          :max="100"
-          show-progress
-          animated>
-          {{ exportState.currentStep }}
-        </b-progress>
-      </b-col>
-    </b-row>
-
-    <!-- Mensaje de error -->
-    <b-row v-if="exportState.error" class="mt-2">
-      <b-col cols="12">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="setError(null)">
-          {{ exportState.error }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <b-modal
-      ref="modal-change-status"
-      id="modal-change-status"
-      scrollable
-      size="xl"
-      :ok-title="$t('actionButtons.modal.save')"
-      ok-variant="outline-success"
-      @ok="savePublicStatus"
-      cancel-variant="outline-secondary"
-      hide-header-close
-      no-close-on-backdrop
-      no-close-on-esc>
-      <template v-slot:modal-title>
-        <videoHelp :txt="$t('actionButtons.modal.title')" tag="none" urlId="504176899-1"></videoHelp>
-      </template>
-
-      <template v-if="errorsResponse.message !== ''">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="errorsResponse.message = ''">
-          <p class="mb-0" v-html="errorsResponse.message"></p>
-        </b-alert>
-      </template>
-
-      <p class="font-weight-light">
-        {{ $t('actionButtons.modal.publish_info') }}
-      </p>
-      <b-form-group>
-        <b-form-radio-group
-        id="modal-publish-status"
-        v-model="modalProject.public_type"
-        :options="global_status"
-        name="modal-radio-status"
-        ></b-form-radio-group>
-      </b-form-group>
-
-      <template v-if="modalProject.public_type !== 'private'">
-        <h5>{{ $t('actionButtons.modal.choose_license') }}</h5>
-        <p class="font-weight-light">{{ $t('actionButtons.modal.license_info') }} <a href="https://creativecommons.org/about/cclicenses/" target="_blank">{{ $t('actionButtons.modal.license_info_link_text') }}</a>.</p>
-        <p class="font-weight-light">{{ $t('actionButtons.modal.license_responsibility') }}</p>
-        <b-form-group>
-          <b-form-radio-group
-          id="modal-publish-license"
-          v-model="modalProject.license_type"
-          :options="global_licenses"
-          @change="state.license_type = null"
-          name="modal-radio-license"
-          ></b-form-radio-group>
-          <b-form-invalid-feedback :state="state.license_type">{{ $t('actionButtons.modal.must_select_license') }}</b-form-invalid-feedback>
-        </b-form-group>
-      </template>
-
-      <template #modal-footer>
-        <div class="w-100">
-          <b-button
-            variant="outline-success"
-            class="float-right ml-3"
-            @click="savePublicStatus">
-            <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
-            {{ $t('actionButtons.modal.save') }}
-          </b-button>
-          <b-button
-            v-show="!ui.publish.showLoader"
-            variant="outline-secondary"
-            class="float-right"
-            @click="$refs['modal-change-status'].hide()">
-            {{ $t('actionButtons.modal.close') }}
-          </b-button>
-        </div>
-      </template>
-    </b-modal>
+    
+    <!-- Publish Modal Component -->
+    <PublishModal
+      ref="publishModal"
+      :project="project"
+      :ui="ui"
+      @getProject="$emit('getProject')"
+      @uiPublishShowLoader="$emit('uiPublishShowLoader', $event)"
+    />
   </div>
 </template>
 
 <script>
-import Api from '@/utils/Api'
+import axios from 'axios'
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
-import Commons from '@/utils/commons.js'
-import { documentExportMixin } from '@/mixins/documentExportMixin'
-import { useExportState } from '@/composables/useExportState'
-import { ExportStrategyFactory } from '@/strategies/exportStrategies'
-import { DocumentGenerator } from '@/utils/documentGenerator'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule, TableLayoutType } from 'docx'
+import { displayExplanation } from '../utils/commons'
+import PublishModal from '@/components/project/PublishModal'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   name: 'actionButtons',
-  mixins: [documentExportMixin, useExportState()],
   props: {
     mode: {
       type: String,
@@ -210,10 +114,7 @@ export default {
     },
     project: Object,
     canWrite: Boolean,
-    isLocked: {
-      type: Boolean,
-      default: false
-    },
+    permissions: Boolean,
     ui: Object,
     lists: Array,
     findings: Array,
@@ -226,12 +127,16 @@ export default {
     printableItems: Array
   },
   components: {
-    videoHelp
+    videoHelp,
+    PublishModal
   },
-
   data () {
     return {
       modalProject: {name: ''},
+      yes_or_no: [
+        { value: false, text: 'no' },
+        { value: true, text: 'yes' }
+      ],
       errors: [],
       state: {
         name: null,
@@ -249,8 +154,7 @@ export default {
       errorsResponse: {
         message: '',
         items: []
-      },
-
+      }
     }
   },
   watch: {
@@ -258,93 +162,398 @@ export default {
       this.state.name = val.length > 0 ? null : false
     }
   },
-  mounted () {
-    // Listen for modal show event to attach click handler
-    this.$root.$on('bv::modal::shown', this.onModalShown)
-  },
-  beforeDestroy () {
-    // Clean up event listeners
-    this.$root.$off('bv::modal::shown', this.onModalShown)
-    this.removeErrorLinkListener()
-  },
   methods: {
-    onModalShown (bvEvent, modalId) {
-      // Only attach listener for our specific modal
-      if (modalId === 'modal-change-status') {
-        this.$nextTick(() => {
-          const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
-          if (modalBody) {
-            modalBody.addEventListener('click', this.handleErrorLinkClick)
-          }
+    ExportToWord: function (filename = '') {
+      filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
+      const doc = new Document()
+
+      doc.addSection({
+        margins: {
+          top: 720,
+          right: 720,
+          bottom: 720,
+          left: 720
+        },
+        children: [
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: this.project.name,
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
+            ]
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            heading: HeadingLevel.HEADING_2,
+            children: [
+              new TextRun({
+                text: 'Summary of Qualitative Findings Table',
+                bold: true,
+                size: 36,
+                font: { name: 'Times New Roman' },
+                color: '000000'
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Review question',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.review_question,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Authors of the review',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.authors,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Corresponding author',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              this.generateAuthorInfo()
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Has the review been published?',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length) ? ' | DOI: ' + this.project.url_doi : '') : 'No',
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Additional Information',
+                bold: true,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: this.project.description,
+                size: 24
+              })
+            ]
+          }),
+          new Paragraph(''),
+          ...this.generateLicense(this.project),
+          ...this.generateFindingsTable()
+        ]
+      })
+      if (this.findings.length && (this.$route.name === 'viewProject' || (this.$route.name === 'previewContentSoQf' && this.project.public_type !== 'minimally'))) {
+        doc.addSection({
+          size: {
+            orientation: PageOrientation.LANDSCAPE
+          },
+          margins: {
+            top: 720,
+            right: 720,
+            bottom: 720,
+            left: 720
+          },
+          children: [
+            new Paragraph({
+              heading: HeadingLevel.HEADING_3,
+              children: [
+                new TextRun({
+                  text: 'Evidence Profile Table',
+                  bold: true,
+                  size: 32,
+                  font: { name: 'Times New Roman' },
+                  color: '000000'
+                })
+              ]
+            }),
+            new Paragraph(''),
+            new Table({
+              borders: {
+                top: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.NONE
+                },
+                bottom: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.NONE
+                },
+                left: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.NONE
+                },
+                right: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.NONE
+                },
+                insideHorizontal: {
+                  size: 1,
+                  color: '000000',
+                  style: BorderStyle.NONE
+                },
+                insideVertical: {
+                  style: BorderStyle.NONE
+                }
+              },
+              width: {
+                size: 5000,
+                type: WidthType.PERCENTAGE
+              },
+              layout: {
+                type: TableLayoutType.FIXED,
+                width: {
+                  size: 5000,
+                  type: WidthType.PERCENTAGE
+                }
+              },
+              rows: [
+                new TableRow({
+                  tableHeader: true,
+                  height: {
+                    height: 1444,
+                    rule: HeightRule.EXACT
+                  },
+                  children: [
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 250,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: '#',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 1500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.LEFT,
+                          children: [
+                            new TextRun({
+                              text: 'Summarised review finding',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      width: {
+                        size: 500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Methodological limitations',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      width: {
+                        size: 500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Coherence',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Adequacy',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'Relevance',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 500,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: 'GRADE-CERQual assessment of confidence',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      verticalAlign: VerticalAlign.CENTER,
+                      shading: {
+                        fill: '#DDDDDD'
+                      },
+                      width: {
+                        size: 750,
+                        type: WidthType.PERCENTAGE
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.LEFT,
+                          children: [
+                            new TextRun({
+                              text: 'References',
+                              size: 22,
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                ...this.generateEvidenceProfileTable2()
+              ]
+            })
+          ]
         })
       }
-    },
-    removeErrorLinkListener () {
-      const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
-      if (modalBody) {
-        modalBody.removeEventListener('click', this.handleErrorLinkClick)
-      }
-    },
-    handleErrorLinkClick (event) {
-      // Use closest() to handle clicks on link or its children
-      const link = event.target.closest('a')
-      if (link && link.href) {
-        const href = link.getAttribute('href')
-        if (href && href.startsWith('#/')) {
-          event.preventDefault()
-          event.stopPropagation()
-          
-          // Close the modal using Bootstrap Vue's modal API
-          this.$bvModal.hide('modal-change-status')
-          
-          // Navigate to the route after a small delay to ensure modal closes
-          this.$nextTick(() => {
-            const route = href.substring(1) // Remove the '#' prefix
-            this.$router.push(route)
-          })
-        }
-      }
-    },
-    ExportToWord: async function (filename = '') {
-      try {
-        this.startExport(3) // 3 pasos: validación, generación, descarga
-
-        filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
-
-        this.updateProgress(1, 'Validando datos...')
-
-        // Validar datos antes de proceder
-        const data = {
-          findings: this.findings,
-          references: this.references,
-          listsPrintVersion: this.listsPrintVersion,
-          printableItems: this.printableItems
-        }
-
-        const documentGenerator = new DocumentGenerator()
-        const errors = documentGenerator.validateData(data, ['findings'])
-        if (errors.length > 0) {
-          this.setError(errors.join(', '))
-          return
-        }
-
-        this.updateProgress(2, 'Generando documento...')
-
-        // Usar la estrategia de exportación
-        const strategyType = this.project.use_camelot ? 'camelot' : 'isoq'
-        const strategy = ExportStrategyFactory.createStrategy(strategyType, this.project, data)
-        const success = await strategy.generateAndDownload(filename)
-
-        if (success) {
-          this.finishExport()
-        } else {
-          this.setError('Error al generar el documento')
-        }
-
-      } catch (error) {
-        console.error('Error en ExportToWord:', error)
-        this.setError('Error inesperado al exportar el documento')
-      }
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, filename)
+      })
     },
     generateFindingsTable () {
       if (this.findings.length === 0) {
@@ -433,10 +642,10 @@ export default {
                 },
                 children: [
                   new Paragraph({
-                    alignment: AlignmentType.CENTER,
+                    alignment: AlignmentType.LEFT,
                     children: [
                       new TextRun({
-                        text: this.$t('actionButtons.word_export.table_headers.summarised_finding'),
+                        text: 'Summarised review finding',
                         size: 22,
                         bold: true
                       })
@@ -458,7 +667,7 @@ export default {
                     alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
-                        text: this.$t('actionButtons.word_export.table_headers.cerqual_assessment'),
+                        text: 'GRADE-CERQual Assessment of confidence',
                         size: 22,
                         bold: true
                       })
@@ -480,7 +689,7 @@ export default {
                     alignment: AlignmentType.CENTER,
                     children: [
                       new TextRun({
-                        text: this.$t('actionButtons.word_export.table_headers.cerqual_explanation'),
+                        text: 'Explanation of GRADE-CERQual Assessment',
                         size: 22,
                         bold: true
                       })
@@ -499,10 +708,10 @@ export default {
                 },
                 children: [
                   new Paragraph({
-                    alignment: AlignmentType.CENTER,
+                    alignment: AlignmentType.LEFT,
                     children: [
                       new TextRun({
-                        text: this.$t('actionButtons.word_export.table_headers.references'),
+                        text: 'References',
                         size: 22,
                         bold: true
                       })
@@ -523,7 +732,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: this.$t('actionButtons.word_export.license'),
+                text: 'License',
                 bold: true,
                 size: 24
               })
@@ -543,16 +752,7 @@ export default {
       return content
     },
     modalChangePublicStatus: function () {
-      this.modalProject = JSON.parse(JSON.stringify(this.project))
-      this.modalProject.isModal = true
-      if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
-        this.modalProject.license_type = 'CC-BY-NC-ND'
-      }
-      this.errorsResponse = {
-        message: '',
-        items: []
-      }
-      this.$refs['modal-change-status'].show()
+      this.$refs.publishModal.openModal()
     },
     changeMode: function () {
       this.$emit('changeMode', (this.mode === 'edit') ? 'view' : 'edit')
@@ -586,9 +786,9 @@ export default {
       }
 
       if (this.modalProject.public_type !== 'private') {
-        const canPublish = await Api.get('/api/project/can_publish', {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal})
+        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
         if (canPublish.data.status) {
-          Api.patch('/api/publish', {params})
+          axios.patch('/api/publish', {params})
             .then(() => {
               this.modalProject = {name: ''}
               this.$emit('getProject')
@@ -604,7 +804,7 @@ export default {
           this.$emit('uiPublishShowLoader', false)
         }
       } else {
-        Api.patch('/api/publish', {params})
+        axios.patch('/api/publish', {params})
           .then(() => {
             this.modalProject = {name: ''}
             this.$emit('getProject')
@@ -722,11 +922,11 @@ export default {
         } else {
           return new TableRow({
             children: [
-              this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
+              this.generateTableCell({width_size: 250, text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: 2000, text: item.name, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: 1000, text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: 1000, text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+              this.generateTableCell({width_size: 750, text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
             ]
           })
         }
@@ -784,7 +984,7 @@ export default {
       let text = []
       text.push(
         new TextRun({
-          text: this.$t('actionButtons.word_export.explanation_label'),
+          text: 'Explanation: ',
           size: content.font_size,
           bold: true
         })
@@ -834,15 +1034,17 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 250,
                     text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
-                  this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER}),
+                  this.generateTableCell({
+                    width_size: 1500, text: item.name, font_size: 22, align: AlignmentType.CENTER
+                  }),
                   new TableCell({
                     columnSpan: 5,
-                    width_size: '40%',
+                    width_size: 2500,
                     children: [
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
@@ -856,7 +1058,7 @@ export default {
                     ]
                   }),
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 750,
                     text: this.returnRefWithNames(item.references),
                     font_size: 16,
                     align: AlignmentType.LEFT
@@ -867,20 +1069,20 @@ export default {
               return new TableRow({
                 children: [
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 250,
                     text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '40%',
+                    width_size: 1500,
                     text: item.name,
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell(
                     {
-                      width_size: '10%',
+                      width_size: 500,
                       text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
                       explanation: (item.evidence_profile.methodological_limitations.option.length) ? this.getExplanation('methodological-limitations', item.evidence_profile.methodological_limitations.option, item.evidence_profile.methodological_limitations.explanation) : '',
                       font_size: 22,
@@ -888,35 +1090,35 @@ export default {
                     }
                   ),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.coherence.option),
                     explanation: (item.evidence_profile.coherence.explanation.length) ? this.getExplanation('coherence', item.evidence_profile.coherence.option, item.evidence_profile.coherence.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
                     explanation: (item.evidence_profile.adequacy.explanation.length) ? this.getExplanation('adequacy', item.evidence_profile.adequacy.option, item.evidence_profile.adequacy.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.relevance.option),
                     explanation: (item.evidence_profile.relevance.explanation.length) ? this.getExplanation('relevance', item.evidence_profile.relevance.option, item.evidence_profile.relevance.explanation) : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '10%',
+                    width_size: 500,
                     text: this.displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual'),
                     explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
                     font_size: 22,
                     align: AlignmentType.LEFT
                   }),
                   this.generateTableCell({
-                    width_size: '5%',
+                    width_size: 750,
                     text: this.returnRefWithNames(item.references),
                     font_size: 16,
                     align: AlignmentType.LEFT
@@ -928,20 +1130,20 @@ export default {
             return new TableRow({
               children: [
                 this.generateTableCell({
-                  width_size: '40%',
+                  width_size: 250,
                   text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
                 this.generateTableCell({
-                  width_size: '40%',
+                  width_size: 1500,
                   text: item.name,
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
                 new TableCell({
                   columnSpan: 5,
-                  width_size: '40%',
+                  width_size: 2500,
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,
@@ -955,7 +1157,7 @@ export default {
                   ]
                 }),
                 this.generateTableCell({
-                  width_size: '10%',
+                  width_size: 750,
                   text: this.returnRefWithNames(item.references),
                   font_size: 16,
                   align: AlignmentType.LEFT
@@ -971,17 +1173,27 @@ export default {
         return new TableRow({
           tableHeader: true,
           children: [
-            this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '15%', text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
+            this.generateTableCell({width_size: 250, text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: 2000, text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: 1000, text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
+            this.generateTableCell({width_size: 1000, text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
+            this.generateTableCell({width_size: 750, text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
           ]
         })
       })
     },
     displaySelectedOption: function (option, type = '') {
-      return Commons.displaySelectedOption(option, type)
+      if (option === null) {
+        return ''
+      } else if (option >= 0) {
+        if (type === 'cerqual') {
+          return this.cerqualConfidence[option].text
+        } else {
+          return this.selectOptions[option].text
+        }
+      } else {
+        return ''
+      }
     },
     returnRefWithNames: function (array) {
       let authorsList = []
@@ -1000,7 +1212,18 @@ export default {
       return authors
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      return Commons.getAuthorsFormat(authors, pubYear)
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0].split(',')[0] + ' ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        } else {
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        }
+      } else {
+        return 'author(s) not found'
+      }
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -1012,30 +1235,6 @@ export default {
     }
   },
   computed: {
-    global_status () {
-      return [
-        { value: 'private', text: this.$t('actionButtons.status.private') },
-        { value: 'fully', text: this.$t('actionButtons.status.fully') },
-        { value: 'partially', text: this.$t('actionButtons.status.partially') },
-        { value: 'minimally', text: this.$t('actionButtons.status.minimally') }
-      ]
-    },
-    global_licenses () {
-      return [
-        { value: 'CC-BY-NC-ND', text: this.$t('actionButtons.licenses.cc_by_nc_nd') },
-        { value: 'CC-BY-ND', text: this.$t('actionButtons.licenses.cc_by_nd') },
-        { value: 'CC-BY-NC-SA', text: this.$t('actionButtons.licenses.cc_by_nc_sa') },
-        { value: 'CC-BY-NC', text: this.$t('actionButtons.licenses.cc_by_nc') },
-        { value: 'CC-BY-SA', text: this.$t('actionButtons.licenses.cc_by_sa') },
-        { value: 'CC-BY', text: this.$t('actionButtons.licenses.cc_by') }
-      ]
-    },
-    yes_or_no () {
-      return [
-        { value: false, text: this.$t('actionButtons.yes_no.no') },
-        { value: true, text: this.$t('actionButtons.yes_no.yes') }
-      ]
-    },
     getLicense: {
       get: function () {
         if (!Object.prototype.hasOwnProperty.call(this.modalProject, 'license_type')) {

@@ -28,6 +28,11 @@ Single Vuex store at `src/store.js`:
 - **Key actions:** `login`, `logout`, `getLogginInfo` (checks auth on route navigation)
 - **Auth persistence:** Uses cookies (session-based), token stored in `localStorage` as `l_s`
 - Promise-based login check stored in `state.promise` for route guard synchronization
+- **Network state:** `state.isOnline` - Boolean tracking online/offline status
+  - Automatically updated by network event listeners
+  - Used throughout the app to disable actions when offline
+  - Access via computed property: `this.$store.state.isOnline`
+  - **Important:** Do NOT define `isOnline` as a prop if using it from store (causes conflicts)
 
 ### Routing
 
