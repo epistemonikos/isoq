@@ -43,14 +43,6 @@ describe('PublishModal.vue', () => {
         'b-form-invalid-feedback': true,
         'b-button': true,
         'b-spinner': true
-      },
-      mocks: {
-        $refs: {
-          'modal-change-status': {
-            show: jest.fn(),
-            hide: jest.fn()
-          }
-        }
       }
     })
   })
@@ -113,13 +105,30 @@ describe('PublishModal.vue', () => {
     })
 
     it('should initialize modalProject on openModal', () => {
+      // Mock $refs before calling openModal
+      wrapper.vm.$refs = {
+        'modal-change-status': {
+          show: jest.fn(),
+          hide: jest.fn()
+        }
+      }
+      
       wrapper.vm.openModal()
       
       expect(wrapper.vm.modalProject).toBeDefined()
       expect(wrapper.vm.modalProject.name).toBe(mockProject.name)
+      expect(wrapper.vm.$refs['modal-change-status'].show).toHaveBeenCalled()
     })
 
     it('should reset errorsResponse on openModal', () => {
+      // Mock $refs before calling openModal
+      wrapper.vm.$refs = {
+        'modal-change-status': {
+          show: jest.fn(),
+          hide: jest.fn()
+        }
+      }
+      
       wrapper.vm.errorsResponse.message = 'Test error'
       wrapper.vm.openModal()
       
