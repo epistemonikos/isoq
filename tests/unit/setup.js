@@ -33,3 +33,6 @@ Vue.prototype.$store = {
 // Mock window.print
 global.print = jest.fn()
 
+// Suppress Bootstrap Vue warnings
+Vue.config.silent = true
+

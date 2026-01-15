@@ -18,7 +18,7 @@ module.exports = {
     '!**/node_modules/**'
   ],
   testEnvironment: 'jsdom',
-  // setupFilesAfterEnv: ['<rootDir>/tests/unit/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/unit/setup.js'],
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['html', 'text', 'lcov'],
   verbose: true

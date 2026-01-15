@@ -45,8 +45,9 @@ describe('ExportActions.vue', () => {
       expect(printButton.length).toBeGreaterThan(0)
     })
 
-    it('should not render export buttons in edit mode', () => {
+    it('should not render export buttons in edit mode', async () => {
       wrapper.setProps({ mode: 'edit' })
+      await wrapper.vm.$nextTick()
       expect(wrapper.find('#export-button').exists()).toBe(false)
     })
   })
