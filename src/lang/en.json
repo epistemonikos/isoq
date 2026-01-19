@@ -1031,7 +1031,8 @@
         "references": "References"
       },
       "explanation_label": "Explanation: ",
-      "author_not_found": "author(s) not found"
+      "author_not_found": "author(s) not found",
+      "license_text": "This work is licensed under a Creative Commons Attribution-Non Commercial 4.0 International License"
     }
   },
   "offline": {

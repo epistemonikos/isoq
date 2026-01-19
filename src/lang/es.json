@@ -1031,7 +1031,8 @@
         "references": "Referencias"
       },
       "explanation_label": "Explicación: ",
-      "author_not_found": "autor(es) no encontrado(s)"
+      "author_not_found": "autor(es) no encontrado(s)",
+      "license_text": "Este trabajo está licenciado bajo una Licencia Creative Commons Atribución-No Comercial 4.0 Internacional"
     }
   },
   "offline": {
