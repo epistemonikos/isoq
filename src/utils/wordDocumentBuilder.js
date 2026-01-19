@@ -232,8 +232,6 @@ export class WordDocumentBuilder {
    * @returns {WordDocumentBuilder} For chaining
    */
   addTable(rows, headers, options = {}) {
-    console.log('📋 addTable called - rows:', rows.length, 'headers:', headers.length)
-    
     const {
       borders = this.getDefaultBorders(),
       width = { size: 5000, type: WidthType.PERCENTAGE },
@@ -254,7 +252,6 @@ export class WordDocumentBuilder {
       rows: tableRows
     })
 
-    console.log('📋 Table created, adding to section')
     this.addToCurrentSection(table)
     return this
   }
@@ -331,8 +328,6 @@ export class WordDocumentBuilder {
     // CRITICAL: Ensure text is always a string, never undefined/null
     const finalText = sanitized || ''
 
-    console.log('🔤 createTableCell - original:', originalText?.substring(0, 30), '→ sanitized:', finalText.substring(0, 30))
-
     return new TableCell({
       verticalAlign: cellData.verticalAlign || VerticalAlign.CENTER,
       width: cellData.width || { size: 'auto', type: WidthType.PERCENTAGE },
@@ -403,11 +398,6 @@ export class WordDocumentBuilder {
       this.endSection()
     }
 
-    console.log('🏗️ WordDocumentBuilder.build() - Total sections:', this.sections.length)
-    this.sections.forEach((section, index) => {
-      console.log(`🏗️ Section ${index}: ${section.children.length} children`)
-    })
-
     const doc = new Document({
       sections: this.sections.map(section => ({
         properties: section.properties,
@@ -415,7 +405,6 @@ export class WordDocumentBuilder {
       }))
     })
 
-    console.log('🏗️ Document created')
     return doc
   }
 
