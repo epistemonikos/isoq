@@ -394,7 +394,9 @@ export default {
     },
     save: function () {
       const data = JSON.parse(JSON.stringify(this.formData))
-      data.organization = this.$store.state.user.personal_organization
+      if (!data.id) {
+        data.organization = this.$store.state.user.personal_organization
+      }
 
       // Check if required fields were removed from a published project
       if (this.checkRequiredFieldsRemoved(data)) {
