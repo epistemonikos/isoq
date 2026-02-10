@@ -11,12 +11,12 @@ import VueBootstrap from 'bootstrap-vue'
 
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 
-library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle)
+library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
