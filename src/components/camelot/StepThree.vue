@@ -7,13 +7,36 @@
       {{ $t('camelot.step_three.no_records') }}
     </b-alert>
     <div v-else>
-      <!-- Checkbox para mostrar/ocultar Concerns -->
-      <div class="mb-3">
-        <b-form-checkbox
-          v-model="showConcerns"
-          @change="toggleConcerns">
-          {{ $t('camelot.step_three.show_concerns') }}
-        </b-form-checkbox>
+      <!-- Action buttons toolbar -->
+      <div class="mb-3 d-flex gap-2">
+        <b-button
+          variant="outline-primary"
+          size="sm"
+          @click="exportToCSV">
+          <i class="fas fa-file-csv mr-1"></i>
+          {{ $t('camelot.step_three.export_csv') }}
+        </b-button>
+        <b-button
+          variant="outline-primary"
+          size="sm"
+          @click="openColumnsModal">
+          <i class="fas fa-columns mr-1"></i>
+          {{ $t('camelot.step_three.add_edit_columns') }}
+        </b-button>
+        <b-button
+          variant="outline-primary"
+          size="sm"
+          @click="toggleConcerns">
+          <i :class="showConcerns ? 'fas fa-eye-slash' : 'fas fa-eye'" class="mr-1"></i>
+          {{ $t('camelot.step_three.show_hide_concerns') }}
+        </b-button>
+        <b-button
+          variant="outline-primary"
+          size="sm"
+          @click="openFilterModal">
+          <i class="fas fa-filter mr-1"></i>
+          {{ $t('camelot.step_three.filter_columns') }}
+        </b-button>
       </div>
 
       <b-table
@@ -24,6 +47,13 @@
         responsive>
         <template v-slot:cell(authors)="data">
           {{ formatAuthors(data.item) }}
+          <b-button
+            size="sm"
+            variant="primary"
+            class="mr-1"
+            @click="editReference(data.item)">
+            {{ $t('camelot.step_three.edit_button') }}
+          </b-button>
         </template>
 
         <!-- Plantilla genérica para todos los campos -->
@@ -51,29 +81,13 @@
             {{ $t('camelot.step_three.delete_button') }}
           </b-button>
         </template>
-        <template v-slot:thead-top>
-          <tr>
-            <th colspan="1">{{ $t('camelot.step_three.references_header') }}</th>
-            <th v-if="getCustomFields().length > 0"
-              :colspan="getCustomFields().length"
-              class="text-center">
-              &nbsp;
-            </th>
-            <th v-for="category in camelot.categories"
-              :key="category.key"
-              :colspan="getVisibleCategoryOptions(category).length"
-              class="text-center">
-              {{ category.label }}
-            </th>
-            <th colspan="1">{{ $t('camelot.step_three.actions_header') }}</th>
-          </tr>
-        </template>
+
       </b-table>
 
       <!-- Modal para editar referencias -->
       <b-modal
         id="modal-edit-reference"
-        :title="$t('camelot.step_three.modal.title')"
+        :title="modalTitle"
         size="xl"
         @ok="handleModalOk"
         @hide="resetModal">
@@ -107,15 +121,6 @@
 
             <!-- Contenido del formulario -->
             <b-col cols="9">
-              <div id="authors-section" class="mb-3">
-                <label for="authors">{{ $t('camelot.step_three.modal.reference_id_label') }}</label>
-                <b-form-input
-                  id="authors"
-                  v-model="editForm.id"
-                  :placeholder="$t('camelot.step_three.modal.authors_placeholder')">
-                </b-form-input>
-              </div>
-
               <!-- Campos personalizados -->
               <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -225,6 +230,78 @@
           <b-alert show variant="info">{{ $t('camelot.step_three.modal.no_selection') }}</b-alert>
         </template>
       </b-modal>
+
+      <!-- Modal para gestionar columnas personalizadas -->
+      <b-modal
+        id="modal-manage-columns"
+        :title="$t('camelot.step_three.columns_modal.title')"
+        size="lg"
+        @ok="handleSaveColumns"
+        @hide="resetColumnsModal">
+        <p class="text-muted mb-3">{{ $t('camelot.step_three.columns_modal.description') }}</p>
+        
+        <div class="mb-3">
+          <b-button
+            size="sm"
+            variant="success"
+            @click="addColumnDefinition">
+            <font-awesome-icon icon="plus"></font-awesome-icon> {{ $t('camelot.step_three.columns_modal.add_column') }}
+          </b-button>
+        </div>
+
+        <b-card v-if="columnDefinitions.length === 0" body-class="text-center py-3">
+          <p class="mb-0 text-muted">{{ $t('camelot.step_three.columns_modal.no_columns') }}</p>
+        </b-card>
+
+        <draggable
+          v-else
+          v-model="columnDefinitions"
+          handle=".drag-handle"
+          animation="200"
+          class="column-list">
+          <div
+            v-for="(column, index) in columnDefinitions"
+            :key="'col-def-' + index"
+            class="mb-3">
+            <b-card>
+              <b-form-group
+                :label="$t('camelot.step_three.columns_modal.column_name')"
+                :label-for="'column-name-' + index">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-button variant="outline-secondary" class="drag-handle" style="cursor: move;">
+                      <font-awesome-icon icon="arrows-alt" class="mr-1"></font-awesome-icon>{{ $t('camelot.step_three.modal.move_button') }}
+                    </b-button>
+                  </b-input-group-prepend>
+                  <b-form-input
+                    :id="'column-name-' + index"
+                    v-model="column.label"
+                    :placeholder="$t('camelot.step_three.columns_modal.column_name_placeholder')">
+                  </b-form-input>
+                  <b-input-group-append>
+                    <b-button
+                      variant="danger"
+                      @click="removeColumnDefinition(index)">
+                      <font-awesome-icon icon="trash" class="mr-1"></font-awesome-icon>{{ $t('camelot.step_three.delete_button') }}
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-card>
+          </div>
+        </draggable>
+
+        <template #modal-footer>
+          <b-button variant="secondary" @click="closeColumnsModal" :disabled="isSavingColumns">
+            {{ $t('common.cancel') }}
+          </b-button>
+          <b-button variant="primary" @click="handleSaveColumns" :disabled="isSavingColumns">
+            <b-spinner small v-if="isSavingColumns"></b-spinner>
+            <font-awesome-icon v-else icon="save"></font-awesome-icon>
+            {{ $t('camelot.step_three.columns_modal.save_changes') }}
+          </b-button>
+        </template>
+      </b-modal>
     </div>
   </div>
 </template>
@@ -258,10 +335,6 @@ export default {
         {
           key: 'authors',
           label: this.$t('camelot.step_three.authors_label')
-        },
-        {
-          key: 'actions',
-          label: this.$t('camelot.step_three.actions_header')
         }
       ],
       currentItem: null,
@@ -277,7 +350,9 @@ export default {
         project_id: ''
       },
       isLoading: true,
-      showConcerns: false
+      showConcerns: false,
+      columnDefinitions: [], // Global column definitions
+      isSavingColumns: false // Flag to track save state
     }
   },
   computed: {
@@ -318,19 +393,29 @@ export default {
         customField: true
       }))
 
-      // Add category fields (CAMELOT)
+      // Add category fields (CAMELOT) with new structure
       if (this.camelot && Array.isArray(this.camelot.categories)) {
         this.camelot.categories.forEach(category => {
           if (category.options && Array.isArray(category.options)) {
-            category.options.forEach(option => {
-              // Only add "Concerns" fields if showConcerns is true
-              if (!option.key.endsWith('_concerns') || this.showConcerns) {
-                categoryFields.push({
-                  key: option.key,
-                  label: option.label
-                })
-              }
-            })
+            // Find the "extracted data" and "concerns" options for this category
+            const extractedDataOption = category.options.find(opt => !opt.key.endsWith('_concerns'))
+            const concernsOption = category.options.find(opt => opt.key.endsWith('_concerns'))
+            
+            // Add the domain column (extracted data) with the category label as header
+            if (extractedDataOption) {
+              categoryFields.push({
+                key: extractedDataOption.key,
+                label: category.label // Use category label instead of option label
+              })
+            }
+            
+            // If showConcerns is true, add the concerns column right after the domain
+            if (this.showConcerns && concernsOption) {
+              categoryFields.push({
+                key: concernsOption.key,
+                label: concernsOption.label // Keep "Preocupaciones" label
+              })
+            }
           }
         })
       }
@@ -339,18 +424,20 @@ export default {
       const baseFieldsWithoutActions = baseFields.filter(field => field.key !== 'actions')
       baseFields = baseFieldsWithoutActions
 
-      // Add the actions field at the end
-      categoryFields.push({
-        key: 'actions',
-        label: this.$t('camelot.step_three.actions_header')
-      })
-
       // Return the combination of base fields, custom fields, and category fields
       return [...baseFields, ...customFields, ...categoryFields]
     },
     tableFieldsForEdit () {
       // Use table fields without the actions column for editing
       return this.tableFields.filter(field => field.key !== 'actions')
+    },
+    modalTitle () {
+      // Generate dynamic modal title with author information
+      if (this.currentItem) {
+        const authorInfo = this.formatAuthors(this.currentItem)
+        return `${this.$t('camelot.step_three.modal.title')}: ${authorInfo}`
+      }
+      return this.$t('camelot.step_three.modal.title')
     }
   },
   methods: {
@@ -358,7 +445,6 @@ export default {
       return Commons.parseReference(item, true, false)
     },
     editReference (item) {
-      console.log('Editando referencia:', item)
       // Save the current reference for editing
       this.currentItem = {...item}
       // Initialize the edit form with the reference values
@@ -376,7 +462,6 @@ export default {
       this.$bvModal.show('modal-edit-reference')
     },
     deleteReference (item) {
-      console.log('Eliminando referencia:', item)
       this.$emit('delete-reference', item)
     },
     handleModalOk (bvModalEvent) {
@@ -426,8 +511,6 @@ export default {
           })
         }
 
-        console.log('Item a actualizar:', item)
-
         // Check if there is an ID in charsData to determine if it's an update or insert
         if (this.charsData && this.charsData.id) {
           // For update: update only the specific item in existing items
@@ -449,12 +532,9 @@ export default {
           // Update fields if they have changed
           updatedCharsData.fields = customFieldsArray
 
-          console.log('Datos completos a enviar para actualización:', updatedCharsData)
-
           // If ID exists, update
           Api.patch(`/isoqf_characteristics/${this.charsData.id}/`, updatedCharsData)
             .then(response => {
-              console.log('Referencia actualizada:', response.data)
               // Update local data
               this.charsData = response.data
               // Reload characteristics data to reflect changes
@@ -543,14 +623,11 @@ export default {
       }
     },
     onDragStart (evt) {
-      console.log('Drag started', evt)
       this.drag = true
       // Add visual class to highlight drag mode
       document.body.classList.add('dragging-active')
     },
     onDragEnd (evt) {
-      console.log('Drag ended', evt)
-      console.log('New customFields order:', this.customFields)
       this.drag = false
       // Remove visual class
       document.body.classList.remove('dragging-active')
@@ -690,8 +767,12 @@ export default {
      * @param {Object} [itemValues=null] - Object with values for custom fields
      */
     initializeCustomFields (itemValues = null) {
-      console.log('Inicializando campos personalizados con valores:', itemValues)
-      console.log('Fields actuales:', this.charsData.fields)
+      // Safety check: ensure charsData.fields exists and is an array
+      if (!this.charsData || !Array.isArray(this.charsData.fields)) {
+        console.warn('charsData.fields no está disponible o no es un array')
+        this.customFields = []
+        return
+      }
 
       // Get existing custom fields
       const customFields = this.charsData.fields
@@ -718,11 +799,174 @@ export default {
       }
 
       this.customFields = customFields
-      console.log('Campos personalizados inicializados:', this.customFields)
     },
     toggleConcerns () {
-      // Implementa la lógica para mostrar/ocultar los campos "Concerns"
-      console.log('Mostrar/ocultar campos "Concerns":', this.showConcerns)
+      // Alterna el estado de mostrar/ocultar los campos "Concerns"
+      this.showConcerns = !this.showConcerns
+    },
+    exportToCSV () {
+      // TODO: Implementar exportación a CSV
+      console.log('Exportando a CSV...')
+      // Aquí se implementará la lógica para exportar la tabla a CSV
+    },
+    openColumnsModal () {
+      // Load current column definitions from charsData.fields
+      const customFields = this.getCustomFields()
+      
+      this.columnDefinitions = customFields.map(field => ({
+        key: field.key,
+        label: field.label
+      }))
+      
+      this.$bvModal.show('modal-manage-columns')
+    },
+    openFilterModal () {
+      // TODO: Implementar modal para filtrar columnas
+      console.log('Abriendo modal de filtros...')
+      // Aquí se implementará la lógica para abrir el modal de filtros
+    },
+    addColumnDefinition () {
+      // Add a new column definition
+      this.columnDefinitions.push({
+        key: `column_${Date.now()}`,
+        label: ''
+      })
+    },
+    removeColumnDefinition (index) {
+      // Remove a column definition
+      this.columnDefinitions.splice(index, 1)
+    },
+    handleSaveColumns (bvModalEvt) {
+      // Prevent modal from closing automatically if called from @ok event
+      if (bvModalEvt) {
+        bvModalEvt.preventDefault()
+      }
+      
+      // Prevent double-save
+      if (this.isSavingColumns) {
+        return
+      }
+      
+      this.isSavingColumns = true
+      
+      // Update charsData.fields with the new column definitions
+      // Remove old custom fields
+      const nonCustomFields = this.charsData.fields.filter(field => !isCustomField(field.key))
+      
+      // Add new custom fields from columnDefinitions
+      const newCustomFields = this.columnDefinitions
+        .filter(col => col.label && col.label.trim() !== '')
+        .map(col => ({
+          key: col.key || `column_${Date.now()}_${Math.random()}`,
+          label: col.label.trim()
+        }))
+      
+      // Update charsData.fields
+      this.charsData.fields = [...nonCustomFields, ...newCustomFields]
+      
+      // Save to API
+      const dataToSave = {
+        fields: this.charsData.fields,
+        items: this.charsData.items || [],
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
+      
+      if (this.charsData.id || this.charsData._id) {
+        // Update existing
+        const id = this.charsData.id || this.charsData._id
+        Api.patch(`/isoqf_characteristics/${id}`, dataToSave)
+          .then(response => {
+            // The API returns data in $set property
+            const responseData = response.data.$set || response.data
+            
+            // Ensure we have the id
+            const updatedData = {
+              ...responseData,
+              id: response.data.id || this.charsData.id,
+              _id: response.data._id || this.charsData._id
+            }
+            
+            // Update charsData using $set to ensure reactivity
+            this.$set(this, 'charsData', updatedData)
+            this.isSavingColumns = false
+            
+            // Close modal first
+            this.$bvModal.hide('modal-manage-columns')
+            
+            // Wait for next tick to ensure modal is closed and reactivity is triggered
+            this.$nextTick(() => {
+              // Show toast after a small delay to avoid interference
+              setTimeout(() => {
+                this.$bvToast.toast(this.$t('camelot.step_three.columns_modal.success_update'), {
+                  title: this.$t('camelot.step_three.columns_modal.toast_success_title'),
+                  variant: 'success',
+                  solid: true,
+                  autoHideDelay: 3000
+                })
+              }, 100)
+            })
+          })
+          .catch(error => {
+            this.isSavingColumns = false
+            this.$bvToast.toast(this.$t('camelot.step_three.columns_modal.error_update'), {
+              title: this.$t('camelot.step_three.columns_modal.toast_error_title'),
+              variant: 'danger',
+              solid: true
+            })
+          })
+      } else {
+        // Create new
+        Api.post('/isoqf_characteristics/', dataToSave)
+          .then(response => {
+            // The API returns data in $set property
+            const responseData = response.data.$set || response.data
+            
+            // Ensure we have the id
+            const createdData = {
+              ...responseData,
+              id: response.data.id || this.charsData.id,
+              _id: response.data._id || this.charsData._id
+            }
+            
+            // Update charsData using $set to ensure reactivity
+            this.$set(this, 'charsData', createdData)
+            this.isSavingColumns = false
+            
+            // Close modal first
+            this.$bvModal.hide('modal-manage-columns')
+            
+            // Wait for next tick to ensure modal is closed and reactivity is triggered
+            this.$nextTick(() => {
+              // Show toast after a small delay to avoid interference
+              setTimeout(() => {
+                this.$bvToast.toast(this.$t('camelot.step_three.columns_modal.success_create'), {
+                  title: this.$t('camelot.step_three.columns_modal.toast_success_title'),
+                  variant: 'success',
+                  solid: true,
+                  autoHideDelay: 3000
+                })
+              }, 100)
+            })
+          })
+          .catch(error => {
+            this.isSavingColumns = false
+            this.$bvToast.toast(this.$t('camelot.step_three.columns_modal.error_create'), {
+              title: this.$t('camelot.step_three.columns_modal.toast_error_title'),
+              variant: 'danger',
+              solid: true
+            })
+          })
+      }
+    },
+    closeColumnsModal () {
+      // Close the modal
+      this.$bvModal.hide('modal-manage-columns')
+    },
+    resetColumnsModal () {
+      // Reset column definitions when modal is closed
+      this.columnDefinitions = []
+      this.isSavingColumns = false
     },
     getVisibleCategoryOptions (category) {
       if (!this.showConcerns) {
