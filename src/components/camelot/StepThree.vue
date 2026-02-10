@@ -102,7 +102,7 @@
                     :key="'menu-custom-' + index"
                     class="menu-item"
                     @click="scrollToSection('custom-field-' + index)">
-                    {{ field.title || 'Sin título' }}
+                    {{ field.label || 'Sin título' }}
                   </div>
                 </div>
 
@@ -123,76 +123,21 @@
             <b-col cols="9">
               <!-- Campos personalizados -->
               <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <h5 class="mb-0">{{ $t('camelot.step_three.modal.custom_fields_title') }}</h5>
-                  <b-button
-                    size="sm"
-                    variant="success"
-                    @click="addCustomField">
-                    <i class="fas fa-plus"></i> {{ $t('camelot.step_three.modal.add_field_button') }}
-                  </b-button>
-                </div>
-                <b-card v-if="customFields.length === 0" body-class="text-center py-3">
-                  <p class="mb-0 text-muted">{{ $t('camelot.step_three.modal.no_custom_fields') }}</p>
-                </b-card>
-                <div v-else class="custom-fields-container">
-                  <p class="text-muted small mb-2">
-                    <i class="fas fa-arrows-alt mr-1"></i>{{ $t('camelot.step_three.modal.move_instruction') }}
-                  </p>
-                  <draggable
-                    v-model="customFields"
-                    :options="{handle:'.drag-handle'}"
-                    ghost-class="ghost"
-                    animation="300"
-                    group="customFields"
-                    drag-class="sortable-drag"
-                    chosen-class="sortable-chosen"
-                    @start="onDragStart"
-                    @end="onDragEnd">
-                    <div
-                      v-for="(field, index) in customFields"
-                      :key="'column_' + index"
-                      class="mb-3">
-                      <div :id="'column-field-' + index">
-                        <b-card>
-                          <div class="d-flex justify-content-between mb-2">
-                            <div class="d-flex align-items-center">
-                              <label :for="'column_' + index">{{ $t('camelot.step_three.modal.title_label') }}</label>
-                            </div>
-                            <div>
-                              <b-button
-                                size="sm"
-                                variant="outline-secondary"
-                                class="drag-handle mr-1 py-0">
-                                <i class="fas fa-grip-vertical"></i> {{ $t('camelot.step_three.modal.move_button') }}
-                              </b-button>
-                              <b-button
-                                size="sm"
-                                variant="danger"
-                                @click="removeCustomField(index)"
-                                class="py-0">
-                                <i class="fas fa-trash"></i> {{ $t('camelot.step_three.delete_button') }}
-                              </b-button>
-                            </div>
-                          </div>
-                          <b-form-input
-                            :id="'label_' + index"
-                            v-model="field.title"
-                            :placeholder="$t('camelot.step_three.modal.field_title_placeholder')"
-                            class="mb-2">
-                          </b-form-input>
-                          <label :for="'column_' + index">{{ $t('camelot.step_three.modal.content_label') }}</label>
-                          <b-form-textarea
-                            :id="'column_' + index"
-                            v-model="field.value"
-                            :placeholder="$t('camelot.step_three.modal.field_content_placeholder')"
-                            rows="3">
-                          </b-form-textarea>
-                        </b-card>
-                      </div>
-                    </div>
-                  </draggable>
-                </div>
+                <CustomFieldsManager
+                  v-model="customFields"
+                  :with-values="true"
+                  :title="$t('camelot.step_three.modal.custom_fields_title')"
+                  :add-button-text="$t('camelot.step_three.modal.add_field_button')"
+                  :empty-text="$t('camelot.step_three.modal.no_custom_fields')"
+                  :move-instruction-text="$t('camelot.step_three.modal.move_instruction')"
+                  :move-button-text="$t('camelot.step_three.modal.move_button')"
+                  :delete-button-text="$t('camelot.step_three.delete_button')"
+                  :label-text="$t('camelot.step_three.modal.title_label')"
+                  :content-label-text="$t('camelot.step_three.modal.content_label')"
+                  :placeholder-label="$t('camelot.step_three.modal.field_title_placeholder')"
+                  :placeholder-value="$t('camelot.step_three.modal.field_content_placeholder')"
+                  id-prefix="custom-field-"
+                />
               </div>
 
               <h5 class="mt-4">{{ $t('camelot.step_three.modal.camelot_fields_title') }}</h5>
@@ -240,56 +185,19 @@
         @hide="resetColumnsModal">
         <p class="text-muted mb-3">{{ $t('camelot.step_three.columns_modal.description') }}</p>
         
-        <div class="mb-3">
-          <b-button
-            size="sm"
-            variant="success"
-            @click="addColumnDefinition">
-            <font-awesome-icon icon="plus"></font-awesome-icon> {{ $t('camelot.step_three.columns_modal.add_column') }}
-          </b-button>
-        </div>
-
-        <b-card v-if="columnDefinitions.length === 0" body-class="text-center py-3">
-          <p class="mb-0 text-muted">{{ $t('camelot.step_three.columns_modal.no_columns') }}</p>
-        </b-card>
-
-        <draggable
-          v-else
+        <CustomFieldsManager
           v-model="columnDefinitions"
-          handle=".drag-handle"
-          animation="200"
-          class="column-list">
-          <div
-            v-for="(column, index) in columnDefinitions"
-            :key="'col-def-' + index"
-            class="mb-3">
-            <b-card>
-              <b-form-group
-                :label="$t('camelot.step_three.columns_modal.column_name')"
-                :label-for="'column-name-' + index">
-                <b-input-group>
-                  <b-input-group-prepend>
-                    <b-button variant="outline-secondary" class="drag-handle" style="cursor: move;">
-                      <font-awesome-icon icon="arrows-alt" class="mr-1"></font-awesome-icon>{{ $t('camelot.step_three.modal.move_button') }}
-                    </b-button>
-                  </b-input-group-prepend>
-                  <b-form-input
-                    :id="'column-name-' + index"
-                    v-model="column.label"
-                    :placeholder="$t('camelot.step_three.columns_modal.column_name_placeholder')">
-                  </b-form-input>
-                  <b-input-group-append>
-                    <b-button
-                      variant="danger"
-                      @click="removeColumnDefinition(index)">
-                      <font-awesome-icon icon="trash" class="mr-1"></font-awesome-icon>{{ $t('camelot.step_three.delete_button') }}
-                    </b-button>
-                  </b-input-group-append>
-                </b-input-group>
-              </b-form-group>
-            </b-card>
-          </div>
-        </draggable>
+          :with-values="false"
+          :show-header="false"
+          :add-button-text="$t('camelot.step_three.columns_modal.add_column')"
+          :empty-text="$t('camelot.step_three.columns_modal.no_columns')"
+          :move-instruction-text="$t('camelot.step_three.modal.move_instruction')"
+          :move-button-text="$t('camelot.step_three.modal.move_button')"
+          :delete-button-text="$t('camelot.step_three.delete_button')"
+          :label-text="$t('camelot.step_three.columns_modal.column_name')"
+          :placeholder-label="$t('camelot.step_three.columns_modal.column_name_placeholder')"
+          id-prefix="column-def-"
+        />
 
         <template #modal-footer>
           <b-button variant="secondary" @click="closeColumnsModal" :disabled="isSavingColumns">
@@ -316,7 +224,8 @@ import { isCustomField, extractCustomFields, processCustomFields } from '@/utils
 export default {
   name: 'StepThree',
   components: {
-    draggable
+    draggable,
+    CustomFieldsManager: () => import('./CustomFieldsManager.vue')
   },
   mixins: [camelotMixin],
   props: {
@@ -482,9 +391,9 @@ export default {
 
         // Add custom fields to the item object
         this.customFields.forEach((field, index) => {
-          if (field.title && field.title.trim() !== '') {
+          if (field.label && field.label.trim() !== '') {
             // Look if the field already exists
-            const existingField = existingCustomFields.find(ef => ef.label === field.title)
+            const existingField = existingCustomFields.find(ef => ef.label === field.label)
             if (existingField) {
               // If it exists, use its original key
               item[existingField.key] = field.value || ''
@@ -585,28 +494,10 @@ export default {
     validateForm () {
       return true
     },
-    addCustomField () {
-      this.customFields.push({
-        title: '',
-        value: ''
-      })
-      // Wait for next cycle to ensure DOM has been updated
-      this.$nextTick(() => {
-        // Scroll to the last added field
-        const newIndex = this.customFields.length - 1
-        this.scrollToSection('column-field-' + newIndex)
-        // Focus the first input of the new field (the title input)
-        setTimeout(() => {
-          const inputElement = document.getElementById('label_' + newIndex)
-          if (inputElement) {
-            inputElement.focus()
-          }
-        }, 500) // Wait for scroll to finish
-      })
-    },
-    removeCustomField (index) {
-      this.customFields.splice(index, 1)
-    },
+    // addCustomField and removeCustomField are now handled by CustomFieldsManager
+    // removeCustomField (index) {
+    //   this.customFields.splice(index, 1)
+    // },
     scrollToSection (id) {
       const element = document.getElementById(id)
       if (element) {
@@ -622,15 +513,12 @@ export default {
         }
       }
     },
+    // onDragStart and onDragEnd are now handled by CustomFieldsManager or not needed in parent
     onDragStart (evt) {
-      this.drag = true
-      // Add visual class to highlight drag mode
-      document.body.classList.add('dragging-active')
+      // this.drag = true
     },
     onDragEnd (evt) {
-      this.drag = false
-      // Remove visual class
-      document.body.classList.remove('dragging-active')
+      // this.drag = false
       // Notify that there was a change in custom fields
       this.$emit('custom-fields-reordered', this.customFields)
     },
@@ -646,14 +534,14 @@ export default {
 
       // Process new custom fields
       const newCustomFields = this.customFields
-        .filter(field => field.title && field.title.trim() !== '')
+        .filter(field => field.label && field.label.trim() !== '')
         .map((field, index) => {
           // If the field already exists, keep its original key
-          const existingField = existingCustomFields.find(ef => ef.label === field.title)
+          const existingField = existingCustomFields.find(ef => ef.label === field.label)
           if (existingField) {
             return {
               key: existingField.key,
-              label: field.title
+              label: field.label
             }
           }
           // If it's a new field, generate a new correlative key
@@ -662,7 +550,7 @@ export default {
             : -1
           return {
             key: `column_${lastIndex + 1 + index}`,
-            label: field.title
+            label: field.label
           }
         })
 
@@ -779,7 +667,7 @@ export default {
         .filter(field => isCustomField(field.key))
         .map(field => {
           return {
-            title: field.label || '',
+            label: field.label || '',
             value: (itemValues && itemValues[field.key]) || '',
             key: field.key
           }
@@ -790,7 +678,7 @@ export default {
         Object.keys(itemValues).forEach(key => {
           if (isCustomField(key) && !customFields.find(cf => cf.key === key)) {
             customFields.push({
-              title: key,
+              label: key,
               value: itemValues[key] || '',
               key: key
             })
@@ -825,17 +713,16 @@ export default {
       console.log('Abriendo modal de filtros...')
       // Aquí se implementará la lógica para abrir el modal de filtros
     },
-    addColumnDefinition () {
-      // Add a new column definition
-      this.columnDefinitions.push({
-        key: `column_${Date.now()}`,
-        label: ''
-      })
-    },
-    removeColumnDefinition (index) {
-      // Remove a column definition
-      this.columnDefinitions.splice(index, 1)
-    },
+    // addColumnDefinition and removeColumnDefinition are now handled by CustomFieldsManager
+    // addColumnDefinition () {
+    //   this.columnDefinitions.push({
+    //     key: `column_${Date.now()}`,
+    //     label: ''
+    //   })
+    // },
+    // removeColumnDefinition (index) {
+    //   this.columnDefinitions.splice(index, 1)
+    // },
     handleSaveColumns (bvModalEvt) {
       // Prevent modal from closing automatically if called from @ok event
       if (bvModalEvt) {
