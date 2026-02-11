@@ -264,40 +264,12 @@ export default {
     },
     // Watch showConcerns to ensure new columns are visible
     showConcerns (newVal) {
-        if (newVal) {
-             // If showing concerns, we should ensure they are added to visibleColumnKeys
-             // We can defer this to nextTick to let tableFields update, but actually
-             // we can just predict the keys or wait for filterableColumns watcher?
-             // Since filterableColumns depends on showConcerns, the watcher above triggers.
-             // But inside that watcher, I can't distinguish "show concerns" from "loading".
-             
-             // Easier: Just add all concern keys to visibleColumnKeys here?
-             // Or rely on the user to check "Show All" or check them manually? 
-             // Requirement: "al presinar el botón se debe desplegar un listado... si está seleccionado el primer checkbox, significa que todas las columnas son vsibles"
-             // It doesn't explicitly say "Show Concerns" should auto-enable them in the filter, but it implies they become available.
-             // Existing behavior: toggleConcerns shows them. We should preserve this.
-             
-             this.$nextTick(() => {
-                 // Get all concern keys from filterableColumns
-                 const concernKeys = this.filterableColumns
-                     .filter(c => c.key.endsWith('_concerns'))
-                     .map(c => c.key)
-                 
-                 // Add them to visibleColumnKeys if not present
-                 const newKeys = [...this.visibleColumnKeys]
-                 let changed = false
-                 concernKeys.forEach(k => {
-                     if (!newKeys.includes(k)) {
-                         newKeys.push(k)
-                         changed = true
-                     }
-                 })
-                 
-                 if (changed) {
-                     this.visibleColumnKeys = newKeys
-                 }
-             })
-        }
+      if (newVal) {
+        // Validation logic is now handled in toggleConcerns to ensure immediate update
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
+      }
     }
   },
   data () {
@@ -786,8 +758,42 @@ export default {
       this.customFields = customFields
     },
     toggleConcerns () {
-      // Alterna el estado de mostrar/ocultar los campos "Concerns"
+      // Toggle the state of showing/hiding "Concerns" fields
       this.showConcerns = !this.showConcerns
+      
+      if (this.showConcerns) {
+          // Force update of visibleColumnKeys to include concern columns
+          const concernKeys = []
+          if (this.camelot && this.camelot.categories) {
+              this.camelot.categories.forEach(cat => {
+                  if (cat.options) {
+                      const concernOpt = cat.options.find(opt => opt.key && opt.key.endsWith('_concerns'))
+                      if (concernOpt) {
+                          concernKeys.push(concernOpt.key)
+                      }
+                  }
+              })
+          }
+          
+          // Merge unique keys
+          const newKeys = [...this.visibleColumnKeys]
+          let changed = false
+          concernKeys.forEach(k => {
+              if (!newKeys.includes(k)) {
+                  newKeys.push(k)
+                  changed = true
+              }
+          })
+          
+          if (changed) {
+              this.visibleColumnKeys = newKeys
+          }
+          
+          // Force update to ensure table re-renders with new columns
+          this.$nextTick(() => {
+              this.$forceUpdate()
+          })
+      }
     },
     exportToCSV () {
       const { exportTableToCSV } = require('@/utils/csvExporter')
@@ -945,7 +951,7 @@ export default {
             }
             
             // Update charsData using $set to ensure reactivity
-            this.$set(this, 'charsData', updatedData)
+            this.$set(this, 'charsData', createdData)
             
             // Ensure new columns are visible
             this.$nextTick(() => {
