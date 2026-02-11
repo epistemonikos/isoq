@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
 import Api from '@/utils/Api'
-const ExportCSV = require('export-to-csv').ExportToCsv
+import { exportTableToCSV } from '@/utils/csvExporter'
 
 export const tableImportExportMixin = {
   data () {
@@ -67,38 +67,11 @@ export const tableImportExportMixin = {
     },
 
     exportTableToCSV () {
-      const _headers = JSON.parse(JSON.stringify(this.dataTable.fields))
-      const _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      const headers = []
-      const items = []
-      const keys = []
-
-      for (const field of _headers) {
-        if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push(`"${field.label}"`)
-          keys.push(field.key)
-        }
-      }
-
-      for (const i of _items) {
-        const item = {}
-        for (const k in keys) {
-          item[keys[k]] = Object.prototype.hasOwnProperty.call(i, keys[k]) ? i[keys[k]] : ''
-        }
-        items.push(item)
-      }
-
-      const options = {
-        filename: 'exportable_table',
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
+      exportTableToCSV({
+        fields: this.dataTable.fields,
+        items: this.dataTable.items,
+        filename: 'exportable_table'
+      })
     },
 
     async saveImportedData () {

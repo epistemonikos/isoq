@@ -47,6 +47,8 @@
     "clean": "Clean",
     "reject": "Reject",
     "duplicate": "Duplicate",
+    "filter_columns": "Filter columns",
+    "show_all": "Show all",
     "share": "Share",
     "shared": "Shared",
     "leave": "Leave",

@@ -30,13 +30,10 @@
           <i :class="showConcerns ? 'fas fa-eye-slash' : 'fas fa-eye'" class="mr-1"></i>
           {{ $t('camelot.step_three.show_hide_concerns') }}
         </b-button>
-        <b-button
-          variant="outline-primary"
-          size="sm"
-          @click="openFilterModal">
-          <i class="fas fa-filter mr-1"></i>
-          {{ $t('camelot.step_three.filter_columns') }}
-        </b-button>
+        <TableColumnFilter
+          :all-columns="filterableColumns"
+          v-model="visibleColumnKeys"
+        />
       </div>
 
       <b-table
@@ -219,13 +216,14 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import draggable from 'vuedraggable'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
-import { isCustomField, extractCustomFields, processCustomFields } from '@/utils/customFieldsHelper'
+import { isCustomField, extractCustomFields, processCustomFields, cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 
 export default {
   name: 'StepThree',
   components: {
     draggable,
-    CustomFieldsManager: () => import('./CustomFieldsManager.vue')
+    CustomFieldsManager: () => import('./CustomFieldsManager.vue'),
+    TableColumnFilter: () => import('@/components/common/TableColumnFilter.vue')
   },
   mixins: [camelotMixin],
   props: {
@@ -236,6 +234,70 @@ export default {
     type: {
       type: String,
       default: 'isoqf_characteristics'
+    }
+  },
+  watch: {
+    filterableColumns: {
+      immediate: true,
+      handler (newCols, oldCols) {
+        // Initial load
+        if (!oldCols) {
+           this.visibleColumnKeys = newCols.map(c => c.key)
+           return
+        }
+        
+        // Calculate new columns that weren't present before
+        const oldKeys = oldCols.map(c => c.key)
+        const addedCols = newCols.filter(c => !oldKeys.includes(c.key))
+        
+        if (addedCols.length > 0) {
+          // Add newly appeared columns to visible list
+          const newKeysToAdd = addedCols.map(c => c.key)
+          // Avoid duplicates
+          const uniqueNewKeys = newKeysToAdd.filter(key => !this.visibleColumnKeys.includes(key))
+          
+          if (uniqueNewKeys.length > 0) {
+            this.visibleColumnKeys = [...this.visibleColumnKeys, ...uniqueNewKeys]
+          }
+        }
+      }
+    },
+    // Watch showConcerns to ensure new columns are visible
+    showConcerns (newVal) {
+        if (newVal) {
+             // If showing concerns, we should ensure they are added to visibleColumnKeys
+             // We can defer this to nextTick to let tableFields update, but actually
+             // we can just predict the keys or wait for filterableColumns watcher?
+             // Since filterableColumns depends on showConcerns, the watcher above triggers.
+             // But inside that watcher, I can't distinguish "show concerns" from "loading".
+             
+             // Easier: Just add all concern keys to visibleColumnKeys here?
+             // Or rely on the user to check "Show All" or check them manually? 
+             // Requirement: "al presinar el botón se debe desplegar un listado... si está seleccionado el primer checkbox, significa que todas las columnas son vsibles"
+             // It doesn't explicitly say "Show Concerns" should auto-enable them in the filter, but it implies they become available.
+             // Existing behavior: toggleConcerns shows them. We should preserve this.
+             
+             this.$nextTick(() => {
+                 // Get all concern keys from filterableColumns
+                 const concernKeys = this.filterableColumns
+                     .filter(c => c.key.endsWith('_concerns'))
+                     .map(c => c.key)
+                 
+                 // Add them to visibleColumnKeys if not present
+                 const newKeys = [...this.visibleColumnKeys]
+                 let changed = false
+                 concernKeys.forEach(k => {
+                     if (!newKeys.includes(k)) {
+                         newKeys.push(k)
+                         changed = true
+                     }
+                 })
+                 
+                 if (changed) {
+                     this.visibleColumnKeys = newKeys
+                 }
+             })
+        }
     }
   },
   data () {
@@ -261,7 +323,8 @@ export default {
       isLoading: true,
       showConcerns: false,
       columnDefinitions: [], // Global column definitions
-      isSavingColumns: false // Flag to track save state
+      isSavingColumns: false, // Flag to track save state
+      visibleColumnKeys: [] // Keys of currently visible columns
     }
   },
   computed: {
@@ -291,7 +354,7 @@ export default {
         return authorsA.localeCompare(authorsB)
       })
     },
-    tableFields () {
+    availableTableFields () {
       // Base fields (authors)
       let baseFields = this.fields
       const categoryFields = []
@@ -336,9 +399,21 @@ export default {
       // Return the combination of base fields, custom fields, and category fields
       return [...baseFields, ...customFields, ...categoryFields]
     },
+    filterableColumns () {
+      // Return columns that can be filtered (everything except authors and actions)
+      return this.availableTableFields.filter(f => f.key !== 'authors' && f.key !== 'actions')
+    },
+    tableFields () {
+      // Return columns that should be displayed
+      return this.availableTableFields.filter(f => 
+        f.key === 'authors' || 
+        f.key === 'actions' || 
+        this.visibleColumnKeys.includes(f.key)
+      )
+    },
     tableFieldsForEdit () {
       // Use table fields without the actions column for editing
-      return this.tableFields.filter(field => field.key !== 'actions')
+      return this.availableTableFields.filter(field => field.key !== 'actions')
     },
     modalTitle () {
       // Generate dynamic modal title with author information
@@ -441,14 +516,26 @@ export default {
           // Update fields if they have changed
           updatedCharsData.fields = customFieldsArray
 
+          // Clean orphaned custom field keys from all items
+          updatedCharsData.items = cleanOrphanedCustomFieldKeys(updatedCharsData.items, customFieldsArray)
+
           // If ID exists, update
           Api.patch(`/isoqf_characteristics/${this.charsData.id}/`, updatedCharsData)
             .then(response => {
               // Update local data
               this.charsData = response.data
+              
+              // Ensure new columns are visible immediately using the keys we just sent
+              const newKeys = customFieldsArray
+                  .filter(f => f.key !== 'authors' && f.key !== 'ref_id' && f.key !== 'actions' && !this.visibleColumnKeys.includes(f.key))
+                  .map(f => f.key)
+              
+              if (newKeys.length > 0) {
+                  this.visibleColumnKeys = [...this.visibleColumnKeys, ...newKeys]
+              }
+              
               // Reload characteristics data to reflect changes
               this.loadCharacteristicsData()
-              // Force table update
               this.$forceUpdate()
             })
             .catch(error => {
@@ -463,16 +550,22 @@ export default {
             items: [item]
           }
 
-          console.log('Datos completos a enviar para inserción:', newCharacteristics)
-
           Api.post('/isoqf_characteristics/', newCharacteristics)
             .then(response => {
-              console.log('Referencia creada:', response.data)
               // Update local data
               this.charsData = response.data
+              
+              // Ensure new columns are visible immediately using the keys we just sent
+              const newKeys = customFieldsArray
+                  .filter(f => f.key !== 'authors' && f.key !== 'ref_id' && f.key !== 'actions' && !this.visibleColumnKeys.includes(f.key))
+                  .map(f => f.key)
+              
+              if (newKeys.length > 0) {
+                  this.visibleColumnKeys = [...this.visibleColumnKeys, ...newKeys]
+              }
+              
               // Reload characteristics data to reflect changes
               this.loadCharacteristicsData()
-              // Force table update
               this.$forceUpdate()
             })
             .catch(error => {
@@ -614,6 +707,10 @@ export default {
 
           // Ensure final update after loading state change
           this.$nextTick(() => {
+            // Safeguard: Ensure visible columns are populated if seemingly empty
+            if (this.visibleColumnKeys.length === 0 && this.filterableColumns.length > 0) {
+                 this.visibleColumnKeys = this.filterableColumns.map(c => c.key)
+            }
             this.$forceUpdate()
           })
         })
@@ -693,9 +790,27 @@ export default {
       this.showConcerns = !this.showConcerns
     },
     exportToCSV () {
-      // TODO: Implementar exportación a CSV
-      console.log('Exportando a CSV...')
-      // Aquí se implementará la lógica para exportar la tabla a CSV
+      const { exportTableToCSV } = require('@/utils/csvExporter')
+      // Pre-process items: format authors and replace undefined/null with empty strings
+      const fields = this.tableFields
+      const processedItems = this.tableItems.map(item => {
+        const processed = {}
+        fields.forEach(field => {
+          if (field.key === 'authors') {
+            processed[field.key] = this.formatAuthors(item)
+          } else {
+            const val = item[field.key]
+            processed[field.key] = (val !== undefined && val !== null) ? val : ''
+          }
+        })
+        return processed
+      })
+      exportTableToCSV({
+        fields,
+        items: processedItems,
+        filename: 'characteristics_of_studies',
+        excludeKeys: ['ref_id', 'id', 'actions']
+      })
     },
     openColumnsModal () {
       // Load current column definitions from charsData.fields
@@ -708,11 +823,7 @@ export default {
       
       this.$bvModal.show('modal-manage-columns')
     },
-    openFilterModal () {
-      // TODO: Implementar modal para filtrar columnas
-      console.log('Abriendo modal de filtros...')
-      // Aquí se implementará la lógica para abrir el modal de filtros
-    },
+    // openFilterModal removed - replaced by component
     // addColumnDefinition and removeColumnDefinition are now handled by CustomFieldsManager
     // addColumnDefinition () {
     //   this.columnDefinitions.push({
@@ -751,10 +862,13 @@ export default {
       // Update charsData.fields
       this.charsData.fields = [...nonCustomFields, ...newCustomFields]
       
+      // Clean orphaned custom field keys from items
+      const cleanedItems = cleanOrphanedCustomFieldKeys(this.charsData.items || [], this.charsData.fields)
+      
       // Save to API
       const dataToSave = {
         fields: this.charsData.fields,
-        items: this.charsData.items || [],
+        items: cleanedItems,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
@@ -776,6 +890,20 @@ export default {
             
             // Update charsData using $set to ensure reactivity
             this.$set(this, 'charsData', updatedData)
+            
+            // Ensure new columns are visible
+            this.$nextTick(() => {
+                if (this.charsData && this.charsData.fields) {
+                    const newIds = this.charsData.fields
+                        .filter(f => f.key !== 'authors' && f.key !== 'actions' && !this.visibleColumnKeys.includes(f.key))
+                        .map(f => f.key)
+                    
+                    if (newIds.length > 0) {
+                        this.visibleColumnKeys = [...this.visibleColumnKeys, ...newIds]
+                    }
+                }
+            })
+            
             this.isSavingColumns = false
             
             // Close modal first
@@ -817,7 +945,21 @@ export default {
             }
             
             // Update charsData using $set to ensure reactivity
-            this.$set(this, 'charsData', createdData)
+            this.$set(this, 'charsData', updatedData)
+            
+            // Ensure new columns are visible
+            this.$nextTick(() => {
+                if (this.charsData && this.charsData.fields) {
+                    const newIds = this.charsData.fields
+                        .filter(f => f.key !== 'authors' && f.key !== 'actions' && !this.visibleColumnKeys.includes(f.key))
+                        .map(f => f.key)
+                    
+                    if (newIds.length > 0) {
+                        this.visibleColumnKeys = [...this.visibleColumnKeys, ...newIds]
+                    }
+                }
+            })
+
             this.isSavingColumns = false
             
             // Close modal first
@@ -867,7 +1009,6 @@ export default {
       handler(newReferences, oldReferences) {
         // Only reload if there are actual changes in references
         if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
-          console.log('Referencias cambiaron, recargando datos de características')
           this.loadCharacteristicsData()
         }
       },
@@ -886,7 +1027,6 @@ export default {
     }
   },
   mounted () {
-    console.log('StepThree mounted')
     // Cargamos los datos de características al montar el componente
     this.loadCharacteristicsData()
   }

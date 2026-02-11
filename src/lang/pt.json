@@ -47,6 +47,8 @@
     "clean": "Limpar",
     "reject": "Rejeitar",
     "duplicate": "Duplicar",
+    "filter_columns": "Filtrar colunas",
+    "show_all": "Mostrar todas",
     "share": "Compartilhar",
     "shared": "Compartilhado",
     "leave": "Sair",

@@ -472,7 +472,7 @@ import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
 import { camelotMixin } from '@/mixins/camelotMixin'
 
-const ExportCSV = require('export-to-csv').ExportToCsv
+import { exportTableToCSV } from '@/utils/csvExporter'
 
 export default {
   name: 'crudTables',
@@ -1030,43 +1030,12 @@ export default {
     openModalImportTable: function () {
       this.$refs[`import-table-${this.type}`].show()
     },
-    exportTableToCSV: function (type) {
-      let _headers = JSON.parse(JSON.stringify(this.dataTable.fields))
-      let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let headers = []
-      let items = []
-      let keys = []
-
-      for (const field of _headers) {
-        if (!['ref_id', 'id'].includes(field.key)) {
-          headers.push(`"${field.label}"`)
-          keys.push(field.key)
-        }
-      }
-
-      for (const i of _items) {
-        let item = {}
-        for (const k in keys) {
-          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-            item[keys[k]] = i[keys[k]]
-          } else {
-            item[keys[k]] = ''
-          }
-        }
-        items.push(item)
-      }
-
-      const options = {
-        filename: 'exportable_table',
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
+    exportTableToCSV: function () {
+      exportTableToCSV({
+        fields: this.dataTable.fields,
+        items: this.dataTable.items,
+        filename: 'exportable_table'
+      })
     },
     saveImportedData: function () {
       const params = {

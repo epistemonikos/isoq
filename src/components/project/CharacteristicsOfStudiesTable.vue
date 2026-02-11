@@ -348,7 +348,7 @@ import draggable from 'vuedraggable'
 import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commons from '@/utils/commons.js'
-const ExportCSV = require('export-to-csv').ExportToCsv
+import { exportTableToCSV } from '@/utils/csvExporter'
 
 export default {
   name: 'CharacteristicsOfStudiesTable',
@@ -908,58 +908,23 @@ export default {
     },
     exportTableToCSV: function (type) {
       const _types = ['chars_of_studies', 'meth_assessments']
-      let _headers = []
-      let headers = []
-      let _items = []
+      let fields = []
       let items = []
 
       if (_types.indexOf(type) !== -1) {
         switch (type) {
           case 'chars_of_studies':
-            _headers = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-            _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+            fields = this.charsOfStudies.fields || []
+            items = this.charsOfStudies.items || []
             break
           case 'meth_assessments':
-            _headers = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-            _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-            break
-          default:
-            _headers = []
-            _items = []
+            fields = this.methodologicalTableRefs.fields || []
+            items = this.methodologicalTableRefs.items || []
             break
         }
-
-        let keys = []
-        for (let f of _headers) {
-          if (f.key !== 'ref_id' && f.key !== 'id') {
-            headers.push('"' + f.label + '"')
-            keys.push(f.key)
-          }
-        }
-
-        for (let i of _items) {
-          let item = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-              item[keys[k]] = i[keys[k]]
-            } else {
-              item[keys[k]] = ''
-            }
-          }
-          items.push(item)
-        }
       }
-      const options = {
-        filename: type,
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
+
+      exportTableToCSV({ fields, items, filename: type })
     },
     updateMyDataTables: function () {
       let characteristicsItems = []
