@@ -207,6 +207,7 @@ export default {
         project_id: ''
       },
       isLoading: true,
+      isFirstLoad: true,
       showConcerns: false,
       visibleColumnKeys: [] // Keys of currently visible columns
     }
@@ -326,8 +327,7 @@ export default {
       })
     },
     handleReferenceSaved (updatedData) {
-      this.charsData = updatedData
-      this.loadCharacteristicsData()
+      this.$set(this, 'charsData', updatedData)
       this.$forceUpdate()
     },
     deleteReference (item) {
@@ -378,10 +378,11 @@ export default {
 
           // Ensure final update after loading state change
           this.$nextTick(() => {
-            // Safeguard: Ensure visible columns are populated if seemingly empty
-            if (this.visibleColumnKeys.length === 0 && this.filterableColumns.length > 0) {
+            // Safeguard: Ensure visible columns are populated on first load if they appear empty
+            if (this.isFirstLoad && this.visibleColumnKeys.length === 0 && this.filterableColumns.length > 0) {
                  this.visibleColumnKeys = this.filterableColumns.map(c => c.key)
             }
+            this.isFirstLoad = false
             this.$forceUpdate()
           })
         })

@@ -300,18 +300,29 @@ export default {
 
       savePromise
         .then(response => {
-          const savedData = response.data
-          this.$emit('saved', savedData)
+          const responseData = response.data.$set || response.data
+          const savedData = {
+            ...responseData,
+            id: response.data.id || this.charsData.id,
+            _id: response.data._id || this.charsData._id
+          }
           
-          // Visibility logic
+          // Visibility logic: only add truly NEW columns
+          const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
           const newKeys = customFieldsArray
-            .filter(f => f.key !== 'authors' && f.key !== 'ref_id' && f.key !== 'actions' && !this.visibleColumnKeys.includes(f.key))
+            .filter(f => 
+              f.key !== 'authors' && 
+              f.key !== 'ref_id' && 
+              f.key !== 'actions' && 
+              !oldFieldKeys.includes(f.key) // Only if it wasn't there before
+            )
             .map(f => f.key)
           
           if (newKeys.length > 0) {
             this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
           }
-          
+
+          this.$emit('saved', savedData)
           this.hide()
         })
         .catch(error => {

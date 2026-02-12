@@ -135,11 +135,18 @@ export default {
           
           this.$emit('saved', updatedData)
           
-          // Logic for updating visible columns
+          // Logic for updating visible columns: only add truly NEW columns
           const newVisibleKeys = [...this.visibleColumnKeys]
+          const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
+          
           if (updatedData.fields) {
             const newIds = updatedData.fields
-              .filter(f => f.key !== 'authors' && f.key !== 'actions' && !newVisibleKeys.includes(f.key))
+              .filter(f => 
+                f.key !== 'authors' && 
+                f.key !== 'ref_id' && 
+                f.key !== 'actions' && 
+                !oldFieldKeys.includes(f.key) // Only if it wasn't there before
+              )
               .map(f => f.key)
             
             if (newIds.length > 0) {
