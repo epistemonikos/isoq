@@ -26,7 +26,8 @@
         <b-button
           variant="outline-primary"
           size="sm"
-          @click="toggleConcerns">
+          @click="toggleConcerns"
+          :disabled="!hasVisibleCamelotFields">
           <i :class="showConcerns ? 'fas fa-eye-slash' : 'fas fa-eye'" class="mr-1"></i>
           {{ $t('camelot.step_three.show_hide_concerns') }}
         </b-button>
@@ -270,6 +271,44 @@ export default {
           this.$forceUpdate()
         })
       }
+    },
+    visibleColumnKeys: {
+      handler (newVal, oldVal) {
+        // If showConcerns is active, we should ensure concern columns follow their parents
+        if (this.showConcerns && oldVal) {
+          const added = newVal.filter(k => !oldVal.includes(k))
+          const removed = oldVal.filter(k => !newVal.includes(k))
+          
+          let changed = false
+          let updatedKeys = [...newVal]
+          
+          added.forEach(k => {
+            if (k.endsWith('_extractedData')) {
+              const concernKey = k.replace('_extractedData', '_concerns')
+              if (!updatedKeys.includes(concernKey)) {
+                updatedKeys.push(concernKey)
+                changed = true
+              }
+            }
+          })
+          
+          removed.forEach(k => {
+            if (k.endsWith('_extractedData')) {
+              const concernKey = k.replace('_extractedData', '_concerns')
+              const idx = updatedKeys.indexOf(concernKey)
+              if (idx !== -1) {
+                updatedKeys.splice(idx, 1)
+                changed = true
+              }
+            }
+          })
+          
+          if (changed) {
+            this.visibleColumnKeys = updatedKeys
+          }
+        }
+      },
+      deep: false
     }
   },
   data () {
@@ -372,16 +411,33 @@ export default {
       return [...baseFields, ...customFields, ...categoryFields]
     },
     filterableColumns () {
-      // Return columns that can be filtered (everything except authors and actions)
-      return this.availableTableFields.filter(f => f.key !== 'authors' && f.key !== 'actions')
+      // Return columns that can be filtered (everything except authors, actions and concerns)
+      return this.availableTableFields.filter(f => 
+        f.key !== 'authors' && 
+        f.key !== 'actions' && 
+        !f.key.endsWith('_concerns')
+      )
     },
     tableFields () {
       // Return columns that should be displayed
-      return this.availableTableFields.filter(f => 
-        f.key === 'authors' || 
-        f.key === 'actions' || 
-        this.visibleColumnKeys.includes(f.key)
-      )
+      return this.availableTableFields.filter(f => {
+        if (f.key === 'authors' || f.key === 'actions') return true
+        
+        // Ensure concern columns only show if their parent extracted data column is visible
+        if (f.key.endsWith('_concerns')) {
+          const parentKey = f.key.replace('_concerns', '_extractedData')
+          return this.visibleColumnKeys.includes(f.key) && this.visibleColumnKeys.includes(parentKey)
+        }
+        
+        return this.visibleColumnKeys.includes(f.key)
+      })
+    },
+    hasVisibleCamelotFields () {
+      if (!this.camelot || !this.camelot.categories) return false
+      return this.camelot.categories.some(cat => {
+        const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_concerns'))
+        return extractedOpt && this.visibleColumnKeys.includes(extractedOpt.key)
+      })
     },
     tableFieldsForEdit () {
       // Use table fields without the actions column for editing
@@ -762,13 +818,15 @@ export default {
       this.showConcerns = !this.showConcerns
       
       if (this.showConcerns) {
-          // Force update of visibleColumnKeys to include concern columns
+          // Add concern keys only for CAMELOT fields that are currently visible
           const concernKeys = []
           if (this.camelot && this.camelot.categories) {
               this.camelot.categories.forEach(cat => {
                   if (cat.options) {
+                      const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_concerns'))
                       const concernOpt = cat.options.find(opt => opt.key && opt.key.endsWith('_concerns'))
-                      if (concernOpt) {
+                      
+                      if (extractedOpt && concernOpt && this.visibleColumnKeys.includes(extractedOpt.key)) {
                           concernKeys.push(concernOpt.key)
                       }
                   }
@@ -788,12 +846,14 @@ export default {
           if (changed) {
               this.visibleColumnKeys = newKeys
           }
-          
-          // Force update to ensure table re-renders with new columns
-          this.$nextTick(() => {
-              this.$forceUpdate()
-          })
+      } else {
+          // Remove all concern keys when hiding
+          this.visibleColumnKeys = this.visibleColumnKeys.filter(k => !k.endsWith('_concerns'))
       }
+      
+      this.$nextTick(() => {
+          this.$forceUpdate()
+      })
     },
     exportToCSV () {
       const { exportTableToCSV } = require('@/utils/csvExporter')
