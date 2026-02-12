@@ -30,24 +30,6 @@ export function extractCustomFields(fields) {
 }
 
 /**
- * Procesa los campos personalizados para tener una estructura uniforme
- * @param {Array} customFields - Array de objetos con los campos personalizados
- * @returns {Array} - Array de objetos con key y label
- */
-export function processCustomFields(customFields) {
-  if (!customFields || !Array.isArray(customFields)) {
-    return []
-  }
-
-  return customFields
-    .filter(field => field.title && field.title.trim() !== '')
-    .map((field, index) => ({
-      key: `column_${index}`,
-      label: field.title
-    }))
-}
-
-/**
  * Limpia las llaves huérfanas de campos personalizados de los items.
  * Cuando un campo personalizado se elimina del arreglo fields, las llaves
  * correspondientes (column_X) deben eliminarse también de cada item.
@@ -88,6 +70,5 @@ export function cleanOrphanedCustomFieldKeys(items, fields) {
 export default {
   isCustomField,
   extractCustomFields,
-  processCustomFields,
   cleanOrphanedCustomFieldKeys
 }

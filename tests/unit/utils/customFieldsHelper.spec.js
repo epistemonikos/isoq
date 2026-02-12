@@ -1,7 +1,6 @@
 import {
   isCustomField,
   extractCustomFields,
-  processCustomFields,
   cleanOrphanedCustomFieldKeys
 } from '@/utils/customFieldsHelper'
 
