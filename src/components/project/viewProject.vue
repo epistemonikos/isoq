@@ -421,6 +421,7 @@
               :references="references"
               :categories="list_categories"
               :printableItems="printableItems"
+              :project="project"
               :hasPermission="checkPermissions('can_read')"></PrintViewTable>
             <!-- eopv -->
             <b-modal
@@ -1905,6 +1906,11 @@ export default {
     }
   },
   watch: {
+    'list_categories.options': function (newVal) {
+      if (newVal && newVal.length > 0) {
+        this.getLists()
+      }
+    },
     '$route.query.tab': function (val) {
       const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
       const index = tabs.indexOf(val)

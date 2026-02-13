@@ -168,10 +168,17 @@ export default {
   methods: {
     async ExportToWord(filename = '') {
       try {
+        // Use listsPrintVersion as primary source for categories and order
+        const findingsData = (this.listsPrintVersion && this.listsPrintVersion.length > 0)
+          ? this.listsPrintVersion
+          : this.findings
+
         // Prepare export data
         const data = {
-          findings: this.findings,
+          findings: findingsData, // Primary display list (includes categories)
+          originalFindings: this.findings, // Detailed data source for enrichment
           references: this.references,
+          lists: this.lists,
           listsPrintVersion: this.listsPrintVersion,
           printableItems: this.printableItems,
           charsOfStudies: this.charsOfStudies,

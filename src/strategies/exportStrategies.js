@@ -51,6 +51,48 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     constructor(project, data, locale = 'en') {
         super(project, data, locale)
         this.mixin = documentExportMixin
+        this.enrichFindings()
+    }
+
+    enrichFindings() {
+        if (!this.data.findings || !Array.isArray(this.data.findings)) return
+
+        // Create a map of detailed findings for quick lookup
+        const findingsMap = new Map()
+        
+        // Potential sources of detailed finding data
+        const sources = [
+            this.data.findings, // The main findings array
+            this.data.lists,    // Sometimes data is in lists prop
+            this.data.originalFindings // Custom source if provided
+        ]
+
+        sources.forEach(source => {
+            if (Array.isArray(source)) {
+                source.forEach(item => {
+                    if (item && item.id && item.evidence_profile) {
+                        findingsMap.set(item.id, item)
+                    } else if (item && item.list_id && item.evidence_profile) {
+                        findingsMap.set(item.list_id, item)
+                    }
+                })
+            }
+        })
+
+        // Enrich the items in the display list (this.data.findings)
+        this.data.findings = this.data.findings.map(item => {
+            if (item.is_category) return item
+
+            const detail = findingsMap.get(item.id) || findingsMap.get(item.list_id)
+            if (detail) {
+                return {
+                    ...item,
+                    evidence_profile: detail.evidence_profile || item.evidence_profile,
+                    name: detail.name || item.name
+                }
+            }
+            return item
+        })
     }
 
     async export() {
@@ -107,7 +149,23 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             { text: this.t('actionButtons.word_export.table_headers.references'), width: { size: 750, type: WidthType.PERCENTAGE } }
         ]
 
-        const rows = this.data.findings.map((finding, index) => {
+        const rows = []
+        this.data.findings.forEach((finding, index) => {
+            if (finding.is_category) {
+                // Add a category header row
+                rows.push([
+                    {
+                        text: (finding.name || '').toUpperCase(),
+                        bold: true,
+                        shading: { fill: 'F2F2F2' },
+                        color: '000000',
+                        columnSpan: headers.length,
+                        alignment: AlignmentType.CENTER
+                    }
+                ])
+                return
+            }
+
             // Get CERQual data from evidence_profile
             const cerqual = finding.evidence_profile?.cerqual || {}
             const cerqualOption = this.getCerqualConfidenceText(cerqual.option)
@@ -117,9 +175,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             const refIds = finding.evidence_profile?.references || []
             const refList = this.formatReferenceList(refIds)
             
-            return [
+            rows.push([
                 {
-                    text: finding.isoqf_id?.toString() || (index + 1).toString(),
+                    text: finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
                     alignment: AlignmentType.CENTER
                 },
                 {
@@ -138,7 +196,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
                     text: refList,
                     maxLength: TEXT_LIMITS.references
                 }
-            ]
+            ])
         })
 
         this.builder.addTable(rows, headers)
@@ -189,14 +247,30 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             { text: this.t('actionButtons.word_export.table_headers.references'), width: { size: 750, type: WidthType.PERCENTAGE } }
         ]
 
-        const rows = this.data.findings.map((finding, index) => {
+        const rows = []
+        this.data.findings.forEach((finding, index) => {
+            if (finding.is_category) {
+                // Add a category header row
+                rows.push([
+                    {
+                        text: (finding.name || '').toUpperCase(),
+                        bold: true,
+                        shading: { fill: 'F2F2F2' },
+                        color: '000000',
+                        columnSpan: headers.length,
+                        alignment: AlignmentType.CENTER
+                    }
+                ])
+                return
+            }
+
             const ep = finding.evidence_profile || {}
             const refIds = ep.references || []
             const refList = this.formatReferenceList(refIds)
             
-            return [
+            rows.push([
                 {
-                    text: finding.isoqf_id?.toString() || (index + 1).toString(),
+                    text: finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
                     alignment: AlignmentType.CENTER
                 },
                 {
@@ -227,7 +301,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
                     text: refList,
                     maxLength: TEXT_LIMITS.references
                 }
-            ]
+            ])
         })
 
         this.builder.addTable(rows, headers, {

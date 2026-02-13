@@ -112,6 +112,75 @@ describe('ExportStrategies', () => {
       expect(builderMock.startSection).toHaveBeenCalled()
     })
 
+    describe('Data Format Resilience', () => {
+      it('should correctly extract data when findings are objects', async () => {
+        const strategy = new IsoQExportStrategy(mockProject, mockData)
+        await strategy.export()
+
+        // Verify addTable was called with the object data
+        const callArgs = builderMock.addTable.mock.calls[0]
+        const rows = callArgs[0]
+        
+        // Finding 1 row (first row in the mock data)
+        const findingRow = rows[0]
+        expect(findingRow[1].text).toBe('Finding 1') // Name
+        expect(findingRow[2].text).toBe('Moderate confidence') // Option '1' from mock
+        expect(findingRow[3].text).toBe('Exp') // Explanation
+      })
+
+      it('should result in empty data when findings are just IDs (the bug case)', async () => {
+        // Simulating the bug where findings were just IDs
+        const bugData = {
+          ...mockData,
+          findings: ['finding-id-1', 'finding-id-2']
+        }
+        
+        const strategy = new IsoQExportStrategy(mockProject, bugData)
+        await strategy.export()
+
+        const callArgs = builderMock.addTable.mock.calls[0]
+        const rows = callArgs[0]
+        
+        // Both rows should have empty data for name and cerqual because strings don't have those properties
+        expect(rows[0][1].text).toBe('') // Name should be empty
+        expect(rows[0][2].text).toBe('') // CERQual text should be empty
+        expect(rows[1][1].text).toBe('') // Name should be empty
+      })
+
+      it('should render category rows when items have is_category flag', async () => {
+        const categoryData = {
+          ...mockData,
+          findings: [
+            { is_category: true, name: 'Category A' },
+            { 
+              isoqf_id: 1, 
+              name: 'Finding 1', 
+              evidence_profile: { 
+                cerqual: { option: '0', explanation: 'Exp' } 
+              } 
+            }
+          ]
+        }
+
+        const strategy = new IsoQExportStrategy(mockProject, categoryData)
+        await strategy.export()
+
+        const callArgs = builderMock.addTable.mock.calls[0]
+        const rows = callArgs[0]
+
+        // First row should be the category header
+        const categoryRow = rows[0][0]
+        expect(categoryRow.text).toBe('CATEGORY A')
+        expect(categoryRow.bold).toBe(true)
+        expect(categoryRow.shading.fill).toBe('F2F2F2')
+        expect(categoryRow.columnSpan).toBe(5) // Total headers in findings table
+
+        // Second row should be the finding
+        const findingRow = rows[1]
+        expect(findingRow[1].text).toBe('Finding 1')
+      })
+    })
+
     describe('License Logic', () => {
       it('should return empty string for private projects', () => {
         mockProject.is_public = false
