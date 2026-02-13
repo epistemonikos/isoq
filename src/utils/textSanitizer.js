@@ -57,14 +57,14 @@ export class TextSanitizer {
       clean = this.stripMarkdown(clean)
     }
     
-    // 4. Normalize whitespace
-    if (opts.normalizeWhitespace) {
-      clean = this.normalizeWhitespace(clean, opts)
-    }
-    
-    // 5. Remove emojis if needed
+    // 4. Remove emojis if needed
     if (!opts.preserveEmojis) {
       clean = this.removeEmojis(clean)
+    }
+    
+    // 5. Normalize whitespace (AFTER stripping things that leave spaces)
+    if (opts.normalizeWhitespace) {
+      clean = this.normalizeWhitespace(clean, opts)
     }
     
     // 6. Escape XML characters (only if explicitly requested)
@@ -102,6 +102,7 @@ export class TextSanitizer {
       .replace(/\u200D/g, '') // Zero-width joiner
       .replace(/\uFEFF/g, '') // Byte Order Mark (BOM)
       .replace(/\u00AD/g, '') // Soft hyphen
+      .replace(/\uFE0F/g, '') // Variation Selector-16 (often follows emojis like ❤️)
   }
 
   /**

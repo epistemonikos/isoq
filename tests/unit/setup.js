@@ -24,7 +24,7 @@ Vue.prototype.$route = {
 
 // Mock store
 Vue.prototype.$store = {
-  state: {},
+  state: Vue.observable({}),
   getters: {},
   commit: jest.fn(),
   dispatch: jest.fn()
@@ -32,6 +32,14 @@ Vue.prototype.$store = {
 
 // Mock window.print
 global.print = jest.fn()
+
+// Mock URL methods for JSDOM
+if (typeof window.URL.createObjectURL === 'undefined') {
+  Object.defineProperty(window.URL, 'createObjectURL', { value: jest.fn() })
+}
+if (typeof window.URL.revokeObjectURL === 'undefined') {
+  Object.defineProperty(window.URL, 'revokeObjectURL', { value: jest.fn() })
+}
 
 // Suppress Bootstrap Vue warnings
 Vue.config.silent = true

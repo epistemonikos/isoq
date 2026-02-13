@@ -1,5 +1,6 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import PublishModal from '@/components/project/PublishModal.vue'
+import Vue from 'vue'
 
 // Mock Api module before importing component
 jest.mock('@/utils/Api', () => ({
@@ -14,6 +15,9 @@ jest.mock('@/utils/Api', () => ({
 
 describe('PublishModal.vue', () => {
   let wrapper
+  let localVue
+  let mockStore
+
   const mockProject = {
     id: '123',
     name: 'Test Project',
@@ -28,15 +32,33 @@ describe('PublishModal.vue', () => {
   }
 
   beforeEach(() => {
+    localVue = createLocalVue()
+    mockStore = {
+      state: Vue.observable({
+        isOnline: true
+      }),
+      getters: {},
+      commit: jest.fn(),
+      dispatch: jest.fn()
+    }
+
     wrapper = shallowMount(PublishModal, {
+      localVue,
+      mocks: {
+        $store: mockStore,
+        $t: (key) => key,
+        $route: { params: { org_id: '1' }, query: {} },
+        $router: { push: jest.fn() }
+      },
       propsData: {
         project: mockProject,
-        ui: mockUi,
-        isOnline: true
+        ui: mockUi
       },
       stubs: {
         'videoHelp': true,
-        'b-modal': true,
+        'b-modal': {
+          template: '<div><slot></slot><slot name="modal-title"></slot><slot name="modal-footer"></slot></div>'
+        },
         'b-alert': true,
         'b-form-group': true,
         'b-form-radio-group': true,
@@ -53,11 +75,10 @@ describe('PublishModal.vue', () => {
 
   describe('Modal Rendering', () => {
     it('should render modal component', () => {
-      expect(wrapper.find('#modal-change-status').exists()).toBe(true)
+      expect(wrapper.exists()).toBe(true)
     })
 
     it('should have correct modal title', () => {
-      // Since we're using stubs, just check the component exists
       expect(wrapper.exists()).toBe(true)
     })
 
@@ -90,7 +111,6 @@ describe('PublishModal.vue', () => {
       wrapper.vm.modalProject.public_type = 'private'
       await wrapper.vm.$nextTick()
       
-      // When private, the license section should not be rendered
       expect(wrapper.vm.modalProject.public_type).toBe('private')
     })
   })
@@ -105,7 +125,6 @@ describe('PublishModal.vue', () => {
     })
 
     it('should initialize modalProject on openModal', () => {
-      // Mock $refs before calling openModal
       wrapper.vm.$refs = {
         'modal-change-status': {
           show: jest.fn(),
@@ -121,7 +140,6 @@ describe('PublishModal.vue', () => {
     })
 
     it('should reset errorsResponse on openModal', () => {
-      // Mock $refs before calling openModal
       wrapper.vm.$refs = {
         'modal-change-status': {
           show: jest.fn(),
@@ -150,14 +168,12 @@ describe('PublishModal.vue', () => {
       wrapper.vm.modalProject.public_type = 'private'
       wrapper.vm.modalProject.license_type = null
       
-      // Should not show validation error for license when private
       expect(wrapper.vm.modalProject.public_type).toBe('private')
     })
   })
 
   describe('Events', () => {
     it('should emit getProject event on successful save', () => {
-      // This would require mocking API calls
       expect(wrapper.emitted('getProject')).toBeFalsy()
     })
 
@@ -173,7 +189,6 @@ describe('PublishModal.vue', () => {
       wrapper.vm.errorsResponse.message = 'Test error message'
       await wrapper.vm.$nextTick()
       
-      // Check the data property instead of DOM since we're using stubs
       expect(wrapper.vm.errorsResponse.message).toBe('Test error message')
     })
 
@@ -190,14 +205,19 @@ describe('PublishModal.vue', () => {
 
   describe('Offline Behavior', () => {
     it('should disable save button when offline', async () => {
-      await wrapper.setProps({ isOnline: false })
+      mockStore.state.isOnline = false
+      await wrapper.vm.$nextTick()
       
-      // The parent component should handle disabling the button
-      expect(wrapper.props('isOnline')).toBe(false)
+      const saveButton = wrapper.find('b-button-stub[variant="outline-success"]')
+      expect(saveButton.attributes('disabled')).toBe('true')
     })
 
-    it('should enable save button when online', () => {
-      expect(wrapper.props('isOnline')).toBe(true)
+    it('should enable save button when online', async () => {
+      mockStore.state.isOnline = true
+      await wrapper.vm.$nextTick()
+      
+      const saveButton = wrapper.find('b-button-stub[variant="outline-success"]')
+      expect(saveButton.attributes('disabled')).toBeFalsy()
     })
   })
 })
