@@ -6,7 +6,7 @@
                 <tr>
                     <th rowspan="2">Author(s), Year</th>
                     <!-- Campos personalizados -->
-                    <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customField }}</th>
+                    <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customFieldLabels[customField] || customField }}</th>
                     <!-- Categorías CAMELOT -->
                     <th v-for="category in camelot.categories" :key="category.key" :colspan="2">{{ category.label }}</th>
                 </tr>
@@ -64,6 +64,18 @@ export default {
         allCamelotOptions() {
             // Aplanar todas las opciones de todas las categorías
             return this.camelot.categories.flatMap(category => category.options)
+        },
+        customFieldLabels() {
+            if (!this.charsOfStudies.fields || this.charsOfStudies.fields.length === 0) {
+                return {}
+            }
+            
+            // Create a map of key -> label
+            const labelMap = {}
+            this.charsOfStudies.fields.forEach(field => {
+                labelMap[field.key] = field.label
+            })
+            return labelMap
         }
     },
     methods: {

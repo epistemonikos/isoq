@@ -6,10 +6,10 @@
       <b-thead>
         <b-tr>
           <b-th>#</b-th>
-          <b-th>Summarised review finding</b-th>
-          <b-th>GRADE-CERQual assessment of confidence</b-th>
-          <b-th>Explanation of GRADE-CERQual assessment</b-th>
-          <b-th>References</b-th>
+          <b-th>{{ $t('table_head.summarised_finding') }}</b-th>
+          <b-th>{{ $t('table_head.cerqual_assessment') }}</b-th>
+          <b-th>{{ $t('table_head.cerqual_explanation') }}</b-th>
+          <b-th>{{ $t('table_head.references') }}</b-th>
         </b-tr>
       </b-thead>
       <b-tbody>
@@ -71,18 +71,18 @@
     </b-table-simple>
     <backToTop></backToTop>
     <div class="mt-5">
-      <h3>Evidence Profile Table</h3>
+      <h3>{{ $t('table_head.evidence_profile') }}</h3>
       <b-table-simple style="table-layout: fixed; width: 100%;">
         <b-thead>
           <b-tr>
             <b-th style="width: 5%">#</b-th>
-            <b-th style="width: 35%">Summarised review finding</b-th>
-            <b-th style="width: 10%">Methodological limitations</b-th>
-            <b-th style="width: 10%">Coherence</b-th>
-            <b-th style="width: 10%">Adequacy</b-th>
-            <b-th style="width: 10%">Relevance</b-th>
-            <b-th style="width: 10%">GRADE-CERQual assessment of confidence</b-th>
-            <b-th style="width: 10%">References</b-th>
+            <b-th style="width: 35%">{{ $t('table_head.summarised_finding') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.methodological_limitations') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.coherence') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.adequacy') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.relevance') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.cerqual_assessment') }}</b-th>
+            <b-th style="width: 10%">{{ $t('table_head.references') }}</b-th>
           </b-tr>
         </b-thead>
         <b-tbody>
@@ -112,7 +112,7 @@
                   <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'methodological_limitations')">
                     <p>{{displaySelectedOption(item.evidence_profile.methodological_limitations.option)}}</p>
                     <template v-if="item.evidence_profile.methodological_limitations.explanation!==''">
-                      <p><b>Explanation:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
+                      <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.methodological_limitations.explanation}}</p>
                     </template>
                   </template>
                 </template>
@@ -122,7 +122,7 @@
                   <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'coherence')">
                     <p>{{displaySelectedOption(item.evidence_profile.coherence.option)}}</p>
                     <template v-if="item.evidence_profile.coherence.explanation!==''">
-                      <p><b>Explanation:</b> {{item.evidence_profile.coherence.explanation}}</p>
+                      <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.coherence.explanation}}</p>
                     </template>
                   </template>
                 </template>
@@ -132,7 +132,7 @@
                   <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'adequacy')">
                     <p>{{displaySelectedOption(item.evidence_profile.adequacy.option)}}</p>
                     <template v-if="item.evidence_profile.adequacy.explanation!==''">
-                        <p><b>Explanation:</b> {{item.evidence_profile.adequacy.explanation}}</p>
+                        <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.adequacy.explanation}}</p>
                     </template>
                   </template>
                 </template>
@@ -142,7 +142,7 @@
                   <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'relevance')">
                     <p>{{displaySelectedOption(item.evidence_profile.relevance.option)}}</p>
                     <template v-if="item.evidence_profile.relevance.explanation!==''">
-                        <p><b>Explanation:</b> {{item.evidence_profile.relevance.explanation}}</p>
+                        <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.relevance.explanation}}</p>
                     </template>
                   </template>
                 </template>
@@ -152,7 +152,7 @@
                   <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
                     <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
                     <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                        <p><b>Explanation:</b> {{item.evidence_profile.cerqual.explanation}}</p>
+                        <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.cerqual.explanation}}</p>
                     </template>
                   </template>
                 </template>

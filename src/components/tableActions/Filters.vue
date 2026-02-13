@@ -15,15 +15,15 @@
               sm="9"
               align-self="center">
               <b-form-group
-                label="Search">
+                :label="$t('common.search')">
                 <b-input-group>
                   <b-form-input
                     v-model="tableSettings.filter"
-                    placeholder="Type to search the text in the table below"></b-form-input>
+                    :placeholder="$t('action_table.search_placeholder')"></b-form-input>
                   <b-input-group-append>
                     <b-button
                       :disabled="!tableSettings.filter"
-                      @click="tableSettings.filter = ''">Clear</b-button>
+                      @click="tableSettings.filter = ''">{{ $t('common.clear') }}</b-button>
                   </b-input-group-append>
                 </b-input-group>
               </b-form-group>
@@ -36,7 +36,7 @@
               <b-button
                 block
                 @click="toCSV(type)">
-                Export to XLS file
+                {{ $t('characteristics.export_xls') }}
               </b-button>
             </b-col>
           </b-row>
@@ -47,7 +47,7 @@
 </template>
 
 <script>
-const ExportToCsv = require('export-to-csv').ExportToCsv
+import { exportTableToCSV } from '@/utils/csvExporter'
 import Commons from '@/utils/commons.js'
 
 export default {
@@ -85,42 +85,12 @@ export default {
         'meth_assessments': 'Methodological assessments',
         'extracted_data': 'Extracted data'
       }
-      let _fields = JSON.parse(JSON.stringify(this.local_fields))
-      const _items = JSON.parse(JSON.stringify(this.local_items))
-      let fields = []
-      let keys = []
-      for (let f of _fields) {
-        if (f.key !== 'ref_id') {
-          fields.push('"' + f.label + '"')
-          keys.push(f.key)
-        }
-      }
-      let items = []
-      for (let i of _items) {
-        let item = {}
-        for (let k in keys) {
-          if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-            item[keys[k]] = i[keys[k]]
-          } else {
-            item[keys[k]] = ''
-          }
-        }
-        items.push(item)
-      }
-
-      const options = {
-        filename: types[type],
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: fields
-      }
-
-      const csvExporter = new ExportToCsv(options)
-
-      csvExporter.generateCsv(items)
+      exportTableToCSV({
+        fields: this.local_fields,
+        items: this.local_items,
+        filename: types[type] || 'exportable_table',
+        excludeKeys: ['ref_id']
+      })
     }
   }
 }

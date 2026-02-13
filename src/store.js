@@ -1,21 +1,26 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 Vue.use(Vuex)
 
 export const store = new Vuex.Store({
   state: {
     status: '',
-    user: {}
+    user: {},
+    isOnline: navigator.onLine
   },
   mutations: {
+    SET_ONLINE (state, status) {
+      state.isOnline = status
+    },
     auth_request (state) {
       state.status = 'loading'
     },
     auth_success (state, user) {
       state.status = 'success'
       state.user = user
+      localStorage.setItem('user-data', JSON.stringify(user))
     },
     auth_error (state) {
       state.status = 'error'
@@ -44,7 +49,7 @@ export const store = new Vuex.Store({
         const formData = new FormData()
         formData.append('username', user.username)
         formData.append('password', user.password)
-        axios({url: '/auth/login', data: formData, method: 'POST'})
+        Api.post('/auth/login', formData)
           .then(response => {
             const user = response.data
             if (user.status !== 'false') {
@@ -64,7 +69,7 @@ export const store = new Vuex.Store({
     },
     logout ({commit}) {
       return new Promise((resolve, reject) => {
-        axios.get('/auth/logout').then((response) => {
+        Api.get('/auth/logout').then((response) => {
           console.log(response)
           commit('logout')
           resolve()
@@ -85,10 +90,7 @@ export const store = new Vuex.Store({
     getLogginInfo ({commit}) {
       if (this.state.status === '') {
         let promise = new Promise((resolve, reject) => {
-          let instance = axios.create({
-            withCredentials: true
-          })
-          instance.post('/auth/user').then((response) => {
+          Api.post('/auth/user', null).then((response) => {
             if (response.data.status !== 'not_logged') {
               commit('auth_success', response.data)
             } else {
@@ -97,6 +99,26 @@ export const store = new Vuex.Store({
             resolve()
           }).catch((error) => {
             console.log(error)
+            // If offline or network error, try to restore from localStorage
+            const isOffline = !navigator.onLine || 
+                              (error.message && error.message.includes('Network Error')) || 
+                              error.isOfflineError === true
+            
+            if (isOffline) {
+              const userData = localStorage.getItem('user-data')
+              if (userData) {
+                try {
+                  const user = JSON.parse(userData)
+                  commit('auth_success', user)
+                  console.log('Restored user session from local storage (offline mode)')
+                  resolve()
+                  return
+                } catch (e) {
+                  console.error('Error parsing stored user data', e)
+                }
+              }
+            }
+            
             commit('logout')
             reject(error)
           })

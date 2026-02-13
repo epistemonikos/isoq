@@ -2,7 +2,7 @@
   <div>
     <b-container fluid class="workspace-header">
       <b-container class="py-5">
-        <h2>{{ $t("Profile") }}</h2>
+        <h2>{{ $t("profile.title") }}</h2>
       </b-container>
     </b-container>
     <b-container class="pt-5 pb-5">
@@ -11,7 +11,7 @@
         <b-tbody>
           <b-tr>
             <b-td>
-              <p>username</p>
+              <p>{{ $t('profile.username') }}</p>
             </b-td>
             <b-td>
               {{username}}
@@ -19,7 +19,7 @@
           </b-tr>
           <b-tr>
             <b-td>
-              <p>name</p>
+              <p>{{ $t('profile.name') }}</p>
             </b-td>
             <b-td>
               {{fullname}}
@@ -27,11 +27,23 @@
           </b-tr>
           <b-tr>
             <b-td>
-              <p>new password</p>
+              <p>{{ $t('profile.language') }}</p>
+            </b-td>
+            <b-td>
+              <b-form-select
+                v-model="selectedLanguage"
+                :options="languageOptions"
+                @change="onLanguageChange">
+              </b-form-select>
+            </b-td>
+          </b-tr>
+          <b-tr>
+            <b-td>
+              <p>{{ $t('profile.new_password') }}</p>
             </b-td>
             <b-td>
               <b-form-group
-                description="8 characters at least"
+                :description="$t('profile.password_hint')"
                 class="mb-0">
                 <b-form-input type="password" v-model="new_password"></b-form-input>
             </b-form-group>
@@ -39,11 +51,11 @@
           </b-tr>
           <b-tr>
             <b-td>
-              <p>repeat password</p>
+              <p>{{ $t('profile.repeat_password') }}</p>
             </b-td>
             <b-td>
               <b-form-group
-                description="8 characters at least"
+                :description="$t('profile.password_hint')"
                 class="mb-0">
                 <b-form-input type="password" v-model="new_password_repeat"></b-form-input>
             </b-form-group>
@@ -51,15 +63,16 @@
           </b-tr>
         </b-tbody>
       </b-table-simple>
-      <b-button @click="update" :disabled="isDisabled">Save</b-button>
+      <b-button @click="update" :disabled="isDisabled">{{ $t('common.save') }}</b-button>
     </b-container>
     <subscribe :show="showSubscribe" @resetshowSubscribe="resetshowSubscribe"></subscribe>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import subscribe from '@/components/commons/subscribe.vue'
+import { Trans } from '@/plugins/Translation'
 
 export default {
   name: 'viewProfile',
@@ -72,7 +85,8 @@ export default {
       new_password_repeat: null,
       msg: '',
       showSubscribe: false,
-      isDisabled: true
+      isDisabled: true,
+      selectedLanguage: Trans.currentLanguage
     }
   },
   computed: {
@@ -81,6 +95,12 @@ export default {
     },
     fullname: function () {
       return this.$store.state.user.first_name + ' ' + this.$store.state.user.last_name
+    },
+    languageOptions: function () {
+      return Trans.supportedLanguages.map(lang => ({
+        value: lang,
+        text: this.$t(`profile.languages.${lang}`)
+      }))
     }
   },
   watch: {
@@ -97,17 +117,22 @@ export default {
     }
   },
   methods: {
+    onLanguageChange: function (lang) {
+      Trans.changeLanguage(lang).then(() => {
+        this.selectedLanguage = lang
+      })
+    },
     update: function () {
       this.msg = ''
       const params = {
         user_id: this.$store.state.user.id,
         new_password: this.new_password
       }
-      axios.post(`/users/change_password`, params)
+      Api.post(`/users/change_password`, params)
         .then((r) => {
           this.new_password = null
           this.new_password_repeat = null
-          this.msg = 'Your password has been changed!'
+          this.msg = this.$t('profile.password_changed')
           this.showSubscribe = true
         })
     },

@@ -13,8 +13,8 @@
             md="1"
             class="text-right">
             <b-link class="d-print-none" :to="($route.params.token === 'public') ? { name: 'Browse' } : { name: 'MainPage' }">
-              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
-              {{ $t('back') }}
+              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('common.back')" />
+              {{ $t('common.back') }}
             </b-link>
           </b-col>
         </b-row>
@@ -54,7 +54,7 @@
               cols="12">
               <organizationForm
                 :formData="project"
-                :canWrite="false">
+                :canEdit="false">
               </organizationForm>
             </b-col>
           </b-row>
@@ -116,7 +116,7 @@
               :mode="'view'"
               :preview="true"
               :project="project"
-              :permissions="true"
+              :canWrite="true"
               :ui="ui"
               :lists="lists"
               :findings="findings"
@@ -193,7 +193,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -320,7 +320,7 @@ export default {
       const params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, {params})
+      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}`, params)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
@@ -347,7 +347,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_lists', { params })
+      Api.get('/isoqf_lists', params)
         .then((response) => {
           let data = JSON.parse(JSON.stringify(response.data))
           data.sort(function (a, b) {
@@ -491,7 +491,7 @@ export default {
         organization: orgId,
         list_id: listId
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           if (response.data.length) {
             if (!this.findings.includes(response.data[0].id)) {
@@ -508,7 +508,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_list_categories', { params })
+      Api.get('/isoqf_list_categories', params)
         .then((response) => {
           if (response.data.length) {
             const options = JSON.parse(JSON.stringify(response.data[0].options))
@@ -521,7 +521,7 @@ export default {
         })
     },
     getReferences: function (changeTab = true) {
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           const data = JSON.parse(JSON.stringify(response.data))
           this.references = data
@@ -554,7 +554,7 @@ export default {
     },
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = JSON.parse(JSON.stringify(response.data[0]))
@@ -564,7 +564,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.charsOfStudies.items = _items
 
               this.charsOfStudiesFieldsModal.fields = []
@@ -591,7 +595,7 @@ export default {
     },
     getMethodological: function () {
       this.methodologicalTableRefsTableSettings.isBusy = true
-      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           if (response.data.length) {
             this.methodologicalTableRefs = JSON.parse(JSON.stringify(response.data[0]))
@@ -599,7 +603,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.methodologicalTableRefs.items = _items
 
               this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]

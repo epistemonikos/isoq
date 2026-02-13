@@ -16,15 +16,12 @@
               block
               variant="outline-secondary"
               right
-              :disabled="exportState.isLoading"
-              text="Export">
-              <b-dropdown-item @click="ExportToWord(project.name)" :disabled="exportState.isLoading">
-                <b-spinner small v-show="exportState.isLoading"></b-spinner>
-                {{ exportState.isLoading ? 'Exportando...' : 'to MS Word' }}
-              </b-dropdown-item>
-              <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
+              :text="$t('actionButtons.export')">
+              <b-dropdown-item @click="ExportToWord(project.name)">{{ $t('actionButtons.to_ms_word') }}</b-dropdown-item>
+              <b-dropdown-item @click="exportToRIS">{{ $t('actionButtons.the_references') }}</b-dropdown-item>
             </b-dropdown>
           </b-col>
+          
           <b-col
             v-if="mode==='view'"
             cols="12"
@@ -35,7 +32,7 @@
                 variant="outline-info"
                 block
                 @click="printiSoQ">
-                Print or save as PDF
+                {{ $t('actionButtons.print_save_pdf') }}
               </b-button>
           </b-col>
           <b-col
@@ -49,7 +46,7 @@
                 variant="primary"
                 block>
                 <font-awesome-icon icon="edit"></font-awesome-icon>
-                Edit
+                {{ $t('actionButtons.edit') }}
               </b-button>
           </b-col>
           <b-col
@@ -58,13 +55,13 @@
             md="3"
             xl="3">
               <b-button
-                v-if="permissions"
+                v-if="canWrite"
                 class="mt-1"
                 @click="modalChangePublicStatus"
                 :variant="(project.is_public) ? 'outline-primary' : 'primary'"
                 block
-                v-b-tooltip.hover title="Click here when you have finished your iSoQ to select what you would like published to the publicly available iSoQ database">
-                <span v-if="project.is_public">Published</span><span v-else>Publish</span>
+                v-b-tooltip.hover :title="$t('actionButtons.publish_tooltip')">
+                <span v-if="project.is_public">{{ $t('actionButtons.published') }}</span><span v-else>{{ $t('actionButtons.publish') }}</span>
               </b-button>
           </b-col>
           <b-col
@@ -77,130 +74,35 @@
                 @click="changeMode"
                 variant="outline-success"
                 block
-                v-b-tooltip.hover title="Click to enter view mode where you can export or print">
-                Print or Export
+                v-b-tooltip.hover :title="$t('actionButtons.view_mode_tooltip')">
+                {{ $t('actionButtons.print_or_export') }}
               </b-button>
           </b-col>
         </b-row>
       </b-col>
     </b-row>
-
-    <!-- Indicador de progreso -->
-    <b-row v-if="exportState.isLoading" class="mt-2">
-      <b-col cols="12">
-        <b-progress
-          :value="exportState.progress"
-          :max="100"
-          show-progress
-          animated>
-          {{ exportState.currentStep }}
-        </b-progress>
-      </b-col>
-    </b-row>
-
-    <!-- Mensaje de error -->
-    <b-row v-if="exportState.error" class="mt-2">
-      <b-col cols="12">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="setError(null)">
-          {{ exportState.error }}
-        </b-alert>
-      </b-col>
-    </b-row>
-
-    <b-modal
-      ref="modal-change-status"
-      id="modal-change-status"
-      scrollable
-      size="xl"
-      ok-title="Save"
-      ok-variant="outline-success"
-      @ok="savePublicStatus"
-      cancel-variant="outline-secondary"
-      hide-header-close
-      no-close-on-backdrop
-      no-close-on-esc>
-      <template v-slot:modal-title>
-        <videoHelp txt="Publish to the iSoQ Database" tag="none" urlId="504176899-1"></videoHelp>
-      </template>
-
-      <template v-if="errorsResponse.message !== ''">
-        <b-alert
-          show
-          variant="danger"
-          dismissible
-          @dismissed="errorsResponse.message = ''">
-          <p class="mb-0" v-html="errorsResponse.message"></p>
-        </b-alert>
-      </template>
-
-      <p class="font-weight-light">
-        By publishing your iSoQ to the online database, your contribution becomes searchable, readable and downloadable by the public. Please select a visibility setting below and click "publish". Click the icon next to each to see an example. We recommend users choose Fully Public to maximise transparency. You can change your visibility settings at any time in Project Properties.
-      </p>
-      <b-form-group>
-        <b-form-radio-group
-        id="modal-publish-status"
-        v-model="modalProject.public_type"
-        :options="global_status"
-        name="modal-radio-status"
-        ></b-form-radio-group>
-      </b-form-group>
-
-      <template v-if="modalProject.public_type !== 'private'">
-        <h5>Choose a license</h5>
-        <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
-        <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
-        <b-form-group>
-          <b-form-radio-group
-          id="modal-publish-license"
-          v-model="modalProject.license_type"
-          :options="global_licenses"
-          @change="state.license_type = null"
-          name="modal-radio-license"
-          ></b-form-radio-group>
-          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons license.</b-form-invalid-feedback>
-        </b-form-group>
-      </template>
-
-      <template #modal-footer>
-        <div class="w-100">
-          <b-button
-            variant="outline-success"
-            class="float-right ml-3"
-            @click="savePublicStatus">
-            <b-spinner small v-show="ui.publish.showLoader"></b-spinner>
-            Save
-          </b-button>
-          <b-button
-            v-show="!ui.publish.showLoader"
-            variant="outline-secondary"
-            class="float-right"
-            @click="$refs['modal-change-status'].hide()">
-            Close
-          </b-button>
-        </div>
-      </template>
-    </b-modal>
+    
+    <!-- Publish Modal Component -->
+    <PublishModal
+      ref="publishModal"
+      :project="project"
+      :ui="ui"
+      @getProject="$emit('getProject')"
+      @uiPublishShowLoader="$emit('uiPublishShowLoader', $event)"
+    />
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
-import Commons from '@/utils/commons.js'
-import { documentExportMixin } from '@/mixins/documentExportMixin'
-import { useExportState } from '@/composables/useExportState'
-import { ExportStrategyFactory } from '@/strategies/exportStrategies'
-import { DocumentGenerator } from '@/utils/documentGenerator'
+import { displayExplanation } from '../utils/commons'
+import PublishModal from '@/components/project/PublishModal'
+import { getWordExportService } from '@/services/wordExportService'
+import { getRisExportService } from '@/services/risExportService'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */ '../videoHelp')
 
 export default {
   name: 'actionButtons',
-  mixins: [documentExportMixin, useExportState()],
   props: {
     mode: {
       type: String,
@@ -212,6 +114,7 @@ export default {
       default: false
     },
     project: Object,
+    canWrite: Boolean,
     permissions: Boolean,
     ui: Object,
     lists: Array,
@@ -225,26 +128,14 @@ export default {
     printableItems: Array
   },
   components: {
-    videoHelp
+    videoHelp,
+    PublishModal
   },
-
   data () {
     return {
+      exportService: getWordExportService(),
+      risExportService: getRisExportService(),
       modalProject: {name: ''},
-      global_status: [
-        { value: 'private', text: 'Private - Your iSoQ is not publicly available on the iSoQ database' },
-        { value: 'fully', text: 'Fully Public - Your iSoQ table, Evidence Profile, and GRADE-CERQual Worksheets are publicly available on the iSoQ database' },
-        { value: 'partially', text: 'Partially Public - Your iSoQ table and Evidence Profile are publicly available on the iSoQ database' },
-        { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
-      ],
-      global_licenses: [
-        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-      ],
       yes_or_no: [
         { value: false, text: 'no' },
         { value: true, text: 'yes' }
@@ -266,8 +157,7 @@ export default {
       errorsResponse: {
         message: '',
         items: []
-      },
-
+      }
     }
   },
   watch: {
@@ -275,248 +165,31 @@ export default {
       this.state.name = val.length > 0 ? null : false
     }
   },
-    methods: {
-    ExportToWord: async function (filename = '') {
+  methods: {
+    async ExportToWord(filename = '') {
       try {
-        this.startExport(3) // 3 pasos: validación, generación, descarga
-
-        filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
-
-        this.updateProgress(1, 'Validando datos...')
-
-        // Validar datos antes de proceder
+        // Prepare export data
         const data = {
           findings: this.findings,
           references: this.references,
           listsPrintVersion: this.listsPrintVersion,
-          printableItems: this.printableItems
+          printableItems: this.printableItems,
+          charsOfStudies: this.charsOfStudies,
+          methodologicalTableRefs: this.methodologicalTableRefs
         }
 
-        const documentGenerator = new DocumentGenerator()
-        const errors = documentGenerator.validateData(data, ['findings'])
-        if (errors.length > 0) {
-          this.setError(errors.join(', '))
-          return
-        }
-
-        this.updateProgress(2, 'Generando documento...')
-
-        // Usar la estrategia de exportación
-        const strategyType = this.project.use_camelot ? 'camelot' : 'isoq'
-        const strategy = ExportStrategyFactory.createStrategy(strategyType, this.project, data)
-        const success = await strategy.generateAndDownload(filename)
-
-        if (success) {
-          this.finishExport()
-        } else {
-          this.setError('Error al generar el documento')
-        }
+        // Use WordExportService with current locale
+        await this.exportService.exportToWord(this.project, data, { 
+          filename,
+          locale: this.$i18n.locale 
+        })
 
       } catch (error) {
-        console.error('Error en ExportToWord:', error)
-        this.setError('Error inesperado al exportar el documento')
+        alert('Error al exportar: ' + error.message)
       }
-    },
-    generateFindingsTable () {
-      if (this.findings.length === 0) {
-        return []
-      }
-      return [new Table({
-        borders: {
-          top: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.NONE
-          },
-          bottom: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.NONE
-          },
-          left: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.NONE
-          },
-          right: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.NONE
-          },
-          insideHorizontal: {
-            size: 1,
-            color: '000000',
-            style: BorderStyle.NONE
-          },
-          insideVertical: {
-            style: BorderStyle.NONE
-          }
-        },
-        width: {
-          size: '100%',
-          type: WidthType.PERCENTAGE
-        },
-        rows: [
-          new TableRow({
-            tableHeader: true,
-            height: {
-              height: 1444,
-              rule: HeightRule.EXACT
-            },
-            children: [
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '5%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: '#',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                width: {
-                  size: '40%',
-                  type: WidthType.PERCENTAGE
-                },
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'Summarised review finding',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                width: {
-                  size: '20%',
-                  type: WidthType.PERCENTAGE
-                },
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'GRADE-CERQual Assessment of confidence',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '20%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'Explanation of GRADE-CERQual Assessment',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: {
-                  fill: '#DDDDDD'
-                },
-                width: {
-                  size: '15%',
-                  type: WidthType.PERCENTAGE
-                },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: 'References',
-                        size: 22,
-                        bold: true
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          }),
-          ...this.generateFindingsTableContent()
-        ]
-      })]
-    },
-    generateLicense: function (project) {
-      let content = []
-      if (project.public_type !== 'private') {
-        content.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'License',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: project.license_type,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph('')
-        )
-      }
-      return content
     },
     modalChangePublicStatus: function () {
-      this.modalProject = JSON.parse(JSON.stringify(this.project))
-      this.modalProject.isModal = true
-      if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
-        this.modalProject.license_type = 'CC-BY-NC-ND'
-      }
-      this.errorsResponse = {
-        message: '',
-        items: []
-      }
-      this.$refs['modal-change-status'].show()
+      this.$refs.publishModal.openModal()
     },
     changeMode: function () {
       this.$emit('changeMode', (this.mode === 'edit') ? 'view' : 'edit')
@@ -560,7 +233,7 @@ export default {
               this.$refs['modal-change-status'].hide()
             })
             .catch((error) => {
-              console.log(error)
+              // Error handling
             })
         } else {
           document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
@@ -576,71 +249,14 @@ export default {
             this.$refs['modal-change-status'].hide()
           })
           .catch((error) => {
-            console.log(error)
+            // Error handling
           })
       }
     },
     exportToRIS: function () {
-      const _refs = JSON.parse(JSON.stringify(this.references))
-      let content = ''
-      for (let ref of _refs) {
-        content += this.processRIS(ref)
-      }
-
-      var element = document.createElement('a')
-      element.setAttribute('href', 'data:text/text;charset=utf-8,' + encodeURI(content))
-      element.setAttribute('download', 'references.ris')
-      element.click()
-    },
-    processRIS: function (reference = {}) {
-      let txt = ''
-
-      if (Object.prototype.hasOwnProperty.call(reference, 'type')) {
-        txt += 'TY  - ' + reference.type + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'abstract')) {
-        txt += 'AB  - ' + reference.abstract + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'title')) {
-        txt += 'TI  - ' + reference.title + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        var cnt = 1
-        for (let a of reference.authors) {
-          txt += `A${cnt}  - ` + a + '\r\n'
-          cnt++
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'publication_year')) {
-        txt += 'PY  - ' + reference.publication_year + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'database')) {
-        txt += 'DB  - ' + reference.database + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'volume_number')) {
-        txt += 'VL  - ' + reference.volume_number + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'url')) {
-        txt += 'UR  - ' + reference.url + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'start_page')) {
-        txt += 'SP  - ' + reference.start_page + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'isbn_issn')) {
-        txt += 'SN  - ' + reference.isbn_issn + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'date')) {
-        txt += 'DA  - ' + reference.date + '\r\n'
-      }
-      if (Object.prototype.hasOwnProperty.call(reference, 'user_definable')) {
-        var count = 1
-        for (let c of reference.user_definable) {
-          txt += `C${count} - ` + c + '\r\n'
-          count++
-        }
-      }
-      txt += 'ER  - ' + '\r\n'
-      return txt
+      this.risExportService.exportToRIS(this.references, {
+        projectName: this.project.name
+      })
     },
     printiSoQ: function () {
       window.print()
@@ -655,111 +271,7 @@ export default {
         }
       }
 
-      return new TextRun({
-        text: data,
-        size: 24
-      })
-    },
-    generateFindingsTableContent: function () {
-      const filteredItems = this.filteredPrintedData()
-      return filteredItems.map((item, index) => {
-        if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
-          return new TableRow({
-            children: [
-              new TableCell({
-                columnSpan: 5,
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: item.name.toUpperCase(),
-                        bold: true,
-                        size: 22
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          })
-        } else {
-          return new TableRow({
-            children: [
-              this.generateTableCell({width_size: '5%', text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-              this.generateTableCell({width_size: '20%', text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-              this.generateTableCell({width_size: '15%', text: item.ref_list, font_size: 16, align: AlignmentType.LEFT})
-            ]
-          })
-        }
-      })
-    },
-    generateTableCell: function (content) {
-      return new TableCell({
-        width: {
-          size: content.width_size,
-          type: WidthType.PERCENTAGE
-        },
-        children: [
-          this.generateParagraph(content),
-          ...(this.generateParagraphExplanation(content))
-        ]
-      })
-    },
-    generateParagraph: function (content) {
-      return new Paragraph({
-        indent: {
-          left: 100,
-          right: 100
-        },
-        alignment: content.alignment,
-        children: [
-          this.generateText(content)
-        ]
-      })
-    },
-    generateText: function (content) {
-      return new TextRun({
-        text: content.text,
-        size: content.font_size
-      })
-    },
-    generateParagraphExplanation: function (content) {
-      let paragraph = []
-      if (content.explanation !== '') {
-        if (Object.prototype.hasOwnProperty.call(content, 'explanation')) {
-          paragraph.push(
-            new Paragraph('')
-          )
-          paragraph.push(
-            new Paragraph({
-              children: [
-                ...(this.generateExplanationText(content))
-              ]
-            })
-          )
-        }
-      }
-      return paragraph
-    },
-    generateExplanationText: function (content) {
-      let text = []
-      text.push(
-        new TextRun({
-          text: 'Explanation: ',
-          size: content.font_size,
-          bold: true
-        })
-      )
-      text.push(
-        new TextRun({
-          text: content.explanation,
-          size: content.font_size
-        })
-      )
-      return text
+      return data
     },
     filteredPrintedData: function () {
       const items = this.listsPrintVersion
@@ -769,185 +281,18 @@ export default {
         }
       })
     },
-    generateEvidenceProfileTable2: function () {
-      const items = this.filteredPrintedData()
-      return items.map((item, index) => {
-        if (Object.prototype.hasOwnProperty.call(item, 'is_category')) {
-          return new TableRow({
-            children: [
-              new TableCell({
-                columnSpan: 8,
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: item.name.toUpperCase(),
-                        bold: true,
-                        size: 22
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          })
-        } else {
-          if (Object.prototype.hasOwnProperty.call(item, 'evidence_profile')) {
-            if (item.evidence_profile === undefined) {
-              return new TableRow({
-                children: [
-                  this.generateTableCell({
-                    width_size: '5%',
-                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
-                    font_size: 22,
-                    align: AlignmentType.CENTER
-                  }),
-                  this.generateTableCell({
-                    width_size: '40%', text: item.name, font_size: 22, align: AlignmentType.CENTER
-                  }),
-                  new TableCell({
-                    columnSpan: 5,
-                    width_size: '40%',
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.CENTER,
-                        children: [
-                          new TextRun({
-                            text: '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  this.generateTableCell({
-                    width_size: '5%',
-                    text: this.returnRefWithNames(item.references),
-                    font_size: 16,
-                    align: AlignmentType.LEFT
-                  })
-                ]
-              })
-            } else {
-              return new TableRow({
-                children: [
-                  this.generateTableCell({
-                    width_size: '5%',
-                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
-                    font_size: 22,
-                    align: AlignmentType.CENTER
-                  }),
-                  this.generateTableCell({
-                    width_size: '40%',
-                    text: item.name,
-                    font_size: 22,
-                    align: AlignmentType.CENTER
-                  }),
-                  this.generateTableCell(
-                    {
-                      width_size: '10%',
-                      text: this.displaySelectedOption(item.evidence_profile.methodological_limitations.option),
-                      explanation: (item.evidence_profile.methodological_limitations.option.length) ? this.getExplanation('methodological-limitations', item.evidence_profile.methodological_limitations.option, item.evidence_profile.methodological_limitations.explanation) : '',
-                      font_size: 22,
-                      align: AlignmentType.LEFT
-                    }
-                  ),
-                  this.generateTableCell({
-                    width_size: '10%',
-                    text: this.displaySelectedOption(item.evidence_profile.coherence.option),
-                    explanation: (item.evidence_profile.coherence.explanation.length) ? this.getExplanation('coherence', item.evidence_profile.coherence.option, item.evidence_profile.coherence.explanation) : '',
-                    font_size: 22,
-                    align: AlignmentType.CENTER
-                  }),
-                  this.generateTableCell({
-                    width_size: '10%',
-                    text: this.displaySelectedOption(item.evidence_profile.adequacy.option),
-                    explanation: (item.evidence_profile.adequacy.explanation.length) ? this.getExplanation('adequacy', item.evidence_profile.adequacy.option, item.evidence_profile.adequacy.explanation) : '',
-                    font_size: 22,
-                    align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '10%',
-                    text: this.displaySelectedOption(item.evidence_profile.relevance.option),
-                    explanation: (item.evidence_profile.relevance.explanation.length) ? this.getExplanation('relevance', item.evidence_profile.relevance.option, item.evidence_profile.relevance.explanation) : '',
-                    font_size: 22,
-                    align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '10%',
-                    text: this.displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual'),
-                    explanation: (item.evidence_profile.cerqual.explanation.length) ? item.evidence_profile.cerqual.explanation : '',
-                    font_size: 22,
-                    align: AlignmentType.LEFT
-                  }),
-                  this.generateTableCell({
-                    width_size: '5%',
-                    text: this.returnRefWithNames(item.references),
-                    font_size: 16,
-                    align: AlignmentType.LEFT
-                  })
-                ]
-              })
-            }
-          } else {
-            return new TableRow({
-              children: [
-                this.generateTableCell({
-                  width_size: '40%',
-                  text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
-                  font_size: 22,
-                  align: AlignmentType.LEFT
-                }),
-                this.generateTableCell({
-                  width_size: '40%',
-                  text: item.name,
-                  font_size: 22,
-                  align: AlignmentType.LEFT
-                }),
-                new TableCell({
-                  columnSpan: 5,
-                  width_size: '40%',
-                  children: [
-                    new Paragraph({
-                      alignment: AlignmentType.CENTER,
-                      children: [
-                        new TextRun({
-                          text: '',
-                          size: 22
-                        })
-                      ]
-                    })
-                  ]
-                }),
-                this.generateTableCell({
-                  width_size: '10%',
-                  text: this.returnRefWithNames(item.references),
-                  font_size: 16,
-                  align: AlignmentType.LEFT
-                })
-              ]
-            })
-          }
-        }
-      })
-    },
-    generateTableWithoutCategories: function (findings) {
-      return findings.map((finding) => {
-        return new TableRow({
-          tableHeader: true,
-          children: [
-            this.generateTableCell({width_size: '5%', text: finding.sort, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
-            this.generateTableCell({width_size: '20%', text: finding.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
-            this.generateTableCell({width_size: '15%', text: finding.ref_list, font_size: 16, align: AlignmentType.LEFT})
-          ]
-        })
-      })
-    },
     displaySelectedOption: function (option, type = '') {
-      return Commons.displaySelectedOption(option, type)
+      if (option === null) {
+        return ''
+      } else if (option >= 0) {
+        if (type === 'cerqual') {
+          return this.cerqualConfidence[option].text
+        } else {
+          return this.selectOptions[option].text
+        }
+      } else {
+        return ''
+      }
     },
     returnRefWithNames: function (array) {
       let authorsList = []
@@ -966,10 +311,26 @@ export default {
       return authors
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      return Commons.getAuthorsFormat(authors, pubYear)
+      if (authors.length) {
+        const nroAuthors = authors.length
+        if (nroAuthors === 1) {
+          return authors[0].split(',')[0] + ' ' + pubYear
+        } else if (nroAuthors === 2) {
+          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
+        } else {
+          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
+        }
+      } else {
+        return 'author(s) not found'
+      }
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
+    },
+    handleErrorClick: function (event) {
+      if (event.target.tagName === 'A') {
+        this.$refs['modal-change-status'].hide()
+      }
     }
   },
   computed: {

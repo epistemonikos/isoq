@@ -9,7 +9,7 @@
     </b-row>
     <organizationForm
       :formData="project"
-      :canWrite="canWrite"
+      :canEdit="canEdit"
       :highlight="highlight"
       @update-form-data="updateFormData"></organizationForm>
   </div>
@@ -26,7 +26,7 @@ export default {
       type: Object,
       required: true
     },
-    canWrite: {
+    canEdit: {
       type: Boolean,
       required: true
     },

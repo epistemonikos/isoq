@@ -5,14 +5,14 @@
       :label-for="`${local_criteria}-criteria`"
       :description="ui.description">
       <b-form-textarea
-        :disabled="!ui.isDisabled"
+        :disabled="!ui.canEdit"
         :id="`${local_criteria}-criteria`"
         rows="6"
         max-rows="100"
         v-model="local_data"></b-form-textarea>
     </b-form-group>
     <div
-      v-if="ui.isDisabled"
+      v-if="ui.canEdit"
       class="float-right">
       <b-button
         :disabled="ui.project.inclusion.loading"
@@ -31,33 +31,47 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
 
 export default {
   name: 'Criteria',
   props: {
-    isDisabled: Boolean,
+    canEdit: Boolean,
     label: String,
     description: String,
     dataTxt: String,
     criteria: String
   },
   created: function () {
+    this.local_criteria = this.criteria
+    this.ui.canEdit = this.canEdit
+    this.ui.label = this.label
+    this.ui.description = this.description
+    this.local_data = this.dataTxt
+    
     this.saveCriteria = _debounce(function () { this.criteriaAction(this.local_criteria) }, 1500)
   },
   watch: {
-    local_data: function () {
-      this.saveCriteria()
+    canEdit: function (newVal) {
+      this.ui.canEdit = newVal
+    },
+    dataTxt: {
+      immediate: true,
+      handler: function (newVal) {
+        this.local_data = newVal || ''
+      }
+    },
+    local_data: function (newVal) {
+      if (newVal !== this.dataTxt) {
+        this.saveCriteria()
+      }
     }
-  },
-  mounted () {
-    this.loadData()
   },
   data: function () {
     return {
       ui: {
-        isDisabled: false,
+        canEdit: false,
         label: '',
         description: '',
         project: {
@@ -99,7 +113,7 @@ export default {
     loadData: function () {
       this.local_data = this.dataTxt
       this.local_criteria = this.criteria
-      this.ui.isDisabled = this.isDisabled
+      this.ui.canEdit = this.canEdit
       this.ui.label = this.label
       this.ui.description = this.description
     },
@@ -138,8 +152,8 @@ export default {
           params.exclusion = ''
         }
       }
-      if (this.ui.isDisabled) {
-        axios.patch(`/api/isoqf_projects/${this.$route.params.id}`, params)
+      if (this.ui.canEdit) {
+        Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
           .then((response) => {
             if (type === 'inclusion') {
               this.ui.project.inclusion.loading = false

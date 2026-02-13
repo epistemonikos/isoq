@@ -6,89 +6,101 @@
           <b-form>
             <b-card
               v-if="ui.display_create_account"
-              header="Create an account">
+              :header="$t('account.create_account')">
               <b-form-group
                 id="input_group_name"
-                label="Name:"
+                :label="$t('account.name_label')"
                 label-for="input_name">
                 <b-form-input
                   id="input_name"
                   type="text"
-                  placeholder="Name"
+                  :placeholder="$t('account.name_placeholder')"
                   v-model="user.first_name"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_surname"
-                label="Surname:"
+                :label="$t('account.surname_label')"
                 label-for="input_surname">
                 <b-form-input
                   id="input_surname"
                   type="text"
-                  placeholder="Surname"
+                  :placeholder="$t('account.surname_placeholder')"
                   v-model="user.last_name"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_email"
-                label="Email:"
+                :label="$t('account.email_label')"
                 label-for="input_email">
                 <b-form-input
                   id="input_email"
                   :state="ui.username_validation"
                   required
                   aria-describedby="input-live-help input-live-feedback"
-                  placeholder="Enter a valid email"
+                  :placeholder="$t('account.email_placeholder')"
                   v-model.trim="user.username">
                 </b-form-input>
                 <b-form-text
                   id="input-live-feedback"
-                  v-if="!ui.username_validation && ui.username_validation !== null">There is already an account for this email address or the email is wrong formatted</b-form-text>
+                  v-if="!ui.username_validation && ui.username_validation !== null">{{ $t('account.email_exists_error') }}</b-form-text>
                 <b-form-text
-                  id="input-live-help">Your email address is your username for logging-in to iSoQ.</b-form-text>
+                  id="input-live-help">{{ $t('account.email_username_hint') }}</b-form-text>
               </b-form-group>
               <b-form-group
                 v-if="false"
                 id="input_group_affiliation"
-                label="Affiliation:"
+                :label="$t('account.affiliation_label')"
                 label-for="input_affiliation">
                 <b-form-input
                   id="input_affiliation"
                   type="text"
-                  placeholder="Your affiliation"
+                  :placeholder="$t('account.affiliation_placeholder')"
                   v-model="user.affiliation"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_password"
-                label="Password:"
+                :label="$t('account.password_label')"
                 label-for="input_password">
                 <b-form-input
                   id="input_password"
                   type="password"
                   required
-                  placeholder="Write a strong password with at least 8 alpha-numeric characters"
+                  :placeholder="$t('account.password_placeholder')"
                   v-model="user.password"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_repeat_password"
-                label="Repeat the password:"
+                :label="$t('account.repeat_password_label')"
                 label-for="input_repeat_password">
                 <b-form-input
                   id="input_repeat_password"
                   type="password"
                   required
-                  placeholder="Write the same password as above"
+                  :placeholder="$t('account.repeat_password_placeholder')"
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
 
+              <b-alert
+                v-if="errorMessage"
+                show
+                variant="danger"
+                dismissible
+                @dismissed="errorMessage = ''">
+                {{ errorMessage }}
+              </b-alert>
+
               <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
+                <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link> | <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link>
               </b-card-text>
               <div
                 slot="footer"
                 class="text-right">
                 <b-button
                   variant="outline-primary"
-                  :disabled="!(ui.username_validation && ui.password_validation)"
-                  @click="createAccount">Create account</b-button>
+                  :disabled="!(ui.username_validation && ui.password_validation) || ui.isProcessing"
+                  @click="createAccount">
+                  <b-spinner small v-if="ui.isProcessing" class="mr-1"></b-spinner>
+                  {{ $t('account.create_account_btn') }}
+                </b-button>
               </div>
             </b-card>
           </b-form>
@@ -96,12 +108,12 @@
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_join_org_or_create_org"
-            header="Your account has been created.">
+            :header="$t('account.account_created')">
             <p>
-              As an individual, you will be able to create iSoQ tables, but they will remain in your personal space (i.e. they will be only visible when logged in your account).
+              {{ $t('account.individual_info') }}
             </p>
             <p>
-              In order to share iSoQ tables with others you need to join an existing organisation or create a new one.
+              {{ $t('account.share_info') }}
             </p>
             <b-row>
               <b-col cols="12" sm="6" class="text-center">
@@ -109,14 +121,14 @@
                   variant="outline-success"
                   block
                   size="lg"
-                  @click="showJoinOrgCard">Join</b-button>
+                  @click="showJoinOrgCard">{{ $t('common.join') }}</b-button>
               </b-col>
               <b-col cols="12" sm="6" class="text-center">
                 <b-button
                   variant="outline-success"
                   block
                   size="lg"
-                  @click="showCreateOrgCard">Create</b-button>
+                  @click="showCreateOrgCard">{{ $t('common.create') }}</b-button>
               </b-col>
             </b-row>
           </b-card>
@@ -124,9 +136,9 @@
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_join_org"
-            header="Join to an a organisation">
+            :header="$t('account.join_organization')">
             <b-form-group
-              label="Organisation"
+              :label="$t('account.organization_label')"
               label-for="input-select-organization">
               <b-form-select
                 v-model="org_selected"
@@ -139,19 +151,19 @@
               class="text-right">
               <b-button
                 variant="outline-danger"
-                @click="cancelCardShowOptions">Cancel</b-button>
+                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
               <b-button
                 variant="outline-primary"
-                @click="jointToOrg">Join</b-button>
+                @click="jointToOrg">{{ $t('common.join') }}</b-button>
             </div>
           </b-card>
         </b-col>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_create_org"
-            header="Create an organisation">
+            :header="$t('account.create_organization')">
             <b-form-group
-              label="Name"
+              :label="$t('common.name')"
               label-for="organization-name">
               <b-form-input
                 id="organization-name"
@@ -160,12 +172,12 @@
               </b-form-input>
             </b-form-group>
             <b-form-group
-              label="Website"
+              :label="$t('account.website_label')"
               label-for="organization-website">
               <b-form-input
                 id="organization-website"
                 type="url"
-                placeholder="https://myorganization.org"
+                :placeholder="$t('account.website_placeholder')"
                 v-model="organization.website">
               </b-form-input>
             </b-form-group>
@@ -173,9 +185,9 @@
               <b-form-checkbox
                 v-model="organization.nonprofit"
                 value="false"
-                unchecked-value="true">confirm this is a non-profit organisation</b-form-checkbox>
+                unchecked-value="true">{{ $t('account.nonprofit_confirm') }}</b-form-checkbox>
             </b-form-group>
-            <b-form-group label="Plan">
+            <b-form-group :label="$t('account.plan_label')">
               <b-form-radio-group
                 id="option-plans"
                 v-model="organization.selected_plan"
@@ -189,9 +201,9 @@
                 <b-card
                   :header="plan.text">
                   <ul class="list-unstyled">
-                    <li>users: {{plan.specs.users}}</li>
-                    <li>tables: {{plan.specs.tables}}</li>
-                    <li>price: {{plan.specs.price}}</li>
+                    <li>{{ $t('account.users_label') }}: {{plan.specs.users}}</li>
+                    <li>{{ $t('account.tables_label') }}: {{plan.specs.tables}}</li>
+                    <li>{{ $t('account.price_label') }}: {{plan.specs.price}}</li>
                   </ul>
                 </b-card>
               </b-col>
@@ -201,45 +213,45 @@
               class="text-right">
               <b-button
                 variant="outline-danger"
-                @click="cancelCardShowOptions">Cancel</b-button>
+                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
               <b-button
                 variant="outline-primary"
-                @click="organizationRequest">Create an Join</b-button>
+                @click="organizationRequest">{{ $t('account.create_and_join') }}</b-button>
             </div>
           </b-card>
         </b-col>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-card
             v-if="ui.display_end_affiliation"
-            header="You are done!">
-            <p>Now, you can create and share iSoQ tables with your organisation.</p>
+            :header="$t('account.you_are_done')">
+            <p>{{ $t('account.can_create_share') }}</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
-                :to="{name: 'Organizations'}">Go to organisations</b-button>
+                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
             </div>
           </b-card>
           <b-card
             v-if="ui.display_end_org_creation"
-            header="Many thanks for registering your organisation">
-            <p>You can star using iSoQ right now and move your work to the organisation when created.</p>
+            :header="$t('account.thanks_registering')">
+            <p>{{ $t('account.start_using_now') }}</p>
             <div class="text-right">
               <b-button
                 variant="outline-success"
-                :to="{name: 'Organizations'}">Go to organisations</b-button>
+                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
             </div>
           </b-card>
         </b-col>
       </b-row>
     </b-container>
 
-    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login(user.username, user.password)"></subscribe>
+    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login()"></subscribe>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
-import Commons from '@/utils/commons.js'
+import Api from '@/utils/Api'
+import _debounce from 'lodash.debounce'
 import subscribe from '@/components/commons/subscribe.vue'
 
 export default {
@@ -253,8 +265,11 @@ export default {
         display_join_org: false,
         display_create_org: false,
         display_end_affiliation: false,
-        display_end_org_creation: false
+        display_end_org_creation: false,
+        isProcessing: false
       },
+      errorMessage: '',
+      loginCredentials: null,
       organizations: [
         {id: 'examples', name: 'Examples'},
         {id: 'episte', name: 'Test organisation'}
@@ -275,16 +290,33 @@ export default {
         nonprofit: true,
         selected_plan: false
       },
-      plans: [
-        {text: 'Small', value: 'small', specs: {users: 10, tables: 20, price: 'free'}},
-        {text: 'Medium', value: 'medium', specs: {users: 50, tables: 200, price: '1000 USD a year'}},
-        {text: 'Large', value: 'large', specs: {users: 'Contact us', tables: 'Contact us', price: 'Contact us'}}
+      plansData: [
+        {value: 'small', specs: {users: 10, tables: 20, priceKey: 'plan_free'}},
+        {value: 'medium', specs: {users: 50, tables: 200, priceKey: 'plan_1000'}},
+        {value: 'large', specs: {usersKey: 'plan_contact', tablesKey: 'plan_contact', priceKey: 'plan_contact'}}
       ],
       showSubscribe: false
     }
   },
   components: {
     subscribe
+  },
+  computed: {
+    plans () {
+      return this.plansData.map(plan => {
+        const textKey = `account.plan_${plan.value}`
+        const specs = {
+          users: plan.specs.usersKey ? this.$t(`account.${plan.specs.usersKey}`) : plan.specs.users,
+          tables: plan.specs.tablesKey ? this.$t(`account.${plan.specs.tablesKey}`) : plan.specs.tables,
+          price: this.$t(`account.${plan.specs.priceKey}`)
+        }
+        return {
+          text: this.$t(textKey),
+          value: plan.value,
+          specs: specs
+        }
+      })
+    }
   },
   watch: {
     'user.username': function () {
@@ -301,17 +333,27 @@ export default {
     this.getOrganizations()
   },
   created: function () {
-    this.checkEmail = Commons.debounce(this.checkEmailExist, 500)
+    this.checkEmail = _debounce(this.checkEmailExist, 500)
   },
   methods: {
     validEmail: function (email) {
-      if (Commons.validEmail(email)) {
+      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      if (re.test(email)) {
         this.ui.username_validation = true
       } else {
         this.ui.username_validation = false
       }
     },
     createAccount: function () {
+      this.ui.isProcessing = true
+      this.errorMessage = ''
+
+      // Guardar credenciales antes de cualquier operación
+      this.loginCredentials = {
+        username: this.user.username,
+        password: this.user.password
+      }
+
       let params = {
         user: this.user,
         organizations: this.organizations
@@ -325,33 +367,61 @@ export default {
           r: this.$route.query['r']
         }
       }
-      axios.post('/create_user', params)
+      Api.post('/create_user', params)
         .then(() => {
-          // this.login(this.user.username, this.user.password)
+          this.ui.isProcessing = false
           this.showSubscribe = true
         })
         .catch((error) => {
+          this.ui.isProcessing = false
+          if (error.response && error.response.data && error.response.data.message) {
+            this.errorMessage = error.response.data.message
+          } else {
+            this.errorMessage = this.$t('account.create_error')
+          }
           console.log(error)
         })
     },
     login (username, password) {
+      // Cancelar cualquier debounce pendiente antes del login
+      if (this.checkEmail && this.checkEmail.cancel) {
+        this.checkEmail.cancel()
+      }
+
+      // Usar credenciales guardadas si no se proporcionan
+      const loginUsername = username || (this.loginCredentials && this.loginCredentials.username)
+      const loginPassword = password || (this.loginCredentials && this.loginCredentials.password)
+
+      if (!loginUsername || !loginPassword) {
+        this.errorMessage = this.$t('account.login_error')
+        return
+      }
+
+      this.ui.isProcessing = true
       this.$store
-        .dispatch('login', {username, password})
+        .dispatch('login', {username: loginUsername, password: loginPassword})
         .then((response) => {
           this.ui.display_create_account = false
           this.ui.display_join_org_or_create_org = false
-          this.user = response.data
           let orgPath = {'id': response.data.personal_organization}
           const path = { 'name': 'viewOrganization', 'params': orgPath }
           this.$router.push(path)
         })
-        .catch((error) => console.log(error))
+        .catch((error) => {
+          this.ui.isProcessing = false
+          if (error.response && error.response.data && error.response.data.message) {
+            this.errorMessage = error.response.data.message
+          } else {
+            this.errorMessage = this.$t('account.login_error')
+          }
+          console.log(error)
+        })
     },
     jointToOrg: function () {
       let params = {
         org_to_join: this.org_selected
       }
-      axios.patch('/users/update_my_profile', params)
+      Api.patch('/users/update_my_profile', params)
         .then((response) => {
           this.ui.display_join_org = false
           this.ui.display_end_affiliation = true
@@ -369,7 +439,7 @@ export default {
         name: this.organization.name,
         website: this.organization.website
       }
-      axios.post('/organizations/request_new', params)
+      Api.post('/organizations/request_new', params)
         .then((response) => {
           this.ui.display_create_org = false
           this.ui.display_end_org_creation = true
@@ -379,8 +449,9 @@ export default {
         })
     },
     checkEmailExist: function () {
+      if (!this.user.username) return
       const email = this.user.username.trim()
-      axios.get(`/users/check_email?email=${email}`)
+      Api.get('/users/check_email', { email: email })
         .then((response) => {
           if (response.data.error === false) {
             this.ui.username_validation = true
@@ -400,10 +471,22 @@ export default {
         })
     },
     comparePassword: function () {
-      this.ui.password_validation = Commons.comparePassword(this.user.password, this.user.password_2)
+      if (!this.user.password || !this.user.password_2) {
+        this.ui.password_validation = false
+        return
+      }
+      if (this.user.password !== this.user.password_2) {
+        this.ui.password_validation = false
+        return
+      }
+      if (this.user.password.length < 8 || this.user.password_2.length < 8) {
+        this.ui.password_validation = false
+        return
+      }
+      this.ui.password_validation = true
     },
     getOrganizations: function () {
-      axios.get('/api/organizations?personal_organization=false')
+      Api.get('/api/organizations', { personal_organization: false })
         .then((response) => {
           this.all_organizations = response.data
         })

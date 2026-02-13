@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>STEP 2: Enter the study <b>inclusion and exclusion criteria</b> used in the review (recommended)</h4>
+    <h4 v-html="$t('inclusion.step_title')"></h4>
     <b-container fluid>
       <b-row>
         <b-col
@@ -8,9 +8,9 @@
           class="pl-0">
           <criteria
             v-if="ui.project.show_criteria"
-            label="Inclusion criteria"
-            description="Please enter the study inclusion criteria used in the review"
-            :isDisabled="checkPermissions"
+            :label="$t('inclusion.inclusion_criteria')"
+            :description="$t('inclusion.inclusion_placeholder')"
+            :canEdit="canEdit"
             criteria="inclusion"
             :dataTxt="project.inclusion"
             @update-modification="updateModificationTime()">
@@ -21,9 +21,9 @@
           class="pr-0">
           <criteria
             v-if="ui.project.show_criteria"
-            label="Exclusion criteria"
-            description="Please enter the study exclusion criteria used in the review"
-            :isDisabled="checkPermissions"
+            :label="$t('inclusion.exclusion_criteria')"
+            :description="$t('inclusion.exclusion_placeholder')"
+            :canEdit="canEdit"
             criteria="exclusion"
             :dataTxt="project.exclusion"
             @update-modification="updateModificationTime()">
@@ -38,7 +38,7 @@
 export default {
   name: 'InclusionExclusionCriteria',
   props: {
-    checkPermissions: {
+    canEdit: {
       type: Boolean,
       required: true
     },

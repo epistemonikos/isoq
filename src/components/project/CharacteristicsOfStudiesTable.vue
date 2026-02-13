@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h4 class="mt-5">STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)</h4>
+    <h4 class="mt-5" v-html="$t('characteristics.step_title')"></h4>
     <p class="font-weight-light">
-      Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)
+      {{ $t('characteristics.description') }}
     </p>
     <b-row
       v-if="checkPermissions">
@@ -345,10 +345,10 @@
 
 <script>
 import draggable from 'vuedraggable'
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commons from '@/utils/commons.js'
-const ExportCSV = require('export-to-csv').ExportToCsv
+import { exportTableToCSV } from '@/utils/csvExporter'
 
 export default {
   name: 'CharacteristicsOfStudiesTable',
@@ -498,7 +498,7 @@ export default {
   methods: {
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
+      Api.get(`/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`)
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = response.data[0]
@@ -508,7 +508,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+            const authorsA = (a.authors || '').toString()
+            const authorsB = (b.authors || '').toString()
+            return authorsA.localeCompare(authorsB)
+          })
               this.charsOfStudies.items = _items
 
               this.charsOfStudiesFieldsModal.fields = []
@@ -579,7 +583,7 @@ export default {
       }
 
       if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'id')) {
-        axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+        Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
           .then(() => {
             this.$emit('get-project')
             this.charsOfStudiesTableSettings.isBusy = false
@@ -587,7 +591,7 @@ export default {
             console.log('error: ', error)
           })
       } else {
-        axios.post('/api/isoqf_characteristics', params)
+        Api.post('/isoqf_characteristics', params)
           .then(() => {
             this.getCharacteristics()
           })
@@ -625,7 +629,7 @@ export default {
         params.is_public = true
       }
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then(() => {
           this.getCharacteristics()
           this.charsOfStudiesTableSettings.isBusy = false
@@ -656,7 +660,7 @@ export default {
       let characteristicId = this.charsOfStudies.id
       params.items = this.charsOfStudiesFieldsModal.items
 
-      axios.patch(`/api/isoqf_characteristics/${characteristicId}`, params)
+      Api.patch(`/isoqf_characteristics/${characteristicId}`, params)
         .then(() => {
           this.$emit('get-project')
           this.getCharacteristics()
@@ -707,7 +711,7 @@ export default {
 
       params.items = items
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then(() => {
           this.getCharacteristics()
         })
@@ -796,7 +800,7 @@ export default {
       params.fields = _fields
       params.items = _items
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
           let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
           const excluded = ['ref_id', 'authors', 'actions']
@@ -887,14 +891,14 @@ export default {
       this.$refs['import-characteristics-table'].hide()
     },
     cleanImportedData: function (id = '', endpoint = '', params = {}) {
-      axios.delete(`/api/${endpoint}/${id}`)
+      Api.delete(`/${endpoint}/${id}`)
         .then(() => {
           this.pre_ImportDataTable = ''
           this.insertImportedData(endpoint, params)
         })
     },
     insertImportedData: function (endpoint = '', params = {}) {
-      axios.post(`/api/${endpoint}/`, params)
+      Api.post(`/${endpoint}/`, params)
         .then(() => {
           this.getCharacteristics()
         })
@@ -904,58 +908,23 @@ export default {
     },
     exportTableToCSV: function (type) {
       const _types = ['chars_of_studies', 'meth_assessments']
-      let _headers = []
-      let headers = []
-      let _items = []
+      let fields = []
       let items = []
 
       if (_types.indexOf(type) !== -1) {
         switch (type) {
           case 'chars_of_studies':
-            _headers = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
-            _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+            fields = this.charsOfStudies.fields || []
+            items = this.charsOfStudies.items || []
             break
           case 'meth_assessments':
-            _headers = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
-            _items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
-            break
-          default:
-            _headers = []
-            _items = []
+            fields = this.methodologicalTableRefs.fields || []
+            items = this.methodologicalTableRefs.items || []
             break
         }
-
-        let keys = []
-        for (let f of _headers) {
-          if (f.key !== 'ref_id' && f.key !== 'id') {
-            headers.push('"' + f.label + '"')
-            keys.push(f.key)
-          }
-        }
-
-        for (let i of _items) {
-          let item = {}
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(i, keys[k])) {
-              item[keys[k]] = i[keys[k]]
-            } else {
-              item[keys[k]] = ''
-            }
-          }
-          items.push(item)
-        }
       }
-      const options = {
-        filename: type,
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        headers: headers
-      }
-      const csvExporter = new ExportCSV(options)
-      csvExporter.generateCsv(items)
+
+      exportTableToCSV({ fields, items, filename: type })
     },
     updateMyDataTables: function () {
       let characteristicsItems = []
@@ -964,7 +933,7 @@ export default {
         project_id: this.$route.params.id
       }
 
-      axios.get(`/api/isoqf_characteristics`, {params})
+      Api.get(`/isoqf_characteristics`, params)
         .then((response) => {
           if (!response.data.length) {
             return
@@ -989,7 +958,7 @@ export default {
             let params = {
               items: items
             }
-            axios.patch(`/api/isoqf_characteristics/${charId}`, params)
+            Api.patch(`/isoqf_characteristics/${charId}`, params)
               .then(() => {
                 this.getCharacteristics()
               })
@@ -1031,7 +1000,7 @@ export default {
         params.fields.push(objField)
       }
 
-      axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
+      Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
         .then((response) => {
           this.getProject()
           this.$emit('get-project')

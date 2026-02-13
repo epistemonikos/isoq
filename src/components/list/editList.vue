@@ -1,5 +1,18 @@
 <template>
   <div>
+    <!-- Lock Modals -->
+    <b-modal id="modal-lock-lost-sheet" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+        <div class="text-center">
+            <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
+            <p>{{ $t('lock.lock_lost_message') || 'The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.' }}</p>
+        </div>
+    </b-modal>
+      <b-modal id="modal-lock-idle-sheet" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
+        <div class="text-center">
+            <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
+            <p>{{ $t('lock.idle_message') || 'You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.' }}</p>
+        </div>
+    </b-modal>
     <b-alert
       :show="editingUser.show"
       class="position-fixed fixed-bottom m-0 rounded-0"
@@ -7,15 +20,15 @@
       variant="danger"
       dismissible
     >
-      The user <b>{{editingUser.first_name}} {{editingUser.last_name}}</b> is editing this finding. The edit mode is disabled.
+      <span v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
     </b-alert>
+
     <edit-header-list
-      :organizationId="list.organization"
-      :projectId="list.project_id"
+      :organizationId="project.organization"
+      :projectId="project.id"
       :name="list.name"
       :mode="mode"
-      :list="list"
-    />
+      :list="list"></edit-header-list>
     <b-container fluid>
       <edit-list-actions-buttons
         :mode="mode"
@@ -31,60 +44,50 @@
         :extractedData="extracted_data"
         :license="theLicense(this.project.license_type)"
         @changeMode="changeMode"
-      />
+        ></edit-list-actions-buttons>
       <b-row
         class="sticky-top"
         style="background-color: #fff; padding-bottom: 0.3rem"
-        v-if="mode==='edit'"
-      >
+        v-if="mode==='edit'">
         <b-col
           class="d-print-none"
-          cols="12"
-        >
+          cols="12">
           <b-nav class="mt-2">
-            <b-nav-item disabled>Navigate this page:</b-nav-item>
+            <b-nav-item disabled>{{ $t('worksheet_nav.navigate_page') }}</b-nav-item>
             <b-nav-item href="#evidence-profile">
-              Evidence Profile
+              {{ $t('worksheet_nav.evidence_profile') }}
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
                 class="text-danger"
-                v-b-tooltip.hover
-                title="Data are missing. Click link to see what's missing."
-              >
-                <font-awesome-icon icon="exclamation-circle" />
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#characteristics-of-studies">
-              Characteristics of Studies
+              {{ $t('worksheet.characteristics_of_studies') }}
               <span
                 v-if="ui.adequacy.chars_of_studies.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover
-                title="Data are missing. Click link to see what's missing."
-              >
-                <font-awesome-icon icon="exclamation-circle" />
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#methodological-assessments">
-              Methodological Assessments
+              {{ $t('worksheet.methodological_assessments') }}
               <span
                 v-if="ui.methodological_assessments.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover
-                title="Data are missing. Click link to see what's missing."
-              >
-                <font-awesome-icon icon="exclamation-circle" />
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#extracted-data">
-              Extracted Data
+              {{ $t('worksheet.extracted_data') }}
               <span
                 v-if="ui.adequacy.extracted_data.display_warning"
                 class="text-danger"
-                v-b-tooltip.hover
-                title="Data are missing. Click link to see what's missing."
-              >
-                <font-awesome-icon icon="exclamation-circle" />
+                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+                <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
           </b-nav>
@@ -92,119 +95,108 @@
       </b-row>
       <b-row
         class="justify-content-end"
-        v-if="mode==='edit' && checkPermissions(list.organization)"
-      >
+        v-if="mode==='edit' && checkPermissions(list.organization)">
         <b-col
           cols="12"
-          md="3"
-        >
-          <b-button
-            class="mt-2"
-            @click="changeMode"
-            variant="outline-success"
-            block
-          >
-            Print or Export
-          </b-button>
+          md="3">
+            <b-button
+              class="mt-2"
+              @click="changeMode"
+              variant="outline-success"
+              block>
+              {{ $t('publish.print_export') }}
+            </b-button>
         </b-col>
       </b-row>
 
       <b-row class="mt-4">
         <b-col cols="12">
-          <div
-            id="progress-status"
-            v-if="mode==='edit'"
-            class="d-print-none"
-          >
-            <h5>
-              Progress status
-              <span
-                v-b-tooltip.hover
-                title="This progress bar shows you how far along you are in making your GRADE-CERQual assessment of confidence. You have 5 assessments to make in total. Firstly, an assessment for each of the 4 GRADE-CERQual components, and lastly the overall assessment."
-              >*</span>
-            </h5>
-            <p v-if="list.cerqual.option !== null">
-              Your GRADE-CERQual assessment has been added to the iSoQ for this finding. Click "return to iSoQ table" above to view it
-            </p>
-            <b-progress
-              :value="status_evidence_profile.value"
-              :max="status_evidence_profile.max"
-              :variant="status_evidence_profile.variant"
-              class="mb-3"
-            />
-          </div>
+          <!--<b-tabs>-->
+            <!-- Evidence Profile-->
+            <!--<b-tab :title="$t('Evidence Profile')">-->
+              <div id="progress-status"
+                v-if="mode==='edit'"
+                class="d-print-none">
+                <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
+                <p v-if="list.cerqual.option !== null">
+                  {{ $t('worksheet.assessment_added_isoq') }}
+                </p>
+                <b-progress
+                  :value="status_evidence_profile.value"
+                  :max="status_evidence_profile.max"
+                  :variant="status_evidence_profile.variant"
+                  class="mb-3">
+                </b-progress>
+              </div>
 
-          <evidence-profile-table
-            :evidenceProfile="evidence_profile"
-            :ui="ui"
-            :evidenceProfileTableSettings="evidence_profile_table_settings"
-            :references="references"
-            :mode="mode"
-            :list="list"
-            :refsWithTitle="refsWithTitle"
-            :project="project"
-            :permission="checkPermissions(list.organization)"
-            :selectOptions="select_options"
-            :levelConfidence="level_confidence"
-            :findings="findings"
-            :methAssessments="meth_assessments"
-            :extractedData="extracted_data"
-            :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
-            :modalData="buffer_modal_stage_two"
-            :charsOfStudies="characteristics_studies"
-            @update-list-data="getList"
-            @printErrors="printErrors"
-            @modalDataChanged="modalDataChanged"
-            @busyEvidenceProfileTable="busyEvidenceProfileTable"
-            @callGetStageOneData="callGetStageOneData"
-            @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
-            @getExtractedData="getExtractedData"
-          />
+              <evidence-profile-table
+                :evidenceProfile="evidence_profile"
+                :ui="ui"
+                :show="show"
+                :evidenceProfileTableSettings="evidence_profile_table_settings"
+                :references="references"
+                :mode="mode"
+                :list="list"
+                :refsWithTitle="refsWithTitle"
+                :project="project"
+                :permission="checkPermissions(list.organization)"
+                :selectOptions="select_options"
+                :levelConfidence="level_confidence"
+                :findings="findings"
+                :methAssessments="meth_assessments"
+                :extractedData="extracted_data"
+                :modePrintFieldObject="mode_print_fieldsObj"
+                :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
+                :modalData="buffer_modal_stage_two"
+                :charsOfStudies="characteristics_studies"
+                @update-list-data="getList"
+                @printErrors="printErrors"
+                @modalDataChanged="modalDataChanged"
+                @busyEvidenceProfileTable="busyEvidenceProfileTable"
+                @callGetFinding="callGetFinding"
+                @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+                @getExtractedData="getExtractedData"
+              ></evidence-profile-table>
 
-          <table-chars-of-studies
-            :useCamelot="project.use_camelot"
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :charsOfStudies="characteristics_studies"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"
-          />
+                      <table-chars-of-studies
+                        :useCamelot="project.use_camelot"
+                        :ui="ui"              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :charsOfStudies="characteristics_studies"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-chars-of-studies>
 
-          <table-meth-assessments
-            :useCamelot="project.use_camelot"
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :methAssessments="meth_assessments"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"
-          />
+                      <table-meth-assessments
+                        :useCamelot="project.use_camelot"
+                        :ui="ui"              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :methAssessments="meth_assessments"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"></table-meth-assessments>
 
-          <table-extracted-data
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :extractedData="extracted_data"
-            :modePrintFieldObject="mode_print_fieldsObj"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"
-            @printErrors="printErrors"
-            @getExtractedData="getExtractedData"
-          />
+            <table-extracted-data
+              :ui="ui"
+              :show="show"
+              :mode="mode"
+              :list="list"
+              :permission="checkPermissions(list.organization)"
+              :extractedData="extracted_data"
+              :modePrintFieldObject="mode_print_fieldsObj"
+              :refsWithTitle="refsWithTitle"
+              :showParagraph="true"
+              @printErrors="printErrors"
+              @getExtractedData="getExtractedData"></table-extracted-data>
 
-          <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type')">
-            <div class="mt-5">
-              <h5 class="text-info">License type</h5>
-              <p class="text-info">{{ theLicense(this.project.license_type) }}</p>
-            </div>
-          </template>
+            <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
+              <div class="mt-5 alert alert-info" role="alert">
+                <h5>{{ $t('project.license_type') }}</h5>
+                <p>{{ theLicense(this.project.license_type) }}</p>
+              </div>
+            </template>
         </b-col>
       </b-row>
     </b-container>
@@ -212,15 +204,9 @@
 </template>
 
 <script>
-import axios from 'axios'
-import draggable from 'vuedraggable'
-
-// Importar componentes
-const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
-const bCardActionTable = () => import(/* webpackChunkName: "backtotop" */'../tableActions/ActionTable')
-const editReviewFinding = () => import(/* webpackChunkName: "backtotop" */'../editReviewFinding')
-const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
-const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
+import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
+import Commons from '../../utils/commons'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -228,90 +214,8 @@ const editListCharsOfStudies = () => import('./editListCharsOfStudies.vue')
 const editListMethAssessments = () => import('./editListMethAssessments.vue')
 const editListExtractedData = () => import('./editListExtractedData.vue')
 
-// Servicio de API
-const apiService = {
-  async getList (id) {
-    try {
-      const response = await axios.get(`/api/isoqf_lists/${id}`)
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener la lista: ${error.message}`)
-    }
-  },
-
-  async getProject (projectId) {
-    try {
-      const response = await axios.get(`/api/isoqf_projects/${projectId}`)
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener el proyecto: ${error.message}`)
-    }
-  },
-
-  async getReferences (params) {
-    try {
-      const response = await axios.get(`/api/isoqf_references`, { params })
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener referencias: ${error.message}`)
-    }
-  },
-
-  async getFindings (params) {
-    try {
-      const response = await axios.get('/api/isoqf_findings', { params })
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener hallazgos: ${error.message}`)
-    }
-  },
-
-  async getCharacteristics (params) {
-    try {
-      const response = await axios.get('/api/isoqf_characteristics', { params })
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener características: ${error.message}`)
-    }
-  },
-
-  async getAssessments (params) {
-    try {
-      const response = await axios.get('/api/isoqf_assessments', { params })
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener evaluaciones: ${error.message}`)
-    }
-  },
-
-  async getExtractedData (params) {
-    try {
-      const response = await axios.get('/api/isoqf_extracted_data', { params })
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al obtener datos extraídos: ${error.message}`)
-    }
-  },
-
-  async updateList (id, params) {
-    try {
-      const response = await axios.patch(`/api/isoqf_lists/${id}`, params)
-      return response.data
-    } catch (error) {
-      throw new Error(`Error al actualizar la lista: ${error.message}`)
-    }
-  }
-}
-
 export default {
-  name: 'EditList',
   components: {
-    'bc-filters': bCardFilters,
-    'bc-action-table': bCardActionTable,
-    'edit-review-finding': editReviewFinding,
-    'back-to-top': backToTop,
-    draggable,
-    videoHelp,
     'edit-header-list': editHeaderList,
     'edit-list-actions-buttons': editListActionButtons,
     'evidence-profile-table': editListEvidenceProfile,
@@ -319,11 +223,8 @@ export default {
     'table-meth-assessments': editListMethAssessments,
     'table-extracted-data': editListExtractedData
   },
-
   data () {
     return {
-      loading: false,
-      error: null,
       licenseUrl: require('../../assets/by-88x31.png'),
       ui: {
         methodological_assessments: {
@@ -367,28 +268,12 @@ export default {
       },
       show: {
         selected: ['cs', 'ma', 'ed'],
-        options: [
-          { text: 'Characteristics Studies', value: 'cs' },
-          { text: 'Methodological Assessments', value: 'ma' },
-          { text: 'Extracted Data', value: 'ed' }
-        ]
+        options: []
       },
       /** filters **/
       /** selectors **/
-      select_options: [
-        { value: 0, text: 'No/Very minor concerns' },
-        { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' },
-        { value: null, text: 'Undefined' }
-      ],
-      level_confidence: [
-        { value: 0, text: 'High confidence' },
-        { value: 1, text: 'Moderate confidence' },
-        { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' },
-        { value: null, text: 'Undefined' }
-      ],
+      select_options: [],
+      level_confidence: [],
       /** selectors **/
       /** tables fields **/
       /** tables fields **/
@@ -398,12 +283,6 @@ export default {
         list_id: '',
         organization: ''
       },
-      // buffer_modal_stage_one: {
-      //   id: null,
-      //   name: '',
-      //   list_id: '',
-      //   organization: ''
-      // },
       buffer_modal_stage_two: {
         methodological_limitations: {
           option: null,
@@ -443,6 +322,11 @@ export default {
         type: '',
         title: ''
       },
+      editingUser: {
+        first_name: '',
+        last_name: '',
+        show: false
+      },
       list: {
         id: '',
         title: '',
@@ -455,6 +339,7 @@ export default {
           items: []
         },
         cerqual: {},
+        cerqual_lists: [],
         references: []
       },
       buffer_meth_assessments: {
@@ -520,772 +405,592 @@ export default {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
       },
-      editingUser: {
-        show: false
+      lockInfo: {
+        locked: false,
+        lockedBy: null
       }
     }
   },
-
   mounted () {
-    this.initializeData()
+    this.updateTranslations()
+    this.getList()
+    window.addEventListener('lock-lost', this.handleLockLost)
+    window.addEventListener('lock-idle', this.handleIdle)
+    window.addEventListener('axios-refresh-lock', this.handleLockLost)
   },
-
+  beforeDestroy () {
+    LockService.release()
+    window.removeEventListener('lock-lost', this.handleLockLost)
+    window.removeEventListener('lock-idle', this.handleIdle)
+    window.removeEventListener('axios-refresh-lock', this.handleLockLost)
+  },
   methods: {
-    async initializeData () {
-      try {
-        this.loading = true
-        this.evidence_profile_table_settings.isBusy = true
-
-        // Primero obtenemos la lista
-        const listData = await apiService.getList(this.$route.params.id)
-        this.list = JSON.parse(JSON.stringify(listData))
-
-        // Verificamos que tengamos los datos necesarios
-        if (!this.list || !this.list.project_id) {
-          throw new Error('No se pudo obtener la lista o el ID del proyecto')
-        }
-
-        // Luego obtenemos el proyecto y las referencias en paralelo
-        const [projectData, referencesData] = await Promise.all([
-          apiService.getProject(this.list.project_id),
-          apiService.getReferences({
-            organization: this.list.organization,
-            project_id: this.list.project_id
-          })
-        ])
-
-        // Actualizamos los datos
-        this.project = projectData
-        this.processReferences(referencesData)
-
-        // Finalmente obtenemos los datos secundarios
-        await Promise.all([
-          this.getStageOneData(),
-          this.getCharsOfStudies(),
-          this.getMethAssessments(),
-          this.getExtractedData()
-        ])
-
-        this.evidence_profile_table_settings.isBusy = false
-        this.scrollToEvidenceProfile()
-      } catch (error) {
-        this.error = error.message
-        this.printErrors(error)
-        // Emitir evento de error para manejo global
-        this.$emit('error', {
-          message: 'Error al inicializar los datos',
-          details: error.message
-        })
-      } finally {
-        this.loading = false
-      }
+    updateTranslations: function () {
+      this.show.options = [
+        { text: this.$t('worksheet.characteristics_of_studies'), value: 'cs' },
+        { text: this.$t('worksheet.methodological_assessments'), value: 'ma' },
+        { text: this.$t('worksheet.extracted_data'), value: 'ed' }
+      ]
+      this.select_options = [
+        { value: 0, text: this.$t('worksheet.options.no_concerns') },
+        { value: 1, text: this.$t('worksheet.options.minor_concerns') },
+        { value: 2, text: this.$t('worksheet.options.moderate_concerns') },
+        { value: 3, text: this.$t('worksheet.options.serious_concerns') },
+        { value: null, text: this.$t('worksheet.options.undefined') }
+      ]
+      this.level_confidence = [
+        { value: 0, text: this.$t('worksheet.options.high_confidence') },
+        { value: 1, text: this.$t('worksheet.options.moderate_confidence') },
+        { value: 2, text: this.$t('worksheet.options.low_confidence') },
+        { value: 3, text: this.$t('worksheet.options.very_low_confidence') },
+        { value: null, text: this.$t('worksheet.options.undefined') }
+      ]
     },
+    filterItemsByReferences: function (items, references, fieldsLength) {
+      const referencesSet = new Set(references)
+      const excludedKeys = new Set(['authors', 'ref_id'])
+      let haveContent = 0
+      const filteredItems = []
 
-    async getList (fromModal = false) {
-      try {
-        this.loading = true
-        const listData = await apiService.getList(this.$route.params.id)
-        this.list = JSON.parse(JSON.stringify(listData))
-        this.list.sources = []
-        this.evidence_profile = []
-        this.extracted_data = {
-          fields: [],
-          items: []
-        }
+      for (const item of items) {
+        if (!referencesSet.has(item.ref_id)) continue
 
-        await Promise.all([
-          this.getProject(),
-          this.getAllReferences(),
-          this.getStageOneData(fromModal),
-          this.getCharsOfStudies(),
-          this.getMethAssessments()
-        ])
+        filteredItems.push(item)
 
-        this.evidence_profile_table_settings.isBusy = false
-        this.scrollToEvidenceProfile()
-      } catch (error) {
-        this.printErrors(error)
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async getProject () {
-      if (!this.list.project_id) {
-        console.warn('getProject: project_id no definido')
-        return
-      }
-
-      try {
-        const projectData = await apiService.getProject(this.list.project_id)
-        this.project = projectData
-        this.project.inclusion = this.project.inclusion || ''
-        this.project.exclusion = this.project.exclusion || ''
-      } catch (error) {
-        this.printErrors(error)
-        throw error
-      }
-    },
-
-    async getAllReferences () {
-      try {
-        const params = {
-          organization: this.list.organization,
-          project_id: this.list.project_id
-        }
-        const references = await apiService.getReferences(params)
-        this.processReferences(references)
-      } catch (error) {
-        this.printErrors(error)
-        throw error
-      }
-    },
-
-    processReferences (references) {
-      if (!references || !Array.isArray(references)) {
-        console.warn('processReferences: referencias no definidas o no es un array')
-        return
-      }
-
-      const _references = references.map(reference => ({
-        'id': reference.id,
-        'content': this.parseReference(reference, true)
-      }))
-
-      const _refsWithTitles = references.map(reference => ({
-        'id': reference.id,
-        'content': this.parseReference(reference, false)
-      }))
-
-      this.references = _references.sort((a, b) => a.content.localeCompare(b.content))
-      this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
-    },
-
-    async getExtractedData () {
-      try {
-        if (!this.findings || !this.findings.id) {
-          console.warn('getExtractedData: findings no definido o sin ID')
-          return
-        }
-
-        const params = {
-          organization: this.list.organization,
-          finding_id: this.findings.id
-        }
-
-        const response = await apiService.getExtractedData(params)
-        let localData = { id: null, fields: [], items: [] }
-
-        if (response && response.length) {
-          localData = response[0]
-          this.extracted_data = response[0]
-          localData.fields.push({ key: 'actions', label: '' })
-
-          const _fields = JSON.parse(JSON.stringify(localData.fields))
-          localData.fieldsObj = []
-          this.mode_print_fieldsObj = []
-
-          for (let field of _fields) {
-            if (field.key !== 'ref_id') {
-              localData.fieldsObj.push(field)
-              if (field.key !== 'actions') {
-                this.mode_print_fieldsObj.push(field)
-              }
-            }
-          }
-
-          const _references = this.list.references
-          let _items = []
-          let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
-
-          extractedDataItems.sort((a, b) => {
-            if (a.authors < b.authors) return -1
-            if (a.authors > b.authors) return 1
-            return 0
-          })
-
-          localData.original_items = JSON.parse(JSON.stringify(localData.items))
-          let haveContent = 0
-
-          for (let i in _references) {
-            let index = 0
-            for (let item of extractedDataItems) {
-              if (item.ref_id === _references[i]) {
-                _items.push({
-                  ref_id: item.ref_id,
-                  authors: item.authors,
-                  column_0: item.column_0,
-                  index: index
-                })
-                if (item.column_0 === '') {
-                  haveContent++
-                }
-              }
-              index++
-            }
-          }
-
-          this.ui.coherence.display_warning = true
-          this.ui.methodological_assessments.extracted_data.display_warning = true
-          this.ui.adequacy.extracted_data.display_warning = true
-
-          if (!haveContent) {
-            this.ui.coherence.display_warning = false
-            this.ui.methodological_assessments.extracted_data.display_warning = false
-            this.ui.adequacy.extracted_data.display_warning = false
-          }
-
-          this.extracted_data.items = _items
-        }
-      } catch (error) {
-        this.printErrors(error)
-      }
-    },
-
-    async getStageOneData (fromModal = false) {
-      try {
-        const params = {
-          organization: this.list.organization,
-          list_id: this.list.id
-        }
-
-        const response = await apiService.getFindings(params)
-
-        if (response && response.length) {
-          this.findings = JSON.parse(JSON.stringify(response[0]))
-          this.findings.isoqf_id = this.list.sort
-          this.evidence_profile = []
-
-          if (this.findings.evidence_profile) {
-            this.evidence_profile.push(this.findings.evidence_profile)
-            this.evidence_profile[0].isoqf_id = this.list.sort
-          }
-
-          if (fromModal) {
-            const title = this.buffer_modal_stage_two.title
-            const type = this.buffer_modal_stage_two.type
-            this.buffer_modal_stage_two = this.evidence_profile[0]
-            this.buffer_modal_stage_two.title = title
-            this.buffer_modal_stage_two.type = type
-          }
-
-          await this.updateMyData()
-        }
-
-        this.getStatus()
-        await this.getExtractedData()
-        this.evidence_profile_table_settings.isBusy = false
-      } catch (error) {
-        this.printErrors(error)
-      }
-    },
-
-    async getCharsOfStudies () {
-      try {
-        const params = {
-          organization: this.list.organization,
-          project_id: this.list.project_id
-        }
-
-        const response = await apiService.getCharacteristics(params)
-
-        if (response && response.length) {
-          let data = response[0]
-          let items = []
-          let haveContent = 0
-
-          for (let item of data.items) {
-            for (let reference of this.list.references) {
-              if (reference === item.ref_id) {
-                items.push(item)
-                for (let i in item) {
-                  if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                    if (item[i] === '') {
-                      haveContent++
-                    }
-                  }
-                }
-                if (data.fields.length > Object.keys(item).length) {
-                  haveContent++
-                }
-              }
-            }
-          }
-
-          if (data.fields.length < 3) {
+        const itemKeys = Object.keys(item)
+        for (const key of itemKeys) {
+          if (!excludedKeys.has(key) && item[key] === '') {
             haveContent++
           }
-
-          this.ui.adequacy.chars_of_studies.display_warning = true
-          this.ui.relevance.chars_of_studies.display_warning = true
-
-          if (!haveContent) {
-            this.ui.adequacy.chars_of_studies.display_warning = false
-            this.ui.relevance.chars_of_studies.display_warning = false
-          }
-
-          data.items = items
-          this.characteristics_studies = data
-
-          if (data.fields.length) {
-            let fields = JSON.parse(JSON.stringify(data.fields))
-            let lastItem = fields.splice(fields.length - 1, 1)
-            this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-            this.characteristics_studies.fieldsObj = []
-
-            for (let field of data.fields) {
-              if (field.key !== 'ref_id') {
-                this.characteristics_studies.fieldsObj.push(field)
-              }
-            }
-
-            if (!this.characteristics_studies.items) {
-              this.characteristics_studies.items = []
-            }
-          }
-
-          this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
-          this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
-
-          let tableTop = []
-
-          if (this.characteristics_studies.mainFields) {
-            const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
-            for (let tt of _tableTop) {
-              tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
-            }
-          }
-
-          this.characteristics_studies.tableTop = tableTop
-        } else {
-          this.characteristics_studies = {
-            items: [],
-            fields: []
-          }
         }
-      } catch (error) {
-        this.printErrors(error)
+
+        if (fieldsLength > itemKeys.length) {
+          haveContent++
+        }
       }
+
+      return { filteredItems, haveContent }
     },
-
-    async getMethAssessments () {
-      try {
-        const params = {
-          organization: this.list.organization,
-          project_id: this.list.project_id
-        }
-
-        const response = await apiService.getAssessments(params)
-
-        if (response && response.length) {
-          let data = response[0]
-
-          // Asegurarse de que data.fields exista y sea un array
-          if (!data.fields) {
-            data.fields = []
-          }
-
-          // Asegurarse de que data.items exista y sea un array
-          if (!data.items) {
-            data.items = []
-          }
-
-          if (this.project.use_camelot) {
-            // Para Camelot, simplemente asignar los datos pero asegurarse de que tenga las propiedades necesarias
-            this.meth_assessments = data
-
-            // Asegurar que exista fieldsObj si no viene en la respuesta
-            if (!this.meth_assessments.fieldsObj) {
-              this.meth_assessments.fieldsObj = []
-            }
-          } else {
-            const _references = JSON.parse(JSON.stringify(this.list.references))
-            let items = []
-            let haveContent = 0
-
-            for (let item of data.items) {
-              for (let reference of _references) {
-                if (reference === item.ref_id) {
-                  items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'author' && item[i] !== 'ref_id') {
-                      if (item[i] === '') {
-                        haveContent++
-                      }
-                    }
-                  }
-                  // Verificar que data.fields.length sea seguro de utilizar
-                  if (data.fields.length > 0 && data.fields.length > Object.keys(item).length) {
-                    haveContent++
-                  }
-                }
-              }
-            }
-
-            // Verificar que data.fields.length sea seguro de utilizar
-            if (data.fields.length < 3) {
-              haveContent++
-            }
-
-            this.ui.methodological_assessments.display_warning = true
-            if (!haveContent) {
-              this.ui.methodological_assessments.display_warning = false
-            }
-
-            data.items = items
-            data.fieldsObj = []
-
-            // Verificar que data.fields exista antes de iterarlo
-            if (data.fields && data.fields.length > 0) {
-              for (let field of data.fields) {
-                if (field.key !== 'ref_id') {
-                  data.fieldsObj.push(field)
-                }
-              }
-            }
-
-            this.meth_assessments = data
-          }
-        } else {
-          this.meth_assessments = { nroOfColumns: 1, fields: [], items: [], fieldsObj: [] }
-        }
-      } catch (error) {
-        this.printErrors(error)
-      }
-    },
-
-    async updateMyData () {
-      try {
-        let _extractedData = []
-        const params = {
-          organization: this.list.organization,
-          list_id: this.list.id
-        }
-
-        const response = await apiService.getExtractedData(params)
-
-        if (response && response.length && response[0].items.length && this.references.length > response[0].items.length) {
-          let _items = response[0].items
-          let _itemsChecks = []
-
-          for (let item of _items) {
-            _itemsChecks.push(item.ref_id)
-          }
-
-          for (let reference of this.references) {
-            if (!_itemsChecks.includes(reference.id)) {
-              _extractedData.push({ ref_id: reference.id, authors: reference.content })
-            }
-          }
-
-          _items.push(..._extractedData)
-          await apiService.updateList(response[0].id, { items: _items })
-          await this.getExtractedData()
-        }
-      } catch (error) {
-        this.printErrors(error)
-      }
-    },
-
-    scrollToEvidenceProfile () {
-      const elementScroll = document.getElementsByName('evidence-profile')[0]
-      if (elementScroll) {
-        window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
-      }
-    },
-
-    checkPermissions (organizationId, type = 'can_write') {
-      // Verificar que organizationId esté definido
-      if (!organizationId) {
-        console.warn('checkPermissions: organizationId no está definido')
-        return false
-      }
-
-      // Verificar que el usuario esté autenticado
-      if (!this.$store.state.user || !this.$store.state.user.personal_organization) {
-        console.warn('checkPermissions: usuario no autenticado o sin organización personal')
-        return false
-      }
-
-      // Verificar que el proyecto exista
-      if (!this.project) {
-        console.warn('checkPermissions: proyecto no definido')
-        return false
-      }
-
-      // Si el usuario pertenece a la organización personal
+    checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true
       }
-
-      // Verificar permisos específicos del proyecto
-      if (!this.project[type]) {
-        console.warn(`checkPermissions: tipo de permiso '${type}' no definido en el proyecto`)
+      if (!Object.prototype.hasOwnProperty.call(this.project, type)) {
         return false
       }
-
-      return this.project[type].includes(this.$store.state.user.id)
+      if (this.project[type].includes(this.$store.state.user.id)) {
+        return true
+      }
+      return false
     },
-
-    changeMode () {
+    changeMode: function () {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
-
-    parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       let result = ''
       const semicolon = hasSemicolon ? '; ' : ''
-
-      if (reference && reference.authors) {
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
         if (reference.authors.length < 1) {
-          result = 'no autho(s)'
+          result = ' ' + this.$t('common.no_authors')
         } else if (reference.authors.length === 1) {
           result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
           result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + this.$t('common.et_al') + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
         }
+        return result
+      } else {
+        return result
       }
-      return result
     },
+    getAllReferences: function () {
+      let _references = JSON.parse(JSON.stringify(this.list.fullreferences))
+      let _refs = []
+      let _refsWithTitles = []
+      for (let reference of _references) {
+        _refs.push({
+          'id': reference.id,
+          'content': this.parseReference(reference, true)
+        })
+        _refsWithTitles.push({
+          'id': reference.id,
+          'content': this.parseReference(reference, false)})
+      }
 
-    getStatus () {
+      this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
+      this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
+    },
+    getList: function (fromModal = false) {
+      Api.get('/getLists', {id: this.$route.params.id})
+        .then((response) => {
+          if (response.data && response.data.length > 0) {
+            this.list = JSON.parse(JSON.stringify(response.data[0]))
+            
+            // Attempt lock if we have write permissions
+            // Note: We need 'project' loaded to check permissions properly, or check list.organization
+            if (this.checkPermissions(this.list.organization)) {
+                 this.attemptLock()
+            }
+          } else {
+            console.log('Empty list response')
+          }
+          this.getProject()
+          this.getAllReferences()
+          this.getFinding(fromModal)
+          this.getCharsOfStudies()
+          this.getMethAssessments()
+          this.getExtractedData()
+
+          this.evidence_profile_table_settings.isBusy = false
+          const elementScroll = document.getElementsByName('evidence-profile')[0]
+
+          window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
+        })
+    },
+    updateMyData: function () {
+      let _extractedData = []
+      const params = {
+        finding_id: this.findings.id
+      }
+      Api.get(`/isoqf_extracted_data`, params)
+        .then((response) => {
+          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
+            let _items = response.data[0].items
+            let _itemsChecks = []
+            for (let item of _items) {
+              _itemsChecks.push(item.ref_id)
+            }
+            for (let reference of this.references) {
+              if (!_itemsChecks.includes(reference.id)) {
+                _extractedData.push({ref_id: reference.id, authors: reference.content})
+              }
+            }
+            _items.push(..._extractedData)
+            let params = {
+              items: _items
+            }
+            Api.patch(`/isoqf_extracted_data/${response.data[0].id}`, params)
+              .then(() => {
+                this.getExtractedData()
+              })
+          }
+        })
+    },
+    getProject: function () {
+      this.project = JSON.parse(JSON.stringify(this.list.project))
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+        this.project.inclusion = ''
+      }
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+        this.project.exclusion = ''
+      }
+    },
+    getFinding: function (fromModal = false) {
+      const finding = this.list.findings
+      if (finding.length) {
+        this.findings = JSON.parse(JSON.stringify(finding[0]))
+        this.findings.isoqf_id = this.list.sort
+        this.evidence_profile = []
+        if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
+          this.evidence_profile.push(this.findings.evidence_profile)
+          this.evidence_profile[0].isoqf_id = this.list.sort
+        } else {
+          // Create a default evidence_profile structure if it doesn't exist
+          this.evidence_profile.push({
+            isoqf_id: this.list.sort,
+            cerqual: { explanation: '', option: null },
+            name: '',
+            title: '',
+            notes: '',
+            coherence: { explanation: '', option: null },
+            methodological_limitations: { explanation: '', option: null },
+            references: [],
+            relevance: { explanation: '', option: null },
+            adequacy: { explanation: '', option: null }
+          })
+        }
+        // Sync references from list.references to evidence_profile.references
+        // The source of truth for references is list.references
+        this.evidence_profile[0].references = this.list.references || []
+        if (fromModal) {
+          const title = this.buffer_modal_stage_two.title
+          const type = this.buffer_modal_stage_two.type
+          this.buffer_modal_stage_two = this.evidence_profile[0]
+          this.buffer_modal_stage_two.title = title
+          this.buffer_modal_stage_two.type = type
+        }
+        this.updateMyData()
+      }
+      this.getStatus()
+      // this.getExtractedData()
+      this.evidence_profile_table_settings.isBusy = false
+    },
+    getStatus: function () {
       this.status_evidence_profile.value = 0
-      const profile = this.evidence_profile[0] || {}
-
-      if (profile.methodological_limitations && profile.methodological_limitations.option !== null) {
-        this.status_evidence_profile.value += 20
+      if (this.evidence_profile[0].methodological_limitations.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-      if (profile.coherence && profile.coherence.option !== null) {
-        this.status_evidence_profile.value += 20
+      if (this.evidence_profile[0].coherence.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-      if (profile.adequacy && profile.adequacy.option !== null) {
-        this.status_evidence_profile.value += 20
+      if (this.evidence_profile[0].adequacy.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-      if (profile.relevance && profile.relevance.option !== null) {
-        this.status_evidence_profile.value += 20
+      if (this.evidence_profile[0].relevance.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-      if (profile.cerqual && profile.cerqual.option !== null) {
-        this.status_evidence_profile.value += 20
+      if (this.evidence_profile[0].cerqual.option !== null) {
+        this.status_evidence_profile.value = this.status_evidence_profile.value + 20
       }
-
       if (this.status_evidence_profile.value <= 40) {
         this.status_evidence_profile.variant = 'danger'
-      } else if (this.status_evidence_profile.value <= 80) {
+      }
+      if (this.status_evidence_profile.value > 40 && this.status_evidence_profile.value <= 80) {
         this.status_evidence_profile.variant = 'warning'
-      } else if (this.status_evidence_profile.value === 100) {
+      }
+      if (this.status_evidence_profile.value === 100) {
         this.status_evidence_profile.variant = 'success'
       }
     },
+    getCharsOfStudies: function () {
+      const characteristics = JSON.parse(JSON.stringify(this.list.characteristics))
+      if (characteristics.length) {
+        let data = characteristics[0]
 
-    printErrors (error) {
-      console.error('Error:', {
-        message: error.message,
-        response: error.response && error.response.data,
-        status: error.response && error.response.status,
-        headers: error.response && error.response.headers,
-        config: error.config
-      })
+        // Add defensive checks for undefined properties
+        if (!data.fields) {
+          data.fields = []
+        }
+        if (!data.items) {
+          data.items = []
+        }
 
-      // Emitir evento de error para manejo global
-      this.$emit('error', {
-        message: error.message,
-        details: error.response && error.response.data
-      })
+        const { filteredItems, haveContent } = this.filterItemsByReferences(
+          data.items,
+          this.list.references,
+          data.fields.length
+        )
+
+        const hasWarning = haveContent > 0 || data.fields.length < 3
+        this.ui.adequacy.chars_of_studies.display_warning = hasWarning
+        this.ui.relevance.chars_of_studies.display_warning = hasWarning
+
+        data.items = filteredItems
+        this.characteristics_studies = data
+        if (data.fields.length) {
+          let fields = JSON.parse(JSON.stringify(data.fields))
+          let lastItem = fields.splice(fields.length - 1, 1)
+          this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
+          this.characteristics_studies.fieldsObj = []
+          let _fields = data.fields
+          for (let field of _fields) {
+            if (field.key !== 'ref_id') {
+              this.characteristics_studies.fieldsObj.push(field)
+            }
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
+            this.characteristics_studies.items = []
+          }
+        }
+        this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
+        this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
+
+        let tableTop = []
+
+        if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
+          const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
+          for (let tt of _tableTop) {
+            tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+          }
+        }
+        this.characteristics_studies.tableTop = tableTop
+      } else {
+        this.characteristics_studies = {
+          items: [],
+          fields: []
+        }
+      }
     },
+    getMethAssessments: function () {
+      const assessments = JSON.parse(JSON.stringify(this.list.assessments))
+      if (assessments.length) {
+        let data = assessments[0]
 
-    displaySelectedOption (option) {
+        // Add defensive checks for undefined properties
+        if (!data.fields) {
+          data.fields = []
+        }
+        if (!data.items) {
+          data.items = []
+        }
+
+        const { filteredItems, haveContent } = this.filterItemsByReferences(
+          data.items,
+          this.list.references,
+          data.fields.length
+        )
+
+        const hasWarning = haveContent > 0 || data.fields.length < 3
+        this.ui.methodological_assessments.display_warning = hasWarning
+
+        data.items = filteredItems
+        data.fieldsObj = data.fields.filter(field => field.key !== 'ref_id')
+
+        this.meth_assessments = data
+      } else {
+        this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
+      }
+    },
+    getExtractedData: function (status = false) {
+      let extractedData = JSON.parse(JSON.stringify(this.list.extracted_data))
+      if (status) {
+        Api.get(`/isoqf_extracted_data`, {finding_id: this.findings.id})
+          .then((response) => {
+            extractedData = response.data
+            this.processExtractedData(extractedData)
+          })
+      }
+      this.processExtractedData(extractedData)
+    },
+    processExtractedData: function (extractedData) {
+      let localData = {id: null, fields: [], items: []}
+      if (extractedData.length) {
+        localData = extractedData[0]
+        this.extracted_data = extractedData[0]
+        localData.fields.push({key: 'actions', label: ''})
+        let _fields = JSON.parse(JSON.stringify(localData.fields))
+        localData.fieldsObj = []
+        this.mode_print_fieldsObj = []
+        for (let field of _fields) {
+          if (field.key !== 'ref_id') {
+            localData.fieldsObj.push(field)
+            if (field.key !== 'actions') {
+              this.mode_print_fieldsObj.push(field)
+            }
+          }
+        }
+
+        const _references = this.list.references
+        let _items = []
+        let extractedDataItems = JSON.parse(JSON.stringify(localData.items))
+        extractedDataItems.sort(function (a, b) {
+          if (a.authors < b.authors) {
+            return -1
+          }
+          if (a.authors > b.authors) {
+            return 1
+          }
+          return 0
+        })
+        localData.original_items = JSON.parse(JSON.stringify(localData.items))
+        let haveContent = 0
+        const referencesSet = new Set(_references)
+
+        extractedDataItems.forEach((item, index) => {
+          if (referencesSet.has(item.ref_id)) {
+            _items.push({
+              ref_id: item.ref_id,
+              authors: item.authors,
+              column_0: item.column_0,
+              index: index
+            })
+
+            const hasEmptyOrMissingColumn = !item.column_0
+            if (hasEmptyOrMissingColumn) {
+              haveContent++
+            }
+          }
+        })
+
+        this.ui.coherence.display_warning = true
+        this.ui.methodological_assessments.extracted_data.display_warning = true
+        this.ui.adequacy.extracted_data.display_warning = true
+        if (!haveContent) {
+          this.ui.coherence.display_warning = false
+          this.ui.methodological_assessments.extracted_data.display_warning = false
+          this.ui.adequacy.extracted_data.display_warning = false
+        }
+        this.extracted_data.items = _items
+      }
+    },
+    printErrors: function (error) {
+      Commons.printErrors(error)
+    },
+    displaySelectedOption: function (option) {
       if (option === null) {
         return ''
       } else if (option >= 0 && this.select_options && this.select_options[option]) {
         return this.select_options[option].text
-      }
-      return ''
-    },
-
-    theLicense (license) {
-      const globalLicenses = [
-        {
-          value: 'BY-NC-ND',
-          text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.',
-          image: 'by-nc-nd-88x31.png'
-        },
-        { value: 'BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-nd-88x31.png' },
-        { value: 'BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-nc-sa-88x31.png' },
-        { value: 'BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.', image: 'by-nc-88x31.png' },
-        { value: 'BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.', image: 'by-sa-88x31.png' },
-        { value: 'BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.', image: 'by-88x31.png' }
-      ]
-
-      if (license) {
-        for (let lic of globalLicenses) {
-          if (lic.value === license) {
-            this.licenseUrl = require('../../assets/' + lic.image)
-            return lic.text
-          }
-        }
-      }
-
-      this.licenseUrl = require('../../assets/' + globalLicenses[0].image)
-      return globalLicenses[0].text
-    },
-
-    async returnTo () {
-      if (this.list.userEditing === this.$store.state.user.id) {
-        try {
-          const params = { editing: false, userEditing: '' }
-          await apiService.updateList(this.$route.params.id, params)
-          this.list.editing = false
-          this.list.userEditing = ''
-          this.$router.push({
-            name: 'viewProject',
-            params: {
-              org_id: this.list.organization,
-              id: this.list.project_id
-            }
-          })
-        } catch (error) {
-          this.printErrors(error)
-        }
       } else {
-        this.$router.push({
-          name: 'viewProject',
-          params: {
-            org_id: this.list.organization,
-            id: this.list.project_id
-          }
-        })
+        return ''
+      }
+    },
+    theLicense: function (license) {
+      return Commons.theLicense(license)
+    },
+    returnTo: function () {
+      if (this.list.userEditing === this.$store.state.user.id) {
+        const params = { editing: false, userEditing: '' }
+        Api.patch(`/isoqf_lists/${this.$route.params.id}`, params)
+          .then((response) => {
+            this.list.editing = false
+            this.list.userEditing = ''
+            this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
+          })
+          .catch((error) => {
+            this.printErrors(error)
+          })
+      } else {
+        this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
       }
     },
 
-    modalDataChanged (data) {
+    async attemptLock () {
+      // Use list.project_id if available, otherwise wait for getProject?
+      // list object has project_id
+      if (this.list.project_id) {
+        const res = await LockService.acquire(this.list.project_id)
+        if (res.success) {
+            this.lockInfo.locked = true
+        } else if (res.lockedBy) {
+            this.lockInfo.locked = false
+            this.lockInfo.lockedBy = res.lockedBy
+            this.mode = 'view'
+            this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }), {
+            title: this.$t('lock.locked_title'),
+            variant: 'warning',
+            solid: true,
+            noAutoHide: true
+            })
+        }
+      }
+    },
+    handleLockLost (e) {
+      if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-lost-sheet')
+      }
+    },
+    handleIdle (e) {
+        if (e.detail && e.detail.projectId === this.list.project_id) {
+        this.mode = 'view'
+        this.$bvModal.show('modal-lock-idle-sheet')
+      }
+    },
+    reloadPage () {
+        window.location.reload()
+    },
+
+    modalDataChanged: function (data) {
       this.buffer_modal_stage_two = JSON.parse(JSON.stringify(data))
     },
-
-    busyEvidenceProfileTable (status) {
+    busyEvidenceProfileTable: function (status) {
       this.evidence_profile_table_settings.isBusy = status
     },
-
-    callGetStageOneData (status) {
-      this.getStageOneData(status)
+    callGetFinding: function (status) {
+      this.getFinding(status)
     },
-
-    setShowEditExtractedDataInPlace (data) {
+    setShowEditExtractedDataInPlace: function (data) {
       this.showEditExtractedDataInPlace = data
+    }
+  },
+  mounted () {
+    this.updateTranslations()
+    this.getList()
+  },
+  watch: {
+    '$i18n.locale' (val) {
+      this.updateTranslations()
+    },
+    '$route' (to, from) {
+      if (to.params.id !== from.params.id) {
+        this.getList()
+      }
     }
   }
 }
 </script>
 
-<style lang="scss" scoped>
-div {
-  :deep(.navlink) {
-    padding: 0.5rem 0.9rem;
-  }
-
-  :deep(a.return) {
-    font-size: 1.2rem;
-  }
-
-  :deep(h3) {
-    span {
-      font-size: 1.55rem;
-
-      &.title-finding {
-        font-weight: 300;
-      }
+<style scoped>
+  div >>>
+    .navlink {
+      padding: 0.5rem 0.9rem;
     }
-  }
-
-  :deep(#assessments.table) {
-    thead {
-      th {
-        width: 19%;
-
-        &:first-child {
-          width: 2%;
-        }
-
-        &:last-child {
-          width: 3%;
-        }
-      }
+  div >>>
+    a.return {
+      font-size: 1.2rem;
     }
-  }
-
-  :deep(#assessments-print.table) {
-    thead {
-      th {
-        &:first-child {
-          width: 2%;
-        }
-
-        &:nth-child(2) {
-          width: 35%;
-        }
-
-        &:last-child {
-          width: 15%;
-        }
-      }
+  div >>>
+    h3 span {
+      font-size: 1.55rem
     }
-  }
-
-  :deep(.table) {
-    tbody {
-      td {
-        div {
-          li {
-            font-size: 0.8rem;
-            padding-top: 0.4rem;
-            list-style-type: none;
-          }
-        }
-      }
+  div >>>
+    h3 span.title-finding {
+      font-weight: 300;
     }
-  }
-
-  :deep(#extracted.table) {
-    thead {
-      th {
-        &:last-child {
-          text-align: right;
-          width: 13%;
-        }
-      }
+  div >>>
+    #assessments.table thead th:first-child {
+      width: 2%;
     }
-  }
-
-  :deep(.table-small-font) {
-    font-size: 14px;
-
-    &.extracted-data {
-      thead {
-        th {
-          &:last-child {
-            width: 3%;
-          }
-        }
-      }
+  div >>>
+    #assessments.table thead th:last-child {
+      width: 3%;
     }
-  }
-
-  :deep(.reference-txt) {
-    font-size: 12px;
-  }
-
-  :deep(#span-txt) {
-    font-size: 2rem;
-  }
-
-  :deep(label) {
-    b {
+  div >>>
+    #assessments.table thead th {
+      width: 19%;
+    }
+  div >>>
+    #assessments-print.table thead th:first-child {
+      width: 2%;
+    }
+  div >>>
+    #assessments-print.table thead th:nth-child(2) {
+      width: 35%;
+    }
+  div >>>
+    #assessments-print.table thead th:last-child {
+      width: 15%;
+    }
+  div >>>
+    .table tbody td div li {
+      font-size: 0.8rem;
+      padding-top: 0.4rem;
+      list-style-type: none;
+    }
+  div >>>
+    #extracted.table thead th:last-child {
+      text-align: right;
+      width: 13%;
+    }
+  div >>>
+    .table-small-font {
+      font-size: 14px;
+    }
+  div >>>
+    .table-small-font.extracted-data thead th:last-child {
+      width: 3%;
+    }
+  div >>>
+    .reference-txt {
+      font-size: 12px;
+    }
+  div >>>
+    #span-txt {
+      font-size: 2rem;
+    }
+  div >>>
+    label b {
       font-weight: bold;
     }
+  /* .extracted-data-table tbody tr td:last-child button {
+    display: none;
   }
-}
+  .extracted-data-table tbody tr:hover td:last-child button {
+    display: inline;
+  } */
 </style>

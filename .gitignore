@@ -18,3 +18,6 @@ config/prod.env.js
 *.njsproj
 *.sln
 src/components/camelot/char_demo.json
+
+# Test coverage
+coverage/
