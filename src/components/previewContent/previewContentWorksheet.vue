@@ -23,6 +23,7 @@
               id="exportButton"
               variant="outline-secondary"
               block
+              :disabled="!evidence_profile || evidence_profile.length === 0"
               @click="exportToWord()">
               Export to MS-Word
             </b-button>
@@ -680,13 +681,10 @@ export default {
       console.log(error.config)
     },
     exportToWord: function () {
-      console.log('--- Iniciando exportación a Word (previewContentWorksheet.vue) ---');
-      console.log('Project data:', JSON.stringify(this.project, null, 2));
-      console.log('Evidence Profile data:', JSON.stringify(this.evidence_profile, null, 2));
-      console.log('Characteristics data:', JSON.stringify(this.characteristics_studies, null, 2));
-      console.log('Assessments data:', JSON.stringify(this.meth_assessments, null, 2));
-      console.log('Extracted data:', JSON.stringify(this.extracted_data, null, 2));
-
+      if (!this.evidence_profile || this.evidence_profile.length === 0) {
+        alert('There is no evidence profile to export. Please wait for the data to load.');
+        return;
+      }
       const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
 
       const evidenceProfileChildren = [
@@ -817,12 +815,7 @@ export default {
         ]
       });
 
-      console.log('Document object created:', doc);
-
       Packer.toBlob(doc).then(blob => {
-        console.log('Blob generado:', blob);
-        console.log('Tamaño del blob:', blob.size);
-        console.log('Tipo del blob:', blob.type);
         saveAs(blob, filename)
       })
     },

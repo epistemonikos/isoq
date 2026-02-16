@@ -17,7 +17,7 @@
               variant="outline-secondary"
               right
               text="Export">
-              <b-dropdown-item @click="ExportToWord(project.name)">to MS Word</b-dropdown-item>
+              <b-dropdown-item :disabled="!findings || findings.length === 0" @click="ExportToWord(project.name)">to MS Word</b-dropdown-item>
               <b-dropdown-item @click="exportToRIS">the references</b-dropdown-item>
             </b-dropdown>
           </b-col>
@@ -239,10 +239,10 @@ export default {
   },
   methods: {
     ExportToWord: function (filename = '') {
-      console.log('--- Iniciando exportación a Word (actionButtons.vue) ---');
-      console.log('Project data:', JSON.stringify(this.project, null, 2));
-      console.log('Findings data:', JSON.stringify(this.findings, null, 2));
-      console.log('Lists Print Version data:', JSON.stringify(this.listsPrintVersion, null, 2));
+      if (!this.findings || this.findings.length === 0) {
+        alert('There are no findings to export. Please wait for the data to load or add findings to the project.');
+        return;
+      }
       filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
 
       const sections = []
@@ -646,12 +646,7 @@ export default {
         sections: sections
       })
 
-      console.log('Document object created:', doc);
-
       Packer.toBlob(doc).then(blob => {
-        console.log('Blob generado:', blob);
-        console.log('Tamaño del blob:', blob.size);
-        console.log('Tipo del blob:', blob.type);
         saveAs(blob, filename)
       })
     },
