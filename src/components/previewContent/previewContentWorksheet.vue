@@ -129,6 +129,7 @@ export default {
   },
   data () {
     return {
+      itemNumber: null,
       ui: {
         methodological_assessments: {
           display_warning: true
@@ -289,6 +290,7 @@ export default {
     }
   },
   mounted () {
+    this.itemNumber = this.$route.query.num
     this.getList()
   },
   methods: {
@@ -398,6 +400,9 @@ export default {
             this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
               this.evidence_profile.push(this.findings.evidence_profile)
+              if (this.evidence_profile.length > 0 && this.itemNumber) {
+                this.evidence_profile[0].isoqf_id = this.itemNumber
+              }
             }
             if (fromModal) {
               const title = this.buffer_modal_stage_two.title
@@ -676,396 +681,126 @@ export default {
     },
     exportToWord: function () {
       const filename = (this.project.name + ' - GRADE-CERQual Assessment Worksheet' || 'GRADE-CERQual Assessment Worksheet') + '.doc'
-      const doc = new Document()
 
-      doc.addSection({
-        size: {
-          orientation: PageOrientation.LANDSCAPE
-        },
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: this.project.name,
-                size: 24,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1,
-            children: [
-              new TextRun({
-                text: 'GRADE-CERQual Assessment Worksheet',
-                bold: true,
-                size: 28,
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Table({
-            borders: {
-              top: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              bottom: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              left: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              right: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideHorizontal: {
-                size: 1,
-                color: '000000',
-                style: BorderStyle.SINGLE
-              },
-              insideVertical: {
-                style: BorderStyle.NONE
+      const evidenceProfileChildren = [
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          children: [
+            new TextRun({
+              text: this.project.name,
+              size: 24,
+              font: { name: 'Times New Roman' },
+              color: '000000'
+            })
+          ]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({
+              text: 'GRADE-CERQual Assessment Worksheet',
+              bold: true,
+              size: 28,
+              color: '000000'
+            })
+          ]
+        }),
+        new Paragraph(''),
+        new Table({
+          borders: {
+            top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            insideHorizontal: { size: 1, color: '000000', style: BorderStyle.SINGLE },
+            insideVertical: { style: BorderStyle.NONE }
+          },
+          width: { size: '100%', type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '2%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: '#', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '28%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Summarized Review Finding', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '12%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Methodological limitations', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '12%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Coherence', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '12%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Adequacy', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '12%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Relevance', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '12%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'GRADE-CERQual assessment of confidence', bold: true, size: 22 })] })]
+                }),
+                new TableCell({
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '#EEEEEE' },
+                  width: { size: '10%', type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ children: [new TextRun({ text: 'References', bold: true, size: 22 })] })]
+                })
+              ]
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(this.itemNumber), size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.evidence_profile[0].name, size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.displaySelectedOption(this.evidence_profile[0].methodological_limitations.option), bold: true, size: 22 })] }), new Paragraph(''), new Paragraph({ children: [new TextRun({ text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? this.evidence_profile[0].methodological_limitations.explanation : '', size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.displaySelectedOption(this.evidence_profile[0].coherence.option), bold: true, size: 22 })] }), new Paragraph(''), new Paragraph({ children: [new TextRun({ text: (this.evidence_profile[0].coherence.explanation.length) ? this.evidence_profile[0].coherence.explanation : '', size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.displaySelectedOption(this.evidence_profile[0].adequacy.option), bold: true, size: 22 })] }), new Paragraph(''), new Paragraph({ children: [new TextRun({ text: (this.evidence_profile[0].adequacy.explanation.length) ? this.evidence_profile[0].adequacy.explanation : '', size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.displaySelectedOption(this.evidence_profile[0].relevance.option), bold: true, size: 22 })] }), new Paragraph(''), new Paragraph({ children: [new TextRun({ text: (this.evidence_profile[0].relevance.explanation.length) ? this.evidence_profile[0].relevance.explanation : '', size: 22 })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: this.displayLevelConfidence(this.evidence_profile[0].cerqual.option), bold: true, size: 22 })] }), new Paragraph(''), new Paragraph({ children: [new TextRun({ text: (this.evidence_profile[0].cerqual.explanation.length) ? this.evidence_profile[0].cerqual.explanation : '', size: 22 })] })] }),
+                new TableCell({ children: [...this.generateReferences()] })
+              ]
+            })
+          ]
+        })
+      ];
+
+      const doc = new Document({
+        creator: this.project.author || 'Epistemonikos',
+        title: this.project.name,
+        sections: [
+          {
+            properties: {
+              page: {
+                size: {
+                  orientation: PageOrientation.PORTRAIT,
+                },
+                margins: { top: 720, right: 720, bottom: 720, left: 720 }
               }
             },
-            width: {
-              size: '100%',
-              type: WidthType.PERCENTAGE
-            },
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '2%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: '#',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '28%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Summarized Review Finding',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Methodological limitations',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Coherence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Adequacy',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Relevance',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '12%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'GRADE-CERQual assessment of confidence',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    verticalAlign: VerticalAlign.CENTER,
-                    shading: {
-                      fill: '#EEEEEE'
-                    },
-                    width: {
-                      size: '10%',
-                      type: WidthType.PERCENTAGE
-                    },
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'References',
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidence_profile[0].isoqf_id,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.evidence_profile[0].name,
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].methodological_limitations.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].methodological_limitations.explanation.length) ? this.evidence_profile[0].methodological_limitations.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].coherence.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].coherence.explanation.length) ? this.evidence_profile[0].coherence.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].adequacy.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].adequacy.explanation.length) ? this.evidence_profile[0].adequacy.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displaySelectedOption(this.evidence_profile[0].relevance.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].relevance.explanation.length) ? this.evidence_profile[0].relevance.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: this.displayLevelConfidence(this.evidence_profile[0].cerqual.option),
-                            bold: true,
-                            size: 22
-                          })
-                        ]
-                      }),
-                      new Paragraph(''),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: (this.evidence_profile[0].cerqual.explanation.length) ? this.evidence_profile[0].cerqual.explanation : '',
-                            size: 22
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    children: [
-                      ...this.generateReferences()
-                    ]
-                  })
-                ]
-              })
-            ]
-          }),
+            children: evidenceProfileChildren
+          },
           ...this.showOtherTables(
             this.project.public_type,
             this.characteristics_studies,
@@ -1073,62 +808,85 @@ export default {
             this.extracted_data
           )
         ]
-      })
+      });
 
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
       })
     },
     showOtherTables: function (publicType, charsOfStudies, methAssessments, extractedData) {
-      let content = []
+      const sections = [];
       if (publicType === 'fully') {
-        content.push(new Paragraph(''))
-        content.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Characteristics of Studies',
-                size: 24,
-                bold: true
-              })
-            ]
-          })
-        )
-        content.push(
-          this.generateTable(JSON.parse(JSON.stringify(charsOfStudies)))
-        )
-        content.push(new Paragraph(''))
-        content.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Methodological Assessments',
-                size: 24,
-                bold: true
-              })
-            ]
-          })
-        )
-        content.push(
-          this.generateTable(JSON.parse(JSON.stringify(methAssessments)))
-        )
-        content.push(new Paragraph(''))
-        content.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Extracted Data',
-                size: 24,
-                bold: true
-              })
-            ]
-          })
-        )
-        content.push(
-          this.generateTable(JSON.parse(JSON.stringify(extractedData)))
-        )
+        // Characteristics of Studies Section
+        sections.push({
+          properties: {
+            page: {
+              size: { orientation: PageOrientation.LANDSCAPE },
+              margins: { top: 720, right: 720, bottom: 720, left: 720 }
+            }
+          },
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Characteristics of Studies',
+                  size: 24,
+                  bold: true
+                })
+              ]
+            }),
+            new Paragraph(''),
+            this.generateTable(JSON.parse(JSON.stringify(charsOfStudies)))
+          ]
+        });
+
+        // Methodological Assessments Section
+        sections.push({
+          properties: {
+            page: {
+              size: { orientation: PageOrientation.LANDSCAPE },
+              margins: { top: 720, right: 720, bottom: 720, left: 720 }
+            }
+          },
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Methodological Assessments',
+                  size: 24,
+                  bold: true
+                })
+              ]
+            }),
+            new Paragraph(''),
+            this.generateTable(JSON.parse(JSON.stringify(methAssessments)))
+          ]
+        });
+
+        // Extracted Data Section
+        sections.push({
+          properties: {
+            page: {
+              size: { orientation: PageOrientation.LANDSCAPE },
+              margins: { top: 720, right: 720, bottom: 720, left: 720 }
+            }
+          },
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Extracted Data',
+                  size: 24,
+                  bold: true
+                })
+              ]
+            }),
+            new Paragraph(''),
+            this.generateTable(JSON.parse(JSON.stringify(extractedData)))
+          ]
+        });
       }
-      return content
+      return sections;
     },
     generateReferences: function () {
       const allReferences = JSON.parse(JSON.stringify(this.references))
@@ -1191,7 +949,7 @@ export default {
         },
         rows: [
           this.generateHeaderRow(JSON.parse(JSON.stringify(data.fields))),
-          ...this.generateBodyRow(JSON.parse(JSON.stringify(data.items)))
+          ...this.generateBodyRow(JSON.parse(JSON.stringify(data.items)), JSON.parse(JSON.stringify(data.fields)))
         ]
       })
     },
@@ -1203,11 +961,11 @@ export default {
         ]
       })
     },
-    generateBodyRow: function (data) {
-      return data.map((item) => {
+    generateBodyRow: function (items, fields) {
+      return items.map((item) => {
         return new TableRow({
           children: [
-            ...this.prepareBodyCell(item)
+            ...this.prepareBodyCell(item, fields)
           ]
         })
       })
@@ -1234,37 +992,16 @@ export default {
         })
       })
     },
-    prepareBodyCell: function (data) {
-      if (Object.prototype.hasOwnProperty.call(data, 'index')) {
-        delete data.index
-      }
-      let arr = []
-      const keys = Object.keys(data)
-      let numbers = []
-      for (let key of keys) {
-        if (key !== 'ref_id' && key !== 'authors') {
-          const newKey = parseInt(key.split('_')[1])
-          numbers.push(newKey)
+    prepareBodyCell: function (item, fields) {
+      const cells = []
+      for (const field of fields) {
+        if (field.key !== 'ref_id' && field.key !== 'actions') {
+          const text = item[field.key] || ''
+          const isBold = field.key === 'authors'
+          cells.push(this.generateBodyCell(text, isBold, 20))
         }
       }
-      const len = numbers.sort((a, b) => { return a - b }).slice(-1)[0]
-      if (len !== undefined) {
-        if (len) {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          for (var cnt = 0; cnt <= len; cnt++) {
-            if (Object.prototype.hasOwnProperty.call(data, 'column_' + cnt.toString())) {
-              arr.push(this.generateBodyCell(data['column_' + cnt.toString()], false, 20))
-            }
-          }
-        } else {
-          arr.push(this.generateBodyCell(data.authors, true, 20))
-          arr.push(this.generateBodyCell(data['column_0'], false, 20))
-        }
-      } else {
-        arr.push(this.generateBodyCell(data.authors, true, 20))
-        arr.push(this.generateBodyCell(' ', false, 20))
-      }
-      return arr
+      return cells
     },
     generateBodyCell: function (data, isBold, size) {
       return new TableCell({
