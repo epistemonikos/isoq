@@ -14,25 +14,25 @@
       </b-thead>
       <b-tbody>
         <b-tr v-for="(item, index) of local_data" :key="index">
-          <template v-if="item.references.length && item.cerqual.option !== null">
+          <template v-if="item.is_category || (item.name && item.references)">
             <template v-if="item.is_category">
               <b-td
                 colspan="5"
                 class="text-center text-uppercase font-weight-bolder"
-                style="font-weight: bold; text-align: center; text-transform: uppercase;">
+                style="background-color: #f2f2f2; font-weight: bold; text-align: center; text-transform: uppercase;">
                 {{ item.name }}
               </b-td>
             </template>
             <template v-else>
               <b-td
                 style="vertical-align: top;">
-                <p>{{ item.isoqf_id || item.sort }}</p>
+                <p>{{ item.cnt || item.isoqf_id || item.sort }}</p>
               </b-td>
               <b-td
                 style="vertical-align: top;">
-                <template v-if="local_project.public_type !== 'minimally'">
+                <template v-if="local_project && local_project.public_type !== 'minimally'">
                   <p>
-                    <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token } }">{{ item.name }}</b-link>
+                    <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: $route.params.token }, query: { num: item.cnt || item.isoqf_id || item.sort } }">{{ item.name }}</b-link>
                   </p>
                 </template>
                 <template v-else>
@@ -66,12 +66,21 @@ export default {
     data: Array,
     project: Object
   },
+  watch: {
+    data: function (newVal) {
+      this.local_data = newVal
+    },
+    project: function (newVal) {
+      this.local_project = newVal
+    }
+  },
   mounted: function () {
     this.loadData()
   },
   data: function () {
     return {
-      local_data: []
+      local_data: [],
+      local_project: {}
     }
   },
   methods: {

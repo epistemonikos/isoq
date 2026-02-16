@@ -240,143 +240,152 @@ export default {
   methods: {
     ExportToWord: function (filename = '') {
       filename = filename ? filename + ' - Summary of Qualitative Findings Table.docx' : 'Summary of Qualitative Findings Table.docx'
-      const doc = new Document()
 
-      doc.addSection({
-        margins: {
-          top: 720,
-          right: 720,
-          bottom: 720,
-          left: 720
-        },
-        children: [
-          new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: this.project.name,
-                bold: true,
-                size: 36,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_2,
-            children: [
-              new TextRun({
-                text: 'Summary of Qualitative Findings Table',
-                bold: true,
-                size: 36,
-                font: { name: 'Times New Roman' },
-                color: '000000'
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Review question',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.review_question,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Authors of the review',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.authors,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Corresponding author',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              this.generateAuthorInfo()
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Has the review been published?',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length) ? ' | DOI: ' + this.project.url_doi : '') : 'No',
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Additional Information',
-                bold: true,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: this.project.description,
-                size: 24
-              })
-            ]
-          }),
-          new Paragraph(''),
-          ...this.generateLicense(this.project),
-          ...this.generateFindingsTable()
-        ]
-      })
-      if (this.findings.length && (this.$route.name === 'viewProject' || (this.$route.name === 'previewContentSoQf' && this.project.public_type !== 'minimally'))) {
-        doc.addSection({
-          size: {
-            orientation: PageOrientation.LANDSCAPE
-          },
+      const sections = []
+      const mainChildren = [
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          children: [
+            new TextRun({
+              text: this.project.name,
+              bold: true,
+              size: 36,
+              font: { name: 'Times New Roman' },
+              color: '000000'
+            })
+          ]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          heading: HeadingLevel.HEADING_2,
+          children: [
+            new TextRun({
+              text: 'Summary of Qualitative Findings Table',
+              bold: true,
+              size: 36,
+              font: { name: 'Times New Roman' },
+              color: '000000'
+            })
+          ]
+        }),
+        new Paragraph(''),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Review question',
+              bold: true,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: this.project.review_question,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph(''),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Authors of the review',
+              bold: true,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: this.project.authors,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph(''),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Corresponding author',
+              bold: true,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph({
+          children: [
+            this.generateAuthorInfo()
+          ]
+        }),
+        new Paragraph(''),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Has the review been published?',
+              bold: true,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: (this.project.published_status) ? ('Yes' + (this.project.url_doi.length ? ' | DOI: ' + this.project.url_doi : '')) : 'No',
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph(''),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Additional Information',
+              bold: true,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: this.project.description,
+              size: 24
+            })
+          ]
+        }),
+        new Paragraph(''),
+        ...this.generateLicense(this.project),
+        ...this.generateFindingsTable()
+      ]
+
+      sections.push({
+        properties: {
           margins: {
             top: 720,
             right: 720,
             bottom: 720,
             left: 720
+          }
+        },
+        children: mainChildren
+      })
+
+      if (this.findings.length && (this.$route.name === 'viewProject' || (this.$route.name === 'previewContentSoQf' && this.project.public_type !== 'minimally'))) {
+        sections.push({
+          properties: {
+            page: {
+              size: {
+                orientation: PageOrientation.LANDSCAPE
+              },
+              margins: {
+                top: 720,
+                right: 720,
+                bottom: 720,
+                left: 720
+              }
+            }
           },
           children: [
             new Paragraph({
@@ -438,7 +447,7 @@ export default {
                 new TableRow({
                   tableHeader: true,
                   height: {
-                    height: 1444,
+                    value: 1444,
                     rule: HeightRule.EXACT
                   },
                   children: [
@@ -626,6 +635,13 @@ export default {
           ]
         })
       }
+
+      const doc = new Document({
+        creator: this.project.author || 'Epistemonikos',
+        title: this.project.name,
+        sections: sections
+      })
+
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
       })
@@ -680,7 +696,7 @@ export default {
           new TableRow({
             tableHeader: true,
             height: {
-              height: 1444,
+              value: 1444,
               rule: HeightRule.EXACT
             },
             children: [
@@ -1006,7 +1022,7 @@ export default {
         } else {
           return new TableRow({
             children: [
-              this.generateTableCell({width_size: 250, text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1, font_size: 22, align: AlignmentType.CENTER}),
+              this.generateTableCell({width_size: 250, text: String(item.cnt || item.isoqf_id || item.sort), font_size: 22, align: AlignmentType.CENTER}),
               this.generateTableCell({width_size: 2000, text: item.name, font_size: 22, align: AlignmentType.LEFT}),
               this.generateTableCell({width_size: 1000, text: item.cerqual_option, font_size: 22, align: AlignmentType.CENTER}),
               this.generateTableCell({width_size: 1000, text: item.cerqual_explanation, font_size: 22, align: AlignmentType.LEFT}),
@@ -1082,6 +1098,9 @@ export default {
       return text
     },
     filteredPrintedData: function () {
+      if (this.preview) {
+        return this.listsPrintVersion
+      }
       const items = this.listsPrintVersion
       return items.filter((item) => {
         if (this.printableItems.includes(item.id)) {
@@ -1119,7 +1138,7 @@ export default {
                 children: [
                   this.generateTableCell({
                     width_size: 250,
-                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    text: String(item.cnt || item.isoqf_id || item.sort),
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
@@ -1128,7 +1147,10 @@ export default {
                   }),
                   new TableCell({
                     columnSpan: 5,
-                    width_size: 2500,
+                    width: {
+                      size: 2500,
+                      type: WidthType.PERCENTAGE
+                    },
                     children: [
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
@@ -1154,7 +1176,7 @@ export default {
                 children: [
                   this.generateTableCell({
                     width_size: 250,
-                    text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : index + 1,
+                    text: String(item.cnt || item.isoqf_id || item.sort),
                     font_size: 22,
                     align: AlignmentType.CENTER
                   }),
@@ -1215,7 +1237,7 @@ export default {
               children: [
                 this.generateTableCell({
                   width_size: 250,
-                  text: (Object.prototype.hasOwnProperty.call(item, 'cnt')) ? item.cnt : (Object.prototype.hasOwnProperty.call(item, 'sort')) ? item.sort : index + 1,
+                  text: String(item.cnt || item.isoqf_id || item.sort),
                   font_size: 22,
                   align: AlignmentType.LEFT
                 }),
@@ -1227,7 +1249,10 @@ export default {
                 }),
                 new TableCell({
                   columnSpan: 5,
-                  width_size: 2500,
+                  width: {
+                    size: 2500,
+                    type: WidthType.PERCENTAGE
+                  },
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,

@@ -123,7 +123,7 @@
               :references="references"
               :charsOfStudies="charsOfStudies"
               :methodologicalTableRefs="methodologicalTableRefs"
-              :listsPrintVersion="lists"
+              :listsPrintVersion="lists_print_version"
               :selectOptions="select_options"
               :cerqualConfidence="cerqual_confidence"
               :printableItems="printableItems"></action-buttons>
@@ -149,14 +149,14 @@
                   <p>{{project.review_question}}</p>
 
                   <h5>Has the review been published?</h5>
-                  <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                  <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status && project.url_doi">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
                   <h5 v-if="project.description">Additional Information</h5>
                   <p v-if="project.description">{{project.description}}</p>
                 </b-col>
                 <b-col cols="12" md="4" class="toDoc">
-                  <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
-                  <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
+                  <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors') && project.authors">Authors of the review</h5>
+                  <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors') && project.authors">
                     <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
                   </ul>
 
@@ -176,8 +176,8 @@
           </b-card>
           <div class="mt-3">
             <table-printing-findings
-              v-if="lists.length"
-              :data="lists"
+              v-if="lists_print_version.length"
+              :data="lists_print_version"
               :project="project">
             </table-printing-findings>
           </div>
@@ -236,6 +236,7 @@ export default {
         name: ''
       },
       lists: [],
+      lists_print_version: [],
       list_categories: {
         options: [],
         selected: null
@@ -303,6 +304,13 @@ export default {
     this.getListCategories()
     this.getReferences()
   },
+  watch: {
+    'list_categories.options': function (newVal) {
+      if (newVal && newVal.length > 0) {
+        this.getLists()
+      }
+    }
+  },
   methods: {
     printDoc: function () {
       window.print()
@@ -322,7 +330,34 @@ export default {
       }
       axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, {params})
         .then((response) => {
-          this.project = response.data
+          let _project = (Array.isArray(response.data)) ? response.data[0] : response.data
+          if (!_project) {
+            this.$router.push({ name: 'MainPage' })
+            return
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'name')) {
+            _project.name = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'review_question')) {
+            _project.review_question = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'description')) {
+            _project.description = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'authors') || _project.authors === null) {
+            _project.authors = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'author')) {
+            _project.author = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'author_email')) {
+            _project.author_email = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'license_type') || _project.license_type === null || _project.license_type === '') {
+            _project.license_type = 'CC-BY-NC-ND'
+          }
+          this.project = _project
+
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
             if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
               this.project.inclusion = ''
@@ -428,23 +463,41 @@ export default {
             }
 
             if (this.list_categories.options.length) {
+              this.lists_print_version = []
               let categories = []
 
               for (let category of this.list_categories.options) {
                 if (category.id !== null) {
-                  categories.push({'name': category.text, 'value': category.id, 'items': [], is_category: true})
+                  categories.push({
+                    'name': category.text,
+                    'id': category.id,
+                    'value': category.id,
+                    'items': [],
+                    is_category: true
+                  })
                 }
               }
-              categories.push({'name': 'Uncategorised findings', 'value': null, 'items': [], is_category: true})
+              categories.push({
+                'name': this.$t('uncategorised_findings') || 'Uncategorised findings',
+                'id': 'uncategorized',
+                'value': null,
+                'items': [],
+                is_category: true
+              })
 
               for (let list of data) {
                 if (categories.length) {
                   for (let category of categories) {
-                    if (category.value === list.category) {
+                    const listCatId = list.category ? list.category.toString() : null
+                    const categoryValue = category.value ? category.value.toString() : null
+
+                    if (categoryValue === listCatId) {
                       category.items.push(
                         {
+                          'id': list.id,
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
+                          'cerqual': list.cerqual,
                           'cerqual_option': list.cerqual_option,
                           'filter_cerqual': list.filter_cerqual,
                           'cerqual_explanation': list.cerqual_explanation,
@@ -510,14 +563,21 @@ export default {
       }
       axios.get('/api/isoqf_list_categories', { params })
         .then((response) => {
+          this.list_categories.options = []
           if (response.data.length) {
-            const options = JSON.parse(JSON.stringify(response.data[0].options))
+            let options = JSON.parse(JSON.stringify(response.data))
+            for (let option of options) {
+              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+                option.text = ''
+              }
+            }
+            options.sort((a, b) => a.text.localeCompare(b.text))
+            options.splice(0, 0, {id: null, text: this.$t('no_group') || 'No group'})
             this.list_categories.options = options
           }
         })
         .catch((error) => {
           console.log(error)
-          // this.printErrors(error)
         })
     },
     getReferences: function (changeTab = true) {
