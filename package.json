@@ -17,7 +17,7 @@
     "axios": "^1.7.9",
     "bootstrap": "^4.6.2",
     "bootstrap-vue": "^2.23.1",
-    "docx": "^5.1.1",
+    "docx": "^9.5.1",
     "export-to-csv": "^0.2.1",
     "file-saver": "^2.0.2",
     "jquery": "^3.7.1",
