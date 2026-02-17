@@ -773,6 +773,8 @@ export default {
         params.items.push(objItem)
       }
 
+      params.items = this.getCleanedItems(params.items, params.fields)
+
       if (this.project.is_public) {
         params.is_public = true
       }
@@ -806,19 +808,7 @@ export default {
       fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
 
       params.fields = fields
-
-      let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
-            item[field.key] = ''
-          }
-        }
-      }
-
-      params.items = _items
+      params.items = this.getCleanedItems(this.dataTable.items, fields)
 
       if (this.project.is_public) {
         params.is_public = true
@@ -832,6 +822,21 @@ export default {
         .catch((error) => {
           this.$emit('print-errors', error)
         })
+    },
+    getCleanedItems: function (items, fields) {
+      const allowedKeys = fields.map(f => f.key)
+      if (this.useCamelot) {
+        const camelotKeys = this.camelot.fields.map(f => f.key)
+        allowedKeys.push(...camelotKeys)
+      }
+
+      return items.map(item => {
+        const cleanedItem = {}
+        for (const key of allowedKeys) {
+          cleanedItem[key] = Object.prototype.hasOwnProperty.call(item, key) ? item[key] : ''
+        }
+        return cleanedItem
+      })
     },
     dataTableNewColumn: function () {
       let _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
@@ -1100,8 +1105,9 @@ export default {
           const charId = responseData.id
 
           if (responseData.items.length) {
-            const items = this.processItems(responseData.items)
-            
+            let items = this.processItems(responseData.items)
+            items = this.getCleanedItems(items, responseData.fields)
+
             // Fix: Do not patch (auto-save) if user does not have write permissions (e.g. project locked)
             if (this.checkPermissions) {
               let params = {
@@ -1153,14 +1159,8 @@ export default {
       _fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
       _fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
 
-      for (let item of _items) {
-        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
-          delete item[removedField.key]
-        }
-      }
-
       params.fields = _fields
-      params.items = _items
+      params.items = this.getCleanedItems(_items, _fields)
 
       Api.patch(`/${this.type}/${dataTableId}`, params)
         .then((response) => {
