@@ -57,11 +57,7 @@ const webpackConfig = merge(baseWebpackConfig, {
     minimizer: [
       new TerserPlugin({
         terserOptions: {
-          compress: {
-            warnings: false
-          },
-          keep_classnames: true,
-          keep_fnames: true
+          compress: false
         },
         sourceMap: config.build.productionSourceMap,
         parallel: true
