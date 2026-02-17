@@ -106,4 +106,31 @@ export default class Commons {
       return i18n.t(`commons.licenses.CC-BY-NC-ND`)
     }
   }
+
+  static sortFindings (findings, categories) {
+    const options = Array.isArray(categories) ? categories : (categories.options || [])
+
+    const getCategoryName = (id) => {
+      const cat = options.find(c => c.id === id)
+      return cat ? (cat.text || cat.name || '') : ''
+    }
+
+    return [...findings].sort((a, b) => {
+      const catA = (getCategoryName(a.category) || 'zzzzzzzz').toLowerCase()
+      const catB = (getCategoryName(b.category) || 'zzzzzzzz').toLowerCase()
+
+      if (catA < catB) return -1
+      if (catA > catB) return 1
+
+      if (a.sort < b.sort) return -1
+      if (a.sort > b.sort) return 1
+
+      return 0
+    }).map((item, index) => {
+      return {
+        ...item,
+        sort: index + 1
+      }
+    })
+  }
 }

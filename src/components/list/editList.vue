@@ -401,6 +401,7 @@ export default {
       mode: 'edit',
       mode_print_fieldsObj: [],
       findings: null,
+      list_categories: [],
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
@@ -539,6 +540,7 @@ export default {
             console.log('Empty list response')
           }
           this.getProject()
+          this.syncOrderWithProject()
           this.getAllReferences()
           this.getFinding(fromModal)
           this.getCharsOfStudies()
@@ -549,6 +551,29 @@ export default {
           const elementScroll = document.getElementsByName('evidence-profile')[0]
 
           window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
+        })
+    },
+    syncOrderWithProject: function () {
+      const params = {
+        organization: this.project.organization,
+        project_id: this.project.id
+      }
+      Api.get('/isoqf_list_categories', params)
+        .then((catResponse) => {
+          this.list_categories = catResponse.data
+          Api.get('/isoqf_lists', params)
+            .then((listsResponse) => {
+              const sorted = Commons.sortFindings(listsResponse.data, this.list_categories)
+              const current = sorted.find(l => l.id === this.list.id)
+              if (current) {
+                if (this.findings) {
+                  this.findings.isoqf_id = current.sort
+                }
+                if (this.evidence_profile && this.evidence_profile.length) {
+                  this.evidence_profile[0].isoqf_id = current.sort
+                }
+              }
+            })
         })
     },
     updateMyData: function () {

@@ -1225,12 +1225,8 @@ export default {
     processLists: async function (response) {
       let data = JSON.parse(JSON.stringify(response.data))
       if (data.length) {
-        data.sort(function (a, b) {
-          if (a.sort < b.sort) { return -1 }
-          if (a.sort > b.sort) { return 1 }
-          return 0
-        })
-        this.lastId = data.length + 1// parseInt(data.slice(-1)[0].isoqf_id) + 1
+        data = Commons.sortFindings(data, this.list_categories)
+        this.lastId = data.length + 1
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             list.status = 'unfinished'
@@ -1750,44 +1746,45 @@ export default {
       let requests = []
       this.table_settings.isBusy = true
       for (const list of this.sorted_lists) {
-        const params = {
-          'sort': cnt
-        }
-        requests.push(Api.patch(`/isoqf_lists/${list.id}`, params))
-        cnt++
+        const sortValue = cnt++
+        requests.push(
+          Api.patch(`/isoqf_lists/${list.id}`, { 'sort': sortValue })
+            .then(() => this.updateFindingSort(list.id, sortValue, false))
+        )
       }
 
       Promise.all(requests)
-        .then((responses) => {
-          for (const response of responses) {
-            this.updateFindingSort(response.data.id, response.data.$set.sort)
-          }
+        .then(() => {
+          this.getLists()
+          this.$refs['modal-sort-findings'].hide()
         })
         .catch((error) => {
           this.table_settings.isBusy = false
           Commons.printErrors(error)
         })
     },
-    updateFindingSort: function (listId, sort, getList = false) {
+    updateFindingSort: function (listId, sort, getList = true) {
       const params = {
         organization: this.$route.params.org_id,
         list_id: listId
       }
-      Api.get('/isoqf_findings', params)
+      return Api.get('/isoqf_findings', params)
         .then((reponse) => {
           const findingId = reponse.data[0].id
           const params = {
             'isoqf_id': sort,
             'evidence_profile.isoqf_id': sort
           }
-          Api.patch(`/isoqf_findings/${findingId}`, params)
+          return Api.patch(`/isoqf_findings/${findingId}`, params)
             .then(() => {
-              this.getLists()
+              if (getList) {
+                this.getLists()
+              }
             })
-            .catch((error) => {
-              this.table_settings.isBusy = false
-              Commons.printErrors(error)
-            })
+        })
+        .catch((error) => {
+          this.table_settings.isBusy = false
+          Commons.printErrors(error)
         })
     },
     getCategoryName: function (id) {
