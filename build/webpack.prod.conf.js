@@ -59,7 +59,9 @@ const webpackConfig = merge(baseWebpackConfig, {
         terserOptions: {
           compress: {
             warnings: false
-          }
+          },
+          keep_classnames: true,
+          keep_fnames: true
         },
         sourceMap: config.build.productionSourceMap,
         parallel: true

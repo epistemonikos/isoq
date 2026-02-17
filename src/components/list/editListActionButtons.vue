@@ -86,12 +86,6 @@ export default {
       return ''
     },
     exportToWord: function () {
-      console.log('--- Iniciando exportación a Word (editListActionButtons.vue) ---');
-      console.log('Project data:', JSON.stringify(this.project, null, 2));
-      console.log('Evidence Profile data:', JSON.stringify(this.evidenceProfile, null, 2));
-      console.log('Characteristics data:', JSON.stringify(this.characteristicStudies, null, 2));
-      console.log('Assessments data:', JSON.stringify(this.methodologicalAssessments, null, 2));
-      console.log('Extracted data:', JSON.stringify(this.extractedData, null, 2));
       if (!this.evidenceProfile || this.evidenceProfile.length === 0) {
         alert('There is no evidence profile to export. Please wait for the data to load or add data.');
         return;
@@ -603,12 +597,7 @@ export default {
         ]
       })
 
-      console.log('Document object created:', doc);
-
       Packer.toBlob(doc).then(blob => {
-        console.log('Blob generado:', blob);
-        console.log('Tamaño del blob:', blob.size);
-        console.log('Tipo del blob:', blob.type);
         saveAs(blob, filename)
       })
     },
