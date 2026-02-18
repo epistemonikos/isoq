@@ -28,6 +28,9 @@ export const store = new Vuex.Store({
     logout (state) {
       state.status = ''
       state.user = {}
+      localStorage.removeItem('user-data')
+      localStorage.removeItem('l_s')
+      localStorage.removeItem('token')
     },
     user_can (state, _bool) {
       state.user.can_write_other_orgs = _bool
@@ -100,10 +103,10 @@ export const store = new Vuex.Store({
           }).catch((error) => {
             console.log(error)
             // If offline or network error, try to restore from localStorage
-            const isOffline = !navigator.onLine || 
-                              (error.message && error.message.includes('Network Error')) || 
+            const isOffline = !navigator.onLine ||
+                              (error.message && error.message.includes('Network Error')) ||
                               error.isOfflineError === true
-            
+
             if (isOffline) {
               const userData = localStorage.getItem('user-data')
               if (userData) {
@@ -118,7 +121,7 @@ export const store = new Vuex.Store({
                 }
               }
             }
-            
+
             commit('logout')
             reject(error)
           })

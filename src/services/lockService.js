@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { store } from '../store'
+import Api from '@/utils/Api'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 const IDLE_TIMEOUT = 15 * 60 * 1000 // 15 minutes
@@ -11,9 +12,21 @@ class LockService {
     this.idleTimer = null
     this.isLocked = false
     this.lockedBy = null
-    
+
     // Bind idle handlers
     this.resetIdleTimer = this.resetIdleTimer.bind(this)
+
+    // Listen for logout in other tabs
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        // 'l_s' is the session token key and 'user-data' is the user data key
+        // When these are removed, it means the user logged out in another tab
+        if ((event.key === 'l_s' || event.key === 'user-data') && !event.newValue) {
+          this.handleLockLost()
+          this.release()
+        }
+      })
+    }
   }
 
   get isEnabled () {
@@ -24,11 +37,15 @@ class LockService {
 
   async acquire (projectId) {
     if (!this.isEnabled) return { success: true }
-    
+
     this.projectId = projectId
     try {
-      const response = await axios.post(`/api/lock/${projectId}`, {}, { 
-        headers: { 'X-Suppress-Lock-Error': 'true' }
+      const response = await axios.post(`/api/lock/${projectId}`, {}, {
+        headers: {
+          ...Api.getHeaders(),
+          'X-Suppress-Lock-Error': 'true'
+        },
+        withCredentials: true
       })
       if (response.data.status) {
         this.isLocked = true
@@ -56,36 +73,53 @@ class LockService {
     this.stopHeartbeat()
     this.stopIdleDetection()
     this.isLocked = false
-    
-    try {
-      // Use beacon or standard request?
-      // Standard request is fine, but if page is closing, sendBeacon is better.
-      // For now simple axios.
-      await axios.delete(`/api/lock/${this.projectId}`)
-    } catch (e) {
-      console.error('Error releasing lock', e)
-    }
+
+    const projectId = this.projectId
     this.projectId = null
+
+    // If we are not logged in, we shouldn't attempt to call the API
+    // (this avoids 401 errors during logout)
+    // We also check if l_s exists in localStorage as a double check
+    if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
+      try {
+        // Use beacon or standard request?
+        // Standard request is fine, but if page is closing, sendBeacon is better.
+        // For now simple axios.
+        await axios.delete(`/api/lock/${projectId}`, {
+          headers: Api.getHeaders(),
+          withCredentials: true
+        })
+      } catch (e) {
+        // Silently ignore 401 errors during release as they often happen during logout
+        if (e.response && e.response.status === 401) {
+          return
+        }
+        console.error('Error releasing lock', e)
+      }
+    }
   }
 
   async heartbeat () {
     if (!this.projectId || !this.isLocked) return
 
     if (!store.state.isOnline) {
-       // Skip if offline, but don't stop timer? 
-       // Or stop timer to prevent error accumulation?
-       // The server lock WILL expire.
-       // We should notify connection lost?
-       return
+      // Skip if offline, but don't stop timer?
+      // Or stop timer to prevent error accumulation?
+      // The server lock WILL expire.
+      // We should notify connection lost?
+      return
     }
 
     try {
-      await axios.post(`/api/lock/${this.projectId}/heartbeat`)
+      await axios.post(`/api/lock/${this.projectId}/heartbeat`, {}, {
+        headers: Api.getHeaders(),
+        withCredentials: true
+      })
     } catch (error) {
-       if (error.response && (error.response.status === 409 || error.response.status === 403)) {
-         // Lock lost!
-         this.handleLockLost()
-       }
+      if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
+        // Lock lost!
+        this.handleLockLost()
+      }
     }
   }
 
