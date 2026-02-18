@@ -75,8 +75,14 @@ export default {
         extractedData: JSON.parse(JSON.stringify(this.extractedData || {})),
         selectOptions: JSON.parse(JSON.stringify(this.selectOptions || [])),
         levelConfidence: JSON.parse(JSON.stringify(this.levelConfidence || [])),
-        references: JSON.parse(JSON.stringify(this.references || [])),
+        references: JSON.parse(JSON.stringify(this.list.fullreferences || [])),
         list: JSON.parse(JSON.stringify(this.list || {})),
+        findings: [
+          {
+            ...JSON.parse(JSON.stringify(this.list || {})),
+            evidence_profile: this.evidenceProfile && this.evidenceProfile.length ? this.evidenceProfile[0] : null
+          }
+        ],
         license: this.license
       }
 

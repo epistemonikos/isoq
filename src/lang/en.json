@@ -122,7 +122,10 @@
     "username": "Username",
     "first_name": "First name",
     "last_name": "Last name",
-    "user_can": "User can"
+    "user_can": "User can",
+    "et_al": " et al. ",
+    "and": " and ",
+    "no_authors": "No author(s)"
   },
   "menu": {
     "about": "About",

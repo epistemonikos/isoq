@@ -488,25 +488,7 @@ export default {
       this.mode = (this.mode === 'edit') ? 'view' : 'edit'
     },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = ' ' + this.$t('common.no_authors')
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else {
-          result = reference.authors[0].split(',')[0] + this.$t('common.et_al') + reference.publication_year + semicolon
-        }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
-      } else {
-        return result
-      }
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     getAllReferences: function () {
       let _references = JSON.parse(JSON.stringify(this.list.fullreferences))
@@ -566,6 +548,7 @@ export default {
               const sorted = Commons.sortFindings(listsResponse.data, this.list_categories)
               const current = sorted.find(l => l.id === this.list.id)
               if (current) {
+                this.list.sort = current.sort
                 if (this.findings) {
                   this.findings.isoqf_id = current.sort
                 }

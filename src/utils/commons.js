@@ -27,15 +27,15 @@ export default class Commons {
         if (reference.authors.length === 1) {
           result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' ' + i18n.t('commons.and') + ' ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + i18n.t('common.and') + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',')[0] + ' ' + i18n.t('commons.et_al') + ' ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',')[0] + i18n.t('common.et_al') + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
         }
       } else {
-        return i18n.t('commons.author_not_found')
+        return i18n.t('common.author_not_found')
       }
     }
     return result
@@ -47,12 +47,12 @@ export default class Commons {
       if (nroAuthors === 1) {
         return authors[0].split(',')[0] + ' ' + pubYear
       } else if (nroAuthors === 2) {
-        return authors[0].split(',')[0] + ' ' + i18n.t('commons.and') + ' ' + authors[1].split(',')[0] + ' ' + pubYear
+        return authors[0].split(',')[0] + i18n.t('common.and') + authors[1].split(',')[0] + ' ' + pubYear
       } else {
-        return authors[0].split(',')[0] + ' ' + i18n.t('commons.et_al') + ' ' + pubYear
+        return authors[0].split(',')[0] + i18n.t('common.et_al') + pubYear
       }
     } else {
-      return i18n.t('commons.author_not_found')
+      return i18n.t('common.author_not_found')
     }
   }
 

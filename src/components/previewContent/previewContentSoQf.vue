@@ -201,6 +201,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -579,26 +580,8 @@ export default {
           // this.printErrors(error)
         })
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else if (reference.authors.length === 2) {
-            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else {
-            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-          }
-          if (!onlyAuthors) {
-            result = result + reference.title
-          }
-        } else {
-          return 'author(s) not found'
-        }
-      }
-      return result
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true

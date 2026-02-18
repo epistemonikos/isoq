@@ -4,6 +4,7 @@ import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
+import Commons from '@/utils/commons'
 
 export class BaseExportStrategy {
     constructor(project, data, locale = 'en') {
@@ -177,7 +178,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             
             rows.push([
                 {
-                    text: finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
+                    text: finding.sort?.toString() || finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
                     alignment: AlignmentType.CENTER
                 },
                 {
@@ -204,16 +205,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 
     formatReferenceList(refIds) {
         if (!refIds || refIds.length === 0) return ''
-        
+
         const refs = refIds.map(id => {
             const ref = this.data.references?.find(r => r.id === id)
             if (!ref) return null
-            
-            const author = ref.authors?.[0] || 'Unknown'
-            const year = ref.publication_year || ''
-            return `${author}, ${year}`
+
+            return Commons.parseReference(ref, true, false)
         }).filter(Boolean)
-        
+
         return refs.join('; ')
     }
 
@@ -270,7 +269,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             
             rows.push([
                 {
-                    text: finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
+                    text: finding.sort?.toString() || finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
                     alignment: AlignmentType.CENTER
                 },
                 {
@@ -461,7 +460,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
                 }),
                 new TableRow({
                     children: [
-                        this.createCell([new TextRun({ text: this.evidenceProfile[0].isoqf_id, size: 22 })]),
+                        this.createCell([new TextRun({ text: (this.evidenceProfile[0].sort || this.evidenceProfile[0].isoqf_id || '').toString(), size: 22 })]),
                         this.createCell([new TextRun({ text: this.evidenceProfile[0].name, size: 22 })]),
                         this.createExplanationCell('methodological-limitations', this.evidenceProfile[0].methodological_limitations),
                         this.createExplanationCell('coherence', this.evidenceProfile[0].coherence),
@@ -1152,7 +1151,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         let epReferences = []
         for (let reference of allReferences) {
             if (listReferences.indexOf(reference.id) !== -1) {
-                epReferences.push(reference.content)
+                epReferences.push(Commons.parseReference(reference, true, false))
             }
         }
         let arr = []
