@@ -1142,6 +1142,9 @@
         "concerns": "Preocupaciones",
         "fit_assessment": "Evaluación de ajuste"
       },
+      "inline_edit": {
+        "warning": "Los cambios que hagas en datos extraídos o preocupaciones se actualizarán automáticamente en los datos del paso 3 y 4."
+      },
       "table_headers": {
         "authors": "Autores",
         "overall": "Evaluación general",

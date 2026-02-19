@@ -132,14 +132,44 @@
                     </div>
                     <div>
                       <div v-for="(item, iIndex) in (modal.stage === 0 ? meta[1] : meta[2]).items" :key="iIndex" class="mb-3 border-bottom pb-2">
-                        <h4 class="mb-2 font-weight-bold">
-                          {{ iIndex + 1 }} - {{ getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex) }}
-                        </h4>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <h4 class="mb-0 font-weight-bold">
+                            {{ iIndex + 1 }} - {{ getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex) }}
+                          </h4>
+                          <b-button v-if="editingField.metaIndex !== (modal.stage === 0 ? 1 : 2) || editingField.itemIndex !== iIndex"
+                            size="sm" variant="link" class="p-0 text-primary edit-category-btn" @click="startEditing(modal.stage === 0 ? 1 : 2, iIndex)">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
+                        </div>
+
                         <div class="pl-2">
-                          <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-2">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] || '---' }}</p>
-                          <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                          <p class="mb-0">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] || '---' }}</p>
+                          <template v-if="editingField.metaIndex === (modal.stage === 0 ? 1 : 2) && editingField.itemIndex === iIndex">
+                            <!-- Modo Edición Combinado -->
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                            <b-form-textarea v-model="editValueExtracted" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                            
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                            <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                            
+                            <p class="small text-danger mb-2 font-italic font-weight-bold">{{ $t('camelot.step_four.inline_edit.warning') }}</p>
+                            
+                            <div class="d-flex justify-content-end gap-2 mb-2">
+                              <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                              <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                                <b-spinner small v-if="isSavingField"></b-spinner>
+                                {{ $t('common.save') }}
+                              </b-button>
+                            </div>
+                          </template>
+                          
+                          <template v-else>
+                            <!-- Modo Vista -->
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                            <p class="mb-2 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] || '---' }}</p>
+                            
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                            <p class="mb-0 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] || '---' }}</p>
+                          </template>
                         </div>
                       </div>
                     </div>
@@ -150,14 +180,41 @@
                     <b-row>
                       <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
                       <b-col cols="6" class="modal-column-scroll">
-                        <div class="column-header mb-3">
-                          <h3>{{ domain.label }}</h3>
+                        <div class="column-header mb-3 d-flex justify-content-between align-items-center border-bottom pb-2">
+                          <h3 class="mb-0 border-0">{{ domain.label }}</h3>
+                          <b-button v-if="editingField.metaIndex !== 0 || editingField.itemIndex !== dIndex"
+                            size="sm" variant="link" class="p-0 text-primary edit-category-btn" @click="startEditing(0, dIndex)">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
                         </div>
                         <div class="pl-2">
-                          <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-2">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] || '---' }}</p>
-                          <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                          <p class="mb-0">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] || '---' }}</p>
+                          <template v-if="editingField.metaIndex === 0 && editingField.itemIndex === dIndex">
+                            <!-- Modo Edición Combinado Meta Domain -->
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                            <b-form-textarea v-model="editValueExtracted" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                            
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                            <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                            
+                            <p class="small text-danger mb-2 font-italic font-weight-bold">{{ $t('camelot.step_four.inline_edit.warning') }}</p>
+                            
+                            <div class="d-flex justify-content-end gap-2 mb-2">
+                              <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                              <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                                <b-spinner small v-if="isSavingField"></b-spinner>
+                                {{ $t('common.save') }}
+                              </b-button>
+                            </div>
+                          </template>
+                          
+                          <template v-else>
+                            <!-- Modo Vista Meta Domain -->
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                            <p class="mb-2 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] || '---' }}</p>
+                            
+                            <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                            <p class="mb-0 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] || '---' }}</p>
+                          </template>
                         </div>
                       </b-col>
                       
@@ -370,7 +427,9 @@ export default {
           { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
         ]
       },
-      characteristics: [],
+      characteristics: {
+        items: []
+      },
       assessments: {
         items: []
       },
@@ -450,7 +509,14 @@ export default {
         }
       ],
       selectedMeta: 0,
-      refId: null
+      refId: null,
+      editingField: {
+        metaIndex: null,
+        itemIndex: null
+      },
+      editValueExtracted: '',
+      editValueConcerns: '',
+      isSavingField: false
     }
   },
   watch: {
@@ -579,6 +645,78 @@ export default {
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
+    },
+    startEditing (metaIndex, itemIndex) {
+      this.editingField = { metaIndex, itemIndex }
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      this.editValueExtracted = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData'] || ''
+      this.editValueConcerns = this.meta[metaIndex].values[itemIndex][itemPrefix + 'concerns'] || ''
+    },
+    cancelEditing () {
+      this.editingField = { metaIndex: null, itemIndex: null }
+      this.editValueExtracted = ''
+      this.editValueConcerns = ''
+    },
+    saveField () {
+      if (!this.characteristics) return
+      
+      this.isSavingField = true
+      const { metaIndex, itemIndex } = this.editingField
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      
+      // Asegurar estructura básica si es un objeto nuevo
+      if (!this.characteristics.organization) {
+        this.characteristics.organization = this.$route.params.org_id
+        this.characteristics.project_id = this.$route.params.id
+      }
+      
+      if (!this.characteristics.items) {
+        this.$set(this.characteristics, 'items', [])
+      }
+
+      // Actualizar o añadir el ítem en el arreglo principal
+      let existingItemIdx = this.characteristics.items.findIndex(item => item.ref_id === this.refId)
+
+      if (existingItemIdx !== -1) {
+        this.$set(this.characteristics.items[existingItemIdx], itemPrefix + 'extractedData', this.editValueExtracted)
+        this.$set(this.characteristics.items[existingItemIdx], itemPrefix + 'concerns', this.editValueConcerns)
+      } else {
+        this.characteristics.items.push({
+          ref_id: this.refId,
+          authors: this.ui.authors,
+          [itemPrefix + 'extractedData']: this.editValueExtracted,
+          [itemPrefix + 'concerns']: this.editValueConcerns
+        })
+      }
+      
+      // Actualizar la vista local meta para feedback inmediato
+      this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData'] = this.editValueExtracted
+      this.meta[metaIndex].values[itemIndex][itemPrefix + 'concerns'] = this.editValueConcerns
+
+      const savePromise = this.characteristics.id
+        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/`, this.characteristics)
+        : Api.post('/isoqf_characteristics/', this.characteristics)
+
+      savePromise
+        .then(response => {
+          const responseData = response.data.$set || response.data
+          // Sincronizar objeto local con respuesta del servidor
+          this.characteristics = { 
+            ...this.characteristics, 
+            ...responseData, 
+            id: response.data.id || this.characteristics.id || response.data._id 
+          }
+          
+          this.cancelEditing()
+          this.isSavingField = false
+          // Notificar a otros componentes (Paso 3)
+          this.$root.$emit('characteristics-updated', this.characteristics)
+        })
+        .catch(error => {
+          console.error('Error saving characteristic field:', error)
+          this.isSavingField = false
+          this.getCharacteristics()
+        })
     },
     getCircleClass: function (stage, optionIndex, item) {
       if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
@@ -745,6 +883,21 @@ export default {
 
 .column-header {
   margin-bottom: 1.5rem;
+}
+
+.text-wrap-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.edit-category-btn {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  
+  &:hover {
+    color: #0056b3 !important;
+  }
 }
 
 .modal-column-scroll {

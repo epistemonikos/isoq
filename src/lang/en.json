@@ -1142,6 +1142,9 @@
         "concerns": "Concerns",
         "fit_assessment": "Fit assessment"
       },
+      "inline_edit": {
+        "warning": "Changes made to extracted data or concerns will be automatically updated in the Step 3 and 4 data."
+      },
       "table_headers": {
         "authors": "Authors",
         "overall": "Overall assessment",

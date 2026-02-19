@@ -417,6 +417,17 @@ export default {
   mounted () {
     // Cargamos los datos de características al montar el componente
     this.loadCharacteristicsData()
+
+    // Escuchar actualizaciones globales para sincronizar datos entre pestañas
+    this.$root.$on('characteristics-updated', (updatedData) => {
+      if (updatedData) {
+        this.charsData = updatedData
+        this.$forceUpdate()
+      }
+    })
+  },
+  beforeDestroy () {
+    this.$root.$off('characteristics-updated')
   }
 }
 </script>
