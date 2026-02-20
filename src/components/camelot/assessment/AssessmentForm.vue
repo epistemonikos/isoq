@@ -25,12 +25,30 @@
         :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
     </b-form-group>
 
-    <div>
-      <!-- <b-button>cancel</b-button> -->
+    <div class="mt-4">
+      <h3 class="notes-title">{{ $t('common.notes') }}</h3>
+      <b-form-group label="" label-for="textarea-notes">
+        <b-form-textarea
+          id="textarea-notes"
+          v-model="notes"
+          rows="3"
+          :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+        <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+      </b-form-group>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <b-button
+        variant="outline-secondary"
+        class="mr-2"
+        @click="cancel">
+        {{ $t('common.cancel') }}
+      </b-button>
       <b-button
         :disabled="button.disabled"
         :variant="(button.disabled) ? 'outline-primary' : 'primary'"
         @click="save">
+        <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
         {{ $t('camelot.assessment_form.save_button') }}
       </b-button>
     </div>
@@ -52,6 +70,8 @@ export default {
       ],
       selected: null,
       text1: '',
+      notes: '',
+      isSaving: false,
       options: [
         [
           {
@@ -194,12 +214,14 @@ export default {
       if (this.assessments.items.length) {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
+        this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
       }
     },
     selectedMeta (newValue) {
       if (this.assessments.items) {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
+        this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
       }
     },
     assessments: {
@@ -207,52 +229,65 @@ export default {
         if (newValue.items.length) {
           this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
           this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+          this.notes = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
         }
       },
       deep: true
     },
     selected (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
     },
     text1 (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
+    },
+    notes (newValue) {
+      this.checkChanges()
     }
   },
   mounted: function () {
     if (this.assessments.items.length) {
       this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
       this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+      this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
   },
   methods: {
+    checkChanges () {
+      const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+      if (item.option === this.selected && item.text === this.text1 && (item.notes || '') === this.notes) {
+        this.button.disabled = true
+      } else {
+        this.button.disabled = false
+      }
+    },
+    cancel () {
+      this.$bvModal.hide('modal-1')
+    },
     save () {
+      this.isSaving = true
       const stages = [
         {
           key: 0,
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -261,19 +296,23 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -282,7 +321,8 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -291,7 +331,8 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         }
@@ -312,6 +353,7 @@ export default {
             if (item.ref_id === this.refId) {
               item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
               item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+              item.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
             }
           })
         } else {
@@ -322,24 +364,43 @@ export default {
             .then(response => {
               console.log('Data updated successfully:', response.data)
               this.$emit('getAssessments')
+              this.isSaving = false
             })
             .catch(error => {
               console.error('Error updating data:', error)
+              this.isSaving = false
             })
         } else {
           Api.post('/isoqf_assessments', params)
             .then(response => {
               this.$emit('getAssessments')
               console.log('Data saved successfully:', response.data)
+              this.isSaving = false
             })
             .catch(error => {
               console.error('Error saving data:', error)
+              this.isSaving = false
             })
         }
       } else {
         console.log('no ref id')
+        this.isSaving = false
       }
     }
   }
 }
 </script>
+
+<style scoped>
+.notes-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #1065AB;
+  border-bottom: 2px solid #1065AB;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.italic {
+  font-style: italic;
+}
+</style>
