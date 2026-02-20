@@ -293,7 +293,7 @@
               >
                 <b-row class="mt-4">
                   <!-- Columna 1: Fit Design vs Meta Resumen -->
-                  <b-col cols="4" class="modal-column-scroll">
+                  <b-col cols="3" class="modal-column-scroll">
                     <div class="column-header mb-3">
                       <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
                     </div>
@@ -312,7 +312,7 @@
                   </b-col>
 
                   <!-- Columna 2: Fit Conduct vs Meta Resumen -->
-                  <b-col cols="4" class="modal-column-scroll">
+                  <b-col cols="3" class="modal-column-scroll">
                     <div class="column-header mb-3">
                       <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
                     </div>
@@ -330,8 +330,23 @@
                     </div>
                   </b-col>
 
-                  <!-- Columna 3: Assessment Evaluation -->
-                  <b-col cols="4" class="border-left">
+                  <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
+                  <b-col cols="3" class="modal-column-scroll border-left">
+                    <div class="column-header mb-3">
+                      <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
+                    </div>
+                    <div class="p-1">
+                      <responses
+                        v-if="assessments.items.length"
+                        :stage="2"
+                        :index="0"
+                        :option="assessments.items[modal.index].stages[2].options[0].option"
+                        :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                    </div>
+                  </b-col>
+
+                  <!-- Columna 4: Evaluación de ajuste final -->
+                  <b-col cols="3" class="border-left">
                     <assessmentForm
                       :assessments="assessments"
                       :modalStage="3"
@@ -339,20 +354,6 @@
                       :refId="refId"
                       :modalIndex="modal.index"
                       @getAssessments="getAssessments"></assessmentForm>
-                    
-                    <div class="mt-4 pt-4 border-top">
-                      <div class="column-header mb-3">
-                        <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
-                      </div>
-                      <div class="p-1">
-                        <responses
-                          v-if="assessments.items.length"
-                          :stage="2"
-                          :index="0"
-                          :option="assessments.items[modal.index].stages[2].options[0].option"
-                          :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
-                      </div>
-                    </div>
                   </b-col>
                 </b-row>
               </b-tab>
