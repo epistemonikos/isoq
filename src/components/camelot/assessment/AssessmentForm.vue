@@ -11,7 +11,8 @@
         v-for="(value, index) in options[modalStage][selectedMeta].values"
         v-model="selected"
         :key="index"
-        :value="value.value">
+        :value="value.value"
+        :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
         {{ value.text }}
       </b-form-radio>
     </b-form-group>
@@ -260,6 +261,16 @@ export default {
         this.button.disabled = false
       }
     },
+    getOptionColor (value) {
+      const colors = {
+        'A': '#1065AB', // No or minimal
+        'B': '#8EC4DE', // Minor
+        'C': '#F6A482', // Moderate
+        'D': '#B31529', // Serious
+        'E': '#B3B3B3'  // Unclear
+      }
+      return colors[value] || '#B3B3B3'
+    },
     cancel () {
       this.$bvModal.hide('modal-1')
     },
@@ -391,7 +402,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .notes-title {
   font-size: 1.1rem;
   font-weight: bold;
@@ -402,5 +413,49 @@ export default {
 }
 .italic {
   font-style: italic;
+}
+
+.assessment-radio {
+  display: flex;
+  align-items: center;
+  
+  ::v-deep label {
+    cursor: pointer;
+    line-height: 1.5;
+    margin-bottom: 0;
+    padding-top: 2px;
+  }
+
+  // Estilos base para los radios personalizados de Bootstrap-Vue
+  ::v-deep .custom-control-label::before {
+    border-width: 2px;
+  }
+
+  // Definición de colores por nivel
+  &.radio-color-A {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #1065AB !important; border-color: #1065AB !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231065AB'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #1065AB !important; }
+  }
+  &.radio-color-B {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #8EC4DE !important; border-color: #8EC4DE !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238EC4DE'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #8EC4DE !important; }
+  }
+  &.radio-color-C {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #F6A482 !important; border-color: #F6A482 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23F6A482'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #F6A482 !important; }
+  }
+  &.radio-color-D {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B31529 !important; border-color: #B31529 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B31529'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #B31529 !important; }
+  }
+  &.radio-color-E {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B3B3B3 !important; border-color: #B3B3B3 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B3B3B3'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #B3B3B3 !important; }
+  }
 }
 </style>
