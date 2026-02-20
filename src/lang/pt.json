@@ -1105,6 +1105,8 @@
       "assess_button": "Avaliar",
       "not_assigned": "Não atribuído",
       "modal_title": "Avaliação metodológica",
+      "breadcrumb_main": "Tabela de avaliações metodológicas",
+      "breadcrumb_sub": "Avaliações de ajuste Camelot",
       "tabs": {
         "fit_meta_design": "Ajuste entre Domínios Meta e Desenho de pesquisa",
         "fit_meta_conduct": "Ajuste entre Domínios Meta e Condução de pesquisa",
@@ -1141,6 +1143,9 @@
         "extracted_data": "Dados extraídos",
         "concerns": "Preocupações",
         "fit_assessment": "Avaliação de ajuste"
+      },
+      "inline_edit": {
+        "warning": "As alterações feitas nos dados extraídos ou preocupações serão atualizadas automaticamente nos dados das etapas 3 e 4."
       },
       "table_headers": {
         "authors": "Autores",

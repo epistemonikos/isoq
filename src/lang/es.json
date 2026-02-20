@@ -1105,6 +1105,8 @@
       "assess_button": "Evaluar",
       "not_assigned": "No asignado",
       "modal_title": "Evaluación metodológica",
+      "breadcrumb_main": "Tabla de evaluaciones metodológicas",
+      "breadcrumb_sub": "Evaluaciones de ajuste Camelot",
       "tabs": {
         "fit_meta_design": "Ajuste entre Dominios Meta y Diseño de investigación",
         "fit_meta_conduct": "Ajuste entre Dominios Meta y Conducta de investigación",

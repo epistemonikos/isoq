@@ -1105,6 +1105,8 @@
       "assess_button": "Assess",
       "not_assigned": "Not assigned",
       "modal_title": "Methodological assessment",
+      "breadcrumb_main": "Methodological assessments table",
+      "breadcrumb_sub": "Camelot assessments of fit",
       "tabs": {
         "fit_meta_design": "Fit between Meta domains and Research design",
         "fit_meta_conduct": "Fit between Meta domains and Research conduct",

@@ -109,7 +109,19 @@
       </template>
     </b-table>
 
-    <b-modal id="modal-1" size="xl" hide-footer :title="$t('camelot.step_four.modal_title')" class="modal-header">
+    <b-modal id="modal-1" size="xl" hide-footer header-class="camelot-modal-header">
+      <template #modal-title>
+        <div class="modal-title-container">
+          <div class="modal-breadcrumb">
+            {{ $t('camelot.step_four.breadcrumb_main') }} &gt; 
+            {{ $t('camelot.step_four.breadcrumb_sub') }} &gt; 
+            <span class="text-white">{{ ui.authors }}</span>
+          </div>
+          <div class="modal-main-title mt-1">
+            {{ modalSubtitle }}
+          </div>
+        </div>
+      </template>
       <b-row>
         <b-col cols="12" class="modal-body">
           <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs" align="right" @input="selectedMeta = $event">
@@ -520,6 +532,17 @@ export default {
       isSavingField: false
     }
   },
+  computed: {
+    modalSubtitle () {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      return this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
+    }
+  },
   watch: {
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
@@ -824,11 +847,35 @@ export default {
   }
 }
 
-.modal-header {
+.camelot-modal-header {
   background-color: #1E2137;
   color: #fff;
-  font-size: 1.375rem;
+  border-bottom: none;
+  padding: 1.5rem;
+
+  .modal-breadcrumb {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+  }
+
+  .modal-main-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .close {
+    color: #fff;
+    text-shadow: none;
+    opacity: 0.8;
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
+
 .modal-body {
   color: #152536;
   
