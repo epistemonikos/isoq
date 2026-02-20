@@ -109,7 +109,7 @@
       </template>
     </b-table>
 
-    <b-modal id="modal-1" size="xl" hide-footer header-class="camelot-modal-header">
+    <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer">
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -177,10 +177,10 @@
                           <template v-else>
                             <!-- Modo Vista -->
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                            <p class="mb-2 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] || '---' }}</p>
+                            <p class="mb-2 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
                             
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                            <p class="mb-0 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] || '---' }}</p>
+                            <p class="mb-0 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] || $t('common.not_completed') }}</p>
                           </template>
                         </div>
                       </div>
@@ -222,10 +222,10 @@
                           <template v-else>
                             <!-- Modo Vista Meta Domain -->
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                            <p class="mb-2 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] || '---' }}</p>
+                            <p class="mb-2 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] || $t('common.not_completed') }}</p>
                             
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                            <p class="mb-0 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] || '---' }}</p>
+                            <p class="mb-0 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] || $t('common.not_completed') }}</p>
                           </template>
                         </div>
                       </b-col>
@@ -262,7 +262,7 @@
                         <h4 class="mb-2 font-weight-bold">{{ iIndex + 1 }} - {{ getMetaItemLabel(1, iIndex) }}</h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] || '---' }}</p>
+                          <p class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
                         </div>
                       </div>
                     </div>
@@ -278,7 +278,7 @@
                         <h4 class="mb-2 font-weight-bold">{{ iIndex + 1 }} - {{ getMetaItemLabel(2, iIndex) }}</h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] || '---' }}</p>
+                          <p class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
                         </div>
                       </div>
                     </div>
@@ -373,6 +373,21 @@
           </b-tabs>
         </b-col>
       </b-row>
+      <template #modal-footer>
+        <div class="w-100 d-flex justify-content-between align-items-center px-3">
+          <div v-if="modal.stage > 0" @click="goToStage(modal.stage - 1)" class="nav-footer-link">
+            &lt; {{ getStageTitle(modal.stage - 1) }}
+          </div>
+          <div v-else></div>
+          
+          <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link">
+            {{ getStageTitle(modal.stage + 1) }} &gt;
+          </div>
+          <div v-else @click="$bvModal.hide('modal-1')" class="nav-footer-link">
+            {{ $t('common.close') }}
+          </div>
+        </div>
+      </template>
     </b-modal>
   </div>
 </template>
@@ -666,6 +681,20 @@ export default {
       this.ui.authors = data.item.authors
       this.$bvModal.show('modal-1')
     },
+    goToStage (stage) {
+      this.modal.stage = stage
+      this.modal.tab = 0
+      this.selectedMeta = 0
+    },
+    getStageTitle (stage) {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
+    },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
@@ -872,6 +901,26 @@ export default {
     opacity: 0.8;
     &:hover {
       opacity: 1;
+    }
+  }
+}
+
+.camelot-modal-footer {
+  background-color: #F8F9FA;
+  padding: 1.5rem;
+  border-top: 1px solid #DEE2E6;
+
+  .nav-footer-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: color 0.2s;
+    
+    &:hover {
+      color: #1065AB;
+      text-decoration: none !important;
     }
   }
 }
