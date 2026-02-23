@@ -1103,6 +1103,19 @@
       }
     },
     "step_four": {
+      "how_to_read": {
+        "title": "Cómo leer esta tabla",
+        "section_1": "1. Qué muestra esta tabla",
+        "section_2": "2. Cómo interpretar los colores e íconos",
+        "section_3": "3. El botón \"Editar\"",
+        "section_4": "4. Cómo usar esta tabla"
+      },
+      "legend": {
+        "show": "Mostrar leyenda de colores",
+        "hide": "Ocultar leyenda de colores",
+        "title": "Leyenda de colores",
+        "not_completed": "Evaluación no completada"
+      },
       "assess_button": "Evaluar",
       "not_assigned": "No asignado",
       "modal_title": "Evaluación metodológica",

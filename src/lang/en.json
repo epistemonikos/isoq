@@ -1103,6 +1103,19 @@
       }
     },
     "step_four": {
+      "how_to_read": {
+        "title": "How to read this table",
+        "section_1": "1. What this table shows",
+        "section_2": "2. How to interpret the colors and icons",
+        "section_3": "3. The \"Edit\" button",
+        "section_4": "4. How to use this table"
+      },
+      "legend": {
+        "show": "Show colour legend",
+        "hide": "Hide colour legend",
+        "title": "Colour legend",
+        "not_completed": "Assessment not completed"
+      },
       "assess_button": "Assess",
       "not_assigned": "Not assigned",
       "modal_title": "Methodological assessment",
