@@ -3,6 +3,8 @@
     variant="outline-primary"
     size="sm"
     no-caret
+    left
+    boundary="viewport"
     class="table-column-filter"
     ref="dropdown"
   >
