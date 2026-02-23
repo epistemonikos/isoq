@@ -8,23 +8,26 @@
     </b-alert>
     <div v-else>
       <!-- Action buttons toolbar -->
-      <div class="mb-3 d-flex gap-2">
+      <div class="mb-3 d-flex justify-content-end">
         <ExportCSVButton
           :fields="tableFields"
           :items="tableItems"
         />
         <ManageColumnsButton
+          class="ml-2"
           :chars-data="charsData"
           :visible-column-keys.sync="visibleColumnKeys"
           @saved="charsData = $event"
         />
         <ToggleConcernsButton
+          class="ml-2"
           v-model="showConcerns"
           :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys"
           :camelot="camelot"
         />
         <TableColumnFilter
+          class="ml-2"
           :all-columns="filterableColumns"
           v-model="visibleColumnKeys"
         />
