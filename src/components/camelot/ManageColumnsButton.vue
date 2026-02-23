@@ -1,7 +1,7 @@
 <template>
   <div class="d-inline-block">
     <b-button
-      variant="outline-primary"
+      variant="primary"
       size="sm"
       @click="openColumnsModal">
       <i class="fas fa-columns mr-1"></i>

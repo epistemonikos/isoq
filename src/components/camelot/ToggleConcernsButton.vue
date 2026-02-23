@@ -1,6 +1,6 @@
 <template>
   <b-button
-    variant="outline-primary"
+    variant="primary"
     size="sm"
     @click="toggleConcerns"
     :disabled="!hasVisibleCamelotFields">
