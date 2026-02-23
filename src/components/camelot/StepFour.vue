@@ -16,7 +16,6 @@
         @hide="showLegend = false"
       >
         <template #button-content>
-          <font-awesome-icon :icon="showLegend ? 'eye-slash' : 'eye'" class="mr-1" />
           {{ showLegend ? $t('camelot.step_four.legend.hide') : $t('camelot.step_four.legend.show') }}
           <div class="color-preview-bars d-inline-flex ml-2">
             <div class="color-bar" style="background-color: #1065AB;"></div>
