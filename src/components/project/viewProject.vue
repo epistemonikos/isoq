@@ -426,6 +426,7 @@
             <!-- eopv -->
             <b-modal
               size="xl"
+              centered
               id="add-summarized"
               ref="add-summarized"
               :title="$t('common.add_summarized_finding') || 'Add Summarised review finding'"
