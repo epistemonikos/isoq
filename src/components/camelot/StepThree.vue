@@ -51,10 +51,18 @@
         <template v-slot:cell()="data">
           <!-- Para los campos personalizados, mostramos su contenido -->
           <span v-if="isCustomField(data.field.key)">
-            {{ data.item[data.field.key] || '' }}
+            <template v-if="data.item[data.field.key]">
+              {{ data.item[data.field.key] }}
+            </template>
+            <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
           </span>
           <!-- Para campos normales, mostramos el valor predeterminado -->
-          <span v-else>{{ data.value }}</span>
+          <span v-else>
+            <template v-if="data.value">
+              {{ data.value }}
+            </template>
+            <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
+          </span>
         </template>
 
         <template v-slot:cell(actions)="data">
