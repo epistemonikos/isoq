@@ -4,8 +4,8 @@
       variant="primary"
       size="sm"
       @click="openColumnsModal">
-      <i class="fas fa-columns mr-1"></i>
       {{ $t('camelot.step_three.add_edit_columns') }}
+      <font-awesome-icon icon="plus" class="ml-1" />
     </b-button>
 
     <!-- Modal para gestionar columnas personalizadas -->

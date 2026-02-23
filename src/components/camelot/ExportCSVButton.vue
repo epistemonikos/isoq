@@ -1,11 +1,12 @@
 <template>
-  <b-button
-    variant="outline-primary"
-    size="sm"
-    @click="exportToCSV">
-    <i class="fas fa-file-csv mr-1"></i>
-    {{ $t('camelot.step_three.export_csv') }}
-  </b-button>
+      <b-button
+        variant="outline-primary"
+        size="sm"
+        @click="exportToCSV">
+        {{ $t('camelot.step_three.export_csv') }}
+        <font-awesome-icon icon="file-export" class="ml-1" />
+      </b-button>
+  
 </template>
 
 <script>

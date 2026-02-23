@@ -1055,7 +1055,8 @@
     "step_three": {
       "loading": "Cargando datos...",
       "no_records": "No hay registros disponibles",
-      "show_concerns": "Mostrar Preocupaciones",
+      "show_concerns": "Mostrar preocupaciones",
+      "hide_concerns": "Ocultar preocupaciones",
       "edit_button": "Editar",
       "delete_button": "Eliminar",
       "references_header": "Referencias",

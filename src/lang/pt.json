@@ -1053,9 +1053,10 @@
   },
   "camelot": {
     "step_three": {
-      "loading": "Carregando dados...",
+      "loading": "Carregando datos...",
       "no_records": "Nenhum registro disponível",
-      "show_concerns": "Mostrar Preocupações",
+      "show_concerns": "Mostrar preocupações",
+      "hide_concerns": "Ocultar preocupações",
       "edit_button": "Editar",
       "delete_button": "Excluir",
       "references_header": "Referências",

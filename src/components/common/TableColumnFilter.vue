@@ -9,8 +9,8 @@
     ref="dropdown"
   >
     <template #button-content>
-      <i class="fas fa-filter mr-1"></i>
       {{ $t('common.filter_columns') }}
+      <font-awesome-icon icon="filter" class="ml-1" />
     </template>
 
     <b-dropdown-form class="p-2" style="min-width: 250px; max-height: 400px; overflow-y: auto;">

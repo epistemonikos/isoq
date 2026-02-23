@@ -5,8 +5,8 @@
     @click="toggleConcerns"
     :disabled="!hasVisibleCamelotFields"
     :style="value ? { backgroundColor: '#19426E', borderColor: '#19426E' } : {}">
-    <i :class="value ? 'fas fa-eye-slash' : 'fas fa-eye'" class="mr-1"></i>
-    {{ $t('camelot.step_three.show_hide_concerns') }}
+    {{ value ? $t('camelot.step_three.hide_concerns') : $t('camelot.step_three.show_concerns') }}
+    <font-awesome-icon :icon="value ? 'comment-slash' : 'comment'" class="ml-1" />
   </b-button>
 </template>
 
