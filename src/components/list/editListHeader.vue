@@ -1,6 +1,6 @@
 <template>
   <b-container fluid class="workspace-header">
-    <div class="py-5">
+    <div class="py-3">
       <b-row>
         <b-col cols="12" class="text-right d-print-none">
           <!-- disabled for v1 -->

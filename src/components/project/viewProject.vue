@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <div class="pt-5">
+      <div class="pt-3">
         <b-row align-h="end">
           <b-col
             class="text-right">
@@ -15,7 +15,7 @@
             <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
         </b-row>
-        <b-nav id="tabsTitle" tabs fill class="pt-5">
+        <b-nav id="tabsTitle" tabs fill class="pt-3">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
             @click="clickTab(0)">{{ $t('project.properties') }}</b-nav-item>
@@ -52,7 +52,7 @@
             </p>
           </b-col>
           <b-card no-body class="col-12">
-            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage">
+            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage" lazy>
               <b-tab :title="$t('steps.step_1_references')">
                 <UploadReferences
                   :canEdit="isEditing"

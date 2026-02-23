@@ -5,7 +5,7 @@
         <h2>{{ $t("profile.title") }}</h2>
       </b-container>
     </b-container>
-    <b-container class="pt-5 pb-5">
+    <b-container class="pt-3 pb-5">
       <b-alert variant="success" :show="showAlert()" dismissible>{{msg}}</b-alert>
       <b-table-simple>
         <b-tbody>

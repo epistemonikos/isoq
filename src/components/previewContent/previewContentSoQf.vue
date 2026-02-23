@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="pt-5">
+      <b-container class="pt-3">
         <b-row align-h="end">
           <b-col
             cols="12"

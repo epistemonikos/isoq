@@ -5,7 +5,7 @@
         <h2>{{ $t("menu.about") }}</h2>
       </div>
     </b-container>
-    <b-container fluid class="pt-5 pb-5">
+    <b-container fluid class="pt-3 pb-5">
       <h3>{{ $t('about.what_is_isoq') }}</h3>
       <p>{{ $t('about.what_is_isoq_p1') }}</p>
       <ul>
