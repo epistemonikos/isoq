@@ -3,7 +3,8 @@
     variant="primary"
     size="sm"
     @click="toggleConcerns"
-    :disabled="!hasVisibleCamelotFields">
+    :disabled="!hasVisibleCamelotFields"
+    :style="value ? { backgroundColor: '#19426E', borderColor: '#19426E' } : {}">
     <i :class="value ? 'fas fa-eye-slash' : 'fas fa-eye'" class="mr-1"></i>
     {{ $t('camelot.step_three.show_hide_concerns') }}
   </b-button>
