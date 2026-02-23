@@ -311,14 +311,21 @@
           <b-table
             responsive
             striped
-            :fields="[{key: 'checkbox', label: ''}, {key: 'content', label: $t('soqf_table.author_year_title')}]"
+            hover
+            class="references-list-table"
+            :fields="[{key: 'content', label: $t('soqf_table.author_year_title')}]"
             :items="refs">
-            <template v-slot:cell(checkbox)="data">
+            <template v-slot:head(content)="data">
+              <span class="ml-4">{{ data.label }}</span>
+            </template>
+            <template v-slot:cell(content)="data">
               <b-form-checkbox
+                class="w-100 cursor-pointer"
                 :id="`checkbox-${data.index}`"
                 v-model="selected_references"
                 :name="`checkbox-${data.index}`"
                 :value="data.item.id">
+                <span class="ml-2">{{ data.item.content }}</span>
               </b-form-checkbox>
             </template>
           </b-table>
@@ -856,3 +863,17 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.references-list-table {
+  ::v-deep .custom-control-label {
+    width: 100%;
+    cursor: pointer;
+    padding-top: 2px;
+  }
+}
+</style>
