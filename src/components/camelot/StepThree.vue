@@ -41,6 +41,9 @@
         responsive>
         <template v-slot:cell(authors)="data">
           {{ formatAuthors(data.item) }}
+        </template>
+
+        <template v-slot:cell(edit)="data">
           <b-button
             size="sm"
             variant="outline-primary"
@@ -208,6 +211,10 @@ export default {
         {
           key: 'authors',
           label: this.$t('camelot.step_three.authors_label')
+        },
+        {
+          key: 'edit',
+          label: ''
         }
       ],
       currentItem: null,
@@ -302,13 +309,14 @@ export default {
       return this.availableTableFields.filter(f => 
         f.key !== 'authors' && 
         f.key !== 'actions' && 
+        f.key !== 'edit' &&
         !f.key.endsWith('_concerns')
       )
     },
     tableFields () {
       // Return columns that should be displayed
       return this.availableTableFields.filter(f => {
-        if (f.key === 'authors' || f.key === 'actions') return true
+        if (f.key === 'authors' || f.key === 'actions' || f.key === 'edit') return true
         
         // Ensure concern columns only show if their parent extracted data column is visible
         if (f.key.endsWith('_concerns')) {

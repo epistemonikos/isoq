@@ -52,7 +52,7 @@ export default {
         fields: this.fields,
         items: processedItems,
         filename: this.filename,
-        excludeKeys: ['ref_id', 'id', 'actions']
+        excludeKeys: ['ref_id', 'id', 'actions', 'edit']
       })
     }
   }
