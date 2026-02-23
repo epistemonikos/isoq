@@ -126,7 +126,7 @@
         <b-col cols="12" class="modal-body">
           <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs" align="right" @input="selectedMeta = $event">
             <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center modal-author"><b>{{ ui.authors }}</b></li>
+              <!-- <li role="presentation" class="nav-item mr-auto align-self-center modal-author"><b>{{ ui.authors }}*</b></li> -->
             </template>
             
             <template v-if="modal.stage < 2">
