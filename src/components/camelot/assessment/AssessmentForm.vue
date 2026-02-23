@@ -1,12 +1,14 @@
 <template>
-  <div>
-    <div>
-      <h3>{{ $t('camelot.assessment_form.title') }}</h3>
+  <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
+    <template #header>
+      <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
+    </template>
+
+    <div class="assessment-description mb-2 py-2">
+      <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
     </div>
 
-    <p v-html="options[modalStage][selectedMeta].text"></p>
-
-    <b-form-group label="" v-slot="{ ariaDescribedby }">
+    <b-form-group label="" v-slot="{ ariaDescribedby }" class="mb-4">
       <b-form-radio
         v-for="(value, index) in options[modalStage][selectedMeta].values"
         v-model="selected"
@@ -19,14 +21,16 @@
 
     <b-form-group
       :label="$t('camelot.assessment_form.explain_label')"
-      label-for="textarea-formatter">
+      label-for="textarea-formatter"
+      class="font-weight-bold small">
       <b-form-textarea
         id="textarea-formatter"
         v-model="text1"
+        rows="3"
         :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
     </b-form-group>
 
-    <div class="mt-4">
+    <div class="mt-4 pt-3 border-top">
       <h3 class="notes-title">{{ $t('common.notes') }}</h3>
       <b-form-group label="" label-for="textarea-notes">
         <b-form-textarea
@@ -38,22 +42,26 @@
       </b-form-group>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-3">
-      <b-button
-        variant="outline-secondary"
-        class="mr-2"
-        @click="cancel">
-        {{ $t('common.cancel') }}
-      </b-button>
-      <b-button
-        :disabled="button.disabled"
-        :variant="(button.disabled) ? 'outline-primary' : 'primary'"
-        @click="save">
-        <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
-        {{ $t('camelot.assessment_form.save_button') }}
-      </b-button>
-    </div>
-  </div>
+    <template #footer>
+      <div class="d-flex justify-content-end gap-2">
+        <b-button
+          variant="outline-secondary"
+          class="mr-2"
+          size="sm"
+          @click="cancel">
+          {{ $t('common.cancel') }}
+        </b-button>
+        <b-button
+          :disabled="button.disabled"
+          size="sm"
+          :variant="(button.disabled) ? 'outline-primary' : 'primary'"
+          @click="save">
+          <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
+          {{ $t('camelot.assessment_form.save_button') }}
+        </b-button>
+      </div>
+    </template>
+  </b-card>
 </template>
 
 <script>
@@ -403,13 +411,30 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.assessment-card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+  }
+}
+
+.assessment-description {
+  line-height: 1.4;
+}
+
 .notes-title {
-  font-size: 1.1rem;
+  font-size: 0.8rem;
   font-weight: bold;
-  color: #1065AB;
-  border-bottom: 2px solid #1065AB;
   padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 .italic {
   font-style: italic;
