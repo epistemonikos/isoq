@@ -9,12 +9,7 @@
     <div v-else>
       <!-- Action buttons toolbar -->
       <div class="mb-3 d-flex justify-content-end">
-        <ExportCSVButton
-          :fields="tableFields"
-          :items="tableItems"
-        />
         <ManageColumnsButton
-          class="ml-2"
           :chars-data="charsData"
           :visible-column-keys.sync="visibleColumnKeys"
           @saved="charsData = $event"
@@ -30,6 +25,11 @@
           class="ml-2"
           :all-columns="filterableColumns"
           v-model="visibleColumnKeys"
+        />
+        <ExportCSVButton
+          class="ml-2"
+          :fields="tableFields"
+          :items="tableItems"
         />
       </div>
 

@@ -1,6 +1,6 @@
 <template>
   <b-dropdown
-    variant="outline-primary"
+    variant="primary"
     size="sm"
     no-caret
     left

@@ -1,6 +1,6 @@
 <template>
   <b-button
-    variant="primary"
+    variant="outline-primary"
     size="sm"
     @click="exportToCSV">
     <i class="fas fa-file-csv mr-1"></i>
