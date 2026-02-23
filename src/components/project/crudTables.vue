@@ -824,8 +824,9 @@ export default {
         })
     },
     getCleanedItems: function (items, fields) {
-      const allowedKeys = fields.map(f => f.key)
-      if (this.useCamelot) {
+      if (!items) return []
+      const allowedKeys = fields ? fields.map(f => f.key) : []
+      if (this.useCamelot && this.camelot && this.camelot.fields) {
         const camelotKeys = this.camelot.fields.map(f => f.key)
         allowedKeys.push(...camelotKeys)
       }
@@ -1104,7 +1105,7 @@ export default {
           const responseData = JSON.parse(JSON.stringify(response.data[0]))
           const charId = responseData.id
 
-          if (responseData.items.length) {
+          if (responseData.items && responseData.items.length) {
             let items = this.processItems(responseData.items)
             items = this.getCleanedItems(items, responseData.fields)
 
