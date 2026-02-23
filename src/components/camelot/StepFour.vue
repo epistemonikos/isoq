@@ -215,7 +215,10 @@
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
                             <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
                             
-                            <p class="small text-danger mb-2 font-italic font-weight-bold">{{ $t('camelot.step_four.inline_edit.warning') }}</p>
+                            <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                            </b-alert>
                             
                             <div class="d-flex justify-content-end gap-2 mb-2">
                               <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
@@ -229,10 +232,18 @@
                           <template v-else>
                             <!-- Modo Vista -->
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                            <p class="mb-2 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
+                            <p v-if="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']" class="mb-2 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData'] }}</p>
+                            <b-alert v-else show variant="warning" class="mb-2 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                            </b-alert>
                             
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                            <p class="mb-0 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] || $t('common.not_completed') }}</p>
+                            <p v-if="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns']" class="mb-0 text-wrap-pre">{{ (modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns'] }}</p>
+                            <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                            </b-alert>
                           </template>
                         </div>
                       </div>
@@ -263,7 +274,10 @@
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
                             <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
                             
-                            <p class="small text-danger mb-2 font-italic font-weight-bold">{{ $t('camelot.step_four.inline_edit.warning') }}</p>
+                            <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                            </b-alert>
                             
                             <div class="d-flex justify-content-end gap-2 mb-2">
                               <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
@@ -277,10 +291,18 @@
                           <template v-else>
                             <!-- Modo Vista Meta Domain -->
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                            <p class="mb-2 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] || $t('common.not_completed') }}</p>
+                            <p v-if="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']" class="mb-2 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData'] }}</p>
+                            <b-alert v-else show variant="warning" class="mb-2 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                            </b-alert>
                             
                             <h5 class="small text-muted mt-1">{{ $t('camelot.step_four.common.concerns') }}</h5>
-                            <p class="mb-0 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] || $t('common.not_completed') }}</p>
+                            <p v-if="meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns']" class="mb-0 text-wrap-pre">{{ meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns'] }}</p>
+                            <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                              <div class="alert-strip"></div>
+                              <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                            </b-alert>
                           </template>
                         </div>
                       </b-col>
@@ -320,7 +342,11 @@
                         </h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
+                          <p v-if="meta[1].values[iIndex][item + 'extractedData']" class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
                         </div>
                       </div>
                     </div>
@@ -339,7 +365,11 @@
                         </h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                          <p class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
+                          <p v-if="meta[2].values[iIndex][item + 'extractedData']" class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
                         </div>
                       </div>
                     </div>
@@ -1104,6 +1134,47 @@ export default {
   &::-webkit-scrollbar-thumb {
     background: #D8DAE5;
     border-radius: 3px;
+  }
+}
+
+.not-completed-alert {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .alert-strip {
+    width: 5px;
+    flex-shrink: 0;
+  }
+
+  &.alert-warning {
+    background: linear-gradient(90deg, #fff3cd 0%, #fff9e6 100%) !important;
+    .alert-strip {
+      background-color: #856404;
+    }
+  }
+
+  &.alert-danger {
+    background: linear-gradient(90deg, rgba(179, 21, 41, 0.5) 0%, rgba(179, 21, 41, 0.35) 100%) !important;
+    border-color: #B31529;
+    color: #B31529;
+
+    .alert-strip {
+      background-color: #B31529;
+    }
+  }
+  
+  .alert-content {
+    padding: 0.25rem 0.5rem;
   }
 }
 </style>
