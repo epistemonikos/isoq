@@ -198,6 +198,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                           <h4 class="mb-0 font-weight-bold">
                             {{ iIndex + 1 }} - {{ getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex) }}
+                            <font-awesome-icon v-if="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
                           </h4>
                           <b-button v-if="editingField.metaIndex !== (modal.stage === 0 ? 1 : 2) || editingField.itemIndex !== iIndex"
                             size="sm" variant="link" class="p-0 text-primary edit-category-btn" @click="startEditing(modal.stage === 0 ? 1 : 2, iIndex)">
@@ -244,7 +245,10 @@
                       <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
                       <b-col cols="6" class="modal-column-scroll">
                         <div class="column-header mb-3 d-flex justify-content-between align-items-center border-bottom pb-2">
-                          <h3 class="mb-0 border-0">{{ domain.label }}</h3>
+                          <h3 class="mb-0 border-0">
+                            {{ domain.label }}
+                            <font-awesome-icon v-if="displayExclamationAlert(0, dIndex)" icon="exclamation-circle" class="text-danger ml-1" />
+                          </h3>
                           <b-button v-if="editingField.metaIndex !== 0 || editingField.itemIndex !== dIndex"
                             size="sm" variant="link" class="p-0 text-primary edit-category-btn" @click="startEditing(0, dIndex)">
                             {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
@@ -310,7 +314,10 @@
                     </div>
                     <div>
                       <div v-for="(item, iIndex) in meta[1].items" :key="iIndex" class="mb-3 border-bottom pb-2">
-                        <h4 class="mb-2 font-weight-bold">{{ iIndex + 1 }} - {{ getMetaItemLabel(1, iIndex) }}</h4>
+                        <h4 class="mb-2 font-weight-bold">
+                          {{ iIndex + 1 }} - {{ getMetaItemLabel(1, iIndex) }}
+                          <font-awesome-icon v-if="displayExclamationAlert(1, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
+                        </h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                           <p class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
@@ -326,7 +333,10 @@
                     </div>
                     <div>
                       <div v-for="(item, iIndex) in meta[2].items" :key="iIndex" class="mb-3 border-bottom pb-2">
-                        <h4 class="mb-2 font-weight-bold">{{ iIndex + 1 }} - {{ getMetaItemLabel(2, iIndex) }}</h4>
+                        <h4 class="mb-2 font-weight-bold">
+                          {{ iIndex + 1 }} - {{ getMetaItemLabel(2, iIndex) }}
+                          <font-awesome-icon v-if="displayExclamationAlert(2, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
+                        </h4>
                         <div class="pl-2">
                           <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
                           <p class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] || $t('common.not_completed') }}</p>
@@ -746,6 +756,15 @@ export default {
         'overall'
       ]
       return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
+    },
+    displayExclamationAlert (metaIndex, itemIndex) {
+      if (!this.meta[metaIndex] || !this.meta[metaIndex].values[itemIndex]) return false
+
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      const extractedData = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData']
+      const concerns = this.meta[metaIndex].values[itemIndex][itemPrefix + 'concerns']
+
+      return (!extractedData || extractedData.trim() === '') && (!concerns || concerns.trim() === '')
     },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
