@@ -27,7 +27,7 @@
     <p>For more information on where GRADE-CERQual fits into the review process please see the <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank">EPOC QES protocol and review template</a>.</p>
 
     <b-alert show variant="info" class="text-center">
-    A Portuguese version of the guidance can be <a href="http://www.saude.sp.gov.br/resources/instituto-de-saude/homepage/temas-saude-coletiva/49213001internetinterativo.pdf" target="_blank">found here</a>
+      Find guidance in other languages <a href="https://www.cerqual.org/translated-guidance/" target="_blank">here</a>
     </b-alert>
 
     <h2 class="mb-3">GRADE-CERQual Webinars</h2>
