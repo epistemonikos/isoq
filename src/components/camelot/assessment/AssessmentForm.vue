@@ -1,163 +1,192 @@
 <template>
-  <div>
-    <div>
-      <h3>Fit assessment</h3>
+  <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
+    <!-- <template #header>
+      <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
+    </template> -->
+
+    <div class="assessment-description mb-2 py-2">
+      <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
     </div>
 
-    <p v-html="options[modalStage][selectedMeta].text"></p>
-
-    <b-form-group label="" v-slot="{ ariaDescribedby }">
+    <b-form-group label="" v-slot="{ ariaDescribedby }" class="mb-4">
       <b-form-radio
         v-for="(value, index) in options[modalStage][selectedMeta].values"
         v-model="selected"
         :key="index"
-        :value="value.value">
+        :value="value.value"
+        :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
         {{ value.text }}
       </b-form-radio>
     </b-form-group>
 
     <b-form-group
-      label="Explain any concerns you have in your own words"
-      label-for="textarea-formatter">
+      :label="$t('camelot.assessment_form.explain_label')"
+      label-for="textarea-formatter"
+      class="font-weight-bold small">
       <b-form-textarea
         id="textarea-formatter"
         v-model="text1"
-        placeholder="Enter your text"></b-form-textarea>
+        rows="3"
+        :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
     </b-form-group>
 
-    <div>
-      <!-- <b-button>cancel</b-button> -->
-      <b-button
-        :disabled="button.disabled"
-        :variant="(button.disabled) ? 'outline-primary' : 'primary'"
-        @click="save">
-        save
-      </b-button>
+    <div class="mt-4 pt-3 border-top">
+      <h3 class="notes-title">{{ $t('common.notes') }}</h3>
+      <b-form-group label="" label-for="textarea-notes">
+        <b-form-textarea
+          id="textarea-notes"
+          v-model="notes"
+          rows="3"
+          :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+        <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+      </b-form-group>
     </div>
-  </div>
+
+    <template #footer>
+      <div class="d-flex justify-content-end gap-2">
+        <b-button
+          variant="outline-secondary"
+          class="mr-2"
+          size="sm"
+          @click="cancel">
+          {{ $t('common.cancel') }}
+        </b-button>
+        <b-button
+          :disabled="button.disabled"
+          size="sm"
+          :variant="(button.disabled) ? 'outline-primary' : 'primary'"
+          @click="save">
+          <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
+          {{ $t('camelot.assessment_form.save_button') }}
+        </b-button>
+      </div>
+    </template>
+  </b-card>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export default {
   name: 'AssessmentForm',
   data () {
     return {
       categories: [
-        'Fit between Meta domains and Research design',
-        'Fit between Meta domains and Research conduct',
-        'Fit between Research design and Research conduct',
-        'Overall assessment'
+        this.$t('camelot.assessment_form.categories.fit_meta_design'),
+        this.$t('camelot.assessment_form.categories.fit_meta_conduct'),
+        this.$t('camelot.assessment_form.categories.fit_design_conduct'),
+        this.$t('camelot.assessment_form.overall_assessment')
       ],
       selected: null,
       text1: '',
+      notes: '',
+      isSaving: false,
       options: [
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: '<b>Research design domains</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.descriptions.design_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Overall assessment',
+            text: this.$t('camelot.assessment_form.overall_assessment'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ]
@@ -194,12 +223,14 @@ export default {
       if (this.assessments.items.length) {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
+        this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
       }
     },
     selectedMeta (newValue) {
       if (this.assessments.items) {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
+        this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
       }
     },
     assessments: {
@@ -207,52 +238,75 @@ export default {
         if (newValue.items.length) {
           this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
           this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+          this.notes = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
         }
       },
       deep: true
     },
     selected (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
     },
     text1 (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
+    },
+    notes (newValue) {
+      this.checkChanges()
     }
   },
   mounted: function () {
     if (this.assessments.items.length) {
       this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
       this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+      this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
   },
   methods: {
+    checkChanges () {
+      const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+      if (item.option === this.selected && item.text === this.text1 && (item.notes || '') === this.notes) {
+        this.button.disabled = true
+      } else {
+        this.button.disabled = false
+      }
+    },
+    getOptionColor (value) {
+      const colors = {
+        'A': '#1065AB', // No or minimal
+        'B': '#8EC4DE', // Minor
+        'C': '#F6A482', // Moderate
+        'D': '#B31529', // Serious
+        'E': '#B3B3B3'  // Unclear
+      }
+      return colors[value] || '#B3B3B3'
+    },
+    cancel () {
+      this.$bvModal.hide('modal-1')
+    },
     save () {
+      this.isSaving = true
       const stages = [
         {
           key: 0,
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -261,19 +315,23 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             },
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -282,7 +340,8 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         },
@@ -291,7 +350,8 @@ export default {
           options: [
             {
               option: null,
-              text: ''
+              text: '',
+              notes: ''
             }
           ]
         }
@@ -312,34 +372,117 @@ export default {
             if (item.ref_id === this.refId) {
               item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
               item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+              item.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
             }
           })
         } else {
           params.items.push(data)
         }
         if (this.assessments.id) {
-          axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
+          Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
             .then(response => {
               console.log('Data updated successfully:', response.data)
               this.$emit('getAssessments')
+              this.isSaving = false
             })
             .catch(error => {
               console.error('Error updating data:', error)
+              this.isSaving = false
             })
         } else {
-          axios.post('/api/isoqf_assessments', params)
+          Api.post('/isoqf_assessments', params)
             .then(response => {
               this.$emit('getAssessments')
               console.log('Data saved successfully:', response.data)
+              this.isSaving = false
             })
             .catch(error => {
               console.error('Error saving data:', error)
+              this.isSaving = false
             })
         }
       } else {
         console.log('no ref id')
+        this.isSaving = false
       }
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.assessment-card {
+  border-color: #2A70BC !important;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border-top-width: 5px !important;
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+  }
+}
+
+.assessment-description {
+  line-height: 1.4;
+}
+
+.notes-title {
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.italic {
+  font-style: italic;
+}
+
+.assessment-radio {
+  display: flex;
+  align-items: center;
+  
+  ::v-deep label {
+    cursor: pointer;
+    line-height: 1.5;
+    margin-bottom: 0;
+    padding-top: 2px;
+  }
+
+  // Estilos base para los radios personalizados de Bootstrap-Vue
+  ::v-deep .custom-control-label::before {
+    border-width: 2px;
+  }
+
+  // Definición de colores por nivel
+  &.radio-color-A {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #1065AB !important; border-color: #1065AB !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231065AB'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #1065AB !important; }
+  }
+  &.radio-color-B {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #8EC4DE !important; border-color: #8EC4DE !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238EC4DE'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #8EC4DE !important; }
+  }
+  &.radio-color-C {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #F6A482 !important; border-color: #F6A482 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23F6A482'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #F6A482 !important; }
+  }
+  &.radio-color-D {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B31529 !important; border-color: #B31529 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B31529'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #B31529 !important; }
+  }
+  &.radio-color-E {
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B3B3B3 !important; border-color: #B3B3B3 !important; }
+    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B3B3B3'/%3e%3c/svg%3e") !important; }
+    ::v-deep .custom-control-label::before { border-color: #B3B3B3 !important; }
+  }
+}
+</style>

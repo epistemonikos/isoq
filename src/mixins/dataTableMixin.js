@@ -1,4 +1,4 @@
-import axios from 'axios'
+import Api from '@/utils/Api'
 
 export const dataTableMixin = {
   data () {
@@ -28,7 +28,7 @@ export const dataTableMixin = {
           organization: this.$route.params.org_id,
           project_id: this.$route.params.id
         }
-        const response = await axios.get(`/api/${this.type}`, { params })
+        const response = await Api.get(`/${this.type}`, params)
 
         if (response.data && response.data.length) {
           const tableData = JSON.parse(JSON.stringify(response.data[0]))

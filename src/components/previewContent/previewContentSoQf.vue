@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-container fluid class="workspace-header">
-      <b-container class="pt-5">
+      <b-container class="pt-3">
         <b-row align-h="end">
           <b-col
             cols="12"
@@ -13,8 +13,8 @@
             md="1"
             class="text-right">
             <b-link class="d-print-none" :to="($route.params.token === 'public') ? { name: 'Browse' } : { name: 'MainPage' }">
-              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('back')" />
-              {{ $t('back') }}
+              <font-awesome-icon icon="long-arrow-alt-left" v-bind:title="$t('common.back')" />
+              {{ $t('common.back') }}
             </b-link>
           </b-col>
         </b-row>
@@ -54,7 +54,7 @@
               cols="12">
               <organizationForm
                 :formData="project"
-                :canWrite="false">
+                :canEdit="false">
               </organizationForm>
             </b-col>
           </b-row>
@@ -116,14 +116,14 @@
               :mode="'view'"
               :preview="true"
               :project="project"
-              :permissions="true"
+              :canWrite="true"
               :ui="ui"
               :lists="lists"
               :findings="findings"
               :references="references"
               :charsOfStudies="charsOfStudies"
               :methodologicalTableRefs="methodologicalTableRefs"
-              :listsPrintVersion="lists"
+              :listsPrintVersion="lists_print_version"
               :selectOptions="select_options"
               :cerqualConfidence="cerqual_confidence"
               :printableItems="printableItems"></action-buttons>
@@ -175,11 +175,18 @@
             </div>
           </b-card>
           <div class="mt-3">
-            <table-printing-findings
-              v-if="lists.length"
-              :data="lists"
-              :project="project">
-            </table-printing-findings>
+            <print-view-table
+              v-if="lists_print_version.length"
+              :dataPrintVersion="lists_print_version"
+              :references="references"
+              :categories="list_categories"
+              :printableItems="printableItems"
+              :isPublic="true"
+              :token="$route.params.token"
+              :project="project"
+              :onlySummary="true"
+              :hasPermission="true">
+            </print-view-table>
           </div>
           <back-to-top></back-to-top>
         </b-tab>
@@ -193,12 +200,13 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
 const Criteria = () => import(/* webpackChunkName: "criteria" */'../Criteria')
-const tablePrintFindings = () => import(/* webpackChunkName: "tableprintfindings" */'../project/tablePrintFindings')
+const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */'../project/PrintViewTable')
 const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')
 const methAssessmentsDisplayDataTable = () => import(/* webpackChunkName: "methassessmentssisplaysatatable" */'../methAssessments/displayTableData')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
@@ -209,7 +217,7 @@ export default {
     'content-guidance': contentGuidance,
     organizationForm,
     'criteria': Criteria,
-    'table-printing-findings': tablePrintFindings,
+    'print-view-table': PrintViewTable,
     'chars-of-studies-table': charsOfStudiesDisplayDataTable,
     'meth-assessments-table': methAssessmentsDisplayDataTable,
     'back-to-top': backToTop,
@@ -236,6 +244,7 @@ export default {
         name: ''
       },
       lists: [],
+      lists_print_version: [],
       list_categories: {
         options: [],
         selected: null
@@ -303,6 +312,13 @@ export default {
     this.getListCategories()
     this.getReferences()
   },
+  watch: {
+    'list_categories.options': function (newVal) {
+      if (newVal && newVal.length > 0) {
+        this.getLists()
+      }
+    }
+  },
   methods: {
     printDoc: function () {
       window.print()
@@ -320,7 +336,7 @@ export default {
       const params = {
         organization: this.$route.params.org_id
       }
-      axios.get(`/api/isoqf_projects/${this.$route.params.isoqf_id}`, {params})
+      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}`, params)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
@@ -347,8 +363,9 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_lists', { params })
+      Api.get('/isoqf_lists', params)
         .then((response) => {
+          this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
           data.sort(function (a, b) {
             if (a.sort < b.sort) { return -1 }
@@ -428,21 +445,39 @@ export default {
             }
 
             if (this.list_categories.options.length) {
+              this.lists_print_version = []
               let categories = []
 
               for (let category of this.list_categories.options) {
                 if (category.id !== null) {
-                  categories.push({'name': category.text, 'value': category.id, 'items': [], is_category: true})
+                  categories.push({
+                    'name': category.text,
+                    'id': category.id,
+                    'value': category.id,
+                    'items': [],
+                    is_category: true
+                  })
                 }
               }
-              categories.push({'name': 'Uncategorised findings', 'value': null, 'items': [], is_category: true})
+              categories.push({
+                'name': this.$t('categories.uncategorised_findings') || 'Uncategorised findings',
+                'id': 'uncategorized',
+                'value': null,
+                'items': [],
+                is_category: true
+              })
 
               for (let list of data) {
                 if (categories.length) {
                   for (let category of categories) {
-                    if (category.value === list.category) {
+                    // Robust comparison of IDs (string conversion)
+                    const listCatId = list.category ? list.category.toString() : null
+                    const categoryValue = category.value ? category.value.toString() : null
+                    
+                    if (categoryValue === listCatId) {
                       category.items.push(
                         {
+                          'id': list.id,
                           'isoqf_id': list.isoqf_id,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
@@ -477,6 +512,13 @@ export default {
             } else {
               this.lists_print_version = data
             }
+
+            this.printableItems = []
+            for (let items of this.lists_print_version) {
+              if (items.id) {
+                this.printableItems.push(items.id)
+              }
+            }
           }
           this.lists = data
           this.table_settings.isBusy = false
@@ -491,11 +533,11 @@ export default {
         organization: orgId,
         list_id: listId
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           if (response.data.length) {
-            if (!this.findings.includes(response.data[0].id)) {
-              this.findings.push(response.data[0].id)
+            if (!this.findings.find(f => f.id === response.data[0].id)) {
+              this.findings.push(response.data[0])
             }
           }
         })
@@ -508,20 +550,27 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.isoqf_id
       }
-      axios.get('/api/isoqf_list_categories', { params })
+      Api.get('/isoqf_list_categories', params)
         .then((response) => {
+          this.list_categories.options = []
           if (response.data.length) {
-            const options = JSON.parse(JSON.stringify(response.data[0].options))
+            let options = JSON.parse(JSON.stringify(response.data))
+            for (let option of options) {
+              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+                option.text = ''
+              }
+            }
+            options.sort((a, b) => a.text.localeCompare(b.text))
+            options.splice(0, 0, {id: null, text: this.$t('categories.no_group') || 'No group'})
             this.list_categories.options = options
           }
         })
         .catch((error) => {
           console.log(error)
-          // this.printErrors(error)
         })
     },
     getReferences: function (changeTab = true) {
-      axios.get(`/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           const data = JSON.parse(JSON.stringify(response.data))
           this.references = data
@@ -531,30 +580,12 @@ export default {
           // this.printErrors(error)
         })
     },
-    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else if (reference.authors.length === 2) {
-            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else {
-            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-          }
-          if (!onlyAuthors) {
-            result = result + reference.title
-          }
-        } else {
-          return 'author(s) not found'
-        }
-      }
-      return result
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true
-      axios.get(`/api/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_characteristics?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           if (response.data.length) {
             this.charsOfStudies = JSON.parse(JSON.stringify(response.data[0]))
@@ -564,7 +595,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.charsOfStudies.items = _items
 
               this.charsOfStudiesFieldsModal.fields = []
@@ -591,7 +626,7 @@ export default {
     },
     getMethodological: function () {
       this.methodologicalTableRefsTableSettings.isBusy = true
-      axios.get(`/api/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
+      Api.get(`/isoqf_assessments?organization=${this.$route.params.org_id}&project_id=${this.$route.params.isoqf_id}`)
         .then((response) => {
           if (response.data.length) {
             this.methodologicalTableRefs = JSON.parse(JSON.stringify(response.data[0]))
@@ -599,7 +634,11 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
 
-              const _items = items.sort((a, b) => a.authors.localeCompare(b.authors))
+              const _items = items.sort((a, b) => {
+          const authorsA = (a.authors || '').toString()
+          const authorsB = (b.authors || '').toString()
+          return authorsA.localeCompare(authorsB)
+        })
               this.methodologicalTableRefs.items = _items
 
               this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
