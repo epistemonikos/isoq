@@ -1,8 +1,8 @@
 <template>
   <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
-    <template #header>
+    <!-- <template #header>
       <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
-    </template>
+    </template> -->
 
     <div class="assessment-description mb-2 py-2">
       <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
@@ -412,8 +412,10 @@ export default {
 
 <style lang="scss" scoped>
 .assessment-card {
+  border-color: #2A70BC !important;
   border-radius: 0.5rem;
   overflow: hidden;
+  border-top-width: 5px !important;
 
   .card-header {
     background-color: #f8f9fa;
