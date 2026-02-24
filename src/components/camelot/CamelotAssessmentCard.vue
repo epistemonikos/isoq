@@ -3,7 +3,7 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-end">
         <h4 class="mb-0 font-weight-bold">
-          {{ itemIndex + 1 }} - {{ label }}
+          {{ label }}
           <font-awesome-icon v-if="isExclamationActive" icon="exclamation-circle" class="text-danger ml-1" />
         </h4>
       </div>
@@ -11,8 +11,8 @@
 
     <!-- Extracted Data section -->
     <div class="field-section mb-3">
-      <div class="d-flex justify-content-between align-items-end mb-1">
-        <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+      <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
+        <h5 class="small m-0 pb-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
         <b-button v-if="!isEditing('extractedData')"
           size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing('extractedData')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
@@ -34,8 +34,8 @@
         </div>
       </template>
       <template v-else>
-        <p v-if="extractedData" class="mb-0 text-wrap-pre">{{ extractedData }}</p>
-        <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+        <p v-if="extractedData" class="mt-2 mb-0 text-wrap-pre">{{ extractedData }}</p>
+        <b-alert v-else show variant="warning" class="mt-2 mb-0 small not-completed-alert">
           <div class="alert-strip"></div>
           <div class="alert-content">{{ $t('common.not_completed') }}</div>
         </b-alert>
@@ -44,8 +44,8 @@
 
     <!-- Concerns section -->
     <div class="field-section">
-      <div class="d-flex justify-content-between align-items-end mb-1">
-        <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
+      <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
+        <h5 class="small m-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
         <b-button v-if="!isEditing('concerns')"
           size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing('concerns')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
@@ -67,8 +67,8 @@
         </div>
       </template>
       <template v-else>
-        <p v-if="concerns" class="mb-0 text-wrap-pre">{{ concerns }}</p>
-        <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+        <p v-if="concerns" class="mt-2 mb-0 text-wrap-pre">{{ concerns }}</p>
+        <b-alert v-else show variant="warning" class="mt-2 mb-0 small not-completed-alert">
           <div class="alert-strip"></div>
           <div class="alert-content">{{ $t('common.not_completed') }}</div>
         </b-alert>

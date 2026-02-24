@@ -919,9 +919,8 @@ export default {
   h5 {
     font-size: 0.85rem;
     font-weight: bold;
-    color: #6C757D;
+    color: #152536;
     text-transform: uppercase;
-    margin-top: 1rem;
   }
   
   p {
