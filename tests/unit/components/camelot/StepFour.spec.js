@@ -13,7 +13,7 @@ localVue.use(Vuex)
 describe('StepFour.vue - TDD for inline editing', () => {
   let wrapper
   const mockReferences = [{ id: 'ref1', authors: 'Author 2024' }]
-  const mockCharacteristics = {
+  const getMockCharacteristics = () => ({
     id: 'char123',
     items: [
       {
@@ -22,9 +22,11 @@ describe('StepFour.vue - TDD for inline editing', () => {
         strategy_concerns: 'Old concerns'
       }
     ]
-  }
+  })
 
   beforeEach(() => {
+    jest.clearAllMocks()
+    const mockCharacteristics = getMockCharacteristics()
     Api.get.mockResolvedValue({ data: [mockCharacteristics] })
     Api.patch.mockResolvedValue({ data: { ...mockCharacteristics } })
     
@@ -53,18 +55,18 @@ describe('StepFour.vue - TDD for inline editing', () => {
     })
   })
 
-  it('should call Api.patch with correct updated data when saveField is called', async () => {
+  it('should call Api.patch with correct updated data when saveField is called for extractedData', async () => {
     // 1. Setup initial state
+    const mockCharacteristics = getMockCharacteristics()
     wrapper.setData({
       characteristics: mockCharacteristics,
       refId: 'ref1',
-      editingField: { metaIndex: 1, itemIndex: 0 }, // Strategy
-      editValueExtracted: 'New extracted data',
-      editValueConcerns: 'New concerns'
+      editingField: { metaIndex: 1, itemIndex: 0, type: 'extractedData' }, // Strategy
+      editValueExtracted: 'New extracted data'
     })
 
     // 2. Trigger save
-    await wrapper.vm.saveField()
+    await wrapper.vm.saveField('New extracted data')
 
     // 3. Assertions
     expect(Api.patch).toHaveBeenCalledWith(
@@ -75,6 +77,35 @@ describe('StepFour.vue - TDD for inline editing', () => {
           expect.objectContaining({
             ref_id: 'ref1',
             strategy_extractedData: 'New extracted data',
+            strategy_concerns: 'Old concerns'
+          })
+        ])
+      })
+    )
+  })
+
+  it('should call Api.patch with correct updated data when saveField is called for concerns', async () => {
+    // 1. Setup initial state
+    const mockCharacteristics = getMockCharacteristics()
+    wrapper.setData({
+      characteristics: mockCharacteristics,
+      refId: 'ref1',
+      editingField: { metaIndex: 1, itemIndex: 0, type: 'concerns' }, // Strategy
+      editValueConcerns: 'New concerns'
+    })
+
+    // 2. Trigger save
+    await wrapper.vm.saveField('New concerns')
+
+    // 3. Assertions
+    expect(Api.patch).toHaveBeenCalledWith(
+      expect.stringContaining('/isoqf_characteristics/char123'),
+      expect.objectContaining({
+        id: 'char123',
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            ref_id: 'ref1',
+            strategy_extractedData: 'Old data',
             strategy_concerns: 'New concerns'
           })
         ])
