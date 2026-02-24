@@ -176,7 +176,7 @@
       <b-row>
         <b-col cols="12" class="modal-body">
           <template v-if="modal.stage < 2">
-            <b-row class="mt-4">
+            <b-row>
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
               <b-col cols="4" class="modal-column-scroll">
                 <div class="column-header mb-3">
@@ -185,7 +185,7 @@
                 <div>
                   <b-card v-for="(item, iIndex) in (modal.stage === 0 ? meta[1] : meta[2]).items" :key="iIndex" 
                     :id="`field-${modal.stage === 0 ? 1 : 2}-${iIndex}`" class="mb-3 item-card" header-tag="header">
-                    <template #header>
+                    <template #header >
                       <div class="d-flex justify-content-between align-items-end">
                         <h4 class="mb-0 font-weight-bold">
                           {{ iIndex + 1 }} - {{ getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex) }}
@@ -270,6 +270,7 @@
                       :key="dIndex"
                       :title-link-class="modal.tab === dIndex ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']"
                       class="border p-2"
+                      style="border-color: #848E98 !important;"
                     >
                       <template #title>
                         <div class="d-flex align-items-center justify-content-center">
@@ -288,16 +289,16 @@
                       </template>                      
                       <b-row class="mt-1">
                         <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
-                        <b-col cols="6" class="modal-column-scroll">
+                        <b-col cols="6" class="modal-column-scroll 00000">
                           <b-card :id="`field-0-${dIndex}`" class="mb-3 item-card" header-tag="header">
-                            <template #header>
+                            <!-- <template #header>
                               <div class="d-flex justify-content-between align-items-end">
                                 <h3 class="mb-0 border-0">
                                   {{ domain.label }}
                                   <font-awesome-icon v-if="displayExclamationAlert(0, dIndex)" icon="exclamation-circle" class="text-danger ml-1" />
                                 </h3>
                               </div>
-                            </template>
+                            </template> -->
 
                             <div class="field-section mb-3">
                               <div class="d-flex justify-content-between align-items-end mb-1">
@@ -384,28 +385,88 @@
           </template>
             
           <template v-else-if="modal.stage === 2">
-            <div class="mt-4">
-              <b-row class="mt-4">
+            <div>
+              <b-row>
                 <!-- Columna 1: Research Design -->
                 <b-col cols="4" class="modal-column-scroll">
                   <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
                   </div>
                   <div>
-                    <div v-for="(item, iIndex) in meta[1].items" :key="iIndex" class="mb-3 pb-2">
-                      <h4 class="mb-2 font-weight-bold">
-                        {{ iIndex + 1 }} - {{ getMetaItemLabel(1, iIndex) }}
-                        <font-awesome-icon v-if="displayExclamationAlert(1, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
-                      </h4>
-                      <div class="pl-2">
-                        <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                        <p v-if="meta[1].values[iIndex][item + 'extractedData']" class="mb-0">{{ meta[1].values[iIndex][item + 'extractedData'] }}</p>
-                        <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
-                          <div class="alert-strip"></div>
-                          <div class="alert-content">{{ $t('common.not_completed') }}</div>
-                        </b-alert>
+                    <b-card v-for="(item, iIndex) in meta[1].items" :key="iIndex" class="mb-3 item-card" header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 class="mb-0 font-weight-bold">
+                            {{ iIndex + 1 }} - {{ getMetaItemLabel(1, iIndex) }}
+                            <font-awesome-icon v-if="displayExclamationAlert(1, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
+                          </h4>
+                        </div>
+                      </template>
+                      
+                      <div class="field-section mb-3">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                          <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                          <b-button v-if="editingField.metaIndex !== 1 || editingField.itemIndex !== iIndex || editingField.type !== 'extractedData'"
+                            size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing(1, iIndex, 'extractedData')">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
+                        </div>
+                        
+                        <template v-if="editingField.metaIndex === 1 && editingField.itemIndex === iIndex && editingField.type === 'extractedData'">
+                          <b-form-textarea v-model="editValueExtracted" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                          <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                          </b-alert>
+                          <div class="d-flex justify-content-end gap-2 mb-2">
+                            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                            <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                              <b-spinner small v-if="isSavingField"></b-spinner>
+                              {{ $t('common.save') }}
+                            </b-button>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <p v-if="meta[1].values[iIndex][item + 'extractedData']" class="mb-0 text-wrap-pre">{{ meta[1].values[iIndex][item + 'extractedData'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
+                        </template>
                       </div>
-                    </div>
+
+                      <div class="field-section">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                          <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                          <b-button v-if="editingField.metaIndex !== 1 || editingField.itemIndex !== iIndex || editingField.type !== 'concerns'"
+                            size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing(1, iIndex, 'concerns')">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
+                        </div>
+
+                        <template v-if="editingField.metaIndex === 1 && editingField.itemIndex === iIndex && editingField.type === 'concerns'">
+                          <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                          <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                          </b-alert>
+                          <div class="d-flex justify-content-end gap-2 mb-2">
+                            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                            <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                              <b-spinner small v-if="isSavingField"></b-spinner>
+                              {{ $t('common.save') }}
+                            </b-button>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <p v-if="meta[1].values[iIndex][item + 'concerns']" class="mb-0 text-wrap-pre">{{ meta[1].values[iIndex][item + 'concerns'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
+                        </template>
+                      </div>
+                    </b-card>
                   </div>
                 </b-col>
                 
@@ -415,25 +476,85 @@
                     <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
                   </div>
                   <div>
-                    <div v-for="(item, iIndex) in meta[2].items" :key="iIndex" class="mb-3 pb-2">
-                      <h4 class="mb-2 font-weight-bold">
-                        {{ iIndex + 1 }} - {{ getMetaItemLabel(2, iIndex) }}
-                        <font-awesome-icon v-if="displayExclamationAlert(2, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
-                      </h4>
-                      <div class="pl-2">
-                        <h5 class="mt-1 small text-muted">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-                        <p v-if="meta[2].values[iIndex][item + 'extractedData']" class="mb-0">{{ meta[2].values[iIndex][item + 'extractedData'] }}</p>
-                        <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
-                          <div class="alert-strip"></div>
-                          <div class="alert-content">{{ $t('common.not_completed') }}</div>
-                        </b-alert>
+                    <b-card v-for="(item, iIndex) in meta[2].items" :key="iIndex" class="mb-3 item-card" header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 class="mb-2 font-weight-bold">
+                            {{ iIndex + 1 }} - {{ getMetaItemLabel(2, iIndex) }}
+                            <font-awesome-icon v-if="displayExclamationAlert(2, iIndex)" icon="exclamation-circle" class="text-danger ml-1" />
+                          </h4>
+                        </div>
+                      </template>
+                      
+                      <div class="field-section mb-3">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                          <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
+                          <b-button v-if="editingField.metaIndex !== 2 || editingField.itemIndex !== iIndex || editingField.type !== 'extractedData'"
+                            size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing(2, iIndex, 'extractedData')">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
+                        </div>
+                        
+                        <template v-if="editingField.metaIndex === 2 && editingField.itemIndex === iIndex && editingField.type === 'extractedData'">
+                          <b-form-textarea v-model="editValueExtracted" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                          <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                          </b-alert>
+                          <div class="d-flex justify-content-end gap-2 mb-2">
+                            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                            <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                              <b-spinner small v-if="isSavingField"></b-spinner>
+                              {{ $t('common.save') }}
+                            </b-button>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <p v-if="meta[2].values[iIndex][item + 'extractedData']" class="mb-0 text-wrap-pre">{{ meta[2].values[iIndex][item + 'extractedData'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
+                        </template>
                       </div>
-                    </div>
+
+                      <div class="field-section">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                          <h5 class="small text-muted mb-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
+                          <b-button v-if="editingField.metaIndex !== 2 || editingField.itemIndex !== iIndex || editingField.type !== 'concerns'"
+                            size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing(2, iIndex, 'concerns')">
+                            {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+                          </b-button>
+                        </div>
+
+                        <template v-if="editingField.metaIndex === 2 && editingField.itemIndex === iIndex && editingField.type === 'concerns'">
+                          <b-form-textarea v-model="editValueConcerns" size="sm" rows="3" class="mb-2"></b-form-textarea>
+                          <b-alert show variant="danger" class="mb-2 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
+                          </b-alert>
+                          <div class="d-flex justify-content-end gap-2 mb-2">
+                            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+                            <b-button size="sm" variant="primary" :disabled="isSavingField" @click="saveField">
+                              <b-spinner small v-if="isSavingField"></b-spinner>
+                              {{ $t('common.save') }}
+                            </b-button>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <p v-if="meta[2].values[iIndex][item + 'concerns']" class="mb-0 text-wrap-pre">{{ meta[2].values[iIndex][item + 'concerns'] }}</p>
+                          <b-alert v-else show variant="warning" class="mb-0 small not-completed-alert">
+                            <div class="alert-strip"></div>
+                            <div class="alert-content">{{ $t('common.not_completed') }}</div>
+                          </b-alert>
+                        </template>
+                      </div>
+                    </b-card>
                   </div>
                 </b-col>
 
                 <!-- Columna 3: Assessment Evaluation -->
-                <b-col cols="4" class="border-left">
+                <b-col cols="4">
                   <assessmentForm
                     :assessments="assessments"
                     :modalStage="2"
@@ -451,13 +572,17 @@
               <b-row class="mt-4">
                 <!-- Columna 1: Fit Design vs Meta Resumen -->
                 <b-col cols="3" class="modal-column-scroll">
-                  <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
-                  </div>
-                  <div>
-                    <div v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 pb-2">
-                      <h4 class="mb-2 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
-                      <div class="pl-2" v-if="assessments.items.length">
+                  <b-card class="mb-3 item-card" header-tag="header">
+                    <template #header>
+                      <div class="column-header mb-3">
+                        <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
+                      </div>
+                    </template>
+                    <div v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex">
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 class="mb-0 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
+                      </div>
+                      <div class="field-section" v-if="assessments.items.length">
                         <responses
                           :stage="0"
                           :index="dIndex"
@@ -465,18 +590,22 @@
                           :text="assessments.items[modal.index].stages[0].options[dIndex].text"></responses>
                       </div>
                     </div>
-                  </div>
+                  </b-card>
                 </b-col>
 
                 <!-- Columna 2: Fit Conduct vs Meta Resumen -->
                 <b-col cols="3" class="modal-column-scroll">
-                  <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
-                  </div>
-                  <div>
-                    <div v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 pb-2">
-                      <h4 class="mb-2 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
-                      <div class="pl-2" v-if="assessments.items.length">
+                  <b-card  class="mb-3 item-card" header-tag="header">
+                    <template #header>
+                      <div class="column-header mb-3">
+                        <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
+                      </div>
+                    </template>
+                    <div v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3">
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 class="mb-0 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
+                      </div>
+                      <div class="field-section" v-if="assessments.items.length">
                         <responses
                           :stage="1"
                           :index="dIndex"
@@ -484,26 +613,31 @@
                           :text="assessments.items[modal.index].stages[1].options[dIndex].text"></responses>
                       </div>
                     </div>
-                  </div>
+                  </b-card>
+                  
                 </b-col>
 
                 <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
-                <b-col cols="3" class="modal-column-scroll border-left">
-                  <div class="column-header mb-3">
-                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
-                  </div>
-                  <div class="p-1">
-                    <responses
-                      v-if="assessments.items.length"
-                      :stage="2"
-                      :index="0"
-                      :option="assessments.items[modal.index].stages[2].options[0].option"
-                      :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
-                  </div>
+                <b-col cols="3" class="modal-column-scroll">
+                  <b-card  class="mb-3 item-card" header-tag="header">
+                    <template #header>
+                      <div class="column-header mb-3">
+                        <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
+                      </div>
+                    </template>
+                    <div class="p-1">
+                      <responses
+                        v-if="assessments.items.length"
+                        :stage="2"
+                        :index="0"
+                        :option="assessments.items[modal.index].stages[2].options[0].option"
+                        :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                    </div>
+                  </b-card>                  
                 </b-col>
 
                 <!-- Columna 4: Evaluación de ajuste final -->
-                <b-col cols="3" class="border-left">
+                <b-col cols="3" class="">
                   <assessmentForm
                     :assessments="assessments"
                     :modalStage="3"
@@ -1132,6 +1266,7 @@ export default {
 
 .modal-body {
   color: #152536;
+  background-color: #E9E9EB;
   
   h3 {
     font-size: 0.9rem;
@@ -1204,14 +1339,14 @@ export default {
 }
 
 .item-card {
-  border: 1px solid #dee2e6;
+  border: 1px solid #b6b6b6;
   border-radius: 0.5rem;
   overflow: hidden;
 
   .card-header {
-    background-color: #f8f9fa;
+    background-color: #CACACA;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #b6b6b6;
   }
 
   .card-body {
