@@ -264,14 +264,29 @@
               <!-- Columna 2: Navigation and Dynamic content -->
               <b-col cols="8">
                 <div id="navegacion">
-                  <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs" align="right" @input="selectedMeta = $event">
+                  <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs nav-fill" align="right" @input="selectedMeta = $event">
                     <b-tab 
                       v-for="(domain, dIndex) in ui.domainTabs" 
-                      :key="dIndex" 
-                      :title="domain.label"
+                      :key="dIndex"
                       :title-link-class="modal.tab === dIndex ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']"
+                      class="border p-2"
                     >
-                      <b-row class="mt-4">
+                      <template #title>
+                        <div class="d-flex align-items-center justify-content-center">
+                          <div v-if="!isTabCompleted(modal.stage, dIndex)" 
+                            class="assessment-circle mr-2" 
+                            :style="{
+                              width: '20px', 
+                              height: '20px', 
+                              border: '2.5px dashed ' + (modal.tab === dIndex ? '#ffffff' : '#212529') + ' !important', 
+                              background: 'transparent', 
+                              borderRadius: '50%', 
+                              display: 'inline-block'
+                            }"></div>
+                          {{ domain.label }}
+                        </div>
+                      </template>                      
+                      <b-row class="mt-1">
                         <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
                         <b-col cols="6" class="modal-column-scroll">
                           <b-card :id="`field-0-${dIndex}`" class="mb-3 item-card" header-tag="header">
@@ -926,6 +941,16 @@ export default {
           this.getCharacteristics()
         })
     },
+    isTabCompleted (stage, tabIndex) {
+      if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
+      
+      const currentItem = this.assessments.items[this.modal.index]
+      if (!currentItem.stages || !currentItem.stages[stage]) return false
+      if (!currentItem.stages[stage].options || !currentItem.stages[stage].options[tabIndex]) return false
+      
+      const option = currentItem.stages[stage].options[tabIndex].option
+      return option !== null
+    },
     getCircleClass: function (stage, optionIndex, item) {
       if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
         return 'circle-not-completed'
@@ -1033,27 +1058,27 @@ export default {
       font-size: 0.8rem;
     }
   }
+}
 
-  .assessment-circle {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-    
-    &:hover {
-      transform: scale(1.2);
-    }
+.assessment-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.2);
   }
+}
 
-  .circle-filled {
-    border: none;
-  }
+.circle-filled {
+  border: none;
+}
 
-  .circle-not-completed {
-    border: 2px dashed #B3B3B3;
-    background-color: transparent;
-  }
+.circle-not-completed {
+  border: 2px dashed #B3B3B3;
+  background-color: transparent;
 }
 
 .camelot-modal-header {
@@ -1144,16 +1169,19 @@ export default {
 }
 .modal-active-tab {
   font-weight: bold;
-  background-color: #9B9EB6 !important;
+  background: linear-gradient(180deg, #287BDC 0%, #2C649B 100%) !important;
+  border-color: #2C649B !important;
 }
 .modal-active-tab-text {
-  color: #152536;
+  color: #ffffff !important;
 }
 .modal-normal-tab {
-  background-color: #D8DAE5 !important;
+  background-color: #E3E3E3 !important;
+  border-color: #848E98 !important;
 }
 .modal-normal-tab-text {
-  color: #6C6C6C;
+  font-weight: bold;
+  color: #212529 !important;
 }
 
 .column-header {
