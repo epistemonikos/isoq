@@ -683,11 +683,11 @@
     "training_webinar_link": "Seminario web de capacitación Cochrane sobre GRADE-CERQual",
     "mailing_list": "Para conocer los próximos talleres de capacitación presenciales, únase a la {0}",
     "mailing_list_link": "Lista de correo de GRADE-CERQual aquí",
-    "full_text": "FULL TEXT",
-    "more_info": "For more information on where GRADE-CERQual fits into the review process please see the",
-    "epoc_protocol": "EPOC QES protocol and review template",
-    "portuguese_version": "A Portuguese version of the guidance can be",
-    "found_here": "found here"
+    "full_text": "TEXTO COMPLETO",
+    "more_info": "Para obtener más información sobre dónde encaja GRADE-CERQual en el proceso de revisión, consulte el",
+    "epoc_protocol": "Protocolo EPOC QES y plantilla de revisión",
+    "portuguese_version": "Encuentre orientación en otros idiomas",
+    "found_here": "aquí"
   },
   "soqf_table": {
     "auto_numbering": "Numeración automática de hallazgos de revisión resumidos",
