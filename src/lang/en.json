@@ -1063,6 +1063,7 @@
       "references_header": "References",
       "actions_header": "Actions",
       "authors_label": "Author(s), Year",
+      "study_characteristics": "Study characteristics",
       "camelot_fields": "CAMELOT fields",
       "camelot_field": "Camelot field",
       "reference_id": "Reference ID",
@@ -1088,20 +1089,21 @@
         "toast_error_title": "Error"
       },
       "modal": {
-        "title": "Edit Reference",
+        "title": "Characteristics of the included study - {reference_id}",
         "reference_id_label": "Reference ID",
         "authors_placeholder": "Authors separated by comma",
         "custom_fields_title": "Custom fields",
         "add_field_button": "Add new field",
         "no_custom_fields": "No custom fields. Click \"Add field\" to create one.",
         "move_instruction": "Use the \"Move\" button to rearrange the fields",
-        "title_label": "Title",
+        "title_label": "Column",
         "move_button": "Move",
         "content_label": "Content",
-        "field_title_placeholder": "Field title",
-        "field_content_placeholder": "Field content",
+        "field_title_placeholder": "Column name",
+        "field_content_placeholder": "Column content",
         "camelot_fields_title": "Camelot fields",
-        "no_selection": "No reference has been selected for editing"
+        "no_selection": "No reference has been selected for editing",
+        "save_button": "Save"
       }
     },
     "step_four": {

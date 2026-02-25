@@ -1063,6 +1063,7 @@
       "references_header": "Referencias",
       "actions_header": "Acciones",
       "authors_label": "Autor(es), Año",
+      "study_characteristics": "Características de los estudios",
       "camelot_fields": "Campos CAMELOT",
       "camelot_field": "Campo Camelot",
       "reference_id": "ID de Referencia",
@@ -1088,20 +1089,21 @@
         "toast_error_title": "Error"
       },
       "modal": {
-        "title": "Editar Referencia",
+        "title": "Características del estudio incluido - {reference_id}",
         "reference_id_label": "ID de referencia",
         "authors_placeholder": "Autores separados por coma",
         "custom_fields_title": "Campos personalizados",
         "add_field_button": "Agregar nuevo campo",
         "no_custom_fields": "No hay campos personalizados. Haz clic en \"Agregar campo\" para crear uno.",
         "move_instruction": "Usa el botón \"Mover\" para reorganizar los campos",
-        "title_label": "Título",
+        "title_label": "Columna",
         "move_button": "Mover",
         "content_label": "Contenido",
-        "field_title_placeholder": "Título del campo",
-        "field_content_placeholder": "Contenido del campo",
+        "field_title_placeholder": "Nombre de la columna",
+        "field_content_placeholder": "Contenido de la columna",
         "camelot_fields_title": "Campos Camelot",
-        "no_selection": "No se ha seleccionado ninguna referencia para editar"
+        "no_selection": "No se ha seleccionado ninguna referencia para editar",
+        "save_button": "Guardar"
       }
     },
     "step_four": {
@@ -1181,7 +1183,7 @@
       "camelot_mixin": {
         "extracted_data": "Datos extraídos",
         "concerns": "Preocupaciones",
-        "meta_domain_1": "Investigación y preguntas",
+        "meta_domain_1": "Objetivo de la investigación y preguntas",
         "meta_domain_2": "Partes interesadas",
         "meta_domain_3": "Investigadores",
         "meta_domain_4": "Contexto",

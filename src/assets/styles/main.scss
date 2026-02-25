@@ -154,6 +154,14 @@ body {
   }
 }
 
+.modal-header.bg-custom-blue {
+  background-color: #1E2137 !important;
+  color: #fff !important;
+  .close {
+    color: #fff !important;
+  }
+}
+
 @media (min-width: 576px) {
   .modal-xl {
     max-width: fit-content;

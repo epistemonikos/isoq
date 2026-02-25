@@ -5,28 +5,34 @@
     :title="modalTitle"
     size="xl"
     @ok="handleModalOk"
-    @hide="resetModal">
+    @hide="resetModal"
+    @shown="initScrollSpy"
+    header-bg-variant="custom-blue"
+    :ok-title="$t('camelot.step_three.modal.save_button')"
+    >
     <template v-if="localReference">
       <b-row>
         <!-- Menú flotante a la izquierda -->
         <b-col cols="3" class="menu-sidebar">
           <div class="sticky-menu p-2">
-            <div class="menu-section mb-3" v-if="customFields.length > 0">
+            <div class="menu-section-title mb-1">{{ $t('camelot.step_three.study_characteristics') }}</div>
+            <div class="menu-section mb-0" v-if="customFields.length > 0">
               <div
                 v-for="(field, index) in customFields"
                 :key="'menu-custom-' + index"
                 class="menu-item"
+                :class="{ 'active-menu-item': activeSection === 'custom-field-' + index }"
                 @click="scrollToSection('custom-field-' + index)">
                 {{ field.label || 'Sin título' }}
               </div>
             </div>
 
             <div class="menu-section">
-              <div class="menu-section-title mb-1">{{ $t('camelot.step_three.camelot_fields') }}</div>
               <div
                 v-for="(category, catIndex) in camelot.categories"
                 :key="'menu-category-' + catIndex"
                 class="menu-item d-flex align-items-center"
+                :class="{ 'active-menu-item': activeSection === 'category-' + catIndex }"
                 @click="scrollToSection('category-' + catIndex)">
                 <img :src="camelotLogo" class="mr-2" width="14" height="14" />
                 {{ category.label }}
@@ -56,21 +62,19 @@
             />
           </div>
 
-          <h5 class="mt-4 d-flex align-items-center">
-            <img :src="camelotLogo" class="mr-2" width="18" height="18" />
-            {{ $t('camelot.step_three.modal.camelot_fields_title') }}
-          </h5>
           <b-row>
             <b-col v-for="(category, catIndex) in camelot.categories"
               :key="'category-' + catIndex"
               :id="'category-' + catIndex"
               cols="12"
               class="mb-3">
-              <h6 class="d-flex align-items-center">
-                <img :src="camelotLogo" class="mr-2" width="14" height="14" />
-                {{ category.label }}
-              </h6>
               <b-card no-body class="mb-3">
+                <template #header>
+                  <h6 class="d-flex align-items-center">
+                    <img :src="camelotLogo" class="mr-2" width="14" height="14" />
+                    {{ category.label }}
+                  </h6>
+                </template>
                 <b-card-body>
                   <b-row>
                     <b-col v-for="(option, optIndex) in category.options"
@@ -132,14 +136,16 @@ export default {
       camelotLogo: require('@/assets/camelot-logo.svg'),
       localReference: null,
       editForm: {},
-      customFields: []
+      customFields: [],
+      activeSection: null,
+      observer: null
     }
   },
   computed: {
     modalTitle () {
       if (this.localReference) {
         const authorInfo = Commons.parseReference(this.localReference, true, false)
-        return `${this.$t('camelot.step_three.modal.title')}: ${authorInfo}`
+        return `${this.$t('camelot.step_three.modal.title', { reference_id: authorInfo })}`
       }
       return this.$t('camelot.step_three.modal.title')
     }
@@ -156,6 +162,15 @@ export default {
           this.resetModal()
         }
       }
+    },
+    customFields: {
+      handler () {
+        if (this.observer) {
+          this.$nextTick(() => {
+            this.initScrollSpy()
+          })
+        }
+      }
     }
   },
   methods: {
@@ -166,10 +181,81 @@ export default {
       this.$bvModal.hide('modal-edit-reference')
     },
     resetModal () {
+      this.destroyScrollSpy()
       this.localReference = null
       this.editForm = {}
       this.customFields = []
+      this.activeSection = null
       this.$emit('close')
+    },
+    initScrollSpy () {
+      this.destroyScrollSpy()
+
+      this.$nextTick(() => {
+        // Usamos una zona de detección muy estrecha cerca del tope (20% del viewport)
+        // Esto actúa como una "línea de disparo" más que como un área
+        const options = {
+          root: null,
+          rootMargin: '-120px 0px -75% 0px', 
+          threshold: 0
+        }
+
+        // Mapa para rastrear qué elementos están cruzando la línea de activación
+        const visibleSections = new Map()
+
+        this.observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              visibleSections.set(entry.target.id, entry.boundingClientRect.top)
+            } else {
+              visibleSections.delete(entry.target.id)
+            }
+          })
+
+          if (visibleSections.size > 0) {
+            // De los elementos que están en la zona activa, elegimos el que tenga el 'top' más pequeño
+            // (el que esté más arriba)
+            let topmostId = this.activeSection
+            let minTop = Infinity
+
+            visibleSections.forEach((top, id) => {
+              if (top < minTop) {
+                minTop = top
+                topmostId = id
+              }
+            })
+
+            if (this.activeSection !== topmostId) {
+              this.activeSection = topmostId
+            }
+          }
+        }, options)
+
+        // Observar secciones
+        const observeElements = () => {
+          if (this.customFields) {
+            this.customFields.forEach((_, index) => {
+              const el = document.getElementById('custom-field-' + index)
+              if (el) this.observer.observe(el)
+            })
+          }
+
+          if (this.camelot && this.camelot.categories) {
+            this.camelot.categories.forEach((_, index) => {
+              const el = document.getElementById('category-' + index)
+              if (el) this.observer.observe(el)
+            })
+          }
+        }
+
+        observeElements()
+      })
+    },
+    destroyScrollSpy () {
+      if (this.observer) {
+        this.observer.disconnect()
+        this.observer = null
+      }
     },
     initializeCustomFields (itemValues = null) {
       if (!this.charsData || !Array.isArray(this.charsData.fields)) {
@@ -372,6 +458,12 @@ export default {
 .menu-item:hover {
   background-color: #e9ecef;
   color: #007bff;
+}
+
+.active-menu-item {
+  font-weight: bold;
+  color: #007bff;
+  background-color: #e9ecef;
 }
 
 .menu-sidebar {
