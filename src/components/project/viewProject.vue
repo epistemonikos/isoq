@@ -133,7 +133,9 @@
               </b-tab>
               <b-tab :title="$t('steps.step_4_methodological')" :disabled="references.length?false:true">
                 <h4 v-html="$t('steps.step_4_description')"></h4>
-                <p class="font-weight-light">
+                <p class="font-weight-light" v-if="project.use_camelot" v-html="$t('camelot.step_four.description')">
+                </p>
+                <p class="font-weight-light" v-else>
                   {{ $t('steps.step_4_long_description') }}
                 </p>
                 <template v-if="project.use_camelot">
