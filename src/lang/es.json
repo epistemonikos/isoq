@@ -1108,9 +1108,14 @@
       "how_to_read": {
         "title": "Cómo leer esta tabla",
         "section_1": "1. Qué muestra esta tabla",
+        "content_1": "<p>Cada fila representa un estudio individual.</p><p>Cada columna representa una evaluación de ajuste CAMELOT entre dominios metodológicos específicos.</p><p>Los dominios se agrupan en tres categorías principales:</p><ul><li>Dominios Meta vs. Dominios de diseño de investigación (FA1–FA4)</li><li>Dominios Meta vs. Dominios de conducta de investigación (FA5–FA8)</li><li>Dominios de diseño de investigación vs. Dominios de conducta de investigación (FA9)</li></ul><p>Al final de cada fila, encontrará una Evaluación General (OA) que resume el ajuste metodológico para el estudio.</p>",
         "section_2": "2. Cómo interpretar los colores e íconos",
+        "content_2_pre": "Cada celda contiene un marcador de color que indica el nivel de preocupación identificado durante la evaluación:",
+        "content_2_post": "Estos indicadores le ayudan a identificar visualmente las fortalezas metodológicas y los problemas potenciales en los estudios.",
         "section_3": "3. El botón \"Editar\"",
-        "section_4": "4. Cómo usar esta tabla"
+        "content_3": "<p>El botón Editar en cada celda le permite:</p><ul><li>Ver la justificación de la calificación asignada</li><li>Modificar la evaluación si es necesario</li><li>Añadir notas o explicaciones para asegurar la transparencia</li></ul><p>Esto apoya evaluaciones metodológicas consistentes y bien documentadas.</p>",
+        "section_4": "4. Cómo usar esta tabla",
+        "content_4": "<p>Use esta tabla para:</p><ul><li>Construir la tabla final de evaluación CAMELOT para su revisión</li><li>Informar los juicios metodológicos utilizados en las evaluaciones GRADE-CERQual</li><li>Detectar rápidamente evaluaciones que puedan necesitar revisión o discusión en equipo</li></ul>"
       },
       "legend": {
         "show": "Mostrar leyenda de colores",
