@@ -27,7 +27,7 @@
     <p>{{ $t('guidance.more_info') }} <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank">{{ $t('guidance.epoc_protocol') }}</a>.</p>
 
     <b-alert show variant="info" class="text-center">
-    {{ $t('guidance.portuguese_version') }} <a href="http://www.saude.sp.gov.br/resources/instituto-de-saude/homepage/temas-saude-coletiva/49213001internetinterativo.pdf" target="_blank">{{ $t('guidance.found_here') }}</a>
+    {{ $t('guidance.portuguese_version') }} <a href="https://www.cerqual.org/translated-guidance/" target="_blank">{{ $t('guidance.found_here') }}</a>
     </b-alert>
 
     <h2 class="mb-3">{{ $t('guidance.webinars_title') }}</h2>
