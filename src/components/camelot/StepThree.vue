@@ -54,6 +54,21 @@
           </b-button>
         </template>
 
+        <!-- Cabeceras personalizadas para campos Camelot -->
+        <template v-for="field in tableFields" v-slot:[`head(${field.key})`]="data">
+          <div :key="field.key" class="d-flex align-items-center">
+            <span>{{ data.label }}</span>
+            <img
+              v-if="field.isCamelot"
+              :src="camelotLogo"
+              class="ml-1"
+              width="16"
+              height="16"
+              v-b-tooltip.hover=" $t('camelot.step_three.camelot_field') "
+            />
+          </div>
+        </template>
+
         <!-- Plantilla genérica para todos los campos -->
         <template v-slot:cell()="data">
           <!-- Para los campos personalizados, mostramos su contenido -->
@@ -137,20 +152,20 @@ export default {
       handler (newCols, oldCols) {
         // Initial load
         if (!oldCols) {
-           this.visibleColumnKeys = newCols.map(c => c.key)
-           return
+          this.visibleColumnKeys = newCols.map(c => c.key)
+          return
         }
-        
+
         // Calculate new columns that weren't present before
         const oldKeys = oldCols.map(c => c.key)
         const addedCols = newCols.filter(c => !oldKeys.includes(c.key))
-        
+
         if (addedCols.length > 0) {
           // Add newly appeared columns to visible list
           const newKeysToAdd = addedCols.map(c => c.key)
           // Avoid duplicates
           const uniqueNewKeys = newKeysToAdd.filter(key => !this.visibleColumnKeys.includes(key))
-          
+
           if (uniqueNewKeys.length > 0) {
             this.visibleColumnKeys = [...this.visibleColumnKeys, ...uniqueNewKeys]
           }
@@ -172,10 +187,10 @@ export default {
         if (this.showConcerns && oldVal) {
           const added = newVal.filter(k => !oldVal.includes(k))
           const removed = oldVal.filter(k => !newVal.includes(k))
-          
+
           let changed = false
           let updatedKeys = [...newVal]
-          
+
           added.forEach(k => {
             if (k.endsWith('_extractedData')) {
               const concernKey = k.replace('_extractedData', '_concerns')
@@ -185,7 +200,7 @@ export default {
               }
             }
           })
-          
+
           removed.forEach(k => {
             if (k.endsWith('_extractedData')) {
               const concernKey = k.replace('_extractedData', '_concerns')
@@ -196,13 +211,33 @@ export default {
               }
             }
           })
-          
+
           if (changed) {
             this.visibleColumnKeys = updatedKeys
           }
         }
       },
       deep: false
+    },
+    references: {
+      handler (newReferences, oldReferences) {
+        // Only reload if there are actual changes in references
+        if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
+          this.loadCharacteristicsData()
+        }
+      },
+      immediate: false
+    },
+    charsData: {
+      handler (newVal) {
+        if (newVal && newVal.fields) {
+          // Force table update when data changes
+          this.$nextTick(() => {
+            this.$forceUpdate()
+          })
+        }
+      },
+      deep: true
     }
   },
   data () {
@@ -217,6 +252,7 @@ export default {
           label: ''
         }
       ],
+      camelotLogo: require('@/assets/camelot-logo.svg'),
       currentItem: null,
       charsData: {
         fields: [],
@@ -277,20 +313,22 @@ export default {
             // Find the "extracted data" and "concerns" options for this category
             const extractedDataOption = category.options.find(opt => !opt.key.endsWith('_concerns'))
             const concernsOption = category.options.find(opt => opt.key.endsWith('_concerns'))
-            
+
             // Add the domain column (extracted data) with the category label as header
             if (extractedDataOption) {
               categoryFields.push({
                 key: extractedDataOption.key,
-                label: category.label // Use category label instead of option label
+                label: category.label, // Use category label instead of option label
+                isCamelot: true
               })
             }
-            
+
             // If showConcerns is true, add the concerns column right after the domain
             if (this.showConcerns && concernsOption) {
               categoryFields.push({
                 key: concernsOption.key,
-                label: concernsOption.label // Keep "Preocupaciones" label
+                label: concernsOption.label, // Keep "Preocupaciones" label
+                isCamelot: true
               })
             }
           }
@@ -306,9 +344,9 @@ export default {
     },
     filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)
-      return this.availableTableFields.filter(f => 
-        f.key !== 'authors' && 
-        f.key !== 'actions' && 
+      return this.availableTableFields.filter(f =>
+        f.key !== 'authors' &&
+        f.key !== 'actions' &&
         f.key !== 'edit' &&
         !f.key.endsWith('_concerns')
       )
@@ -317,13 +355,13 @@ export default {
       // Return columns that should be displayed
       return this.availableTableFields.filter(f => {
         if (f.key === 'authors' || f.key === 'actions' || f.key === 'edit') return true
-        
+
         // Ensure concern columns only show if their parent extracted data column is visible
         if (f.key.endsWith('_concerns')) {
           const parentKey = f.key.replace('_concerns', '_extractedData')
           return this.visibleColumnKeys.includes(f.key) && this.visibleColumnKeys.includes(parentKey)
         }
-        
+
         return this.visibleColumnKeys.includes(f.key)
       })
     },
@@ -336,7 +374,7 @@ export default {
     }
   },
   methods: {
-    formatAuthors(item) {
+    formatAuthors (item) {
       return Commons.parseReference(item, true, false)
     },
     editReference (item) {
@@ -401,7 +439,7 @@ export default {
           this.$nextTick(() => {
             // Safeguard: Ensure visible columns are populated on first load if they appear empty
             if (this.isFirstLoad && this.visibleColumnKeys.length === 0 && this.filterableColumns.length > 0) {
-                 this.visibleColumnKeys = this.filterableColumns.map(c => c.key)
+              this.visibleColumnKeys = this.filterableColumns.map(c => c.key)
             }
             this.isFirstLoad = false
             this.$forceUpdate()
@@ -411,28 +449,6 @@ export default {
           console.error('Error al cargar los datos de características:', error)
           this.isLoading = false
         })
-    }
-  },
-  watch: {
-    references: {
-      handler(newReferences, oldReferences) {
-        // Only reload if there are actual changes in references
-        if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
-          this.loadCharacteristicsData()
-        }
-      },
-      immediate: false
-    },
-    charsData: {
-      handler(newVal) {
-        if (newVal && newVal.fields) {
-          // Force table update when data changes
-          this.$nextTick(() => {
-            this.$forceUpdate()
-          })
-        }
-      },
-      deep: true
     }
   },
   mounted () {

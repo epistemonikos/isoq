@@ -96,7 +96,9 @@
               </b-tab>
               <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length?false:true">
                 <h4 v-html="$t('characteristics.step_title')"></h4>
-                <p class="font-weight-light">
+                <p class="font-weight-light" v-if="project.use_camelot" v-html="formattedCamelotDescription">
+                </p>
+                <p class="font-weight-light" v-else>
                   {{ $t('characteristics.description') }}
                 </p>
                 <template v-if="project.use_camelot">
@@ -638,6 +640,7 @@ export default {
   data () {
     return {
       stepStage: 0,
+      camelotLogo: require('@/assets/camelot-logo.svg'),
       project: {
         name: '',
         authors: '',
@@ -1916,6 +1919,11 @@ export default {
     }
   },
   computed: {
+    formattedCamelotDescription: function () {
+      const desc = this.$t('camelot.step_three.description')
+      const iconHtml = `<img src="${this.camelotLogo}" width="16" height="16" class="align-middle mx-1" />`
+      return desc.replace('{icon}', iconHtml)
+    },
     title: function () {
       let txt = ''
       if (this.mode === 'edit') {

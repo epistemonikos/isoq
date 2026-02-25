@@ -1054,6 +1054,7 @@
   "camelot": {
     "step_three": {
       "loading": "Carregando datos...",
+      "description": "Esta tabela será utilizada posteriormente para os seguintes fins:<ul><li>Gerar uma tabela de Características dos estudos a ser incluída na sua revisão</li><li>Servir como material de referência para realizar avaliações CAMELOT para cada estudo incluído (as colunas marcadas com o ícone {icon} correspondem aos domínios CAMELOT).</li><li>Servir como material de referência para realizar avaliações GRADE-CERQual para cada descoberta de revisão (componentes de Adequação e Relevância). <a href='https://www.cerqual.org/' target='_blank'>Saiba mais</a></li></ul><p>Abra o formulário de extração de dados clicando nos botões de edição.</p><p>Adicione outras características dos estudos relevantes para a sua revisão clicando no botão Adicionar ou editar colunas.</p>",
       "no_records": "Nenhum registro disponível",
       "show_concerns": "Mostrar preocupações",
       "hide_concerns": "Ocultar preocupações",
@@ -1063,6 +1064,7 @@
       "actions_header": "Ações",
       "authors_label": "Autor(es), Ano",
       "camelot_fields": "Campos CAMELOT",
+      "camelot_field": "Campo Camelot",
       "reference_id": "ID de Referência",
       "author_year": "Autor(es), Ano",
       "export_csv": "Exportar para CSV",

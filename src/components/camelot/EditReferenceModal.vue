@@ -26,8 +26,9 @@
               <div
                 v-for="(category, catIndex) in camelot.categories"
                 :key="'menu-category-' + catIndex"
-                class="menu-item"
+                class="menu-item d-flex align-items-center"
                 @click="scrollToSection('category-' + catIndex)">
+                <img :src="camelotLogo" class="mr-2" width="14" height="14" />
                 {{ category.label }}
               </div>
             </div>
@@ -55,14 +56,20 @@
             />
           </div>
 
-          <h5 class="mt-4">{{ $t('camelot.step_three.modal.camelot_fields_title') }}</h5>
+          <h5 class="mt-4 d-flex align-items-center">
+            <img :src="camelotLogo" class="mr-2" width="18" height="18" />
+            {{ $t('camelot.step_three.modal.camelot_fields_title') }}
+          </h5>
           <b-row>
             <b-col v-for="(category, catIndex) in camelot.categories"
               :key="'category-' + catIndex"
               :id="'category-' + catIndex"
               cols="12"
               class="mb-3">
-              <h6>{{ category.label }}</h6>
+              <h6 class="d-flex align-items-center">
+                <img :src="camelotLogo" class="mr-2" width="14" height="14" />
+                {{ category.label }}
+              </h6>
               <b-card no-body class="mb-3">
                 <b-card-body>
                   <b-row>
@@ -122,6 +129,7 @@ export default {
   },
   data () {
     return {
+      camelotLogo: require('@/assets/camelot-logo.svg'),
       localReference: null,
       editForm: {},
       customFields: []
@@ -240,7 +248,7 @@ export default {
     },
     handleModalOk (bvModalEvent) {
       if (bvModalEvent) bvModalEvent.preventDefault()
-      
+
       const customFieldsArray = this.processCustomFields()
       const item = {
         ref_id: this.editForm.id || '',
@@ -293,10 +301,10 @@ export default {
       const savePromise = updatedCharsData.id
         ? Api.patch(`/isoqf_characteristics/${updatedCharsData.id}/`, updatedCharsData)
         : Api.post('/isoqf_characteristics/', {
-            organization: this.$route.params.org_id || '',
-            project_id: this.$route.params.id || '',
-            ...updatedCharsData
-          })
+          organization: this.$route.params.org_id || '',
+          project_id: this.$route.params.id || '',
+          ...updatedCharsData
+        })
 
       savePromise
         .then(response => {
@@ -306,18 +314,18 @@ export default {
             id: response.data.id || this.charsData.id,
             _id: response.data._id || this.charsData._id
           }
-          
+
           // Visibility logic: only add truly NEW columns
           const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
           const newKeys = customFieldsArray
-            .filter(f => 
-              f.key !== 'authors' && 
-              f.key !== 'ref_id' && 
-              f.key !== 'actions' && 
+            .filter(f =>
+              f.key !== 'authors' &&
+              f.key !== 'ref_id' &&
+              f.key !== 'actions' &&
               !oldFieldKeys.includes(f.key) // Only if it wasn't there before
             )
             .map(f => f.key)
-          
+
           if (newKeys.length > 0) {
             this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
           }

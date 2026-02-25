@@ -1054,6 +1054,7 @@
   "camelot": {
     "step_three": {
       "loading": "Loading data...",
+      "description": "This table will be used later on for the following purposes:<ul><li>Generate a Characteristics of studies table to be included in your review</li><li>Serve as reference material for making CAMELOT assessments for each included study (columns marked with the icon {icon} correspond to CAMELOT domains).</li><li>Serve as reference material for making GRADE-CERQual assessments for each review finding (Adequacy and Relevance components). <a href='https://grade-cerqual.org/' target='_blank'>Learn more</a></li></ul><p>Open the Data extraction form by clicking the edit buttons.</p><p>Add other characteristics of studies relevant for your review by clicking the Add or edit columns button.</p>",
       "no_records": "No records available",
       "show_concerns": "Show concerns",
       "hide_concerns": "Hide concerns",
@@ -1063,6 +1064,7 @@
       "actions_header": "Actions",
       "authors_label": "Author(s), Year",
       "camelot_fields": "CAMELOT fields",
+      "camelot_field": "Camelot field",
       "reference_id": "Reference ID",
       "author_year": "Author(s), Year",
       "export_csv": "Export to CSV",
