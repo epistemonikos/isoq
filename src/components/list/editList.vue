@@ -111,92 +111,90 @@
 
       <b-row class="mt-4">
         <b-col cols="12">
-          <!--<b-tabs>-->
-            <!-- Evidence Profile-->
-            <!--<b-tab :title="$t('Evidence Profile')">-->
-              <div id="progress-status"
-                v-if="mode==='edit'"
-                class="d-print-none">
-                <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
-                <p v-if="list.cerqual.option !== null">
-                  {{ $t('worksheet.assessment_added_isoq') }}
-                </p>
-                <b-progress
-                  :value="status_evidence_profile.value"
-                  :max="status_evidence_profile.max"
-                  :variant="status_evidence_profile.variant"
-                  class="mb-3">
-                </b-progress>
-              </div>
+          <div id="progress-status"
+            v-if="mode==='edit'"
+            class="d-print-none">
+            <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
+            <p v-if="list.cerqual.option !== null">
+              {{ $t('worksheet.assessment_added_isoq') }}
+            </p>
+            <b-progress
+              :value="status_evidence_profile.value"
+              :max="status_evidence_profile.max"
+              :variant="status_evidence_profile.variant"
+              class="mb-3">
+            </b-progress>
+          </div>
 
-              <evidence-profile-table
-                :evidenceProfile="evidence_profile"
-                :ui="ui"
-                :show="show"
-                :evidenceProfileTableSettings="evidence_profile_table_settings"
-                :references="references"
-                :mode="mode"
-                :list="list"
-                :refsWithTitle="refsWithTitle"
-                :project="project"
-                :permission="checkPermissions(list.organization)"
-                :selectOptions="select_options"
-                :levelConfidence="level_confidence"
-                :findings="findings"
-                :methAssessments="meth_assessments"
-                :extractedData="extracted_data"
-                :modePrintFieldObject="mode_print_fieldsObj"
-                :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
-                :modalData="buffer_modal_stage_two"
-                :charsOfStudies="characteristics_studies"
-                @update-list-data="getList"
-                @printErrors="printErrors"
-                @modalDataChanged="modalDataChanged"
-                @busyEvidenceProfileTable="busyEvidenceProfileTable"
-                @callGetFinding="callGetFinding"
-                @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
-                @getExtractedData="getExtractedData"
-              ></evidence-profile-table>
+          <evidence-profile-table
+            :evidenceProfile="evidence_profile"
+            :ui="ui"
+            :show="show"
+            :evidenceProfileTableSettings="evidence_profile_table_settings"
+            :references="references"
+            :mode="mode"
+            :list="list"
+            :refsWithTitle="refsWithTitle"
+            :project="project"
+            :permission="checkPermissions(list.organization)"
+            :selectOptions="select_options"
+            :levelConfidence="level_confidence"
+            :findings="findings"
+            :methAssessments="meth_assessments"
+            :extractedData="extracted_data"
+            :modePrintFieldObject="mode_print_fieldsObj"
+            :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
+            :modalData="buffer_modal_stage_two"
+            :charsOfStudies="characteristics_studies"
+            @update-list-data="getList"
+            @printErrors="printErrors"
+            @modalDataChanged="modalDataChanged"
+            @busyEvidenceProfileTable="busyEvidenceProfileTable"
+            @callGetFinding="callGetFinding"
+            @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+            @getExtractedData="getExtractedData"
+          ></evidence-profile-table>
 
-                      <table-chars-of-studies
-                        :useCamelot="project.use_camelot"
-                        :ui="ui"              :show="show"
-              :mode="mode"
-              :list="list"
-              :permission="checkPermissions(list.organization)"
-              :charsOfStudies="characteristics_studies"
-              :refsWithTitle="refsWithTitle"
-              :showParagraph="true"></table-chars-of-studies>
+          <table-chars-of-studies
+            :useCamelot="project.use_camelot"
+            :ui="ui"              :show="show"
+            :mode="mode"
+            :list="list"
+            :permission="checkPermissions(list.organization)"
+            :charsOfStudies="characteristics_studies"
+            :refsWithTitle="refsWithTitle"
+            :showParagraph="true"></table-chars-of-studies>
 
-                      <table-meth-assessments
-                        :useCamelot="project.use_camelot"
-                        :ui="ui"              :show="show"
-              :mode="mode"
-              :list="list"
-              :permission="checkPermissions(list.organization)"
-              :methAssessments="meth_assessments"
-              :refsWithTitle="refsWithTitle"
-              :showParagraph="true"></table-meth-assessments>
+          <table-meth-assessments
+            :useCamelot="project.use_camelot"
+            :ui="ui"
+            :show="show"
+            :mode="mode"
+            :list="list"
+            :permission="checkPermissions(list.organization)"
+            :methAssessments="meth_assessments"
+            :refsWithTitle="refsWithTitle"
+            :showParagraph="true"></table-meth-assessments>
 
-            <table-extracted-data
-              :ui="ui"
-              :show="show"
-              :mode="mode"
-              :list="list"
-              :permission="checkPermissions(list.organization)"
-              :extractedData="extracted_data"
-              :modePrintFieldObject="mode_print_fieldsObj"
-              :refsWithTitle="refsWithTitle"
-              :showParagraph="true"
-              @printErrors="printErrors"
-              @getExtractedData="getExtractedData"></table-extracted-data>
+          <table-extracted-data
+            :ui="ui"
+            :show="show"
+            :mode="mode"
+            :list="list"
+            :permission="checkPermissions(list.organization)"
+            :extractedData="extracted_data"
+            :modePrintFieldObject="mode_print_fieldsObj"
+            :refsWithTitle="refsWithTitle"
+            :showParagraph="true"
+            @printErrors="printErrors"
+            @getExtractedData="getExtractedData"></table-extracted-data>
 
-            <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
-              <div class="mt-5 alert alert-info" role="alert">
-                <h5>{{ $t('project.license_type') }}</h5>
-                <p>{{ theLicense(this.project.license_type) }}</p>
-              </div>
-            </template>
+          <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
+            <div class="mt-5 alert alert-info" role="alert">
+              <h5>{{ $t('project.license_type') }}</h5>
+              <p>{{ theLicense(this.project.license_type) }}</p>
+            </div>
+          </template>
         </b-col>
       </b-row>
     </b-container>
