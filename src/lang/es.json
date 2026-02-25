@@ -1173,18 +1173,18 @@
       "camelot_mixin": {
         "extracted_data": "Datos extraídos",
         "concerns": "Preocupaciones",
-        "meta_domain_1": "Dominio Meta 1 - Investigación",
-        "meta_domain_2": "Dominio Meta 2 - Partes interesadas",
-        "meta_domain_3": "Dominio Meta 3 - Investigadores",
-        "meta_domain_4": "Dominio Meta 4 - Contexto",
-        "research_design_1": "Diseño de investigación 1 - Estrategia de investigación",
-        "research_design_2": "Diseño de investigación 2 - Teoría",
-        "research_design_3": "Diseño de investigación 3 - Consideraciones éticas",
-        "research_design_4": "Diseño de investigación 4 - Consideraciones de equidad, diversidad e inclusión",
-        "research_conduct_1": "Conducta de investigación 1 - Reclutamiento y selección de participantes",
-        "research_conduct_2": "Conducta de investigación 2 - Recolección de datos",
-        "research_conduct_3": "Conducta de investigación 3 - Análisis e interpretación",
-        "research_conduct_4": "Conducta de investigación 4 - Presentación de hallazgos"
+        "meta_domain_1": "Investigación y preguntas",
+        "meta_domain_2": "Partes interesadas",
+        "meta_domain_3": "Investigadores",
+        "meta_domain_4": "Contexto",
+        "research_design_1": "Estrategia de investigación",
+        "research_design_2": "Teoría",
+        "research_design_3": "Consideraciones éticas",
+        "research_design_4": "Consideraciones de equidad, diversidad e inclusión",
+        "research_conduct_1": "Reclutamiento y selección de participantes",
+        "research_conduct_2": "Recolección de datos",
+        "research_conduct_3": "Análisis e interpretación",
+        "research_conduct_4": "Presentación de hallazgos"
       }
     },
     "responses": {

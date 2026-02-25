@@ -1173,18 +1173,18 @@
       "camelot_mixin": {
         "extracted_data": "Extracted data",
         "concerns": "Concerns",
-        "meta_domain_1": "Meta domain 1 - Research",
-        "meta_domain_2": "Meta domain 2 - Stakeholders",
-        "meta_domain_3": "Meta domain 3 - Researchers",
-        "meta_domain_4": "Meta domain 4 - Context",
-        "research_design_1": "Research design 1 - Research strategy",
-        "research_design_2": "Research design 2 - Theory",
-        "research_design_3": "Research design 3 - Ethical considerations",
-        "research_design_4": "Research design 4 - Equity, diversity & inclusion considerations",
-        "research_conduct_1": "Research conduct 1 - Participant recruitment & selection",
-        "research_conduct_2": "Research conduct 2 - Data collection",
-        "research_conduct_3": "Research conduct 3 - Analysis & interpretation",
-        "research_conduct_4": "Research conduct 4 - Presentation of findings"
+        "meta_domain_1": "Research aim & question(s)",
+        "meta_domain_2": "Stakeholders",
+        "meta_domain_3": "Researchers",
+        "meta_domain_4": "Context",
+        "research_design_1": "Research strategy",
+        "research_design_2": "Theory",
+        "research_design_3": "Ethical considerations",
+        "research_design_4": "Equity, diversity & inclusion considerations",
+        "research_conduct_1": "Participant recruitment & selection",
+        "research_conduct_2": "Data collection",
+        "research_conduct_3": "Analysis & interpretation",
+        "research_conduct_4": "Presentation of findings"
       }
     },
     "responses": {
