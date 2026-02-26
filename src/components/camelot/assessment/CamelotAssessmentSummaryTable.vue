@@ -1,5 +1,45 @@
 <template>
   <div class="camelot-summary-table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="h5 mb-0 font-weight-bold text-secondary">{{ $t('camelot.step_four.breadcrumb_sub') }}</h4>
+      
+      <b-dropdown
+        id="dropdown-filter-assessments"
+        variant="outline-primary"
+        size="sm"
+        no-caret
+        right
+        class="assessment-filter-dropdown"
+      >
+        <template #button-content>
+          {{ $t('common.filter') }}
+          <font-awesome-icon icon="filter" class="ml-1" />
+        </template>
+        <b-dropdown-form class="p-3" style="min-width: 320px; max-height: 500px; overflow-y: auto;">
+          <h6 class="dropdown-header px-0 mb-2 font-weight-bold">{{ $t('common.filter_columns') }}</h6>
+          
+          <b-form-checkbox
+            v-model="allVisible"
+            class="mb-2 font-weight-bold"
+            @change="toggleAllAssessments"
+          >
+            {{ $t('common.show_all') }}
+          </b-form-checkbox>
+          
+          <div v-for="(group, gIdx) in filterGroups" :key="gIdx" class="filter-group-section mt-3">
+            <div class="filter-group-title text-muted small font-weight-bold text-uppercase border-bottom mb-2 pb-1">
+              {{ group.title }}
+            </div>
+            <div v-for="opt in group.options" :key="opt.value" class="mb-1 ml-2">
+              <b-form-checkbox v-model="visibleAssessments" :value="opt.value">
+                {{ opt.label }}
+              </b-form-checkbox>
+            </div>
+          </div>
+        </b-dropdown-form>
+      </b-dropdown>
+    </div>
+
     <b-table
       :fields="fields"
       :items="tableItems"
@@ -83,8 +123,8 @@
 
       <!-- Summary Action -->
       <template v-slot:cell(actions)="data">
-        <b-button size="sm" variant="link" @click="data.toggleDetails" class="p-0 text-primary">
-          {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }} {{ $t('camelot.step_four.common.fit_assessment') }}
+        <b-button size="sm" variant="link" @click="data.toggleDetails" class="p-0 text-primary summary-toggle-btn">
+          {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }} {{ $t('camelot.step_four.breadcrumb_sub') }}
           <font-awesome-icon :icon="data.detailsShowing ? 'chevron-up' : 'chevron-down'" class="ml-1" />
         </b-button>
       </template>
@@ -92,35 +132,41 @@
       <!-- Row Details Summary -->
       <template v-slot:row-details="data">
         <div class="summary-details-panel p-3 bg-light border-top">
-          <div v-for="(stage, sIdx) in 4" :key="sIdx" class="stage-section mb-4">
-            <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(sIdx) }}</h5>
+          <div v-for="stageIdx in activeStages" :key="stageIdx" class="stage-section mb-4">
+            <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
             
             <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
               <b-thead head-variant="light">
                 <b-tr>
-                  <b-th style="width: 80px">{{ $t('camelot.step_three.camelot_field') }}</b-th>
+                  <b-th style="width: 80px">{{ $t('camelot.step_four.breadcrumb_sub') }}</b-th>
                   <b-th style="width: 50px"></b-th>
                   <b-th>{{ $t('camelot.step_four.common.fit_assessment') }}</b-th>
                 </b-tr>
               </b-thead>
               <b-tbody>
-                <b-tr v-for="(option, oIdx) in data.item.stages[sIdx].options" :key="oIdx">
-                  <b-td class="font-weight-bold text-center vertical-middle">
-                    {{ getAssessmentLabel(sIdx, oIdx) }}
-                  </b-td>
-                  <b-td class="text-center vertical-middle">
-                    <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
-                  </b-td>
-                  <b-td>
-                    <div v-if="option.option">
-                      <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
-                      <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
-                    </div>
-                    <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed') }}</div>
-                  </b-td>
-                </b-tr>
+                <template v-for="(option, oIdx) in data.item.stages[stageIdx].options">
+                  <b-tr v-if="isAssessmentVisible(stageIdx, oIdx)" :key="oIdx">
+                    <b-td class="font-weight-bold text-center vertical-middle">
+                      {{ getAssessmentLabel(stageIdx, oIdx) }}
+                    </b-td>
+                    <b-td class="text-center vertical-middle">
+                      <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
+                    </b-td>
+                    <b-td>
+                      <div v-if="option.option">
+                        <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
+                        <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
+                      </div>
+                      <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed') }}</div>
+                    </b-td>
+                  </b-tr>
+                </template>
               </b-tbody>
             </b-table-simple>
+          </div>
+          <div v-if="activeStages.length === 0" class="text-center py-4 text-muted">
+            <font-awesome-icon icon="filter" size="2x" class="mb-3 opacity-50" />
+            <p>{{ $t('common.no_records') }}</p>
           </div>
         </div>
       </template>
@@ -130,9 +176,9 @@
 
 <script>
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons'
+import { faChevronUp, faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faChevronUp, faChevronDown)
+library.add(faChevronUp, faChevronDown, faFilter)
 
 export default {
   name: 'CamelotAssessmentSummaryTable',
@@ -152,7 +198,7 @@ export default {
 
     return {
       fields: [
-        { key: 'authors', label: 'Fit assessments', thClass: headerClass, tdClass: 'border-right' },
+        { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: headerClass, tdClass: 'border-right' },
         { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
         { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
         { key: 'fa3', label: 'FA 3', thClass: headerClass, tdClass: 'assessment-col' },
@@ -171,10 +217,46 @@ export default {
         { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
         { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
-      ]
+      ],
+      visibleAssessments: ['0-0', '0-1', '0-2', '0-3', '1-0', '1-1', '1-2', '1-3', '2-0', '3-0'],
+      allVisible: true
     }
   },
   computed: {
+    filterGroups() {
+      return [
+        {
+          title: this.getStageTitle(0),
+          options: [
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_1'), value: '0-0' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_2'), value: '0-1' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_3'), value: '0-2' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_4'), value: '0-3' }
+          ]
+        },
+        {
+          title: this.getStageTitle(1),
+          options: [
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_1'), value: '1-0' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_2'), value: '1-1' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_3'), value: '1-2' },
+            { label: this.$t('camelot.step_four.camelot_mixin.meta_domain_4'), value: '1-3' }
+          ]
+        },
+        {
+          title: this.getStageTitle(2),
+          options: [
+            { label: this.$t('camelot.step_four.sections.fit_between_design_conduct'), value: '2-0' }
+          ]
+        },
+        {
+          title: this.getStageTitle(3),
+          options: [
+            { label: this.$t('camelot.step_four.tabs.overall'), value: '3-0' }
+          ]
+        }
+      ]
+    },
     tableItems() {
       if (!this.assessments || !this.assessments.items) return []
 
@@ -190,9 +272,37 @@ export default {
       }
 
       return filteredItems
+    },
+    activeStages() {
+      const active = []
+      for (let stageIdx = 0; stageIdx < 4; stageIdx++) {
+        const hasVisibleAssessment = this.visibleAssessments.some(v => v.startsWith(`${stageIdx}-`))
+        if (hasVisibleAssessment) {
+          active.push(stageIdx)
+        }
+      }
+      return active
+    },
+    allAssessmentValues() {
+      return this.filterGroups.flatMap(g => g.options.map(o => o.value))
+    }
+  },
+  watch: {
+    visibleAssessments(newVal) {
+      this.allVisible = newVal.length === this.allAssessmentValues.length
     }
   },
   methods: {
+    toggleAllAssessments(checked) {
+      if (checked) {
+        this.visibleAssessments = [...this.allAssessmentValues]
+      } else {
+        this.visibleAssessments = []
+      }
+    },
+    isAssessmentVisible(stageIdx, oIdx) {
+      return this.visibleAssessments.includes(`${stageIdx}-${oIdx}`)
+    },
     getCircleClass(stage, optionIndex, item) {
       if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
         return 'circle-not-completed'
@@ -231,12 +341,25 @@ export default {
     },
     getAssessmentLabel(stage, index) {
       if (stage === 3) return this.$t('camelot.step_four.tabs.overall')
-      const labels = [
-        ['FA1', 'FA2', 'FA3', 'FA4'],
-        ['FA5', 'FA6', 'FA7', 'FA8'],
-        ['FA9']
+      const keys = [
+        [
+          'camelot.step_four.camelot_mixin.meta_domain_1',
+          'camelot.step_four.camelot_mixin.meta_domain_2',
+          'camelot.step_four.camelot_mixin.meta_domain_3',
+          'camelot.step_four.camelot_mixin.meta_domain_4'
+        ],
+        [
+          'camelot.step_four.camelot_mixin.meta_domain_1',
+          'camelot.step_four.camelot_mixin.meta_domain_2',
+          'camelot.step_four.camelot_mixin.meta_domain_3',
+          'camelot.step_four.camelot_mixin.meta_domain_4'
+        ],
+        [
+          'camelot.step_four.sections.fit_between_design_conduct'
+        ]
       ]
-      return labels[stage][index]
+      const key = keys[stage] ? keys[stage][index] : null
+      return key ? this.$t(key) : ''
     }
   }
 }
@@ -315,6 +438,19 @@ export default {
 
   .summary-details-panel {
     border-left: 4px solid #1065AB;
+  }
+
+  .assessment-filter-dropdown {
+    ::v-deep .dropdown-menu {
+      padding: 0;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .filter-group-title {
+    color: #1065AB !important;
+    letter-spacing: 0.02em;
   }
 
   .stage-header {
