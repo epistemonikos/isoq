@@ -5,6 +5,8 @@ module.exports = {
     '^.+\\.js$': 'babel-jest'
   },
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': '<rootDir>/tests/unit/__mocks__/styleMock.js',
+    '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/tests/unit/__mocks__/fileMock.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@/utils/api$': '<rootDir>/tests/unit/__mocks__/Api.js',
     '^@/utils/Api$': '<rootDir>/tests/unit/__mocks__/Api.js'

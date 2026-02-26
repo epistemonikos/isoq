@@ -4,7 +4,13 @@ import viewProject from '@/components/project/viewProject.vue'
 import BootstrapVue from 'bootstrap-vue'
 
 // Mock dependencies
-jest.mock('@/utils/Api')
+jest.mock('@/utils/Api', () => ({
+  get: jest.fn(() => Promise.resolve({ data: [] })),
+  post: jest.fn(() => Promise.resolve({ data: {} })),
+  patch: jest.fn(() => Promise.resolve({ data: {} })),
+  put: jest.fn(() => Promise.resolve({ data: {} })),
+  delete: jest.fn(() => Promise.resolve({ data: {} }))
+}))
 jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
   release: jest.fn()
