@@ -12,7 +12,7 @@
         class="assessment-filter-dropdown"
       >
         <template #button-content>
-          {{ $t('common.filter') }}
+          {{ $t('camelot.step_four.show_details_across_studies') }}
           <font-awesome-icon icon="filter" class="ml-1" />
         </template>
         <b-dropdown-form class="p-3" style="min-width: 320px; max-height: 500px; overflow-y: auto;">
@@ -50,12 +50,12 @@
     >
       <template v-slot:thead-top>
         <tr class="header-top-row">
-          <th class="border-bottom-0">{{ $t('camelot.step_four.table_headers.authors') }}</th>
-          <th colspan="4" class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_meta_design') }}</th>
-          <th colspan="4" class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}</th>
-          <th class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_design_conduct') }}</th>
-          <th class="text-center group-header border-left header-overall-group">{{ $t('camelot.step_four.tabs.overall') }}</th>
-          <th class="border-bottom-0"></th>
+          <th class="border-bottom-0 bg-grey-light">{{ $t('camelot.step_four.table_headers.authors') }}</th>
+          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_meta_design') }}</th>
+          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}</th>
+          <th class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_design_conduct') }}</th>
+          <th class="text-center group-header border-left bg-grey-light">{{ $t('camelot.step_four.tabs.overall') }}</th>
+          <th class="border-bottom-0 bg-grey-light"></th>
         </tr>
       </template>
 
@@ -123,8 +123,8 @@
 
       <!-- Summary Action -->
       <template v-slot:cell(actions)="data">
-        <b-button size="sm" variant="link" @click="data.toggleDetails" class="p-0 text-primary summary-toggle-btn">
-          {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }} {{ $t('camelot.step_four.breadcrumb_sub') }}
+        <b-button size="sm" variant="outline-primary" @click="data.toggleDetails" class="p-0 summary-toggle-btn">
+          {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }}
           <font-awesome-icon :icon="data.detailsShowing ? 'chevron-up' : 'chevron-down'" class="ml-1" />
         </b-button>
       </template>
@@ -136,17 +136,10 @@
             <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
             
             <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
-              <b-thead head-variant="light">
-                <b-tr>
-                  <b-th style="width: 80px">{{ $t('camelot.step_four.breadcrumb_sub') }}</b-th>
-                  <b-th style="width: 50px"></b-th>
-                  <b-th>{{ $t('camelot.step_four.common.fit_assessment') }}</b-th>
-                </b-tr>
-              </b-thead>
               <b-tbody>
                 <template v-for="(option, oIdx) in data.item.stages[stageIdx].options">
                   <b-tr v-if="isAssessmentVisible(stageIdx, oIdx)" :key="oIdx">
-                    <b-td class="font-weight-bold text-center vertical-middle">
+                    <b-td class="font-weight-bold text-left vertical-middle first-col">
                       {{ getAssessmentLabel(stageIdx, oIdx) }}
                     </b-td>
                     <b-td class="text-center vertical-middle">
@@ -194,24 +187,7 @@ export default {
     }
   },
   data() {
-    const headerClass = 'header-second-row'
-    const overallHeaderClass = 'header-overall-row'
-
     return {
-      fields: [
-        { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: headerClass, tdClass: 'border-right' },
-        { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa3', label: 'FA 3', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa4', label: 'FA 4', thClass: headerClass, tdClass: 'border-right assessment-col' },
-        { key: 'fa5', label: 'FA 5', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa6', label: 'FA 6', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa7', label: 'FA 7', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa8', label: 'FA 8', thClass: headerClass, tdClass: 'border-right assessment-col' },
-        { key: 'fa9', label: 'FA 9', thClass: headerClass, tdClass: 'border-right assessment-col' },
-        { key: 'oa', label: 'OA', thClass: overallHeaderClass, tdClass: 'border-right assessment-col' },
-        { key: 'actions', label: '', thClass: headerClass }
-      ],
       responses: [
         { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
         { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
@@ -224,6 +200,25 @@ export default {
     }
   },
   computed: {
+    fields() {
+      const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
+      const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
+
+      return [
+        { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: 'header-second-row text-left', tdClass: 'border-right' },
+        { key: 'fa1', label: `${faPrefix} 1`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa2', label: `${faPrefix} 2`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa3', label: `${faPrefix} 3`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa4', label: `${faPrefix} 4`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
+        { key: 'fa5', label: `${faPrefix} 5`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa6', label: `${faPrefix} 6`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa7', label: `${faPrefix} 7`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
+        { key: 'fa8', label: `${faPrefix} 8`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
+        { key: 'fa9', label: `${faPrefix} 9`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
+        { key: 'oa', label: oaLabel, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
+        { key: 'actions', label: '', thClass: 'header-second-row text-center' }
+      ]
+    },
     filterGroups() {
       return [
         {
@@ -368,6 +363,14 @@ export default {
 
 <style lang="scss" scoped>
 .camelot-summary-table-container {
+  ::v-deep .table-bordered {
+    border: 1px solid #AAADB0 !important;
+    
+    th, td {
+      border: 1px solid #AAADB0 !important;
+    }
+  }
+
   .camelot-table {
     font-size: 0.9rem;
     
@@ -384,40 +387,42 @@ export default {
   }
 
   .header-top-row {
-    background-color: #E9ECEF;
     color: #152536;
     
     th {
       border-bottom: none !important;
       padding: 1rem 0.5rem;
     }
-  }
 
-  .group-header {
-    background-color: #E9ECEF;
-  }
+    .bg-grey-light {
+      background-color: #E2E2E2 !important;
+    }
 
-  .header-overall-group {
-    background-color: #D8EBF5 !important;
-  }
-
-  .header-second-row {
-    background-color: #D8DAE5 !important;
-    color: #495057;
-    
-    th {
-      font-weight: 500;
-      font-size: 0.8rem;
-      text-transform: uppercase;
+    .bg-grey-lighter {
+      background-color: #E9ECEF !important;
     }
   }
 
-  .header-overall-row {
-    background-color: #D8EBF5 !important;
-    color: #495057;
-    th {
-      font-weight: 500;
-      font-size: 0.8rem;
+  .group-header {
+  }
+
+  .header-overall-group {
+  }
+
+  ::v-deep .header-second-row {
+    background-color: #D3E9FF !important;
+    color: #495057 !important;
+    font-weight: bold;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    vertical-align: middle !important;
+
+    &.text-center {
+      text-align: center !important;
+    }
+
+    &.text-left {
+      text-align: left !important;
     }
   }
 
@@ -467,6 +472,11 @@ export default {
   .summary-sub-table {
     font-size: 0.85rem;
     margin-bottom: 0;
+    table-layout: fixed;
+
+    .first-col {
+      width: 25%;
+    }
     
     ::v-deep th {
       text-transform: uppercase;

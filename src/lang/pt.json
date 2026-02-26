@@ -47,6 +47,10 @@
     "clean": "Limpar",
     "reject": "Rejeitar",
     "duplicate": "Duplicar",
+    "filter": "Filtrar",
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "no_records": "Nenhum registro encontrado",
     "filter_columns": "Filtrar colunas",
     "show_all": "Mostrar todas",
     "share": "Compartilhar",
@@ -1071,7 +1075,6 @@
       "export_csv": "Exportar para CSV",
       "add_edit_columns": "Adicionar ou editar colunas",
       "show_hide_concerns": "Mostrar/Ocultar preocupações",
-      "filter_columns": "Filtrar colunas",
       "columns_modal": {
         "title": "Gerenciar colunas personalizadas",
         "description": "Adicione, edite ou exclua colunas personalizadas. Essas colunas estarão disponíveis para todas as referências.",
@@ -1130,6 +1133,7 @@
       "modal_title": "Avaliação metodológica",
       "breadcrumb_main": "Tabela de avaliações metodológicas",
       "breadcrumb_sub": "Avaliações de ajuste Camelot",
+      "show_details_across_studies": "Mostrar detalhes dos estudos",
       "description": "CAMELOT é a ferramenta de avaliação metodológica padrão no iSoQ. Para optar por não usar a ferramenta CAMELOT, retorne às Propriedades do Projeto.<br/><br/>Para cada estudo incluído, avalie o ajuste entre os domínios CAMELOT (rotulados de 1 a 9 na tabela abaixo). Em seguida, faça uma avaliação geral (rotulada como OA na tabela abaixo)<br/><br/>Esta tabela será utilizada posteriormente para os seguintes fins:<ul><li>Gerar uma tabela de avaliações CAMELOT para incluir na sua revisão</li><li>Servir como material de referência para realizar avaliações GRADE-CERQual para cada descoberta de revisão (componente de Limitações Metodológicas). <a href='https://www.cerqual.org/' target='_blank'>Saiba mais</a></li></ul>",
       "tabs": {
         "fit_meta_design": "Ajuste entre Domínios Meta e Desenho de pesquisa",
@@ -1172,7 +1176,9 @@
         "warning": "As alterações feitas nos dados extraídos ou preocupações serão atualizadas automaticamente nos dados das etapas 3 e 4."
       },
       "table_headers": {
-        "authors": "Autores",
+        "authors": "Autor(es), Ano",
+        "fa_prefix": "FA",
+        "oa_label": "OA",
         "overall": "Avaliação geral",
         "research": "Pesquisa",
         "stakeholders": "Partes interessadas",
@@ -1229,7 +1235,7 @@
     },
     "assessment_table": {
       "headers": {
-        "authors": "Autores",
+        "authors": "Autor(es), Ano",
         "overall_assessment": "Avaliação geral",
         "research_design": "Desenho de pesquisa",
         "research_conduct": "Condução de pesquisa",
