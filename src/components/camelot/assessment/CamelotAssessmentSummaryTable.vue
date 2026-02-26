@@ -66,58 +66,98 @@
       <!-- Step One: FA 1-4 -->
       <template v-slot:cell(fa1)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 0, data.item)]" :style="getCircleStyle(0, 0, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(0, 0, data.item)]"
+            :style="getCircleStyle(0, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 0, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa2)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 1, data.item)]" :style="getCircleStyle(0, 1, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(0, 1, data.item)]"
+            :style="getCircleStyle(0, 1, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 1, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa3)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 2, data.item)]" :style="getCircleStyle(0, 2, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(0, 2, data.item)]"
+            :style="getCircleStyle(0, 2, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 2, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa4)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(0, 3, data.item)]" :style="getCircleStyle(0, 3, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(0, 3, data.item)]"
+            :style="getCircleStyle(0, 3, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 3, data.item)"
+          ></div>
         </div>
       </template>
 
       <!-- Step Two: FA 5-8 -->
       <template v-slot:cell(fa5)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 0, data.item)]" :style="getCircleStyle(1, 0, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(1, 0, data.item)]"
+            :style="getCircleStyle(1, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 0, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa6)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 1, data.item)]" :style="getCircleStyle(1, 1, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(1, 1, data.item)]"
+            :style="getCircleStyle(1, 1, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 1, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa7)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 2, data.item)]" :style="getCircleStyle(1, 2, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(1, 2, data.item)]"
+            :style="getCircleStyle(1, 2, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 2, data.item)"
+          ></div>
         </div>
       </template>
       <template v-slot:cell(fa8)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(1, 3, data.item)]" :style="getCircleStyle(1, 3, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(1, 3, data.item)]"
+            :style="getCircleStyle(1, 3, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 3, data.item)"
+          ></div>
         </div>
       </template>
 
       <!-- Step Three: FA 9 -->
       <template v-slot:cell(fa9)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(2, 0, data.item)]" :style="getCircleStyle(2, 0, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(2, 0, data.item)]"
+            :style="getCircleStyle(2, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(2, 0, data.item)"
+          ></div>
         </div>
       </template>
 
       <!-- Step Four: OA -->
       <template v-slot:cell(oa)="data">
         <div class="d-flex justify-content-center">
-          <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]" :style="getCircleStyle(3, 0, data.item)"></div>
+          <div
+            :class="['assessment-circle', getCircleClass(3, 0, data.item)]"
+            :style="getCircleStyle(3, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(3, 0, data.item)"
+          ></div>
         </div>
       </template>
 
@@ -125,7 +165,7 @@
       <template v-slot:cell(actions)="data">
         <b-button size="sm" variant="outline-primary" @click="data.toggleDetails" class="p-0 summary-toggle-btn">
           {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }}
-          <font-awesome-icon :icon="data.detailsShowing ? 'chevron-up' : 'chevron-down'" class="ml-1" />
+          <font-awesome-icon :icon="data.detailsShowing ? 'eye-slash' : 'eye'" class="ml-1" />
         </b-button>
       </template>
 
@@ -323,6 +363,17 @@ export default {
       return response ? response.color : '#B3B3B3'
     },
     getOptionText(optionValue) {
+      const response = this.responses.find(r => r.value === optionValue)
+      return response ? response.text : optionValue
+    },
+    getCircleTooltip(stage, optionIndex, item) {
+      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
+        return this.$t('camelot.step_four.legend.not_completed')
+      }
+      const optionValue = item.stages[stage].options[optionIndex].option
+      if (optionValue === null) {
+        return this.$t('camelot.step_four.legend.not_completed')
+      }
       const response = this.responses.find(r => r.value === optionValue)
       return response ? response.text : optionValue
     },
