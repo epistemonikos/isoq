@@ -151,6 +151,7 @@
                     </b-td>
                     <b-td class="text-center vertical-middle">
                       <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
+                      <div v-else class="assessment-circle circle-not-completed mx-auto"></div>
                     </b-td>
                     <b-td>
                       <div v-if="option.option">
