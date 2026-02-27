@@ -857,11 +857,16 @@ export default {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
+    
+    // Load categories first as they are needed for sorting findings
     await this.getListCategories()
+    // Load references next
     await this.getReferences()
+    // Load project which will also trigger getLists()
     await this.getProject()
-    await this.getCharacteristicsData()
-    await this.getAssessmentsData()
+    // Other parallel data loads
+    this.getCharacteristicsData()
+    this.getAssessmentsData()
   },
   beforeDestroy () {
     LockService.release()
@@ -888,7 +893,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      Api.get('/isoqf_list_categories', params)
+      return Api.get('/isoqf_list_categories', params)
         .then((response) => {
           this.processGetListCategories(response.data)
         })
@@ -901,7 +906,7 @@ export default {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      Api.get(`/isoqf_references`, params)
+      return Api.get(`/isoqf_references`, params)
         .then(async (response) => {
           this.references = await this.processGetReferencesRaw(response.data)
           this.refs = await this.processGetReferencesWithNames(response.data)
@@ -933,7 +938,7 @@ export default {
       const params = {
         organization: this.$route.params.org_id
       }
-      Api.get(`/isoqf_projects/${this.$route.params.id}`, params)
+      return Api.get(`/isoqf_projects/${this.$route.params.id}`, params)
         .then((response) => {
           let _project = JSON.parse(JSON.stringify(response.data))
           if (!Object.prototype.hasOwnProperty.call(_project, 'inclusion')) {
