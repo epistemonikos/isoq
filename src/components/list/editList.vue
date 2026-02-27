@@ -157,7 +157,8 @@
 
           <table-chars-of-studies
             :useCamelot="project.use_camelot"
-            :ui="ui"              :show="show"
+            :ui="ui"
+            :show="show"
             :mode="mode"
             :list="list"
             :permission="checkPermissions(list.organization)"
@@ -447,28 +448,111 @@ export default {
     },
     filterItemsByReferences: function (items, references, fieldsLength) {
       const referencesSet = new Set(references)
-      const excludedKeys = new Set(['authors', 'ref_id'])
+      const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields'])
       let haveContent = 0
       const filteredItems = []
+      
+      let bibliographicRefs = []
+      if (this.list.fullreferences) {
+        if (typeof this.list.fullreferences === 'string') {
+          try {
+            bibliographicRefs = JSON.parse(this.list.fullreferences)
+          } catch (e) {
+            console.error('Error parsing fullreferences', e)
+          }
+        } else {
+          bibliographicRefs = this.list.fullreferences
+        }
+      }
+
+      // Camelot characteristics use keys like 'research_extractedData'
+      const camelotCharKeys = [
+        'research_extractedData', 'stakeholders_extractedData', 
+        'researchers_extractedData', 'context_extractedData',
+        'strategy_extractedData', 'theory_extractedData',
+        'ethical_extractedData', 'equity_extractedData',
+        'participant_extractedData', 'data_extractedData',
+        'analysis_extractedData', 'presentation_extractedData'
+      ]
 
       for (const item of items) {
         if (!referencesSet.has(item.ref_id)) continue
 
+        // Ensure authors are formatted correctly for the UI without mutating the original structure
+        // Find the full reference to get the correct year and authors array
+        const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+        if (bibRef) {
+          item.authors = this.parseReference(bibRef, true)
+        } else if (Array.isArray(item.authors)) {
+          // Fallback if bibRef not found but we have an array
+          item.authors = this.parseReference(item, true)
+        }
+
         filteredItems.push(item)
 
         const itemKeys = Object.keys(item)
-        for (const key of itemKeys) {
-          if (!excludedKeys.has(key) && item[key] === '') {
+        
+        if (this.project.use_camelot) {
+          // CAMELOT LOGIC
+          
+          // 1. Check for Camelot Assessment Stages (Step 4)
+          if (item.stages) {
+            for (const stage of item.stages) {
+              if (stage.options) {
+                for (const option of stage.options) {
+                  if (option.option === null || option.option === '') {
+                    haveContent++
+                  }
+                }
+              }
+            }
+          }
+          
+          // 2. Check for Camelot Characteristics (Step 3)
+          let hasAnyCamelotDataKey = false
+          let camelotDataCount = 0
+          for (const key of camelotCharKeys) {
+            if (item[key] !== undefined) {
+              hasAnyCamelotDataKey = true
+              if (item[key] !== '') {
+                camelotDataCount++
+              }
+            }
+          }
+          
+          // 3. Only count as missing if we HAVE camelot keys but ALL are empty
+          // This prevents the warning if at least one domain has data
+          if (hasAnyCamelotDataKey && camelotDataCount === 0) {
             haveContent++
           }
-        }
 
-        if (fieldsLength > itemKeys.length) {
-          haveContent++
+          // 4. Check for CUSTOM fields in Camelot projects
+          // (They are optional but if they exist and are empty, they count as missing)
+          for (const key of itemKeys) {
+            if (!excludedKeys.has(key) && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
+              // Only count custom fields if they were intentionally added (not part of Camelot defaults)
+              haveContent++
+            }
+          }
+
+        } else {
+          // NON-CAMELOT LOGIC (Standard)
+          for (const key of itemKeys) {
+            if (!excludedKeys.has(key) && item[key] === '') {
+              haveContent++
+            }
+          }
+          // Generic fields count check
+          if (fieldsLength > itemKeys.length) {
+            haveContent++
+          }
         }
       }
 
       return { filteredItems, haveContent }
+    },
+    isExtractedDataContext: function (keys) {
+      return keys.includes('column_0') && !keys.includes('research_extractedData')
     },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
@@ -681,7 +765,10 @@ export default {
           data.fields.length
         )
 
-        const hasWarning = haveContent > 0 || data.fields.length < 3
+        let hasWarning = haveContent > 0
+        if (!this.project.use_camelot) {
+          hasWarning = hasWarning || data.fields.length < 3
+        }
         this.ui.adequacy.chars_of_studies.display_warning = hasWarning
         this.ui.relevance.chars_of_studies.display_warning = hasWarning
 
@@ -719,6 +806,12 @@ export default {
           items: [],
           fields: []
         }
+        let hasWarning = false
+        if (!this.project.use_camelot) {
+          hasWarning = true
+        }
+        this.ui.adequacy.chars_of_studies.display_warning = hasWarning
+        this.ui.relevance.chars_of_studies.display_warning = hasWarning
       }
     },
     getMethAssessments: function () {
@@ -740,7 +833,10 @@ export default {
           data.fields.length
         )
 
-        const hasWarning = haveContent > 0 || data.fields.length < 3
+        let hasWarning = haveContent > 0
+        if (!this.project.use_camelot) {
+          hasWarning = hasWarning || data.fields.length < 3
+        }
         this.ui.methodological_assessments.display_warning = hasWarning
 
         data.items = filteredItems
@@ -749,6 +845,11 @@ export default {
         this.meth_assessments = data
       } else {
         this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
+        let hasWarning = false
+        if (!this.project.use_camelot) {
+          hasWarning = true
+        }
+        this.ui.methodological_assessments.display_warning = hasWarning
       }
     },
     getExtractedData: function (status = false) {

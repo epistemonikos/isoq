@@ -457,7 +457,7 @@ export default {
                 if (item.ref_id === reference) {
                   _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
                   for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
+                    if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
                       if (item[i] === '') {
                         haveContent++
                       }
@@ -493,24 +493,71 @@ export default {
             let items = []
 
             let haveContent = 0
+            const camelotCharKeys = [
+              'research_extractedData', 'stakeholders_extractedData', 
+              'researchers_extractedData', 'context_extractedData',
+              'strategy_extractedData', 'theory_extractedData',
+              'ethical_extractedData', 'equity_extractedData',
+              'participant_extractedData', 'data_extractedData',
+              'analysis_extractedData', 'presentation_extractedData'
+            ]
+
+            let bibliographicRefs = []
+            if (this.list.fullreferences) {
+              if (typeof this.list.fullreferences === 'string') {
+                try {
+                  bibliographicRefs = JSON.parse(this.list.fullreferences)
+                } catch (e) {
+                  console.error('Error parsing fullreferences', e)
+                }
+              } else {
+                bibliographicRefs = this.list.fullreferences
+              }
+            }
             for (let item of data.items) {
               for (let reference of this.list.references) {
                 if (reference === item.ref_id) {
+                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                  item.authors = this.parseReference(bibRef || item, true)
                   items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                      if (item[i] === '') {
+                  
+                  if (this.project.use_camelot) {
+                    let camelotDataCount = 0
+                    let hasAnyCamelotDataKey = false
+                    for (const key of camelotCharKeys) {
+                      if (item[key] !== undefined) {
+                        hasAnyCamelotDataKey = true
+                        if (item[key] !== '') {
+                          camelotDataCount++
+                        }
+                      }
+                    }
+                    if (hasAnyCamelotDataKey && camelotDataCount === 0) {
+                      haveContent++
+                    }
+                    // Still check for CUSTOM fields in Camelot projects
+                    for (const key in item) {
+                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
                         haveContent++
                       }
                     }
-                  }
-                  if (data.fields.length > Object.keys(item).length) {
-                    haveContent++
+                  } else {
+                    // NON-CAMELOT
+                    for (let i in item) {
+                      if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
+                        if (item[i] === '') {
+                          haveContent++
+                        }
+                      }
+                    }
+                    if (data.fields.length > Object.keys(item).length) {
+                      haveContent++
+                    }
                   }
                 }
               }
             }
-            if (data.fields.length < 3) {
+            if (data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
 
@@ -573,24 +620,63 @@ export default {
             let items = []
 
             let haveContent = 0
+            let bibliographicRefs = []
+            if (this.list.fullreferences) {
+              if (typeof this.list.fullreferences === 'string') {
+                try {
+                  bibliographicRefs = JSON.parse(this.list.fullreferences)
+                } catch (e) {
+                  console.error('Error parsing fullreferences', e)
+                }
+              } else {
+                bibliographicRefs = this.list.fullreferences
+              }
+            }
             for (let item of data.items) {
               for (let reference of _references) {
                 if (reference === item.ref_id) {
+                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                  item.authors = this.parseReference(bibRef || item, true)
                   items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'author' && item[i] !== 'ref_id') {
-                      if (item[i] === '') {
-                        haveContent++
+
+                  if (this.project.use_camelot) {
+                    // Check for Camelot Assessment Stages
+                    if (item.stages) {
+                      for (const stage of item.stages) {
+                        if (stage.options) {
+                          for (const option of stage.options) {
+                            if (option.option === null || option.option === '') {
+                              haveContent++
+                            }
+                          }
+                        }
                       }
                     }
-                  }
-                  if (data.fields.length > Object.keys(item).length) {
-                    haveContent++
+                    // Still check for CUSTOM fields in Camelot projects
+                    for (const key in item) {
+                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !key.endsWith('_concerns')) {
+                        if (item[key] === '') {
+                          haveContent++
+                        }
+                      }
+                    }
+                  } else {
+                    // NON-CAMELOT
+                    for (let i in item) {
+                      if (i !== 'author' && i !== 'ref_id' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
+                        if (item[i] === '') {
+                          haveContent++
+                        }
+                      }
+                    }
+                    if (data.fields.length > Object.keys(item).length) {
+                      haveContent++
+                    }
                   }
                 }
               }
             }
-            if (data.fields.length < 3) {
+            if (data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
             this.ui.methodological_assessments.display_warning = true

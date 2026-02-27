@@ -1,5 +1,18 @@
 <template>
     <div>
+        <div class="d-flex justify-content-end mb-3">
+            <b-button
+                size="sm"
+                variant="outline-info"
+                @click="showConcerns = !showConcerns">
+                <template v-if="showConcerns">
+                    {{ $t('worksheet.actions.hide_concerns') }}
+                </template>
+                <template v-else>
+                    {{ $t('worksheet.actions.show_concerns') }}
+                </template>
+            </b-button>
+        </div>
         <table class="table table-bordered table-striped table-responsive">
             <!-- Primera fila de cabecera -->
             <thead>
@@ -8,11 +21,11 @@
                     <!-- Campos personalizados -->
                     <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customFieldLabels[customField] || customField }}</th>
                     <!-- Categorías CAMELOT -->
-                    <th v-for="category in camelot.categories" :key="category.key" :colspan="2">{{ category.label }}</th>
+                    <th v-for="category in camelot.categories" :key="category.key" :colspan="showConcerns ? 2 : 1">{{ category.label }}</th>
                 </tr>
                 <!-- Segunda fila de cabecera - solo para opciones CAMELOT -->
                 <tr>
-                    <th v-for="option in allCamelotOptions" :key="option.key">{{ option.label }}</th>
+                    <th v-for="option in visibleCamelotOptions" :key="option.key">{{ option.label }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -24,7 +37,7 @@
                     <td v-for="customField in sortedCustomFields" :key="customField">{{ item[customField] || '' }}</td>
 
                     <!-- Valores CAMELOT -->
-                    <td v-for="option in allCamelotOptions" :key="option.key">{{ item[option.key] || '' }}</td>
+                    <td v-for="option in visibleCamelotOptions" :key="option.key">{{ item[option.key] || '' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -41,6 +54,11 @@ export default {
         charsOfStudies: {
             type: Object,
             required: true
+        }
+    },
+    data() {
+        return {
+            showConcerns: false
         }
     },
     computed: {
@@ -64,6 +82,13 @@ export default {
         allCamelotOptions() {
             // Aplanar todas las opciones de todas las categorías
             return this.camelot.categories.flatMap(category => category.options)
+        },
+        visibleCamelotOptions() {
+            if (this.showConcerns) {
+                return this.allCamelotOptions
+            }
+            // Filter out options that end with _concerns
+            return this.allCamelotOptions.filter(option => !option.key.endsWith('_concerns'))
         },
         customFieldLabels() {
             if (!this.charsOfStudies.fields || this.charsOfStudies.fields.length === 0) {

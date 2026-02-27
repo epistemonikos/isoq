@@ -527,7 +527,9 @@
       "do_it_now": "Fazer agora",
       "do_it_later": "Fazer mais tarde",
       "show_example": "Mostrar exemplo",
-      "hide_example": "Ocultar exemplo"
+      "hide_example": "Ocultar exemplo",
+      "show_concerns": "Mostrar preocupações",
+      "hide_concerns": "Ocultar preocupações"
     },
     "labels": {
       "explanation_required": "A abordagem GRADE-CERQual exige que você inclua uma explicação para o seu julgamento.",

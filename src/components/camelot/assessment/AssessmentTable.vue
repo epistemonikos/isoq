@@ -33,9 +33,11 @@
                             v-if="option.option"
                             class="option-circle mr-2"
                             :style="{ backgroundColor: getOptionColor(option.option) }"
-                        />
-                        <p><strong>{{ getOptionText(option.option) }}</strong></p>
-                        <p>{{ option.text }}</p>
+                        ></div>
+                        <div>
+                            <p><strong>{{ getOptionText(option.option) }}</strong></p>
+                            <p>{{ option.text }}</p>
+                        </div>
                     </div>
                 </div>
                 <span v-else>&nbsp;</span>
@@ -47,7 +49,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage0.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage0.option) }}</strong></p>
                         <p>{{ data.item.firstStage0.text }}</p>
@@ -60,7 +62,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage1.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage1.option) }}</strong></p>
                         <p>{{ data.item.firstStage1.text }}</p>
@@ -73,7 +75,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage2.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage2.option) }}</strong></p>
                         <p>{{ data.item.firstStage2.text }}</p>
@@ -86,7 +88,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.firstStage3.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.firstStage3.option) }}</strong></p>
                         <p>{{ data.item.firstStage3.text }}</p>
@@ -101,7 +103,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage0.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage0.option) }}</strong></p>
                         <p>{{ data.item.secondStage0.text }}</p>
@@ -114,7 +116,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage1.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage1.option) }}</strong></p>
                         <p>{{ data.item.secondStage1.text }}</p>
@@ -127,7 +129,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage2.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage2.option) }}</strong></p>
                         <p>{{ data.item.secondStage2.text }}</p>
@@ -140,7 +142,7 @@
                     <div
                         class="option-circle mr-2"
                         :style="{ backgroundColor: getOptionColor(data.item.secondStage3.option) }"
-                    />
+                    ></div>
                     <div>
                         <p><strong>{{ getOptionText(data.item.secondStage3.option) }}</strong></p>
                         <p>{{ data.item.secondStage3.text }}</p>
@@ -156,9 +158,11 @@
                             v-if="option.option"
                             class="option-circle mr-2"
                             :style="{ backgroundColor: getOptionColor(option.option) }"
-                        />
-                        <p><strong>{{ getOptionText(option.option) }}</strong></p>
-                        <p>{{ option.text }}</p>
+                        ></div>
+                        <div>
+                            <p><strong>{{ getOptionText(option.option) }}</strong></p>
+                            <p>{{ option.text }}</p>
+                        </div>
                     </div>
                 </div>
                 <span v-else>&nbsp;</span>

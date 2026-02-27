@@ -527,7 +527,9 @@
       "do_it_now": "Do it now",
       "do_it_later": "Do it later",
       "show_example": "Show example",
-      "hide_example": "Hide example"
+      "hide_example": "Hide example",
+      "show_concerns": "Show concerns",
+      "hide_concerns": "Hide concerns"
     },
     "labels": {
       "explanation_required": "The GRADE-CERQual approach requires you to include an explanation for your judgement.",

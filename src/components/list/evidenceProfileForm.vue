@@ -556,12 +556,17 @@
                       query: { tab: 'My-Data', step: 3 }
                     }">{{ $t('common.my_data') }}</b-link>.
                   </p>
-                  <b-table class="table-small-font" responsive head-variant="light" outlined
-                    :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
-                    <template v-slot:cell(authors)="data">
-                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-                    </template>
-                  </b-table>
+                  <template v-if="project.use_camelot">
+                    <camelot-characteristics-table :charsOfStudies="charsOfStudies" />
+                  </template>
+                  <template v-else>
+                    <b-table class="table-small-font" responsive head-variant="light" outlined
+                      :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
+                      <template v-slot:cell(authors)="data">
+                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                      </template>
+                    </b-table>
+                  </template>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
                   <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
@@ -576,13 +581,10 @@
                   <template slot="title">
                     {{ $t('worksheet.titles.question_criteria') }}
                     <font-awesome-icon v-if="
-                      project.review_question === ''
-                        ? true
-                        : false || project.inclusion === ''
-                          ? true
-                          : false || project.exclusion === ''
-                            ? true
-                            : false
+                      project.review_question === '' || 
+                      project.inclusion === '' || 
+                      project.exclusion === '' ||
+                      ui.relevance.chars_of_studies.display_warning
                     " class="text-danger" icon="exclamation-circle"></font-awesome-icon>
                   </template>
                   <h4>{{ $t('worksheet.titles.review_question') }}</h4>
@@ -648,12 +650,17 @@
                     }">{{ $t('common.my_data') }}</b-link>.
                     <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                   </p>
-                  <b-table class="table-small-font" responsive head-variant="light" outlined
-                    :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
-                    <template v-slot:cell(authors)="data">
-                      <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
-                    </template>
-                  </b-table>
+                  <template v-if="project.use_camelot">
+                    <camelot-characteristics-table :charsOfStudies="charsOfStudies" />
+                  </template>
+                  <template v-else>
+                    <b-table class="table-small-font" responsive head-variant="light" outlined
+                      :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
+                      <template v-slot:cell(authors)="data">
+                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                      </template>
+                    </b-table>
+                  </template>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
                   <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
@@ -804,6 +811,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 
 export default {
@@ -812,6 +820,7 @@ export default {
     videoHelp: () => import('@/components/videoHelp.vue'),
     'edit-review-finding': () => import('@/components/editReviewFinding.vue'),
     'assessment-table': () => import('@/components/camelot/assessment/CamelotAssessmentSummaryTable.vue'),
+    'camelot-characteristics-table': () => import('@/components/camelot/characteristics/CharacteristicsTable.vue'),
     'table-extracted-data': () => import('./editListExtractedData.vue')
   },
   props: {
@@ -916,6 +925,9 @@ export default {
     }
   },
   methods: {
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
+    },
     commonGenerateCerqualExplanation: function () {
       this.selectedOptions.cerqual.explanation = generateCerqualExplanation(this.selectedOptions)
     },
