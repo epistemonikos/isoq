@@ -124,6 +124,20 @@ export default class Api {
     return false
   }
 
+  static shouldQueue (path, data) {
+    // No encolar si coincide con patrones excluidos (mismos que cache)
+    for (const pattern of NO_CACHE_PATTERNS) {
+      if (pattern.test(path)) return false
+    }
+    
+    // No encolar si es FormData (no se puede clonar en IndexedDB)
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      return false
+    }
+    
+    return true
+  }
+
   static async cacheResponse (path, data) {
     try {
       for (const strategy of strategies) {
@@ -222,6 +236,9 @@ export default class Api {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
       await addPendingOperation({
         type: 'PUT',
         endpoint: url,
@@ -274,6 +291,9 @@ export default class Api {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
       await addPendingOperation({
         type: 'PATCH',
         endpoint: url,
@@ -324,6 +344,9 @@ export default class Api {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
       await addPendingOperation({
         type: 'POST',
         endpoint: url,
@@ -378,6 +401,9 @@ export default class Api {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
+      if (!this.shouldQueue(path, data)) {
+        throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
+      }
       await addPendingOperation({
         type: 'DELETE',
         endpoint: url,
