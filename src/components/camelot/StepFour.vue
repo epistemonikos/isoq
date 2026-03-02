@@ -9,7 +9,7 @@
       @open-modal="onOpenModal"
     />
 
-    <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer">
+    <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer" body-class="camelot-modal-body">
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -23,7 +23,7 @@
         </div>
       </template>
       <b-row>
-        <b-col cols="12" class="modal-body">
+        <b-col cols="12" class="camelot-modal-body">
           <template v-if="modal.stage < 2">
             <b-row>
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
@@ -894,7 +894,7 @@ export default {
   }
 }
 
-.modal-body {
+.camelot-modal-body {
   color: #152536;
   background-color: #E9E9EB;
   
