@@ -17,7 +17,7 @@
             <!-- Primera fila de cabecera -->
             <thead>
                 <tr>
-                    <th rowspan="2">Author(s), Year</th>
+                    <th rowspan="2">{{ $t('camelot.step_three.authors_label') }}</th>
                     <!-- Campos personalizados -->
                     <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customFieldLabels[customField] || customField }}</th>
                     <!-- Categorías CAMELOT -->
