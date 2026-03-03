@@ -206,6 +206,7 @@
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
+import { camelotMixin } from '@/mixins/camelotMixin'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -222,6 +223,7 @@ export default {
     'table-meth-assessments': editListMethAssessments,
     'table-extracted-data': editListExtractedData
   },
+  mixins: [camelotMixin],
   data () {
     return {
       licenseUrl: require('../../assets/by-88x31.png'),
@@ -448,6 +450,11 @@ export default {
     },
     filterItemsByReferences: function (items, references, fieldsLength) {
       const referencesSet = new Set(references)
+      const itemsMap = new Map()
+      for (const item of items) {
+        itemsMap.set(item.ref_id, item)
+      }
+      
       const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields'])
       let haveContent = 0
       const filteredItems = []
@@ -465,25 +472,25 @@ export default {
         }
       }
 
-      // Camelot characteristics use keys like 'research_extractedData'
-      const camelotCharKeys = [
-        'research_extractedData', 'stakeholders_extractedData', 
-        'researchers_extractedData', 'context_extractedData',
-        'strategy_extractedData', 'theory_extractedData',
-        'ethical_extractedData', 'equity_extractedData',
-        'participant_extractedData', 'data_extractedData',
-        'analysis_extractedData', 'presentation_extractedData'
-      ]
+      // Camelot characteristics meta-domains
+      const camelotCharKeys = this.camelot.categories.map(cat => `${cat.key}_extractedData`)
 
-      for (const item of items) {
-        if (!referencesSet.has(item.ref_id)) continue
+      for (const refId of references) {
+        let item = itemsMap.get(refId)
+        if (!item) {
+          item = { ref_id: refId }
+        } else {
+          // Clone item to avoid mutating original list data if necessary
+          item = JSON.parse(JSON.stringify(item))
+        }
 
         // Ensure authors are formatted correctly for the UI without mutating the original structure
         // Find the full reference to get the correct year and authors array
-        const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+        const bibRef = bibliographicRefs.find(r => r.id === refId)
         if (bibRef) {
           item.authors = this.parseReference(bibRef, true)
-        } else if (Array.isArray(item.authors)) {
+          item.year = bibRef.publication_year || ''
+        } else if (item.authors && Array.isArray(item.authors)) {
           // Fallback if bibRef not found but we have an array
           item.authors = this.parseReference(item, true)
         }
@@ -509,21 +516,18 @@ export default {
           }
           
           // 2. Check for Camelot Characteristics (Step 3)
-          let hasAnyCamelotDataKey = false
-          let camelotDataCount = 0
-          for (const key of camelotCharKeys) {
-            if (item[key] !== undefined) {
-              hasAnyCamelotDataKey = true
-              if (item[key] !== '') {
-                camelotDataCount++
+          if (!item.stages) {
+            let hasAtLeastOneEmptyCamelotKey = false
+            for (const key of camelotCharKeys) {
+              // Treat as empty if it's missing (undefined) OR explicitly empty string
+              if (item[key] === undefined || item[key] === '') {
+                hasAtLeastOneEmptyCamelotKey = true
+                break // Found one missing, that's enough for Step 3 warning
               }
             }
-          }
-          
-          // 3. Only count as missing if we HAVE camelot keys but ALL are empty
-          // This prevents the warning if at least one domain has data
-          if (hasAnyCamelotDataKey && camelotDataCount === 0) {
-            haveContent++
+            if (hasAtLeastOneEmptyCamelotKey) {
+              haveContent++
+            }
           }
 
           // 4. Check for CUSTOM fields in Camelot projects
@@ -545,6 +549,10 @@ export default {
           // Generic fields count check
           if (fieldsLength > itemKeys.length) {
             haveContent++
+          }
+          // If item is empty, itemKeys will only have ref_id (length 1)
+          if (itemKeys.length === 1 && fieldsLength > 1) {
+             // haveContent already incremented by fieldsLength > itemKeys.length
           }
         }
       }
@@ -748,109 +756,89 @@ export default {
     },
     getCharsOfStudies: function () {
       const characteristics = JSON.parse(JSON.stringify(this.list.characteristics))
-      if (characteristics.length) {
-        let data = characteristics[0]
+      let data = characteristics.length ? characteristics[0] : { items: [], fields: [] }
 
-        // Add defensive checks for undefined properties
-        if (!data.fields) {
-          data.fields = []
-        }
-        if (!data.items) {
-          data.items = []
-        }
-
-        const { filteredItems, haveContent } = this.filterItemsByReferences(
-          data.items,
-          this.list.references,
-          data.fields.length
-        )
-
-        let hasWarning = haveContent > 0
-        if (!this.project.use_camelot) {
-          hasWarning = hasWarning || data.fields.length < 3
-        }
-        this.ui.adequacy.chars_of_studies.display_warning = hasWarning
-        this.ui.relevance.chars_of_studies.display_warning = hasWarning
-
-        data.items = filteredItems
-        this.characteristics_studies = data
-        if (data.fields.length) {
-          let fields = JSON.parse(JSON.stringify(data.fields))
-          let lastItem = fields.splice(fields.length - 1, 1)
-          this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-          this.characteristics_studies.fieldsObj = []
-          let _fields = data.fields
-          for (let field of _fields) {
-            if (field.key !== 'ref_id') {
-              this.characteristics_studies.fieldsObj.push(field)
-            }
-          }
-          if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
-            this.characteristics_studies.items = []
-          }
-        }
-        this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
-        this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
-
-        let tableTop = []
-
-        if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
-          const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
-          for (let tt of _tableTop) {
-            tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
-          }
-        }
-        this.characteristics_studies.tableTop = tableTop
-      } else {
-        this.characteristics_studies = {
-          items: [],
-          fields: []
-        }
-        let hasWarning = false
-        if (!this.project.use_camelot) {
-          hasWarning = true
-        }
-        this.ui.adequacy.chars_of_studies.display_warning = hasWarning
-        this.ui.relevance.chars_of_studies.display_warning = hasWarning
+      // Add defensive checks for undefined properties
+      if (!data.fields) {
+        data.fields = []
       }
+      if (!data.items) {
+        data.items = []
+      }
+
+      const { filteredItems, haveContent } = this.filterItemsByReferences(
+        data.items,
+        this.list.references,
+        data.fields.length
+      )
+
+      let hasWarning = haveContent > 0
+      if (!this.project.use_camelot) {
+        hasWarning = hasWarning || data.fields.length < 3
+      }
+      this.ui.adequacy.chars_of_studies.display_warning = hasWarning
+      this.ui.relevance.chars_of_studies.display_warning = hasWarning
+
+      data.items = filteredItems
+      this.characteristics_studies = data
+      if (data.fields.length) {
+        let fields = JSON.parse(JSON.stringify(data.fields))
+        let lastItem = fields.splice(fields.length - 1, 1)
+        this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
+        this.characteristics_studies.fieldsObj = []
+        let _fields = data.fields
+        for (let field of _fields) {
+          if (field.key !== 'ref_id') {
+            this.characteristics_studies.fieldsObj.push(field)
+          }
+        }
+        if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
+          this.characteristics_studies.items = []
+        }
+      }
+      this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
+      if (this.buffer_characteristics_studies.fields && this.buffer_characteristics_studies.fields.length) {
+        this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
+      }
+
+      let tableTop = []
+
+      if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
+        const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
+        for (let tt of _tableTop) {
+          tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+        }
+      }
+      this.characteristics_studies.tableTop = tableTop
     },
     getMethAssessments: function () {
       const assessments = JSON.parse(JSON.stringify(this.list.assessments))
-      if (assessments.length) {
-        let data = assessments[0]
+      let data = assessments.length ? assessments[0] : { fields: [], items: [] }
 
-        // Add defensive checks for undefined properties
-        if (!data.fields) {
-          data.fields = []
-        }
-        if (!data.items) {
-          data.items = []
-        }
-
-        const { filteredItems, haveContent } = this.filterItemsByReferences(
-          data.items,
-          this.list.references,
-          data.fields.length
-        )
-
-        let hasWarning = haveContent > 0
-        if (!this.project.use_camelot) {
-          hasWarning = hasWarning || data.fields.length < 3
-        }
-        this.ui.methodological_assessments.display_warning = hasWarning
-
-        data.items = filteredItems
-        data.fieldsObj = data.fields.filter(field => field.key !== 'ref_id')
-
-        this.meth_assessments = data
-      } else {
-        this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
-        let hasWarning = false
-        if (!this.project.use_camelot) {
-          hasWarning = true
-        }
-        this.ui.methodological_assessments.display_warning = hasWarning
+      // Add defensive checks for undefined properties
+      if (!data.fields) {
+        data.fields = []
       }
+      if (!data.items) {
+        data.items = []
+      }
+
+      const { filteredItems, haveContent } = this.filterItemsByReferences(
+        data.items,
+        this.list.references,
+        data.fields.length
+      )
+
+      let hasWarning = haveContent > 0
+      if (!this.project.use_camelot) {
+        hasWarning = hasWarning || data.fields.length < 3
+      }
+      this.ui.methodological_assessments.display_warning = hasWarning
+
+      data.items = filteredItems
+      data.fieldsObj = data.fields.filter(field => field.key !== 'ref_id')
+
+      this.meth_assessments = data
     },
     getExtractedData: function (status = false) {
       let extractedData = JSON.parse(JSON.stringify(this.list.extracted_data))

@@ -173,17 +173,8 @@ describe('Camelot Warning Logic Tests', () => {
 
     it('should NOT show warning for CharsOfStudies in Camelot project when fields < 3 but Camelot data is complete', () => {
       const wrapper = shallowMount(editList, {
-        localVue,
-        store,
-        mocks,
-        stubs: {
-          'edit-header-list': true,
-          'edit-list-actions-buttons': true,
-          'evidence-profile-table': true,
-          'table-chars-of-studies': true,
-          'table-meth-assessments': true,
-          'table-extracted-data': true
-        }
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
       })
 
       wrapper.setData({
@@ -196,9 +187,18 @@ describe('Camelot Warning Logic Tests', () => {
             fields: [{ key: 'ref_id' }], // Only 1 field
             items: [{ 
               ref_id: 'ref1', 
-              research_extractedData: 'some research data',
-              stakeholders_extractedData: 'some stakeholder data'
-              // ... and so on
+              research_extractedData: 'data',
+              stakeholders_extractedData: 'data',
+              researchers_extractedData: 'data',
+              context_extractedData: 'data',
+              strategy_extractedData: 'data',
+              theory_extractedData: 'data',
+              ethical_extractedData: 'data',
+              equity_extractedData: 'data',
+              participant_extractedData: 'data',
+              data_extractedData: 'data',
+              analysis_extractedData: 'data',
+              presentation_extractedData: 'data'
             }]
           }],
           assessments: [],
@@ -208,6 +208,36 @@ describe('Camelot Warning Logic Tests', () => {
 
       wrapper.vm.getCharsOfStudies()
       expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
+    })
+
+    it('SHOULD show warning for CharsOfStudies in Camelot when some Camelot domains are MISSING (undefined) from the item object', () => {
+      const wrapper = shallowMount(editList, {
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
+      })
+
+      wrapper.setData({
+        project: { use_camelot: true, organization: 'org1', id: 'p1' },
+        list: {
+          project: { use_camelot: true, organization: 'org1', id: 'p1' },
+          references: ['ref1'],
+          findings: [],
+          characteristics: [{
+            fields: [{ key: 'ref_id' }],
+            items: [{ 
+              ref_id: 'ref1', 
+              research_extractedData: 'some data',
+              stakeholders_extractedData: 'some data'
+              // other keys like context_extractedData are UNDEFINED/MISSING
+            }]
+          }],
+          assessments: [],
+          fullreferences: JSON.stringify([{ id: 'ref1', authors: ['Author'], publication_year: '2020', title: 'Title' }])
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(true)
     })
 
     it('SHOULD show warning for CharsOfStudies in Camelot project when Camelot data is INCOMPLETE', () => {
@@ -284,17 +314,8 @@ describe('Camelot Warning Logic Tests', () => {
 
     it('should NOT show warning for CharsOfStudies in Camelot project when concerns are empty', () => {
       const wrapper = shallowMount(editList, {
-        localVue,
-        store,
-        mocks,
-        stubs: {
-          'edit-header-list': true,
-          'edit-list-actions-buttons': true,
-          'evidence-profile-table': true,
-          'table-chars-of-studies': true,
-          'table-meth-assessments': true,
-          'table-extracted-data': true
-        }
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
       })
 
       wrapper.setData({
@@ -308,6 +329,17 @@ describe('Camelot Warning Logic Tests', () => {
             items: [{ 
               ref_id: 'ref1', 
               research_extractedData: 'some data',
+              stakeholders_extractedData: 'data',
+              researchers_extractedData: 'data',
+              context_extractedData: 'data',
+              strategy_extractedData: 'data',
+              theory_extractedData: 'data',
+              ethical_extractedData: 'data',
+              equity_extractedData: 'data',
+              participant_extractedData: 'data',
+              data_extractedData: 'data',
+              analysis_extractedData: 'data',
+              presentation_extractedData: 'data',
               research_concerns: '' // EMPTY CONCERN - Should be allowed
             }]
           }],
@@ -320,7 +352,48 @@ describe('Camelot Warning Logic Tests', () => {
       expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
     })
 
-    it('should CLEAR warning for CharsOfStudies in Camelot project even if characteristics array is empty', () => {
+    it('should NOT show warning for CharsOfStudies in Camelot when some _concerns fields are empty but all _extractedData are complete', () => {
+      const wrapper = shallowMount(editList, {
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
+      })
+
+      wrapper.setData({
+        project: { use_camelot: true, organization: 'org1', id: 'p1' },
+        list: {
+          project: { use_camelot: true, organization: 'org1', id: 'p1' },
+          references: ['ref1'],
+          findings: [],
+          characteristics: [{
+            fields: [{ key: 'ref_id' }],
+            items: [{ 
+              ref_id: 'ref1', 
+              research_extractedData: 'data',
+              stakeholders_extractedData: 'data',
+              researchers_extractedData: 'data',
+              context_extractedData: 'data',
+              strategy_extractedData: 'data',
+              theory_extractedData: 'data',
+              ethical_extractedData: 'data',
+              equity_extractedData: 'data',
+              participant_extractedData: 'data',
+              data_extractedData: 'data',
+              analysis_extractedData: 'data',
+              presentation_extractedData: 'data',
+              research_concerns: '', // EMPTY CONCERN
+              stakeholders_concerns: '' // EMPTY CONCERN
+            }]
+          }],
+          assessments: [],
+          fullreferences: JSON.stringify([{ id: 'ref1', authors: ['Author'], publication_year: '2020', title: 'Title' }])
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
+    })
+
+    it('should SHOW warning for CharsOfStudies in Camelot project if characteristics array is empty and there are references', () => {
       const wrapper = shallowMount(editList, {
         localVue,
         store,
@@ -347,14 +420,11 @@ describe('Camelot Warning Logic Tests', () => {
         }
       })
 
-      // Force initial state to true to see if it clears
-      wrapper.vm.ui.adequacy.chars_of_studies.display_warning = true
-      
       wrapper.vm.getCharsOfStudies()
-      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(true)
     })
 
-    it('should NOT show warning for CharsOfStudies in Camelot when at least ONE domain has data', () => {
+    it('SHOULD show warning for CharsOfStudies in Camelot when at least ONE domain is empty', () => {
       const wrapper = shallowMount(editList, {
         localVue, store, mocks,
         stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
@@ -371,7 +441,7 @@ describe('Camelot Warning Logic Tests', () => {
             items: [{ 
               ref_id: 'ref1', 
               research_extractedData: 'some data',
-              stakeholders_extractedData: '' // EMPTY but should NOT trigger warning because research has data
+              stakeholders_extractedData: '' // EMPTY - Now SHOULD trigger warning
             }]
           }],
           assessments: [],
@@ -380,10 +450,10 @@ describe('Camelot Warning Logic Tests', () => {
       })
 
       wrapper.vm.getCharsOfStudies()
-      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(true)
     })
 
-    it('SHOULD show warning for CharsOfStudies in Camelot ONLY when ALL domains are empty', () => {
+    it('SHOULD show warning for CharsOfStudies in Camelot when a CUSTOM field is empty', () => {
       const wrapper = shallowMount(editList, {
         localVue, store, mocks,
         stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
@@ -396,12 +466,22 @@ describe('Camelot Warning Logic Tests', () => {
           references: ['ref1'],
           findings: [],
           characteristics: [{
-            fields: [{ key: 'ref_id' }],
+            fields: [{ key: 'ref_id' }, { key: 'custom_col' }],
             items: [{ 
               ref_id: 'ref1', 
-              research_extractedData: '',
-              stakeholders_extractedData: ''
-              // all camelot domains empty
+              research_extractedData: 'all good',
+              stakeholders_extractedData: 'all good',
+              researchers_extractedData: 'all good',
+              context_extractedData: 'all good',
+              strategy_extractedData: 'all good',
+              theory_extractedData: 'all good',
+              ethical_extractedData: 'all good',
+              equity_extractedData: 'all good',
+              participant_extractedData: 'all good',
+              data_extractedData: 'all good',
+              analysis_extractedData: 'all good',
+              presentation_extractedData: 'all good',
+              custom_col: '' // EMPTY CUSTOM FIELD
             }]
           }],
           assessments: [],
@@ -411,6 +491,66 @@ describe('Camelot Warning Logic Tests', () => {
 
       wrapper.vm.getCharsOfStudies()
       expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(true)
+    })
+
+    it('SHOULD show warning for CharsOfStudies in NON-Camelot project when a custom field is empty', () => {
+      const wrapper = shallowMount(editList, {
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
+      })
+
+      wrapper.setData({
+        project: { use_camelot: false, organization: 'org1', id: 'p1' },
+        list: {
+          project: { use_camelot: false, organization: 'org1', id: 'p1' },
+          references: ['ref1'],
+          findings: [],
+          characteristics: [{
+            fields: [{ key: 'ref_id' }, { key: 'col1' }, { key: 'col2' }, { key: 'col3' }],
+            items: [{ 
+              ref_id: 'ref1', 
+              col1: 'data',
+              col2: 'data',
+              col3: '' // EMPTY FIELD
+            }]
+          }],
+          assessments: [],
+          fullreferences: JSON.stringify([{ id: 'ref1', authors: ['Author'], publication_year: '2020', title: 'Title' }])
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(true)
+    })
+
+    it('should NOT show warning for CharsOfStudies in NON-Camelot project when all fields are complete', () => {
+      const wrapper = shallowMount(editList, {
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
+      })
+
+      wrapper.setData({
+        project: { use_camelot: false, organization: 'org1', id: 'p1' },
+        list: {
+          project: { use_camelot: false, organization: 'org1', id: 'p1' },
+          references: ['ref1'],
+          findings: [],
+          characteristics: [{
+            fields: [{ key: 'ref_id' }, { key: 'col1' }, { key: 'col2' }, { key: 'col3' }],
+            items: [{ 
+              ref_id: 'ref1', 
+              col1: 'data',
+              col2: 'data',
+              col3: 'data' // ALL COMPLETE
+            }]
+          }],
+          assessments: [],
+          fullreferences: JSON.stringify([{ id: 'ref1', authors: ['Author'], publication_year: '2020', title: 'Title' }])
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
     })
   })
 

@@ -13,7 +13,7 @@
       </span>
     </h3>
     <p
-      v-if="showParagraph"
+      v-if="showParagraph && (!useCamelot || ui.adequacy.chars_of_studies.display_warning)"
       class="d-print-none font-weight-light">
       {{ $t('help.instructions.add_data_link_pre') }}
       <b-link
