@@ -315,12 +315,16 @@ Projects can be configured as **Camelot** or **non-Camelot** (controlled by `use
 {
   id: string,
   project_id: string,
-  name: string,  // Field name
+  organization: string,
+  fields: [
+    { key: string, label: string } // e.g., { key: 'column_1', label: 'Country' }
+  ],
   items: [
     {
-      ref_id: string,  // Reference ID
-      column_0: string,  // Field value
-      authors: string
+      ref_id: string,
+      authors: string,
+      // Dynamic keys matching 'key' in fields array
+      // e.g., column_1: 'Chile'
     }
   ]
 }
@@ -353,11 +357,24 @@ Projects can be configured as **Camelot** or **non-Camelot** (controlled by `use
 {
   id: string,
   project_id: string,
-  name: string,  // Assessment name
+  fields: [
+    {
+      key: 'ref_id',
+      value: 'Reference' // String
+    }
+    {
+      key: 'column_0',
+      label: 'Country' // String
+    },
+    {
+      key: 'authors',
+      value: 'Author(s), Year' // Sting
+    }
+  ]
   items: [
     {
       ref_id: string,
-      column_0: string,  // Assessment value
+      column_0: string,  // Assessment value, example: 'Chile'
       authors: string
     }
   ]

@@ -305,7 +305,26 @@
     "status_private": "Privado",
     "status_fully": "Público",
     "status_partially": "Parcial",
-    "status_minimally": "Mínimo"
+    "status_minimally": "Mínimo",
+    "toggle_camelot": {
+      "title": "Alterar metodologia do projeto",
+      "warning": "Alterar a metodologia do projeto é uma mudança estrutural importante. Alguns dados serão excluídos permanentemente.",
+      "to_camelot_title": "Convertendo para CAMELOT",
+      "to_camelot_step3": "No Passo 3, seus campos personalizados serão preservados, mas você deverá preencher os novos campos obrigatórios para habilitar o Passo 4.",
+      "to_camelot_step4": "No Passo 4, todos los dados atuais serão excluídos. Você precisará preencher as novas perguntas de avaliação.",
+      "from_camelot_title": "Convertendo para Não-CAMELOT",
+      "from_camelot_step3": "No Passo 3, seus campos personalizados serão preservados. Os dados nos campos específicos do CAMELOT (meta-domínios, preocupações) serão excluídos.",
+      "from_camelot_step4": "No Passo 4, todos os dados de avaliação atuais serão excluídos. Você precisará criar suas tabelas de avaliação manualmente.",
+      "backup_checkbox": "Criar um backup (clone) deste projeto antes de prosseguir",
+      "confirm_button": "Confirmar e Migrar",
+      "migrating": "Migrando metodologia..."
+    },
+    "use_camelot_label": "Gostaria de usar o CAMELOT para este projeto?",
+    "use_camelot_desc": "O CAMELOT fornece ferramentas adicionais para avaliação de qualidade e extração de dados.",
+    "use_camelot_yes": "Sim, usar CAMELOT (recomendado)",
+    "use_camelot_no": "Não, não usar CAMELOT",
+    "use_camelot_active": "Ativo",
+    "use_camelot_inactive": "Inativo"
   },
   "references": {
     "step_title": "ETAPA 1: Envie as <b>referências</b> dos seus estudos incluídos (obrigatório)",

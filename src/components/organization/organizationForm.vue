@@ -163,33 +163,21 @@
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            label="Would you like to use CAMELOT for this project?"
+            :label="$t('project.use_camelot_label')"
             label-for="input-project-use-camelot"
-            :description="!formData.id ? 'CAMELOT provides additional tools for quality assessment and data extraction.' : ''">
-            <template v-if="!formData.id">
-              <b-form-radio-group
-                :disabled="!canEdit"
-                id="input-project-use-camelot"
-                v-model="formData.use_camelot"
-                :options="[
-                  { text: 'Yes, use CAMELOT (recommended)', value: true },
-                  { text: 'No, do not use CAMELOT', value: false }
-                ]"
-                buttons
-                button-variant="outline-primary"
-                size="md"
-                name="use-camelot-buttons"></b-form-radio-group>
-            </template>
-            <template v-else>
-              <div class="pt-2">
-                <span v-if="formData.use_camelot" class="align-middle">
-                  Yes, using CAMELOT <b-badge variant="success" class="ml-1">Active</b-badge>
-                </span>
-                <span v-else class="align-middle">
-                  No, not using CAMELOT <b-badge variant="secondary" class="ml-1">Inactive</b-badge>
-                </span>
-              </div>
-            </template>
+            :description="!formData.id ? $t('project.use_camelot_desc') : ''">
+            <b-form-radio-group
+              :disabled="!canEdit"
+              id="input-project-use-camelot"
+              v-model="formData.use_camelot"
+              :options="[
+                { text: $t('project.use_camelot_yes'), value: true },
+                { text: $t('project.use_camelot_no'), value: false }
+              ]"
+              buttons
+              button-variant="outline-primary"
+              size="md"
+              name="use-camelot-buttons"></b-form-radio-group>
           </b-form-group>
           <b-form-group
             label-for="select-project-list-status"
@@ -268,11 +256,55 @@
         @cancel="handlePublishWarningCancel">
         <p>{{ $t('project.revert_private_warning') }}</p>
       </b-modal>
+
+      <!-- Methodology Conversion Modal -->
+      <b-modal
+        id="camelot-toggle-modal"
+        :title="$t('project.toggle_camelot.title')"
+        @ok.prevent="confirmCamelotToggle"
+        :ok-title="isMigrating ? $t('project.toggle_camelot.migrating') : $t('project.toggle_camelot.confirm_button')"
+        :cancel-title="$t('common.cancel')"
+        ok-variant="danger"
+        :busy="isMigrating"
+        no-close-on-backdrop
+        no-close-on-esc>
+        <div class="p-3">
+          <p class="font-weight-bold text-danger">
+            <font-awesome-icon icon="exclamation-triangle" class="mr-2" />
+            {{ $t('project.toggle_camelot.warning') }}
+          </p>
+          
+          <div v-if="formData.use_camelot" class="mt-3">
+            <h6>{{ $t('project.toggle_camelot.to_camelot_title') }}</h6>
+            <ul class="small">
+              <li>{{ $t('project.toggle_camelot.to_camelot_step3') }}</li>
+              <li>{{ $t('project.toggle_camelot.to_camelot_step4') }}</li>
+            </ul>
+          </div>
+          <div v-else class="mt-3">
+            <h6>{{ $t('project.toggle_camelot.from_camelot_title') }}</h6>
+            <ul class="small">
+              <li>{{ $t('project.toggle_camelot.from_camelot_step3') }}</li>
+              <li>{{ $t('project.toggle_camelot.from_camelot_step4') }}</li>
+            </ul>
+          </div>
+
+          <b-form-checkbox v-model="backupBeforeToggle" class="mt-4 font-weight-bold">
+            {{ $t('project.toggle_camelot.backup_checkbox') }}
+          </b-form-checkbox>
+          
+          <div v-if="isMigrating" class="text-center mt-3">
+            <b-spinner variant="danger" label="Spinning"></b-spinner>
+            <p class="mt-2">{{ $t('project.toggle_camelot.migrating') }}</p>
+          </div>
+        </div>
+      </b-modal>
     </template>
   </div>
 </template>
 
 <script>
+import Api from '@/utils/Api'
 import Project from '@/utils/project'
 
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
@@ -320,10 +352,51 @@ export default {
         can_publish: null
       },
       originalFormData: null,
-      pendingData: null
+      pendingData: null,
+      backupBeforeToggle: false,
+      isMigrating: false
     }
   },
   methods: {
+    confirmCamelotToggle: async function () {
+      this.isMigrating = true
+      const data = this.pendingData
+      
+      try {
+        // 1. Create backup if requested
+        if (this.backupBeforeToggle) {
+          await Api.get(`/api/clone/project/${data.id}/org/${data.organization}`)
+        }
+        
+        // 2. Call conversion endpoint
+        const response = await Api.post(`/api/project/${data.id}/toggle_camelot`, {
+          use_camelot: data.use_camelot
+        })
+        
+        if (response.data.status) {
+          // 3. Methodology updated, now save other project properties
+          await Project.update(data)
+          
+          // 4. Success, redirect to Step 3
+          this.$bvModal.hide('camelot-toggle-modal')
+          this.isMigrating = false
+          this.$router.push({ name: 'viewProject', params: { org_id: data.organization, id: data.id }, query: { step: 3 } })
+          // If we are already in viewProject, we might need to refresh
+          if (this.$route.name === 'viewProject') {
+            location.reload()
+          }
+        } else {
+          this.isMigrating = false
+          this.setMsgUpdateProject(response.data.message)
+          this.$bvModal.hide('camelot-toggle-modal')
+        }
+      } catch (error) {
+        console.error('Error updating methodology', error)
+        this.isMigrating = false
+        this.setMsgUpdateProject('Error updating methodology')
+        this.$bvModal.hide('camelot-toggle-modal')
+      }
+    },
     resetState: function () {
       this.state = {
         name: null,
@@ -396,6 +469,13 @@ export default {
       const data = JSON.parse(JSON.stringify(this.formData))
       if (!data.id) {
         data.organization = this.$store.state.user.personal_organization
+      }
+
+      // Check for Camelot methodology change in existing project
+      if (data.id && data.use_camelot !== this.originalFormData.use_camelot) {
+        this.pendingData = data
+        this.$bvModal.show('camelot-toggle-modal')
+        return
       }
 
       // Check if required fields were removed from a published project

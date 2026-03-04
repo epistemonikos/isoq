@@ -106,7 +106,7 @@ export default {
       const newCustomFields = this.columnDefinitions
         .filter(col => col.label && col.label.trim() !== '')
         .map(col => ({
-          key: col.key || `column_${Date.now()}_${Math.random()}`,
+          key: col.key || `column_${Date.now()}_${Math.random().toString().replace('.', '')}`,
           label: col.label.trim()
         }))
       
