@@ -64,6 +64,21 @@
         <span class="font-weight-bold">{{ data.item.authors }}</span>
       </template>
 
+      <!-- Dynamic Clickable Headers -->
+      <template v-for="field in fields.filter(f => f.assessmentKey)" v-slot:[`head(${field.key})`]="data">
+        <div 
+          v-if="clickableHeaders" 
+          :key="field.key" 
+          class="w-100 h-100 d-flex align-items-center justify-content-center cursor-pointer" 
+          @click="handleHeaderClick(field.assessmentKey)"
+          v-b-tooltip.hover
+          :title="$t('camelot.step_four.tooltips.filter_by_this')"
+        >
+          {{ data.label }}
+        </div>
+        <span v-else :key="field.key">{{ data.label }}</span>
+      </template>
+
       <!-- Step One: FA 1-4 -->
       <template v-slot:cell(fa1)="data">
         <div class="d-flex justify-content-center">
@@ -235,6 +250,10 @@ export default {
     hideActions: {
       type: Boolean,
       default: false
+    },
+    clickableHeaders: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -254,19 +273,21 @@ export default {
     fields() {
       const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
+      
+      const thClass = `header-second-row text-center ${this.clickableHeaders ? 'clickable-header' : ''}`
 
       const fields = [
         { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: 'header-second-row text-left', tdClass: 'border-right' },
-        { key: 'fa1', label: `${faPrefix} 1`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa2', label: `${faPrefix} 2`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa3', label: `${faPrefix} 3`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa4', label: `${faPrefix} 4`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
-        { key: 'fa5', label: `${faPrefix} 5`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa6', label: `${faPrefix} 6`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa7', label: `${faPrefix} 7`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
-        { key: 'fa8', label: `${faPrefix} 8`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
-        { key: 'fa9', label: `${faPrefix} 9`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
-        { key: 'oa', label: oaLabel, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' }
+        { key: 'fa1', assessmentKey: '0-0', label: `${faPrefix} 1`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa2', assessmentKey: '0-1', label: `${faPrefix} 2`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa3', assessmentKey: '0-2', label: `${faPrefix} 3`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa4', assessmentKey: '0-3', label: `${faPrefix} 4`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
+        { key: 'fa5', assessmentKey: '1-0', label: `${faPrefix} 5`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa6', assessmentKey: '1-1', label: `${faPrefix} 6`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa7', assessmentKey: '1-2', label: `${faPrefix} 7`, thClass, tdClass: 'assessment-col' },
+        { key: 'fa8', assessmentKey: '1-3', label: `${faPrefix} 8`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
+        { key: 'fa9', assessmentKey: '2-0', label: `${faPrefix} 9`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
+        { key: 'oa', assessmentKey: '3-0', label: oaLabel, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' }
       ]
 
       if (!this.hideActions) {
@@ -323,6 +344,14 @@ export default {
         filteredItems = filteredItems.filter(item => referenceIds.includes(String(item.ref_id)))
       }
 
+      // Si hideActions es true (vista Worksheet), forzamos que no se muestren los detalles
+      if (this.hideActions) {
+        return filteredItems.map(item => ({
+          ...item,
+          _showDetails: false
+        }))
+      }
+
       return filteredItems
     },
     activeStages() {
@@ -349,6 +378,12 @@ export default {
     }
   },
   methods: {
+    handleHeaderClick(assessmentKey) {
+      if (!this.clickableHeaders) return
+      
+      this.visibleAssessments = [assessmentKey]
+      this.expandAllDetails(true)
+    },
     handleFilterDropdownShow() {
       // Al abrir el filtro, si hay algún estudio abierto, los cerramos todos.
       const anyShowing = this.tableItems.some(item => item._showDetails)
@@ -385,6 +420,12 @@ export default {
     },
     isAssessmentVisible(stageIdx, oIdx) {
       return this.visibleAssessments.includes(`${stageIdx}-${oIdx}`)
+    },
+    resetTableState() {
+      // Restablecer filtros a "todos visibles"
+      this.toggleAllAssessments(true)
+      // Colapsar todos los detalles
+      this.expandAllDetails(false)
     },
     getCircleClass(stage, optionIndex, item) {
       if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
@@ -594,6 +635,22 @@ export default {
 
   .italic {
     font-style: italic;
+  }
+
+  .clickable-header {
+    cursor: pointer;
+    padding: 0 !important;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #A3D1FF !important;
+      color: #000 !important;
+    }
+  }
+
+  .cursor-pointer {
+    cursor: pointer;
+    min-height: 40px;
   }
 }
 </style>

@@ -3,7 +3,8 @@
     <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
       :ok-disabled="!permission"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
-      cancel-variant="outline-secondary">
+      cancel-variant="outline-secondary"
+      @show="onModalShow">
       <template v-slot:modal-title>
         <videoHelp v-if="selectedOptions.type === 'methodological-limitations'"
           :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835272"></videoHelp>
@@ -409,7 +410,12 @@
                     }">{{ $t('common.my_data') }}</b-link>.
                   </p>
                   <template v-if="project.use_camelot">
-                    <assessment-table :assessments="methAssessments" :references="list.references" />
+                    <assessment-table 
+                      ref="camelotTable"
+                      :assessments="methAssessments" 
+                      :references="list.references"
+                      :hideActions="false"
+                      :clickableHeaders="true" />
                   </template>
                   <template v-else>
                     <b-table class="table-small-font" responsive head-variant="light" outlined
@@ -930,6 +936,13 @@ export default {
     },
     commonGenerateCerqualExplanation: function () {
       this.selectedOptions.cerqual.explanation = generateCerqualExplanation(this.selectedOptions)
+    },
+    onModalShow: function () {
+      this.$nextTick(() => {
+        if (this.$refs.camelotTable && typeof this.$refs.camelotTable.resetTableState === 'function') {
+          this.$refs.camelotTable.resetTableState()
+        }
+      })
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)

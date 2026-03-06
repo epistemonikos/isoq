@@ -1222,6 +1222,9 @@
         "research_conduct_2": "Data collection",
         "research_conduct_3": "Analysis & interpretation",
         "research_conduct_4": "Presentation of findings"
+      },
+      "tooltips": {
+        "filter_by_this": "Filter by this assessment"
       }
     },
     "responses": {

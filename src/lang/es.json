@@ -1222,6 +1222,9 @@
         "research_conduct_2": "Recolección de datos",
         "research_conduct_3": "Análisis e interpretación",
         "research_conduct_4": "Presentación de hallazgos"
+      },
+      "tooltips": {
+        "filter_by_this": "Filtrar por esta evaluación"
       }
     },
     "responses": {

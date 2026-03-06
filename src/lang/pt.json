@@ -1222,6 +1222,9 @@
         "research_conduct_2": "Coleta de dados",
         "research_conduct_3": "Análise e interpretação",
         "research_conduct_4": "Apresentação de descobertas"
+      },
+      "tooltips": {
+        "filter_by_this": "Filtrar por esta avaliação"
       }
     },
     "responses": {

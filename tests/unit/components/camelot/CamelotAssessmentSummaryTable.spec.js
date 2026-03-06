@@ -133,4 +133,29 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     // Top row should not have the extra empty th
     expect(wrapper.find('th.border-bottom-0.bg-grey-light[v-if="!hideActions"]').exists()).toBe(false)
   })
+
+  it('filters and expands all rows when a header is clicked and clickableHeaders is true', async () => {
+    await wrapper.setProps({ clickableHeaders: true })
+    
+    // Simular clic en la cabecera FA1 (assessmentKey '0-0')
+    wrapper.vm.handleHeaderClick('0-0')
+    await wrapper.vm.$nextTick()
+    
+    expect(wrapper.vm.visibleAssessments).toEqual(['0-0'])
+    expect(wrapper.vm.allVisible).toBe(false)
+    expect(wrapper.vm.tableItems.every(item => item._showDetails)).toBe(true)
+  })
+
+  it('resets table state correctly using resetTableState method', async () => {
+    // Estado alterado
+    await wrapper.setData({ visibleAssessments: ['0-0'], allVisible: false })
+    wrapper.vm.expandAllDetails(true)
+    
+    wrapper.vm.resetTableState()
+    await wrapper.vm.$nextTick()
+    
+    expect(wrapper.vm.allVisible).toBe(true)
+    expect(wrapper.vm.visibleAssessments.length).toBe(wrapper.vm.allAssessmentValues.length)
+    expect(wrapper.vm.tableItems.every(item => !item._showDetails)).toBe(true)
+  })
 })

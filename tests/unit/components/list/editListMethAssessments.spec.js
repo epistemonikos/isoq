@@ -51,7 +51,7 @@ describe('editListMethAssessments.vue', () => {
         'camelot-assessment-summary-table': { 
           name: 'CamelotAssessmentSummaryTable', 
           template: '<div />',
-          props: ['assessments', 'references', 'hideActions']
+          props: ['assessments', 'references', 'hideActions', 'clickableHeaders']
         }
       }
     })
@@ -69,6 +69,8 @@ describe('editListMethAssessments.vue', () => {
       expect(table.props('assessments')).toEqual(propsData.methAssessments)
       expect(table.props('references')).toEqual(propsData.list.references)
       expect(table.props('hideActions')).toBe(true)
+      // Ya no debe pasarse como true en este contexto
+      expect(table.props('clickableHeaders')).toBeFalsy()
     }
   })
 })
