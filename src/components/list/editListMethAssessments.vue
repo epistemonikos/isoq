@@ -17,9 +17,10 @@
     </p>
     
     <template v-if="useCamelot">
-      <assessment-table
+      <camelot-assessment-summary-table
         :assessments="methAssessments"
-        :references="list.references" />
+        :references="list.references"
+        :hideActions="true" />
     </template>
     <template v-else>
       <template v-if="methAssessments.fields.length">
@@ -57,7 +58,7 @@
 <script>
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
-const AssessmentTable = () => import(/* webpackChunkName: "camelot" */ '../camelot/assessment/AssessmentTable.vue')
+const CamelotAssessmentSummaryTable = () => import(/* webpackChunkName: "camelot" */ '../camelot/assessment/CamelotAssessmentSummaryTable.vue')
 
 export default {
   name: 'editListMethAssessments',
@@ -81,7 +82,7 @@ export default {
   components: {
     'back-to-top': backToTop,
     'bc-filters': bCardFilters,
-    'assessment-table': AssessmentTable
+    'camelot-assessment-summary-table': CamelotAssessmentSummaryTable
   },
   data () {
     return {

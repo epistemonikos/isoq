@@ -119,4 +119,18 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     expect(items[0]._showDetails).toBe(false)
     expect(items[1]._showDetails).toBe(false)
   })
+
+  it('hides header and actions column when hideActions prop is true', async () => {
+    await wrapper.setProps({ hideActions: true })
+    
+    // Header section should be hidden
+    expect(wrapper.find('.d-flex.justify-content-between.align-items-center.mb-3').exists()).toBe(false)
+    
+    // Actions column should be removed from fields
+    const visibleFieldKeys = wrapper.vm.fields.map(f => f.key)
+    expect(visibleFieldKeys).not.toContain('actions')
+    
+    // Top row should not have the extra empty th
+    expect(wrapper.find('th.border-bottom-0.bg-grey-light[v-if="!hideActions"]').exists()).toBe(false)
+  })
 })

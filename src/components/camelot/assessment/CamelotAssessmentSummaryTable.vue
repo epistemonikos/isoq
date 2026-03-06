@@ -1,6 +1,6 @@
 <template>
   <div class="camelot-summary-table-container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div v-if="!hideActions" class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="h5 mb-0 font-weight-bold text-secondary">{{ $t('camelot.step_four.breadcrumb_sub') }}</h4>
       
       <b-dropdown
@@ -56,7 +56,7 @@
           <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}</th>
           <th class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_design_conduct') }}</th>
           <th class="text-center group-header border-left bg-grey-light">{{ $t('camelot.step_four.tabs.overall') }}</th>
-          <th class="border-bottom-0 bg-grey-light"></th>
+          <th v-if="!hideActions" class="border-bottom-0 bg-grey-light"></th>
         </tr>
       </template>
 
@@ -231,6 +231,10 @@ export default {
     references: {
       type: Array,
       default: () => []
+    },
+    hideActions: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -251,7 +255,7 @@ export default {
       const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
 
-      return [
+      const fields = [
         { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: 'header-second-row text-left', tdClass: 'border-right' },
         { key: 'fa1', label: `${faPrefix} 1`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
         { key: 'fa2', label: `${faPrefix} 2`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
@@ -262,9 +266,14 @@ export default {
         { key: 'fa7', label: `${faPrefix} 7`, thClass: 'header-second-row text-center', tdClass: 'assessment-col' },
         { key: 'fa8', label: `${faPrefix} 8`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
         { key: 'fa9', label: `${faPrefix} 9`, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
-        { key: 'oa', label: oaLabel, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' },
-        { key: 'actions', label: '', thClass: 'header-second-row text-center' }
+        { key: 'oa', label: oaLabel, thClass: 'header-second-row text-center border-right', tdClass: 'border-right assessment-col' }
       ]
+
+      if (!this.hideActions) {
+        fields.push({ key: 'actions', label: '', thClass: 'header-second-row text-center' })
+      }
+
+      return fields
     },
     filterGroups() {
       return [
