@@ -10,6 +10,7 @@
         no-caret
         right
         class="assessment-filter-dropdown"
+        @show="handleFilterDropdownShow"
       >
         <template #button-content>
           {{ $t('camelot.step_four.show_details_across_studies') }}
@@ -163,7 +164,7 @@
 
       <!-- Summary Action -->
       <template v-slot:cell(actions)="data">
-        <b-button size="sm" variant="outline-primary" @click="data.toggleDetails" class="p-0 summary-toggle-btn">
+        <b-button size="sm" variant="outline-primary" @click="handleToggleDetails(data)" class="p-0 summary-toggle-btn">
           {{ data.detailsShowing ? $t('common.hide') : $t('common.show') }}
           <font-awesome-icon :icon="data.detailsShowing ? 'eye-slash' : 'eye'" class="ml-1" />
         </b-button>
@@ -332,9 +333,40 @@ export default {
   watch: {
     visibleAssessments(newVal) {
       this.allVisible = newVal.length === this.allAssessmentValues.length
+      // Al cambiar los filtros, nos aseguramos de que todos los detalles estén abiertos si hay filtros activos
+      if (newVal.length < this.allAssessmentValues.length && newVal.length > 0) {
+        this.expandAllDetails(true)
+      }
     }
   },
   methods: {
+    handleFilterDropdownShow() {
+      // Al abrir el filtro, si hay algún estudio abierto, los cerramos todos.
+      const anyShowing = this.tableItems.some(item => item._showDetails)
+      if (anyShowing) {
+        this.expandAllDetails(false)
+      } else {
+        // Si no hay ninguno abierto, abrimos todos (mostrando la información filtrada)
+        this.expandAllDetails(true)
+      }
+    },
+    handleToggleDetails(data) {
+      // Al presionar show o hide individual, se cierran todos los demás y se resetean los filtros
+      const currentItemId = data.item.ref_id
+      this.tableItems.forEach(item => {
+        if (item.ref_id !== currentItemId) {
+          this.$set(item, '_showDetails', false)
+        }
+      })
+      
+      this.toggleAllAssessments(true)
+      data.toggleDetails()
+    },
+    expandAllDetails(show) {
+      this.tableItems.forEach(item => {
+        this.$set(item, '_showDetails', show)
+      })
+    },
     toggleAllAssessments(checked) {
       if (checked) {
         this.visibleAssessments = [...this.allAssessmentValues]
