@@ -172,33 +172,39 @@
       <!-- Row Details Summary -->
       <template v-slot:row-details="data">
         <div class="summary-details-panel p-3 bg-light border-top">
-          <div v-for="stageIdx in activeStages" :key="stageIdx" class="stage-section mb-4">
-            <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
-            
-            <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
-              <b-tbody>
-                <template v-for="(option, oIdx) in data.item.stages[stageIdx].options">
-                  <b-tr v-if="isAssessmentVisible(stageIdx, oIdx)" :key="oIdx">
-                    <b-td class="font-weight-bold text-left vertical-middle first-col">
-                      {{ getAssessmentLabel(stageIdx, oIdx) }}
-                    </b-td>
-                    <b-td class="text-center vertical-middle">
-                      <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
-                      <div v-else class="assessment-circle circle-not-completed mx-auto"></div>
-                    </b-td>
-                    <b-td>
-                      <div v-if="option.option">
-                        <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
-                        <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
-                      </div>
-                      <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed') }}</div>
-                    </b-td>
-                  </b-tr>
-                </template>
-              </b-tbody>
-            </b-table-simple>
-          </div>
-          <div v-if="activeStages.length === 0" class="text-center py-4 text-muted">
+          <template v-if="data.item.stages">
+            <div v-for="stageIdx in activeStages" :key="stageIdx" class="stage-section mb-4">
+              <template v-if="data.item.stages[stageIdx]">
+                <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
+                
+                <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
+                  <b-tbody>
+                    <template v-if="data.item.stages[stageIdx].options">
+                      <template v-for="(option, oIdx) in data.item.stages[stageIdx].options">
+                        <b-tr v-if="isAssessmentVisible(stageIdx, oIdx)" :key="oIdx">
+                          <b-td class="font-weight-bold text-left vertical-middle first-col">
+                            {{ getAssessmentLabel(stageIdx, oIdx) }}
+                          </b-td>
+                          <b-td class="text-center vertical-middle">
+                            <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
+                            <div v-else class="assessment-circle circle-not-completed mx-auto"></div>
+                          </b-td>
+                          <b-td>
+                            <div v-if="option.option">
+                              <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
+                              <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
+                            </div>
+                            <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed') }}</div>
+                          </b-td>
+                        </b-tr>
+                      </template>
+                    </template>
+                  </b-tbody>
+                </b-table-simple>
+              </template>
+            </div>
+          </template>
+          <div v-if="activeStages.length === 0 || !data.item.stages" class="text-center py-4 text-muted">
             <font-awesome-icon icon="filter" size="2x" class="mb-3 opacity-50" />
             <p>{{ $t('common.no_records') }}</p>
           </div>
