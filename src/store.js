@@ -57,6 +57,8 @@ export const store = new Vuex.Store({
             const user = response.data
             if (user.status !== 'false') {
               commit('auth_success', user)
+              // Actualizar el promise para que los guardias de navegación lo vean resuelto
+              commit('save_promise', Promise.resolve())
               resolve(response)
             } else {
               commit('auth_error')
@@ -75,6 +77,8 @@ export const store = new Vuex.Store({
         Api.get('/auth/logout').then((response) => {
           console.log(response)
           commit('logout')
+          // Al desloguearse, resetear el promise para que la próxima navegación dispare getLogginInfo
+          commit('save_promise', null)
           resolve()
         }).catch((error) => {
           reject(error)
@@ -91,7 +95,14 @@ export const store = new Vuex.Store({
       commit('change_status')
     },
     getLogginInfo ({commit}) {
-      if (this.state.status === '') {
+      // Si ya estamos logueados satisfactoriamente, nos aseguramos de tener un promise resuelto
+      if (this.state.status === 'success') {
+        commit('save_promise', Promise.resolve())
+        return
+      }
+
+      // Si no tenemos status o hubo un error previo, pedimos info al servidor
+      if (this.state.status === '' || this.state.status === 'error') {
         let promise = new Promise((resolve, reject) => {
           Api.post('/auth/user', null).then((response) => {
             if (response.data.status !== 'not_logged') {
@@ -127,6 +138,9 @@ export const store = new Vuex.Store({
           })
         })
         commit('save_promise', promise)
+      } else if (this.state.status === 'success' && !this.state.promise) {
+        // Asegurarse de tener un promise resuelto si ya estamos logueados
+        commit('save_promise', Promise.resolve())
       }
     }
   },

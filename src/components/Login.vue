@@ -65,7 +65,14 @@ export default {
         .then((response) => {
           const personalInfo = response.data
           const basePath = `/workspace/${personalInfo.personal_organization}`
-          const path = { 'path': (this.$route.query.redirect) ? this.$route.query.redirect : basePath }
+          let redirectPath = (this.$route.query.redirect) ? this.$route.query.redirect : basePath
+          
+          // Si el hash está separado (común en modo hash de vue-router 3), lo adjuntamos
+          if (this.$route.hash && !redirectPath.includes('#')) {
+            redirectPath += this.$route.hash
+          }
+          
+          const path = { 'path': redirectPath }
           this.$router.push(path)
         })
         .catch((error) => console.log(error))
