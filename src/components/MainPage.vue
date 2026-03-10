@@ -22,17 +22,49 @@
       </b-container>
       <b-container fluid class="bg-black py-3">
         <b-row>
-          <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" alt="NIPH"></b-img>
+          <b-col class="d-flex flex-row align-items-center">
+            <b-container>
+              <b-row>
+                <b-col class="text-center" cols="3" align-self="center">
+                  <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" alt="NIPH"></b-img>
+                </b-col>
+                <b-col class="text-center" cols="3" align-self="center">
+                  <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
+                </b-col>
+                <b-col class="text-center" cols="3" align-self="center">
+                  <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
+                </b-col>
+                <b-col class="text-center" cols="3" align-self="center">
+                  <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
+                </b-col>
+              </b-row>
+            </b-container>
           </b-col>
-          <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
-          </b-col>
-          <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
-          </b-col>
-          <b-col class="text-center" cols="3" align-self="center">
-            <b-img fluid :src="require('@/assets/hvl_logo_en_neg.png')" height="30" alt="HVL"></b-img>
+          <b-col>
+            <div class="d-flex flex-row justify-content-end">
+              <div class="col-md-1">
+                <h6 class="font-weight-bold">About</h6>
+                <ul class="list-unstyled">
+                  <li>
+                    <router-link :to="{name: 'About'}" class="text-reset text-decoration-none">About</router-link>
+                  </li>
+                  <li>
+                    <router-link :to="{name: 'Help'}" class="text-reset text-decoration-none">Help</router-link>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-md-3">
+                <h6 class="font-weight-bold">Legal</h6>
+                <ul class="list-unstyled">
+                  <li>
+                    <router-link :to="{name: 'TermsAndConditions'}" class="text-reset text-decoration-none">Terms and Conditions</router-link>
+                  </li>
+                  <li>
+                    <router-link :to="{name: 'PrivacyPolicy'}" class="text-reset text-decoration-none">Privacy Policy</router-link>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </b-col>
         </b-row>
       </b-container>
