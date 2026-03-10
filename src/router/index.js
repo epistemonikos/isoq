@@ -14,6 +14,8 @@ const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 const WhatsNew = () => import(/* webpackChunkName: "whatsnew" */ '@/components/WhatsNew')
+const TermsAndConditions = () => import(/* webpackChunkName: "termsandconditions" */ '@/components/TermsAndConditions')
+const PrivacyPolicy = () => import(/* webpackChunkName: "privacypolicy" */ '@/components/PrivacyPolicy')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -40,6 +42,22 @@ var routes = [
     component: Help,
     meta: {
       title: 'Help - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/terms-and-conditions',
+    name: 'TermsAndConditions',
+    component: TermsAndConditions,
+    meta: {
+      title: 'Terms and Conditions - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: PrivacyPolicy,
+    meta: {
+      title: 'Privacy Policy - Interactive Summary of Qualitative Findings'
     }
   },
   {
