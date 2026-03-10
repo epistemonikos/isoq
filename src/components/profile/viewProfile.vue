@@ -69,13 +69,16 @@
       </b-card>
       
       <b-card no-body class="mt-3 p-3">
-        <h3>Manage profile</h3>
+        <h3>Manage profile data</h3>
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <p class="m-0">Download profile data: Export all of your profile information in a JSON file </p>
+            <p class="m-0"><b>Download profile data:</b> Export all of your profile information in a JSON file </p>
           </div>
           <div>
-            <b-button variant="outline-primary">Export profile data</b-button>
+            <b-button variant="outline-primary" @click="exportData" :disabled="isExporting">
+              <b-spinner v-if="isExporting" small class="mr-2"></b-spinner>
+              Export profile data
+            </b-button>
           </div>
         </div>
 
@@ -102,10 +105,13 @@
 
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <p class="m-0">Delete account: Export all of your profile information in a JSON file </p>
+            <p class="m-0"><b>Delete account:</b> Permanently remove your account and all associated data</p>
           </div>
           <div>
-            <b-button variant="outline-danger">Delete account</b-button>
+            <b-button variant="outline-danger" @click="deleteAccount" :disabled="isDeletingAccount">
+              <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
+              Delete account
+            </b-button>
           </div>
         </div>
 
@@ -197,7 +203,9 @@ export default {
       message: '',
       isSendingContact: false,
       contactMsg: '',
-      contactMsgVariant: 'success'
+      contactMsgVariant: 'success',
+      isExporting: false,
+      isDeletingAccount: false
     }
   },
   mounted () {
@@ -309,6 +317,31 @@ export default {
         this.checkDisabled()
       }
     },
+    exportData: async function () {
+      this.isExporting = true
+      try {
+        const response = await axios.get('/users/get_full_data', {
+          params: {
+            user_id: this.$store.state.user.id
+          },
+          responseType: 'blob'
+        })
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', 'profile_data.zip')
+        document.body.appendChild(link)
+        link.click()
+        
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Error exporting data:', error)
+      } finally {
+        this.isExporting = false
+      }
+    },
     sendContact: async function () {
       if (!this.isContactFormValid) return
       
@@ -330,6 +363,24 @@ export default {
         this.contactMsgVariant = 'danger'
       } finally {
         this.isSendingContact = false
+      }
+    },
+    deleteAccount: async function () {
+      if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
+        this.isDeletingAccount = true
+        try {
+          const response = await axios.delete('/users/delete_account')
+          if (response.data && response.data.result === 'success') {
+            window.location.href = '/'
+          } else {
+            alert('Failed to delete account. Please try again.')
+          }
+        } catch (error) {
+          console.error(error)
+          alert('An error occurred while deleting your account.')
+        } finally {
+          this.isDeletingAccount = false
+        }
       }
     },
     showAlert: function () {
