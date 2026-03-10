@@ -79,16 +79,36 @@
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
 
-              <b-card-text class="text-center text-forgot-create">
-                <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
+              <b-card-text class="text-forgot-create">
+                <div>
+                  <p class="font-weight-bold">
+                    Your personal data is processed for the provision of the service according to our <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link>
+                  </p>
+                  <p>
+                    <b-form-checkbox v-model="user.newsletter"> I agree to receive email communications about important service updates and news (optional)</b-form-checkbox>
+                  </p>
+                  <p>
+                    <b-form-checkbox v-model="user.improvement"> I agree to the use of my data in aggregated and anonymized form to help improve the service (optional)</b-form-checkbox>
+                  </p>
+                </div>
+                <div class="text-center">
+                  <router-link :to="{name: 'Login'}">login</router-link> | <router-link :to="{name: 'ForgotPassword'}">forgot your password?</router-link>
+                </div>
               </b-card-text>
               <div
                 slot="footer"
-                class="text-right">
-                <b-button
-                  variant="outline-primary"
-                  :disabled="!(ui.username_validation && ui.password_validation)"
-                  @click="createAccount">Create account</b-button>
+                class="d-flex flex-row justify-content-between">
+                <div>
+                  <p>
+                    By creating an account, you accept our <router-link :to="{name: 'TermsAndConditions'}">Terms and Conditions</router-link> and <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link>
+                  </p>
+                </div>
+                <div>
+                  <b-button
+                    variant="outline-primary"
+                    :disabled="!(ui.username_validation && ui.password_validation)"
+                    @click="createAccount">Create account</b-button>
+                </div>
               </div>
             </b-card>
           </b-form>
@@ -265,7 +285,9 @@ export default {
         affiliation: '',
         username: '',
         password: '',
-        password_2: ''
+        password_2: '',
+        newsletter: false,
+        improvement: false
       },
       org_selected: '',
       all_organizations: [],
@@ -380,6 +402,9 @@ export default {
         })
     },
     checkEmailExist: function () {
+      if (!this.user.username) {
+        return
+      }
       const email = this.user.username.trim()
       axios.get(`/users/check_email?email=${email}`)
         .then((response) => {
