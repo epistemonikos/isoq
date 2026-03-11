@@ -54,7 +54,7 @@
           </b-tbody>
         </b-table-simple>
 
-        <ul>
+        <ul class="list-unstyled">
           <li>
             <b-checkbox v-model="newsletter">I agree to receive email communications about important service updates and news (optional)</b-checkbox>
           </li>
@@ -72,7 +72,7 @@
         <h3>Manage profile data</h3>
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <p class="m-0"><b>Download profile data:</b> Export all of your profile information in a JSON file </p>
+            <p class="m-0"><b>Download profile data:</b> Export all of the personal data and profile information in a JSON file</p>
           </div>
           <div>
             <b-button variant="outline-primary" @click="exportData" :disabled="isExporting">
@@ -83,16 +83,16 @@
         </div>
 
         <b-alert show class="mt-3">
-          <p>Note: You can download a copy of your personal data associated with your account.</p>
+          <p>Note: You can download a copy of the profile data associated with your account.</p>
           <ul>
             <li>
-              The export will include the personal information you provided (e.g., name, email) and records of your activity in the platform.
+              The export will include the personal information you provided (e.g., name, email) and records of your activity in the platform. Export all of the personal data and your profile information in a JSON file
             </li>
             <li>
               Data will be provided in a structured, commonly used, machine-readable format (JSON,CSV,XML).
             </li>
             <li>
-              Exporting your data does not delete it from our systems. You can request deletion separately.
+              Exporting your profile does not delete it from our systems. You can request deletion separately.
             </li>
             <li>
               We may take up to 30 days to provide the full export, in line with our Privacy Policy.
@@ -105,7 +105,9 @@
 
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <p class="m-0"><b>Delete account:</b> Permanently remove your account and all associated data</p>
+            <p class="m-0">
+              <b>Delete account:</b> Permanently delete your account, all personal data and all the iSoQ projects you have created, including all the data you have created and entered into those projects.
+            </p>
           </div>
           <div>
             <b-button variant="outline-danger" @click="deleteAccount" :disabled="isDeletingAccount">
@@ -119,10 +121,13 @@
           <p>Important: Deleting your account is permanent and cannot be undone.</p>
           <ul>
             <li>
-              Your personal information will be deleted from our active systems.
+              Your personal data will be deleted from our active systems.
             </li>
             <li>
-              Some records may be retained as required by law (e.g. billing, legal compliance, or security logs).
+              All the projects you created in iSoQ and all the data created and entered into those projects will be a deleted permanently. If a project was created by you and shared with others, deleting your account will delete the project for all shared users. Before deleting your account, you may want to ask those you shared the project with to create a copy of the project in their Workspace so that they retain a copy of the shared project before you delete your account.
+            </li>
+            <li>
+              Some records may be retained as required by law (e.g. legal compliance, or security logs).
             </li>
             <li>
               Data that has been anonymized or aggregated (not linked to you) may be kept for research or statistical purposes.
