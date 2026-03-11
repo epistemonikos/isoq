@@ -60,6 +60,10 @@ export default {
       type: Object,
       required: true
     },
+    camelot: {
+      type: Object,
+      default: () => ({ categories: [] })
+    },
     visibleColumnKeys: {
       type: Array,
       required: true
@@ -72,15 +76,49 @@ export default {
     }
   },
   methods: {
-    getCustomFields () {
-      return extractCustomFields(this.charsData.fields)
-    },
     openColumnsModal () {
-      const customFields = this.getCustomFields()
-      this.columnDefinitions = customFields.map(field => ({
-        key: field.key,
-        label: field.label
-      }))
+      this.columnDefinitions = []
+      if (this.charsData && this.charsData.fields) {
+        for (const field of this.charsData.fields) {
+          if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
+          if (field.key.endsWith('_concerns')) continue
+
+          const isCamelot = field.key.endsWith('_extractedData')
+          let categoryLabel = ''
+          let extractedDataLabel = ''
+          let concernsLabel = ''
+
+          if (isCamelot) {
+            const concernsKey = field.key.replace('_extractedData', '_concerns')
+            categoryLabel = field.label
+            extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
+            concernsLabel = this.$t('camelot.step_three.concerns_label') || 'Concerns'
+            
+            if (this.camelot && this.camelot.categories) {
+              const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
+              if (categoryMatch) {
+                categoryLabel = categoryMatch.label
+                const extOpt = categoryMatch.options.find(o => o.key === field.key)
+                if (extOpt) extractedDataLabel = extOpt.label
+                
+                const concOpt = categoryMatch.options.find(o => o.key === concernsKey)
+                if (concOpt) concernsLabel = concOpt.label
+              }
+            }
+          }
+
+          this.columnDefinitions.push({
+            key: field.key,
+            label: field.label,
+            categoryLabel: categoryLabel,
+            extractedDataLabel: extractedDataLabel,
+            concernsLabel: concernsLabel,
+            locked: isCamelot,
+            isCamelot: isCamelot,
+            hasConcerns: false // ManageColumnsButton uses with-values="false" so we don't need the concerns textarea here
+          })
+        }
+      }
       this.$bvModal.show('modal-manage-columns')
     },
     closeColumnsModal () {
@@ -101,16 +139,30 @@ export default {
       
       this.isSavingColumns = true
       
-      const nonCustomFields = this.charsData.fields.filter(field => !isCustomField(field.key))
+      const systemFields = (this.charsData.fields || []).filter(field => 
+        ['authors', 'ref_id', 'actions', 'edit'].includes(field.key)
+      )
       
-      const newCustomFields = this.columnDefinitions
-        .filter(col => col.label && col.label.trim() !== '')
-        .map(col => ({
-          key: col.key || `column_${Date.now()}_${Math.random().toString().replace('.', '')}`,
-          label: col.label.trim()
-        }))
+      const newFields = []
+      for (const col of this.columnDefinitions) {
+        if (!col.label || col.label.trim() === '') continue
+        
+        if (col.isCamelot) {
+          const extDataField = this.charsData.fields.find(f => f.key === col.key)
+          if (extDataField) newFields.push(extDataField)
+          
+          const concernsKey = col.key.replace('_extractedData', '_concerns')
+          const concernsField = this.charsData.fields.find(f => f.key === concernsKey)
+          if (concernsField) newFields.push(concernsField)
+        } else {
+          newFields.push({
+            key: col.key || `column_${Date.now()}_${Math.random().toString().replace('.', '')}`,
+            label: col.label.trim()
+          })
+        }
+      }
       
-      const updatedFields = [...nonCustomFields, ...newCustomFields]
+      const updatedFields = [...systemFields, ...newFields]
       const cleanedItems = cleanOrphanedCustomFieldKeys(this.charsData.items || [], updatedFields)
       
       const dataToSave = {

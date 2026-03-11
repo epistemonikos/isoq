@@ -44,7 +44,8 @@
               <!-- Header with drag handle and remove button -->
               <div class="d-flex justify-content-between mb-2">
                 <div class="d-flex align-items-center">
-                  <label :for="idPrefix + 'label-' + index" class="mb-0">{{ labelText }}</label>
+                  <label v-if="!field.isCamelot" :for="idPrefix + 'label-' + index" class="mb-0">{{ labelText }}</label>
+                  <strong v-else class="mb-0" style="font-size: 1.1em; color: #333;">{{ field.categoryLabel || field.label }}</strong>
                 </div>
                 <div>
                   <b-button
@@ -55,6 +56,7 @@
                     <font-awesome-icon icon="grip-vertical" class="mr-1"></font-awesome-icon> {{ moveButtonText }}
                   </b-button>
                   <b-button
+                    v-if="!field.locked"
                     size="sm"
                     variant="danger"
                     @click="removeField(index)"
@@ -66,19 +68,21 @@
 
               <!-- Title/Label Input -->
               <b-form-group
+                v-if="!field.isCamelot"
                 :label-for="idPrefix + 'label-' + index"
                 class="mb-2">
                 <b-form-input
                   :id="idPrefix + 'label-' + index"
                   v-model="field.label"
                   :placeholder="placeholderLabel"
+                  :disabled="field.locked"
                   @input="emitChange">
                 </b-form-input>
               </b-form-group>
 
               <!-- Value Input (Optional) -->
               <template v-if="withValues">
-                <label :for="idPrefix + 'value-' + index">{{ contentLabelText }}</label>
+                <label :for="idPrefix + 'value-' + index" :class="{'mt-2': field.isCamelot}">{{ field.isCamelot ? (field.extractedDataLabel || contentLabelText) : contentLabelText }}</label>
                 <b-form-textarea
                   :id="idPrefix + 'value-' + index"
                   v-model="field.value"
@@ -86,6 +90,18 @@
                   rows="3"
                   @input="emitChange">
                 </b-form-textarea>
+                
+                <!-- Concerns Input (Optional for Camelot pairs) -->
+                <template v-if="field.hasConcerns">
+                  <label :for="idPrefix + 'concerns-' + index" class="mt-2">{{ field.concernsLabel || $t('camelot.step_three.concerns_label') || 'Concerns' }}</label>
+                  <b-form-textarea
+                    :id="idPrefix + 'concerns-' + index"
+                    v-model="field.concernsValue"
+                    :placeholder="$t('camelot.step_three.modal.field_content_placeholder')"
+                    rows="2"
+                    @input="emitChange">
+                  </b-form-textarea>
+                </template>
               </template>
             </b-card>
           </div>
@@ -198,12 +214,12 @@ export default {
         label: '',
         value: ''
       }
-      this.localFields.push(newField)
+      this.localFields.unshift(newField)
       this.emitChange()
       
       // Scroll to new field and focus
       this.$nextTick(() => {
-        const index = this.localFields.length - 1
+        const index = 0
         const element = document.getElementById(this.idPrefix + index)
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' })

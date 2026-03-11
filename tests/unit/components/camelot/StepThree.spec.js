@@ -56,7 +56,7 @@ describe('StepThree.vue', () => {
         'ManageColumnsButton': {
           name: 'ManageColumnsButton',
           template: '<div />',
-          props: ['charsData', 'visibleColumnKeys']
+          props: ['charsData', 'visibleColumnKeys', 'camelot']
         },
         'ToggleConcernsButton': {
           name: 'ToggleConcernsButton',

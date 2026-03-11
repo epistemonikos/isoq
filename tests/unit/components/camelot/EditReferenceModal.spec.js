@@ -24,13 +24,21 @@ describe('EditReferenceModal.vue', () => {
   }
   const mockCharsData = {
     id: 'char1',
-    fields: [{ key: 'authors', label: 'Authors' }],
+    fields: [
+      { key: 'authors', label: 'Authors' },
+      { key: 'column_1', label: 'Custom Field 1' },
+      { key: 'design_extractedData', label: 'Study Design' },
+      { key: 'design_concerns', label: 'Concerns' }
+    ],
     items: []
   }
   const mockReference = {
     id: 'ref1',
     authors: ['Smith, J'],
-    publication_year: '2020'
+    publication_year: '2020',
+    column_1: 'Custom Value',
+    design_extractedData: 'Data Value',
+    design_concerns: 'Concern Value'
   }
 
   beforeEach(() => {
@@ -81,7 +89,12 @@ describe('EditReferenceModal.vue', () => {
       '/isoqf_characteristics/char1/',
       expect.objectContaining({
         items: expect.arrayContaining([
-          expect.objectContaining({ ref_id: 'ref1' })
+          expect.objectContaining({ 
+            ref_id: 'ref1',
+            column_1: 'Custom Value',
+            design_extractedData: 'Data Value',
+            design_concerns: 'Concern Value'
+          })
         ])
       })
     )

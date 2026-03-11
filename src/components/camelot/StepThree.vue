@@ -11,6 +11,7 @@
       <div class="mb-3 d-flex justify-content-end">
         <ManageColumnsButton
           :chars-data="charsData"
+          :camelot="camelot"
           :visible-column-keys.sync="visibleColumnKeys"
           @saved="charsData = $event"
         />
@@ -297,50 +298,47 @@ export default {
     },
     availableTableFields () {
       // Base fields (authors)
-      let baseFields = this.fields
-      const categoryFields = []
+      const baseFields = this.fields.filter(f => f.key === 'authors')
+      const orderedFields = []
 
-      // Get custom fields and add customField=true property
-      const customFields = this.getCustomFields().map(field => ({
-        ...field,
-        customField: true
-      }))
+      if (this.charsData && Array.isArray(this.charsData.fields)) {
+        this.charsData.fields.forEach(field => {
+          if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
 
-      // Add category fields (CAMELOT) with new structure
-      if (this.camelot && Array.isArray(this.camelot.categories)) {
-        this.camelot.categories.forEach(category => {
-          if (category.options && Array.isArray(category.options)) {
-            // Find the "extracted data" and "concerns" options for this category
-            const extractedDataOption = category.options.find(opt => !opt.key.endsWith('_concerns'))
-            const concernsOption = category.options.find(opt => opt.key.endsWith('_concerns'))
-
-            // Add the domain column (extracted data) with the category label as header
-            if (extractedDataOption) {
-              categoryFields.push({
-                key: extractedDataOption.key,
-                label: category.label, // Use category label instead of option label
-                isCamelot: true
-              })
+          if (field.key.endsWith('_concerns')) {
+            if (this.showConcerns) {
+              let label = field.label
+              if (this.camelot && Array.isArray(this.camelot.categories)) {
+                for (const cat of this.camelot.categories) {
+                  const opt = cat.options && cat.options.find(o => o.key === field.key)
+                  if (opt) { label = opt.label; break }
+                }
+              }
+              orderedFields.push({ key: field.key, label: label, isCamelot: true })
             }
+            return
+          }
 
-            // If showConcerns is true, add the concerns column right after the domain
-            if (this.showConcerns && concernsOption) {
-              categoryFields.push({
-                key: concernsOption.key,
-                label: concernsOption.label, // Keep "Preocupaciones" label
-                isCamelot: true
-              })
+          if (field.key.endsWith('_extractedData')) {
+            let label = field.label
+            if (this.camelot && Array.isArray(this.camelot.categories)) {
+              const catMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
+              if (catMatch) label = catMatch.label
             }
+            orderedFields.push({ key: field.key, label: label, isCamelot: true })
+            return
+          }
+
+          if (isCustomField(field.key)) {
+            orderedFields.push({ key: field.key, label: field.label, customField: true })
           }
         })
       }
 
-      // Remove 'actions' field from base fields to avoid duplicates
-      const baseFieldsWithoutActions = baseFields.filter(field => field.key !== 'actions')
-      baseFields = baseFieldsWithoutActions
+      const actionFields = this.fields.filter(f => f.key === 'edit' || f.key === 'actions')
 
-      // Return the combination of base fields, custom fields, and category fields
-      return [...baseFields, ...customFields, ...categoryFields]
+      // Return the combination maintaining the custom order
+      return [...baseFields, ...orderedFields, ...actionFields]
     },
     filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)
