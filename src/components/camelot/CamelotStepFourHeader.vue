@@ -1,7 +1,7 @@
 <template>
   <div class="mb-3 d-flex justify-content-end align-items-end">
     <b-button variant="link" class="p-0 help-link d-flex align-items-center mr-3" v-b-toggle.sidebar-help>
-      <font-awesome-icon icon="question-circle" class="mr-1" />
+      <!-- <font-awesome-icon icon="question-circle" class="mr-1" /> -->
       {{ $t('camelot.step_four.how_to_read.title') }}
     </b-button>
 
