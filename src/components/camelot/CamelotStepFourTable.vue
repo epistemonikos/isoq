@@ -45,7 +45,7 @@
     <template v-slot:cell(edit1)="data">
       <div class="d-flex justify-content-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+          <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
     </template>
@@ -74,7 +74,7 @@
     <template v-slot:cell(edit2)="data">
       <div class="d-flex justify-content-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+          <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
     </template>
@@ -88,7 +88,7 @@
     <template v-slot:cell(edit3)="data">
       <div class="d-flex justify-content-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+          <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
     </template>
@@ -102,7 +102,7 @@
     <template v-slot:cell(edit4)="data">
       <div class="d-flex justify-content-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+          <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
     </template>
