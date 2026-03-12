@@ -1190,7 +1190,7 @@
       },
       "common": {
         "extracted_data": "Dados extraídos",
-        "concerns": "Preocupações",
+        "concerns": "Comentários",
         "fit_assessment": "Avaliação de ajuste"
       },
       "inline_edit": {
@@ -1209,7 +1209,7 @@
       },
       "camelot_mixin": {
         "extracted_data": "Dados extraídos",
-        "concerns": "Preocupações",
+        "concerns": "Comentários",
         "meta_domain_1": "Objetivo da pesquisa e perguntas",
         "meta_domain_2": "Partes interessadas",
         "meta_domain_3": "Pesquisadores",

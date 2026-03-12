@@ -19,7 +19,7 @@ describe('CharacteristicsTable.vue - Toggle Concerns', () => {
           authors: 'Author A',
           year: '2020',
           research_extractedData: 'data1',
-          research_concerns: 'concern1'
+          research_comments: 'concern1'
         }]
       }
     }

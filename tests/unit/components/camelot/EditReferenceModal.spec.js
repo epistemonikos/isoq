@@ -28,7 +28,7 @@ describe('EditReferenceModal.vue', () => {
       { key: 'authors', label: 'Authors' },
       { key: 'column_1', label: 'Custom Field 1' },
       { key: 'design_extractedData', label: 'Study Design' },
-      { key: 'design_concerns', label: 'Concerns' }
+      { key: 'design_comments', label: 'Concerns' }
     ],
     items: []
   }
@@ -38,7 +38,7 @@ describe('EditReferenceModal.vue', () => {
     publication_year: '2020',
     column_1: 'Custom Value',
     design_extractedData: 'Data Value',
-    design_concerns: 'Concern Value'
+    design_comments: 'Concern Value'
   }
 
   beforeEach(() => {
@@ -93,7 +93,7 @@ describe('EditReferenceModal.vue', () => {
             ref_id: 'ref1',
             column_1: 'Custom Value',
             design_extractedData: 'Data Value',
-            design_concerns: 'Concern Value'
+            design_comments: 'Concern Value'
           })
         ])
       })

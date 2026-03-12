@@ -4,8 +4,8 @@
             <b-button
                 size="sm"
                 variant="outline-info"
-                @click="showConcerns = !showConcerns">
-                <template v-if="showConcerns">
+                @click="showComments = !showComments">
+                <template v-if="showComments">
                     {{ $t('worksheet.actions.hide_concerns') }}
                 </template>
                 <template v-else>
@@ -58,7 +58,7 @@ export default {
     },
     data() {
         return {
-            showConcerns: false
+            showComments: false
         }
     },
     computed: {
@@ -68,7 +68,7 @@ export default {
 
             for (const field of this.charsOfStudies.fields) {
                 if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
-                if (field.key.endsWith('_concerns')) continue
+                if (field.key.endsWith('_comments')) continue
 
                 const isCamelot = field.key.endsWith('_extractedData')
                 
@@ -87,7 +87,7 @@ export default {
                     if (options.length === 0) {
                         options = [
                             { key: field.key, label: field.label },
-                            { key: field.key.replace('_extractedData', '_concerns'), label: this.$t('camelot.step_three.concerns_label') || 'Concerns' }
+                            { key: field.key.replace('_extractedData', '_comments'), label: this.$t('camelot.step_three.concerns_label') || 'Comments' }
                         ]
                     }
 
@@ -96,7 +96,7 @@ export default {
                         key: field.key,
                         label: categoryLabel,
                         options: options,
-                        colspan: this.showConcerns ? 2 : 1
+                        colspan: this.showComments ? 2 : 1
                     })
                 } else {
                     headers.push({
@@ -114,7 +114,7 @@ export default {
             for (const header of this.unifiedHeaders) {
                 if (header.type === 'camelot') {
                     for (const option of header.options) {
-                        if (!this.showConcerns && option.key.endsWith('_concerns')) continue
+                        if (!this.showComments && option.key.endsWith('_comments')) continue
                         subH.push(option)
                     }
                 }
@@ -133,7 +133,7 @@ export default {
             for (const header of this.unifiedHeaders) {
                 if (header.type === 'camelot') {
                     for (const option of header.options) {
-                        if (!this.showConcerns && option.key.endsWith('_concerns')) continue
+                        if (!this.showComments && option.key.endsWith('_comments')) continue
                         cells.push({ key: option.key, value: item[option.key] || '' })
                     }
                 } else {

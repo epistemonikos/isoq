@@ -81,18 +81,18 @@ export default {
       if (this.charsData && this.charsData.fields) {
         for (const field of this.charsData.fields) {
           if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
-          if (field.key.endsWith('_concerns')) continue
+          if (field.key.endsWith('_comments')) continue
 
           const isCamelot = field.key.endsWith('_extractedData')
           let categoryLabel = ''
           let extractedDataLabel = ''
-          let concernsLabel = ''
+          let commentsLabel = ''
 
           if (isCamelot) {
-            const concernsKey = field.key.replace('_extractedData', '_concerns')
+            const commentsKey = field.key.replace('_extractedData', '_comments')
             categoryLabel = field.label
             extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
-            concernsLabel = this.$t('camelot.step_three.concerns_label') || 'Concerns'
+            commentsLabel = this.$t('camelot.step_three.concerns_label') || 'Comments'
             
             if (this.camelot && this.camelot.categories) {
               const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
@@ -101,8 +101,8 @@ export default {
                 const extOpt = categoryMatch.options.find(o => o.key === field.key)
                 if (extOpt) extractedDataLabel = extOpt.label
                 
-                const concOpt = categoryMatch.options.find(o => o.key === concernsKey)
-                if (concOpt) concernsLabel = concOpt.label
+                const concOpt = categoryMatch.options.find(o => o.key === commentsKey)
+                if (concOpt) commentsLabel = concOpt.label
               }
             }
           }
@@ -112,10 +112,10 @@ export default {
             label: field.label,
             categoryLabel: categoryLabel,
             extractedDataLabel: extractedDataLabel,
-            concernsLabel: concernsLabel,
+            commentsLabel: commentsLabel,
             locked: isCamelot,
             isCamelot: isCamelot,
-            hasConcerns: false // ManageColumnsButton uses with-values="false" so we don't need the concerns textarea here
+            hasComments: false // ManageColumnsButton uses with-values="false" so we don't need the comments textarea here
           })
         }
       }
@@ -151,9 +151,9 @@ export default {
           const extDataField = this.charsData.fields.find(f => f.key === col.key)
           if (extDataField) newFields.push(extDataField)
           
-          const concernsKey = col.key.replace('_extractedData', '_concerns')
-          const concernsField = this.charsData.fields.find(f => f.key === concernsKey)
-          if (concernsField) newFields.push(concernsField)
+          const commentsKey = col.key.replace('_extractedData', '_comments')
+          const commentsField = this.charsData.fields.find(f => f.key === commentsKey)
+          if (commentsField) newFields.push(commentsField)
         } else {
           newFields.push({
             key: col.key || `column_${Date.now()}_${Math.random().toString().replace('.', '')}`,

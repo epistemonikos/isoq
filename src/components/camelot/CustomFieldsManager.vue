@@ -91,12 +91,12 @@
                   @input="emitChange">
                 </b-form-textarea>
                 
-                <!-- Concerns Input (Optional for Camelot pairs) -->
-                <template v-if="field.hasConcerns">
-                  <label :for="idPrefix + 'concerns-' + index" class="mt-2">{{ field.concernsLabel || $t('camelot.step_three.concerns_label') || 'Concerns' }}</label>
+                <!-- Comments Input (Optional for Camelot pairs) -->
+                <template v-if="field.hasComments">
+                  <label :for="idPrefix + 'comments-' + index" class="mt-2">{{ field.commentsLabel || $t('camelot.step_three.concerns_label') || 'Comments' }}</label>
                   <b-form-textarea
-                    :id="idPrefix + 'concerns-' + index"
-                    v-model="field.concernsValue"
+                    :id="idPrefix + 'comments-' + index"
+                    v-model="field.commentsValue"
                     :placeholder="$t('camelot.step_three.modal.field_content_placeholder')"
                     rows="2"
                     @input="emitChange">

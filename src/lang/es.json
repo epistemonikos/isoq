@@ -1190,7 +1190,7 @@
       },
       "common": {
         "extracted_data": "Datos extraídos",
-        "concerns": "Preocupaciones",
+        "concerns": "Comentarios",
         "fit_assessment": "Evaluación de ajuste"
       },
       "inline_edit": {
@@ -1209,7 +1209,7 @@
       },
       "camelot_mixin": {
         "extracted_data": "Datos extraídos",
-        "concerns": "Preocupaciones",
+        "concerns": "Comentarios",
         "meta_domain_1": "Objetivo de la investigación y preguntas",
         "meta_domain_2": "Partes interesadas",
         "meta_domain_3": "Investigadores",
@@ -1261,8 +1261,8 @@
       "headers": {
         "authors": "Autor(es), Año",
         "overall_assessment": "Evaluación general",
-        "research_design": "Diseño de investigación",
-        "research_conduct": "Conducta de investigación",
+        "research_design": "Dominios de diseño de investigación",
+        "research_conduct": "Dominios de conducta de investigación",
         "research": "Investigación",
         "stakeholders": "Partes interesadas",
         "researchers": "Investigadores",

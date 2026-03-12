@@ -1190,7 +1190,7 @@
       },
       "common": {
         "extracted_data": "Extracted data",
-        "concerns": "Concerns",
+        "concerns": "Comments",
         "fit_assessment": "Fit assessment"
       },
       "inline_edit": {
@@ -1209,7 +1209,7 @@
       },
       "camelot_mixin": {
         "extracted_data": "Extracted data",
-        "concerns": "Concerns",
+        "concerns": "Comments",
         "meta_domain_1": "Research aim & question(s)",
         "meta_domain_2": "Stakeholders",
         "meta_domain_3": "Researchers",
@@ -1261,8 +1261,8 @@
       "headers": {
         "authors": "Author(s), Year",
         "overall_assessment": "Overall assessment",
-        "research_design": "Research design",
-        "research_conduct": "Research conduct",
+        "research_design": "Research design domains",
+        "research_conduct": "Research conduct domains",
         "research": "Research",
         "stakeholders": "Stakeholders",
         "researchers": "Researchers",

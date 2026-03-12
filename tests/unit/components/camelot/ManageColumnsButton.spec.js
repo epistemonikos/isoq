@@ -18,7 +18,7 @@ describe('ManageColumnsButton.vue', () => {
       { key: 'authors', label: 'Authors' },
       { key: 'column_1', label: 'Custom Field 1' },
       { key: 'design_extractedData', label: 'Study Design' },
-      { key: 'design_concerns', label: 'Concerns' }
+      { key: 'design_comments', label: 'Concerns' }
     ],
     items: []
   }
@@ -89,7 +89,7 @@ describe('ManageColumnsButton.vue', () => {
         fields: [
           { key: 'authors', label: 'Authors' }, // System field
           { key: 'design_extractedData', label: 'Study Design' }, // Camelot parent
-          { key: 'design_concerns', label: 'Concerns' }, // Camelot pair automatically included
+          { key: 'design_comments', label: 'Concerns' }, // Camelot pair automatically included
           { key: 'column_1', label: 'Updated Label' } // Custom field
         ]
       })

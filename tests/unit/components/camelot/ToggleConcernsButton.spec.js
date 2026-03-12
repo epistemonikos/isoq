@@ -11,7 +11,7 @@ describe('ToggleConcernsButton.vue', () => {
         key: 'cat1',
         options: [
           { key: 'cat1_extractedData' },
-          { key: 'cat1_concerns' }
+          { key: 'cat1_comments' }
         ]
       }
     ]
@@ -50,18 +50,18 @@ describe('ToggleConcernsButton.vue', () => {
     expect(wrapper.emitted('input')[0]).toEqual([true])
     
     expect(wrapper.emitted('update:visibleColumnKeys')).toBeTruthy()
-    expect(wrapper.emitted('update:visibleColumnKeys')[0][0]).toContain('cat1_concerns')
+    expect(wrapper.emitted('update:visibleColumnKeys')[0][0]).toContain('cat1_comments')
   })
 
   it('removes concern keys when toggled OFF', async () => {
     await wrapper.setProps({
       value: true,
-      visibleColumnKeys: ['cat1_extractedData', 'cat1_concerns']
+      visibleColumnKeys: ['cat1_extractedData', 'cat1_comments']
     })
     
     wrapper.vm.toggleConcerns()
     
     expect(wrapper.emitted('input')[0]).toEqual([false])
-    expect(wrapper.emitted('update:visibleColumnKeys')[0][0]).not.toContain('cat1_concerns')
+    expect(wrapper.emitted('update:visibleColumnKeys')[0][0]).not.toContain('cat1_comments')
   })
 })

@@ -19,7 +19,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
       {
         ref_id: 'ref1',
         strategy_extractedData: 'Old data',
-        strategy_concerns: 'Old concerns'
+        strategy_comments: 'Old concerns'
       }
     ]
   })
@@ -77,7 +77,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
           expect.objectContaining({
             ref_id: 'ref1',
             strategy_extractedData: 'New extracted data',
-            strategy_concerns: 'Old concerns'
+            strategy_comments: 'Old concerns'
           })
         ])
       })
@@ -106,7 +106,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
           expect.objectContaining({
             ref_id: 'ref1',
             strategy_extractedData: 'Old data',
-            strategy_concerns: 'New concerns'
+            strategy_comments: 'New concerns'
           })
         ])
       })

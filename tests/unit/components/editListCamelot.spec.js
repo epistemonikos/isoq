@@ -340,7 +340,7 @@ describe('Camelot Warning Logic Tests', () => {
               data_extractedData: 'data',
               analysis_extractedData: 'data',
               presentation_extractedData: 'data',
-              research_concerns: '' // EMPTY CONCERN - Should be allowed
+              research_comments: '' // EMPTY CONCERN - Should be allowed
             }]
           }],
           assessments: [],
@@ -352,7 +352,7 @@ describe('Camelot Warning Logic Tests', () => {
       expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
     })
 
-    it('should NOT show warning for CharsOfStudies in Camelot when some _concerns fields are empty but all _extractedData are complete', () => {
+    it('should NOT show warning for CharsOfStudies in Camelot when some _comments fields are empty but all _extractedData are complete', () => {
       const wrapper = shallowMount(editList, {
         localVue, store, mocks,
         stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
@@ -380,8 +380,8 @@ describe('Camelot Warning Logic Tests', () => {
               data_extractedData: 'data',
               analysis_extractedData: 'data',
               presentation_extractedData: 'data',
-              research_concerns: '', // EMPTY CONCERN
-              stakeholders_concerns: '' // EMPTY CONCERN
+              research_comments: '', // EMPTY CONCERN
+              stakeholders_comments: '' // EMPTY CONCERN
             }]
           }],
           assessments: [],

@@ -17,7 +17,7 @@
         />
         <ToggleConcernsButton
           class="ml-2"
-          v-model="showConcerns"
+          v-model="showComments"
           :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys"
           :camelot="camelot"
@@ -173,8 +173,8 @@ export default {
         }
       }
     },
-    // Watch showConcerns to ensure new columns are visible
-    showConcerns (newVal) {
+    // Watch showComments to ensure new columns are visible
+    showComments (newVal) {
       if (newVal) {
         // Validation logic is now handled in toggleConcerns to ensure immediate update
         this.$nextTick(() => {
@@ -184,8 +184,8 @@ export default {
     },
     visibleColumnKeys: {
       handler (newVal, oldVal) {
-        // If showConcerns is active, we should ensure concern columns follow their parents
-        if (this.showConcerns && oldVal) {
+        // If showComments is active, we should ensure concern columns follow their parents
+        if (this.showComments && oldVal) {
           const added = newVal.filter(k => !oldVal.includes(k))
           const removed = oldVal.filter(k => !newVal.includes(k))
 
@@ -194,7 +194,7 @@ export default {
 
           added.forEach(k => {
             if (k.endsWith('_extractedData')) {
-              const concernKey = k.replace('_extractedData', '_concerns')
+              const concernKey = k.replace('_extractedData', '_comments')
               if (!updatedKeys.includes(concernKey)) {
                 updatedKeys.push(concernKey)
                 changed = true
@@ -204,7 +204,7 @@ export default {
 
           removed.forEach(k => {
             if (k.endsWith('_extractedData')) {
-              const concernKey = k.replace('_extractedData', '_concerns')
+              const concernKey = k.replace('_extractedData', '_comments')
               const idx = updatedKeys.indexOf(concernKey)
               if (idx !== -1) {
                 updatedKeys.splice(idx, 1)
@@ -265,7 +265,7 @@ export default {
       },
       isLoading: true,
       isFirstLoad: true,
-      showConcerns: false,
+      showComments: false,
       visibleColumnKeys: [] // Keys of currently visible columns
     }
   },
@@ -305,8 +305,8 @@ export default {
         this.charsData.fields.forEach(field => {
           if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
 
-          if (field.key.endsWith('_concerns')) {
-            if (this.showConcerns) {
+          if (field.key.endsWith('_comments')) {
+            if (this.showComments) {
               let label = field.label
               if (this.camelot && Array.isArray(this.camelot.categories)) {
                 for (const cat of this.camelot.categories) {
@@ -335,10 +335,11 @@ export default {
         })
       }
 
-      const actionFields = this.fields.filter(f => f.key === 'edit' || f.key === 'actions')
+      const editFields = this.fields.filter(f => f.key === 'edit')
+      const actionFields = this.fields.filter(f => f.key === 'actions')
 
       // Return the combination maintaining the custom order
-      return [...baseFields, ...orderedFields, ...actionFields]
+      return [...baseFields, ...editFields, ...orderedFields, ...actionFields]
     },
     filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)
@@ -346,7 +347,7 @@ export default {
         f.key !== 'authors' &&
         f.key !== 'actions' &&
         f.key !== 'edit' &&
-        !f.key.endsWith('_concerns')
+        !f.key.endsWith('_comments')
       )
     },
     tableFields () {
@@ -355,8 +356,8 @@ export default {
         if (f.key === 'authors' || f.key === 'actions' || f.key === 'edit') return true
 
         // Ensure concern columns only show if their parent extracted data column is visible
-        if (f.key.endsWith('_concerns')) {
-          const parentKey = f.key.replace('_concerns', '_extractedData')
+        if (f.key.endsWith('_comments')) {
+          const parentKey = f.key.replace('_comments', '_extractedData')
           return this.visibleColumnKeys.includes(f.key) && this.visibleColumnKeys.includes(parentKey)
         }
 
@@ -366,7 +367,7 @@ export default {
     hasVisibleCamelotFields () {
       if (!this.camelot || !this.camelot.categories) return false
       return this.camelot.categories.some(cat => {
-        const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_concerns'))
+        const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_comments'))
         return extractedOpt && this.visibleColumnKeys.includes(extractedOpt.key)
       })
     }
@@ -422,9 +423,9 @@ export default {
             // Save received data
             this.charsData = response.data[0] || { fields: [], items: [] }
           } else {
-            // If there's no data, initialize with empty structure
+            // If there's no data, initialize with empty structure and default Camelot fields if available
             this.charsData = {
-              fields: [],
+              fields: this.camelot && this.camelot.fields ? [...this.camelot.fields] : [],
               items: [],
               organization: this.$route.params.org_id,
               project_id: this.$route.params.id

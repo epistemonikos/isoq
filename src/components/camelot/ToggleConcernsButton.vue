@@ -40,30 +40,30 @@ export default {
       let newVisibleKeys = [...this.visibleColumnKeys]
       
       if (newValue) {
-        // Add concern keys only for CAMELOT fields that are currently visible
-        const concernKeys = []
+        // Add comment keys only for CAMELOT fields that are currently visible
+        const commentKeys = []
         if (this.camelot && this.camelot.categories) {
           this.camelot.categories.forEach(cat => {
             if (cat.options) {
-              const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_concerns'))
-              const concernOpt = cat.options.find(opt => opt.key && opt.key.endsWith('_concerns'))
+              const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_comments'))
+              const commentOpt = cat.options.find(opt => opt.key && opt.key.endsWith('_comments'))
               
-              if (extractedOpt && concernOpt && newVisibleKeys.includes(extractedOpt.key)) {
-                concernKeys.push(concernOpt.key)
+              if (extractedOpt && commentOpt && newVisibleKeys.includes(extractedOpt.key)) {
+                commentKeys.push(commentOpt.key)
               }
             }
           })
         }
         
         // Merge unique keys
-        concernKeys.forEach(k => {
+        commentKeys.forEach(k => {
           if (!newVisibleKeys.includes(k)) {
             newVisibleKeys.push(k)
           }
         })
       } else {
-        // Remove all concern keys when hiding
-        newVisibleKeys = newVisibleKeys.filter(k => !k.endsWith('_concerns'))
+        // Remove all comment keys when hiding
+        newVisibleKeys = newVisibleKeys.filter(k => !k.endsWith('_comments'))
       }
       
       this.$emit('update:visibleColumnKeys', newVisibleKeys)

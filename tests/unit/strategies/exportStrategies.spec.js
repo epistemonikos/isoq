@@ -255,7 +255,7 @@ describe('ExportStrategies', () => {
             { key: 'column_1', label: 'Custom 1' }
           ],
           items: [
-            { ref_id: 1, authors: 'Author A', year: '2021', column_1: 'Val 1', research_concerns: 'A' }
+            { ref_id: 1, authors: 'Author A', year: '2021', column_1: 'Val 1', research_comments: 'A' }
           ]
         }
         mockData.characteristicStudies = charData

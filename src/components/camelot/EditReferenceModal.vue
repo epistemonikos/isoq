@@ -216,8 +216,8 @@ export default {
       this.charsData.fields.forEach(field => {
         // Skip system fields
         if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
-        // Skip concerns as they are bundled with extractedData
-        if (field.key.endsWith('_concerns')) return
+        // Skip comments as they are bundled with extractedData
+        if (field.key.endsWith('_comments')) return
 
         const isCamelot = field.key.endsWith('_extractedData')
         
@@ -227,23 +227,23 @@ export default {
           key: field.key,
           locked: isCamelot,
           isCamelot: isCamelot,
-          hasConcerns: false,
-          concernsValue: '',
-          concernsKey: '',
+          hasComments: false,
+          commentsValue: '',
+          commentsKey: '',
           categoryLabel: '',
           extractedDataLabel: '',
-          concernsLabel: ''
+          commentsLabel: ''
         }
 
         if (isCamelot) {
-          const concernsKey = field.key.replace('_extractedData', '_concerns')
-          customFieldObj.hasConcerns = true
-          customFieldObj.concernsKey = concernsKey
-          customFieldObj.concernsValue = (itemValues && itemValues[concernsKey]) || ''
+          const commentsKey = field.key.replace('_extractedData', '_comments')
+          customFieldObj.hasComments = true
+          customFieldObj.commentsKey = commentsKey
+          customFieldObj.commentsValue = (itemValues && itemValues[commentsKey]) || ''
           
           let categoryLabel = field.label
           let extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
-          let concernsLabel = this.$t('camelot.step_three.concerns_label') || 'Concerns'
+          let commentsLabel = this.$t('camelot.step_three.concerns_label') || 'Comments'
           
           if (this.camelot && this.camelot.categories) {
             const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
@@ -252,14 +252,14 @@ export default {
               const extOpt = categoryMatch.options.find(o => o.key === field.key)
               if (extOpt) extractedDataLabel = extOpt.label
               
-              const concOpt = categoryMatch.options.find(o => o.key === concernsKey)
-              if (concOpt) concernsLabel = concOpt.label
+              const concOpt = categoryMatch.options.find(o => o.key === commentsKey)
+              if (concOpt) commentsLabel = concOpt.label
             }
           }
           
           customFieldObj.categoryLabel = categoryLabel
           customFieldObj.extractedDataLabel = extractedDataLabel
-          customFieldObj.concernsLabel = concernsLabel
+          customFieldObj.commentsLabel = commentsLabel
         }
         
         parsedFields.push(customFieldObj)
@@ -275,7 +275,7 @@ export default {
               key: key,
               locked: false,
               isCamelot: false,
-              hasConcerns: false
+              hasComments: false
             })
           }
         })
@@ -323,13 +323,13 @@ export default {
           item[fieldKey] = field.value || ''
           newFieldsArray.push({ key: fieldKey, label: field.label })
 
-          if (field.hasConcerns) {
-            item[field.concernsKey] = field.concernsValue || ''
-            const existingConcernsField = this.charsData.fields.find(f => f.key === field.concernsKey)
-            if (existingConcernsField) {
-              newFieldsArray.push(existingConcernsField)
+          if (field.hasComments) {
+            item[field.commentsKey] = field.commentsValue || ''
+            const existingCommentsField = this.charsData.fields.find(f => f.key === field.commentsKey)
+            if (existingCommentsField) {
+              newFieldsArray.push(existingCommentsField)
             } else {
-              newFieldsArray.push({ key: field.concernsKey, label: this.$t('camelot.step_three.concerns_label') || 'Concerns' })
+              newFieldsArray.push({ key: field.commentsKey, label: this.$t('camelot.step_three.concerns_label') || 'Comments' })
             }
           }
         }
