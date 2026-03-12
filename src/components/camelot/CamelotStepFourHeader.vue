@@ -52,7 +52,7 @@
             <span class="small font-weight-bold">{{ response.text }}</span>
           </div>
           <div class="d-flex align-items-center">
-            <div class="assessment-circle circle-not-completed mr-2" style="border-color: #B3B3B3; width: '16px', height: '16px'"></div>
+            <div class="assessment-circle circle-not-completed mr-2" style="border-color: #B3B3B3; width: '16px'; height: '16px'"></div>
             <span class="small font-weight-bold">{{ $t('camelot.step_four.legend.not_completed') }}</span>
           </div>
         </div>
