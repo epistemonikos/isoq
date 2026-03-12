@@ -1157,8 +1157,8 @@
       "show_details_across_studies": "Show details across studies",
       "description": "CAMELOT is the default methodological assessments tool in iSoQ. To opt-out of using the CAMELOT tool return to Project Properties.<br/><br/>For each included study, assess the fit between CAMELOT domains (labelled 1-9 in the table below). Then make an overall assessment (labelled as OA in the table below)<br/><br/>This table will be used later on for the following purposes:<ul><li>Generate a CAMELOT assessments table to include in your review</li><li>Serve as reference material for making GRADE-CERQual assessments for each review finding (Methodological Limitations component). <a href='https://www.cerqual.org/' target='_blank'>Learn more</a></li></ul>",
       "tabs": {
-        "fit_meta_design": "Fit between Meta domains and Research design",
-        "fit_meta_conduct": "Fit between Meta domains and Research conduct",
+        "fit_meta_design": "Fit between Research design and Meta domains",
+        "fit_meta_conduct": "Fit between Research conduct and Meta domains",
         "fit_design_conduct": "Fit between Research design and Research conduct",
         "overall": "Overall assessment"
       },

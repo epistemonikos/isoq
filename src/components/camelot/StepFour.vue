@@ -356,7 +356,8 @@ export default {
       modal: {
         stage: 0,
         index: 0,
-        tab: 0
+        tab: 0,
+        faLabel: null
       },
       meta: [
         {
@@ -447,7 +448,8 @@ export default {
         'fit_design_conduct',
         'overall'
       ]
-      return this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
+      const title = this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
+      return this.modal.faLabel ? `${this.modal.faLabel} ${title}` : title
     }
   },
   watch: {
@@ -563,18 +565,19 @@ export default {
           console.error('Error fetching characteristics:', error)
         })
     },
-    openModal: function (stage = 0, data, tab = 0) {
+    openModal: function (stage = 0, data, tab = 0, faLabel = null) {
       this.getCharacteristics()
       this.modal.stage = stage
       this.modal.index = data.index
       this.modal.tab = tab
+      this.modal.faLabel = faLabel
       this.selectedMeta = tab
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
       this.$bvModal.show('modal-1')
     },
-    onOpenModal({ stage, data, tab }) {
-      this.openModal(stage, data, tab)
+    onOpenModal({ stage, data, tab, faLabel = null }) {
+      this.openModal(stage, data, tab, faLabel)
     },
     goToStage (stage) {
       this.modal.stage = stage
