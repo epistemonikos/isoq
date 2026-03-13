@@ -182,14 +182,15 @@
               <b-row class="mt-4">
                 <!-- Columna 1: Fit Design vs Meta Resumen -->
                 <b-col cols="3" class="modal-column-scroll">
-                  <div class="column-header mb-3">
+                  <!-- <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
-                  </div>
+                  </div> -->
                   <div>
                     <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card" header-tag="header">
                       <template #header>
                         <div class="d-flex justify-content-between align-items-end">
-                          <h4 class="mb-0 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
+                          <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 1">{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</b-tooltip>
                         </div>
                       </template>
                       <div class="field-section" v-if="assessments.items.length">
@@ -205,14 +206,15 @@
 
                 <!-- Columna 2: Fit Conduct vs Meta Resumen -->
                 <b-col cols="3" class="modal-column-scroll">
-                  <div class="column-header mb-3">
+                  <!-- <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
-                  </div>
+                  </div> -->
                   <div>
                     <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card" header-tag="header">
                       <template #header>
                         <div class="d-flex justify-content-between align-items-end">
-                          <h4 class="mb-0 font-weight-bold">{{ dIndex + 1 }} - {{ domain.label }}</h4>
+                          <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 5">{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</b-tooltip>
                         </div>
                       </template>
                       <div class="field-section" v-if="assessments.items.length">
@@ -230,8 +232,9 @@
                 <b-col cols="3" class="modal-column-scroll">
                   <b-card  class="mb-3 item-card" header-tag="header">
                     <template #header>
-                      <div class="column-header mb-3">
-                        <h3>{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</h3>
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 id="fa9" class="mb-0">FA9</h4>
+                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</b-tooltip>
                       </div>
                     </template>
                     <div class="p-1">
