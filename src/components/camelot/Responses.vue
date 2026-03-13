@@ -6,6 +6,10 @@
         <strong>{{ getText() }}</strong>
       </div>
     </div>
+    <div v-else class="d-flex flex-row justify-content-start align-items-center">
+      <div class="assessment-circle circle-not-completed"></div>
+      <div class="ml-2 text-muted">{{ $t('camelot.step_four.legend.not_completed') }}</div>
+    </div>
     <p v-if="text"><strong>{{ $t('camelot.responses.explanation') }}:</strong> {{ text }}</p>
   </div>
 </template>
@@ -156,5 +160,15 @@ export default {
 .circle {
   width: 20px;
   height: 20px;
+}
+.assessment-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.circle-not-completed {
+  border: 2px dashed #B3B3B3;
+  background-color: transparent;
 }
 </style>
