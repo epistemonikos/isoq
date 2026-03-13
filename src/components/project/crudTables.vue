@@ -1185,18 +1185,7 @@ export default {
         })
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return this.$t('references.author_not_found')
-      }
+      return Commmons.getAuthorsFormat(authors, pubYear)
     },
     scrollToSection (sectionId) {
       const element = document.getElementById(sectionId)

@@ -23,13 +23,16 @@ export default class Commons {
     let result = ''
     const semicolon = hasSemicolon ? '; ' : ''
     if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-      if (reference.authors.length) {
+      if (typeof reference.authors === 'string') {
+        return reference.authors
+      }
+      if (Array.isArray(reference.authors) && reference.authors.length) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + i18n.t('common.and') + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
+          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.and') + reference.authors[1].split(',').map(s => s.trim()).join(' ') + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',')[0] + i18n.t('common.et_al') + reference.publication_year + semicolon
+          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.et_al') + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -42,14 +45,17 @@ export default class Commons {
   }
 
   static getAuthorsFormat (authors = [], pubYear = '') {
-    if (authors.length) {
+    if (typeof authors === 'string') {
+      return authors
+    }
+    if (Array.isArray(authors) && authors.length) {
       const nroAuthors = authors.length
       if (nroAuthors === 1) {
-        return authors[0].split(',')[0] + ' ' + pubYear
+        return authors[0].split(',').map(s => s.trim()).join(' ') + ' ' + pubYear
       } else if (nroAuthors === 2) {
-        return authors[0].split(',')[0] + i18n.t('common.and') + authors[1].split(',')[0] + ' ' + pubYear
+        return authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.and') + authors[1].split(',').map(s => s.trim()).join(' ') + ' ' + pubYear
       } else {
-        return authors[0].split(',')[0] + i18n.t('common.et_al') + pubYear
+        return authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.et_al') + pubYear
       }
     } else {
       return i18n.t('common.author_not_found')

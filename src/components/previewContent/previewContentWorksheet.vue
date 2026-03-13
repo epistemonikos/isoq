@@ -759,25 +759,7 @@ export default {
       return ''
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = 'no autho(s)'
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-        }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
-      } else {
-        return result
-      }
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     print: function () {
       window.print()

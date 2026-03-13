@@ -279,9 +279,10 @@ export default {
           charItem = this.charsData.items.find(item => item.ref_id === ref.id)
         }
 
-        // If there is data, merge it with the reference
+        // If there is data, merge it with the reference, but preserve the authors array
+        // to ensure formatAuthors can always re-format correctly with the new logic
         if (charItem) {
-          return { ...ref, ...charItem }
+          return { ...ref, ...charItem, authors: ref.authors }
         }
 
         // If not, return the reference as is

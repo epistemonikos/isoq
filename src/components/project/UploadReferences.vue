@@ -266,6 +266,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -376,15 +377,7 @@ export default {
   },
   methods: {
     formatAuthors (authors) {
-      if (!authors || !authors.length) return this.$t('references.author_not_found')
-
-      if (authors.length === 1) {
-        return authors[0].split(',')[0]
-      } else if (authors.length === 2) {
-        return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0]
-      } else {
-        return authors[0].split(',')[0] + ' et al.'
-      }
+      return Commons.getAuthorsFormat(authors)
     },
     storeProgress () {
       const progress = {

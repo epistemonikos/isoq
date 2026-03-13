@@ -95,6 +95,7 @@
 
 <script>
 import axios from 'axios'
+import Commons from '@/utils/commons'
 import { displayExplanation } from '../utils/commons'
 import PublishModal from '@/components/project/PublishModal'
 import { getWordExportService } from '@/services/wordExportService'
@@ -318,18 +319,7 @@ export default {
       return authors
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
-      if (authors.length) {
-        const nroAuthors = authors.length
-        if (nroAuthors === 1) {
-          return authors[0].split(',')[0] + ' ' + pubYear
-        } else if (nroAuthors === 2) {
-          return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0] + ' ' + pubYear
-        } else {
-          return authors[0].split(',')[0] + ' et al. ' + ' ' + pubYear
-        }
-      } else {
-        return 'author(s) not found'
-      }
+      return Commons.getAuthorsFormat(authors, pubYear)
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)

@@ -21,35 +21,35 @@ describe('Commons.parseReference formatting', () => {
   const ref3 = { authors: ['Doe, J.', 'Smith, A.', 'Brown, L.'], publication_year: '2022', title: 'Title 3' }
 
   describe('Scenario 1: Single Author', () => {
-    it('returns "Doe 2020; " when onlyAuthors is true', () => {
+    it('returns "Doe J. 2020; " when onlyAuthors is true', () => {
       const result = Commons.parseReference(ref1, true)
-      expect(result).toBe('Doe 2020; ')
+      expect(result).toBe('Doe J. 2020; ')
     })
 
-    it('returns "Doe 2020; Title 1" when onlyAuthors is false', () => {
+    it('returns "Doe J. 2020; Title 1" when onlyAuthors is false', () => {
       const result = Commons.parseReference(ref1, false)
-      expect(result).toBe('Doe 2020; Title 1')
+      expect(result).toBe('Doe J. 2020; Title 1')
     })
   })
 
   describe('Scenario 2: Two Authors', () => {
-    it('returns "Doe and Smith 2021; " when onlyAuthors is true', () => {
+    it('returns "Doe J. and Smith A. 2021; " when onlyAuthors is true', () => {
       const result = Commons.parseReference(ref2, true)
-      expect(result).toBe('Doe and Smith 2021; ')
+      expect(result).toBe('Doe J. and Smith A. 2021; ')
     })
   })
 
   describe('Scenario 3: More than Two Authors', () => {
-    it('returns "Doe et al. 2022; " when onlyAuthors is true', () => {
+    it('returns "Doe J. et al. 2022; " when onlyAuthors is true', () => {
       const result = Commons.parseReference(ref3, true)
-      expect(result).toBe('Doe et al. 2022; ')
+      expect(result).toBe('Doe J. et al. 2022; ')
     })
   })
 
   describe('Global Options', () => {
     it('respects hasSemicolon = false', () => {
       const result = Commons.parseReference(ref1, true, false)
-      expect(result).toBe('Doe 2020')
+      expect(result).toBe('Doe J. 2020')
     })
 
     it('handles empty authors array', () => {

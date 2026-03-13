@@ -4,7 +4,7 @@
 
     <camelot-step-four-table
       :fields="ui.fields"
-      :items="assessments.items"
+      :items="tableItems"
       :responses="ui.responses"
       @open-modal="onOpenModal"
     />
@@ -444,6 +444,21 @@ export default {
     }
   },
   computed: {
+    tableItems () {
+      if (!this.assessments.items) return []
+      return this.assessments.items.map(item => {
+        const ref = this.references.find(r => r.id === item.ref_id)
+        if (ref) {
+          return {
+            ...ref,
+            ...item,
+            // Force re-formatting authors for consistency with Step 3 and the fix
+            authors: Commons.parseReference(ref, true, false)
+          }
+        }
+        return item
+      })
+    },
     modalSubtitle () {
       const stages = [
         'fit_meta_design',
