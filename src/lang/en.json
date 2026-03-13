@@ -1157,18 +1157,18 @@
       "show_details_across_studies": "Show details across studies",
       "description": "CAMELOT is the default methodological assessments tool in iSoQ. To opt-out of using the CAMELOT tool return to Project Properties.<br/><br/>For each included study, assess the fit between CAMELOT domains (labelled 1-9 in the table below). Then make an overall assessment (labelled as OA in the table below)<br/><br/>This table will be used later on for the following purposes:<ul><li>Generate a CAMELOT assessments table to include in your review</li><li>Serve as reference material for making GRADE-CERQual assessments for each review finding (Methodological Limitations component). <a href='https://www.cerqual.org/' target='_blank'>Learn more</a></li></ul>",
       "tabs": {
-        "fit_meta_design": "Fit between Research design and Meta domains",
-        "fit_meta_conduct": "Fit between Research conduct and Meta domains",
-        "fit_design_conduct": "Fit between Research design and Research conduct",
+        "fit_meta_design": "Fit between Research design domains and Meta domains",
+        "fit_meta_conduct": "Fit between Research conduct domains and Meta domains",
+        "fit_design_conduct": "Fit between Research design domains and Research conduct domains",
         "overall": "Overall assessment"
       },
       "sections": {
         "meta_domains": "Meta domains",
         "research_design": "Research design domains",
         "research_conduct": "Research conduct domains",
-        "fit_between_design_meta": "Fit between Research design and each Meta domain",
-        "fit_between_conduct_meta": "Fit between Research conduct and each Meta domain",
-        "fit_between_design_conduct": "Fit between Research design and Research conduct domains"
+        "fit_between_design_meta": "Fit between Research design domains and each Meta domain",
+        "fit_between_conduct_meta": "Fit between Research conduct domains and each Meta domain",
+        "fit_between_design_conduct": "Fit between Research design domains and Research conduct domains"
       },
       "meta_items": {
         "research": "Research",
@@ -1242,9 +1242,9 @@
       "save_button": "save",
       "overall_assessment": "Overall assessment",
       "categories": {
-        "fit_meta_design": "Fit between Meta domains and Research design",
-        "fit_meta_conduct": "Fit between Meta domains and Research conduct",
-        "fit_design_conduct": "Fit between Research design and Research conduct"
+        "fit_meta_design": "Fit between Meta domains and Research design domains",
+        "fit_meta_conduct": "Fit between Meta domains and Research conduct domains",
+        "fit_design_conduct": "Fit between Research design domains and Research conduct domains"
       },
       "descriptions": {
         "meta_research_vs_design": "Meta domain <b>Research</b> against <b>Research design domains</b>",

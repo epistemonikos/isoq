@@ -1157,18 +1157,18 @@
       "show_details_across_studies": "Mostrar detalhes dos estudos",
       "description": "CAMELOT é a ferramenta de avaliação metodológica padrão no iSoQ. Para optar por não usar a ferramenta CAMELOT, retorne às Propriedades do Projeto.<br/><br/>Para cada estudo incluído, avalie o ajuste entre os domínios CAMELOT (rotulados de 1 a 9 na tabela abaixo). Em seguida, faça uma avaliação geral (rotulada como OA na tabela abaixo)<br/><br/>Esta tabela será utilizada posteriormente para os seguintes fins:<ul><li>Gerar uma tabela de avaliações CAMELOT para incluir na sua revisão</li><li>Servir como material de referência para realizar avaliações GRADE-CERQual para cada descoberta de revisão (componente de Limitações Metodológicas). <a href='https://www.cerqual.org/' target='_blank'>Saiba mais</a></li></ul>",
       "tabs": {
-        "fit_meta_design": "Ajuste entre Desenho de pesquisa e Domínios Meta",
-        "fit_meta_conduct": "Ajuste entre Condução de pesquisa e Domínios Meta",
-        "fit_design_conduct": "Ajuste entre Desenho de pesquisa e Condução de pesquisa",
+        "fit_meta_design": "Ajuste entre Domínios de desenho de pesquisa e Domínios Meta",
+        "fit_meta_conduct": "Ajuste entre Domínios de condução de pesquisa e Domínios Meta",
+        "fit_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa",
         "overall": "Avaliação geral"
       },
       "sections": {
         "meta_domains": "Domínios Meta",
         "research_design": "Domínios de desenho de pesquisa",
         "research_conduct": "Domínios de condução de pesquisa",
-        "fit_between_design_meta": "Ajuste entre Desenho de pesquisa e cada Domínio Meta",
-        "fit_between_conduct_meta": "Ajuste entre Condução de pesquisa e cada Domínio Meta",
-        "fit_between_design_conduct": "Ajuste entre Desenho de pesquisa e domínios de Condução de pesquisa"
+        "fit_between_design_meta": "Ajuste entre Domínios de desenho de pesquisa e cada Domínio Meta",
+        "fit_between_conduct_meta": "Ajuste entre Domínios de condução de pesquisa e cada Domínio Meta",
+        "fit_between_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa"
       },
       "meta_items": {
         "research": "Pesquisa",
@@ -1242,9 +1242,9 @@
       "save_button": "Salvar",
       "overall_assessment": "Avaliação geral",
       "categories": {
-        "fit_meta_design": "Ajuste entre Domínios Meta e Desenho de pesquisa",
-        "fit_meta_conduct": "Ajuste entre Domínios Meta e Condução de pesquisa",
-        "fit_design_conduct": "Ajuste entre Desenho de pesquisa e Condução de pesquisa"
+        "fit_meta_design": "Ajuste entre Domínios Meta e Domínios de desenho de pesquisa",
+        "fit_meta_conduct": "Ajuste entre Domínios Meta e Domínios de condução de pesquisa",
+        "fit_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa"
       },
       "descriptions": {
         "meta_research_vs_design": "Domínio Meta <b>Pesquisa</b> contra <b>Domínios de desenho de pesquisa</b>",
@@ -1262,8 +1262,8 @@
       "headers": {
         "authors": "Autor(es), Ano",
         "overall_assessment": "Avaliação geral",
-        "research_design": "Desenho de pesquisa",
-        "research_conduct": "Condução de pesquisa",
+        "research_design": "Domínios de desenho de pesquisa",
+        "research_conduct": "Domínios de condução de pesquisa",
         "research": "Pesquisa",
         "stakeholders": "Partes interessadas",
         "researchers": "Pesquisadores",
