@@ -660,7 +660,7 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
               const items = JSON.parse(JSON.stringify(this.dataTable.items))
 
-              const _items = items.sort((a, b) => {
+              const _items = items.filter(item => item.ref_id && item.authors).sort((a, b) => {
                 const authorsA = (a.authors || '').toString()
                 const authorsB = (b.authors || '').toString()
                 return authorsA.localeCompare(authorsB)
@@ -831,8 +831,10 @@ export default {
         allowedKeys.push(...camelotKeys)
       }
 
-      return items.map(item => {
-        const cleanedItem = {}
+      return items
+        .filter(item => item.ref_id && item.authors)
+        .map(item => {
+          const cleanedItem = {}
         for (const key of allowedKeys) {
           cleanedItem[key] = Object.prototype.hasOwnProperty.call(item, key) ? item[key] : ''
         }

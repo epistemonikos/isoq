@@ -164,4 +164,29 @@ describe('crudTables.vue', () => {
     expect(sentItem.research_extractedData).toBe('camelot data')
     expect(sentItem.orphan_col).toBeUndefined()
   })
+
+  it('should filter out items without ref_id or empty authors in getData', async () => {
+    const mockData = [{
+      id: 'table-1',
+      fields: [
+        { key: 'ref_id', label: 'ID' },
+        { key: 'authors', label: 'Authors' },
+        { key: 'column_0', label: 'Col 0' }
+      ],
+      items: [
+        { ref_id: 'ref1', authors: 'Author 1', column_0: 'data 1' },
+        { ref_id: '', authors: 'Author 2', column_0: 'data 2' }, // Empty ref_id
+        { ref_id: 'ref3', authors: '', column_0: 'data 3' }, // Empty authors
+        { ref_id: null, authors: 'Author 4', column_0: 'data 4' }, // Null ref_id
+        { column_0: 'data 5' } // Missing ref_id and authors
+      ]
+    }]
+
+    Api.get.mockResolvedValue({ data: mockData })
+
+    await wrapper.vm.getData()
+
+    expect(wrapper.vm.dataTable.items).toHaveLength(1)
+    expect(wrapper.vm.dataTable.items[0].ref_id).toBe('ref1')
+  })
 })
