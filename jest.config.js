@@ -9,8 +9,12 @@ module.exports = {
     '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/tests/unit/__mocks__/fileMock.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@/utils/api$': '<rootDir>/tests/unit/__mocks__/Api.js',
-    '^@/utils/Api$': '<rootDir>/tests/unit/__mocks__/Api.js'
+    '^@/utils/Api$': '<rootDir>/tests/unit/__mocks__/Api.js',
+    '^axios$': require.resolve('axios')
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(axios|@fortawesome)/)'
+  ],
   testMatch: [
     '**/tests/unit/**/*.spec.js'
   ],
