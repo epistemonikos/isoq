@@ -1228,6 +1228,7 @@
       }
     },
     "responses": {
+      "explanation": "Explicação",
       "no_minimal": "Sem preocupações ou mínimas",
       "minor": "Preocupações menores",
       "moderate": "Preocupações moderadas",

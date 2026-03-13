@@ -1228,6 +1228,7 @@
       }
     },
     "responses": {
+      "explanation": "Explanation",
       "no_minimal": "No or minimal concerns",
       "minor": "Minor concerns",
       "moderate": "Moderate concerns",

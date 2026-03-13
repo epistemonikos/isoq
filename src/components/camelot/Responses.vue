@@ -6,7 +6,7 @@
         <strong>{{ getText() }}</strong>
       </div>
     </div>
-    <p>{{ text }}</p>
+    <p v-if="text"><strong>{{ $t('camelot.responses.explanation') }}:</strong> {{ text }}</p>
   </div>
 </template>
 
