@@ -96,7 +96,7 @@
     <!-- Step Four: OA + Edit -->
     <template v-slot:cell(oa)="data">
       <div class="d-flex justify-content-center">
-        <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]" :style="getCircleStyle(3, 0, data.item)" @click="openModal(3, data, 0, 'OA')"></div>
+        <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]" :style="getCircleStyle(3, 0, data.item)" @click="openModal(3, data, 0)"></div>
       </div>
     </template>
     <template v-slot:cell(edit4)="data">
