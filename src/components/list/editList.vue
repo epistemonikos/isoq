@@ -448,7 +448,7 @@ export default {
         { value: null, text: this.$t('worksheet.options.undefined') }
       ]
     },
-    filterItemsByReferences: function (items, references, fieldsLength) {
+    filterItemsByReferences: function (items, references, fields) {
       const referencesSet = new Set(references)
       const itemsMap = new Map()
       for (const item of items) {
@@ -474,14 +474,25 @@ export default {
 
       // Camelot characteristics meta-domains
       const camelotCharKeys = this.camelot.categories.map(cat => `${cat.key}_extractedData`)
+      
+      // Collect ALL allowed keys to remove orphans
+      const fieldKeys = (Array.isArray(fields)) ? fields.map(f => f.key) : []
+      const allowedKeys = new Set([...excludedKeys, ...fieldKeys])
+      if (this.project.use_camelot) {
+        this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+      }
 
       for (const refId of references) {
-        let item = itemsMap.get(refId)
-        if (!item) {
-          item = { ref_id: refId }
-        } else {
-          // Clone item to avoid mutating original list data if necessary
-          item = JSON.parse(JSON.stringify(item))
+        let originalItem = itemsMap.get(refId)
+        let item = { ref_id: refId }
+        
+        if (originalItem) {
+          // Only copy allowed keys to the item (removes orphans)
+          for (const key in originalItem) {
+            if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+              item[key] = originalItem[key]
+            }
+          }
         }
 
         // Ensure authors are formatted correctly for the UI without mutating the original structure
@@ -541,18 +552,20 @@ export default {
 
         } else {
           // NON-CAMELOT LOGIC (Standard)
-          for (const key of itemKeys) {
-            if (!excludedKeys.has(key) && item[key] === '') {
+          // We only check for fields defined in 'fields' property
+          const fieldKeys = (Array.isArray(fields)) ? fields.map(f => f.key) : []
+          for (const key of fieldKeys) {
+            if (!excludedKeys.has(key) && (item[key] === undefined || item[key] === '')) {
               haveContent++
             }
           }
-          // Generic fields count check
-          if (fieldsLength > itemKeys.length) {
-            haveContent++
-          }
-          // If item is empty, itemKeys will only have ref_id (length 1)
-          if (itemKeys.length === 1 && fieldsLength > 1) {
-             // haveContent already incremented by fieldsLength > itemKeys.length
+          // If fields definition is missing, we can't reliably check content
+          if (!Array.isArray(fields) || fields.length <= 2) {
+            // Check if we have any content at all besides the defaults
+            const hasAnyContent = itemKeys.some(k => !excludedKeys.has(k) && item[k] !== '')
+            if (!hasAnyContent) {
+              haveContent++
+            }
           }
         }
       }
@@ -769,7 +782,7 @@ export default {
       const { filteredItems, haveContent } = this.filterItemsByReferences(
         data.items,
         this.list.references,
-        data.fields.length
+        data.fields
       )
 
       let hasWarning = haveContent > 0
@@ -826,7 +839,7 @@ export default {
       const { filteredItems, haveContent } = this.filterItemsByReferences(
         data.items,
         this.list.references,
-        data.fields.length
+        data.fields
       )
 
       let hasWarning = haveContent > 0

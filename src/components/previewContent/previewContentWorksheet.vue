@@ -514,13 +514,29 @@ export default {
                 bibliographicRefs = this.list.fullreferences
               }
             }
+            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+            const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
+            if (this.project.use_camelot) {
+              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+            }
+
             for (let item of data.items) {
               for (let reference of this.list.references) {
                 if (reference === item.ref_id) {
                   const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
                   item.authors = this.parseReference(bibRef || item, true)
-                  items.push(item)
                   
+                  // Clean item from orphans
+                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
+                  for (const key in item) {
+                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                      cleanedItem[key] = item[key]
+                    }
+                  }
+                  item = cleanedItem
+                  items.push(item)
+
                   if (this.project.use_camelot) {
                     let camelotDataCount = 0
                     let hasAnyCamelotDataKey = false
@@ -543,15 +559,19 @@ export default {
                     }
                   } else {
                     // NON-CAMELOT
-                    for (let i in item) {
-                      if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
-                        if (item[i] === '') {
-                          haveContent++
-                        }
+                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+                    for (let key of fieldKeys) {
+                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                        haveContent++
                       }
                     }
-                    if (data.fields.length > Object.keys(item).length) {
-                      haveContent++
+                    // If fields definition is missing, we can't reliably check content
+                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
+                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                      if (!hasAnyContent) {
+                        haveContent++
+                      }
                     }
                   }
                 }
@@ -632,11 +652,27 @@ export default {
                 bibliographicRefs = this.list.fullreferences
               }
             }
+            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+            const allowedKeys = new Set([...excluded, ...fieldKeys])
+            if (this.project.use_camelot) {
+              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+            }
+
             for (let item of data.items) {
               for (let reference of _references) {
                 if (reference === item.ref_id) {
                   const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
                   item.authors = this.parseReference(bibRef || item, true)
+                  
+                  // Clean item from orphans
+                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
+                  for (const key in item) {
+                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                      cleanedItem[key] = item[key]
+                    }
+                  }
+                  item = cleanedItem
                   items.push(item)
 
                   if (this.project.use_camelot) {
@@ -662,15 +698,19 @@ export default {
                     }
                   } else {
                     // NON-CAMELOT
-                    for (let i in item) {
-                      if (i !== 'author' && i !== 'ref_id' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
-                        if (item[i] === '') {
-                          haveContent++
-                        }
+                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+                    for (let key of fieldKeys) {
+                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                        haveContent++
                       }
                     }
-                    if (data.fields.length > Object.keys(item).length) {
-                      haveContent++
+                    // If fields definition is missing, we can't reliably check content
+                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
+                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                      if (!hasAnyContent) {
+                        haveContent++
+                      }
                     }
                   }
                 }
