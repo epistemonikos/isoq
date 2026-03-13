@@ -589,8 +589,7 @@
                     <font-awesome-icon v-if="
                       project.review_question === '' || 
                       project.inclusion === '' || 
-                      project.exclusion === '' ||
-                      ui.relevance.chars_of_studies.display_warning
+                      project.exclusion === ''
                     " class="text-danger" icon="exclamation-circle"></font-awesome-icon>
                   </template>
                   <h4>{{ $t('worksheet.titles.review_question') }}</h4>
@@ -640,11 +639,11 @@
                 <b-tab>
                   <template slot="title">
                     {{ $t('worksheet.characteristics_of_studies') }}
-                    <font-awesome-icon v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger"
+                    <font-awesome-icon v-if="ui.relevance.chars_of_studies.display_warning" class="text-danger"
                       icon="exclamation-circle"></font-awesome-icon>
                   </template>
                   <h4>{{ $t('worksheet.characteristics_of_studies') }}</h4>
-                  <p v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger">
+                  <p v-if="ui.relevance.chars_of_studies.display_warning" class="text-danger">
                     {{ $t('worksheet.warnings.chars_of_studies_missing') }}
                     <b-link :to="{
                       name: 'viewProject',

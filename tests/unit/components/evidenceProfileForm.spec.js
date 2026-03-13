@@ -10,7 +10,7 @@ localVue.use(BootstrapVue)
 localVue.component('font-awesome-icon', { 
   name: 'font-awesome-icon',
   props: ['icon'],
-  template: '<i :class="icon"></i>' 
+  template: '<i :class="icon" :data-icon="icon"></i>' 
 })
 
 describe('evidenceProfileForm.vue - Camelot Warning Display', () => {
@@ -71,9 +71,12 @@ describe('evidenceProfileForm.vue - Camelot Warning Display', () => {
       propsData,
       mocks,
       stubs: {
-        'b-modal': { template: '<div><slot name="modal-title"></slot><slot></slot></div>' },
-        'b-tabs': { template: '<div><slot></slot></div>' },
-        'b-tab': { template: '<div><slot name="title"></slot><slot></slot></div>' },
+        'b-modal': { template: '<div class="modal-stub"><slot name="modal-title"></slot><slot></slot></div>' },
+        'b-tabs': { template: '<div class="tabs-stub"><slot></slot></div>' },
+        'b-tab': { 
+            props: ['active', 'title'],
+            template: '<div class="tab-stub"><div class="tab-title-slot">{{title}}<slot name="title"></slot></div><div class="tab-content-slot"><slot></slot></div></div>' 
+        },
         'b-container': { template: '<div><slot></slot></div>' },
         'b-row': { template: '<div><slot></slot></div>' },
         'b-col': { template: '<div><slot></slot></div>' },
@@ -84,6 +87,10 @@ describe('evidenceProfileForm.vue - Camelot Warning Display', () => {
         'camelot-characteristics-table': { 
           name: 'camelot-characteristics-table',
           template: '<div class="camelot-table-mock"></div>' 
+        },
+        'font-awesome-icon': {
+            props: ['icon'],
+            template: '<i class="text-danger" :data-icon="icon"></i>'
         }
       }
     })
@@ -105,5 +112,56 @@ describe('evidenceProfileForm.vue - Camelot Warning Display', () => {
     propsData.modalData.type = 'relevance'
     const wrapper = await createWrapper()
     expect(wrapper.find('.camelot-table-mock').exists()).toBe(true)
+  })
+
+  describe('Relevance Warning Display', () => {
+    beforeEach(() => {
+        propsData.modalData.type = 'relevance'
+        propsData.project.review_question = 'Question'
+        propsData.project.inclusion = 'Inclusion'
+        propsData.project.exclusion = 'Exclusion'
+    })
+
+    it('DOES NOT show exclamation mark in "Question and criteria" tab title when chars_of_studies has warning but fields are filled', async () => {
+        propsData.ui.relevance.chars_of_studies.display_warning = true
+        const wrapper = await createWrapper()
+        
+        const tabs = wrapper.findAll('.tab-stub')
+        const firstTab = tabs.at(0)
+        
+        expect(firstTab.find('.tab-title-slot').text()).toContain('worksheet.titles.question_criteria')
+        expect(firstTab.find('.tab-title-slot').find('.text-danger').exists()).toBe(false)
+    })
+
+    it('shows exclamation mark in "Question and criteria" tab title if review_question is missing', async () => {
+        propsData.project.review_question = ''
+        const wrapper = await createWrapper()
+        
+        const tabs = wrapper.findAll('.tab-stub')
+        const firstTab = tabs.at(0)
+        
+        expect(firstTab.find('.tab-title-slot').text()).toContain('worksheet.titles.question_criteria')
+        expect(firstTab.find('.tab-title-slot').find('.text-danger').exists()).toBe(true)
+    })
+
+    it('correctly uses ui.relevance.chars_of_studies.display_warning in the title of the second tab of Relevance', async () => {
+        propsData.ui.relevance.chars_of_studies.display_warning = true
+        propsData.ui.adequacy.chars_of_studies.display_warning = false
+        const wrapper = await createWrapper()
+        
+        const tabs = wrapper.findAll('.tab-stub')
+        const secondTab = tabs.at(1)
+        
+        expect(secondTab.find('.tab-title-slot').text()).toContain('worksheet.characteristics_of_studies')
+        // It should now have the icon in the title because it uses ui.relevance
+        expect(secondTab.find('.tab-title-slot').find('.text-danger').exists()).toBe(true)
+        
+        // Now set relevance warning to false
+        propsData.ui.relevance.chars_of_studies.display_warning = false
+        propsData.ui.adequacy.chars_of_studies.display_warning = true
+        const wrapper2 = await createWrapper()
+        const secondTab2 = wrapper2.findAll('.tab-stub').at(1)
+        expect(secondTab2.find('.tab-title-slot').find('.text-danger').exists()).toBe(false)
+    })
   })
 })
