@@ -56,8 +56,8 @@ describe('ExportCSVButton.vue', () => {
     expect(callArgs.items).toHaveLength(2)
     
     // Check processed authors
-    expect(callArgs.items[0].authors).toContain('Smith 2020')
-    expect(callArgs.items[1].authors).toContain('Doe 2021')
+    expect(callArgs.items[0].authors).toContain('Smith J 2020')
+    expect(callArgs.items[1].authors).toContain('Doe A 2021')
     
     // Check other values
     expect(callArgs.items[0].column_1).toBe('Value 1')
