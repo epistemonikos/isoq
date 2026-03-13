@@ -118,8 +118,10 @@ import charsOfStudies from '../list/editListCharsOfStudies.vue'
 import methAssessments from '../list/editListMethAssessments.vue'
 import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
+import { camelotMixin } from '@/mixins/camelotMixin'
 
 export default {
+  mixins: [camelotMixin],
   components: {
     'back-to-top': backToTop,
     'evidence-profile': evidenceProfile,
