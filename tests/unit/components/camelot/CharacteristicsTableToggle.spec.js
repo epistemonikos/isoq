@@ -13,7 +13,10 @@ describe('CharacteristicsTable.vue - Toggle Concerns', () => {
   beforeEach(() => {
     propsData = {
       charsOfStudies: {
-        fields: [{ key: 'ref_id', label: 'ID' }],
+        fields: [
+          { key: 'ref_id', label: 'ID' },
+          { key: 'research_extractedData', label: 'Research' }
+        ],
         items: [{
           ref_id: '1',
           authors: 'Author A',

@@ -64,7 +64,8 @@ describe('CamelotStepFourTable.vue', () => {
     expect(wrapper.emitted('open-modal')[0][0]).toEqual({
       stage: 0,
       data: { index: 0, item: propsData.items[0] },
-      tab: 1
+      tab: 1,
+      faLabel: null
     })
   })
 })

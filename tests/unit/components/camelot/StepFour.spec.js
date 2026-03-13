@@ -19,7 +19,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
       {
         ref_id: 'ref1',
         strategy_extractedData: 'Old data',
-        strategy_comments: 'Old concerns'
+        strategy_comments: 'Old comments'
       }
     ]
   })
@@ -77,25 +77,25 @@ describe('StepFour.vue - TDD for inline editing', () => {
           expect.objectContaining({
             ref_id: 'ref1',
             strategy_extractedData: 'New extracted data',
-            strategy_comments: 'Old concerns'
+            strategy_comments: 'Old comments'
           })
         ])
       })
     )
   })
 
-  it('should call Api.patch with correct updated data when saveField is called for concerns', async () => {
+  it('should call Api.patch with correct updated data when saveField is called for comments', async () => {
     // 1. Setup initial state
     const mockCharacteristics = getMockCharacteristics()
     wrapper.setData({
       characteristics: mockCharacteristics,
       refId: 'ref1',
-      editingField: { metaIndex: 1, itemIndex: 0, type: 'concerns' }, // Strategy
-      editValueConcerns: 'New concerns'
+      editingField: { metaIndex: 1, itemIndex: 0, type: 'comments' }, // Strategy
+      editValueComments: 'New comments'
     })
 
     // 2. Trigger save
-    await wrapper.vm.saveField('New concerns')
+    await wrapper.vm.saveField('New comments')
 
     // 3. Assertions
     expect(Api.patch).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
           expect.objectContaining({
             ref_id: 'ref1',
             strategy_extractedData: 'Old data',
-            strategy_comments: 'New concerns'
+            strategy_comments: 'New comments'
           })
         ])
       })

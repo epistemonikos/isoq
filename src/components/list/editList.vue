@@ -533,7 +533,7 @@ export default {
           // 4. Check for CUSTOM fields in Camelot projects
           // (They are optional but if they exist and are empty, they count as missing)
           for (const key of itemKeys) {
-            if (!excludedKeys.has(key) && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
+            if (!excludedKeys.has(key) && !camelotCharKeys.includes(key) && !key.endsWith('_comments') && item[key] === '') {
               // Only count custom fields if they were intentionally added (not part of Camelot defaults)
               haveContent++
             }

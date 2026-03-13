@@ -39,7 +39,7 @@
                     :item-index="iIndex"
                     :label="getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex)"
                     :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
-                    :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'concerns']"
+                    :comments="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
                     :editing-field="editingField"
                     :is-saving="isSavingField"
@@ -84,7 +84,7 @@
                             :item-index="dIndex"
                             :label="domain.label"
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
-                            :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'concerns']"
+                            :comments="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)"
                             :editing-field="editingField"
                             :is-saving="isSavingField"
@@ -128,7 +128,7 @@
                       :item-index="iIndex"
                       :label="getMetaItemLabel(1, iIndex)"
                       :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
-                      :concerns="meta[1].values[iIndex][item + 'concerns']"
+                      :comments="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)"
                       :editing-field="editingField"
                       :is-saving="isSavingField"
@@ -152,7 +152,7 @@
                       :item-index="iIndex"
                       :label="getMetaItemLabel(2, iIndex)"
                       :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
-                      :concerns="meta[2].values[iIndex][item + 'concerns']"
+                      :comments="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)"
                       :editing-field="editingField"
                       :is-saving="isSavingField"
@@ -369,19 +369,19 @@ export default {
           values: [
             {
               research_extractedData: '',
-              research_concerns: ''
+              research_comments: ''
             },
             {
               stakeholders_extractedData: '',
-              stakeholders_concerns: ''
+              stakeholders_comments: ''
             },
             {
               researchers_extractedData: '',
-              researchers_concerns: ''
+              researchers_comments: ''
             },
             {
               context_extractedData: '',
-              context_concerns: ''
+              context_comments: ''
             }
           ]
         },
@@ -391,19 +391,19 @@ export default {
           values: [
             {
               strategy_extractedData: '',
-              strategy_concerns: ''
+              strategy_comments: ''
             },
             {
               ethical_extractedData: '',
-              ethical_concerns: ''
+              ethical_comments: ''
             },
             {
               equity_extractedData: '',
-              equity_concerns: ''
+              equity_comments: ''
             },
             {
               theory_extractedData: '',
-              theory_concerns: ''
+              theory_comments: ''
             }
           ]
         },
@@ -413,19 +413,19 @@ export default {
           values: [
             {
               participant_extractedData: '',
-              participant_concerns: ''
+              participant_comments: ''
             },
             {
               data_extractedData: '',
-              data_concerns: ''
+              data_comments: ''
             },
             {
               analysis_extractedData: '',
-              analysis_concerns: ''
+              analysis_comments: ''
             },
             {
               presentation_extractedData: '',
-              presentation_concerns: ''
+              presentation_comments: ''
             }
           ]
         }
@@ -438,7 +438,7 @@ export default {
         type: null
       },
       editValueExtracted: '',
-      editValueConcerns: '',
+      editValueComments: '',
       isSavingField: false,
       showLegend: false
     }
@@ -556,7 +556,7 @@ export default {
               for (let y = 0; y < this.meta.length; y++) {
                 for (let z = 0; z < this.meta[y].items.length; z++) {
                   this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = items[x][this.meta[y].items[z] + 'extractedData']
-                  this.meta[y].values[z][this.meta[y].items[z] + 'concerns'] = items[x][this.meta[y].items[z] + 'concerns']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = items[x][this.meta[y].items[z] + 'comments']
                 }
               }
             }
@@ -601,9 +601,9 @@ export default {
 
       const itemPrefix = this.meta[metaIndex].items[itemIndex]
       const extractedData = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData']
-      const concerns = this.meta[metaIndex].values[itemIndex][itemPrefix + 'concerns']
+      const comments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments']
 
-      return (!extractedData || extractedData.trim() === '') && (!concerns || concerns.trim() === '')
+      return (!extractedData || extractedData.trim() === '') && (!comments || comments.trim() === '')
     },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
@@ -615,7 +615,7 @@ export default {
       if (type === 'extractedData') {
         this.editValueExtracted = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData'] || ''
       } else {
-        this.editValueConcerns = this.meta[metaIndex].values[itemIndex][itemPrefix + 'concerns'] || ''
+        this.editValueComments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments'] || ''
       }
     },
     onStartEditing({ metaIndex, itemIndex, type }) {
@@ -634,7 +634,7 @@ export default {
       const { metaIndex, itemIndex } = this.editingField
       this.editingField = { metaIndex: null, itemIndex: null, type: null }
       this.editValueExtracted = ''
-      this.editValueConcerns = ''
+      this.editValueComments = ''
       if (metaIndex !== null && itemIndex !== null) {
         this.scrollToField(metaIndex, itemIndex)
       }
@@ -652,7 +652,7 @@ export default {
       if (type === 'extractedData') {
         this.editValueExtracted = newValue
       } else {
-        this.editValueConcerns = newValue
+        this.editValueComments = newValue
       }
       
       // Asegurar estructura básica si es un objeto nuevo
@@ -667,8 +667,8 @@ export default {
 
       // Actualizar o añadir el ítem en el arreglo principal
       let existingItemIdx = this.characteristics.items.findIndex(item => item.ref_id === this.refId)
-      const fieldName = type === 'extractedData' ? itemPrefix + 'extractedData' : itemPrefix + 'concerns'
-      const fieldValue = type === 'extractedData' ? this.editValueExtracted : this.editValueConcerns
+      const fieldName = type === 'extractedData' ? itemPrefix + 'extractedData' : itemPrefix + 'comments'
+      const fieldValue = type === 'extractedData' ? this.editValueExtracted : this.editValueComments
 
       if (existingItemIdx !== -1) {
         this.$set(this.characteristics.items[existingItemIdx], fieldName, fieldValue)
