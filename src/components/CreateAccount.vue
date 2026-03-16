@@ -350,8 +350,8 @@ export default {
       }
       axios.post('/create_user', params)
         .then(() => {
-          // this.login(this.user.username, this.user.password)
-          this.showSubscribe = true
+          this.showSubscribe = false
+          this.login(this.user.username, this.user.password)
         })
         .catch((error) => {
           console.log(error)
@@ -426,15 +426,15 @@ export default {
         })
     },
     comparePassword: function () {
+      if (!this.user.password || !this.user.password_2) {
+        this.ui.password_validation = false
+        return
+      }
       if (this.user.password !== this.user.password_2) {
         this.ui.password_validation = false
         return
       }
-      if (this.user.password === null || this.user.password_2 === null) {
-        this.ui.password_validation = false
-        return
-      }
-      if (this.user.password.length < 8 || this.user.password_2 < 8) {
+      if (this.user.password.length < 8 || this.user.password_2.length < 8) {
         this.ui.password_validation = false
         return
       }
