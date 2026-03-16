@@ -6,44 +6,67 @@
       </div>
     </b-container>
     <b-container fluid class="pt-5 pb-5">
-      <h3>What is iSoQ?</h3>
-      <p>The GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) is an online tool designed to:</p>
-      <ul>
-        <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
-        <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
-        <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
-      </ul>
+      <b-row>
+        <!-- Table of Contents Sidebar -->
+        <b-col md="3" class="mb-4 d-none d-md-block">
+          <div class="sticky-top" style="top: 80px; z-index: 1;">
+            <b-nav vertical class="bg-light p-3 rounded border">
+              <h5 class="mb-3 border-bottom pb-2">{{ $t("Table of Contents") }}</h5>
+              <b-nav-item href="#what-is-isoq">What is iSoQ?</b-nav-item>
+              <b-nav-item href="#what-is-grade-cerqual">What is GRADE-CERQual?</b-nav-item>
+              <b-nav-item href="#when-to-use">When in the review process can I use the iSoQ tool?</b-nav-item>
+              <b-nav-item href="#replace-software">Does the iSoQ tool replace other kinds of software used in reviews?</b-nav-item>
+              <b-nav-item href="#invite-collaborators">Can you invite collaborators to an iSoQ project?</b-nav-item>
+              <b-nav-item href="#export">Can I export from the iSoQ tool into other programs?</b-nav-item>
+              <b-nav-item href="#public">Can iSoQ tables be made public for anyone to see?</b-nav-item>
+              <b-nav-item href="#mac-compatibility">Is iSoQ compatible with Mac?</b-nav-item>
+              <b-nav-item href="#funding">How is the iSoQ tool funded?</b-nav-item>
+              <b-nav-item href="#licence">How is the iSoQ tool and its contents licenced?</b-nav-item>
+              <b-nav-item href="#cite">How do I cite iSoQ?</b-nav-item>
+            </b-nav>
+          </div>
+        </b-col>
+
+        <!-- Main Content -->
+        <b-col md="9">
+          <h3 id="what-is-isoq">What is iSoQ?</h3>
+          <p>The GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) is an online tool designed to:</p>
+          <ul>
+            <li>Assist review authors with applying the GRADE-CERQual approach to the findings of a qualitative evidence synthesis (systematic review of qualitative studies) and presenting these in a summary of qualitative findings table.</li>
+            <li>Assist review authors with managing and archiving data for GRADE-CERQual assessments.</li>
+            <li>Make GRADE-CERQual assessments more accessible to end users, including decision makers and those who support them.</li>
+          </ul>
       <p>In March 2022 we launched the software with a webinar <a href="https://vimeo.com/737300971" target="_blank">presentation</a> and <a href="https://vimeo.com/738892529" target="_blank">live demo</a> of the software.</p>
 
-      <h3>What is GRADE-CERQual?</h3>
+      <h3 id="what-is-grade-cerqual" class="mt-4">What is GRADE-CERQual?</h3>
       <p><a href="https://www.cerqual.org" target="_blank">GRADE-CERQual</a> is an approach for transparently assessing and describing how much confidence decision makers and other users can place in individual review findings from syntheses (or systematic reviews) of qualitative evidence. An overall GRADE-CERQual assessment of confidence is based on an assessment of four components: methodological limitations, coherence, adequacy and relevance.</p>
 
-      <h3>When in the review process can I use the iSoQ tool?</h3>
+      <h3 id="when-to-use" class="mt-4">When in the review process can I use the iSoQ tool?</h3>
       <p>You can begin using this tool once you have finished the study screening process and have a list of included studies that meet the inclusion criteria for your synthesis (systematic review). In the early stages of a systematic review, the iSoQ tool can be used to help organise some of the data that are needed to apply GRADE-CERQual, for example, tables of the characteristics of included studies and of the methodological limitations of the included studies (critical appraisal tables).</p>
       <p>The primary function of the tool is to assist review authors with managing the process of applying the GRADE-CERQual approach to their review findings. GRADE-CERQual is applied near the end of a review process, at the point when reviewers have completed analysis and synthesis and have draft summaries of each review finding.</p>
       <p class="text-primary">For more information on where GRADE-CERQual fits into the review process please see the <a href="https://doi.org/10.5281/zenodo.5101812" target="_blank"><u>EPOC QES protocol and review template.</u></a></p>
 
-      <h3>Does the iSoQ tool replace other kinds of software used in reviews?</h3>
+      <h3 id="replace-software" class="mt-4">Does the iSoQ tool replace other kinds of software used in reviews?</h3>
       <p>No, this tool is specific to applying the GRADE-CERQual approach. It is not a replacement for other commonly used software in systematic reviews like reference management software (e.g. Endnote), software for screening and selecting studies (e.g. Covidence and Distiller SR), or software and programs for extracting and analysing data (e.g. DistillerSR, NVivo, Microsoft Excel).</p>
 
-      <h3>Can you invite collaborators to an iSoQ project?</h3>
+      <h3 id="invite-collaborators" class="mt-4">Can you invite collaborators to an iSoQ project?</h3>
       <p>Yes. You can invite collaborators (for example other review authors) to a shared project and assign them either "view only" or "view and edit" rights. These collaborators need to set-up an iSoQ account in order to access the shared project. You can also generate a temporary link to send to collaborators who only need to view the project for a limited amount of time (for example a guideline panel or a peer reviewer).</p>
 
-      <h3>Can I export from the iSoQ tool into other programs?</h3>
+      <h3 id="export" class="mt-4">Can I export from the iSoQ tool into other programs?</h3>
       <p>Currently you cannot directly export the content within the iSoQ tool into other platforms, but you can export and download a Microsoft Word or PDF copy of the Summary of Qualitative Findings Table and Evidence Profile Tables. These can be copy and pasted or imported into other programs such as RevMan, GRADEpro GDT, or MAGICapp. Characteristics of Studies, Methodological Assessments and Extracted Data tables created in the iSoQ tool can be downloaded into a Microsoft Excel compatible format.</p>
 
-      <h3>Can iSoQ tables be made public for anyone to see?</h3>
+      <h3 id="public" class="mt-4">Can iSoQ tables be made public for anyone to see?</h3>
       <p>iSoQ includes a "publish" function, meaning you can publish some or all of your completed Interactive Summary of Qualitative Findings Table to the iSoQ database. It is up to you to decide if and when to publish to the iSoQ database and to ensure you are not infringing any copyright issues (for example you may have to abide by an embargo period or wait for a manuscript to be published). The database will become a repository for iSoQ tables.</p>
 
-      <h3>Is iSoQ compatible with Mac?</h3>
+      <h3 id="mac-compatibility" class="mt-4">Is iSoQ compatible with Mac?</h3>
       <p>
         iSoQ can be used on a Mac but has not been extensively tested with Mac. We are aware of one common issue for Mac users and that is with the “import table” function in the My Data section. When our Excel template is downloaded and opened in Excel for Mac, columns A and B are merged instead of separate. This causes import failure and serious malfunctioning in the software. We therefore recommend Mac users work on the template in either Google docs, Open Office or LibreOffice. Be sure to save the file as a “comma-separated values” (CSV). We welcome feedback from Mac users so we can continue to improve your experience with iSoQ.
       </p>
 
-      <h3>How is the iSoQ tool funded?</h3>
+      <h3 id="funding" class="mt-4">How is the iSoQ tool funded?</h3>
       <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR); the Norwegian University of Science and Technology (NTNU); the Western Norway University of Applied Sciences (HVL), and the Epistemonikos Foundation. Additional funding for members of the iSoQ Development Team is provided by HVL and NTNU.</p>
 
-      <h3>How is the iSoQ tool and its contents licenced?</h3>
+      <h3 id="licence" class="mt-4">How is the iSoQ tool and its contents licenced?</h3>
       <ul>
         <li>
           The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">Creative Commons Attribution Non-Commercial ShareAlike International Licence (CC-BY-NC-SA)</a>
@@ -59,8 +82,15 @@
         </li>
       </ul>
 
-      <h3>How do I cite iSoQ?</h3>
-      <p>Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org</p>
+      <h3 id="cite" class="mt-4">How do I cite iSoQ?</h3>
+      <p>
+        iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Version 1. Epistemonikos, Norwegian Institute of Public Health and the <a href="https://www.epistemonikos.org/about" target="_blank">iSoQ Development Team</a>*. Available from <a href="https://isoq.epistemonikos.org" target="_blank">isoq.epistemonikos.org</a>
+      </p>
+      <p class="text-muted">
+        *iSoQ Development Team: Megan Wainwright (Consultant), Simon Lewin (Norwegian University of Science and Technology (NTNU)), Claire Glenton (Western Norway University of Applied Sciences (HVL)), Heather Munthe-Kaas (Norwegian Institute of Public Health).
+      </p>
+        </b-col>
+      </b-row>
     </b-container>
   </div>
 </template>
