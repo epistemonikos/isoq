@@ -308,16 +308,11 @@
     "status_minimally": "Mínimo",
     "toggle_camelot": {
       "title": "Alterar metodologia do projeto",
-      "warning": "Alterar a metodologia do projeto é uma mudança estrutural importante. Alguns dados serão excluídos permanentemente.",
-      "to_camelot_title": "Convertendo para CAMELOT",
-      "to_camelot_step3": "No Passo 3, seus campos personalizados serão preservados, mas você deverá preencher os novos campos obrigatórios para habilitar o Passo 4.",
-      "to_camelot_step4": "No Passo 4, todos los dados atuais serão excluídos. Você precisará preencher as novas perguntas de avaliação.",
-      "from_camelot_title": "Convertendo para Não-CAMELOT",
-      "from_camelot_step3": "No Passo 3, seus campos personalizados serão preservados. Os dados nos campos específicos do CAMELOT (meta-domínios, preocupações) serão excluídos.",
-      "from_camelot_step4": "No Passo 4, todos os dados de avaliação atuais serão excluídos. Você precisará criar suas tabelas de avaliação manualmente.",
-      "backup_checkbox": "Criar um backup (clone) deste projeto antes de prosseguir",
       "confirm_button": "Confirmar e Migrar",
-      "migrating": "Migrando metodologia..."
+      "migrating": "Migrando metodologia...",
+      "new_modal_title": "ALTERAÇÃO DA FERRAMENTA DE AVALIAÇÃO CRÍTICA",
+      "to_camelot_body": "Se você alterar sua seleção, o iSoQ criará duas cópias do seu projeto. Uma terá o CAMELOT desativado e preservará todos os dados que você extraiu e avaliações que fez até agora. A outra terá o CAMELOT ativado e o Passo 3 (tabela de Características dos Estudos) e o Passo 4 (tabela de Avaliações Metodológicas) em Meus Dados estarão em branco, assim como qualquer avaliação GRADE-CERQual informada por esses dados.",
+      "from_camelot_body": "Se você alterar sua seleção, o iSoQ criará duas cópias do seu projeto. Uma terá o CAMELOT ativado e preservará todos os dados que você extraiu e avaliações que fez até agora. A outra terá o CAMELOT desativado e o Passo 3 (tabela de Características dos Estudos) e o Passo 4 (tabela de Avaliações Metodológicas) em Meus Dados estarão em branco, assim como qualquer avaliação GRADE-CERQual informada por esses dados"
     },
     "use_camelot_label": "Gostaria de usar o CAMELOT para este projeto?",
     "use_camelot_desc": "O CAMELOT fornece ferramentas adicionais para avaliação de qualidade e extração de dados.",

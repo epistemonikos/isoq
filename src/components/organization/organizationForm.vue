@@ -269,29 +269,16 @@
         no-close-on-backdrop
         no-close-on-esc>
         <div class="p-3">
-          <p class="font-weight-bold text-danger">
-            <font-awesome-icon icon="exclamation-triangle" class="mr-2" />
-            {{ $t('project.toggle_camelot.warning') }}
-          </p>
-          
           <div v-if="formData.use_camelot" class="mt-3">
-            <h6>{{ $t('project.toggle_camelot.to_camelot_title') }}</h6>
-            <ul class="small">
-              <li>{{ $t('project.toggle_camelot.to_camelot_step3') }}</li>
-              <li>{{ $t('project.toggle_camelot.to_camelot_step4') }}</li>
-            </ul>
+            <h6 class="font-weight-bold">{{ $t('project.toggle_camelot.new_modal_title') }}</h6>
+            <p>{{ $t('project.toggle_camelot.to_camelot_body') }}</p>
+            <p class="font-weight-bold mt-3">{{ $t('common.continue_question') }}</p>
           </div>
           <div v-else class="mt-3">
-            <h6>{{ $t('project.toggle_camelot.from_camelot_title') }}</h6>
-            <ul class="small">
-              <li>{{ $t('project.toggle_camelot.from_camelot_step3') }}</li>
-              <li>{{ $t('project.toggle_camelot.from_camelot_step4') }}</li>
-            </ul>
+            <h6 class="font-weight-bold">{{ $t('project.toggle_camelot.new_modal_title') }}</h6>
+            <p>{{ $t('project.toggle_camelot.from_camelot_body') }}</p>
+            <p class="font-weight-bold mt-3">{{ $t('common.continue_question') }}</p>
           </div>
-
-          <b-form-checkbox v-model="backupBeforeToggle" class="mt-4 font-weight-bold">
-            {{ $t('project.toggle_camelot.backup_checkbox') }}
-          </b-form-checkbox>
           
           <div v-if="isMigrating" class="text-center mt-3">
             <b-spinner variant="danger" label="Spinning"></b-spinner>
@@ -363,10 +350,8 @@ export default {
       const data = this.pendingData
       
       try {
-        // 1. Create backup if requested
-        if (this.backupBeforeToggle) {
-          await Api.get(`/api/clone/project/${data.id}/org/${data.organization}`)
-        }
+        // 1. Create backup
+        await Api.get(`/api/clone/project/${data.id}/org/${data.organization}`)
         
         // 2. Call conversion endpoint
         const response = await Api.post(`/api/project/${data.id}/toggle_camelot`, {
@@ -608,6 +593,9 @@ export default {
     },
     formData: {
       handler (newFormData) {
+        if (newFormData && newFormData.use_camelot === undefined) {
+          this.$set(newFormData, 'use_camelot', false)
+        }
         // When formData changes externally, update the original data
         if (JSON.stringify(this.originalFormData) !== JSON.stringify(newFormData)) {
           this.originalFormData = JSON.parse(JSON.stringify(newFormData))
