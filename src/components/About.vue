@@ -64,7 +64,7 @@
       </p>
 
       <h3 id="funding" class="mt-4">How is the iSoQ tool funded?</h3>
-      <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR); the Norwegian University of Science and Technology (NTNU); and the Western Norway University of Applied Sciences (HVL). Additional funding for members of the iSoQ Development Team is provided by HVL, NTNU and the Epistemonikos Foundation.</p>
+      <p>The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR); the Norwegian University of Science and Technology (NTNU); the Western Norway University of Applied Sciences (HVL), and the Epistemonikos Foundation. Additional funding for members of the iSoQ Development Team is provided by HVL and NTNU.</p>
 
       <h3 id="licence" class="mt-4">How is the iSoQ tool and its contents licenced?</h3>
       <ul>
