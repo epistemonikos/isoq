@@ -779,6 +779,15 @@ export default {
         data.items = []
       }
 
+      if (this.project.use_camelot) {
+        const existingFieldKeys = new Set(data.fields.map(f => f.key))
+        for (const field of this.camelot.fields) {
+          if (!existingFieldKeys.has(field.key)) {
+            data.fields.push(field)
+          }
+        }
+      }
+
       const { filteredItems, haveContent } = this.filterItemsByReferences(
         data.items,
         this.list.references,

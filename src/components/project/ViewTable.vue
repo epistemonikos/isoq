@@ -1,20 +1,9 @@
 <template>
   <div>
-    <b-table
-      selected-variant="warning"
-      bordered
-      head-variant="light"
-      id="findings"
-      ref="findings"
-      sort-by="sort"
-      :fields="(list_categories.options.length)?fields.with_categories:fields.without_categories"
-      :items="lists"
-      show-empty
-      :busy="isBusy"
-      :current-page="table_settings.currentPage"
-      :filter="table_settings.filter"
-      @filtered="onFiltered"
-      :filter-included-fields="table_settings.filterOn">
+    <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="sort"
+      :fields="(list_categories.options.length) ? fields.with_categories : fields.without_categories" :items="lists"
+      show-empty :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
+      @filtered="onFiltered" :filter-included-fields="table_settings.filterOn">
       <template v-slot:head(sort)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
       </template>
@@ -22,48 +11,40 @@
         <span v-b-tooltip.hover :title="$t('soqf_table.finding_summary')">{{ data.label }}</span>
       </template>
       <template v-slot:head(category_name)="data">
-        {{data.label}}
-        <b-dropdown
-          id="dropdown-categories"
-          text=""
-          class="finding-filter"
-          :no-caret="false"
-          size="sm">
-          <b-dropdown-item
-          v-for="(category, index) of list_categories.options"
-          :key="index"
-          @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text }}</b-dropdown-item>
+        {{ data.label }}
+        <b-dropdown id="dropdown-categories" text="" class="finding-filter" :no-caret="false" size="sm">
+          <b-dropdown-item v-for="(category, index) of list_categories.options" :key="index"
+            @click="tableFilter(category.text, 1)" :active="isFilterActive(category.text)">{{ category.text
+            }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterOne" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
       <template v-slot:head(cerqual_option)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.confidence_desc')">{{ data.label }}</span>
-        <b-dropdown
-          id="dropdown-cerqual-option"
-          text=""
-          class="finding-filter"
-          :no-caret="false"
-          size="sm">
-          <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">{{ $t('soqf_table.high_confidence') }}</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">{{ $t('soqf_table.moderate_confidence') }}</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">{{ $t('soqf_table.low_confidence') }}</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">{{ $t('soqf_table.very_low_confidence') }}</b-dropdown-item>
+        <b-dropdown id="dropdown-cerqual-option" text="" class="finding-filter" :no-caret="false" size="sm">
+          <b-dropdown-item @click="tableFilter('hc', 2)" :active="isFilterActive('hc')">{{
+            $t('soqf_table.high_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('mc', 2)" :active="isFilterActive('mc')">{{
+            $t('soqf_table.moderate_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('lc', 2)" :active="isFilterActive('lc')">{{
+            $t('soqf_table.low_confidence') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('vc', 2)" :active="isFilterActive('vc')">{{
+            $t('soqf_table.very_low_confidence') }}</b-dropdown-item>
           <b-dropdown-divider></b-dropdown-divider>
-          <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">{{ $t('soqf_table.assessments_completed') }}</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">{{ $t('soqf_table.assessments_not_completed') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('completed', 2)" :active="isFilterActive('completed')">{{
+            $t('soqf_table.assessments_completed') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('unfinished', 2)" :active="isFilterActive('unfinished')">{{
+            $t('soqf_table.assessments_not_completed') }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterTwo" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
       <template v-slot:head(cerqual_explanation)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.explanation_desc')">{{ data.label }}</span>
-        <b-dropdown
-          id="dropdown-cerqual-explanation"
-          text=""
-          class="finding-filter"
-          :no-caret="false"
-          size="sm">
-          <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">{{ $t('common.completed') }}</b-dropdown-item>
-          <b-dropdown-item @click="tableFilter('without_explanation', 3)" :active="isFilterActive('without_explanation')">{{ $t('common.not_completed') }}</b-dropdown-item>
+        <b-dropdown id="dropdown-cerqual-explanation" text="" class="finding-filter" :no-caret="false" size="sm">
+          <b-dropdown-item @click="tableFilter('with_explanation', 3)" :active="isFilterActive('with_explanation')">{{
+            $t('common.completed') }}</b-dropdown-item>
+          <b-dropdown-item @click="tableFilter('without_explanation', 3)"
+            :active="isFilterActive('without_explanation')">{{ $t('common.not_completed') }}</b-dropdown-item>
         </b-dropdown>
         <span v-if="ui.project.showFilterThree" class="text-danger remove-opt" @click="cleanTableFilter">&times;</span>
       </template>
@@ -72,46 +53,32 @@
       </template>
       <!-- data -->
       <template v-slot:cell(sort)="data">
-        {{(Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1}}
+        {{ (Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1 }}
       </template>
       <template v-slot:cell(name)="data">
         <a :id="`a-${data.item.id}`"></a>
         <span v-if="mode === 'edit'">
-          <b-row
-            class="mb-3">
-            <b-col
-              lg="6"
-              cols="12">
-              <b-button
-                block
-                v-if="mode==='edit'"
-                variant="outline-success"
-                @click="editModalFindingName(data)">
-                <font-awesome-icon
-                  v-if=(data.item.notes.length)
-                  icon="comments"></font-awesome-icon>
+          <b-row class="mb-3">
+            <b-col lg="6" cols="12">
+              <b-button block v-if="mode === 'edit'" variant="outline-success" @click="editModalFindingName(data)">
+                <font-awesome-icon v-if=(data.item.notes.length) icon="comments"></font-awesome-icon>
                 {{ $t('common.edit') }}
               </b-button>
             </b-col>
-            <b-col
-              class="mt-1 mt-lg-0"
-              lg="6"
-              cols="12">
-              <b-button
-                block
-                v-if="mode==='edit'"
-                variant="outline-danger"
-                @click="removeModalFinding(data)">
+            <b-col class="mt-1 mt-lg-0" lg="6" cols="12">
+              <b-button block v-if="mode === 'edit'" variant="outline-danger" @click="removeModalFinding(data)">
                 {{ $t('common.remove') }}
               </b-button>
             </b-col>
           </b-row>
-          <b-link class="table-edit-list" v-if="data.item.references.length" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+          <b-link class="table-edit-list" v-if="data.item.references.length"
+            :to="{ name: 'editList', params: { id: data.item.id } }">{{ data.item.name }}</b-link>
           <span v-if="data.item.references.length === 0">{{ data.item.name }}</span>
         </span>
         <span v-else>
-          <template v-if="mode==='view' && data.item.references.length">
-            <b-link class="table-edit-list" :to="{name: 'editList', params: {id: data.item.id}}">{{ data.item.name }}</b-link>
+          <template v-if="mode === 'view' && data.item.references.length">
+            <b-link class="table-edit-list" :to="{ name: 'editList', params: { id: data.item.id } }">{{ data.item.name
+              }}</b-link>
           </template>
           <template v-else>
             {{ data.item.name }}
@@ -120,80 +87,64 @@
       </template>
       <template v-slot:cell(category_name)="data">
         <template v-if="data.item.category !== null">
-          <b-button
-            v-if="mode==='edit'"
-            block
-            variant="outline-info"
-            @click="editModalFindingName(data)">{{ $t('soqf_table.edit_group') }}</b-button>
+          <b-button v-if="mode === 'edit'" block variant="outline-info" @click="editModalFindingName(data)">{{
+            $t('soqf_table.edit_group') }}</b-button>
           {{ data.item.category_name }}
-          <span
-            v-if="data.item.category_extra_info !== ''"
-            v-b-tooltip.hover
+          <span v-if="data.item.category_extra_info !== ''" v-b-tooltip.hover
             :title="data.item.category_extra_info">*</span>
         </template>
         <template v-else>
-          <b-button
-            v-if="mode==='edit' && data.item.references.length"
-            variant="info"
-            block
+          <b-button v-if="mode === 'edit' && data.item.references.length" variant="info" block
             @click="editModalFindingName(data)">{{ $t('soqf_table.assign_group') }}</b-button>
         </template>
       </template>
       <template v-slot:cell(cerqual_option)="data">
-        <b-button
-          v-if="data.item.references.length"
-          class="d-print-none mb-3"
-          :disabled="(data.item.references.length) ? false : true"
-          block
+        <b-button v-if="data.item.references.length" class="d-print-none mb-3"
+          :disabled="(data.item.references.length) ? false : true" block
           :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
-          :to="{name: 'editList', params: {id: data.item.id}}">
-            <font-awesome-icon
-              v-if="mode==='edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-              icon="comments"></font-awesome-icon>
-            <span v-if="mode === 'edit' && data.item.cerqual_option===''">{{ $t('common.complete') }}</span>
-            <span v-if="mode === 'edit' && data.item.cerqual_option!=''">{{ $t('common.edit') }}</span>
-            <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
-            {{ $t('soqf_table.gc_assessment') }}
-          </b-button>
+          :to="{ name: 'editList', params: { id: data.item.id } }">
+          <font-awesome-icon
+            v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            icon="comments"></font-awesome-icon>
+          <span v-if="mode === 'edit' && data.item.cerqual_option === ''">{{ $t('common.complete') }}</span>
+          <span v-if="mode === 'edit' && data.item.cerqual_option != ''">{{ $t('common.edit') }}</span>
+          <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
+          {{ $t('soqf_table.gc_assessment') }}
+        </b-button>
         <b>{{ data.item.cerqual_option }}</b>
       </template>
       <template v-slot:cell(cerqual_explanation)="data">
-        <b-button
-          v-if="data.item.references.length"
-          class="d-print-none mb-3"
-          :disabled="(data.item.references.length) ? false : true"
-          block
-          :variant="(data.item.cerqual_explanation==='') ? 'info' : 'outline-info'"
-          :to="{name: 'editList', params: {id: data.item.id}}">
-            <font-awesome-icon
-              v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
-              icon="comments"></font-awesome-icon>
-            <span v-if="mode === 'edit' && data.item.cerqual_explanation===''">{{ $t('common.complete') }}</span>
-            <span v-if="mode === 'edit' && data.item.cerqual_explanation!=''">{{ $t('common.edit') }}</span>
-            <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
-            GRADE-CERQual Assessment
+        <b-button v-if="data.item.references.length" class="d-print-none mb-3"
+          :disabled="(data.item.references.length) ? false : true" block
+          :variant="(data.item.cerqual_explanation === '') ? 'info' : 'outline-info'"
+          :to="{ name: 'editList', params: { id: data.item.id } }">
+          <font-awesome-icon
+            v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            icon="comments"></font-awesome-icon>
+          <span v-if="mode === 'edit' && data.item.cerqual_explanation === ''">{{ $t('common.complete') }}</span>
+          <span v-if="mode === 'edit' && data.item.cerqual_explanation != ''">{{ $t('common.edit') }}</span>
+          <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
+          GRADE-CERQual Assessment
         </b-button>
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
       </template>
       <template v-slot:cell(ref_list)="data">
-        <template v-if="mode!=='edit'">
+        <template v-if="mode !== 'edit'">
           {{ data.item.ref_list }}
         </template>
         <template v-else>
-          <b-button
-            block
-            class="mb-3 d-print-none"
-            :variant="(data.item.references.length) ? 'outline-info' : 'info'"
+          <b-button block class="mb-3 d-print-none" :variant="(data.item.references.length) ? 'outline-info' : 'info'"
             @click="openModalReferences(data)">
             <span v-if="data.item.references.length">{{ $t('soqf_table.view_edit_refs') }}</span>
             <span v-else>{{ $t('soqf_table.select_references') }}</span>
           </b-button>
-          <span v-html="$t('soqf_table.refs_count', {count: data.item.raw_ref.length})"></span>
+          <span v-html="$t('soqf_table.refs_count', { count: data.item.raw_ref.length })"></span>
         </template>
       </template>
       <template v-slot:empty>
         <p class="text-center my-5">
-          {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding') }}</a>
+          {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding')
+            }}</a>
         </p>
       </template>
       <template v-slot:table-busy>
@@ -204,68 +155,36 @@
       </template>
     </b-table>
     <!-- modals -->
-    <b-modal
-      size="lg"
-      id="edit-finding-name"
-      ref="edit-finding-name"
-      :title="$t('soqf_table.edit_finding')"
-      :ok-title="$t('common.save')"
-      ok-variant="outline-success"
-      cancel-variant="outline-secondary"
-      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length"
-      @ok="updateListName">
-      <b-alert
-        :show="editingUser.show"
-        variant="danger">
-        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
+    <b-modal size="xl" id="edit-finding-name" ref="edit-finding-name" :title="$t('soqf_table.edit_finding')"
+      :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary"
+      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName">
+      <b-alert :show="editingUser.show" variant="danger">
+        <span
+          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
       </b-alert>
-      <b-form-group
-        :label="$t('soqf_table.summarised_finding')"
-        label-for="finding-name">
+      <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="finding-name">
         <template slot="description">{{ $t('soqf_table.tips_writing') }}</template>
-        <b-form-textarea
-          id="finding-name"
-          v-model="editFindingName.name"
-          rows="6"
-          max-rows="100"></b-form-textarea>
+        <b-form-textarea id="finding-name" v-model="editFindingName.name" rows="6" max-rows="100"></b-form-textarea>
       </b-form-group>
-      <b-form-group
-        v-if="list_categories.options.length"
-        :label="$t('soqf_table.select_group')"
+      <b-form-group v-if="list_categories.options.length" :label="$t('soqf_table.select_group')"
         :description="$t('soqf_table.group_optional')">
-        <b-form-select
-          v-model="editFindingName.category"
-          value-field="id"
-          text-field="text"
+        <b-form-select v-model="editFindingName.category" value-field="id" text-field="text"
           :options="list_categories.options"></b-form-select>
       </b-form-group>
-      <b-form-group
-        label-for="finding-note"
-        :description="$t('soqf_table.notes_placeholder')">
+      <b-form-group label-for="finding-note" :description="$t('soqf_table.notes_placeholder')">
         <template v-slot:label>
           <videoHelp :txt="$t('common.notes')" tag="none" urlId="462176506"></videoHelp>
         </template>
-        <b-form-textarea
-          id="finding-note"
-          v-model="editFindingName.notes"
-          rows="6"
-          max-rows="100"></b-form-textarea>
+        <b-form-textarea id="finding-note" v-model="editFindingName.notes" rows="6" max-rows="100"></b-form-textarea>
       </b-form-group>
     </b-modal>
 
-    <b-modal
-      size="xl"
-      id="remove-finding"
-      ref="remove-finding"
-      :title="$t('soqf_table.remove_finding')"
-      :ok-title="$t('common.confirm')"
-      ok-variant="outline-danger"
-      cancel-variant="outline-secondary"
+    <b-modal size="xl" id="remove-finding" ref="remove-finding" :title="$t('soqf_table.remove_finding')"
+      :ok-title="$t('common.confirm')" ok-variant="outline-danger" cancel-variant="outline-secondary"
       @ok="confirmRemoveList">
-      <b-alert
-        :show="editingUser.show"
-        variant="danger">
-        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
+      <b-alert :show="editingUser.show" variant="danger">
+        <span
+          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
       </b-alert>
       <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
         {{ $t('soqf_table.delete_warning_revert') }}
@@ -274,57 +193,33 @@
         {{ $t('soqf_table.delete_warning') }}
       </p>
       <p>
-        <span v-html="$t('soqf_table.confirm_remove', {name: this.editFindingName.name})"></span>
+        <span v-html="$t('soqf_table.confirm_remove', { name: this.editFindingName.name })"></span>
       </p>
     </b-modal>
 
-    <b-modal
-      v-if="selected_list_index >= 0"
-      id="modal-references-list"
-      ref="modal-references-list"
-      :title="$t('soqf_table.references')"
-      @ok="checkReferencesBeforeSaving"
-      @hidden="handleReferencesModalHidden"
-      @cancel="cancelReferencesList"
-      :ok-disabled="(selected_list_index === null) ? true : false"
-      :no-close-on-backdrop="pendingSaveReferences"
-      :no-close-on-esc="pendingSaveReferences"
-      :ok-title="$t('common.save')"
-      ok-variant="outline-success"
-      cancel-variant="outline-secondary"
-      size="xl"
+    <b-modal v-if="selected_list_index >= 0" id="modal-references-list" ref="modal-references-list"
+      :title="$t('soqf_table.references')" @ok="checkReferencesBeforeSaving" @hidden="handleReferencesModalHidden"
+      @cancel="cancelReferencesList" :ok-disabled="(selected_list_index === null) ? true : false"
+      :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
+      :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
-      <b-alert
-        :show="editingUser.show"
-        variant="danger">
-        <span v-html="$t('soqf_table.user_editing', {first_name: editingUser.first_name, last_name: editingUser.last_name})"></span>
+      <b-alert :show="editingUser.show" variant="danger">
+        <span
+          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
       </b-alert>
       <template v-if="references.length">
-        <div
-          class="mt-2">
-          <b-alert
-            v-if="showBanner"
-            show
-            variant="danger">
+        <div class="mt-2">
+          <b-alert v-if="showBanner" show variant="danger">
             {{ $t('soqf_table.remove_ref_warning') }}
           </b-alert>
-          <b-table
-            responsive
-            striped
-            hover
-            class="references-list-table"
-            :fields="[{key: 'content', label: $t('soqf_table.author_year_title')}]"
-            :items="refs">
+          <b-table responsive striped hover class="references-list-table"
+            :fields="[{ key: 'content', label: $t('soqf_table.author_year_title') }]" :items="refs">
             <template v-slot:head(content)="data">
               <span class="ml-4">{{ data.label }}</span>
             </template>
             <template v-slot:cell(content)="data">
-              <b-form-checkbox
-                class="w-100 cursor-pointer"
-                :id="`checkbox-${data.index}`"
-                v-model="selected_references"
-                :name="`checkbox-${data.index}`"
-                :value="data.item.id">
+              <b-form-checkbox class="w-100 cursor-pointer" :id="`checkbox-${data.index}`" v-model="selected_references"
+                :name="`checkbox-${data.index}`" :value="data.item.id">
                 <span class="ml-2">{{ data.item.content }}</span>
               </b-form-checkbox>
             </template>
@@ -332,38 +227,21 @@
         </div>
       </template>
       <template v-else>
-        <div
-          class="mt-2">
+        <div class="mt-2">
           <p>{{ $t('references.select_first') }}</p>
         </div>
       </template>
     </b-modal>
 
-    <b-modal
-      id="modal-no-references-warning"
-      ref="modal-no-references-warning"
-      :title="$t('project.warning')"
-      @ok="confirmSaveNoReferences"
-      @cancel="cancelNoReferencesWarning"
-      :ok-title="$t('common.continue')"
-      ok-variant="outline-danger"
-      cancel-variant="outline-secondary"
-      no-close-on-backdrop
-      no-close-on-esc>
+    <b-modal id="modal-no-references-warning" ref="modal-no-references-warning" :title="$t('project.warning')"
+      @ok="confirmSaveNoReferences" @cancel="cancelNoReferencesWarning" :ok-title="$t('common.continue')"
+      ok-variant="outline-danger" cancel-variant="outline-secondary" no-close-on-backdrop no-close-on-esc>
       <p>{{ $t('soqf_table.remove_all_unpublish') }}</p>
     </b-modal>
 
-    <b-modal
-      id="modal-private-project-warning"
-      ref="modal-private-project-warning"
-      :title="$t('project.warning')"
-      @ok="confirmSavePrivateProject"
-      @cancel="cancelPrivateProjectWarning"
-      :ok-title="$t('common.continue')"
-      ok-variant="outline-danger"
-      cancel-variant="outline-secondary"
-      no-close-on-backdrop
-      no-close-on-esc>
+    <b-modal id="modal-private-project-warning" ref="modal-private-project-warning" :title="$t('project.warning')"
+      @ok="confirmSavePrivateProject" @cancel="cancelPrivateProjectWarning" :ok-title="$t('common.continue')"
+      ok-variant="outline-danger" cancel-variant="outline-secondary" no-close-on-backdrop no-close-on-esc>
       <p>{{ $t('soqf_table.remove_all_revert') }}</p>
     </b-modal>
   </div>
@@ -378,7 +256,7 @@ export default {
   components: {
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  data () {
+  data() {
     return {
       ui: {
         project: {
@@ -504,19 +382,19 @@ export default {
       required: true,
       default: () => ({
         with_categories: [
-          {key: 'sort', label: 'No.'},
-          {key: 'name', label: this.$t('table_headers.summarised_finding')},
-          {key: 'category_name', label: this.$t('table_headers.review_finding_groups')},
-          {key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment')},
-          {key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation')},
-          {key: 'ref_list', label: this.$t('table_headers.references')}
+          { key: 'sort', label: 'No.' },
+          { key: 'name', label: this.$t('table_headers.summarised_finding') },
+          { key: 'category_name', label: this.$t('table_headers.review_finding_groups') },
+          { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
+          { key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation') },
+          { key: 'ref_list', label: this.$t('table_headers.references') }
         ],
         without_categories: [
-          {key: 'sort', label: 'No.'},
-          {key: 'name', label: this.$t('table_headers.summarised_finding')},
-          {key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment')},
-          {key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation')},
-          {key: 'ref_list', label: this.$t('table_headers.references')}
+          { key: 'sort', label: 'No.' },
+          { key: 'name', label: this.$t('table_headers.summarised_finding') },
+          { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
+          { key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation') },
+          { key: 'ref_list', label: this.$t('table_headers.references') }
         ]
       })
     },
@@ -554,7 +432,7 @@ export default {
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
     },
-    cleanTableFilter () {
+    cleanTableFilter() {
       this.ui.project.showFilterOne = false
       this.ui.project.showFilterTwo = false
       this.ui.project.showFilterThree = false
@@ -609,7 +487,7 @@ export default {
       }
       Api.get('/isoqf_findings', params)
         .then((response) => {
-          this.editFindingName = {...response.data[0]}
+          this.editFindingName = { ...response.data[0] }
 
           let cnt = 0
           for (const el of this.lists) {

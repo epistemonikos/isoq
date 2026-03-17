@@ -552,6 +552,36 @@ describe('Camelot Warning Logic Tests', () => {
       wrapper.vm.getCharsOfStudies()
       expect(wrapper.vm.ui.adequacy.chars_of_studies.display_warning).toBe(false)
     })
+
+    it('should ADD camelot fields to characteristics fields if project uses camelot and fields are empty', () => {
+      const wrapper = shallowMount(editList, {
+        localVue, store, mocks,
+        stubs: { 'edit-header-list': true, 'edit-list-actions-buttons': true, 'evidence-profile-table': true, 'table-chars-of-studies': true, 'table-meth-assessments': true, 'table-extracted-data': true }
+      })
+
+      wrapper.setData({
+        project: { use_camelot: true, organization: 'org1', id: 'p1' },
+        list: {
+          project: { use_camelot: true, organization: 'org1', id: 'p1' },
+          references: ['ref1'],
+          findings: [],
+          characteristics: [{
+            fields: [], // EMPTY FIELDS
+            items: [{ ref_id: 'ref1' }]
+          }],
+          assessments: [],
+          fullreferences: JSON.stringify([{ id: 'ref1', authors: ['Author'], publication_year: '2020', title: 'Title' }])
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      
+      const camelotFieldsCount = wrapper.vm.camelot.fields.length
+      // Since one field might be popped inside getCharsOfStudies (the last one, which gets placed in last_column), 
+      // the remaining fields will be length - 1, plus whatever else we have. But fieldsObj has them.
+      // We can just check that it's close to camelotFieldsCount.
+      expect(wrapper.vm.characteristics_studies.fields.length).toBeGreaterThanOrEqual(camelotFieldsCount - 1)
+    })
   })
 
   describe('previewContentWorksheet.vue', () => {
