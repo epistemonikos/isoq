@@ -1,13 +1,18 @@
 <template>
   <div class="step-four-container">
-    <camelot-step-four-header :responses="ui.responses" />
+    <b-alert show variant="info" v-if="isLoading">
+      {{ $t('camelot.step_four.loading') }}
+    </b-alert>
+    <div v-else>
+      <camelot-step-four-header :responses="ui.responses" />
 
-    <camelot-step-four-table
-      :fields="ui.fields"
-      :items="tableItems"
-      :responses="ui.responses"
-      @open-modal="onOpenModal"
-    />
+      <camelot-step-four-table
+        :fields="ui.fields"
+        :items="tableItems"
+        :responses="ui.responses"
+        @open-modal="onOpenModal"
+      />
+    </div>
 
     <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer" body-class="camelot-modal-body">
       <template #modal-title>
@@ -311,6 +316,7 @@ export default {
     const overallHeaderClass = 'header-overall-row'
 
     return {
+      isLoading: false,
       ui: {
         fields: [
           { key: 'authors', label: 'Fit assessments', thClass: headerClass, tdClass: 'border-right' },
@@ -502,6 +508,7 @@ export default {
       return ''
     },
     getAssessments: function () {
+      this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
@@ -552,6 +559,9 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching Assessments data:', error)
+        })
+        .finally(() => {
+          this.isLoading = false
         })
     },
     getCharacteristics: function () {

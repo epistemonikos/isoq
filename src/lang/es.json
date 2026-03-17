@@ -1126,6 +1126,7 @@
       }
     },
     "step_four": {
+      "loading": "Cargando datos...",
       "how_to_read": {
         "title": "Cómo leer esta tabla",
         "section_1": "1. Qué muestra esta tabla",
