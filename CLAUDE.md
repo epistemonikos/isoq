@@ -4,8 +4,9 @@
 
 **Interactive Summary of Qualitative Findings (iSoQ)** - A Vue.js 2 application for creating and managing interactive summaries of qualitative research findings using the GRADE-CERQual approach. Built for the Epistemonikos Foundation.
 
-**Tech Stack:** Vue 2.6, Vuex, Vue Router, Bootstrap-Vue, Webpack 4, Axios
+**Tech Stack:** Vue 2.6.12, Vuex, Vue Router, Bootstrap-Vue, Webpack 4, Axios, Dexie (IndexedDB), docx (Word export), PapaParse (CSV/RIS), vuedraggable
 **Node Version:** >= 14.0.0
+**PWA Support:** Workbox-powered service worker for offline capabilities
 
 ## Architecture
 
@@ -19,6 +20,7 @@ Components are organized by feature domain:
 - `src/components/previewContent/` - Public preview views (previewContentSoQf.vue, previewContentWorksheet.vue)
 - `src/components/tableActions/` - Reusable table components (ActionTable.vue, Filters.vue)
 - `src/components/charsOfStudies/`, `methAssessments/` - Domain-specific data display
+- `src/components/camelot/` - CAMELOT-specific components for quality assessment
 
 ### State Management
 
@@ -26,97 +28,60 @@ Single Vuex store at `src/store.js`:
 
 - **Authentication state:** User login status, permissions (`can_write_other_orgs`, `is_owner`)
 - **Key actions:** `login`, `logout`, `getLogginInfo` (checks auth on route navigation)
-- **Auth persistence:** Uses cookies (session-based), token stored in `localStorage` as `l_s`
-- Promise-based login check stored in `state.promise` for route guard synchronization
-- **Network state:** `state.isOnline` - Boolean tracking online/offline status
-  - Automatically updated by network event listeners
-  - Used throughout the app to disable actions when offline
-  - Access via computed property: `this.$store.state.isOnline`
-  - **Important:** Do NOT define `isOnline` as a prop if using it from store (causes conflicts)
+- **Auth persistence:** Uses session cookies and `localStorage` (`l_s` for token, `user-data` for offline fallback)
+- **Offline Support:** `getLogginInfo` attempts to restore session from `user-data` if network is unavailable
+- **Network state:** `state.isOnline` - Boolean tracking online/offline status via window events
+  - Access via global mixin computed property: `this.isOnline`
 
 ### Routing
 
 - **Mode:** Hash-based routing (`mode: 'hash'`)
-- **Auth guard:** `beforeEach` calls `getLogginInfo`, checks `meta.requiresAuth`
+- **Auth guard:** `beforeEach` calls `getLogginInfo`, checks `meta.requiresAuth`, and sets `document.title`
 - **Route naming:** Routes use camelCase names (e.g., `viewProject`, `editList`)
 - **Key routes:**
+  - `/workspace/:id` → Workspace view
   - `/workspace/:org_id/isoqf/:id` → Project view
   - `/worksheet/:id/edit` → Worksheet editor
   - `/preview/isoq/:org_id/:isoqf_id/:token` → Public preview
-- **Title handling:** Routes set `document.title` via `meta.title`
 
-### API Communication
+### API Communication & Offline Support
 
-Custom API wrapper at `src/utils/Api.js`:
-\`\`\`javascript
-import Api from '@/utils/Api'
-Api.get('/path', params)
-Api.post('/path', data)
-Api.put('/path', data)
-Api.delete('/path')
-\`\`\`
+Advanced API wrapper at `src/utils/Api.js`:
 
 - **Base URL:** Set via `process.env.API_URL`
-- **Auth:** Token from `localStorage.getItem('l_s')` → Header: `Authorization: Token session="..."`
-- **Alternative:** Direct axios calls for auth endpoints (`/auth/login`, `/auth/logout`)
+- **Authentication:** Token-based via `Authorization: Token session="..."` header
+- **Offline Capabilities:**
+  - **Caching:** GET requests are cached using `strategies` (in `OfflineStrategies.js`) and stored in IndexedDB via `Dexie`
+  - **Queuing:** POST/PUT/PATCH/DELETE operations are queued when offline and automatically synced when connection is restored
+  - **Optimistic Updates:** Local cache is updated immediately before syncing with server
+- **Concurrency Control:** Handles project locking conflicts (409/403 errors)
 
 ### Internationalization (i18n)
 
 - Plugin at `src/plugins/i18n.js` using vue-i18n
-- Locale files: `src/lang/en.json`
+- Locale files: `src/lang/en.json`, `es.json`, `pt.json`
 - Default locale: `en`
-- Usage in components: `$t('key')` or `{{ $t('key') }}`
-- Route translation helper: `$i18nRoute` (Trans plugin)
+- Helper at `src/plugins/Translation.js` for language switching and async loading
+- **Language Persistence:** Managed via `localStorage` (`user_language`) and detected on initial load.
+- **URL Handling:** Note that while `Translation.js` has legacy logic for `:lang` parameters, the current routes do **not** use language prefixes in the URL.
 
 ## Development Workflow
 
 ### Local Development Setup
 
-**IMPORTANT:** Full-stack development requires starting multiple services in order:
+**IMPORTANT:** Full-stack development requires starting multiple services:
 
-1. **Start Database (Docker)**
+1. **Start Database (Docker)**: `docker compose up`
+2. **Start Backend Server**: See `isoq_server` instructions (typically port 8080)
+3. **Start Frontend**:
    \`\`\`bash
-
-   # Launch Docker container with database
-
-   docker compose up # or docker-compose up
+   nvm use 14 # or see .nvmrc
+   npm install
+   npm run dev
    \`\`\`
 
-2. **Start Backend Server**
-   \`\`\`bash
-   cd ~/dev/epistemonikos/isoq_server
-   conda activate isoq-server
-
-   # Run backend server command (typically runs on port 8080)
-
-   \`\`\`
-
-3. **Start Frontend (this repository)**
-   \`\`\`bash
-   cd ~/dev/epistemonikos/isoq_web
-   nvm use isoq
-   npm run dev # or npm start
-   \`\`\`
-
-4. **Access Application**
-   - URL: `http://episte.lo:8090`
-   - Test user credentials: Ask a team member for dev credentials
-
-### Starting Development Server
-
-\`\`\`bash
-npm run dev
-
-# Or explicitly:
-
-npm start
-\`\`\`
-
-- **Dev server:** Runs on `http://episte.lo:8090` (or next available port)
-- **Backend dependency:** Frontend proxies API calls to `http://localhost:8080` (backend must be running)
-- **Proxy setup:** All API endpoints (`/auth`, `/api`, `/users`, `/organizations`, `/project`) proxy to backend
-- **Hot reload:** Enabled via webpack-dev-server
-- **DNS requirement:** `episte.lo` must resolve to localhost (add to `/etc/hosts` if needed)
+- **Dev server:** Runs on `http://episte.lo:8090` (host resolution required in `/etc/hosts`)
+- **Proxy setup:** Configured in `config/index.js` to point to `localhost:8080`
 
 ### Building for Production
 
@@ -125,71 +90,42 @@ npm run build
 \`\`\`
 
 - **Output:** `dist/` directory
-- **Asset path:** Relative (`assetsPublicPath: './'`)
-- **Source maps:** Disabled in production (`productionSourceMap: false`)
-- **No gzip** by default
+- **Service Worker:** Generated via Workbox `GenerateSW` plugin
+- **Gzip:** Off by default in config, can be enabled via `productionGzip: true`
 
-### Deployment
+### Code Quality & Testing
 
-Manual deployment process:
-
-1. Ensure `master` branch is up to date with desired changes
-2. SSH into production server
-3. Pull latest code from `master` branch
-4. Run deployment script/commands on server
-5. No automated CI/CD pipeline currently configured
-
-### Code Quality
-
-\`\`\`bash
-npm run lint
-\`\`\`
-
-- **Linter:** ESLint with `babel-eslint` parser
-- **Style guide:** Standard JS + Vue Essential rules
-- **Currently disabled** in build process (`useEslint: false` in config)
-- Debugger statements allowed in development
-
-### No Testing Framework
-
-No test files or test runner configured. If adding tests, you'll need to set up Jest or similar.
+- **Linting:** `npm run lint` (ESLint with Standard JS + Vue rules)
+- **Unit Testing:** `npm run test` (Jest + Vue Test Utils)
+  - Test files located in `tests/unit/`
+- **E2E Testing:** `cypress open` or `cypress run`
+  - Files located in `cypress/`
 
 ## Key Patterns & Conventions
 
-### Component Loading
+### Project Types (CAMELOT)
 
-Lazy loading with webpack chunks for route components:
-\`\`\`javascript
-const MainPage = () => import(/_ webpackChunkName: "home" _/ '@/components/MainPage')
-\`\`\`
+Projects can be **Camelot** or **non-Camelot** (`use_camelot` field):
+- **Camelot**: Uses predefined domains and questions for Step 3 (Characteristics) and Step 4 (Methodological Assessment)
+- **Non-Camelot**: Uses user-defined custom fields for these steps
 
 ### Data Validation
 
-Project publishing requires validation via `src/utils/project.js`:
+Project publishing requires validation via `src/utils/project.js` (`Project.validations()`):
+- Frontend checks required metadata (authors, email, question, etc.)
+- Backend checks content requirements (`/api/project/can_publish`): at least 1 reference, 1 finding with CERQual explanation
 
-- Email validation: `Project.validEmail(email)`
-- URL validation: `Project.validUrl(url)`
-- Full validation: `Project.validations(data)` checks required fields for public projects
-- Returns structured error state for form field highlighting
+### Bootstrap-Vue & FontAwesome
 
-### Bootstrap-Vue Usage
+- Heavy use of `<b-table>`, `<b-modal>`, `<b-form-*>`
+- Icons managed via `@fortawesome/vue-fontawesome` library in `main.js`
 
-Heavy use of Bootstrap-Vue components:
+### Component Loading
 
-- Tables: `<b-table>` with filters, sorting, pagination
-- Modals: `<b-modal>` for dialogs
-- Forms: `<b-form-input>`, `<b-form-select>`, etc.
-- Layout: `<b-container>`, `<b-row>`, `<b-col>`
-- See `ViewTable.vue` for typical table patterns with dropdown filters
-
-### FontAwesome Icons
-
-Icons added to library in `src/main.js`:
+Lazy loading with webpack chunks for all main routes:
 \`\`\`javascript
-import { faEdit, faCopy, faTrash, ... } from '@fortawesome/free-solid-svg-icons'
-library.add(faEdit, faCopy, ...)
+const ViewProject = () => import(/* webpackChunkName: "viewproject" */ '@/components/project/viewProject')
 \`\`\`
-Usage: `<font-awesome-icon icon="edit" />`
 
 ## Project Creation & Publication Flow
 
@@ -209,13 +145,6 @@ isoqf_projects (Project)
 ├── isoqf_characteristics (Step 3 data)
 └── isoqf_assessments (Step 4 data)
 ```
-
-### Project Types
-
-Projects can be configured as **Camelot** or **non-Camelot** (controlled by `use_camelot` boolean field):
-
-- **Camelot projects**: Use predefined Camelot fields in Steps 3-4 plus optional custom fields
-- **Non-Camelot projects**: Use only custom fields defined by the user in Steps 3-4
 
 ### Step-by-Step Creation Workflow
 
@@ -563,7 +492,6 @@ Located in: `isoq_server/auth_server/controllers/core.py`
 ### Webpack Configuration
 
 - Uses **Webpack 4** (not 5)
-- Custom polyfills for Node globals (buffer, crypto, stream, process) configured in `build/webpack.base.conf.js`
 - Root webpack.config.js is a compatibility wrapper for webpack-dev-server
 
 ### Authentication Flow
