@@ -1,15 +1,7 @@
 <template>
-  <b-modal
-    id="modal-edit-reference"
-    ref="modal-edit-reference"
-    :title="modalTitle"
-    size="xl"
-    @ok="handleModalOk"
-    @hide="resetModal"
-    @shown="initScrollSpy"
-    header-bg-variant="custom-blue"
-    :ok-title="$t('camelot.step_three.modal.save_button')"
-    >
+  <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" @ok="handleModalOk"
+    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue"
+    :no-close-on-esc="isSaving" :no-close-on-backdrop="isSaving">
     <template v-if="localReference">
       <b-row>
         <!-- Menú flotante a la izquierda -->
@@ -17,10 +9,7 @@
           <div class="sticky-menu p-2">
             <div class="menu-section-title mb-1">{{ $t('camelot.step_three.study_characteristics') }}</div>
             <div class="menu-section mb-0" v-if="customFields.length > 0">
-              <div
-                v-for="(field, index) in customFields"
-                :key="'menu-custom-' + index"
-                class="menu-item"
+              <div v-for="(field, index) in customFields" :key="'menu-custom-' + index" class="menu-item"
                 :class="{ 'active-menu-item': activeSection === 'custom-field-' + index }"
                 @click="scrollToSection('custom-field-' + index)">
                 {{ field.isCamelot ? (field.categoryLabel || field.label) : (field.label || 'Sin título') }}
@@ -33,9 +22,7 @@
         <b-col cols="9">
           <!-- Campos unificados -->
           <div class="mb-4">
-            <CustomFieldsManager
-              v-model="customFields"
-              :with-values="true"
+            <CustomFieldsManager v-model="customFields" :with-values="true"
               :title="$t('camelot.step_three.modal.custom_fields_title')"
               :add-button-text="$t('camelot.step_three.modal.add_field_button')"
               :empty-text="$t('camelot.step_three.modal.no_custom_fields')"
@@ -45,15 +32,23 @@
               :label-text="$t('camelot.step_three.modal.title_label')"
               :content-label-text="$t('camelot.step_three.modal.content_label')"
               :placeholder-label="$t('camelot.step_three.modal.field_title_placeholder')"
-              :placeholder-value="$t('camelot.step_three.modal.field_content_placeholder')"
-              id-prefix="custom-field-"
-            />
+              :placeholder-value="$t('camelot.step_three.modal.field_content_placeholder')" id-prefix="custom-field-" />
           </div>
         </b-col>
       </b-row>
     </template>
     <template v-else>
       <b-alert show variant="info">{{ $t('camelot.step_three.modal.no_selection') }}</b-alert>
+    </template>
+
+    <template #modal-footer="{ ok, cancel }">
+      <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
+        {{ $t('common.cancel') }}
+      </b-button>
+      <b-button size="md" variant="primary" @click="ok()" :disabled="isSaving">
+        <b-spinner v-if="isSaving" small></b-spinner>
+        {{ $t('camelot.step_three.modal.save_button') }}
+      </b-button>
     </template>
   </b-modal>
 </template>
@@ -86,18 +81,19 @@ export default {
       default: () => []
     }
   },
-  data () {
+  data() {
     return {
       camelotLogo: require('@/assets/camelot-logo.svg'),
       localReference: null,
       editForm: {},
       customFields: [],
       activeSection: null,
-      observer: null
+      observer: null,
+      isSaving: false
     }
   },
   computed: {
-    modalTitle () {
+    modalTitle() {
       if (this.localReference) {
         const authorInfo = Commons.parseReference(this.localReference, true, false)
         return `${this.$t('camelot.step_three.modal.title', { reference_id: authorInfo })}`
@@ -108,7 +104,7 @@ export default {
   watch: {
     reference: {
       immediate: true,
-      handler (newVal) {
+      handler(newVal) {
         if (newVal) {
           this.localReference = { ...newVal }
           this.editForm = { ...newVal }
@@ -119,7 +115,7 @@ export default {
       }
     },
     customFields: {
-      handler () {
+      handler() {
         if (this.observer) {
           this.$nextTick(() => {
             this.initScrollSpy()
@@ -129,21 +125,22 @@ export default {
     }
   },
   methods: {
-    show () {
+    show() {
       this.$bvModal.show('modal-edit-reference')
     },
-    hide () {
+    hide() {
       this.$bvModal.hide('modal-edit-reference')
     },
-    resetModal () {
+    resetModal() {
       this.destroyScrollSpy()
-      this.localReference = null
       this.editForm = {}
       this.customFields = []
       this.activeSection = null
+      this.localReference = null
+      this.isSaving = false
       this.$emit('close')
     },
-    initScrollSpy () {
+    initScrollSpy() {
       this.destroyScrollSpy()
 
       this.$nextTick(() => {
@@ -151,7 +148,7 @@ export default {
         // Esto actúa como una "línea de disparo" más que como un área
         const options = {
           root: null,
-          rootMargin: '-120px 0px -75% 0px', 
+          rootMargin: '-120px 0px -75% 0px',
           threshold: 0
         }
 
@@ -199,20 +196,20 @@ export default {
         observeElements()
       })
     },
-    destroyScrollSpy () {
+    destroyScrollSpy() {
       if (this.observer) {
         this.observer.disconnect()
         this.observer = null
       }
     },
-    initializeCustomFields (itemValues = null) {
+    initializeCustomFields(itemValues = null) {
       if (!this.charsData || !Array.isArray(this.charsData.fields)) {
         this.customFields = []
         return
       }
 
       const parsedFields = []
-      
+
       this.charsData.fields.forEach(field => {
         // Skip system fields
         if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) return
@@ -220,7 +217,7 @@ export default {
         if (field.key.endsWith('_comments')) return
 
         const isCamelot = field.key.endsWith('_extractedData')
-        
+
         const customFieldObj = {
           label: field.label || '',
           value: (itemValues && itemValues[field.key]) || '',
@@ -240,28 +237,28 @@ export default {
           customFieldObj.hasComments = true
           customFieldObj.commentsKey = commentsKey
           customFieldObj.commentsValue = (itemValues && itemValues[commentsKey]) || ''
-          
+
           let categoryLabel = field.label
           let extractedDataLabel = this.$t('camelot.step_three.modal.content_label')
           let commentsLabel = this.$t('camelot.step_three.concerns_label') || 'Comments'
-          
+
           if (this.camelot && this.camelot.categories) {
             const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
             if (categoryMatch) {
               categoryLabel = categoryMatch.label
               const extOpt = categoryMatch.options.find(o => o.key === field.key)
               if (extOpt) extractedDataLabel = extOpt.label
-              
+
               const concOpt = categoryMatch.options.find(o => o.key === commentsKey)
               if (concOpt) commentsLabel = concOpt.label
             }
           }
-          
+
           customFieldObj.categoryLabel = categoryLabel
           customFieldObj.extractedDataLabel = extractedDataLabel
           customFieldObj.commentsLabel = commentsLabel
         }
-        
+
         parsedFields.push(customFieldObj)
       })
 
@@ -283,7 +280,7 @@ export default {
 
       this.customFields = parsedFields
     },
-    scrollToSection (id) {
+    scrollToSection(id) {
       const element = document.getElementById(id)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -295,8 +292,11 @@ export default {
         }
       }
     },
-    handleModalOk (bvModalEvent) {
+    handleModalOk(bvModalEvent) {
       if (bvModalEvent) bvModalEvent.preventDefault()
+      if (this.isSaving) return
+
+      this.isSaving = true
 
       const item = {
         ref_id: this.localReference.id || '',
@@ -304,8 +304,8 @@ export default {
       }
 
       const newFieldsArray = []
-      
-      const systemFields = (this.charsData.fields || []).filter(field => 
+
+      const systemFields = (this.charsData.fields || []).filter(field =>
         ['authors', 'ref_id', 'actions', 'edit'].includes(field.key)
       )
 
@@ -313,11 +313,11 @@ export default {
         if (field.label && field.label.trim() !== '') {
           let fieldKey = field.key
           if (!field.locked && (!fieldKey || !fieldKey.startsWith('column_'))) {
-             const existingCustomFields = this.charsData.fields.filter(f => isCustomField(f.key))
-             const lastIndex = existingCustomFields.length > 0
-               ? Math.max(...existingCustomFields.map(ef => parseInt(ef.key.split('_')[1])))
-               : -1
-             fieldKey = `column_${Date.now()}_${index}`
+            const existingCustomFields = this.charsData.fields.filter(f => isCustomField(f.key))
+            const lastIndex = existingCustomFields.length > 0
+              ? Math.max(...existingCustomFields.map(ef => parseInt(ef.key.split('_')[1])))
+              : -1
+            fieldKey = `column_${Date.now()}_${index}`
           }
 
           item[fieldKey] = field.value || ''
@@ -361,6 +361,7 @@ export default {
 
       savePromise
         .then(response => {
+          this.isSaving = false
           const responseData = response.data.$set || response.data
           const savedData = {
             ...responseData,
@@ -387,6 +388,7 @@ export default {
           this.hide()
         })
         .catch(error => {
+          this.isSaving = false
           console.error('Error saving reference characteristics:', error)
         })
     }
@@ -438,9 +440,17 @@ export default {
 }
 
 @keyframes highlightBackground {
-  0% { background-color: rgba(40, 167, 69, 0.2); }
-  50% { background-color: rgba(40, 167, 69, 0.1); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(40, 167, 69, 0.2);
+  }
+
+  50% {
+    background-color: rgba(40, 167, 69, 0.1);
+  }
+
+  100% {
+    background-color: transparent;
+  }
 }
 
 .highlight-new-field {
