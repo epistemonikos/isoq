@@ -10,104 +10,74 @@
         <h3>{{ $t("Projects") }}</h3>
         <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
           <b-col cols="12" class="text-right">
-            <b-button
-              v-b-tooltip.hover
-              title="Create a new Interactive Summary of Qualitative Findings Table"
-              variant="success"
-              @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
+            <b-button v-b-tooltip.hover title="Create a new Interactive Summary of Qualitative Findings Table"
+              variant="success" @click="openModalNewFindingTable">{{ $t("Add new project") }}</b-button>
           </b-col>
         </b-row>
-        <b-row
-          class="mt-3">
-          <b-col
-            cols="12">
-            <b-table
-              id="organizations"
-              responsive
-              striped
-              hover
-              head-variant="light"
-              :busy="ui.projectTable.isBusy"
-              :fields="ui.projectTable.fields"
-              :items="projects"
-              sort-by="created_at"
-              :sort-desc="true">
+        <b-row class="mt-3">
+          <b-col cols="12">
+            <b-table id="organizations" responsive striped hover head-variant="light" :busy="ui.projectTable.isBusy"
+              :fields="ui.projectTable.fields" :items="projects" sort-by="created_at" :sort-desc="true">
               <template v-slot:cell(private)="data">
-                <b-badge
-                  variant="light"
-                  class="publish-status"
-                  v-b-tooltip.hover
-                  :title="global_status.map((obj)=>{ if (obj.value === data.item.public_type) { return obj.text } })">
+                <b-badge variant="light" class="publish-status" v-b-tooltip.hover
+                  :title="global_status.map((obj) => { if (obj.value === data.item.public_type) { return obj.text } })">
                   {{ data.item.public_type }}
                 </b-badge>
               </template>
               <template v-slot:cell(name)="data">
-                <b-link
-                  :id="`p-${data.item.id}`"
-                  class="link-project"
-                  :to="{name: 'viewProject', params: {org_id: data.item.organization, id: data.item.id}}">
+                <b-link :id="`p-${data.item.id}`" class="link-project"
+                  :to="{ name: 'viewProject', params: { org_id: data.item.organization, id: data.item.id } }">
                   {{ data.item.name }}
                 </b-link>
               </template>
               <template v-slot:cell(actions)="data">
                 <div class="d-block d-lg-none">
                   <b-dropdown id="dropdown-1" text="Project Options" class="m-md-2" variant="outline-secondary">
-                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> Duplicate</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> Shared</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> Share</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>Edit</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> Remove</b-dropdown-item>
-                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> Leave</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write"
+                      @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon
+                        icon="copy"></font-awesome-icon> Duplicate</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                      @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon
+                        icon="link"></font-awesome-icon> Shared</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)"
+                      link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon>
+                      Share</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)"
+                      link-class="text-decoration-none"><font-awesome-icon
+                        icon="edit"></font-awesome-icon>Edit</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)"
+                      link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon>
+                      Remove</b-dropdown-item>
+                    <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
+                      @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon
+                        icon="sign-out-alt"></font-awesome-icon> Leave</b-dropdown-item>
                   </b-dropdown>
                 </div>
                 <div class="d-none d-lg-block">
-                  <b-button
-                    v-if="data.item.is_owner || data.item.allow_to_write"
-                    title="Duplicate"
-                    variant="outline-secondary"
-                    @click="openCloneModal(data.item.id)">
-                    <font-awesome-icon
-                      icon="copy"></font-awesome-icon>
+                  <b-button v-if="data.item.is_owner || data.item.allow_to_write" title="Duplicate"
+                    variant="outline-secondary" @click="openCloneModal(data.item.id)">
+                    <font-awesome-icon icon="copy"></font-awesome-icon>
                   </b-button>
-                  <b-button
-                    v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                  <b-button v-if="data.item.is_owner && (data.item.sharedToken.length)"
                     title="You have a temporary link enabled for this project. It will remain enabled until you manually switch it off. Click here to switch it off"
-                    variant="outline-secondary"
-                    @click="modalShareOptions(data.item.id, 2)">
-                    <font-awesome-icon
-                      icon="link"></font-awesome-icon>
+                    variant="outline-secondary" @click="modalShareOptions(data.item.id, 2)">
+                    <font-awesome-icon icon="link"></font-awesome-icon>
                   </b-button>
-                  <b-button
-                    v-if="data.item.is_owner"
-                    title="Share"
-                    variant="outline-secondary"
+                  <b-button v-if="data.item.is_owner" title="Share" variant="outline-secondary"
                     @click="modalShareOptions(data.item.id)">
-                    <font-awesome-icon
-                      icon="users"></font-awesome-icon>
+                    <font-awesome-icon icon="users"></font-awesome-icon>
                   </b-button>
-                  <b-button
-                    v-if="data.item.allow_to_write"
-                    title="Edit"
-                    variant="outline-success"
+                  <b-button v-if="data.item.allow_to_write" title="Edit" variant="outline-success"
                     @click="openModalEditProject(data.item)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
+                    <font-awesome-icon icon="edit"></font-awesome-icon>
                   </b-button>
-                  <b-button
-                    v-if="data.item.is_owner"
-                    title="Remove"
-                    variant="outline-danger"
+                  <b-button v-if="data.item.is_owner" title="Remove" variant="outline-danger"
                     @click="modalRemoveProject(data.item)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
+                    <font-awesome-icon icon="trash"></font-awesome-icon>
                   </b-button>
-                  <b-button
-                    v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
-                    title="Leave"
-                    variant="outline-success"
-                    @click="openModalLeaveProject(data.item)">
-                    <font-awesome-icon
-                      icon="sign-out-alt"></font-awesome-icon>
+                  <b-button v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
+                    title="Leave" variant="outline-success" @click="openModalLeaveProject(data.item)">
+                    <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
                   </b-button>
                 </div>
               </template>
@@ -122,145 +92,82 @@
         </b-row>
       </div>
       <!-- modals -->
-      <b-modal
-        id="new-project"
-        ref="new-project"
-        size="xl"
-        :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'"
-        @ok="save"
-        @cancel="closeModalProject"
-        :ok-disabled="!buffer_project.name"
-        ok-title="Save"
-        ok-variant="outline-success"
+      <b-modal id="new-project" ref="new-project" size="xl"
+        :title="(buffer_project.id) ? 'Edit iSoQ table' : 'New iSoQ table'" @ok="save" @cancel="closeModalProject"
+        :ok-disabled="!buffer_project.name" ok-title="Save" ok-variant="outline-success"
         cancel-variant="outline-secondary">
-        <b-alert
-          :show="ui.dismissCounters.dismissCountDown"
-          @dismiss-count-down="countDownChanged"
-          variant="danger"
+        <b-alert :show="ui.dismissCounters.dismissCountDown" @dismiss-count-down="countDownChanged" variant="danger"
           v-if="ui.error.status">
-            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
-            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
-          </b-alert>
-        <organizationForm
-          ref="organizationForm"
-          :formData="buffer_project"
-          :canWrite="($store.state.user.personal_organization === this.$route.params.id)"
-          :isModal="true"
+          <p>[{{ ui.error.status }}] - {{ ui.error.statusText }}</p>
+          <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
+        </b-alert>
+        <organizationForm ref="organizationForm" :formData="buffer_project"
+          :canWrite="($store.state.user.personal_organization === this.$route.params.id)" :isModal="true"
           @modal-notification="modalNotification"></organizationForm>
       </b-modal>
-      <b-modal
-        size="xl"
-        id="new-project-list"
-        ref="new-project-list"
+      <b-modal size="xl" id="new-project-list" ref="new-project-list"
         :title="(buffer_project_list.id) ? 'Edit summarised review finding' : 'New summarised review finding'"
-        @ok="AddOrUpdateProjectList"
-        @hidden="cleanProjectList"
-        ok-title="Save"
-        ok-variant="outline-success"
+        @ok="AddOrUpdateProjectList" @hidden="cleanProjectList" ok-title="Save" ok-variant="outline-success"
         cancel-variant="outline-secondary">
-        <b-form-group
-          label="Summarised review"
-          label-for="summarized-review">
-          <b-form-input
-            id="summarized-review"
-            placeholder="Enter a summarised review finding"
+        <b-form-group label="Summarised review" label-for="summarized-review">
+          <b-form-input id="summarized-review" placeholder="Enter a summarised review finding"
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
-      <b-modal
-        id="modal-remove-project"
-        ref="modal-remove-project"
-        title="Delete project"
-        @ok="removeProject"
-        @cancel="cleanProject"
-        ok-title="Remove"
-        ok-variant="outline-danger"
-        cancel-variant="outline-secondary">
-        <p>Are you sure you wanna remove "<b>{{this.buffer_project.name}}</b>" and all the data related?</p>
+      <b-modal id="modal-remove-project" ref="modal-remove-project" title="Delete project" @ok="removeProject"
+        @cancel="cleanProject" ok-title="Remove" ok-variant="outline-danger" cancel-variant="outline-secondary">
+        <p>Are you sure you wanna remove "<b>{{ this.buffer_project.name }}</b>" and all the data related?</p>
       </b-modal>
-      <b-modal
-        size="xl"
-        id="modal-share-options"
-        ref="modal-share-options"
-        ok-only
-        ok-title="Close"
-        scrollable>
+      <b-modal size="xl" id="modal-share-options" ref="modal-share-options" ok-only ok-title="Close" scrollable>
         <template v-slot:modal-title>
           <videoHelp txt="Share" tag="none" urlId="449741356"></videoHelp>
         </template>
         <b-tabs v-model="ui.tabIndex">
-          <b-tab
-            title="Invite">
+          <b-tab title="Invite">
             <b-container class="pt-3">
-              <b-form-group
-                label='Insert emails separated by commas and click "add"'
-                label-for="input-emails-invite">
-                <b-input
-                  type="email"
-                  v-model="buffer_project.sharedTo"></b-input>
+              <b-form-group label='Insert emails separated by commas and click "add"' label-for="input-emails-invite">
+                <b-input type="email" v-model="buffer_project.sharedTo"></b-input>
               </b-form-group>
-              <p
-                class="text-danger"
-                v-if="buffer_project.sharedToError != ''">
-                {{buffer_project.sharedToError}}
+              <p class="text-danger" v-if="buffer_project.sharedToError != ''">
+                {{ buffer_project.sharedToError }}
               </p>
-              <b-button
-                :disabled="!ui.sharedProject.enabledToShare"
-                @click="addEmailForShare">add</b-button>
-              <div
-                class="my-3"
-                v-if="buffer_project.tmp_invite_emails.length">
+              <b-button :disabled="!ui.sharedProject.enabledToShare" @click="addEmailForShare">add</b-button>
+              <div class="my-3" v-if="buffer_project.tmp_invite_emails.length">
                 <p class="mb-1 font-weight-light">This project will be shared with:</p>
-                <b-badge
-                class="mx-1"
-                v-for="(email, index) in buffer_project.tmp_invite_emails"
-                :key="index"
-                variant="dark">
+                <b-badge class="mx-1" v-for="(email, index) in buffer_project.tmp_invite_emails" :key="index"
+                  variant="dark">
                   {{ email }}
                   <span @click="removeSharedEmail(index)">x</span>
                 </b-badge>
               </div>
-              <b-form-group
-                label="Can:">
-                <b-form-select
-                  v-model="buffer_project.sharedType"
-                  :options="[{value: 0, text:'View the project'}, {value: 1, text: 'View and edit the project'}]"></b-form-select>
+              <b-form-group label="Can:">
+                <b-form-select v-model="buffer_project.sharedType"
+                  :options="[{ value: 0, text: 'View the project' }, { value: 1, text: 'View and edit the project' }]"></b-form-select>
               </b-form-group>
-              <b-button
-                :disabled="!buffer_project.tmp_invite_emails.length"
-                variant="success"
+              <b-button :disabled="!buffer_project.tmp_invite_emails.length" variant="success"
                 @click="saveSharedProject(buffer_project.id)">Invite</b-button>
             </b-container>
           </b-tab>
-          <b-tab
-            title="Users with access">
+          <b-tab title="Users with access">
             <b-container class="pt-3">
               <h4>Users with Access</h4>
-              <b-table
-                show-empty
-                responsive
-                :fields="['username', 'first_name', 'last_name', 'user_can', 'actions']"
+              <b-table show-empty responsive :fields="['username', 'first_name', 'last_name', 'user_can', 'actions']"
                 :items="users_allowed">
                 <template v-slot:cell(actions)="data">
-                  <b-button
-                    variant="danger"
-                    @click="unshare(data.index, data.item.id)">unshare</b-button>
+                  <b-button variant="danger" @click="unshare(data.index, data.item.id)">unshare</b-button>
                 </template>
                 <template v-slot:cell(user_can)="data">
-                  <b-form-select
-                    v-model="data.item.user_can"
-                    :options="[{value: 0, text: 'Can view'}, {value: 1, text: 'Can view and edit'}]"
+                  <b-form-select v-model="data.item.user_can"
+                    :options="[{ value: 0, text: 'Can view' }, { value: 1, text: 'Can view and edit' }]"
                     @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
                 </template>
                 <template v-slot:empty>
                   <p class="font-weight-light text-center my-3">No users have access to this project</p>
                 </template>
               </b-table>
-              <div
-                v-if="buffer_project.invite_emails.length">
+              <div v-if="buffer_project.invite_emails.length">
                 <h4>Pending access</h4>
-                <b-table-simple
-                  v-if="buffer_project.invite_emails.length">
+                <b-table-simple v-if="buffer_project.invite_emails.length">
                   <b-thead>
                     <b-tr>
                       <b-th>Email</b-th>
@@ -271,9 +178,7 @@
                     <b-tr v-for="(email, index) of buffer_project.invite_emails" :key="index">
                       <b-td>{{ email }}</b-td>
                       <b-td>
-                        <b-button
-                          variant="danger"
-                          @click="unshareInvited(email)">
+                        <b-button variant="danger" @click="unshareInvited(email)">
                           unshare
                         </b-button>
                       </b-td>
@@ -283,66 +188,51 @@
               </div>
             </b-container>
           </b-tab>
-          <b-tab
-            title="Temporary sharing">
+          <b-tab title="Temporary sharing">
             <b-container class="pt-3">
-              <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send the link to will be able to see the project but not edit it.</p>
-              <b-form-checkbox
-                switch
-                v-model="buffer_project.sharedTokenOnOff"
-                :value="true"
-                :unchecked-value="false">Generate a temporary URL. <span class="text-danger">This link will not expire automatically. You must switch it off manually to disable it.</span></b-form-checkbox>
-              <div
-                v-if="buffer_project.sharedTokenOnOff"
-                class="mt-2">
+              <p>Enable this option to share the project with a user who does not have an iSoQ account. Anyone you send
+                the
+                link to will be able to see the project but not edit it.</p>
+              <b-form-checkbox switch v-model="buffer_project.sharedTokenOnOff" :value="true"
+                :unchecked-value="false">Generate a temporary URL. <span class="text-danger">This link will not expire
+                  automatically. You must switch it off manually to disable it.</span></b-form-checkbox>
+              <div v-if="buffer_project.sharedTokenOnOff" class="mt-2">
                 <p>Copy and Share this URL</p>
-                <b-form-input
-                  :value="buffer_project.temporaryUrl"></b-form-input>
+                <b-form-input :value="buffer_project.temporaryUrl"></b-form-input>
               </div>
             </b-container>
           </b-tab>
         </b-tabs>
       </b-modal>
-      <b-modal
-        id="clone-modal"
-        title="Duplicate a project"
-        ok-title="Duplicate"
-        cancel-title="Close"
-        @ok="startCloning"
+      <b-modal id="clone-modal" title="Duplicate a project" ok-title="Duplicate" cancel-title="Close" @ok="startCloning"
         @cancel="closeCloneModal"
         :cancel-disabled="this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable"
         :ok-disabled="((this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) || this.ui.copy.showWarning)"
-        no-close-on-backdrop
-        no-close-on-esc>
+        no-close-on-backdrop no-close-on-esc>
         <template v-if="modalCloneId != null">
           <p>
-            Click on the "duplicate" button to start making a copy of the project "<b>{{buffer_project.name}}</b>".
+            Click on the "duplicate" button to start making a copy of the project "<b>{{ buffer_project.name }}</b>".
             <br>
-            The content of the duplicate will be identical to the original but it will not be shared with other users automatically.
+            The content of the duplicate will be identical to the original but it will not be shared with other users
+            automatically.
             <br>
             Use the "share" button to share the duplicated project.
           </p>
         </template>
-        <template v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
-          <div
-            class="text-center">
-            <b-spinner
-              class="text-center"
-              label="Loading..." variant="secondary"></b-spinner>
+        <template
+          v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
+          <div class="text-center">
+            <b-spinner class="text-center" label="Loading..." variant="secondary"></b-spinner>
           </div>
         </template>
-        <template v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
+        <template
+          v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
           <p class="text-center text-success">Duplicate complete. You can now close this modal.</p>
         </template>
       </b-modal>
-      <b-modal
-        ref="unlink-project"
-        id="unlink-project"
-        title="Leave project"
-        @ok="leaveProject"
-        @cancel="cancelLeaveProject"
-        ok-title="Leave">
-        <p>Leave the project <b>{{buffer_project.name}}</b></p>
+      <b-modal ref="unlink-project" id="unlink-project" title="Leave project" @ok="leaveProject"
+        @cancel="cancelLeaveProject" ok-title="Leave">
+        <p>Leave the project <b>{{ buffer_project.name }}</b></p>
       </b-modal>
     </b-container>
   </div>
@@ -360,7 +250,7 @@ export default {
     'organizationForm': organizationForm,
     videoHelp
   },
-  data () {
+  data() {
     return {
       users: [],
       project_id: '',
@@ -501,7 +391,7 @@ export default {
       hashId: null
     }
   },
-  mounted () {
+  mounted() {
     this.getProjects()
   },
   watch: {
@@ -549,7 +439,7 @@ export default {
           project_id: project.id
         }
         axios.patch('/api/sharedLink', { params })
-          .then(() => {})
+          .then(() => { })
           .catch((error) => {
             console.log(error)
           })
@@ -559,7 +449,7 @@ export default {
   methods: {
     getProjectById: async function (params) {
       try {
-        const response = await axios.get('/api/isoqf_projects', {params: params})
+        const response = await axios.get('/api/isoqf_projects', { params: params })
         return response
       } catch (error) {
         console.log(error)
@@ -682,7 +572,7 @@ export default {
       e.preventDefault()
       this.$refs['organizationForm'].save()
     },
-    countDownChanged (dismissCountDown) {
+    countDownChanged(dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
     },
     ModalAddList: function (idProject) {
@@ -758,7 +648,7 @@ export default {
     },
     removeProject: function () {
       this.ui.projectTable.isBusy = true
-      axios.get(`/api/remove/project/${this.buffer_project.id}`)
+      axios.delete(`/api/remove/project/${this.buffer_project.id}`)
         .then((response) => {
           if (response.data.status) {
             this.getProjects()
@@ -909,7 +799,7 @@ export default {
     },
     removeUser: async function (project, params) {
       try {
-        const data = await axios.post(`/share/project/${project}/unshare`, null, {params: params})
+        const data = await axios.post(`/share/project/${project}/unshare`, null, { params: params })
         return data
       } catch (error) {
         console.log('errors: => ', error)
@@ -925,7 +815,7 @@ export default {
       this.removeUser(projectId, params)
         .then((response) => {
           if (response.status === 200) {
-            this.getProjectById({id: projectId})
+            this.getProjectById({ id: projectId })
               .then((response) => {
                 if (response.status === 200) {
                   const project = this.processProject(response.data[0])
@@ -1067,23 +957,23 @@ export default {
 </script>
 
 <style scoped>
-  div >>>
-    .publish-status {
-      text-transform: uppercase;
-    }
-  div >>>
-    .link-project {
-      color: #000;
-    }
-  div >>>
-    table#organizations thead th:nth-child(2) {
-      width: 60%;
-    }
-  div >>>
-    table#organizations thead th:last-child {
-      width: 30%;
-    }
-  /* div >>>
+div>>>.publish-status {
+  text-transform: uppercase;
+}
+
+div>>>.link-project {
+  color: #000;
+}
+
+div>>>table#organizations thead th:nth-child(2) {
+  width: 60%;
+}
+
+div>>>table#organizations thead th:last-child {
+  width: 30%;
+}
+
+/* div >>>
     table#organizations tbody tr td button {
       display: none;
     }
@@ -1091,12 +981,11 @@ export default {
     table#organizations tbody tr:hover td button {
       display: inline;
     } */
-  div >>>
-    table#organizations tbody td:last-child {
-      text-align: right;
-    }
-  div >>>
-    table#organizations tbody td a {
-      text-decoration: underline;
-    }
+div>>>table#organizations tbody td:last-child {
+  text-align: right;
+}
+
+div>>>table#organizations tbody td a {
+  text-decoration: underline;
+}
 </style>
