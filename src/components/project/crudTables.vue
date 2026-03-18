@@ -471,6 +471,7 @@ import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
 import { camelotMixin } from '@/mixins/camelotMixin'
+import { parseCSVData } from '@/utils/csvImporter'
 
 import { exportTableToCSV } from '@/utils/csvExporter'
 
@@ -573,55 +574,16 @@ export default {
   },
   watch: {
     pre_ImportDataTable: function (data) {
-      let fields = []
-      let items = []
-      const csvData = Papa.parse(data, { skipEmptyLines: true })
-      this.importDataTable.error = null
-      if (csvData.data.length) {
-        if (csvData.data[0].length < 3) {
-          this.importDataTable.error = this.$t('import_modal.format_error')
-        } else {
-          for (let cnt in csvData.data) {
-            if (parseInt(cnt) === 0) {
-              let cntI = 0
-              for (let i in csvData.data[cnt]) {
-                let obj = {}
-                if (parseInt(i) === 0) {
-                  obj.key = 'ref_id'
-                }
-                if (parseInt(i) === 1) {
-                  obj.key = 'authors'
-                }
-                if (parseInt(i) > 1) {
-                  this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': csvData.data[cnt][i] })
-                  obj.key = 'column_' + cntI
-                  cntI++
-                }
-                obj.label = csvData.data[cnt][i]
-                fields.push(obj)
-              }
-            } else {
-              let cntI = 0
-              let obj = {}
-              for (let i in csvData.data[cnt]) {
-                if (parseInt(i) === 0) {
-                  obj.ref_id = csvData.data[cnt][i]
-                }
-                if (parseInt(i) === 1) {
-                  obj.authors = csvData.data[cnt][i]
-                }
-                if (parseInt(i) > 1) {
-                  obj[`column_${cntI}`] = csvData.data[cnt][i]
-                  cntI++
-                }
-              }
-              items.push(obj)
-            }
-          }
-        }
+      const parsed = parseCSVData(data, this.$t('import_modal.format_error'))
+      this.importDataTable.error = parsed.error
+      if (parsed.fieldsObj.length > 0) {
+        this.importDataTable.fieldsObj = [
+          { key: 'authors', label: this.$t('table_headers.author_year') },
+          ...parsed.fieldsObj
+        ]
       }
-      this.importDataTable.fields = fields
-      this.importDataTable.items = items
+      this.importDataTable.fields = parsed.fields
+      this.importDataTable.items = parsed.items
     },
     references () {
       this.updateMyDataTables()
@@ -649,7 +611,7 @@ export default {
       Api.get(`/${this.type}`, params)
         .then((response) => {
           if (response.data.length) {
-            const dataTable = JSON.parse(JSON.stringify(response.data[0]))
+            const dataTable = Commmons.deepClone(response.data[0])
             this.dataTable = dataTable
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
@@ -657,8 +619,8 @@ export default {
                 this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
               }
 
-              const fields = JSON.parse(JSON.stringify(this.dataTable.fields))
-              const items = JSON.parse(JSON.stringify(this.dataTable.items))
+              const fields = Commmons.deepClone(this.dataTable.fields)
+              const items = Commmons.deepClone(this.dataTable.items)
 
               const _items = items.filter(item => item.ref_id && item.authors).sort((a, b) => {
                 const authorsA = (a.authors || '').toString()
@@ -679,7 +641,7 @@ export default {
                 this.addFieldsObjects(this.dataTable.fieldsObj)
               }
 
-              const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
+              const original = Commmons.deepClone(this.dataTable.fieldsObj)
               this.dataTable.fieldsObjOriginal = original
 
               if (this.useCamelot && !this.showConcerns) {
@@ -711,7 +673,7 @@ export default {
         })
     },
     openModalDataTable: function () {
-      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+      let fields = Commmons.deepClone(this.dataTable.fields)
       let editFields = []
       const excluded = ['ref_id', 'authors', 'actions']
       for (let field of fields) {
@@ -723,7 +685,7 @@ export default {
       this.$refs['open-dataTable-modal'].show()
     },
     openModalDataTableEdit: function () {
-      let _fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+      let _fields = Commmons.deepClone(this.dataTable.fields)
       let fields = []
       const excluded = ['ref_id', 'authors', 'actions']
       for (let field of _fields) {
@@ -738,8 +700,8 @@ export default {
     },
     saveDataTableFields: function () {
       this.dataTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModal.fields))
-      let references = JSON.parse(JSON.stringify(this.references))
+      let fields = Commmons.deepClone(this.dataTableFieldsModal.fields)
+      let references = Commmons.deepClone(this.references)
       let params = {
         fields: [
           {'key': 'ref_id', 'label': this.$t('table_headers.reference_id')},
@@ -802,7 +764,7 @@ export default {
       let params = {
         is_public: false
       }
-      let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
+      let fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
 
       fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
       fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
@@ -842,7 +804,7 @@ export default {
       })
     },
     dataTableNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
+      let _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
       let fields = []
       let column = '0'
       const excluded = ['ref_id', 'authors', 'actions']
@@ -878,11 +840,11 @@ export default {
       }
     },
     addContentDataTable: function (index = 0) {
-      const items = JSON.parse(JSON.stringify(this.dataTable.items))
+      const items = Commmons.deepClone(this.dataTable.items)
       
-      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+      let fields = Commmons.deepClone(this.dataTable.fields)
       if (this.useCamelot) {
-        fields = JSON.parse(JSON.stringify(this.dataTable.fieldsObjOriginal))
+        fields = Commmons.deepClone(this.dataTable.fieldsObjOriginal)
       }
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
@@ -923,7 +885,7 @@ export default {
     openModalRemoveContentDataTable: function (id) {
       if (!id) return
 
-      const lists = JSON.parse(JSON.stringify(this.lists))
+      const lists = Commmons.deepClone(this.lists)
       this.removeReferenceDataTable = {
         id: id,
         findings: []
@@ -946,9 +908,9 @@ export default {
     },
     removeDataFromLists: function () {
       const removedId = this.removeReferenceDataTable.id
-      const _items = JSON.parse(JSON.stringify(this.dataTable.items))
+      const _items = Commmons.deepClone(this.dataTable.items)
       let items = []
-      let _keys = JSON.parse(JSON.stringify(this.dataTable.fields))
+      let _keys = Commmons.deepClone(this.dataTable.fields)
       let keys = []
       for (const k of _keys) {
         keys.push(k.key)
@@ -987,7 +949,7 @@ export default {
         })
     },
     generateTemplate: function () {
-      const _refs = JSON.parse(JSON.stringify(this.refs))
+      const _refs = Commmons.deepClone(this.refs)
       let obj = {
         fields: [this.$t('table_headers.reference_id'), this.$t('table_headers.author_year')],
         data: []
@@ -1104,7 +1066,7 @@ export default {
             this.getData()
             return
           }
-          const responseData = JSON.parse(JSON.stringify(response.data[0]))
+          const responseData = Commmons.deepClone(response.data[0])
           const charId = responseData.id
 
           if (responseData.items && responseData.items.length) {
@@ -1130,7 +1092,7 @@ export default {
         })
     },
     processItems: function (dataItems) {
-      let items = JSON.parse(JSON.stringify(dataItems))
+      let items = Commmons.deepClone(dataItems)
       let references = []
       let newItems = []
       for (const item of items) {
@@ -1153,8 +1115,8 @@ export default {
     },
     deleteFieldFromCharsSudiesEdit: function (index) {
       let params = {}
-      const _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
-      const _items = JSON.parse(JSON.stringify(this.dataTable.items))
+      const _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
+      const _items = Commmons.deepClone(this.dataTable.items)
       const dataTableId = this.dataTable.id
 
       let removedField = _fields.splice(index, 1)[0]
@@ -1167,7 +1129,7 @@ export default {
 
       Api.patch(`/${this.type}/${dataTableId}`, params)
         .then((response) => {
-          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
+          let _fields = Commmons.deepClone(response.data['$set'].fields)
           const excluded = ['ref_id', 'authors', 'actions']
           let editFields = []
           for (let field of _fields) {

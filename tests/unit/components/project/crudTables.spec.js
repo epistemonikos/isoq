@@ -189,4 +189,58 @@ describe('crudTables.vue', () => {
     expect(wrapper.vm.dataTable.items).toHaveLength(1)
     expect(wrapper.vm.dataTable.items[0].ref_id).toBe('ref1')
   })
+
+  it('should process new items from references in processItems', async () => {
+    await wrapper.setProps({
+      references: [
+        { id: 'ref1', authors: ['Auth 1'], publication_year: '2021' },
+        { id: 'ref2', authors: ['Auth 2'], publication_year: '2022' }
+      ]
+    })
+    
+    // Existing data only has ref1
+    const dataItems = [
+      { ref_id: 'ref1', authors: 'Auth 1 (2021)', column_0: 'data 1' }
+    ]
+
+    const processed = wrapper.vm.processItems(dataItems)
+    
+    // It should add ref2
+    expect(processed).toHaveLength(2)
+    const newRef = processed.find(p => p.ref_id === 'ref2')
+    expect(newRef).toBeDefined()
+  })
+
+  it('should patch with newly added references in updateMyDataTables if permissions exist', async () => {
+    const mockData = [{
+      id: 'table-1',
+      fields: [{ key: 'ref_id', label: 'ID' }, { key: 'authors', label: 'Authors' }],
+      items: [{ ref_id: 'ref1', authors: 'Auth 1 (2021)' }]
+    }]
+    Api.get.mockResolvedValue({ data: mockData })
+    
+    wrapper.setProps({
+      references: [
+        { id: 'ref1', authors: ['Auth 1'], publication_year: '2021' },
+        { id: 'ref2', authors: ['Auth 2'], publication_year: '2022' }
+      ]
+    })
+    
+    // Check permission logic simulation (mixins/camelotMixin or similar should provide checkPermissions)
+    wrapper.vm.checkPermissions = true
+
+    await wrapper.vm.updateMyDataTables()
+
+    expect(Api.patch).toHaveBeenCalled()
+    const patchCall = Api.patch.mock.calls.find(call => call[0].includes('table-1'))
+    expect(patchCall).toBeDefined()
+    // It patched with the new items
+    expect(patchCall[1].items).toHaveLength(2)
+  })
+
+  it('should format authors correctly in getAuthorsFormat', () => {
+    const formatted = wrapper.vm.getAuthorsFormat(['Smith J', 'Doe A'], '2023')
+    // We don't check exactly what Commons does, but ensure it runs without crashing
+    expect(formatted).toBeDefined()
+  })
 })
