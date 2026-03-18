@@ -54,7 +54,7 @@
           sort-by="authors"
           :id="`${prefix}-table`"
           class="table-content-refs mt-3"
-          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > 1"
+          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)"
           :fields="dataTable.fieldsObj"
           :items="dataTable.items"
           :current-page="dataTableSettings.currentPage"
@@ -406,7 +406,7 @@ export default {
   },
   mounted () {
     this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
-    this.getData()
+    this.updateMyDataTables()
   },
   data () {
     return { dataTable: {
@@ -902,13 +902,15 @@ export default {
           const responseData = Commmons.deepClone(response.data[0])
           const charId = responseData.id
 
-          if (responseData.items && responseData.items.length) {
-            let items = this.processItems(responseData.items)
-            items = this.getCleanedItems(items, responseData.fields)
+          const originalItemsCount = (responseData.items || []).length
+          let items = this.processItems(responseData.items || [])
+          items = this.getCleanedItems(items, responseData.fields)
 
+          // Only patch if items changed (addition or removal)
+          if (items.length !== originalItemsCount || JSON.stringify(items) !== JSON.stringify(responseData.items || [])) {
             // Fix: Do not patch (auto-save) if user does not have write permissions (e.g. project locked)
-            if (this.checkPermissions) {
-              let params = {
+            if (this.canEdit) {
+              const params = {
                 items: items
               }
               Api.patch(`/${this.type}/${charId}`, params)
@@ -917,31 +919,34 @@ export default {
                 })
             } else {
               // If read-only, just update the local data without saving to DB
-              // effectively "previewing" the processed items but not persisting them
-              // This avoids the 409 Conflict.
               this.getData()
             }
+          } else {
+            this.getData()
           }
         })
     },
     processItems: function (dataItems) {
-      let items = Commmons.deepClone(dataItems)
-      let references = []
-      let newItems = []
-      for (const item of items) {
-        references.push(item.ref_id)
-      }
+      const items = Commmons.deepClone(dataItems)
+      const currentRefIds = this.references.map(r => r.id)
+
+      // 1. Keep only items whose reference still exists
+      const filteredItems = items.filter(item => currentRefIds.includes(item.ref_id))
+
+      // 2. Add new items for references that don't have one yet
+      const existingRefIds = filteredItems.map(item => item.ref_id)
+      const newItems = []
+
       for (const reference of this.references) {
-        if (!references.includes(reference.id)) {
-          console.log('this.processItems')
+        if (!existingRefIds.includes(reference.id)) {
           newItems.push({
             ref_id: reference.id,
             authors: this.parseReference(reference, true, false)
           })
         }
       }
-      items.push(...newItems)
-      return items
+
+      return [...filteredItems, ...newItems]
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)

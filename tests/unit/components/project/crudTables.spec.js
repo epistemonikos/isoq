@@ -178,15 +178,18 @@ describe('crudTables.vue', () => {
     }]
     Api.get.mockResolvedValue({ data: mockData })
     
-    wrapper.setProps({
+    // Ensure parseReference returns something valid
+    jest.spyOn(wrapper.vm, 'parseReference').mockReturnValue('Formatted Author')
+    
+    await wrapper.setProps({
       references: [
         { id: 'ref1', authors: ['Auth 1'], publication_year: '2021' },
         { id: 'ref2', authors: ['Auth 2'], publication_year: '2022' }
       ]
     })
     
-    // Check permission logic simulation (mixins/camelotMixin or similar should provide checkPermissions)
-    wrapper.vm.checkPermissions = true
+    // Clear previous calls from watch/mounted
+    Api.patch.mockClear()
 
     await wrapper.vm.updateMyDataTables()
 
@@ -195,6 +198,26 @@ describe('crudTables.vue', () => {
     expect(patchCall).toBeDefined()
     // It patched with the new items
     expect(patchCall[1].items).toHaveLength(2)
+  })
+
+  it('should remove items if references are deleted in processItems', () => {
+    // We set references in DATA because processItems uses this.references
+    wrapper.setData({
+      references: [
+        { id: 'ref1', authors: ['Auth 1'], publication_year: '2021' }
+      ]
+    })
+    
+    const dataItems = [
+      { ref_id: 'ref1', authors: 'Auth 1 (2021)', column_0: 'data 1' },
+      { ref_id: 'ref2', authors: 'Auth 2 (2022)', column_0: 'data 2' }
+    ]
+
+    const processed = wrapper.vm.processItems(dataItems)
+    
+    expect(processed).toHaveLength(1)
+    expect(processed[0].ref_id).toBe('ref1')
+    expect(processed.find(p => p.ref_id === 'ref2')).toBeUndefined()
   })
 
   it('should format authors correctly in getAuthorsFormat', () => {
