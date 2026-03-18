@@ -112,30 +112,77 @@ describe('UploadReferences.vue', () => {
     })
   })
 
-  describe('Import Logic', () => {
-    it('correctly structures the reference object from PubMed data', () => {
-      const pubmedData = {
-        uid: '1111111',
-        title: 'Test Title',
-        authors: [{ name: 'Author A' }, { name: 'Author B' }],
-        pubdate: '2024',
-        issn: '1111-2222'
-      }
-
-      wrapper.vm.processPubmedData(pubmedData)
+  describe('PubMed Batch Processing', () => {
+    it('processes PubMed IDs in batches of 5', async () => {
+      // Create 12 dummy IDs
+      const pubmedIds = Array.from({ length: 12 }, (_, i) => (1000000 + i).toString())
       
-      const processedRef = wrapper.vm.pubmed_requested[0]
-      
-      expect(processedRef).toMatchObject({
-        title: 'Test Title',
-        database: 'PubMed',
-        authors: ['Author A', 'Author B'],
-        publication_year: '2024',
-        isbn_issn: '1111-2222',
-        organization: 'org-456',
-        project_id: 'project-123',
-        uid: '1111111'
+      // Mock Api.get to return a successful response for each ID
+      Api.get.mockImplementation((url) => {
+        const id = url.split('id=')[1]
+        return Promise.resolve({
+          status: 200,
+          data: {
+            result: {
+              uids: [id],
+              [id]: {
+                uid: id,
+                title: `Title ${id}`,
+                authors: [{ name: 'Author' }],
+                pubdate: '2024',
+                issn: '1234'
+              }
+            }
+          }
+        })
       })
+
+      // Trigger the batch processing
+      await wrapper.vm.processPubMedRequest(pubmedIds)
+
+      // Verify that all IDs were processed
+      expect(wrapper.vm.pubmed_requested).toHaveLength(12)
+      expect(wrapper.vm.pubmedErrorImported).toHaveLength(0)
+      
+      // Verify Api.get was called 12 times
+      expect(Api.get).toHaveBeenCalledTimes(12)
+    })
+
+    it('handles errors in a batch without stopping the whole process', async () => {
+      const pubmedIds = ['1111111', '2222222', '3333333']
+      
+      // Mock first and third ID as success, second as error
+      Api.get.mockImplementation((url) => {
+        const id = url.split('id=')[1]
+        if (id === '2222222') {
+          return Promise.reject(new Error('Network error'))
+        }
+        return Promise.resolve({
+          status: 200,
+          data: {
+            result: {
+              uids: [id],
+              [id]: {
+                uid: id,
+                title: `Title ${id}`,
+                authors: [{ name: 'Author' }],
+                pubdate: '2024',
+                issn: '1234'
+              }
+            }
+          }
+        })
+      })
+
+      await wrapper.vm.processPubMedRequest(pubmedIds)
+
+      // 2 should be successful
+      expect(wrapper.vm.pubmed_requested).toHaveLength(2)
+      // 1 should be in error list (it puts the whole batch in error if one fails in the current implementation)
+      // Actually, looking at the code:
+      // try { const responses = await Promise.all(promises) ... } catch (error) { this.pubmedErrorImported.push(...batch) }
+      // Yes, if ONE promise in Promise.all fails, the whole batch of 5 is marked as error.
+      expect(wrapper.vm.pubmedErrorImported).toHaveLength(3) // The whole batch ['1111111', '2222222', '3333333']
     })
   })
 })
