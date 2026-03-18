@@ -1,50 +1,57 @@
 <template>
-  <div
-    class="mt-5 mb-5"
-    v-if="show.selected.includes('ma')">
+  <div class="mt-5 mb-5" v-if="show.selected.includes('ma')">
     <a name="methodological-assessments"></a>
     <h3 class="toDoc">
-      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.meth_tooltip')">*</small>
-      <span
-        v-if="ui.methodological_assessments.display_warning"
-        class="text-danger d-print-none"
-        v-b-tooltip.hover :title="$t('worksheet.warnings.meth_missing')">
+      {{ $t('worksheet.methodological_assessments') }} <small v-if="mode === 'edit'" class="d-print-none"
+        v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.meth_tooltip')">*</small>
+      <span v-if="ui.methodological_assessments.display_warning" class="text-danger d-print-none" v-b-tooltip.hover
+        :title="$t('worksheet.warnings.meth_missing')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p v-if="showParagraph && (!useCamelot || ui.methodological_assessments.display_warning)" class="d-print-none font-weight-light">
-      {{ $t('help.instructions.add_data_link_pre') }}<b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">{{ $t('common.my_data') }}</b-link>{{ $t('help.instructions.add_data_link_post') }}
+    <p v-if="showParagraph && (!useCamelot || ui.methodological_assessments.display_warning)"
+      class="d-print-none font-weight-light">
+      {{ $t('help.instructions.add_data_link_pre') }}<b-link
+        :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=4`">{{ $t('common.my_data')
+        }}</b-link>{{ $t('help.instructions.add_data_link_post') }}
     </p>
-    
+
     <template v-if="useCamelot">
-      <camelot-assessment-summary-table
-        :assessments="methAssessments"
-        :references="list.references"
+      <camelot-assessment-summary-table :assessments="methAssessments" :references="list.references"
         :hideActions="true" />
     </template>
     <template v-else>
       <template v-if="methAssessments.fields.length">
-        <bc-filters
-          v-if="mode==='edit' && methAssessments.items.length && permission"
-          class="d-print-none"
-          idname="meth-assessments-filter"
-          :tableSettings="methodological_assessments_table_settings"
-          type="meth_assessments"
-          :fields="methAssessments.fields"
-          :items="methAssessments.items">
+        <bc-filters v-if="mode === 'edit' && methAssessments.items.length && permission" class="d-print-none"
+          idname="meth-assessments-filter" :tableSettings="methodological_assessments_table_settings"
+          type="meth_assessments" :fields="methAssessments.fields" :items="methAssessments.items">
         </bc-filters>
-        <b-table
-          class="toDoc"
-          id="methodological"
-          responsive
-          head-variant="light"
-          outlined
-          :fields="methAssessments.fieldsObj"
-          :items="methAssessments.items"
+        <b-table class="toDoc" id="methodological" responsive head-variant="light" outlined
+          :fields="methAssessments.fieldsObj" :items="methAssessments.items"
           :filter="methodological_assessments_table_settings.filter">
-          <template
-            v-slot:cell(authors)="data">
-            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+          <template v-slot:cell(authors)="data">
+            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+          </template>
+          <template v-slot:cell()="data">
+            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
+              {{ truncate(data.value) }}...
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_more') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
+              {{ data.value }}
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_less') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else>
+              {{ data.value }}
+            </div>
           </template>
         </b-table>
 
@@ -56,6 +63,8 @@
 </template>
 
 <script>
+import Commons from '@/utils/commons'
+
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 const CamelotAssessmentSummaryTable = () => import(/* webpackChunkName: "camelot" */ '../camelot/assessment/CamelotAssessmentSummaryTable.vue')
@@ -84,7 +93,7 @@ export default {
     'bc-filters': bCardFilters,
     'camelot-assessment-summary-table': CamelotAssessmentSummaryTable
   },
-  data () {
+  data() {
     return {
       methodological_assessments_table_settings: {
         filter: '',
@@ -92,7 +101,8 @@ export default {
         currentPage: 1,
         perPage: 10,
         pageOptions: [10, 50, 100]
-      }
+      },
+      expandedCells: {}
     }
   },
   methods: {
@@ -102,11 +112,22 @@ export default {
           return ref.content
         }
       }
+    },
+    shouldTruncate(text) {
+      return Commons.shouldTruncate(text)
+    },
+    truncate(text) {
+      return Commons.truncate(text)
+    },
+    toggleExpand(refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
+    },
+    isExpanded(refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
     }
   }
 }
 </script>
 
-<style>
-
-</style>
+<style></style>
