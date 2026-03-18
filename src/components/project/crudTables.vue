@@ -1,93 +1,76 @@
 <template>
   <div>
-    <b-row
-      v-if="canEdit">
-      <b-col
-        sm="4">
-        <b-button
-          block
-          variant="outline-primary"
-          v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
+    <b-row v-if="canEdit">
+      <b-col sm="4">
+        <b-button block variant="outline-primary" v-b-tooltip.hover
+          :title="isOnline ? '' : $t('offline.action_disabled')"
           :disabled="(references.length > 0 && isOnline) ? false : true"
-          v-if="dataTable.fields && dataTable.fields.length <= 2"
-          @click="openModalDataTable()">
+          v-if="dataTable.fields && dataTable.fields.length <= 2" @click="openModalDataTable()">
           {{ $t('characteristics.create_table') }}
         </b-button>
-        <b-button
-          block
-          variant="outline-primary"
-          v-if="dataTable.fields && dataTable.fields.length > 2"
+        <b-button block variant="outline-primary" v-if="dataTable.fields && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
           {{ $t('characteristics.edit_columns') }}
         </b-button>
       </b-col>
-      <b-col
-        sm="1">
+      <b-col sm="1">
         <p class="text-center pt-1">{{ $t('common.or') }}</p>
       </b-col>
-      <b-col
-        sm="4">
-        <b-button
-          block
-          variant="outline-info"
-          v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
-          :disabled="!references.length || !isOnline"
-          @click="openModalImportTable()">
+      <b-col sm="4">
+        <b-button block variant="outline-info" v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
+          :disabled="!references.length || !isOnline" @click="openModalImportTable()">
           {{ $t('characteristics.import_table') }}
         </b-button>
       </b-col>
-      <b-col
-        sm="3"
-        v-if="dataTable.fields && dataTable.fields.length > 2">
-        <b-button
-          variant="outline-secondary"
-          block
-          @click="exportTableToCSV()">
+      <b-col sm="3" v-if="dataTable.fields && dataTable.fields.length > 2">
+        <b-button variant="outline-secondary" block @click="exportTableToCSV()">
           {{ $t('characteristics.export_xls') }}
         </b-button>
       </b-col>
     </b-row>
     <b-row>
-      <b-col
-        cols="12">
-        <b-table
-          sort-by="authors"
-          :id="`${prefix}-table`"
-          class="table-content-refs mt-3"
-          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)"
-          :fields="dataTable.fieldsObj"
-          :items="dataTable.items"
-          :current-page="dataTableSettings.currentPage"
-          :per-page="dataTableSettings.perPage"
-          :busy="dataTableSettings.isBusy"
-          :responsive="true">
-          <template
-            v-slot:cell(authors)="data">
+      <b-col cols="12">
+        <b-table sort-by="authors" :id="`${prefix}-table`" class="table-content-refs mt-3"
+          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)" :fields="dataTable.fieldsObj"
+          :items="dataTable.items" :current-page="dataTableSettings.currentPage" :per-page="dataTableSettings.perPage"
+          :busy="dataTableSettings.isBusy" :responsive="true">
+          <template v-slot:cell(authors)="data">
             <a :id="`${prefix}-${data.item.ref_id}`"></a>
-            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
           </template>
-          <template
-            v-slot:cell(actions)="data"
-            v-if="dataTable.fields && dataTable.fields.length > 2 && canEdit">
+          <template v-slot:cell()="data">
+            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
+              {{ truncate(data.value) }}...
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_more') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
+              {{ data.value }}
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_less') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else>
+              {{ data.value }}
+            </div>
+          </template>
+          <template v-slot:cell(actions)="data" v-if="dataTable.fields && dataTable.fields.length > 2 && canEdit">
             <b-row>
               <b-col>
-                <b-button
-                  v-if="canEdit"
-                  block
-                  variant="outline-success"
+                <b-button v-if="canEdit" block variant="outline-success"
                   @click="addContentDataTable((dataTableSettings.currentPage > 1) ? (dataTableSettings.perPage * (dataTableSettings.currentPage - 1)) + data.index : data.index)">
-                  <font-awesome-icon
-                    icon="edit"></font-awesome-icon>
+                  <font-awesome-icon icon="edit"></font-awesome-icon>
                 </b-button>
               </b-col>
               <b-col class="pt-2">
-                <b-button
-                  v-if="canEdit"
-                  block
-                  variant="outline-danger"
+                <b-button v-if="canEdit" block variant="outline-danger"
                   @click="openModalRemoveContentDataTable(data.item.ref_id)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
+                  <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </b-col>
             </b-row>
@@ -101,33 +84,21 @@
         </b-table>
       </b-col>
 
-      <b-col
-        cols="12">
+      <b-col cols="12">
         <b-pagination
           v-if="dataTable.items && dataTable.items.length && dataTable.items.length > dataTableSettings.perPage"
-          align="center"
-          v-model="dataTableSettings.currentPage"
-          :total-rows="dataTable.items && dataTable.items.length"
-          :per-page="dataTableSettings.perPage"
-          :aria-controls="`${prefix}-table`">
+          align="center" v-model="dataTableSettings.currentPage" :total-rows="dataTable.items && dataTable.items.length"
+          :per-page="dataTableSettings.perPage" :aria-controls="`${prefix}-table`">
         </b-pagination>
       </b-col>
 
-      <b-col
-        cols="12">
-        <BackToTop/>
+      <b-col cols="12">
+        <BackToTop />
       </b-col>
 
-      <b-modal
-        size="xl"
-        id="open-dataTable-modal"
-        ref="open-dataTable-modal"
-        scrollable
-        :ok-disabled="(dataTableFieldsModal.fields[0])?false:true"
-        @ok="saveDataTableFields"
-        :ok-title="$t('common.save')"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
+      <b-modal size="xl" id="open-dataTable-modal" ref="open-dataTable-modal" scrollable
+        :ok-disabled="(dataTableFieldsModal.fields[0]) ? false : true" @ok="saveDataTableFields"
+        :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.column_headers')" tag="none" urlId="449742512"></videoHelp>
         </template>
@@ -138,44 +109,26 @@
           <li>{{ $t('characteristics.no_author_year') }}</li>
           <li v-if="type !== 'isoqf_assessments'">{{ $t('characteristics.no_meth_here') }}</li>
         </ul>
-        <b-form-group
-          :label="$t('characteristics.num_columns')">
-          <b-form-input
-            id="nro-columns"
-            v-model="dataTableFieldsModal.nroColumns"
-            type="number" min="1"></b-form-input>
+        <b-form-group :label="$t('characteristics.num_columns')">
+          <b-form-input id="nro-columns" v-model="dataTableFieldsModal.nroColumns" type="number" min="1"></b-form-input>
         </b-form-group>
-        <b-form-group
-          v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)"
-          :key="cnt"
-          :label="$t('characteristics.column_n', {n: cnt})">
+        <b-form-group v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)" :key="cnt"
+          :label="$t('characteristics.column_n', { n: cnt })">
           <b-input-group>
-            <b-form-input
-              :id="`column_${cnt}`"
-              v-model="dataTableFieldsModal.fields[cnt - 1]"
+            <b-form-input :id="`column_${cnt}`" v-model="dataTableFieldsModal.fields[cnt - 1]"
               type="text"></b-form-input>
-            <b-input-group-append
-              v-if="dataTable.id">
-              <b-button
-                variant="outline-danger"
-                @click="deleteFieldFromCharsSudies(cnt - 1)">
-                <font-awesome-icon
-                  icon="trash"></font-awesome-icon>
+            <b-input-group-append v-if="dataTable.id">
+              <b-button variant="outline-danger" @click="deleteFieldFromCharsSudies(cnt - 1)">
+                <font-awesome-icon icon="trash"></font-awesome-icon>
               </b-button>
             </b-input-group-append>
           </b-input-group>
         </b-form-group>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        id="open-dataTable-modal-edit"
-        ref="open-dataTable-modal-edit"
-        scrollable
-        :ok-disabled="(dataTableFieldsModalEdit.fields.length)?((dataTableFieldsModalEdit.fields[0].label)?false:true):false"
-        @ok="updateDataTableFields"
-        ok-variant="outline-success"
-        :ok-title="$t('common.save')"
+      <b-modal size="xl" id="open-dataTable-modal-edit" ref="open-dataTable-modal-edit" scrollable
+        :ok-disabled="(dataTableFieldsModalEdit.fields.length) ? ((dataTableFieldsModalEdit.fields[0].label) ? false : true) : false"
+        @ok="updateDataTableFields" ok-variant="outline-success" :ok-title="$t('common.save')"
         cancel-variant="outline-secondary">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.edit_columns')" tag="none" urlId="449742512"></videoHelp>
@@ -183,70 +136,42 @@
         <p class="font-weight-light">
           {{ $t('characteristics.column_help') }}
         </p>
-        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
-          <b-form-group
-            v-for="(field, index) in dataTableFieldsModalEdit.fields"
-            :key="index"
-            :label="$t('characteristics.column_n', {n: index})">
+        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true" @end="drag = false">
+          <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="index"
+            :label="$t('characteristics.column_n', { n: index })">
             <b-input-group>
-              <b-form-input
-                :id="`column_${index}`"
-                v-model="field.label"
-                type="text"></b-form-input>
+              <b-form-input :id="`column_${index}`" v-model="field.label" type="text"></b-form-input>
               <b-input-group-append>
-                <b-button
-                  v-if="dataTableFieldsModalEdit.fields.length > 1"
-                  :id="`drag-button-chars-${index}`"
-                  variant="outline-secondary"
-                  v-b-tooltip
-                  :title="$t('characteristics.drag_sort')">
-                  <font-awesome-icon
-                    icon="arrows-alt"></font-awesome-icon>
+                <b-button v-if="dataTableFieldsModalEdit.fields.length > 1" :id="`drag-button-chars-${index}`"
+                  variant="outline-secondary" v-b-tooltip :title="$t('characteristics.drag_sort')">
+                  <font-awesome-icon icon="arrows-alt"></font-awesome-icon>
                 </b-button>
-                <b-button
-                  variant="outline-danger"
-                  @click="deleteFieldFromCharsSudiesEdit(index)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
+                <b-button variant="outline-danger" @click="deleteFieldFromCharsSudiesEdit(index)">
+                  <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </b-input-group-append>
             </b-input-group>
           </b-form-group>
         </draggable>
-        <b-button
-          class="mb-2"
-          @click="dataTableNewColumn"
-          variant="outline-success">
+        <b-button class="mb-2" @click="dataTableNewColumn" variant="outline-success">
           {{ $t('characteristics.add_new_column') }}
         </b-button>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        ref="edit-content-dataTable"
-        :title="$t('characteristics.edit_data')"
-        scrollable
-        @ok="saveContentDataTable"
-        :ok-title="$t('common.save')"
-        ok-variant="outline-success"
+      <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
+        @ok="saveContentDataTable" :ok-title="$t('common.save')" ok-variant="outline-success"
         cancel-variant="outline-secondary">
-        <template
-          v-if="dataTableFieldsModal.items.length">
+        <template v-if="dataTableFieldsModal.items.length">
           <template v-for="field of dataTable.fields">
-            <b-form-group
-              v-if="field.key !== 'ref_id'"
-              :key="field.id"
-              :label="field.label"
+            <b-form-group v-if="field.key !== 'ref_id'" :key="field.id" :label="field.label"
               label-class="font-weight-bold">
               <template v-if="['ref_id', 'authors'].includes(field.key)">
                 <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
               </template>
               <template v-else>
-                <b-form-textarea
-                  v-if="!['ref_id', 'authors'].includes(field.key)"
+                <b-form-textarea v-if="!['ref_id', 'authors'].includes(field.key)"
                   v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                  :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''"
-                  rows="2"
+                  :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''" rows="2"
                   max-rows="100"></b-form-textarea>
               </template>
             </b-form-group>
@@ -254,39 +179,25 @@
         </template>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        id="removeContentModalDataTable"
-        ref="removeContentModalDataTable"
-        :title="$t('characteristics.remove_content')"
-        :ok-title="$t('common.confirm')"
-        ok-variant="outline-danger"
-        cancel-variant="outline-success"
-        @cancel="cleanRemoveContentCharsOfStudies"
-        @ok="removeDataFromLists">
+      <b-modal size="xl" id="removeContentModalDataTable" ref="removeContentModalDataTable"
+        :title="$t('characteristics.remove_content')" :ok-title="$t('common.confirm')" ok-variant="outline-danger"
+        cancel-variant="outline-success" @cancel="cleanRemoveContentCharsOfStudies" @ok="removeDataFromLists">
         <p>{{ $t('characteristics.confirm_delete_row') }}</p>
-        <p
-          v-if="removeReferenceDataTable.findings.length === 0">
+        <p v-if="removeReferenceDataTable.findings.length === 0">
           <b>{{ $t('characteristics.no_findings_affected') }}</b>
         </p>
-        <p
-          v-if="removeReferenceDataTable.findings.length">
+        <p v-if="removeReferenceDataTable.findings.length">
           <b>{{ $t('characteristics.findings_affected') }}</b>
-          <ul>
-            <li v-for="(finding, index) in removeReferenceDataTable.findings" :key="index">
-              {{ $t('characteristics.finding_n', {n: finding}) }}
-            </li>
-          </ul>
+        <ul>
+          <li v-for="(finding, index) in removeReferenceDataTable.findings" :key="index">
+            {{ $t('characteristics.finding_n', { n: finding }) }}
+          </li>
+        </ul>
         </p>
       </b-modal>
 
-      <b-modal
-        :no-close-on-backdrop="true"
-        :no-close-on-esc="true"
-        :ok-title="$t('common.save')"
-        :cancel-title="$t('common.close')"
-        size="xl"
-        id="`import-table-${this.type}`"
+      <b-modal :no-close-on-backdrop="true" :no-close-on-esc="true" :ok-title="$t('common.save')"
+        :cancel-title="$t('common.close')" size="xl" id="`import-table-${this.type}`"
         :ref="`import-table-${this.type}`">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.import_table')" tag="none" urlId="450046545"></videoHelp>
@@ -294,59 +205,41 @@
         <b-alert show variant="danger">
           <b>{{ $t('import_modal.beware') }}</b> {{ $t('import_modal.overwrite_warning') }}
         </b-alert>
-        <p
-        class="font-weight-light">
+        <p class="font-weight-light">
           {{ $t('import_modal.steps_title') }}
         </p>
         <h4>{{ $t('import_modal.step1') }}</h4>
-        <p
-          class="text-danger">
+        <p class="text-danger">
           <b>{{ $t('import_modal.save_as_csv') }}</b>
         </p>
         <p class="text-danger">
           <b>{{ $t('import_modal.template_problems') }}</b>
         </p>
-        <p
-          class="text-danger">
+        <p class="text-danger">
           <b>{{ $t('import_modal.columns_warning') }}</b>
         </p>
-        <b-button
-          variant="info"
-          @click="generateTemplate">
+        <b-button variant="info" @click="generateTemplate">
           {{ $t('import_modal.download_template') }}
         </b-button>
         <h4 class="mt-5">{{ $t('import_modal.step2') }}</h4>
-        <b-form-file
-          ref="import-file"
-          id="input-template-chars-file"
-          plain
+        <b-form-file ref="import-file" id="input-template-chars-file" plain
           @change="loadTableImportData($event)"></b-form-file>
         <h4 class="mt-5">{{ $t('import_modal.step3') }}</h4>
         <p>{{ $t('import_modal.accept_info') }}</p>
-        <p>{{ $t('import_modal.reject_info') }} <a href="#" v-b-modal='`videoHelp-450046545`'>{{ $t('import_modal.see_help') }}</a></p>
-        <b-alert
-          variant="info"
-          :show="importDataTable.error !== null">
+        <p>{{ $t('import_modal.reject_info') }} <a href="#" v-b-modal='`videoHelp-450046545`'>{{
+          $t('import_modal.see_help')
+            }}</a></p>
+        <b-alert variant="info" :show="importDataTable.error !== null">
           {{ importDataTable.error }}
         </b-alert>
-        <b-table
-          v-if="importDataTable.items.length"
-          sticky-header
-          responsive
-          :fields="importDataTable.fieldsObj"
+        <b-table v-if="importDataTable.items.length" sticky-header responsive :fields="importDataTable.fieldsObj"
           :items="importDataTable.items"></b-table>
         <template v-slot:modal-footer>
-          <b-button
-            variant="outline-secondary"
-            @click="cleanVars(true)">{{ $t('common.close') }}</b-button>
-          <b-button
-            variant="outline-info"
-            :disabled="!importDataTable.items.length"
-            @click="cleanVars()">{{ $t('common.reject') }}</b-button>
-          <b-button
-            variant="outline-success"
-            :disabled="!importDataTable.items.length"
-            @click="saveImportedData()">{{ $t('common.save') }}</b-button>
+          <b-button variant="outline-secondary" @click="cleanVars(true)">{{ $t('common.close') }}</b-button>
+          <b-button variant="outline-info" :disabled="!importDataTable.items.length" @click="cleanVars()">{{
+            $t('common.reject') }}</b-button>
+          <b-button variant="outline-success" :disabled="!importDataTable.items.length" @click="saveImportedData()">{{
+            $t('common.save') }}</b-button>
         </template>
       </b-modal>
 
@@ -380,11 +273,11 @@ export default {
     },
     project: {
       type: Object,
-      default: () => {}
+      default: () => { }
     },
     ui: {
       type: Object,
-      default: () => {}
+      default: () => { }
     },
     references: {
       type: Array,
@@ -404,49 +297,51 @@ export default {
     draggable: () => import('vuedraggable'),
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  mounted () {
+  mounted() {
     this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
     this.updateMyDataTables()
   },
-  data () {
-    return { dataTable: {
-      fields: [],
-      items: [],
-      authors: '',
-      fieldsObj: [
-        { key: 'authors', label: this.$t('table_headers.author_year') }
-      ]
-    },
-    dataTableFieldsModal: {
-      nroColumns: 1,
-      fields: [],
-      items: [],
-      selected_item_index: 0
-    },
-    dataTableFieldsModalEdit: {
-      nroColumns: 1,
-      fields: [],
-      items: [],
-      selected_item_index: 0
-    },
-    dataTableSettings: {
-      currentPage: 1,
-      perPage: 10,
-      isBusy: false
-    },
-    removeReferenceDataTable: {
-      id: null,
-      findings: []
-    },
-    pre_ImportDataTable: '',
-    importDataTable: {
-      error: null,
-      fields: [],
-      items: [],
-      fieldsObj: [
-        { key: 'authors', label: 'Author(s), Year' }
-      ]
-    }
+  data() {
+    return {
+      dataTable: {
+        fields: [],
+        items: [],
+        authors: '',
+        fieldsObj: [
+          { key: 'authors', label: this.$t('table_headers.author_year') }
+        ]
+      },
+      dataTableFieldsModal: {
+        nroColumns: 1,
+        fields: [],
+        items: [],
+        selected_item_index: 0
+      },
+      dataTableFieldsModalEdit: {
+        nroColumns: 1,
+        fields: [],
+        items: [],
+        selected_item_index: 0
+      },
+      dataTableSettings: {
+        currentPage: 1,
+        perPage: 10,
+        isBusy: false
+      },
+      removeReferenceDataTable: {
+        id: null,
+        findings: []
+      },
+      pre_ImportDataTable: '',
+      importDataTable: {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      },
+      expandedCells: {}
     }
   },
   watch: {
@@ -462,11 +357,24 @@ export default {
       this.importDataTable.fields = parsed.fields
       this.importDataTable.items = parsed.items
     },
-    references () {
+    references() {
       this.updateMyDataTables()
     }
   },
   methods: {
+    shouldTruncate(text) {
+      return Commmons.shouldTruncate(text)
+    },
+    truncate(text) {
+      return Commmons.truncate(text)
+    },
+    toggleExpand(refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
+    },
+    isExpanded(refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
+    },
     getData: function () {
       this.dataTableSettings.isBusy = true
       const params = {
@@ -481,7 +389,7 @@ export default {
             if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
               this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
               if (this.canEdit) {
-                this.dataTable.fieldsObj = [{'key': 'actions', 'label': '', stickyColumn: true}, { 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
+                this.dataTable.fieldsObj.push({ 'key': 'actions', 'label': '', stickyColumn: true })
               }
 
               const fields = Commmons.deepClone(this.dataTable.fields)
@@ -557,8 +465,8 @@ export default {
       let references = Commmons.deepClone(this.references)
       let params = {
         fields: [
-          {'key': 'ref_id', 'label': this.$t('table_headers.reference_id')},
-          {'key': 'authors', 'label': this.$t('table_headers.author_year')}
+          { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') },
+          { 'key': 'authors', 'label': this.$t('table_headers.author_year') }
         ],
         items: [],
         organization: this.$route.params.org_id,
@@ -671,7 +579,7 @@ export default {
           return 0
         })
         this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(fields[ fields.length - 1 ].key.split('_')[1]) + 1
+        column = parseInt(fields[fields.length - 1].key.split('_')[1]) + 1
       }
 
       this.dataTableFieldsModalEdit.fields.push(
@@ -794,7 +702,7 @@ export default {
 
       const data = Papa.unparse(obj)
 
-      var csvData = new Blob([data], {type: 'text/csv;charset=utf-8;'})
+      var csvData = new Blob([data], { type: 'text/csv;charset=utf-8;' })
       var csvURL = window.URL.createObjectURL(csvData)
 
       let link = document.createElement('a')
@@ -992,5 +900,4 @@ export default {
 
 </script>
 
-<styles lang="scss" scoped>
-</styles>
+<styles lang="scss" scoped></styles>

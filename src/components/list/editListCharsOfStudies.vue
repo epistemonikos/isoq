@@ -1,63 +1,58 @@
 <template>
-  <div
-    class="mt-5 mb-5"
-    v-if="show.selected.includes('cs')">
+  <div class="mt-5 mb-5" v-if="show.selected.includes('cs')">
     <a name="characteristics-of-studies"></a>
     <h3 class="toDoc">
-      {{ $t('worksheet.characteristics_of_studies') }} <small v-if="mode === 'edit'" class="d-print-none" v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.chars_tooltip')">*</small>
-      <span
-        v-if="ui.adequacy.chars_of_studies.display_warning"
-        class="text-danger d-print-none"
-        v-b-tooltip.hover :title="$t('worksheet.warnings.chars_missing')">
+      {{ $t('worksheet.characteristics_of_studies') }} <small v-if="mode === 'edit'" class="d-print-none"
+        v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.chars_tooltip')">*</small>
+      <span v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger d-print-none" v-b-tooltip.hover
+        :title="$t('worksheet.warnings.chars_missing')">
         <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
       </span>
     </h3>
-    <p
-      v-if="showParagraph && (!useCamelot || ui.adequacy.chars_of_studies.display_warning)"
+    <p v-if="showParagraph && (!useCamelot || ui.adequacy.chars_of_studies.display_warning)"
       class="d-print-none font-weight-light">
       {{ $t('help.instructions.add_data_link_pre') }}
-      <b-link
-        :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">
+      <b-link :to="`/workspace/${list.organization}/isoqf/${list.project_id}?tab=My-Data&step=3`">
         {{ $t('project.my_data') }}
       </b-link>
       {{ $t('help.instructions.add_data_link_post') }}
     </p>
     <template v-if="useCamelot">
-      <camelot-characteristics-table
-        :charsOfStudies="charsOfStudies" />
+      <camelot-characteristics-table :charsOfStudies="charsOfStudies" />
     </template>
     <template v-if="!useCamelot && charsOfStudies.fields.length">
-      <bc-filters
-        v-if="mode==='edit' && charsOfStudies.items.length && permission"
-        class="d-print-none"
-        idname="chars-of-studies-filter"
-        :tableSettings="characteristics_studies_table_settings"
-        type="chars_of_studies"
-        :fields="charsOfStudies.fields"
-        :items="charsOfStudies.items">
+      <bc-filters v-if="mode === 'edit' && charsOfStudies.items.length && permission" class="d-print-none"
+        idname="chars-of-studies-filter" :tableSettings="characteristics_studies_table_settings" type="chars_of_studies"
+        :fields="charsOfStudies.fields" :items="charsOfStudies.items">
       </bc-filters>
-      <b-table
-        id="characteristics"
-        responsive
-        head-variant="light"
-        outlined
-        :fields="charsOfStudies.fieldsObj"
-        :items="charsOfStudies.items"
-        :filter="characteristics_studies_table_settings.filter"
-        class="toDoc">
-        <template
-          v-slot:cell(authors)="data">
-          <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+      <b-table id="characteristics" responsive head-variant="light" outlined :fields="charsOfStudies.fieldsObj"
+        :items="charsOfStudies.items" :filter="characteristics_studies_table_settings.filter" class="toDoc">
+        <template v-slot:cell(authors)="data">
+          <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
         </template>
-        <template
-          v-if="charsOfStudies.tableTop.length"
-          v-slot:thead-top>
+        <template v-slot:cell()="data">
+          <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
+            {{ truncate(data.value) }}...
+            <p>
+              <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">{{
+                $t('common.read_more') }}</b-link>
+            </p>
+          </div>
+          <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
+            {{ data.value }}
+            <p>
+              <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">{{
+                $t('common.read_less') }}</b-link>
+            </p>
+          </div>
+          <div v-else>
+            {{ data.value }}
+          </div>
+        </template>
+        <template v-if="charsOfStudies.tableTop.length" v-slot:thead-top>
           <b-tr>
             <b-th></b-th>
-            <b-th
-              v-for="(value, index) of charsOfStudies.tableTop"
-              :key="index"
-              :colspan="value.colspan"
+            <b-th v-for="(value, index) of charsOfStudies.tableTop" :key="index" :colspan="value.colspan"
               class="text-center">
               {{ value.label }}
             </b-th>
@@ -71,6 +66,8 @@
 </template>
 
 <script>
+import Commons from '@/utils/commons'
+
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
 const CamelotCharacteristicsTable = () => import(/* webpackChunkName: "camelot-characteristics-table" */'../camelot/characteristics/CharacteristicsTable.vue')
@@ -99,7 +96,7 @@ export default {
     'bc-filters': bCardFilters,
     'camelot-characteristics-table': CamelotCharacteristicsTable
   },
-  data () {
+  data() {
     return {
       characteristics_studies_table_settings: {
         filter: '',
@@ -113,7 +110,8 @@ export default {
       buffer_modal_stage_three: {
         fields: [],
         data: []
-      }
+      },
+      expandedCells: {}
     }
   },
   methods: {
@@ -123,11 +121,22 @@ export default {
           return ref.content
         }
       }
+    },
+    shouldTruncate(text) {
+      return Commons.shouldTruncate(text)
+    },
+    truncate(text) {
+      return Commons.truncate(text)
+    },
+    toggleExpand(refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
+    },
+    isExpanded(refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
     }
   }
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

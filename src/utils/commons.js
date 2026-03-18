@@ -121,6 +121,16 @@ export default class Commons {
     return cloned
   }
 
+  static shouldTruncate (text) {
+    if (!text || typeof text !== 'string') return false
+    return text.split(' ').filter(word => word.length > 0).length > 10
+  }
+
+  static truncate (text) {
+    if (!text || typeof text !== 'string') return ''
+    return text.split(' ').filter(word => word.length > 0).slice(0, 10).join(' ')
+  }
+
   static theLicense (license = '') {
     if (license.length) {
       this.licenseUrl = require(`../assets/${license.toLowerCase().replace('cc-', '') + '-88x31.png'}`)

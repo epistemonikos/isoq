@@ -3,53 +3,28 @@
     <b-alert show variant="info" v-if="isLoading">
       {{ $t('camelot.step_three.loading') }}
     </b-alert>
-    <b-alert show variant="info" v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
+    <b-alert show variant="info"
+      v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
       {{ $t('camelot.step_three.no_records') }}
     </b-alert>
     <div v-else>
       <!-- Action buttons toolbar -->
       <div class="mb-3 d-flex justify-content-end">
-        <ManageColumnsButton
-          :chars-data="charsData"
-          :camelot="camelot"
-          :visible-column-keys.sync="visibleColumnKeys"
-          @saved="charsData = $event"
-        />
-        <ToggleConcernsButton
-          class="ml-2"
-          v-model="showComments"
-          :has-visible-camelot-fields="hasVisibleCamelotFields"
-          :visible-column-keys.sync="visibleColumnKeys"
-          :camelot="camelot"
-        />
-        <TableColumnFilter
-          class="ml-2"
-          :all-columns="filterableColumns"
-          v-model="visibleColumnKeys"
-        />
-        <ExportCSVButton
-          class="ml-2"
-          :fields="tableFields"
-          :items="tableItems"
-        />
+        <ManageColumnsButton :chars-data="charsData" :camelot="camelot" :visible-column-keys.sync="visibleColumnKeys"
+          @saved="charsData = $event" />
+        <ToggleConcernsButton class="ml-2" v-model="showComments" :has-visible-camelot-fields="hasVisibleCamelotFields"
+          :visible-column-keys.sync="visibleColumnKeys" :camelot="camelot" />
+        <TableColumnFilter class="ml-2" :all-columns="filterableColumns" v-model="visibleColumnKeys" />
+        <ExportCSVButton class="ml-2" :fields="tableFields" :items="tableItems" />
       </div>
 
-      <b-table
-        :items="tableItems"
-        :fields="tableFields"
-        striped
-        hover
-        responsive>
+      <b-table :items="tableItems" :fields="tableFields" striped hover responsive>
         <template v-slot:cell(authors)="data">
           {{ formatAuthors(data.item) }}
         </template>
 
         <template v-slot:cell(edit)="data">
-          <b-button
-            size="sm"
-            variant="outline-primary"
-            class="mr-1"
-            @click="editReference(data.item)">
+          <b-button size="sm" variant="outline-primary" class="mr-1" @click="editReference(data.item)">
             {{ $t('camelot.step_three.edit_button') }}
             <font-awesome-icon icon="edit" class="ml-1" />
           </b-button>
@@ -59,48 +34,71 @@
         <template v-for="field in tableFields" v-slot:[`head(${field.key})`]="data">
           <div :key="field.key" class="d-flex align-items-center">
             <span>{{ data.label }}</span>
-            <img
-              v-if="field.isCamelot"
-              :src="camelotLogo"
-              class="ml-1"
-              width="16"
-              height="16"
-              v-b-tooltip.hover=" $t('camelot.step_three.camelot_field') "
-            />
+            <img v-if="field.isCamelot" :src="camelotLogo" class="ml-1" width="16" height="16"
+              v-b-tooltip.hover="$t('camelot.step_three.camelot_field')" />
           </div>
         </template>
 
         <!-- Plantilla genérica para todos los campos -->
         <template v-slot:cell()="data">
           <!-- Para los campos personalizados, mostramos su contenido -->
-          <span v-if="isCustomField(data.field.key)">
-            <template v-if="data.item[data.field.key]">
+          <template v-if="isCustomField(data.field.key)">
+            <div v-if="shouldTruncate(data.item[data.field.key]) && !isExpanded(data.item.id, data.field.key)">
+              {{ truncate(data.item[data.field.key]) }}...
+              <p>
+                <b-link @click="toggleExpand(data.item.id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_more') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else-if="shouldTruncate(data.item[data.field.key]) && isExpanded(data.item.id, data.field.key)">
               {{ data.item[data.field.key] }}
-            </template>
-            <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
-          </span>
+              <p>
+                <b-link @click="toggleExpand(data.item.id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_less') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else>
+              <template v-if="data.item[data.field.key]">
+                {{ data.item[data.field.key] }}
+              </template>
+              <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
+            </div>
+          </template>
           <!-- Para campos normales, mostramos el valor predeterminado -->
-          <span v-else>
-            <template v-if="data.value">
+          <template v-else>
+            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.id, data.field.key)">
+              {{ truncate(data.value) }}...
+              <p>
+                <b-link @click="toggleExpand(data.item.id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_more') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.id, data.field.key)">
               {{ data.value }}
-            </template>
-            <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
-          </span>
+              <p>
+                <b-link @click="toggleExpand(data.item.id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_less') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else>
+              <template v-if="data.value">
+                {{ data.value }}
+              </template>
+              <i v-else class="text-muted">{{ $t('common.not_completed') }}</i>
+            </div>
+          </template>
         </template>
 
         <template v-slot:cell(actions)="data">
-          <b-button
-            size="sm"
-            variant="outline-primary"
-            class="mr-1"
-            @click="editReference(data.item)">
+          <b-button size="sm" variant="outline-primary" class="mr-1" @click="editReference(data.item)">
             {{ $t('camelot.step_three.edit_button') }}
             <font-awesome-icon icon="edit" class="ml-1" />
           </b-button>
-          <b-button
-            size="sm"
-            variant="danger"
-            @click="deleteReference(data.item)">
+          <b-button size="sm" variant="danger" @click="deleteReference(data.item)">
             {{ $t('camelot.step_three.delete_button') }}
           </b-button>
         </template>
@@ -108,15 +106,8 @@
       </b-table>
 
       <!-- Modal para editar referencias -->
-      <EditReferenceModal
-        ref="editReferenceModal"
-        :reference="currentItem"
-        :chars-data="charsData"
-        :camelot="camelot"
-        :visible-column-keys.sync="visibleColumnKeys"
-        @saved="handleReferenceSaved"
-        @close="currentItem = null"
-      />
+      <EditReferenceModal ref="editReferenceModal" :reference="currentItem" :chars-data="charsData" :camelot="camelot"
+        :visible-column-keys.sync="visibleColumnKeys" @saved="handleReferenceSaved" @close="currentItem = null" />
     </div>
   </div>
 </template>
@@ -150,7 +141,7 @@ export default {
   watch: {
     filterableColumns: {
       immediate: true,
-      handler (newCols, oldCols) {
+      handler(newCols, oldCols) {
         // Initial load
         if (!oldCols) {
           this.visibleColumnKeys = newCols.map(c => c.key)
@@ -174,7 +165,7 @@ export default {
       }
     },
     // Watch showComments to ensure new columns are visible
-    showComments (newVal) {
+    showComments(newVal) {
       if (newVal) {
         // Validation logic is now handled in toggleConcerns to ensure immediate update
         this.$nextTick(() => {
@@ -183,7 +174,7 @@ export default {
       }
     },
     visibleColumnKeys: {
-      handler (newVal, oldVal) {
+      handler(newVal, oldVal) {
         // If showComments is active, we should ensure concern columns follow their parents
         if (this.showComments && oldVal) {
           const added = newVal.filter(k => !oldVal.includes(k))
@@ -221,7 +212,7 @@ export default {
       deep: false
     },
     references: {
-      handler (newReferences, oldReferences) {
+      handler(newReferences, oldReferences) {
         // Only reload if there are actual changes in references
         if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
           this.loadCharacteristicsData()
@@ -230,7 +221,7 @@ export default {
       immediate: false
     },
     charsData: {
-      handler (newVal) {
+      handler(newVal) {
         if (newVal && newVal.fields) {
           // Force table update when data changes
           this.$nextTick(() => {
@@ -241,7 +232,7 @@ export default {
       deep: true
     }
   },
-  data () {
+  data() {
     return {
       fields: [
         {
@@ -266,11 +257,12 @@ export default {
       isLoading: true,
       isFirstLoad: true,
       showComments: false,
-      visibleColumnKeys: [] // Keys of currently visible columns
+      visibleColumnKeys: [], // Keys of currently visible columns
+      expandedCells: {}
     }
   },
   computed: {
-    tableItems () {
+    tableItems() {
       // Always use references as base to ensure all are displayed
       const items = this.references.map(ref => {
         // Look for saved data for this reference
@@ -297,7 +289,7 @@ export default {
         return authorsA.localeCompare(authorsB)
       })
     },
-    availableTableFields () {
+    availableTableFields() {
       // Base fields (authors)
       const baseFields = this.fields.filter(f => f.key === 'authors')
       const orderedFields = []
@@ -342,7 +334,7 @@ export default {
       // Return the combination maintaining the custom order
       return [...baseFields, ...editFields, ...orderedFields, ...actionFields]
     },
-    filterableColumns () {
+    filterableColumns() {
       // Return columns that can be filtered (everything except authors, actions and concerns)
       return this.availableTableFields.filter(f =>
         f.key !== 'authors' &&
@@ -351,7 +343,7 @@ export default {
         !f.key.endsWith('_comments')
       )
     },
-    tableFields () {
+    tableFields() {
       // Return columns that should be displayed
       return this.availableTableFields.filter(f => {
         if (f.key === 'authors' || f.key === 'actions' || f.key === 'edit') return true
@@ -365,7 +357,7 @@ export default {
         return this.visibleColumnKeys.includes(f.key)
       })
     },
-    hasVisibleCamelotFields () {
+    hasVisibleCamelotFields() {
       if (!this.camelot || !this.camelot.categories) return false
       return this.camelot.categories.some(cat => {
         const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_comments'))
@@ -374,10 +366,23 @@ export default {
     }
   },
   methods: {
-    formatAuthors (item) {
+    formatAuthors(item) {
       return Commons.parseReference(item, true, false)
     },
-    editReference (item) {
+    shouldTruncate(text) {
+      return Commons.shouldTruncate(text)
+    },
+    truncate(text) {
+      return Commons.truncate(text)
+    },
+    toggleExpand(refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
+    },
+    isExpanded(refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
+    },
+    editReference(item) {
       this.currentItem = { ...item }
       this.$nextTick(() => {
         if (this.$refs.editReferenceModal) {
@@ -385,11 +390,11 @@ export default {
         }
       })
     },
-    handleReferenceSaved (updatedData) {
+    handleReferenceSaved(updatedData) {
       this.$set(this, 'charsData', updatedData)
       this.$forceUpdate()
     },
-    deleteReference (item) {
+    deleteReference(item) {
       this.$emit('delete-reference', item)
     },
 
@@ -397,20 +402,20 @@ export default {
      * Gets custom fields from loaded data
      * @returns {Array} Array of objects with key and label for custom fields
      */
-    getCustomFields () {
+    getCustomFields() {
       // Use helper to extract custom fields
       return extractCustomFields(this.charsData.fields)
     },
 
     // Helper method to check if a field is custom
-    isCustomField (fieldKey) {
+    isCustomField(fieldKey) {
       return isCustomField(fieldKey)
     },
 
     /**
      * Loads characteristics data from API
      */
-    loadCharacteristicsData () {
+    loadCharacteristicsData() {
       this.isLoading = true
 
       const params = {
@@ -451,7 +456,7 @@ export default {
         })
     }
   },
-  mounted () {
+  mounted() {
     // Cargamos los datos de características al montar el componente
     this.loadCharacteristicsData()
 
@@ -463,7 +468,7 @@ export default {
       }
     })
   },
-  beforeDestroy () {
+  beforeDestroy() {
     this.$root.$off('characteristics-updated')
   }
 }

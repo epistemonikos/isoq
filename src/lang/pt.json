@@ -20,6 +20,8 @@
     "browser": "Navegar",
     "login": "Entrar",
     "lang": "Idioma",
+    "read_more": "leia mais",
+    "read_less": "leia menos",
     "explanation": "Explicação",
     "enter_explanation": "Insira uma explicação",
     "close": "Fechar",

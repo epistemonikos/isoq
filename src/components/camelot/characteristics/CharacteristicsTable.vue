@@ -37,7 +37,21 @@
                     <td>{{ formatAuthorsYear(item) }}</td>
 
                     <!-- Unified Cells -->
-                    <td v-for="(cell, cellIndex) in dataCells(item)" :key="cellIndex">{{ cell.value }}</td>
+                    <td v-for="(cell, cellIndex) in dataCells(item)" :key="cellIndex">
+                        <div v-if="shouldTruncate(cell.value) && !isExpanded(item.ref_id, cell.key)">
+                            {{ truncate(cell.value) }}...
+                            <p class="mb-0">
+                                <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_more') }}</b-link>
+                            </p>
+                        </div>
+                        <div v-else-if="shouldTruncate(cell.value) && isExpanded(item.ref_id, cell.key)">
+                            {{ cell.value }}
+                            <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_less') }}</b-link>
+                        </div>
+                        <div v-else>
+                            {{ cell.value }}
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -46,6 +60,7 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import Commons from '@/utils/commons'
 
 export default {
     name: 'CharacteristicsTable',
@@ -58,7 +73,8 @@ export default {
     },
     data() {
         return {
-            showComments: false
+            showComments: false,
+            expandedCells: {}
         }
     },
     computed: {
@@ -141,6 +157,19 @@ export default {
                 }
             }
             return cells
+        },
+        shouldTruncate(text) {
+            return Commons.shouldTruncate(text)
+        },
+        truncate(text) {
+            return Commons.truncate(text)
+        },
+        toggleExpand(refId, fieldKey) {
+            const key = `${refId}-${fieldKey}`
+            this.$set(this.expandedCells, key, !this.expandedCells[key])
+        },
+        isExpanded(refId, fieldKey) {
+            return !!this.expandedCells[`${refId}-${fieldKey}`]
         }
     }
 }
