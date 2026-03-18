@@ -50,11 +50,6 @@
     <b-row>
       <b-col
         cols="12">
-        <b-form-checkbox
-          v-if="useCamelot"
-          v-model="showConcerns"
-          :value="true"
-          :unchecked-value="false">Show concerns</b-form-checkbox>
         <b-table
           sort-by="authors"
           :id="`${prefix}-table`"
@@ -228,92 +223,6 @@
 
       <b-modal
         size="xl"
-        id="open-modal-content-camelot-data"
-        ref="open-modal-content-camelot-data"
-        title="Edit Camelot data"
-        @ok="saveContentDataTable"
-        ok-title="Save"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <b-row>
-          <b-col cols="3">
-            <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
-              <b-list-group-item
-                v-for="field of camelot.categories"
-                :active="modal.selectedOption === field.key"
-                :key="field.key"
-                :href="`#${field.key}`"
-                @click="scrollToSection(field.key)">
-                {{ field.label }}
-              </b-list-group-item>
-            </b-list-group>
-          </b-col>
-          <b-col cols="9">
-            <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
-              <!-- Botón para agregar nuevo campo -->
-              <div class="mb-3">
-                <b-button
-                  variant="outline-success"
-                  size="sm"
-                  @click="agregarCampoCamelot">
-                  <font-awesome-icon icon="plus"></font-awesome-icon> Añadir nuevo campo
-                </b-button>
-              </div>
-
-              <template v-for="(field, fieldIndex) of dataTableFieldsModal.fields">
-                <div
-                  v-if="!camelot.excluded.includes(field.key)"
-                  :key="field.id"
-                  class="mb-3 pb-3 border-bottom">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <b-form-group class="mb-0 flex-grow-1">
-                      <b-form-input
-                        v-model="field.label"
-                        :disabled="['ref_id', 'authors'].includes(field.key)"
-                        class="font-weight-bold"
-                        placeholder="Nombre del campo">
-                      </b-form-input>
-                    </b-form-group>
-                    <b-button
-                      v-if="!['ref_id', 'authors'].includes(field.key)"
-                      variant="outline-danger"
-                      size="sm"
-                      class="ml-2"
-                      @click="eliminarCampoCamelot(fieldIndex, field)">
-                      <font-awesome-icon icon="trash"></font-awesome-icon>
-                    </b-button>
-                  </div>
-                  <b-form-textarea
-                      v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                      rows="2"
-                      max-rows="100"></b-form-textarea>
-                </div>
-              </template>
-              <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
-                <div>
-                  <div class="bg-light text-dark p-2">
-                    <p class="font-weight-bold mb-0">{{ field.label }}</p>
-                  </div>
-                  <b-row class="p-2">
-                    <b-col v-for="option in field.options" :key="option.key" :id="option.key">
-                      <p>{{ option.label }}</p>
-                      <b-form-textarea
-                        v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
-                        rows="2"
-                        max-rows="100"></b-form-textarea>
-                    </b-col>
-                  </b-row>
-                </div>
-              </div>
-            </div>
-          </b-col>
-        </b-row>
-      </b-modal>
-
-      <b-modal
-        size="xl"
         ref="edit-content-dataTable"
         :title="$t('characteristics.edit_data')"
         scrollable
@@ -323,30 +232,9 @@
         cancel-variant="outline-secondary">
         <template
           v-if="dataTableFieldsModal.items.length">
-          <template v-if="useCamelot">
-             <template v-for="field of dataTableFieldsModal.fields">
-                <b-form-group
-                  v-if="field.key !== 'ref_id'"
-                  :key="field.id"
-                  :label="field.label"
-                  label-class="font-weight-bold">
-                  <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
-                    <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
-                  </template>
-                  <template v-else>
-                    <b-form-textarea
-                      v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                      rows="2"
-                      max-rows="100"></b-form-textarea>
-                  </template>
-                </b-form-group>
-            </template>
-          </template>
-          <template v-else>
-             <b-form-group
+          <template v-for="field of dataTable.fields">
+            <b-form-group
               v-if="field.key !== 'ref_id'"
-              v-for="field of dataTable.fields"
               :key="field.id"
               :label="field.label"
               label-class="font-weight-bold">
@@ -467,17 +355,16 @@
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
-import { camelotMixin } from '@/mixins/camelotMixin'
 import { parseCSVData } from '@/utils/csvImporter'
 
 import { exportTableToCSV } from '@/utils/csvExporter'
 
 export default {
   name: 'crudTables',
-  mixins: [camelotMixin],
   props: {
     type: {
       type: String,
@@ -510,10 +397,6 @@ export default {
     lists: {
       type: Array,
       default: () => []
-    },
-    useCamelot: {
-      type: Boolean,
-      default: false
     }
   },
   components: {
@@ -526,50 +409,44 @@ export default {
     this.getData()
   },
   data () {
-    return {
-      modal: {
-        selectedOption: 'research'
-      },
-      dataTable: {
-        fields: [],
-        items: [],
-        authors: '',
-        fieldsObj: [
-          { key: 'authors', label: this.$t('table_headers.author_year') }
-        ],
-        fieldsObjOriginal: []
-      },
-      dataTableFieldsModal: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
-      dataTableFieldsModalEdit: {
-        nroColumns: 1,
-        fields: [],
-        items: [],
-        selected_item_index: 0
-      },
-      dataTableSettings: {
-        currentPage: 1,
-        perPage: 10,
-        isBusy: false
-      },
-      removeReferenceDataTable: {
-        id: null,
-        findings: []
-      },
-      pre_ImportDataTable: '',
-      importDataTable: {
-        error: null,
-        fields: [],
-        items: [],
-        fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
-        ]
-      },
-      showConcerns: false
+    return { dataTable: {
+      fields: [],
+      items: [],
+      authors: '',
+      fieldsObj: [
+        { key: 'authors', label: this.$t('table_headers.author_year') }
+      ]
+    },
+    dataTableFieldsModal: {
+      nroColumns: 1,
+      fields: [],
+      items: [],
+      selected_item_index: 0
+    },
+    dataTableFieldsModalEdit: {
+      nroColumns: 1,
+      fields: [],
+      items: [],
+      selected_item_index: 0
+    },
+    dataTableSettings: {
+      currentPage: 1,
+      perPage: 10,
+      isBusy: false
+    },
+    removeReferenceDataTable: {
+      id: null,
+      findings: []
+    },
+    pre_ImportDataTable: '',
+    importDataTable: {
+      error: null,
+      fields: [],
+      items: [],
+      fieldsObj: [
+        { key: 'authors', label: 'Author(s), Year' }
+      ]
+    }
     }
   },
   watch: {
@@ -587,21 +464,9 @@ export default {
     },
     references () {
       this.updateMyDataTables()
-    },
-    showConcerns () {
-      if (this.showConcerns) {
-        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal
-      } else {
-        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => !item.key.match(/_concerns$/))
-      }
     }
   },
   methods: {
-    addFieldsObjects: function (fieldsObj) {
-      for (let field of this.camelot.fields) {
-        fieldsObj.push(field)
-      }
-    },
     getData: function () {
       this.dataTableSettings.isBusy = true
       const params = {
@@ -630,27 +495,16 @@ export default {
               this.dataTable.items = _items
 
               this.dataTableFieldsModal.fields = []
-              for (let f of fields) {
+              for (const f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
                   this.dataTableFieldsModal.fields.push(f.label)
                   this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
                 }
               }
 
-              if (this.useCamelot) {
-                this.addFieldsObjects(this.dataTable.fieldsObj)
-              }
-
-              const original = Commmons.deepClone(this.dataTable.fieldsObj)
-              this.dataTable.fieldsObjOriginal = original
-
-              if (this.useCamelot && !this.showConcerns) {
-                this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
-              }
-
               this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
 
-              for (let item of _items) {
+              for (const item of _items) {
                 this.dataTableFieldsModal.items.push(item)
               }
             }
@@ -664,8 +518,7 @@ export default {
                   key: 'authors',
                   label: this.$t('table_headers.author_year')
                 }
-              ],
-              fieldsObjOriginal: []
+              ]
             }
           }
           this.$emit('updateDataTable', this.dataTable, this.type)
@@ -676,7 +529,7 @@ export default {
       let fields = Commmons.deepClone(this.dataTable.fields)
       let editFields = []
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of fields) {
+      for (const field of fields) {
         if (!excluded.includes(field.key)) {
           editFields.push(field.label)
         }
@@ -688,7 +541,7 @@ export default {
       let _fields = Commmons.deepClone(this.dataTable.fields)
       let fields = []
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
+      for (const field of _fields) {
         if (!excluded.includes(field.key)) {
           fields.push(field)
         }
@@ -788,20 +641,16 @@ export default {
     getCleanedItems: function (items, fields) {
       if (!items) return []
       const allowedKeys = fields ? fields.map(f => f.key) : []
-      if (this.useCamelot && this.camelot && this.camelot.fields) {
-        const camelotKeys = this.camelot.fields.map(f => f.key)
-        allowedKeys.push(...camelotKeys)
-      }
 
       return items
         .filter(item => item.ref_id && item.authors)
         .map(item => {
           const cleanedItem = {}
-        for (const key of allowedKeys) {
-          cleanedItem[key] = Object.prototype.hasOwnProperty.call(item, key) ? item[key] : ''
-        }
-        return cleanedItem
-      })
+          for (const key of allowedKeys) {
+            cleanedItem[key] = Object.prototype.hasOwnProperty.call(item, key) ? item[key] : ''
+          }
+          return cleanedItem
+        })
     },
     dataTableNewColumn: function () {
       let _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
@@ -833,7 +682,7 @@ export default {
       )
     },
     getReferenceInfo: function (refId) {
-      for (let ref of this.refs) {
+      for (const ref of this.refs) {
         if (ref.id === refId) {
           return ref.content
         }
@@ -841,20 +690,12 @@ export default {
     },
     addContentDataTable: function (index = 0) {
       const items = Commmons.deepClone(this.dataTable.items)
-      
+
       let fields = Commmons.deepClone(this.dataTable.fields)
-      if (this.useCamelot) {
-        fields = Commmons.deepClone(this.dataTable.fieldsObjOriginal)
-      }
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
       this.dataTableFieldsModal.selected_item_index = index
-
-      if (this.useCamelot) {
-        this.$refs['open-modal-content-camelot-data'].show()
-      } else {
-        this.$refs['edit-content-dataTable'].show()
-      }
+      this.$refs['edit-content-dataTable'].show()
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
@@ -866,17 +707,9 @@ export default {
         .then(() => {
           this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
           this.$emit('get-project')
-          
-          const currentShowConcerns = this.showConcerns
+
           this.getData()
-          if (currentShowConcerns !== this.showConcerns) {
-            this.showConcerns = currentShowConcerns
-          }
-          
           this.$refs['edit-content-dataTable'].hide()
-          if (this.$refs['open-modal-content-camelot-data']) {
-            this.$refs['open-modal-content-camelot-data'].hide()
-          }
         })
         .catch((error) => {
           this.$emit('print-errors', error)
@@ -916,10 +749,10 @@ export default {
         keys.push(k.key)
       }
 
-      for (let item of _items) {
+      for (const item of _items) {
         if (item.ref_id === removedId) {
           let obj = {}
-          for (let k in keys) {
+          for (const k in keys) {
             if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
               if (keys[k] === 'ref_id' || keys[k] === 'authors') {
                 obj[keys[k]] = item[keys[k]]
@@ -955,7 +788,7 @@ export default {
         data: []
       }
 
-      for (let ref of _refs) {
+      for (const ref of _refs) {
         obj.data.push([ref.id, ref.content.split(';')[0]])
       }
 
@@ -1083,10 +916,10 @@ export default {
                   this.getData()
                 })
             } else {
-               // If read-only, just update the local data without saving to DB
-               // effectively "previewing" the processed items but not persisting them
-               // This avoids the 409 Conflict.
-               this.getData()
+              // If read-only, just update the local data without saving to DB
+              // effectively "previewing" the processed items but not persisting them
+              // This avoids the 409 Conflict.
+              this.getData()
             }
           }
         })
@@ -1119,7 +952,7 @@ export default {
       const _items = Commmons.deepClone(this.dataTable.items)
       const dataTableId = this.dataTable.id
 
-      let removedField = _fields.splice(index, 1)[0]
+      _fields.splice(index, 1)
 
       _fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
       _fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
@@ -1132,7 +965,7 @@ export default {
           let _fields = Commmons.deepClone(response.data['$set'].fields)
           const excluded = ['ref_id', 'authors', 'actions']
           let editFields = []
-          for (let field of _fields) {
+          for (const field of _fields) {
             if (!excluded.includes(field.key)) {
               editFields.push(field)
             }
@@ -1148,76 +981,6 @@ export default {
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       return Commmons.getAuthorsFormat(authors, pubYear)
-    },
-    scrollToSection (sectionId) {
-      const element = document.getElementById(sectionId)
-      if (element) {
-        this.modal.selectedOption = sectionId
-        const camelotContainer = document.getElementById('camelot')
-        const offset = element.offsetTop - camelotContainer.offsetTop
-        camelotContainer.scrollTo({
-          top: offset,
-          behavior: 'smooth'
-        })
-      }
-    },
-    agregarCampoCamelot () {
-      // Generar una clave única para el nuevo campo
-      const newKey = `column_${Date.now()}`
-
-      // Crear el nuevo campo
-      const newField = {
-        key: newKey,
-        label: 'Nuevo campo',
-        id: `field_${Date.now()}`
-      }
-
-      // Añadir el nuevo campo al principio de los campos disponibles
-      this.dataTableFieldsModal.fields.unshift(newField)
-
-      // Inicializar el valor para todos los items
-      if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
-        this.dataTableFieldsModal.items.forEach(item => {
-          this.$set(item, newKey, '')
-        })
-      }
-    },
-    eliminarCampoCamelot (index, field) {
-      // No permitir eliminar campos especiales como ref_id o authors
-      if (['ref_id', 'authors'].includes(field.key)) {
-        return
-      }
-
-      // Confirmar antes de eliminar
-      this.$bvModal.msgBoxConfirm('¿Estás seguro que deseas eliminar este campo?', {
-        title: 'Confirmar eliminación',
-        okVariant: 'danger',
-        okTitle: 'Eliminar',
-        cancelTitle: 'Cancelar',
-        hideHeaderClose: false,
-        centered: true
-      })
-        .then(value => {
-          if (value) {
-            // Obtener la clave del campo que vamos a eliminar
-            const fieldKey = field.key
-
-            // Eliminar el campo de los campos disponibles
-            this.dataTableFieldsModal.fields.splice(index, 1)
-
-            // Eliminar los datos de este campo en todos los items
-            if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
-              this.dataTableFieldsModal.items.forEach(item => {
-                if (Object.prototype.hasOwnProperty.call(item, fieldKey)) {
-                  this.$delete(item, fieldKey)
-                }
-              })
-            }
-          }
-        })
-        .catch(err => {
-          console.error('Error en la confirmación:', err)
-        })
     }
   }
 }
