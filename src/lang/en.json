@@ -340,6 +340,7 @@
     "ref_not_found": "The reference could not be reached, try again or using other ID",
     "select_to_import": "Select the references to import",
     "invalid_pmids": "The following PubMed IDs are invalid",
+    "pubmed_feedback": "Retrieved {success} of {total} requested IDs. Failed IDs: {ids}",
     "import_references": "Import references",
     "no_references": "No references have been uploaded",
     "references_loaded": "You have <b>{count}</b> references loaded listed below",

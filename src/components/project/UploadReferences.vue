@@ -112,6 +112,14 @@
                   </p>
               </template>
               <template v-else>
+                <b-alert
+                  class="mt-2"
+                  variant="info"
+                  :show="pubmed_batch_feedback !== null"
+                  dismissible
+                  @dismissed="pubmed_batch_feedback = null">
+                  {{ pubmed_batch_feedback }}
+                </b-alert>
                 <template v-if="pubmed_requested.length">
                   <p>{{ $t('references.select_to_import') }}</p>
                   <ul class="list-unstyled">
@@ -301,6 +309,7 @@ export default {
       btnSearchPubMed: false,
       localReferences: [],
       btnCleanDisabled: true,
+      pubmed_batch_feedback: null,
       disableBtnRemoveAllRefs: false,
       appearMsgRemoveReferences: false,
       operationId: null,
@@ -595,23 +604,27 @@ export default {
           return
         }
 
+        const totalRequested = validLines.length
+        this.pubmed_batch_feedback = null
+
         const batchSize = 5
         for (let i = 0; i < validLines.length; i += batchSize) {
           const batch = validLines.slice(i, i + batchSize)
           const promises = batch.map(pubMedId => this.apiPubMed(pubMedId))
 
           try {
-            const responses = await Promise.all(promises)
+            // Use allSettled to ensure one error doesn't break the whole batch
+            const results = await Promise.allSettled(promises)
 
-            responses.forEach((response, index) => {
+            results.forEach((result, index) => {
               const pubMedId = batch[index]
 
-              if (!response || response.status !== 200) {
+              if (result.status === 'rejected' || !result.value || result.value.status !== 200) {
                 this.pubmedErrorImported.push(pubMedId)
                 return
               }
 
-              const data = response.data
+              const data = result.value.data
 
               if (Object.prototype.hasOwnProperty.call(data, 'error') ||
                   Object.prototype.hasOwnProperty.call(data, 'esummaryresult')) {
@@ -636,9 +649,21 @@ export default {
               this.processPubmedData(pubmedData)
             })
           } catch (error) {
+            // This catch is mostly for safety as allSettled handles inner rejections
             console.error(`Error processing batch ${i / batchSize + 1}:`, error)
             this.pubmedErrorImported.push(...batch)
           }
+        }
+
+        // Final feedback message
+        if (totalRequested > 0) {
+          const successCount = this.pubmed_requested.length
+          const failedIds = this.pubmedErrorImported.join(', ')
+          this.pubmed_batch_feedback = this.$t('references.pubmed_feedback', {
+            success: successCount,
+            total: totalRequested,
+            ids: failedIds || '-'
+          })
         }
       } catch (error) {
         console.error('Error in processPubMedRequest:', error)

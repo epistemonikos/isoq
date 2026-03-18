@@ -178,11 +178,9 @@ describe('UploadReferences.vue', () => {
 
       // 2 should be successful
       expect(wrapper.vm.pubmed_requested).toHaveLength(2)
-      // 1 should be in error list (it puts the whole batch in error if one fails in the current implementation)
-      // Actually, looking at the code:
-      // try { const responses = await Promise.all(promises) ... } catch (error) { this.pubmedErrorImported.push(...batch) }
-      // Yes, if ONE promise in Promise.all fails, the whole batch of 5 is marked as error.
-      expect(wrapper.vm.pubmedErrorImported).toHaveLength(3) // The whole batch ['1111111', '2222222', '3333333']
+      // Only the failed ID should be in the error list (thanks to Promise.allSettled)
+      expect(wrapper.vm.pubmedErrorImported).toHaveLength(1)
+      expect(wrapper.vm.pubmedErrorImported[0]).toBe('2222222')
     })
   })
 })
