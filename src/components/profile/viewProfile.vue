@@ -6,8 +6,9 @@
       </b-container>
     </b-container>
     <b-container class="pt-5 pb-5">
-      <p>Manage your information, download your data, configure your privacy settings, contact us, or delete your account.</p>
-      <b-alert variant="success" :show="showAlert()" dismissible>{{msg}}</b-alert>
+      <p>Manage your information, download your data, configure your privacy settings, contact us, or delete your
+        account.</p>
+      <b-alert variant="success" :show="showAlert()" dismissible>{{ msg }}</b-alert>
       <b-card no-body class="p-3">
         <b-table-simple>
           <b-tbody>
@@ -16,7 +17,7 @@
                 <p>username</p>
               </b-td>
               <b-td>
-                {{username}}
+                {{ username }}
               </b-td>
             </b-tr>
             <b-tr>
@@ -24,7 +25,7 @@
                 <p>name</p>
               </b-td>
               <b-td>
-                {{fullname}}
+                {{ fullname }}
               </b-td>
             </b-tr>
             <b-tr>
@@ -32,11 +33,9 @@
                 <p>new password</p>
               </b-td>
               <b-td>
-                <b-form-group
-                  description="8 characters at least"
-                  class="mb-0">
+                <b-form-group description="8 characters at least" class="mb-0">
                   <b-form-input type="password" v-model="new_password"></b-form-input>
-              </b-form-group>
+                </b-form-group>
               </b-td>
             </b-tr>
             <b-tr>
@@ -44,11 +43,9 @@
                 <p>repeat password</p>
               </b-td>
               <b-td>
-                <b-form-group
-                  description="8 characters at least"
-                  class="mb-0">
+                <b-form-group description="8 characters at least" class="mb-0">
                   <b-form-input type="password" v-model="new_password_repeat"></b-form-input>
-              </b-form-group>
+                </b-form-group>
               </b-td>
             </b-tr>
           </b-tbody>
@@ -56,23 +53,26 @@
 
         <ul class="list-unstyled">
           <li>
-            <b-checkbox v-model="newsletter">I agree to receive email communications about important service updates and news (optional)</b-checkbox>
+            <b-checkbox v-model="newsletter">I agree to receive email communications about important service updates and
+              news (optional)</b-checkbox>
           </li>
           <li>
-            <b-checkbox v-model="improvement">I agree to the use of my data in aggregated and anonymized form to help improve the service (optional)</b-checkbox>
+            <b-checkbox v-model="improvement">I agree to the use of my data in aggregated and anonymized form to help
+              improve the service (optional)</b-checkbox>
           </li>
         </ul>
-        
+
         <div class="mt-3">
           <b-button variant="primary" @click="update" :disabled="isDisabled">Save</b-button>
         </div>
       </b-card>
-      
+
       <b-card no-body class="mt-3 p-3">
         <h3>Manage profile data</h3>
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <p class="m-0"><b>Download profile data:</b> Export all of the personal data and profile information in a JSON file</p>
+            <p class="m-0"><b>Download profile data:</b> Export all of the personal data and profile information in a
+              JSON file</p>
           </div>
           <div>
             <b-button variant="outline-primary" @click="exportData" :disabled="isExporting">
@@ -86,7 +86,8 @@
           <p>Note: You can download a copy of the profile data associated with your account.</p>
           <ul>
             <li>
-              The export will include the personal information you provided (e.g., name, email) and records of your activity in the platform. Export all of the personal data and your profile information in a JSON file
+              The export will include the personal information you provided (e.g., name, email) and records of your
+              activity in the platform. Export all of the personal data and your profile information in a JSON file
             </li>
             <li>
               Data will be provided in a structured, commonly used, machine-readable format (JSON,CSV,XML).
@@ -99,14 +100,15 @@
             </li>
           </ul>
 
-          <p>For full details, see our <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link></p>
+          <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link></p>
         </b-alert>
 
 
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
             <p class="m-0">
-              <b>Delete account:</b> Permanently delete your account, all personal data and all the iSoQ projects you have created, including all the data you have created and entered into those projects.
+              <b>Delete account:</b> Permanently delete your account, all personal data and all the iSoQ projects you
+              have created, including all the data you have created and entered into those projects.
             </p>
           </div>
           <div>
@@ -124,20 +126,26 @@
               Your personal data will be deleted from our active systems.
             </li>
             <li>
-              All the projects you created in iSoQ and all the data created and entered into those projects will be a deleted permanently. If a project was created by you and shared with others, deleting your account will delete the project for all shared users. Before deleting your account, you may want to ask those you shared the project with to create a copy of the project in their Workspace so that they retain a copy of the shared project before you delete your account.
+              All the projects you created in iSoQ and all the data created and entered into those projects will be a
+              deleted permanently. If a project was created by you and shared with others, deleting your account will
+              delete the project for all shared users. Before deleting your account, you may want to ask those you
+              shared the project with to create a copy of the project in their Workspace so that they retain a copy of
+              the shared project before you delete your account.
             </li>
             <li>
               Some records may be retained as required by law (e.g. legal compliance, or security logs).
             </li>
             <li>
-              Data that has been anonymized or aggregated (not linked to you) may be kept for research or statistical purposes.
+              Data that has been anonymized or aggregated (not linked to you) may be kept for research or statistical
+              purposes.
             </li>
             <li>
               If you change your mind, you must create a new account. Deleted accounts cannot be restored.
             </li>
           </ul>
 
-          <p>For full details, see our <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link> and <router-link :to="{name: 'TermsAndConditions'}">Terms and conditions</router-link></p>
+          <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link> and
+            <router-link :to="{ name: 'TermsAndConditions' }">Terms and conditions</router-link></p>
         </b-alert>
       </b-card>
 
@@ -145,34 +153,22 @@
         <h3>Privacy preferences</h3>
         <div>
           <div>
-            <p class="m-0">Your data is processed according to our Privacy Policy. This is required to provide the service</p>
+            <p class="m-0">Your data is processed according to our Privacy Policy. This is required to provide the
+              service</p>
           </div>
           <b-card class="p-3 mt-3">
-            <b-alert :show="contactMsg.length > 0" :variant="contactMsgVariant" dismissible @dismissed="contactMsg = ''">{{ contactMsg }}</b-alert>
-            <b-form-group
-              id="fieldset-1"
-              description="Subject"
-              label="Subject"
-              label-for="input-1"
-              valid-feedback="Looks good!"
-              invalid-feedback="Subject must be at least 10 characters long."
+            <b-alert :show="contactMsg.length > 0" :variant="contactMsgVariant" dismissible
+              @dismissed="contactMsg = ''">{{ contactMsg }}</b-alert>
+            <b-form-group id="fieldset-1" description="Subject" label="Subject" label-for="input-1"
+              valid-feedback="Looks good!" invalid-feedback="Subject must be at least 10 characters long."
               :state="subjectState">
               <b-form-input id="input-1" v-model="subject" :state="subjectState" trim></b-form-input>
             </b-form-group>
-            <b-form-group
-              id="fieldset-2"
-              description="Your message"
-              label="Message"
-              label-for="input-2"
-              valid-feedback="Looks good!"
-              invalid-feedback="Message must contain at least 5 words."
+            <b-form-group id="fieldset-2" description="Your message" label="Message" label-for="input-2"
+              valid-feedback="Looks good!" invalid-feedback="Message must contain at least 5 words."
               :state="messageState">
-              <b-form-textarea id="textarea"
-                v-model="message"
-                placeholder="Enter your message..."
-                :state="messageState"
-                rows="3"
-                max-rows="6"></b-form-textarea>
+              <b-form-textarea id="textarea" v-model="message" placeholder="Enter your message..." :state="messageState"
+                rows="3" max-rows="6"></b-form-textarea>
             </b-form-group>
             <div class="mt-3">
               <b-button variant="primary" @click="sendContact" :disabled="!isContactFormValid || isSendingContact">
@@ -186,29 +182,14 @@
       </b-card>
     </b-container>
 
-    <b-modal
-      id="modal-export-data"
-      title="Export Profile Data"
-      @hidden="resetExportModal"
-      no-close-on-backdrop
-      hide-footer
-    >
+    <b-modal id="modal-export-data" title="Export Profile Data" @hidden="resetExportModal" no-close-on-backdrop
+      hide-footer>
       <p>Please enter your password to confirm and download your profile data:</p>
-      
-      <b-form-group
-        label="Password"
-        label-for="export-password-input"
-        :invalid-feedback="exportError"
-        :state="exportError ? false : null"
-      >
-        <b-form-input
-          id="export-password-input"
-          type="password"
-          v-model="exportPassword"
-          @keyup.enter="confirmExportData"
-          :state="exportError ? false : null"
-          required
-        ></b-form-input>
+
+      <b-form-group label="Password" label-for="export-password-input" :invalid-feedback="exportError"
+        :state="exportError ? false : null">
+        <b-form-input id="export-password-input" type="password" v-model="exportPassword"
+          @keyup.enter="confirmExportData" :state="exportError ? false : null" required></b-form-input>
       </b-form-group>
 
       <div class="d-flex flex-row justify-content-end mt-4">
@@ -222,32 +203,17 @@
       </div>
     </b-modal>
 
-    <b-modal
-      id="modal-delete-account"
-      title="Delete Account"
-      @hidden="resetDeleteModal"
-      no-close-on-backdrop
-      hide-footer
-    >
+    <b-modal id="modal-delete-account" title="Delete Account" @hidden="resetDeleteModal" no-close-on-backdrop
+      hide-footer>
       <p class="text-danger">
         <b>Are you sure you want to permanently delete your account? This action cannot be undone.</b>
       </p>
       <p>Please enter your password to confirm account deletion:</p>
-      
-      <b-form-group
-        label="Password"
-        label-for="delete-password-input"
-        :invalid-feedback="deleteError"
-        :state="deleteError ? false : null"
-      >
-        <b-form-input
-          id="delete-password-input"
-          type="password"
-          v-model="deletePassword"
-          @keyup.enter="confirmDeleteAccount"
-          :state="deleteError ? false : null"
-          required
-        ></b-form-input>
+
+      <b-form-group label="Password" label-for="delete-password-input" :invalid-feedback="deleteError"
+        :state="deleteError ? false : null">
+        <b-form-input id="delete-password-input" type="password" v-model="deletePassword"
+          @keyup.enter="confirmDeleteAccount" :state="deleteError ? false : null" required></b-form-input>
       </b-form-group>
 
       <div class="d-flex flex-row justify-content-end mt-4">
@@ -269,7 +235,7 @@ import { RouterLink } from 'vue-router';
 
 export default {
   name: 'viewProfile',
-  data () {
+  data() {
     return {
       new_password: null,
       new_password_repeat: null,
@@ -292,7 +258,7 @@ export default {
       exportError: ''
     }
   },
-  mounted () {
+  mounted() {
     this.initCheckboxes()
   },
   computed: {
@@ -316,19 +282,19 @@ export default {
     }
   },
   watch: {
-    new_password () {
+    new_password() {
       this.checkDisabled()
     },
-    new_password_repeat () {
+    new_password_repeat() {
       this.checkDisabled()
     },
-    newsletter () {
+    newsletter() {
       this.checkDisabled()
     },
-    improvement () {
+    improvement() {
       this.checkDisabled()
     },
-    msg () {
+    msg() {
       if (this.msg.length) {
         this.showAlert()
       }
@@ -338,7 +304,7 @@ export default {
     initCheckboxes: function () {
       const user = this.$store.state.user
       const trueValues = [true, 'true', 'True', 1, '1']
-      
+
       if (user) {
         this.newsletter = trueValues.includes(user.newsletter)
         this.improvement = trueValues.includes(user.improvement)
@@ -350,12 +316,12 @@ export default {
       this.msg = ''
       this.isDisabled = true
       const promises = []
-      
+
       const hasPasswordInput = this.new_password !== null && this.new_password !== ''
       const validPassword = hasPasswordInput && this.new_password === this.new_password_repeat && this.new_password.length >= 8
-      
+
       const checkboxesChanged = this.newsletter !== this.initial_newsletter || this.improvement !== this.initial_improvement
-      
+
       try {
         if (validPassword) {
           const passParams = {
@@ -364,7 +330,7 @@ export default {
           }
           promises.push(axios.post(`/users/change_password`, passParams))
         }
-        
+
         if (checkboxesChanged) {
           const infoParams = {
             user_id: this.$store.state.user.id,
@@ -373,17 +339,17 @@ export default {
           }
           promises.push(axios.post(`/users/update_info`, infoParams))
         }
-        
+
         if (promises.length > 0) {
           await Promise.all(promises)
-          
+
           let successMsgs = []
           if (validPassword) {
             successMsgs.push('password')
             this.new_password = null
             this.new_password_repeat = null
           }
-          
+
           if (checkboxesChanged) {
             successMsgs.push('privacy settings')
             this.initial_newsletter = this.newsletter
@@ -391,7 +357,7 @@ export default {
             this.$store.state.user.newsletter = this.newsletter
             this.$store.state.user.improvement = this.improvement
           }
-          
+
           this.msg = `Your ${successMsgs.join(' and ')} ${successMsgs.length > 1 ? 'have' : 'has'} been updated!`
         }
       } catch (error) {
@@ -419,14 +385,14 @@ export default {
         }, {
           responseType: 'blob'
         })
-        
+
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
         link.href = url
         link.setAttribute('download', 'profile_data.zip')
         document.body.appendChild(link)
         link.click()
-        
+
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
         this.$bvModal.hide('modal-export-data')
@@ -447,12 +413,12 @@ export default {
     },
     sendContact: async function () {
       if (!this.isContactFormValid) return
-      
+
       this.isSendingContact = true
       this.contactMsg = ''
-      
+
       try {
-        await axios.post('/users/contact', {
+        await axios.post('/users/privacy_contact', {
           subject: this.subject,
           message: this.message
         })
@@ -512,9 +478,9 @@ export default {
     },
     checkDisabled: function () {
       const checkboxesChanged = this.newsletter !== this.initial_newsletter || this.improvement !== this.initial_improvement
-      
+
       const hasPasswordInput = this.new_password !== null && this.new_password !== ''
-      
+
       if (hasPasswordInput) {
         const validPassword = this.new_password === this.new_password_repeat && this.new_password.length >= 8
         if (!validPassword) {
@@ -522,7 +488,7 @@ export default {
           return
         }
       }
-      
+
       if (checkboxesChanged || (hasPasswordInput && this.new_password === this.new_password_repeat && this.new_password.length >= 8)) {
         this.isDisabled = false
       } else {
@@ -533,6 +499,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>
