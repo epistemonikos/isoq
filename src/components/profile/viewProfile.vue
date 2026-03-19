@@ -185,6 +185,81 @@
 
       </b-card>
     </b-container>
+
+    <b-modal
+      id="modal-export-data"
+      title="Export Profile Data"
+      @hidden="resetExportModal"
+      no-close-on-backdrop
+      hide-footer
+    >
+      <p>Please enter your password to confirm and download your profile data:</p>
+      
+      <b-form-group
+        label="Password"
+        label-for="export-password-input"
+        :invalid-feedback="exportError"
+        :state="exportError ? false : null"
+      >
+        <b-form-input
+          id="export-password-input"
+          type="password"
+          v-model="exportPassword"
+          @keyup.enter="confirmExportData"
+          :state="exportError ? false : null"
+          required
+        ></b-form-input>
+      </b-form-group>
+
+      <div class="d-flex flex-row justify-content-end mt-4">
+        <b-button variant="secondary" @click="$bvModal.hide('modal-export-data')" class="mr-2">
+          Cancel
+        </b-button>
+        <b-button variant="primary" @click="confirmExportData" :disabled="isExporting">
+          <b-spinner v-if="isExporting" small class="mr-2"></b-spinner>
+          Export data
+        </b-button>
+      </div>
+    </b-modal>
+
+    <b-modal
+      id="modal-delete-account"
+      title="Delete Account"
+      @hidden="resetDeleteModal"
+      no-close-on-backdrop
+      hide-footer
+    >
+      <p class="text-danger">
+        <b>Are you sure you want to permanently delete your account? This action cannot be undone.</b>
+      </p>
+      <p>Please enter your password to confirm account deletion:</p>
+      
+      <b-form-group
+        label="Password"
+        label-for="delete-password-input"
+        :invalid-feedback="deleteError"
+        :state="deleteError ? false : null"
+      >
+        <b-form-input
+          id="delete-password-input"
+          type="password"
+          v-model="deletePassword"
+          @keyup.enter="confirmDeleteAccount"
+          :state="deleteError ? false : null"
+          required
+        ></b-form-input>
+      </b-form-group>
+
+      <div class="d-flex flex-row justify-content-end mt-4">
+        <b-button variant="secondary" @click="$bvModal.hide('modal-delete-account')" class="mr-2">
+          Cancel
+        </b-button>
+        <b-button variant="danger" @click="confirmDeleteAccount" :disabled="isDeletingAccount">
+          <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
+          Delete account permanently
+        </b-button>
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -210,7 +285,11 @@ export default {
       contactMsg: '',
       contactMsgVariant: 'success',
       isExporting: false,
-      isDeletingAccount: false
+      isDeletingAccount: false,
+      deletePassword: '',
+      deleteError: '',
+      exportPassword: '',
+      exportError: ''
     }
   },
   mounted () {
@@ -322,13 +401,22 @@ export default {
         this.checkDisabled()
       }
     },
-    exportData: async function () {
+    exportData: function () {
+      this.$bvModal.show('modal-export-data')
+    },
+    confirmExportData: async function () {
+      this.exportError = ''
+      if (!this.exportPassword) {
+        this.exportError = 'Password is required'
+        return
+      }
+
       this.isExporting = true
       try {
-        const response = await axios.get('/users/get_full_data', {
-          params: {
-            user_id: this.$store.state.user.id
-          },
+        const response = await axios.post('/users/get_full_data', {
+          user_id: this.$store.state.user.id,
+          password: this.exportPassword
+        }, {
           responseType: 'blob'
         })
         
@@ -341,11 +429,21 @@ export default {
         
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
+        this.$bvModal.hide('modal-export-data')
       } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+          this.exportError = error.response.data.message
+        } else {
+          this.exportError = 'An error occurred while exporting your data.'
+        }
         console.error('Error exporting data:', error)
       } finally {
         this.isExporting = false
       }
+    },
+    resetExportModal: function () {
+      this.exportPassword = ''
+      this.exportError = ''
     },
     sendContact: async function () {
       if (!this.isContactFormValid) return
@@ -370,23 +468,41 @@ export default {
         this.isSendingContact = false
       }
     },
-    deleteAccount: async function () {
-      if (confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
-        this.isDeletingAccount = true
-        try {
-          const response = await axios.delete('/users/delete_account')
-          if (response.data && response.data.result === 'success') {
-            window.location.href = '/'
-          } else {
-            alert('Failed to delete account. Please try again.')
-          }
-        } catch (error) {
-          console.error(error)
-          alert('An error occurred while deleting your account.')
-        } finally {
-          this.isDeletingAccount = false
-        }
+    deleteAccount: function () {
+      this.$bvModal.show('modal-delete-account')
+    },
+    confirmDeleteAccount: async function () {
+      this.deleteError = ''
+      if (!this.deletePassword) {
+        this.deleteError = 'Password is required'
+        return
       }
+
+      this.isDeletingAccount = true
+      try {
+        const response = await axios.delete('/users/delete_account', {
+          data: { password: this.deletePassword }
+        })
+        if (response.data && response.data.result === 'success') {
+          this.$bvModal.hide('modal-delete-account')
+          window.location.href = '/'
+        } else {
+          this.deleteError = response.data.message || 'Failed to delete account. Please try again.'
+        }
+      } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+          this.deleteError = error.response.data.message
+        } else {
+          this.deleteError = 'An error occurred while deleting your account.'
+        }
+        console.error(error)
+      } finally {
+        this.isDeletingAccount = false
+      }
+    },
+    resetDeleteModal: function () {
+      this.deletePassword = ''
+      this.deleteError = ''
     },
     showAlert: function () {
       if (this.msg.length) {
