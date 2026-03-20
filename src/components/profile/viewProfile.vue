@@ -145,7 +145,8 @@
           </ul>
 
           <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link> and
-            <router-link :to="{ name: 'TermsAndConditions' }">Terms and conditions</router-link></p>
+            <router-link :to="{ name: 'TermsAndConditions' }">Terms and conditions</router-link>
+          </p>
         </b-alert>
       </b-card>
 
@@ -203,12 +204,43 @@
       </div>
     </b-modal>
 
-    <b-modal id="modal-delete-account" title="Delete Account" @hidden="resetDeleteModal" no-close-on-backdrop
+    <b-modal id="modal-delete-account" size="xl" title="Delete Account" @hidden="resetDeleteModal" no-close-on-backdrop
       hide-footer>
       <p class="text-danger">
         <b>Are you sure you want to permanently delete your account? This action cannot be undone.</b>
       </p>
-      <p>Please enter your password to confirm account deletion:</p>
+
+      <div v-if="isLoadingSharedProjects" class="text-center py-3">
+        <b-spinner label="Loading projects..."></b-spinner>
+        <p>Checking shared projects...</p>
+      </div>
+
+      <div v-else-if="sharedProjects.length > 0">
+        <p>You are the owner of shared projects. You must assign a new owner to each project before deleting your
+          account.</p>
+        <b-table-simple striped hover small responsive>
+          <b-thead head-variant="light">
+            <b-tr>
+              <b-th>Project Name</b-th>
+              <b-th>New Owner</b-th>
+            </b-tr>
+          </b-thead>
+          <b-tbody>
+            <b-tr v-for="project in sharedProjects" :key="project.id">
+              <b-td>{{ project.name }}</b-td>
+              <b-td>
+                <b-form-select v-model="projectsNewOwners[project.id]" :options="project.candidates">
+                  <template #first>
+                    <b-form-select-option :value="null" disabled>-- Select a new owner --</b-form-select-option>
+                  </template>
+                </b-form-select>
+              </b-td>
+            </b-tr>
+          </b-tbody>
+        </b-table-simple>
+      </div>
+
+      <p class="mt-3">Please enter your password to confirm account deletion:</p>
 
       <b-form-group label="Password" label-for="delete-password-input" :invalid-feedback="deleteError"
         :state="deleteError ? false : null">
@@ -220,7 +252,8 @@
         <b-button variant="secondary" @click="$bvModal.hide('modal-delete-account')" class="mr-2">
           Cancel
         </b-button>
-        <b-button variant="danger" @click="confirmDeleteAccount" :disabled="isDeletingAccount">
+        <b-button variant="danger" @click="confirmDeleteAccount"
+          :disabled="isDeletingAccount || !deletePassword || !allProjectsHaveNewOwner">
           <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
           Delete account permanently
         </b-button>
@@ -231,7 +264,7 @@
 
 <script>
 import axios from 'axios'
-import { RouterLink } from 'vue-router';
+import { RouterLink } from 'vue-router'
 
 export default {
   name: 'viewProfile',
@@ -255,7 +288,10 @@ export default {
       deletePassword: '',
       deleteError: '',
       exportPassword: '',
-      exportError: ''
+      exportError: '',
+      sharedProjects: [],
+      projectsNewOwners: {},
+      isLoadingSharedProjects: false
     }
   },
   mounted() {
@@ -279,6 +315,10 @@ export default {
     },
     isContactFormValid: function () {
       return this.subjectState === true && this.messageState === true
+    },
+    allProjectsHaveNewOwner: function () {
+      if (this.sharedProjects.length === 0) return true
+      return this.sharedProjects.every(p => this.projectsNewOwners[p.id] !== null && this.projectsNewOwners[p.id] !== undefined)
     }
   },
   watch: {
@@ -434,8 +474,53 @@ export default {
         this.isSendingContact = false
       }
     },
-    deleteAccount: function () {
+    deleteAccount: async function () {
+      this.isLoadingSharedProjects = true
       this.$bvModal.show('modal-delete-account')
+      try {
+        const response = await axios.get('/api/getProjects')
+        const allProjects = response.data
+        const myPersonalOrg = this.$store.state.user.personal_organization
+        const myUserId = this.$store.state.user.id
+
+        // Find projects I own and are shared
+        const sharedOwnedProjects = allProjects.filter(p => {
+          const isOwner = p.organization === myPersonalOrg
+          const hasCollaborators = (p.can_read && p.can_read.filter(uid => uid !== myUserId).length > 0) ||
+            (p.can_write && p.can_write.filter(uid => uid !== myUserId).length > 0)
+          return isOwner && hasCollaborators
+        })
+
+        const projectsToTransfer = []
+        for (const project of sharedOwnedProjects) {
+          const writeCandidatesIds = (project.can_write || []).filter(uid => uid !== myUserId)
+
+          const writeCandidates = []
+          for (const uid of writeCandidatesIds) {
+            const userRes = await axios.get(`/users/${uid}`)
+            if (userRes.data && userRes.data.status) {
+              writeCandidates.push({
+                value: uid,
+                text: (userRes.data.first_name || '') + ' ' + (userRes.data.last_name || '') + ' (' + userRes.data.name + ')'
+              })
+            }
+          }
+
+          if (writeCandidates.length > 0) {
+            projectsToTransfer.push({
+              id: project.id,
+              name: project.name,
+              candidates: writeCandidates
+            })
+            this.$set(this.projectsNewOwners, project.id, null)
+          }
+        }
+        this.sharedProjects = projectsToTransfer
+      } catch (error) {
+        console.error('Error fetching shared projects:', error)
+      } finally {
+        this.isLoadingSharedProjects = false
+      }
     },
     confirmDeleteAccount: async function () {
       this.deleteError = ''
@@ -444,10 +529,18 @@ export default {
         return
       }
 
+      if (!this.allProjectsHaveNewOwner) {
+        this.deleteError = 'All shared projects must have a new owner assigned.'
+        return
+      }
+
       this.isDeletingAccount = true
       try {
         const response = await axios.delete('/users/delete_account', {
-          data: { password: this.deletePassword }
+          data: {
+            password: this.deletePassword,
+            ownership_transfers: this.projectsNewOwners
+          }
         })
         if (response.data && response.data.result === 'success') {
           this.$bvModal.hide('modal-delete-account')
@@ -469,6 +562,9 @@ export default {
     resetDeleteModal: function () {
       this.deletePassword = ''
       this.deleteError = ''
+      this.sharedProjects = []
+      this.projectsNewOwners = {}
+      this.isLoadingSharedProjects = false
     },
     showAlert: function () {
       if (this.msg.length) {
