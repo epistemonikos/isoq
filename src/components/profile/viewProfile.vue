@@ -501,7 +501,7 @@ export default {
             if (userRes.data && userRes.data.status) {
               writeCandidates.push({
                 value: uid,
-                text: (userRes.data.first_name || '') + ' ' + (userRes.data.last_name || '') + ' (' + userRes.data.name + ')'
+                text: (userRes.data.first_name || '') + ' ' + (userRes.data.last_name || '') + ' (' + userRes.data.username + ')'
               })
             }
           }
