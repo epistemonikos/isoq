@@ -1,5 +1,7 @@
 <template>
-  <div class="mb-3 d-flex justify-content-end align-items-end">
+  <div class="mb-3 d-flex align-items-end">
+    <export-c-s-v-button :fields="exportFields" :items="exportItems" class="mr-auto" />
+
     <b-button variant="link" class="p-0 help-link d-flex align-items-center mr-3" v-b-toggle.sidebar-help>
       <!-- <font-awesome-icon icon="question-circle" class="mr-1" /> -->
       {{ $t('camelot.step_four.how_to_read.title') }}
@@ -74,8 +76,13 @@
 <script>
 export default {
   name: 'CamelotStepFourHeader',
+  components: {
+    ExportCSVButton: () => import('./ExportCSVButton.vue')
+  },
   props: {
-    responses: { type: Array, required: true }
+    responses: { type: Array, required: true },
+    exportFields: { type: Array, required: true },
+    exportItems: { type: Array, required: true }
   },
   data () {
     return {

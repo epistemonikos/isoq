@@ -112,4 +112,68 @@ describe('StepFour.vue - TDD for inline editing', () => {
       })
     )
   })
+
+  describe('exportItems computed property', () => {
+    it('should correctly map assessment values and comments to export format', () => {
+      // Mock some assessments items
+      wrapper.setData({
+        ui: {
+          ...wrapper.vm.ui,
+          responses: [
+            { text: 'No or minimal concerns', value: 'A' },
+            { text: 'Minor concerns', value: 'B' }
+          ]
+        },
+        assessments: {
+          items: [{
+            ref_id: 'ref1',
+            stages: [
+              {
+                key: 0,
+                options: [
+                  { option: 'A', text: 'some explanation' }, // FA1
+                  { option: null, text: '' },                // FA2
+                  { option: 'B', text: '' },                 // FA3
+                  { option: null, text: 'only explanation' } // FA4
+                ]
+              },
+              {
+                key: 1,
+                options: [
+                  { option: 'A', text: '' }, // FA5
+                  { option: 'A', text: '' }, // FA6
+                  { option: 'A', text: '' }, // FA7
+                  { option: 'A', text: '' }  // FA8
+                ]
+              },
+              {
+                key: 2,
+                options: [{ option: 'A', text: '' }] // FA9
+              },
+              {
+                key: 3,
+                options: [{ option: 'B', text: 'final comment' }] // OA
+              }
+            ]
+          }]
+        }
+      })
+      
+      const exportItems = wrapper.vm.exportItems
+      expect(exportItems.length).toBe(1)
+      expect(exportItems[0]).toEqual({
+        authors: 'Author 2024',
+        fa1: 'No or minimal concerns, explanation: some explanation',
+        fa2: '',
+        fa3: 'Minor concerns',
+        fa4: 'explanation: only explanation',
+        fa5: 'No or minimal concerns',
+        fa6: 'No or minimal concerns',
+        fa7: 'No or minimal concerns',
+        fa8: 'No or minimal concerns',
+        fa9: 'No or minimal concerns',
+        oa: 'Minor concerns, explanation: final comment'
+      })
+    })
+  })
 })

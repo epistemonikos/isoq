@@ -4,7 +4,11 @@
       {{ $t('camelot.step_four.loading') }}
     </b-alert>
     <div v-else>
-      <camelot-step-four-header :responses="ui.responses" />
+      <camelot-step-four-header
+        :responses="ui.responses"
+        :export-fields="exportFields"
+        :export-items="exportItems"
+      />
 
       <camelot-step-four-table
         :fields="ui.fields"
@@ -450,6 +454,53 @@ export default {
     }
   },
   computed: {
+    exportFields () {
+      return [
+        { key: 'authors', label: 'Author(s), Year' },
+        { key: 'fa1', label: 'FA1' },
+        { key: 'fa2', label: 'FA2' },
+        { key: 'fa3', label: 'FA3' },
+        { key: 'fa4', label: 'FA4' },
+        { key: 'fa5', label: 'FA5' },
+        { key: 'fa6', label: 'FA6' },
+        { key: 'fa7', label: 'FA7' },
+        { key: 'fa8', label: 'FA8' },
+        { key: 'fa9', label: 'FA9' },
+        { key: 'oa', label: 'OA' }
+      ]
+    },
+    exportItems () {
+      return this.tableItems.map(item => {
+        const getVal = (stageIdx, optIdx) => {
+          if (!item.stages || !item.stages[stageIdx] || !item.stages[stageIdx].options[optIdx]) return ''
+          const opt = item.stages[stageIdx].options[optIdx]
+          if (!opt.option && !opt.text) return ''
+          let result = ''
+          if (opt.option) {
+            const response = this.ui.responses.find(r => r.value === opt.option)
+            result += response ? response.text : opt.option
+          }
+          if (opt.text) {
+            result += (result ? ', explanation: ' : 'explanation: ') + opt.text
+          }
+          return result
+        }
+
+        return {
+          authors: item.authors,
+          fa1: getVal(0, 0),
+          fa2: getVal(0, 1),
+          fa3: getVal(0, 2),
+          fa4: getVal(0, 3),
+          fa5: getVal(1, 0),
+          fa6: getVal(1, 1),
+          fa7: getVal(1, 2),
+          fa8: getVal(1, 3),
+          fa9: getVal(2, 0),
+          oa: getVal(3, 0)
+        }
+      })
+    },
     tableItems () {
       if (!this.assessments.items) return []
       return this.assessments.items.map(item => {
