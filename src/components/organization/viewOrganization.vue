@@ -135,6 +135,7 @@
       <RemoveProjectModal
         ref="removeProjectModal"
         :project="buffer_project"
+        :usersAllowed="users_allowed"
         @processing="setProcessing"
         @cancel="cleanProject"
         @project-removed="onProjectRemoved"
@@ -417,6 +418,7 @@ export default {
 
     modalRemoveProject: function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.usersCanList(project.id)
       this.$refs.removeProjectModal.show()
     },
     onProjectRemoved: function () {
