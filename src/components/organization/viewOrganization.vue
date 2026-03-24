@@ -18,10 +18,8 @@
               @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
           </b-col>
         </b-row>
-        <b-row
-          class="mt-3">
-          <b-col
-            cols="12">
+        <b-row class="mt-3">
+          <b-col cols="12">
             <b-table
               id="organizations"
               responsive
@@ -61,9 +59,9 @@
               <template v-slot:cell(actions)="data">
                 <div class="d-block d-lg-none">
                   <b-dropdown id="dropdown-1" :text="$t('project.project_options')" class="m-md-2" variant="outline-secondary">
-                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> {{ $t('common.duplicate') }}</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken.length)" @click="modalShareOptions(data.item.id, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> {{ $t('common.shared') }}</b-dropdown-item>
-                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item.id)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> {{ $t('common.share') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner || data.item.allow_to_write" @click="openCloneModal(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="copy"></font-awesome-icon> {{ $t('common.duplicate') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner && (data.item.sharedToken && data.item.sharedToken.length)" @click="modalShareOptions(data.item, 2)" link-class="text-decoration-none"><font-awesome-icon icon="link"></font-awesome-icon> {{ $t('common.shared') }}</b-dropdown-item>
+                    <b-dropdown-item v-if="data.item.is_owner" @click="modalShareOptions(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="users"></font-awesome-icon> {{ $t('common.share') }}</b-dropdown-item>
                     <b-dropdown-item v-if="data.item.allow_to_write" @click="openModalEditProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="edit"></font-awesome-icon>{{ $t('common.edit') }}</b-dropdown-item>
                     <b-dropdown-item v-if="data.item.is_owner" @click="modalRemoveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="trash"></font-awesome-icon> {{ $t('common.remove') }}</b-dropdown-item>
                     <b-dropdown-item v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)" @click="openModalLeaveProject(data.item)" link-class="text-decoration-none"><font-awesome-icon icon="sign-out-alt"></font-awesome-icon> {{ $t('common.leave') }}</b-dropdown-item>
@@ -74,49 +72,43 @@
                     v-if="data.item.is_owner || data.item.allow_to_write"
                     :title="$t('common.duplicate')"
                     variant="outline-secondary"
-                    @click="openCloneModal(data.item.id)">
-                    <font-awesome-icon
-                      icon="copy"></font-awesome-icon>
+                    @click="openCloneModal(data.item)">
+                    <font-awesome-icon icon="copy"></font-awesome-icon>
                   </b-button>
                   <b-button
-                    v-if="data.item.is_owner && (data.item.sharedToken.length)"
+                    v-if="data.item.is_owner && (data.item.sharedToken && data.item.sharedToken.length)"
                     :title="$t('project.temp_link_warning')"
                     variant="outline-secondary"
-                    @click="modalShareOptions(data.item.id, 2)">
-                    <font-awesome-icon
-                      icon="link"></font-awesome-icon>
+                    @click="modalShareOptions(data.item, 2)">
+                    <font-awesome-icon icon="link"></font-awesome-icon>
                   </b-button>
                   <b-button
                     v-if="data.item.is_owner"
                     :title="$t('common.share')"
                     variant="outline-secondary"
-                    @click="modalShareOptions(data.item.id)">
-                    <font-awesome-icon
-                      icon="users"></font-awesome-icon>
+                    @click="modalShareOptions(data.item)">
+                    <font-awesome-icon icon="users"></font-awesome-icon>
                   </b-button>
                   <b-button
                     v-if="data.item.allow_to_write"
                     :title="$t('common.edit')"
                     variant="outline-success"
                     @click="openModalEditProject(data.item)">
-                    <font-awesome-icon
-                      icon="edit"></font-awesome-icon>
+                    <font-awesome-icon icon="edit"></font-awesome-icon>
                   </b-button>
                   <b-button
                     v-if="data.item.is_owner"
                     :title="$t('common.remove')"
                     variant="outline-danger"
                     @click="modalRemoveProject(data.item)">
-                    <font-awesome-icon
-                      icon="trash"></font-awesome-icon>
+                    <font-awesome-icon icon="trash"></font-awesome-icon>
                   </b-button>
                   <b-button
                     v-if="!data.item.is_owner && (data.item.allow_to_write || data.item.allow_to_read)"
                     :title="$t('common.leave')"
                     variant="outline-success"
                     @click="openModalLeaveProject(data.item)">
-                    <font-awesome-icon
-                      icon="sign-out-alt"></font-awesome-icon>
+                    <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
                   </b-button>
                 </div>
               </template>
@@ -130,250 +122,81 @@
           </b-col>
         </b-row>
       </div>
-      <!-- modals -->
-      <b-modal
-        id="new-project"
-        ref="new-project"
-        size="xl"
-        :title="(buffer_project.id) ? $t('common.edit_isoq_table') || 'Edit iSoQ table' : $t('common.new_isoq_table') || 'New iSoQ table'"
-        @ok="save"
-        @cancel="closeModalProject"
-        @hidden="closeModalProject"
-        :ok-disabled="!buffer_project.name || !canEditProject"
-        :ok-title="$t('common.save')"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <b-alert
-          :show="ui.dismissCounters.dismissCountDown"
-          @dismiss-count-down="countDownChanged"
-          variant="danger"
-          v-if="ui.error.status">
-            <p>[{{ui.error.status}}] - {{ui.error.statusText}}</p>
-            <p>This alert will dismiss after {{ this.ui.dismissCounters.dismissCountDown }} seconds...</p>
-          </b-alert>
-        <b-alert
-          show
-          variant="warning"
-          v-if="lockedByUser">
-          {{ $t('lock.project_locked_by', { user: lockedByUser }) || `Project is currently being edited by ${lockedByUser}. Read-only mode.` }}
-        </b-alert>
-        <organizationForm
-          ref="organizationForm"
-          :formData="buffer_project"
-          :canEdit="canEditProject"
-          :isModal="true"
-          @modal-notification="modalNotification"></organizationForm>
-      </b-modal>
-      <b-modal
-        id="modal-remove-project"
-        ref="modal-remove-project"
-        :title="$t('common.delete_project')"
-        @ok="removeProject"
+
+      <ProjectFormModal
+        ref="projectFormModal"
+        :project="buffer_project"
+        :canEditProject="canEditProject"
+        :lockedByUser="lockedByUser"
         @cancel="cleanProject"
-        :ok-title="$t('common.remove')"
-        ok-variant="outline-danger"
-        cancel-variant="outline-secondary">
-        <p>{{ $t('common.confirm_remove_project') }} "<b>{{this.buffer_project.name}}</b>" {{ $t('common.and_all_data') }}?</p>
-      </b-modal>
-      <b-modal
-        size="xl"
-        id="modal-share-options"
-        ref="modal-share-options"
-        ok-only
-        :ok-title="$t('common.close')"
-        scrollable>
-        <template v-slot:modal-title>
-          <videoHelp :txt="$t('common.share')" tag="none" urlId="449741356"></videoHelp>
-        </template>
-        <b-tabs v-model="ui.tabIndex">
-          <b-tab
-            :title="$t('common.invite') || 'Invite'">
-            <b-container class="pt-3">
-              <b-form-group
-                :label="$t('common.insert_emails_add')"
-                label-for="input-emails-invite">
-                <b-input
-                  type="email"
-                  v-model="buffer_project.sharedTo"></b-input>
-              </b-form-group>
-              <p
-                class="text-danger"
-                v-if="buffer_project.sharedToError != ''">
-                {{buffer_project.sharedToError}}
-              </p>
-              <b-button
-                :disabled="!ui.sharedProject.enabledToShare || !isOnline"
-                @click="addEmailForShare">{{ $t('common.add') }}</b-button>
-              <div
-                class="my-3"
-                v-if="buffer_project.tmp_invite_emails.length">
-                <p class="mb-1 font-weight-light">{{ $t('common.project_will_be_shared') }}</p>
-                <b-badge
-                class="mx-1"
-                v-for="(email, index) in buffer_project.tmp_invite_emails"
-                :key="index"
-                variant="dark">
-                  {{ email }}
-                  <span @click="removeSharedEmail(index)">x</span>
-                </b-badge>
-              </div>
-              <b-form-group
-                :label="$t('common.can')">
-                <b-form-select
-                  v-model="buffer_project.sharedType"
-                  :options="[{value: 0, text: $t('common.can_view_project') || 'View the project'}, {value: 1, text: $t('common.can_view_edit_project') || 'View and edit the project'}]"></b-form-select>
-              </b-form-group>
-              <b-button
-                variant="success"
-                @click="saveSharedProject(buffer_project.id)">{{ $t('common.invite') }}</b-button>
-            </b-container>
-          </b-tab>
-          <b-tab
-            :title="$t('common.users_with_access') || 'Users with access'">
-            <b-container class="pt-3">
-              <h4>{{ $t('common.users_with_access')}}</h4>
-              <b-table
-                show-empty
-                responsive
-                :fields="[{key: 'username', label: $t('common.username')}, {key: 'first_name', label: $t('common.first_name')}, {key: 'last_name', label: $t('common.last_name')}, {key: 'user_can', label: $t('common.user_can')}, {key: 'actions', label: $t('common.actions')}]"
-                :items="users_allowed">
-                <template v-slot:cell(actions)="data">
-                  <b-button
-                    variant="danger"
-                    @click="unshare(data.index, data.item.id)">{{ $t('common.unshare') }}</b-button>
-                </template>
-                <template v-slot:cell(user_can)="data">
-                  <b-form-select
-                    v-model="data.item.user_can"
-                    :options="[{value: 0, text: $t('common.can_view') || 'Can view'}, {value: 1, text: $t('common.can_view_edit') || 'Can view and edit'}]"
-                    @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
-                </template>
-                <template v-slot:empty>
-                  <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') }}</p>
-                </template>
-              </b-table>
-              <div
-                v-if="buffer_project.invite_emails.length">
-                <h4>{{ $t('common.pending_access') }}</h4>
-                <b-table-simple
-                  v-if="buffer_project.invite_emails.length">
-                  <b-thead>
-                    <b-tr>
-                      <b-th>{{ $t('common.email') }}</b-th>
-                      <b-th>{{ $t('common.actions') }}</b-th>
-                    </b-tr>
-                  </b-thead>
-                  <b-tbody>
-                    <b-tr v-for="(email, index) of buffer_project.invite_emails" :key="index">
-                      <b-td>{{ email }}</b-td>
-                      <b-td>
-                        <b-button
-                          variant="danger"
-                          @click="unshareInvited(email)">
-                          {{ $t('common.unshare') }}
-                        </b-button>
-                      </b-td>
-                    </b-tr>
-                  </b-tbody>
-                </b-table-simple>
-              </div>
-            </b-container>
-          </b-tab>
-          <b-tab
-            :title="$t('common.temporary_sharing')">
-            <b-container class="pt-3">
-              <p>{{ $t('common.temporary_sharing_description') }}</p>
-              <b-form-checkbox
-                switch
-                v-model="buffer_project.sharedTokenOnOff"
-                :value="true"
-                :unchecked-value="false">{{ $t('common.generate_temporary_url') }} <span class="text-danger">{{ $t('common.temporary_url_warning') }}</span></b-form-checkbox>
-              <div
-                v-if="buffer_project.sharedTokenOnOff"
-                class="mt-2">
-                <p>{{ $t('common.copy_share_url') }}</p>
-                <b-form-input
-                  :value="buffer_project.temporaryUrl"></b-form-input>
-              </div>
-            </b-container>
-          </b-tab>
-        </b-tabs>
-      </b-modal>
-      <b-modal
-        id="clone-modal"
-        :title="$t('common.duplicate_project') || 'Duplicate a project'"
-        :ok-title="$t('common.duplicate')"
-        :cancel-title="$t('common.close')"
-        @ok="startCloning"
-        @cancel="closeCloneModal"
-        :cancel-disabled="this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable"
-        :ok-disabled="((this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) || this.ui.copy.showWarning)"
-        no-close-on-backdrop
-        no-close-on-esc>
-        <template v-if="modalCloneId != null">
-            <p>
-              {{ $t('common.duplicate_instruction_1') }} "<b>{{buffer_project.name}}</b>".
-              <br>
-              {{ $t('common.duplicate_instruction_2') }}
-              <br>
-              {{ $t('common.duplicate_instruction_3') }}
-            </p>
-        </template>
-        <template v-if="(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
-          <div
-            class="text-center">
-            <b-spinner
-              class="text-center"
-              label="Loading..." variant="secondary"></b-spinner>
-          </div>
-        </template>
-        <template v-if="!(this.ui.copy.project || this.ui.copy.lists || this.ui.copy.references || this.ui.copy.findings || this.ui.copy.replaceReferences || this.ui.copy.copyOf || this.ui.copy.referencesTable) && this.ui.copy.showWarning">
-          <p class="text-center text-success">{{ $t('common.duplicate_complete') || 'Duplicate complete. You can now close this modal.' }}</p>
-        </template>
-      </b-modal>
-      <b-modal
-        ref="unlink-project"
-        id="unlink-project"
-        :title="$t('common.leave_project')"
-        @ok="leaveProject"
-        @cancel="cancelLeaveProject"
-        :ok-title="$t('common.leave')">
-        <p>{{ $t('common.leave_project_confirm') }} <b>{{buffer_project.name}}</b></p>
-      </b-modal>
+        @project-saved="onProjectSaved"
+      />
+
+      <RemoveProjectModal
+        ref="removeProjectModal"
+        :project="buffer_project"
+        @processing="setProcessing"
+        @cancel="cleanProject"
+        @project-removed="onProjectRemoved"
+      />
+
+      <ShareProjectModal
+        ref="shareProjectModal"
+        :project="buffer_project"
+        :usersAllowed="users_allowed"
+        :initialTab="ui.tabIndex"
+        @hidden="cleanProject"
+        @processing="setProcessing"
+        @project-shared="onProjectShared"
+        @user-unshared="onUserUnshared"
+        @invited-unshared="onInvitedUnshared"
+        @permission-changed="onPermissionChanged"
+      />
+
+      <CloneProjectModal
+        ref="cloneProjectModal"
+        :project="buffer_project"
+        :uiCopy="ui.copy"
+        @update-copy-state="updateCopyState"
+        @clone-started="onCloneStarted"
+        @project-cloned="onProjectCloned"
+        @cancel="cleanProject"
+      />
+
+      <LeaveProjectModal
+        ref="leaveProjectModal"
+        :project="buffer_project"
+        @processing="setProcessing"
+        @cancel="cleanProject"
+        @project-left="onProjectLeft"
+      />
+
     </b-container>
   </div>
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
-
-const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
-const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
+import ProjectFormModal from './modals/ProjectFormModal'
+import RemoveProjectModal from './modals/RemoveProjectModal'
+import ShareProjectModal from './modals/ShareProjectModal'
+import CloneProjectModal from './modals/CloneProjectModal'
+import LeaveProjectModal from './modals/LeaveProjectModal'
 
 export default {
   name: 'viewOrganization',
   components: {
-    'organizationForm': organizationForm,
-    videoHelp
+    ProjectFormModal,
+    RemoveProjectModal,
+    ShareProjectModal,
+    CloneProjectModal,
+    LeaveProjectModal
   },
   data () {
     return {
-      users: [],
-      project_id: '',
-      organization: '',
       ui: {
-        error: {
-          status: '',
-          statusText: ''
-        },
-        dismissCounters: {
-          dismisSec: 10,
-          dismissCountDown: 0
-        },
-        sharedProject: {
-          enabledToShare: false
-        },
         projectTable: {
           fields: [
             { key: 'private', label: this.$t('common.privacy') },
@@ -400,10 +223,6 @@ export default {
         { value: 'fully', text: this.$t('project.status_fully_text'), transValue: this.$t('project.status_fully') },
         { value: 'partially', text: this.$t('project.status_partially_text'), transValue: this.$t('project.status_partially') },
         { value: 'minimally', text: this.$t('project.status_minimally_text'), transValue: this.$t('project.status_minimally') }
-      ],
-      yes_or_no: [
-        { value: false, text: this.$t('common.no') },
-        { value: true, text: this.$t('common.yes') }
       ],
       tmp_buffer_project: {
         id: null,
@@ -435,147 +254,23 @@ export default {
         tmp_invite_emails: [],
         use_camelot: true
       },
-      tmp_buffer_project_list: {
-        id: null,
-        name: '',
-        organization: this.$route.params.id,
-        project_id: ''
-      },
-      buffer_project: {
-        id: null,
-        name: '',
-        description: '',
-        private: true,
-        public_type: 'private',
-        license_type: 'CC-BY-NC-ND',
-        organization: this.$route.params.id,
-        review_question: '',
-        published_status: false,
-        complete_by_author: true,
-        url_doi: null,
-        authors: '',
-        lists_authors: '',
-        author: '',
-        author_email: '',
-        is_public: false,
-        sharedType: 0,
-        sharedTo: '',
-        sharedToError: '',
-        sharedTokenOnOff: false,
-        sharedToken: '',
-        sharedCan: {
-          read: [],
-          write: []
-        },
-        temporaryUrl: '',
-        invite_emails: [],
-        tmp_invite_emails: [],
-        use_camelot: true
-      },
-      buffer_project_list: {
-        id: null,
-        name: '',
-        organization: this.$route.params.id,
-        project_id: ''
-      },
-      org: {
-        _id: '',
-        groups: [],
-        hidden_base_templates: [],
-        id: '',
-        logo_url: '',
-        name: '',
-        organization: '',
-        personal_organization: '',
-        project_order: [],
-        warning_message: '',
-        plan: '',
-        projects: []
-      },
+      buffer_project: {},
       users_allowed: [],
       projects: [],
-      modalCloneId: null,
-      modalCloneNewId: null,
-      newReferences: [],
       hashId: null,
       canEditProject: false,
       lockedByUser: null
     }
   },
+  created () {
+    this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
+  },
   mounted () {
     this.getProjects()
   },
-  watch: {
-    'buffer_project.sharedTo': function () {
-      const project = this.buffer_project
-      let regex = /\S+@\S+\.\S+/
-      let enabledButton = true
-      if (Object.prototype.hasOwnProperty.call(project, 'sharedTo')) {
-        const emails = this.buffer_project.sharedTo.split(',')
-        for (let email of emails) {
-          if (!regex.test(email)) {
-            enabledButton = false
-          }
-        }
-      } else {
-        enabledButton = false
-      }
-      this.ui.sharedProject.enabledToShare = enabledButton
-    },
-    'buffer_project.sharedTokenOnOff': function () {
-      let project = this.buffer_project
-      let isPublic = false
-      if (Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-        if (project.sharedTokenOnOff) {
-          if (!project.sharedToken.length) {
-            project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
-          }
-          project.temporaryUrl = window.location.origin + '/preview/isoq/' + project.organization + '/' + project.id + '/' + project.sharedToken
-          isPublic = true
-        } else {
-          project.sharedToken = ''
-          project.temporaryUrl = ''
-          isPublic = false
-        }
-      } else {
-        project.sharedToken = ''
-        project.temporaryUrl = ''
-        isPublic = false
-      }
-      if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
-        const params = {
-          sharedToken: project.sharedToken,
-          is_public: isPublic,
-          temporaryUrl: project.temporaryUrl,
-          project_id: project.id
-        }
-        Api.patch('/sharedLink', { params })
-          .then(() => {})
-          .catch((error) => {
-            console.log(error)
-          })
-      }
-    }
-  },
   methods: {
-    getProjectById: async function (params) {
-      try {
-        const response = await Api.get('/isoqf_projects', params)
-        return response
-      } catch (error) {
-        console.log(error)
-      }
-    },
-    axiosGetProjects: async function (organizationId) {
-      try {
-        return Api.get('/isoqf_projects', {
-          organization: organizationId
-        })
-      } catch (error) {
-        console.log(error)
-      }
-    },
     getProjects: function () {
+      this.ui.projectTable.isBusy = true
       Api.get('/getProjects')
         .then((response) => {
           this.projects = []
@@ -602,8 +297,9 @@ export default {
           }
         }).catch((error) => {
           console.log(error)
+        }).finally(() => {
+          this.ui.projectTable.isBusy = false
         })
-      this.ui.projectTable.isBusy = false
     },
     processProject: function (project) {
       if (!Object.prototype.hasOwnProperty.call(project, 'can_write')) {
@@ -673,66 +369,37 @@ export default {
         return {}
       }
     },
-    modalNotification: function () {
-      this.$refs['new-project'].hide()
-      this.getProjects()
-    },
-    save: function (e) {
-      e.preventDefault()
-      this.$refs['organizationForm'].save()
-    },
-    countDownChanged (dismissCountDown) {
-      this.ui.dismissCounters.dismissCountDown = dismissCountDown
-    },
     cleanProject: function () {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
     },
-    updateProjectList: function () {
-      Api.patch(`/isoqf_lists/${this.buffer_project_list.id}`, this.buffer_project_list)
-        .then((response) => {
-          this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-          this.buffer_project_list = JSON.parse(JSON.stringify(this.tmp_buffer_project_list))
-          this.getProjects()
-          this.$refs['new-project-list'].hide()
-          this.ui.projectTable.isBusy = true
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+    setProcessing: function (status) {
+      this.ui.projectTable.isBusy = status
     },
+
     openModalNewFindingTable: function () {
       this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
       this.canEditProject = true
-      this.$refs['new-project'].show()
-    },
-    closeModalProject: function () {
-      LockService.release()
-      this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
-      this.canEditProject = false
-      this.lockedByUser = null
+      this.$refs.projectFormModal.show()
     },
     openModalEditProject: async function (project) {
       let _project = JSON.parse(JSON.stringify(project))
       if (!Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
         _project.license_type = 'CC-BY-NC-ND'
       }
-      if (Object.prototype.hasOwnProperty.call(_project, 'license_type')) {
-        if (_project.license_type === '') {
-          _project.license_type = 'CC-BY-NC-ND'
-        }
+      if (Object.prototype.hasOwnProperty.call(_project, 'license_type') && _project.license_type === '') {
+        _project.license_type = 'CC-BY-NC-ND'
       }
 
       this.buffer_project = _project
-      
-      // Check permissions based on organization ownership OR project permissions
-      let basePermission = (this.$store.state.user.personal_organization === this.$route.params.id) || 
+
+      let basePermission = (this.$store.state.user.personal_organization === this.$route.params.id) ||
                            (project.allow_to_write)
 
       if (basePermission) {
-        // Attempt to acquire lock
         const res = await LockService.acquire(project.id)
         if (res.success) {
           this.canEditProject = true
+          this.lockedByUser = null
         } else {
           this.canEditProject = false
           if (res.lockedBy) {
@@ -740,320 +407,121 @@ export default {
           }
         }
       } else {
-          this.canEditProject = false
+        this.canEditProject = false
       }
-
-      this.$refs['new-project'].show()
+      this.$refs.projectFormModal.show()
     },
+    onProjectSaved: function () {
+      this.getProjects()
+    },
+
     modalRemoveProject: function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
-      this.$refs['modal-remove-project'].show()
+      this.$refs.removeProjectModal.show()
     },
-    removeProject: function () {
-      this.ui.projectTable.isBusy = true
-      Api.delete(`/remove/project/${this.buffer_project.id}`)
-        .then((response) => {
-          if (response.data.status) {
-            this.getProjects()
-            this.ui.projectTable.isBusy = false
-          } else {
-            this.ui.projectTable.isBusy = false
-            console.log(response.data)
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-          this.ui.projectTable.isBusy = false
-        })
+    onProjectRemoved: function () {
+      this.getProjects()
     },
-    getFindings: function (id) {
-      const params = {
-        organization: this.$route.params.id,
-        list_id: id
-      }
-      Api.get('/isoqf_findings', params)
-        .then((response) => {
-          if (response.data.length) {
-            let requestsFindings = []
-            const findings = response.data
-            for (let finding of findings) {
-              this.getExtractedData(finding.id)
-              requestsFindings.push(Api.delete(`/isoqf_findings/${finding.id}`))
-            }
-            this.processRequests(requestsFindings)
-          }
-        })
+
+    openModalLeaveProject: function (project) {
+      this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.$refs.leaveProjectModal.show()
     },
-    getExtractedData: function (id) {
-      const params = {
-        organization: this.$route.params.id,
-        finding_id: id
-      }
-      Api.get('/isoqf_extracted_data', params)
-        .then((response) => {
-          let requestsExtractedData = []
-          const extractedData = response.data
-          for (let data of extractedData) {
-            requestsExtractedData.push(Api.delete(`/isoqf_extracted_data/${data.id}`))
-          }
-          this.processRequests(requestsExtractedData)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+    onProjectLeft: function () {
+      this.getProjects()
     },
-    processRequests: function (requests) {
-      Promise.all(requests)
-        .then(() => {
-          // console.log(responses)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+
+    openCloneModal: function (project) {
+      this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.$refs.cloneProjectModal.show()
     },
+    updateCopyState: function ({ key, value }) {
+      this.ui.copy[key] = value
+    },
+    onCloneStarted: function () {
+      this.ui.copy.showWarning = true
+    },
+    onProjectCloned: function () {
+      this.getProjects()
+    },
+
     usersCanList: function (id) {
       this.users_allowed = []
-      let _project = JSON.parse(JSON.stringify(this.buffer_project))
+      let _project = this.buffer_project
       if (Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
         for (let user of _project.can_read) {
-          Api.get(`/users/${user}`)
-            .then((response) => {
-              const _user = response.data
-              if (_user.status) {
-                _user.user_can = 0
-                _user.project_id = _project.id
-                // _user.index = index
-                this.users_allowed.push(_user)
-              }
-            })
+          Api.get(`/users/${user}`).then((response) => {
+            const _user = response.data
+            if (_user.status) {
+              _user.user_can = 0
+              _user.project_id = _project.id
+              this.users_allowed.push(_user)
+            }
+          })
         }
       }
       if (Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
         for (let user of _project.can_write) {
-          Api.get(`/users/${user}`)
-            .then((response) => {
-              const _user = response.data
-              if (_user.status) {
-                _user.user_can = 1
-                _user.project_id = _project.id
-                // _user.index = index
-                this.users_allowed.push(_user)
-              }
-            })
+          Api.get(`/users/${user}`).then((response) => {
+            const _user = response.data
+            if (_user.status) {
+              _user.user_can = 1
+              _user.project_id = _project.id
+              this.users_allowed.push(_user)
+            }
+          })
         }
       }
     },
-    modalShareOptions: function (id, tabIndex = 0) {
+    modalShareOptions: function (project, tabIndex = 0) {
       this.ui.tabIndex = tabIndex
-      this.buffer_project = {}
-      for (let p of this.projects) {
-        if (p.id === id) {
-          this.buffer_project = p
-        }
-      }
-      // this.buffer_project.index = index
+      this.buffer_project = JSON.parse(JSON.stringify(project))
       if (Object.prototype.hasOwnProperty.call(this.buffer_project, 'sharedTo')) {
         this.buffer_project.sharedTo = ''
       }
-      this.usersCanList(id)
-      this.$refs['modal-share-options'].show()
+      this.usersCanList(project.id)
+      this.$refs.shareProjectModal.show()
     },
-    addEmailForShare: function () {
-      let emails = this.buffer_project.sharedTo.split(',')
-      this.buffer_project.tmp_invite_emails = emails.map(e => {
-        if (e !== this.$store.state.user.name) {
-          return e.trim().toLowerCase()
+    onProjectShared: function (updatedProject) {
+      const project = this.processProject(updatedProject)
+      if (Object.keys(project).length) {
+        this.buffer_project = project
+        this.updateProjectInList(project)
+        this.usersCanList(project.id)
+      }
+    },
+    onUserUnshared: function (projectId) {
+      Api.get('/isoqf_projects', { id: projectId }).then((response) => {
+        if (response.status === 200 && response.data && response.data.length) {
+          const project = this.processProject(response.data[0])
+          if (Object.keys(project).length) {
+            this.buffer_project = project
+            this.updateProjectInList(project)
+            this.usersCanList(project.id)
+          }
         }
       })
     },
-    saveSharedProject: async function () {
-      const sharedEmails = this.buffer_project.tmp_invite_emails.join()
-      const projectId = this.buffer_project.id
-      const params = {
-        current_user: this.$store.state.user.name,
-        emails: sharedEmails,
-        user_can: this.buffer_project.sharedType,
-        org: this.$route.params.id
-      }
-      await Api.post(`/share/project/${projectId}`, params)
-        .then((response) => {
-          if (response.status === 200) {
-            const project = this.processProject(response.data[0])
-            if (Object.keys(project).length) {
-              this.buffer_project = project
-              const projects = JSON.parse(JSON.stringify(this.projects))
-              let _projects = []
-              for (let p of projects) {
-                if (p.id === project.id) {
-                  _projects.push(project)
-                } else {
-                  _projects.push(p)
-                }
-              }
-              this.projects = _projects
-              this.buffer_project.sharedTo = ''
-              this.buffer_project.tmp_invite_emails = []
-              this.usersCanList(project.id)
-            }
-          }
-        }).catch((error) => {
-          console.log(error)
-        })
+    onInvitedUnshared: function (response) {
+      let _response = response
+      _response.tmp_invite_emails = []
+      this.buffer_project.invite_emails = _response.invite_emails
+      this.updateProjectInList(_response)
     },
-    removeUser: async function (project, params) {
-      try {
-        const data = await Api.post(`/share/project/${project}/unshare`, null, {params: params})
-        return data
-      } catch (error) {
-        console.log('errors: => ', error)
-      }
+    onPermissionChanged: function (project) {
+      this.buffer_project = project
+      this.getProjects()
     },
-    unshare: function (_index, userId) {
-      const projectId = this.buffer_project.id
-      const params = {
-        'user_id': userId,
-        'org_id': this.$route.params.id,
-        'current_user': this.$store.state.user.id
-      }
-      this.removeUser(projectId, params)
-        .then((response) => {
-          if (response.status === 200) {
-            this.getProjectById({id: projectId})
-              .then((response) => {
-                if (response.status === 200) {
-                  const project = this.processProject(response.data[0])
-                  if (Object.keys(project).length) {
-                    this.buffer_project = project
-                    const projects = JSON.parse(JSON.stringify(this.projects))
-                    let _projects = []
-                    for (let p of projects) {
-                      if (p.id === project.id) {
-                        _projects.push(project)
-                      } else {
-                        _projects.push(p)
-                      }
-                    }
-                    this.projects = _projects
-                    this.usersCanList(project.id)
-                  }
-                }
-              })
-          }
-        })
-    },
-    unshareInvited: function (email) {
-      const projectId = this.buffer_project.id
-      Api.post(`/share/project/${projectId}/unshare?email=${email}&org_id=${this.$route.params.id}&current_user=${this.$store.state.user.id}`)
-        .then((response) => {
-          let _response = response.data
-          _response.tmp_invite_emails = []
-          this.projects[this.buffer_project.index] = _response
-          this.buffer_project.invite_emails = _response.invite_emails
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    removeSharedEmail: function (index) {
-      this.buffer_project.tmp_invite_emails.splice(index, 1)
-    },
-    randomString: function (len, charSet) {
-      charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      var randomString = ''
-      for (var i = 0; i < len; i++) {
-        var randomPoz = Math.floor(Math.random() * charSet.length)
-        randomString += charSet.substring(randomPoz, randomPoz + 1)
-      }
-      return randomString
-    },
-    changePermission: function (projectId, userId, option, index) {
-      const params = {
-        'user_id': userId,
-        'option': option
-      }
-      Api.patch(`/share/project/${projectId}/options-update`, params)
-        .then((response) => {
-          const project = response.data[0]
-          // this.projects[index] = project
-          this.buffer_project = project
-          this.getProjects()
-        }).catch((error) => {
-          console.log(error)
-        })
-    },
-    generateACopyOfAProject: async function () {
-      this.ui.copy.project = true
-      Api.get(`/clone/project/${this.buffer_project.id}/org/${this.$route.params.id}`)
-        .then(() => {
-          this.ui.copy.project = false
-          this.getProjects()
-        })
-        .catch((error) => {
-          if (error.response) {
-            // Request made and server responded
-            console.log(error.response.data)
-            console.log(error.response.status)
-            console.log(error.response.headers)
-          } else if (error.request) {
-            // The request was made but no response was received
-            console.log('Request', error.request)
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            console.log('Error', error.message)
-          }
-        })
-    },
-    openCloneModal: function (id) {
-      this.buffer_project = {}
+    updateProjectInList: function (project) {
+      let _projects = []
       for (let p of this.projects) {
-        if (p.id === id) {
-          this.buffer_project = p
+        if (p.id === project.id) {
+          _projects.push(project)
+        } else {
+          _projects.push(p)
         }
       }
-      this.modalCloneId = id
-      this.$bvModal.show('clone-modal')
-    },
-    startCloning: function (event) {
-      event.preventDefault()
-      this.ui.copy.showWarning = true
-      this.ui.copy.disableCloneModalBtn = true
-
-      if (this.modalCloneId !== null || this.modalCloneId !== '') {
-        this.generateACopyOfAProject(this.modalCloneId)
-      }
-    },
-    closeCloneModal: function () {
-      this.ui.copy.showWarning = null
-      this.modalCloneId = null
-      this.modalCloneNewId = null
-      this.ui.copy.disableCloneModalBtn = false
-      this.buffer_project = this.tmp_buffer_project
-      this.$bvModal.hide('clone-modal')
-    },
-    openModalLeaveProject: function (data) {
-      this.buffer_project = {}
-      for (let p of this.projects) {
-        if (p.id === data.id) {
-          this.buffer_project = p
-        }
-      }
-      this.$bvModal.show('unlink-project')
-    },
-    leaveProject: function () {
-      const userId = this.$store.state.user.id
-      Api.post(`/project/${this.buffer_project.id}/unsubscribe?userId=${userId}`)
-        .then((r) => {
-          this.getProjects()
-        })
-        .catch((e) => {
-          console.log(e)
-        })
-
-      this.$bvModal.hide('unlink-project')
-    },
-    cancelLeaveProject: function () {
-      this.buffer_project = this.tmp_buffer_project
-      this.$bvModal.hide('unlink-project')
+      this.projects = _projects
     }
   }
 }
