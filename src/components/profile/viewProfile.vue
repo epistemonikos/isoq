@@ -210,13 +210,19 @@
         <b>Are you sure you want to permanently delete your account? This action cannot be undone.</b>
       </p>
 
+      <p>
+        Deleting your account will delete all of the projects you have created in iSoQ.
+        If you have shared projects that you created, these will appear below.
+        You will first need to assign a new owner to these shared projects before deleting your account.
+      </p>
+
       <div v-if="isLoadingSharedProjects" class="text-center py-3">
         <b-spinner label="Loading projects..."></b-spinner>
         <p>Checking shared projects...</p>
       </div>
 
       <div v-else-if="sharedProjects.length > 0">
-        <p>You are the owner of shared projects. You must assign a new owner to each project before deleting your
+        <p>You are the owner of shared projects. You must assign a new owner to each shared project before deleting your
           account.</p>
         <b-table-simple striped hover small responsive>
           <b-thead head-variant="light">
@@ -238,6 +244,11 @@
             </b-tr>
           </b-tbody>
         </b-table-simple>
+
+        <p class="text-muted">
+          * Users with an asterisk (*) only have read access to the project. If you select a user with read access as
+          the new owner, they will be able to edit the project.
+        </p>
       </div>
 
       <p class="mt-3">Please enter your password to confirm account deletion:</p>
@@ -494,23 +505,30 @@ export default {
         const projectsToTransfer = []
         for (const project of sharedOwnedProjects) {
           const writeCandidatesIds = (project.can_write || []).filter(uid => uid !== myUserId)
+          const readCandidatesIds = (project.can_read || []).filter(uid => uid !== myUserId && !writeCandidatesIds.includes(uid))
 
-          const writeCandidates = []
-          for (const uid of writeCandidatesIds) {
+          const allCandidatesIds = [...writeCandidatesIds, ...readCandidatesIds]
+
+          const candidates = []
+          for (const uid of allCandidatesIds) {
             const userRes = await axios.get(`/users/${uid}`)
             if (userRes.data && userRes.data.status) {
-              writeCandidates.push({
+              let text = (userRes.data.first_name || '') + ' ' + (userRes.data.last_name || '') + ' (' + userRes.data.username + ')'
+              if (readCandidatesIds.includes(uid)) {
+                text += ' *'
+              }
+              candidates.push({
                 value: uid,
-                text: (userRes.data.first_name || '') + ' ' + (userRes.data.last_name || '') + ' (' + userRes.data.username + ')'
+                text: text
               })
             }
           }
 
-          if (writeCandidates.length > 0) {
+          if (candidates.length > 0) {
             projectsToTransfer.push({
               id: project.id,
               name: project.name,
-              candidates: writeCandidates
+              candidates: candidates
             })
             this.$set(this.projectsNewOwners, project.id, null)
           }
