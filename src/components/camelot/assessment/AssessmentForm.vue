@@ -1,5 +1,6 @@
 <template>
-  <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
+  <div class="assessment-form-wrapper">
+    <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
     <!-- <template #header>
       <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
     </template> -->
@@ -8,7 +9,7 @@
       <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
     </div>
 
-    <b-form-group label="" v-slot="{ ariaDescribedby }" class="mb-4">
+    <b-form-group label="" class="mb-4">
       <b-form-radio
         v-for="(value, index) in options[modalStage][selectedMeta].values"
         v-model="selected"
@@ -62,6 +63,28 @@
       </div>
     </template>
   </b-card>
+
+  <b-modal
+    :id="'warning-explanation-modal-' + modalStage + '-' + selectedMeta"
+    :title="$t('common.warning')"
+    :hide-footer="true">
+    <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
+    <b-container>
+      <b-row align-h="between">
+        <b-col cols="4">
+          <b-button block @click="doItNow">
+            {{ $t('worksheet.actions.do_it_now') }}
+          </b-button>
+        </b-col>
+        <b-col cols="4">
+          <b-button block @click="doItLater">
+            {{ $t('worksheet.actions.do_it_later') }}
+          </b-button>
+        </b-col>
+      </b-row>
+    </b-container>
+  </b-modal>
+</div>
 </template>
 
 <script>
@@ -275,14 +298,32 @@ export default {
         'B': '#8EC4DE', // Minor
         'C': '#F6A482', // Moderate
         'D': '#B31529', // Serious
-        'E': '#B3B3B3'  // Unclear
+        'E': '#B3B3B3' // Unclear
       }
       return colors[value] || '#B3B3B3'
     },
     cancel () {
       this.$bvModal.hide('modal-1')
     },
+    doItNow () {
+      this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+      this.$nextTick(() => {
+        const el = document.getElementById('textarea-formatter')
+        if (el) el.focus()
+      })
+    },
+    doItLater () {
+      this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+      this.performSave()
+    },
     save () {
+      if (this.selected && (!this.text1 || this.text1.trim() === '')) {
+        this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+        return
+      }
+      this.performSave()
+    },
+    performSave () {
       this.isSaving = true
       const stages = [
         {
@@ -445,7 +486,7 @@ export default {
 .assessment-radio {
   display: flex;
   align-items: center;
-  
+
   ::v-deep label {
     cursor: pointer;
     line-height: 1.5;
