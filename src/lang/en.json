@@ -131,7 +131,10 @@
     "user_can": "User can",
     "et_al": " et al. ",
     "and": " and ",
-    "no_authors": "No author(s)"
+    "no_authors": "No author(s)",
+    "delete_shared_project_warning": "To delete this shared project, you must first assign a new owner",
+    "select_new_owner": "Select new owner",
+    "enter_password_confirm": "Enter your password to confirm"
   },
   "menu": {
     "about": "About",

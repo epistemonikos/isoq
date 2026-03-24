@@ -419,7 +419,7 @@ export default class Api {
     }
 
     try {
-      return await axios.delete(url, { headers: this.getHeaders(), withCredentials: true })
+      return await axios.delete(url, { data, headers: this.getHeaders(), withCredentials: true })
     } catch (error) {
       if (!error.response) {
         isOnline = false
@@ -450,7 +450,7 @@ export default class Api {
               await axios.patch(op.endpoint, op.payload, { headers: this.getHeaders(), withCredentials: true })
               break
             case 'DELETE':
-              await axios.delete(op.endpoint, { headers: this.getHeaders(), withCredentials: true })
+              await axios.delete(op.endpoint, { data: op.payload, headers: this.getHeaders(), withCredentials: true })
               break
           }
           // Operación exitosa, remover de la cola

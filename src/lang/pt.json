@@ -131,7 +131,10 @@
     "user_can": "O usuário pode",
     "et_al": " et al. ",
     "and": " e ",
-    "no_authors": "Autor(es) não encontrados"
+    "no_authors": "Autor(es) não encontrados",
+    "delete_shared_project_warning": "Para excluir este projeto compartilhado, primeiro você deve atribuir um novo proprietário",
+    "select_new_owner": "Selecionar novo proprietário",
+    "enter_password_confirm": "Digite sua senha para confirmar"
   },
   "menu": {
     "about": "Sobre",
