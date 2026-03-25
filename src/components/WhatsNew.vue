@@ -14,7 +14,7 @@
       <p class="font-weight-bold">Minimum requirements for publishing to the iSoQ database</p>
       <ul>
         <li>
-          In order to publish an Interactive summary of qualitative findings (iSoQ) table to the public iSoQ database, minimum criteria must now be met. Names of the review authors, the corresponding author, the corresponding author's email address, and the review question are required fields in Project Properties. The iSoQ table must also have at least one review finding with a complete GRADE-CERQual assessment. Removing required information after publication to the database will revert the project to "private" and it will no longer be visible on the database. These changes help ensure that projects on the database have a minimum level of transparency and completeness. 
+          In order to publish an Interactive summary of qualitative findings (iSoQ) table to the public iSoQ database, minimum criteria must now be met. Names of the review authors, the corresponding author, the corresponding author's email address, and the review question are required fields in Project Properties. The iSoQ table must also have at least one review finding with a complete GRADE-CERQual assessment. Removing required information after publication to the database will revert the project to "private" and it will no longer be visible on the database. These changes help ensure that projects on the database have a minimum level of transparency and completeness.
         </li>
       </ul>
       <h3>February 2025</h3>

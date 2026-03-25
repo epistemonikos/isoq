@@ -784,7 +784,7 @@ export default {
             })
           ]
         })
-      ];
+      ]
 
       const doc = new Document({
         creator: this.project.author || 'Epistemonikos',
@@ -794,7 +794,7 @@ export default {
             properties: {
               page: {
                 size: {
-                  orientation: PageOrientation.PORTRAIT,
+                  orientation: PageOrientation.PORTRAIT
                 },
                 margins: { top: 720, right: 720, bottom: 720, left: 720 }
               }
@@ -808,14 +808,14 @@ export default {
             this.extracted_data
           )
         ]
-      });
+      })
 
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, filename)
       })
     },
     showOtherTables: function (publicType, charsOfStudies, methAssessments, extractedData) {
-      const sections = [];
+      const sections = []
       if (publicType === 'fully') {
         // Characteristics of Studies Section
         sections.push({
@@ -838,7 +838,7 @@ export default {
             new Paragraph(''),
             this.generateTable(JSON.parse(JSON.stringify(charsOfStudies)))
           ]
-        });
+        })
 
         // Methodological Assessments Section
         sections.push({
@@ -861,7 +861,7 @@ export default {
             new Paragraph(''),
             this.generateTable(JSON.parse(JSON.stringify(methAssessments)))
           ]
-        });
+        })
 
         // Extracted Data Section
         sections.push({
@@ -884,9 +884,9 @@ export default {
             new Paragraph(''),
             this.generateTable(JSON.parse(JSON.stringify(extractedData)))
           ]
-        });
+        })
       }
-      return sections;
+      return sections
     },
     generateReferences: function () {
       const allReferences = JSON.parse(JSON.stringify(this.references))

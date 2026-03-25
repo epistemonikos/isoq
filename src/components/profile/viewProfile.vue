@@ -103,7 +103,6 @@
           <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link></p>
         </b-alert>
 
-
         <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
             <p class="m-0">
@@ -279,7 +278,7 @@ import { RouterLink } from 'vue-router'
 
 export default {
   name: 'viewProfile',
-  data() {
+  data () {
     return {
       new_password: null,
       new_password_repeat: null,
@@ -305,7 +304,7 @@ export default {
       isLoadingSharedProjects: false
     }
   },
-  mounted() {
+  mounted () {
     this.initCheckboxes()
   },
   computed: {
@@ -333,19 +332,19 @@ export default {
     }
   },
   watch: {
-    new_password() {
+    new_password () {
       this.checkDisabled()
     },
-    new_password_repeat() {
+    new_password_repeat () {
       this.checkDisabled()
     },
-    newsletter() {
+    newsletter () {
       this.checkDisabled()
     },
-    improvement() {
+    improvement () {
       this.checkDisabled()
     },
-    msg() {
+    msg () {
       if (this.msg.length) {
         this.showAlert()
       }

@@ -250,7 +250,7 @@ export default {
     'organizationForm': organizationForm,
     videoHelp
   },
-  data() {
+  data () {
     return {
       users: [],
       project_id: '',
@@ -391,7 +391,7 @@ export default {
       hashId: null
     }
   },
-  mounted() {
+  mounted () {
     this.getProjects()
   },
   watch: {
@@ -572,7 +572,7 @@ export default {
       e.preventDefault()
       this.$refs['organizationForm'].save()
     },
-    countDownChanged(dismissCountDown) {
+    countDownChanged (dismissCountDown) {
       this.ui.dismissCounters.dismissCountDown = dismissCountDown
     },
     ModalAddList: function (idProject) {
