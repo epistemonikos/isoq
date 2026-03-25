@@ -31,7 +31,8 @@
         <b-row class="mt-3">
           <b-col cols="12">
             <b-table id="organizations" responsive striped hover head-variant="light" :busy="ui.projectTable.isBusy"
-              :fields="ui.projectTable.fields" :items="filteredProjects" sort-by="created_at" :sort-desc="true">
+              :fields="ui.projectTable.fields" :items="filteredProjects" :per-page="ui.projectTable.perPage"
+              :current-page="ui.projectTable.currentPage" sort-by="created_at" :sort-desc="true">
               <template v-slot:cell(private)="data">
                 <b-badge variant="light" class="publish-status" v-b-tooltip.hover
                   :title="(global_status.find(obj => obj.value === data.item.public_type) || {}).text">
@@ -108,6 +109,9 @@
                 </div>
               </template>
             </b-table>
+            <b-pagination v-if="filteredProjects.length > ui.projectTable.perPage" v-model="ui.projectTable.currentPage"
+              :total-rows="filteredProjects.length" :per-page="ui.projectTable.perPage" aria-controls="organizations"
+              align="center" class="mt-3"></b-pagination>
           </b-col>
         </b-row>
       </div>
@@ -162,7 +166,9 @@ export default {
             { key: 'name', label: this.$t('common.title') },
             { key: 'actions', label: '' }
           ],
-          isBusy: true
+          isBusy: true,
+          perPage: 10,
+          currentPage: 1
         },
         tabIndex: 0,
         copy: {

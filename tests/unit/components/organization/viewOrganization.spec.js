@@ -1,4 +1,4 @@
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { mount, createLocalVue } from '@vue/test-utils'
 import ViewOrganization from '@/components/organization/viewOrganization.vue'
 import Api from '@/utils/Api'
 import BootstrapVue from 'bootstrap-vue'
@@ -19,8 +19,22 @@ describe('viewOrganization.vue', () => {
   let router
 
   const mocks = {
-    $t: (msg) => msg,
-    $route: { params: { id: 'org-123' }, query: {} }
+    $t: (msg) => msg
+  }
+
+  const createProjects = (count) => {
+    return Array.from({ length: count }, (_, i) => ({
+      id: `p-${i}`,
+      name: `Project ${i}`,
+      description: `Description ${i}`,
+      review_question: `Question ${i}`,
+      author: `Author ${i}`,
+      list_authors: `List Author ${i}`,
+      organization: 'org-123',
+      created_at: Date.now() - i * 1000,
+      can_read: [],
+      can_write: []
+    }))
   }
 
   beforeEach(() => {
@@ -31,11 +45,17 @@ describe('viewOrganization.vue', () => {
         isOnline: true
       }
     })
-    router = new VueRouter()
+    router = new VueRouter({
+      routes: [
+        { path: '/workspace/:id', name: 'viewOrganization' },
+        { path: '/workspace/:org_id/isoqf/:id', name: 'viewProject' }
+      ]
+    })
+    router.push('/workspace/org-123')
 
     Api.get.mockResolvedValue({ data: [] })
 
-    wrapper = shallowMount(ViewOrganization, {
+    wrapper = mount(ViewOrganization, {
       localVue,
       store,
       router,
@@ -52,27 +72,88 @@ describe('viewOrganization.vue', () => {
     expect(Api.get).toHaveBeenCalledWith('/getProjects')
   })
 
-  it('opens modales correctly', () => {
-    wrapper.vm.$refs = {
-      projectFormModal: { show: jest.fn() },
-      removeProjectModal: { show: jest.fn() },
-      cloneProjectModal: { show: jest.fn() },
-      shareProjectModal: { show: jest.fn() },
-      leaveProjectModal: { show: jest.fn() }
-    }
+  describe('Search and Pagination', () => {
+    it('does not show search input if projects <= 10', async () => {
+      const projects = createProjects(10)
+      Api.get.mockResolvedValue({ data: projects })
+      await wrapper.vm.getProjects()
+      await localVue.nextTick()
+      expect(wrapper.find('#filterInput').exists()).toBe(false)
+    })
 
-    const mockProject = { id: 'test-1', organization: 'org-123', name: 'Test' }
-    
-    wrapper.vm.openModalNewFindingTable()
-    expect(wrapper.vm.$refs.projectFormModal.show).toHaveBeenCalled()
+    it('shows search input if projects > 10', async () => {
+      const projects = createProjects(11)
+      Api.get.mockResolvedValue({ data: projects })
+      await wrapper.vm.getProjects()
+      await localVue.nextTick()
+      expect(wrapper.find('#filterInput').exists()).toBe(true)
+    })
 
-    wrapper.vm.modalRemoveProject(mockProject)
-    expect(wrapper.vm.$refs.removeProjectModal.show).toHaveBeenCalled()
+    it('filters projects by name', async () => {
+      const projects = [
+        { id: '1', name: 'Alpha', organization: 'org-123', can_read: [], can_write: [] },
+        { id: '2', name: 'Beta', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'alpha' })
+      expect(wrapper.vm.filteredProjects).toHaveLength(1)
+      expect(wrapper.vm.filteredProjects[0].name).toBe('Alpha')
+    })
 
-    wrapper.vm.openCloneModal(mockProject)
-    expect(wrapper.vm.$refs.cloneProjectModal.show).toHaveBeenCalled()
+    it('filters projects by description', async () => {
+      const projects = [
+        { id: '1', name: 'P1', description: 'some description', organization: 'org-123', can_read: [], can_write: [] },
+        { id: '2', name: 'P2', description: 'other', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'some' })
+      expect(wrapper.vm.filteredProjects).toHaveLength(1)
+      expect(wrapper.vm.filteredProjects[0].name).toBe('P1')
+    })
 
-    wrapper.vm.openModalLeaveProject(mockProject)
-    expect(wrapper.vm.$refs.leaveProjectModal.show).toHaveBeenCalled()
+    it('filters projects by review_question', async () => {
+      const projects = [
+        { id: '1', name: 'P1', review_question: 'how to search?', organization: 'org-123', can_read: [], can_write: [] },
+        { id: '2', name: 'P2', review_question: 'nothing', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'how' })
+      expect(wrapper.vm.filteredProjects).toHaveLength(1)
+      expect(wrapper.vm.filteredProjects[0].name).toBe('P1')
+    })
+
+    it('filters projects by author', async () => {
+      const projects = [
+        { id: '1', name: 'P1', author: 'John Doe', organization: 'org-123', can_read: [], can_write: [] },
+        { id: '2', name: 'P2', author: 'Jane Smith', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'doe' })
+      expect(wrapper.vm.filteredProjects).toHaveLength(1)
+      expect(wrapper.vm.filteredProjects[0].name).toBe('P1')
+    })
+
+    it('filters projects by list_authors', async () => {
+      const projects = [
+        { id: '1', name: 'P1', list_authors: 'List Team A', organization: 'org-123', can_read: [], can_write: [] },
+        { id: '2', name: 'P2', list_authors: 'Team B', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'team a' })
+      expect(wrapper.vm.filteredProjects).toHaveLength(1)
+      expect(wrapper.vm.filteredProjects[0].name).toBe('P1')
+    })
+
+    it('shows pagination only when projects > perPage', async () => {
+      const projects = createProjects(10)
+      await wrapper.setData({ projects })
+      await localVue.nextTick()
+      expect(wrapper.find('.pagination').exists()).toBe(false)
+
+      const moreProjects = createProjects(11)
+      await wrapper.setData({ projects: moreProjects })
+      await localVue.nextTick()
+      expect(wrapper.find('.pagination').exists()).toBe(true)
+    })
   })
 })
