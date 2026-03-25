@@ -217,13 +217,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     }
 
     getConcernLevelText(option) {
+        if (option === null || option === undefined) return ''
         const concernMap = {
-            '0': 'No or very minor concerns',
-            '1': 'Minor concerns',
-            '2': 'Moderate concerns',
-            '3': 'Serious concerns'
+            '0': this.t('cerqual_options.no_very_minor_concerns'),
+            '1': this.t('cerqual_options.minor_concerns'),
+            '2': this.t('cerqual_options.moderate_concerns'),
+            '3': this.t('cerqual_options.serious_concerns')
         }
-        return concernMap[option] || ''
+        return concernMap[option.toString()] || ''
     }
 
     createEvidenceProfileSection() {
@@ -309,13 +310,14 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     }
 
     getCerqualConfidenceText(option) {
+        if (option === null || option === undefined) return ''
         const confidenceMap = {
-            '0': 'High confidence',
-            '1': 'Moderate confidence',
-            '2': 'Low confidence',
-            '3': 'Very low confidence'
+            '0': this.t('cerqual_options.high_confidence'),
+            '1': this.t('cerqual_options.moderate_confidence'),
+            '2': this.t('cerqual_options.low_confidence'),
+            '3': this.t('cerqual_options.very_low_confidence')
         }
-        return confidenceMap[option] || ''
+        return confidenceMap[option.toString()] || ''
     }
 
     getLicenseText() {
@@ -738,62 +740,67 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         // Headers
         // Row 1: Group Headers
         const headerRow1Cells = [
-            // Spacer for Authors
+            // Authors
             new TableCell({
                 verticalAlign: VerticalAlign.CENTER,
-                shading: { fill: '#F8F9FA' },
-                children: [new Paragraph('')]
+                shading: { fill: '#EEEEEE' },
+                children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.table_headers.authors'), bold: true, size: 22 })] })]
             }),
-             // Spacer for Overall Assessment
-            new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                shading: { fill: '#F8F9FA' },
-                children: [new Paragraph('')]
-            }),
-            // Research Design (Colspan 4)
+            // Fit Meta Design (Colspan 4)
             new TableCell({
                 columnSpan: 4,
                 verticalAlign: VerticalAlign.CENTER,
-                shading: { fill: '#E7F0F7' }, // Light blue tint
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.assessment_table.headers.research_design'), bold: true, size: 22 })] })]
+                shading: { fill: '#E9ECEF' },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_design'), bold: true, size: 22 })] })]
             }),
-            // Research Conduct (Colspan 4)
+            // Fit Meta Conduct (Colspan 4)
             new TableCell({
                 columnSpan: 4,
                 verticalAlign: VerticalAlign.CENTER,
-                shading: { fill: '#F4F9FC' }, // Lighter blue tint
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.assessment_table.headers.research_conduct'), bold: true, size: 22 })] })]
+                shading: { fill: '#E9ECEF' },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_meta_conduct'), bold: true, size: 22 })] })]
             }),
-             // Spacer for Researchers Domain
+            // Fit Design Conduct (Colspan 1)
             new TableCell({
+                columnSpan: 1,
                 verticalAlign: VerticalAlign.CENTER,
-                shading: { fill: '#F8F9FA' },
-                children: [new Paragraph('')]
+                shading: { fill: '#E9ECEF' },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.fit_design_conduct'), bold: true, size: 22 })] })]
+            }),
+            // Overall Assessment (Colspan 1)
+            new TableCell({
+                columnSpan: 1,
+                verticalAlign: VerticalAlign.CENTER,
+                shading: { fill: '#E2E2E2' },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: this.t('camelot.step_four.tabs.overall'), bold: true, size: 22 })] })]
             })
         ]
 
-        // Row 2: Column Headers
-        const columns = [
-             { label: this.t('camelot.assessment_table.headers.authors') },
-             { label: this.t('camelot.assessment_table.headers.overall_assessment') },
-             // Research Design
-             { label: this.t('camelot.assessment_table.headers.research') },
-             { label: this.t('camelot.assessment_table.headers.stakeholders') },
-             { label: this.t('camelot.assessment_table.headers.researchers') },
-             { label: this.t('camelot.assessment_table.headers.context') },
-             // Research Conduct
-             { label: this.t('camelot.assessment_table.headers.research') },
-             { label: this.t('camelot.assessment_table.headers.stakeholders') },
-             { label: this.t('camelot.assessment_table.headers.researchers') },
-             { label: this.t('camelot.assessment_table.headers.context') },
-             // Researchers Domain
-             { label: this.t('camelot.assessment_table.headers.researchers_domain') }
+        // Row 2: Sub headers
+        const faPrefix = this.t('camelot.step_four.table_headers.fa_prefix') || 'FA'
+        const oaLabel = this.t('camelot.step_four.table_headers.oa_label') || 'OA'
+
+        const headerRow2Cells = [
+            // Row 2 Col 1: Camelot assessments of fit
+            new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                shading: { fill: '#D3E9FF' },
+                children: [new Paragraph({ children: [new TextRun({ text: this.t('camelot.step_four.breadcrumb_sub'), bold: true, size: 22 })] })]
+            })
         ]
 
-        const headerRow2Cells = columns.map(col => new TableCell({
+        // FA1 to FA9 and OA
+        for (let i = 1; i <= 9; i++) {
+            headerRow2Cells.push(new TableCell({
+                verticalAlign: VerticalAlign.CENTER,
+                shading: { fill: '#D3E9FF' },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${faPrefix} ${i}`, bold: true, size: 22 })] })]
+            }))
+        }
+        headerRow2Cells.push(new TableCell({
             verticalAlign: VerticalAlign.CENTER,
-            shading: { fill: '#F8F9FA' },
-            children: [new Paragraph({ children: [new TextRun({ text: col.label, bold: true, size: 22 })] })]
+            shading: { fill: '#D3E9FF' },
+            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: oaLabel, bold: true, size: 22 })] })]
         }))
 
         const rows = [
@@ -805,40 +812,44 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         data.items.forEach(item => {
             const cells = []
             
-            // Authors
+            // Authors (Bold)
             cells.push(new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: item.authors || '', size: 20 })] })]
+                children: [new Paragraph({ children: [new TextRun({ text: item.authors || '', bold: true, size: 20 })] })]
             }))
 
             const stages = item.stages || []
-            const lastStage = stages.length > 0 ? stages[stages.length - 1] : null
-            const firstStage = stages.length > 0 ? stages[0] : null
-            const secondStage = stages.length > 1 ? stages[1] : null
-            const thirdStage = stages.length > 2 ? stages[2] : null
-
-            // Overall Assessment (lastStage)
-            cells.push(this.createStageOptionCell(lastStage ? lastStage.options : [], true))
-
-            // Research Design (firstStage) - 4 columns
-            if (firstStage && firstStage.options) {
+            
+            // Step One: FA 1-4 (Stage 0)
+            if (stages[0] && stages[0].options) {
                 for (let i = 0; i < 4; i++) {
-                    cells.push(this.createSingleOptionCell(firstStage.options[i]))
+                    cells.push(this.createSummaryOptionCell(stages[0].options[i]))
                 }
             } else {
-                 for (let i = 0; i < 4; i++) cells.push(new TableCell({ children: [] }))
+                for (let i = 0; i < 4; i++) cells.push(new TableCell({ children: [] }))
             }
 
-            // Research Conduct (secondStage) - 4 columns
-            if (secondStage && secondStage.options) {
+            // Step Two: FA 5-8 (Stage 1)
+            if (stages[1] && stages[1].options) {
                 for (let i = 0; i < 4; i++) {
-                    cells.push(this.createSingleOptionCell(secondStage.options[i]))
+                    cells.push(this.createSummaryOptionCell(stages[1].options[i]))
                 }
             } else {
-                 for (let i = 0; i < 4; i++) cells.push(new TableCell({ children: [] }))
+                for (let i = 0; i < 4; i++) cells.push(new TableCell({ children: [] }))
             }
 
-            // Researchers Domain (thirdStage)
-             cells.push(this.createStageOptionCell(thirdStage ? thirdStage.options : [], true))
+            // Step Three: FA 9 (Stage 2)
+            if (stages[2] && stages[2].options) {
+                cells.push(this.createSummaryOptionCell(stages[2].options[0]))
+            } else {
+                cells.push(new TableCell({ children: [] }))
+            }
+
+            // Step Four: OA (Stage 3)
+            if (stages[3] && stages[3].options) {
+                cells.push(this.createSummaryOptionCell(stages[3].options[0]))
+            } else {
+                cells.push(new TableCell({ children: [] }))
+            }
 
             rows.push(new TableRow({ children: cells }))
         })
@@ -850,49 +861,53 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         })
     }
 
-    createSingleOptionCell(optionData) {
+    createSummaryOptionCell(optionData) {
         if (!optionData || !optionData.option) {
             return new TableCell({ children: [] })
         }
 
+        const color = this.getOptionColor(optionData.option)
+        const isDark = optionData.option === 'A' || optionData.option === 'D'
         const optionText = this.getOptionText(optionData.option)
         
         return new TableCell({
+            shading: color ? { fill: color } : undefined,
+            verticalAlign: VerticalAlign.CENTER,
             children: [
                 new Paragraph({
+                    alignment: AlignmentType.CENTER,
                     children: [
-                        new TextRun({ text: optionText, bold: true, size: 20 })
+                        new TextRun({ 
+                            text: optionText, 
+                            bold: true, 
+                            size: 20,
+                            color: isDark ? 'FFFFFF' : '000000'
+                        })
                     ]
                 }),
                 new Paragraph({
+                    alignment: AlignmentType.CENTER,
                     children: [
-                        new TextRun({ text: optionData.text || '', size: 20 })
+                        new TextRun({ 
+                            text: optionData.text || '', 
+                            size: 18,
+                            color: isDark ? 'FFFFFF' : '000000'
+                        })
                     ]
                 })
             ]
         })
     }
 
-    createStageOptionCell(options, isMultiple = false) {
-        if (!options || options.length === 0) {
-             return new TableCell({ children: [] })
+    getOptionColor(option) {
+        const colors = {
+            'A': '1065AB',
+            'B': '8EC4DE',
+            'C': 'F6A482',
+            'D': 'B31529',
+            'E': 'B3B3B3'
         }
-
-        const children = []
-        options.forEach(opt => {
-             if (opt.option) {
-                const optionText = this.getOptionText(opt.option)
-                children.push(new Paragraph({
-                    children: [new TextRun({ text: optionText, bold: true, size: 20 })]
-                }))
-                children.push(new Paragraph({
-                    children: [new TextRun({ text: opt.text || '', size: 20 })]
-                }))
-                children.push(new Paragraph('')) // Spacer
-             }
-        })
-
-        return new TableCell({ children: children })
+        return colors[option] || null
     }
 
     getOptionText(option) {

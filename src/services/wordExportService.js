@@ -57,7 +57,7 @@ export class WordExportService {
 
       // Step 2: Determine export strategy
       this.updateProgress(20, 'Preparing export strategy...')
-      const strategyType = this.getStrategyType(project)
+      const strategyType = this.getStrategyType(project, data, options)
       const strategy = ExportStrategyFactory.createStrategy(strategyType, project, data, locale)
 
       // Step 3: Generate document
@@ -127,10 +127,20 @@ export class WordExportService {
   /**
    * Determine which export strategy to use
    * @param {Object} project
+   * @param {Object} data
+   * @param {Object} options
    * @returns {string} Strategy type ('isoq' or 'camelot')
    */
-  getStrategyType(project) {
-    return project.use_camelot ? 'camelot' : 'isoq'
+  getStrategyType(project, data, options = {}) {
+    if (options.strategy) return options.strategy
+
+    // Only use Camelot strategy if it's a Camelot project AND 
+    // we have worksheet-specific data (evidenceProfile as a top-level key)
+    if (project.use_camelot && data && data.evidenceProfile) {
+      return 'camelot'
+    }
+
+    return 'isoq'
   }
 
   /**

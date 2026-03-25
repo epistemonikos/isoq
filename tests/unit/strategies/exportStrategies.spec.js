@@ -124,7 +124,7 @@ describe('ExportStrategies', () => {
         // Finding 1 row (first row in the mock data)
         const findingRow = rows[0]
         expect(findingRow[1].text).toBe('Finding 1') // Name
-        expect(findingRow[2].text).toBe('Moderate confidence') // Option '1' from mock
+        expect(findingRow[2].text).toBe('cerqual_options.moderate_confidence') // Key for option '1'
         expect(findingRow[3].text).toBe('Exp') // Explanation
       })
 
@@ -280,8 +280,10 @@ describe('ExportStrategies', () => {
              { 
                authors: 'Author B',
                stages: [
-                 { options: [{ option: 'A', text: 'Desc A' }] }, // First Stage
-                 { options: [{ option: 'B', text: 'Desc B' }] }  // Second Stage
+                 { options: [{ option: 'A', text: 'Desc A' }] }, // FA1
+                 { options: [{ option: 'B', text: 'Desc B' }] }, // FA5
+                 { options: [{ option: 'C', text: 'Desc C' }] }, // FA9
+                 { options: [{ option: 'D', text: 'Desc D' }] }  // OA
                ]
              }
            ]
@@ -291,6 +293,18 @@ describe('ExportStrategies', () => {
 
          const table = strategy.createMethodologicalAssessmentTable(methData)
          expect(table).toBeDefined()
+         // In a real test we'd check rows and cells, but docx objects are opaque here.
+         // We've verified it doesn't crash and returns a Table object.
+      })
+
+      it('should return correct background colors for options', () => {
+        const strategy = new CamelotExportStrategy(mockProject, mockData)
+        expect(strategy.getOptionColor('A')).toBe('1065AB')
+        expect(strategy.getOptionColor('B')).toBe('8EC4DE')
+        expect(strategy.getOptionColor('C')).toBe('F6A482')
+        expect(strategy.getOptionColor('D')).toBe('B31529')
+        expect(strategy.getOptionColor('E')).toBe('B3B3B3')
+        expect(strategy.getOptionColor('X')).toBeNull()
       })
     })
   })

@@ -103,14 +103,48 @@ describe('WordExportService', () => {
       )
     })
 
-    it('should use Camelot strategy when configured', async () => {
+    it('should use IsoQ strategy for Camelot projects when in project view (no evidenceProfile)', async () => {
       mockProject.use_camelot = true
+      // mockData only contains findings/references, no evidenceProfile top-level key
       await service.exportToWord(mockProject, mockData)
+      
+      expect(ExportStrategyFactory.createStrategy).toHaveBeenCalledWith(
+        'isoq',
+        mockProject,
+        mockData,
+        'en'
+      )
+    })
+
+    it('should use Camelot strategy for Camelot projects when in worksheet view (has evidenceProfile)', async () => {
+      mockProject.use_camelot = true
+      const worksheetData = {
+        ...mockData,
+        evidenceProfile: [{ id: 1 }]
+      }
+      await service.exportToWord(mockProject, worksheetData)
       
       expect(ExportStrategyFactory.createStrategy).toHaveBeenCalledWith(
         'camelot',
         mockProject,
-        mockData,
+        worksheetData,
+        'en'
+      )
+    })
+
+    it('should respect the explicit strategy option', async () => {
+      mockProject.use_camelot = true
+      const worksheetData = {
+        ...mockData,
+        evidenceProfile: [{ id: 1 }]
+      }
+      // Even if it looks like a camelot export, we force isoq
+      await service.exportToWord(mockProject, worksheetData, { strategy: 'isoq' })
+      
+      expect(ExportStrategyFactory.createStrategy).toHaveBeenCalledWith(
+        'isoq',
+        mockProject,
+        worksheetData,
         'en'
       )
     })
