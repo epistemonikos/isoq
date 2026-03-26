@@ -32,7 +32,8 @@
           <b-col cols="12">
             <b-table id="organizations" responsive striped hover head-variant="light" :busy="ui.projectTable.isBusy"
               :fields="ui.projectTable.fields" :items="filteredProjects" :per-page="ui.projectTable.perPage"
-              :current-page="ui.projectTable.currentPage" sort-by="created_at" :sort-desc="true">
+              :current-page="ui.projectTable.currentPage" sort-by="created_at" :sort-desc="true" show-empty
+              :empty-text="searchQuery ? $t('common.no_results_for', { query: searchQuery }) : $t('common.no_records')">
               <template v-slot:cell(private)="data">
                 <b-badge variant="light" class="publish-status" v-b-tooltip.hover
                   :title="(global_status.find(obj => obj.value === data.item.public_type) || {}).text">

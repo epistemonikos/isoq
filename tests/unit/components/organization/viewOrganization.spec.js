@@ -155,5 +155,17 @@ describe('viewOrganization.vue', () => {
       await localVue.nextTick()
       expect(wrapper.find('.pagination').exists()).toBe(true)
     })
+
+    it('shows "no results for" message when search returns no matches', async () => {
+      const projects = [
+        { id: '1', name: 'Alpha', organization: 'org-123', can_read: [], can_write: [] }
+      ]
+      await wrapper.setData({ projects })
+      await wrapper.setData({ searchQuery: 'Non-existent' })
+      await localVue.nextTick()
+      
+      const table = wrapper.find('#organizations')
+      expect(table.text()).toContain('common.no_results_for')
+    })
   })
 })

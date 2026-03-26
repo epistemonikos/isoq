@@ -53,6 +53,7 @@
     "show": "Show",
     "hide": "Hide",
     "no_records": "No records found",
+    "no_results_for": "No results for \"{query}\"",
     "filter_columns": "Filter columns",
     "show_all": "Show all",
     "share": "Share",
