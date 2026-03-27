@@ -1,577 +1,304 @@
 <template>
-  <div>
-    <b-table
-      :fields="ui.fields"
-      :items="assessments.items">
-      <template
-        v-slot:cell(authors)="data">
-        {{ data.item.authors }}
-      </template>
-      <template
-        v-slot:cell(stepOne)="data">
-          <div>
-            <b-button @click="openModal(0, data)" :variant="(isCompleted(0, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(0, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(0, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-      </template>
-      <template
-        v-slot:cell(stepTwo)="data">
-          <div>
-            <b-button @click="openModal(1, data)" :variant="(isCompleted(1, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(1, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(1, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-      </template>
-      <template
-        v-slot:cell(stepThree)="data">
-          <div>
-            <b-button @click="openModal(2, data)" :variant="(isCompleted(2, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-            <div v-if="getStepSummary(2, data.index)" class="mt-2">
-              <small class="text-muted">
-                <div v-for="(value, key) in getStepSummary(2, data.index)" :key="key">
-                  <strong>{{ key }}:</strong>
-                  <span :style="{ color: value.color }">{{ value.text }}</span>
-                </div>
-              </small>
-            </div>
-            <div v-else class="mt-2">
-              <small class="text-muted">Not assigned</small>
-            </div>
-          </div>
-        </template>
-        <template
-          v-slot:cell(stepFour)="data">
-            <div>
-              <b-button @click="openModal(3, data)" :variant="(isCompleted(3, data.index)) ? 'outline-primary': 'primary'">Assess</b-button>
-              <div v-if="getStepSummary(3, data.index)" class="mt-2">
-                <small class="text-muted">
-                  <div v-for="(value, key) in getStepSummary(3, data.index)" :key="key">
-                    <strong>{{ key }}:</strong>
-                    <span :style="{ color: value.color }">{{ value.text }}</span>
-                  </div>
-                </small>
-              </div>
-              <div v-else class="mt-2">
-                <small class="text-muted">Not assigned</small>
-              </div>
-            </div>
-        </template>
-    </b-table>
+  <div class="step-four-container">
+    <b-alert show variant="info" v-if="isLoading">
+      {{ $t('camelot.step_four.loading') }}
+    </b-alert>
+    <div v-else>
+      <camelot-step-four-header
+        :responses="ui.responses"
+        :export-fields="exportFields"
+        :export-items="exportItems"
+      />
 
-    <b-modal id="modal-1" size="xl" hide-footer title="Methodological assessment" class="modal-header">
+      <camelot-step-four-table
+        :fields="ui.fields"
+        :items="tableItems"
+        :responses="ui.responses"
+        @open-modal="onOpenModal"
+      />
+    </div>
+
+    <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer" body-class="camelot-modal-body">
+      <template #modal-title>
+        <div class="modal-title-container">
+          <div class="modal-breadcrumb">
+            {{ $t('camelot.step_four.breadcrumb_main') }} &gt; 
+            {{ $t('camelot.step_four.breadcrumb_sub') }} &gt; 
+            <span class="text-white">{{ ui.authors }}</span>
+          </div>
+          <div class="modal-main-title mt-1">
+            {{ modalSubtitle }}
+          </div>
+        </div>
+      </template>
       <b-row>
-        <b-col cols="12" class="modal-body">
-          <b-tabs nav-class="modal-nav-tabs" v-model="modal.stage" align="right">
-            <template #tabs-start>
-              <li role="presentation" class="nav-item mr-auto align-self-center modal-author"><b>{{ ui.authors }}</b></li>
-            </template>
-            <b-tab title-item-class="align-self-center" :title-link-class="modal.stage === 0 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Meta domains and <br/>Research design
-              </template>
+        <b-col cols="12" class="camelot-modal-body">
+          <template v-if="modal.stage < 2">
+            <b-row>
+              <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
+              <b-col cols="4" class="modal-column-scroll">
+                <div class="column-header mb-3">
+                  <h3>{{ modal.stage === 0 ? $t('camelot.step_four.sections.research_design') : $t('camelot.step_four.sections.research_conduct') }}</h3>
+                </div>
+                <div>
+                  <camelot-assessment-card
+                    v-for="(item, iIndex) in (modal.stage === 0 ? meta[1] : meta[2]).items"
+                    :key="iIndex"
+                    :meta-index="modal.stage === 0 ? 1 : 2"
+                    :item-index="iIndex"
+                    :label="getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex)"
+                    :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
+                    :comments="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
+                    :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
+                    :editing-field="editingField"
+                    :is-saving="isSavingField"
+                    @start-editing="onStartEditing"
+                    @cancel-editing="onCancelEditing"
+                    @save-field="onSaveField"
+                  />
+                </div>
+              </b-col>
+              
+              <!-- Columna 2: Navigation and Dynamic content -->
+              <b-col cols="8">
+                <div id="navegacion">
+                  <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs nav-fill" align="right" @input="selectedMeta = $event">
+                    <b-tab 
+                      v-for="(domain, dIndex) in ui.domainTabs" 
+                      :key="dIndex"
+                      :title-link-class="modal.tab === dIndex ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']"
+                      class="border p-2"
+                      style="border-color: #848E98 !important;"
+                    >
+                      <template #title>
+                        <div class="d-flex align-items-center justify-content-center">
+                          <div v-if="!isTabCompleted(modal.stage, dIndex)" 
+                            class="assessment-circle mr-2" 
+                            :style="{
+                              width: '20px', 
+                              height: '20px', 
+                              border: '2.5px dashed ' + (modal.tab === dIndex ? '#ffffff' : '#212529') + ' !important', 
+                              background: 'transparent', 
+                              borderRadius: '50%', 
+                              display: 'inline-block'
+                            }"></div>
+                          {{ domain.label }}
+                        </div>
+                      </template>                      
+                      <b-row class="mt-1">
+                        <!-- Columna 2.1: Meta Domain item (Research, Stakeholders, etc.) -->
+                        <b-col cols="6" class="modal-column-scroll 00000">
+                          <camelot-assessment-card
+                            :meta-index="0"
+                            :item-index="dIndex"
+                            :label="domain.label"
+                            :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
+                            :comments="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
+                            :is-exclamation-active="displayExclamationAlert(0, dIndex)"
+                            :editing-field="editingField"
+                            :is-saving="isSavingField"
+                            @start-editing="onStartEditing"
+                            @cancel-editing="onCancelEditing"
+                            @save-field="onSaveField"
+                          />
+                        </b-col>
+                        
+                        <!-- Columna 2.2: Assessment Evaluation -->
+                        <b-col cols="6">
+                          <assessmentForm
+                            :assessments="assessments"
+                            :modalStage="modal.stage"
+                            :selectedMeta="dIndex"
+                            :refId="refId"
+                            :modalIndex="modal.index"
+                            @getAssessments="getAssessments"></assessmentForm>
+                        </b-col>
+                      </b-row>
+                    </b-tab>
+                  </b-tabs>
+                </div>
+              </b-col>
+            </b-row>
+          </template>
+            
+          <template v-else-if="modal.stage === 2">
+            <div>
               <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Meta domains and Research design</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="4">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="4">
+                <!-- Columna 1: Research Design -->
+                <b-col cols="4" class="modal-column-scroll">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.research_design') }}</h3>
+                  </div>
                   <div>
-                    <h3>Meta domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-aa', 0)">1 - Research</h4>
-                    </div>
-                    <b-collapse id="accordion-aa" visible accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[0]['research_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ab', 1)">2 - Stakeholders</h4>
-                    </div>
-                    <b-collapse id="accordion-ab" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ac', 2)">3 - Researchers</h4>
-                    </div>
-                    <b-collapse id="accordion-ac" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[2]['researchers_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ad', 3)">4 - Context</h4>
-                    </div>
-                    <b-collapse id="accordion-ad" accordion="aa" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[3]['context_concerns'] }}
-                    </b-collapse>
+                    <camelot-assessment-card
+                      v-for="(item, iIndex) in meta[1].items"
+                      :key="iIndex"
+                      :meta-index="1"
+                      :item-index="iIndex"
+                      :label="getMetaItemLabel(1, iIndex)"
+                      :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
+                      :comments="meta[1].values[iIndex][item + 'comments']"
+                      :is-exclamation-active="displayExclamationAlert(1, iIndex)"
+                      :editing-field="editingField"
+                      :is-saving="isSavingField"
+                      @start-editing="onStartEditing"
+                      @cancel-editing="onCancelEditing"
+                      @save-field="onSaveField"
+                    />
                   </div>
                 </b-col>
-                <b-col cols="4">
+                
+                <!-- Columna 2: Research Conduct -->
+                <b-col cols="4" class="modal-column-scroll">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.research_conduct') }}</h3>
+                  </div>
                   <div>
-                    <h3>Research design domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ae>1 - Research strategy</h4>
-                    </div>
-                    <b-collapse id="accordion-ae" visible accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[0]['strategy_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-af>2 - Ethical considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-af" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[1]['ethical_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ag>3 - Equity, diversity & inclusion considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-ag" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[2]['equity_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ah>4 - Theory</h4>
-                    </div>
-                    <b-collapse id="accordion-ah" accordion="ab" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[3]['theory_concerns'] }}
-                    </b-collapse>
+                    <camelot-assessment-card
+                      v-for="(item, iIndex) in meta[2].items"
+                      :key="iIndex"
+                      :meta-index="2"
+                      :item-index="iIndex"
+                      :label="getMetaItemLabel(2, iIndex)"
+                      :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
+                      :comments="meta[2].values[iIndex][item + 'comments']"
+                      :is-exclamation-active="displayExclamationAlert(2, iIndex)"
+                      :editing-field="editingField"
+                      :is-saving="isSavingField"
+                      @start-editing="onStartEditing"
+                      @cancel-editing="onCancelEditing"
+                      @save-field="onSaveField"
+                    />
                   </div>
                 </b-col>
-              </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 1 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Meta domains and <br/>Research conduct
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Meta domains and Research conduct</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
-                <b-col cols="4">
-                  <assessmentForm
-                    :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
-                    :refId="refId"
-                    :modalIndex="modal.index"
-                    @getAssessments="getAssessments"></assessmentForm>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Meta domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-ba', 0)">1 - Research</h4>
-                    </div>
-                    <b-collapse id="accordion-ba" visible accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[0]['research_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[0]['research_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bb', 1)">2 - Stakeholders</h4>
-                    </div>
-                    <b-collapse id="accordion-bb" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[1]['stakeholders_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[1]['stakeholders_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bc', 2)">3 - Researchers</h4>
-                    </div>
-                    <b-collapse id="accordion-bc" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[2]['researchers_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[2]['researchers_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block @click="showFitAssessment('accordion-bd', 3)">4 - Context</h4>
-                    </div>
-                    <b-collapse id="accordion-bd" accordion="ba" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[0].values[3]['context_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[0].values[3]['context_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Research conduct domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-be>1 - Participant recruitment & selection</h4>
-                    </div>
-                    <b-collapse id="accordion-be" visible accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[0]['participant_concerns'] }}
-                    </b-collapse>
 
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bf>2 - Data collection</h4>
-                    </div>
-                    <b-collapse id="accordion-bf" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[1]['data_concerns'] }}
-                    </b-collapse>
-
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bg>3 - Analysis and interpretation</h4>
-                    </div>
-                    <b-collapse id="accordion-bg" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[2]['analysis_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-bh>4 - Presentation of findings</h4>
-                    </div>
-                    <b-collapse id="accordion-bh" accordion="bb" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[3]['presentation_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-              </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 2 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']">
-              <template #title>
-                Fit between <br/>Research design and <br/>Research conduct
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Fit between Research design and Research conduct</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
-                </b-col>
+                <!-- Columna 3: Assessment Evaluation -->
                 <b-col cols="4">
                   <assessmentForm
                     :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
+                    :modalStage="2"
+                    :selectedMeta="0"
                     :refId="refId"
                     :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
-                <b-col cols="4">
-                  <div>
-                    <h3>Research design domains</h3>
-                  </div>
-                  <div role="tablist">
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-ca>1 - Research strategy</h4>
-                    </div>
-                    <b-collapse id="accordion-ca" visible accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[0]['strategy_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[0]['strategy_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cb>2 - Ethical considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-cb" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[1]['ethical_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[1]['ethical_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cc>3 - Equity, diversity & inclusion considerations</h4>
-                    </div>
-                    <b-collapse id="accordion-cc" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[2]['equity_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[2]['equity_concerns'] }}
-                    </b-collapse>
-                    <div class="p-1" role="tab">
-                      <h4 block v-b-toggle.accordion-cd>4 - Theory</h4>
-                    </div>
-                    <b-collapse id="accordion-cd" accordion="ca" role="tabpanel">
-                      <h5>Extracted data</h5>
-                      {{ this.meta[1].values[3]['theory_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[1].values[3]['theory_concerns'] }}
-                    </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="4">
-                  <div>
-                    <div>
-                      <h3>Research conduct domains</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ce>1 - Participant recruitment & selection</h4>
-                      </div>
-                      <b-collapse id="accordion-ce" visible accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[0]['participant_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[0]['participant_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cf>2 - Data collection</h4>
-                      </div>
-                      <b-collapse id="accordion-cf" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[1]['data_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[1]['data_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-cg>3 - Analysis and interpretation</h4>
-                      </div>
-                      <b-collapse id="accordion-cg" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[2]['analysis_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[2]['analysis_concerns'] }}
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-ch>4 - Presentation of findings</h4>
-                      </div>
-                      <b-collapse id="accordion-ch" accordion="cb" role="tabpanel">
-                        <h5>Extracted data</h5>
-                      {{ this.meta[2].values[3]['presentation_extractedData'] }}
-                      <h5>Concerns</h5>
-                      {{ this.meta[2].values[3]['presentation_concerns'] }}
-                      </b-collapse>
-                    </div>
-                  </div>
-                </b-col>
               </b-row>
-            </b-tab>
-            <b-tab :title-link-class="modal.stage === 3 ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']" title-item-class="align-self-end">
-              <template #title>
-                Overall assessment
-              </template>
-              <b-row>
-                <b-col cols="12">
-                  <h2>Overall assessment</h2>
-                  <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus itaque aliquid consequatur delectus cupiditate, expedita eos quis quidem perferendis, illum dolorem! Natus corrupti atque iure quo adipisci perferendis voluptatibus reiciendis?</p>
+            </div>
+          </template>
+          
+          <template v-else-if="modal.stage === 3">
+            <div class="mt-4">
+              <b-row class="mt-4">
+                <!-- Columna 1: Fit Design vs Meta Resumen -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <!-- <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</h3>
+                  </div> -->
+                  <div>
+                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card" header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 1">{{ $t('camelot.step_four.sections.fit_between_design_meta') }}</b-tooltip>
+                        </div>
+                      </template>
+                      <div class="field-section" v-if="assessments.items.length">
+                        <responses
+                          :stage="0"
+                          :index="dIndex"
+                          :option="assessments.items[modal.index].stages[0].options[dIndex].option"
+                          :text="assessments.items[modal.index].stages[0].options[dIndex].text"></responses>
+                      </div>
+                    </b-card>
+                  </div>
                 </b-col>
-                <b-col cols="3">
+
+                <!-- Columna 2: Fit Conduct vs Meta Resumen -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <!-- <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</h3>
+                  </div> -->
+                  <div>
+                    <b-card v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex" class="mb-3 item-card" header-tag="header">
+                      <template #header>
+                        <div class="d-flex justify-content-between align-items-end">
+                          <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
+                          <b-tooltip :target="'fa' + dIndex + 5">{{ $t('camelot.step_four.sections.fit_between_conduct_meta') }}</b-tooltip>
+                        </div>
+                      </template>
+                      <div class="field-section" v-if="assessments.items.length">
+                        <responses
+                          :stage="1"
+                          :index="dIndex"
+                          :option="assessments.items[modal.index].stages[1].options[dIndex].option"
+                          :text="assessments.items[modal.index].stages[1].options[dIndex].text"></responses>
+                      </div>
+                    </b-card>
+                  </div>
+                </b-col>
+
+                <!-- Columna 3: Fit Design vs Conduct Resumen (FA9) -->
+                <b-col cols="3" class="modal-column-scroll">
+                  <b-card  class="mb-3 item-card" header-tag="header">
+                    <template #header>
+                      <div class="d-flex justify-content-between align-items-end">
+                        <h4 id="fa9" class="mb-0">FA9</h4>
+                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fit_between_design_conduct') }}</b-tooltip>
+                      </div>
+                    </template>
+                    <div class="p-1">
+                      <responses
+                        v-if="assessments.items.length"
+                        :stage="2"
+                        :index="0"
+                        :option="assessments.items[modal.index].stages[2].options[0].option"
+                        :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
+                    </div>
+                  </b-card>                  
+                </b-col>
+
+                <!-- Columna 4: Evaluación de ajuste final -->
+                <b-col cols="3" class="">
                   <assessmentForm
                     :assessments="assessments"
-                    :modalStage="modal.stage"
-                    :selectedMeta="selectedMeta"
+                    :modalStage="3"
+                    :selectedMeta="0"
                     :refId="refId"
                     :modalIndex="modal.index"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
-                <b-col cols="3">
-                  <div>
-                    <h3>Fit between Research design and each Meta domain</h3>
-                  </div>
-                  <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-da>1 - Research</h4>
-                      </div>
-                      <b-collapse id="accordion-da" visible accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[0].options[0].option"
-                            :text="assessments.items[modal.index].stages[0].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-db>2 - Stakeholders</h4>
-                      </div>
-                      <b-collapse id="accordion-db" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="1"
-                            :option="assessments.items[modal.index].stages[0].options[1].option"
-                            :text="assessments.items[modal.index].stages[0].options[1].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dc>3 - Researchers</h4>
-                      </div>
-                      <b-collapse id="accordion-dc" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="2"
-                            :option="assessments.items[modal.index].stages[0].options[2].option"
-                            :text="assessments.items[modal.index].stages[0].options[2].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dd>4 - Context</h4>
-                      </div>
-                      <b-collapse id="accordion-dd" accordion="da" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="0"
-                            :index="3"
-                            :option="assessments.items[modal.index].stages[0].options[3].option"
-                            :text="assessments.items[modal.index].stages[0].options[3].text"></responses>
-                        </template>
-                      </b-collapse>
-                  </div>
-                </b-col>
-                <b-col cols="3">
-                  <div>
-                    <div>
-                      <h3>Fit between Research conduct and each Meta domain</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-de>Research strategy</h4>
-                      </div>
-                      <b-collapse id="accordion-de" visible accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[1].options[0].option"
-                            :text="assessments.items[modal.index].stages[1].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-df>Ethical considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-df" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="1"
-                            :option="assessments.items[modal.index].stages[1].options[1].option"
-                            :text="assessments.items[modal.index].stages[1].options[1].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dg>Equity, diversity & inclusion  considerations</h4>
-                      </div>
-                      <b-collapse id="accordion-dg" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="2"
-                            :option="assessments.items[modal.index].stages[1].options[2].option"
-                            :text="assessments.items[modal.index].stages[1].options[2].text"></responses>
-                        </template>
-                      </b-collapse>
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-dh>Theory</h4>
-                      </div>
-                      <b-collapse id="accordion-dh" accordion="db" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="1"
-                            :index="3"
-                            :option="assessments.items[modal.index].stages[1].options[3].option"
-                            :text="assessments.items[modal.index].stages[1].options[3].text"></responses>
-                        </template>
-                      </b-collapse>
-                    </div>
-                  </div>
-                </b-col>
-                <b-col cols="3">
-                  <div>
-                    <div>
-                      <h3>Fit between Research design and Research conduct domains</h3>
-                    </div>
-                    <div role="tablist">
-                      <div class="p-1" role="tab">
-                        <h4 block v-b-toggle.accordion-di>Fit assessment</h4>
-                      </div>
-                      <b-collapse id="accordion-di" visible accordion="dc" role="tabpanel">
-                        <template v-if="assessments.items.length">
-                          <responses
-                            :stage="2"
-                            :index="0"
-                            :option="assessments.items[modal.index].stages[2].options[0].option"
-                            :text="assessments.items[modal.index].stages[2].options[0].text"></responses>
-                        </template>
-                      </b-collapse>
-                    </div>
-
-                  </div>
-                </b-col>
               </b-row>
-            </b-tab>
-          </b-tabs>
+            </div>
+          </template>
         </b-col>
       </b-row>
+      <template #modal-footer>
+        <div class="w-100 d-flex justify-content-between align-items-end px-3">
+          <div v-if="modal.stage > 0" @click="goToStage(modal.stage - 1)" class="nav-footer-link">
+            &lt; {{ getStageTitle(modal.stage - 1) }}
+          </div>
+          <div v-else></div>
+          
+          <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link">
+            {{ getStageTitle(modal.stage + 1) }} &gt;
+          </div>
+          <div v-else @click="$bvModal.hide('modal-1')" class="nav-footer-link">
+            {{ $t('common.close') }}
+          </div>
+        </div>
+      </template>
     </b-modal>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
 import Responses from './Responses.vue'
+import CamelotAssessmentCard from './CamelotAssessmentCard.vue'
+import CamelotStepFourTable from './CamelotStepFourTable.vue'
+import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 
 export default {
   name: 'StepFour',
@@ -586,186 +313,223 @@ export default {
     }
   },
   components: {
-    AssessmentForm, Responses
+    AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader
   },
   data () {
+    const headerClass = 'header-second-row'
+    const overallHeaderClass = 'header-overall-row'
+
     return {
-      // Define any local data properties here if needed
+      isLoading: false,
       ui: {
         fields: [
-          { key: 'authors', label: 'Study' },
-          { key: 'stepOne', label: 'Fit between Meta domains and Research design' },
-          { key: 'stepTwo', label: 'Fit between Meta domains and Research conduct' },
-          { key: 'stepThree', label: 'Fit between Research design and Research conduct' },
-          { key: 'stepFour', label: 'Overall assessment' }
+          { key: 'authors', label: 'Fit assessments', thClass: headerClass, tdClass: 'border-right' },
+          // Group 1
+          { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa3', label: 'FA 3', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa4', label: 'FA 4', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit1', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 2
+          { key: 'fa5', label: 'FA 5', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa6', label: 'FA 6', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa7', label: 'FA 7', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'fa8', label: 'FA 8', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit2', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 3
+          { key: 'fa9', label: 'FA 9', thClass: headerClass, tdClass: 'assessment-col' },
+          { key: 'edit3', label: '', thClass: headerClass, tdClass: 'border-right' },
+          // Group 4 (OA)
+          { key: 'oa', label: 'OA', thClass: overallHeaderClass, tdClass: 'assessment-col' },
+          { key: 'edit4', label: '', thClass: overallHeaderClass }
         ],
         authors: '',
+        domainTabs: [
+          { key: 'research', label: this.$t('camelot.step_four.meta_items.research') },
+          { key: 'stakeholders', label: this.$t('camelot.step_four.meta_items.stakeholders') },
+          { key: 'researchers', label: this.$t('camelot.step_four.meta_items.researchers') },
+          { key: 'context', label: this.$t('camelot.step_four.meta_items.context') }
+        ],
         responses: [
-          { text: 'No or minimal concerns', value: 'A', color: '#1065AB' },
-          { text: 'Minor concerns', value: 'B', color: '#8EC4DE' },
-          { text: 'Moderate concerns', value: 'C', color: '#F6A482' },
-          { text: 'Serious concerns', value: 'D', color: '#B31529' },
-          { text: 'Unclear', value: 'E', color: '#B3B3B3' }
+          { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
+          { text: this.$t('camelot.responses.minor'), value: 'B', color: '#8EC4DE' },
+          { text: this.$t('camelot.responses.moderate'), value: 'C', color: '#F6A482' },
+          { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
+          { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
         ]
       },
-      characteristics: [],
+      characteristics: {
+        items: []
+      },
       assessments: {
-        items: [
-          {
-            ref_id: null,
-            stages: [
-              {
-                key: 0,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 1,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  },
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 2,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              },
-              {
-                key: 3,
-                options: [
-                  {
-                    option: null,
-                    text: ''
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        items: []
       },
       selected: null,
       text1: '',
       modal: {
         stage: 0,
-        index: 0
+        index: 0,
+        tab: 0,
+        faLabel: null
       },
       meta: [
         {
-          name: 'Meta Domains',
+          name: this.$t('camelot.step_four.sections.meta_domains'),
           items: ['research_', 'stakeholders_', 'researchers_', 'context_'],
           values: [
             {
               research_extractedData: '',
-              research_concerns: ''
+              research_comments: ''
             },
             {
               stakeholders_extractedData: '',
-              stakeholders_concerns: ''
+              stakeholders_comments: ''
             },
             {
               researchers_extractedData: '',
-              researchers_concerns: ''
+              researchers_comments: ''
             },
             {
               context_extractedData: '',
-              context_concerns: ''
+              context_comments: ''
             }
           ]
         },
         {
-          name: 'Research design domains',
+          name: this.$t('camelot.step_four.sections.research_design'),
           items: ['strategy_', 'ethical_', 'equity_', 'theory_'],
           values: [
             {
               strategy_extractedData: '',
-              strategy_concerns: ''
+              strategy_comments: ''
             },
             {
               ethical_extractedData: '',
-              ethical_concerns: ''
+              ethical_comments: ''
             },
             {
               equity_extractedData: '',
-              equity_concerns: ''
+              equity_comments: ''
             },
             {
               theory_extractedData: '',
-              theory_concerns: ''
+              theory_comments: ''
             }
           ]
         },
         {
-          name: 'Research conduct',
+          name: this.$t('camelot.step_four.sections.research_conduct'),
           items: ['participant_', 'data_', 'analysis_', 'presentation_'],
           values: [
             {
               participant_extractedData: '',
-              participant_concerns: ''
+              participant_comments: ''
             },
             {
               data_extractedData: '',
-              data_concerns: ''
+              data_comments: ''
             },
             {
               analysis_extractedData: '',
-              analysis_concerns: ''
+              analysis_comments: ''
             },
             {
               presentation_extractedData: '',
-              presentation_concerns: ''
+              presentation_comments: ''
             }
           ]
         }
       ],
       selectedMeta: 0,
-      refId: null
+      refId: null,
+      editingField: {
+        metaIndex: null,
+        itemIndex: null,
+        type: null
+      },
+      editValueExtracted: '',
+      editValueComments: '',
+      isSavingField: false,
+      showLegend: false
+    }
+  },
+  computed: {
+    exportFields () {
+      return [
+        { key: 'authors', label: 'Author(s), Year' },
+        { key: 'fa1', label: 'FA1' },
+        { key: 'fa2', label: 'FA2' },
+        { key: 'fa3', label: 'FA3' },
+        { key: 'fa4', label: 'FA4' },
+        { key: 'fa5', label: 'FA5' },
+        { key: 'fa6', label: 'FA6' },
+        { key: 'fa7', label: 'FA7' },
+        { key: 'fa8', label: 'FA8' },
+        { key: 'fa9', label: 'FA9' },
+        { key: 'oa', label: 'OA' }
+      ]
+    },
+    exportItems () {
+      return this.tableItems.map(item => {
+        const getVal = (stageIdx, optIdx) => {
+          if (!item.stages || !item.stages[stageIdx] || !item.stages[stageIdx].options[optIdx]) return ''
+          const opt = item.stages[stageIdx].options[optIdx]
+          if (!opt.option && !opt.text) return ''
+          let result = ''
+          if (opt.option) {
+            const response = this.ui.responses.find(r => r.value === opt.option)
+            result += response ? response.text : opt.option
+          }
+          if (opt.text) {
+            result += (result ? ', explanation: ' : 'explanation: ') + opt.text
+          }
+          return result
+        }
+
+        return {
+          authors: item.authors,
+          fa1: getVal(0, 0),
+          fa2: getVal(0, 1),
+          fa3: getVal(0, 2),
+          fa4: getVal(0, 3),
+          fa5: getVal(1, 0),
+          fa6: getVal(1, 1),
+          fa7: getVal(1, 2),
+          fa8: getVal(1, 3),
+          fa9: getVal(2, 0),
+          oa: getVal(3, 0)
+        }
+      })
+    },
+    tableItems () {
+      if (!this.assessments.items) return []
+      return this.assessments.items.map(item => {
+        const ref = this.references.find(r => r.id === item.ref_id)
+        if (ref) {
+          return {
+            ...ref,
+            ...item,
+            // Force re-formatting authors for consistency with Step 3 and the fix
+            authors: Commons.parseReference(ref, true, false)
+          }
+        }
+        return item
+      })
+    },
+    modalSubtitle () {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      const title = this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
+      return this.modal.faLabel ? `${this.modal.faLabel} ${title}` : title
     }
   },
   watch: {
-    // Watch for changes in props or data if needed
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
-    },
-    assessments: {
-      handler (newVal) {
-        this.isCompleted()
-      },
-      deep: true
     },
     references: {
       handler (newVal) {
@@ -774,28 +538,36 @@ export default {
       immediate: true
     }
   },
-  computed: {
-    // Define any computed properties here if needed
-  },
   mounted () {
-    // Fetch data when the component is mounted
     this.getAssessments()
   },
   methods: {
-    // Define any methods here if needed
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
     },
+    getMetaItemLabel (metaIndex, itemIndex) {
+      if (metaIndex === 0) {
+        const keys = ['research', 'stakeholders', 'researchers', 'context']
+        return this.$t(`camelot.step_four.meta_items.${keys[itemIndex]}`)
+      } else if (metaIndex === 1) {
+        const keys = ['strategy', 'ethical', 'equity', 'theory']
+        return this.$t(`camelot.step_four.design_items.${keys[itemIndex]}`)
+      } else if (metaIndex === 2) {
+        const keys = ['participant', 'data', 'analysis', 'presentation']
+        return this.$t(`camelot.step_four.conduct_items.${keys[itemIndex]}`)
+      }
+      return ''
+    },
     getAssessments: function () {
+      this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_assessments', { params })
+      Api.get('/isoqf_assessments', params)
         .then(response => {
           if (response.data.length) {
             this.assessments = {...response.data[0]}
-            // Ordenar los items por autores alfabéticamente
             if (this.assessments.items && this.assessments.items.length > 0) {
               this.assessments.items.sort((a, b) => {
                 const authorsA = a.authors || '';
@@ -804,14 +576,12 @@ export default {
               });
             }
           } else {
-            // Crear items ordenados por autores
             const sortedReferences = [...this.references].sort((a, b) => {
               const authorsA = this.getReferenceData(a) || '';
               const authorsB = this.getReferenceData(b) || '';
               return authorsA.localeCompare(authorsB);
             });
 
-            // Inicializar con estructura vacía si no hay datos
             this.assessments = {
               items: sortedReferences.map(ref => ({
                 ref_id: ref.id,
@@ -819,11 +589,11 @@ export default {
                 stages: [
                   {
                     key: 0,
-                    options: Array(4).fill({ option: null, text: '' })
+                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
                   },
                   {
                     key: 1,
-                    options: Array(4).fill({ option: null, text: '' })
+                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
                   },
                   {
                     key: 2,
@@ -841,14 +611,19 @@ export default {
         .catch(error => {
           console.error('Error fetching Assessments data:', error)
         })
+        .finally(() => {
+          this.isLoading = false
+        })
     },
     getCharacteristics: function () {
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }
-      axios.get('/api/isoqf_characteristics', { params })
+      Api.get('/isoqf_characteristics', params)
         .then(response => {
+          if (!response.data || !response.data.length) return;
+          
           const data = response.data[0]
           const items = data.items
 
@@ -857,7 +632,7 @@ export default {
               for (let y = 0; y < this.meta.length; y++) {
                 for (let z = 0; z < this.meta[y].items.length; z++) {
                   this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = items[x][this.meta[y].items[z] + 'extractedData']
-                  this.meta[y].values[z][this.meta[y].items[z] + 'concerns'] = items[x][this.meta[y].items[z] + 'concerns']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = items[x][this.meta[y].items[z] + 'comments']
                 }
               }
             }
@@ -869,103 +644,497 @@ export default {
           console.error('Error fetching characteristics:', error)
         })
     },
-    openModal: function (stage = 0, modal) {
+    openModal: function (stage = 0, data, tab = 0, faLabel = null) {
       this.getCharacteristics()
       this.modal.stage = stage
-      this.modal.index = modal.index
-      this.selectedMeta = 0
-      this.refId = modal.item.ref_id
-      this.ui.authors = modal.item.authors
+      this.modal.index = data.index
+      this.modal.tab = tab
+      this.modal.faLabel = faLabel
+      this.selectedMeta = tab
+      this.refId = data.item.ref_id
+      this.ui.authors = data.item.authors
       this.$bvModal.show('modal-1')
+    },
+    onOpenModal({ stage, data, tab, faLabel = null }) {
+      this.openModal(stage, data, tab, faLabel)
+    },
+    goToStage (stage) {
+      this.modal.stage = stage
+      this.modal.tab = 0
+      this.selectedMeta = 0
+    },
+    getStageTitle (stage) {
+      const stages = [
+        'fit_meta_design',
+        'fit_meta_conduct',
+        'fit_design_conduct',
+        'overall'
+      ]
+      return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
+    },
+    displayExclamationAlert (metaIndex, itemIndex) {
+      if (!this.meta[metaIndex] || !this.meta[metaIndex].values[itemIndex]) return false
+
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      const extractedData = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData']
+      const comments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments']
+
+      return (!extractedData || extractedData.trim() === '') && (!comments || comments.trim() === '')
     },
     showFitAssessment: function (assessmentId, position) {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
     },
-    isCompleted: function (stage = 0, index = 0) {
-      // Verificar si el item existe y tiene la estructura necesaria
-      if (!this.assessments ||
-          !this.assessments.items ||
-          !this.assessments.items[index] ||
-          !this.assessments.items[index].stages ||
-          !this.assessments.items[index].stages[stage] ||
-          !this.assessments.items[index].stages[stage].options) {
-        return false
+    startEditing (metaIndex, itemIndex, type) {
+      this.editingField = { metaIndex, itemIndex, type }
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+      if (type === 'extractedData') {
+        this.editValueExtracted = this.meta[metaIndex].values[itemIndex][itemPrefix + 'extractedData'] || ''
+      } else {
+        this.editValueComments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments'] || ''
       }
-
-      const options = this.assessments.items[index].stages[stage].options
-      let cnt = 0
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].option === null) {
-          cnt++
-        }
-      }
-      return cnt === 0
     },
-        getStepSummary: function (stage, index) {
-      if (!this.assessments ||
-          !this.assessments.items ||
-          !this.assessments.items[index] ||
-          !this.assessments.items[index].stages ||
-          !this.assessments.items[index].stages[stage] ||
-          !this.assessments.items[index].stages[stage].options) {
-        return null
-      }
-
-      const options = this.assessments.items[index].stages[stage].options
-      const summary = {}
-
-      // Definir los nombres de los dominios para cada etapa
-      const domainNames = {
-        0: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 1: Meta domains
-        1: ['Research', 'Stakeholders', 'Researchers', 'Context'], // Step 2: Meta domains
-        2: ['Fit assessment'], // Step 3: Single assessment
-        3: ['Overall assessment'] // Step 4: Single assessment
-      }
-
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].option !== null) {
-          const domainName = domainNames[stage] && domainNames[stage][i] ? domainNames[stage][i] : `Option ${i + 1}`
-
-          // Buscar la respuesta correspondiente en ui.responses
-          const response = this.ui.responses.find(r => r.value === options[i].option)
-
-          summary[domainName] = {
-            text: response ? response.text : options[i].option,
-            color: response ? response.color : '#000000'
-          }
+    onStartEditing({ metaIndex, itemIndex, type }) {
+      this.startEditing(metaIndex, itemIndex, type)
+    },
+    scrollToField (metaIndex, itemIndex) {
+      this.$nextTick(() => {
+        const elementId = `field-${metaIndex}-${itemIndex}`
+        const element = document.getElementById(elementId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
+      })
+    },
+    cancelEditing () {
+      const { metaIndex, itemIndex } = this.editingField
+      this.editingField = { metaIndex: null, itemIndex: null, type: null }
+      this.editValueExtracted = ''
+      this.editValueComments = ''
+      if (metaIndex !== null && itemIndex !== null) {
+        this.scrollToField(metaIndex, itemIndex)
+      }
+    },
+    onCancelEditing() {
+      this.cancelEditing()
+    },
+    saveField (newValue) {
+      if (!this.characteristics) return
+      
+      this.isSavingField = true
+      const { metaIndex, itemIndex, type } = this.editingField
+      const itemPrefix = this.meta[metaIndex].items[itemIndex]
+
+      if (type === 'extractedData') {
+        this.editValueExtracted = newValue
+      } else {
+        this.editValueComments = newValue
+      }
+      
+      // Asegurar estructura básica si es un objeto nuevo
+      if (!this.characteristics.organization) {
+        this.characteristics.organization = this.$route.params.org_id
+        this.characteristics.project_id = this.$route.params.id
+      }
+      
+      if (!this.characteristics.items) {
+        this.$set(this.characteristics, 'items', [])
       }
 
-      return Object.keys(summary).length > 0 ? summary : null
+      // Actualizar o añadir el ítem en el arreglo principal
+      let existingItemIdx = this.characteristics.items.findIndex(item => item.ref_id === this.refId)
+      const fieldName = type === 'extractedData' ? itemPrefix + 'extractedData' : itemPrefix + 'comments'
+      const fieldValue = type === 'extractedData' ? this.editValueExtracted : this.editValueComments
+
+      if (existingItemIdx !== -1) {
+        this.$set(this.characteristics.items[existingItemIdx], fieldName, fieldValue)
+      } else {
+        this.characteristics.items.push({
+          ref_id: this.refId,
+          authors: this.ui.authors,
+          [fieldName]: fieldValue
+        })
+      }
+      
+      // Actualizar la vista local meta para feedback inmediato
+      this.meta[metaIndex].values[itemIndex][fieldName] = fieldValue
+
+      const savePromise = this.characteristics.id
+        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/`, this.characteristics)
+        : Api.post('/isoqf_characteristics/', this.characteristics)
+
+      savePromise
+        .then(response => {
+          const responseData = response.data.$set || response.data
+          // Sincronizar objeto local con respuesta del servidor
+          this.characteristics = { 
+            ...this.characteristics, 
+            ...responseData, 
+            id: response.data.id || this.characteristics.id || response.data._id 
+          }
+          
+          this.cancelEditing()
+          this.isSavingField = false
+          // Notificar a otros componentes (Paso 3)
+          this.$root.$emit('characteristics-updated', this.characteristics)
+        })
+        .catch(error => {
+          console.error('Error saving characteristic field:', error)
+          this.isSavingField = false
+          this.getCharacteristics()
+        })
+    },
+    onSaveField(newValue) {
+      this.saveField(newValue)
+    },
+    isTabCompleted (stage, tabIndex) {
+      if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
+      
+      const currentItem = this.assessments.items[this.modal.index]
+      if (!currentItem.stages || !currentItem.stages[stage]) return false
+      if (!currentItem.stages[stage].options || !currentItem.stages[stage].options[tabIndex]) return false
+      
+      const option = currentItem.stages[stage].options[tabIndex].option
+      return option !== null
+    },
+    getCircleClass: function (stage, optionIndex, item) {
+      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
+        return 'circle-not-completed'
+      }
+      const option = item.stages[stage].options[optionIndex].option
+      return option === null ? 'circle-not-completed' : 'circle-filled'
+    },
+    getCircleStyle: function (stage, optionIndex, item) {
+      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
+        return {}
+      }
+      const option = item.stages[stage].options[optionIndex].option
+      if (option === null) return {}
+      
+      const response = this.ui.responses.find(r => r.value === option)
+      return {
+        backgroundColor: response ? response.color : '#B3B3B3'
+      }
     }
   }
 }
 </script>
 
 <style lang="scss">
-.modal-header {
+.step-four-container {
+  .help-link {
+    color: #898989 !important;
+    text-decoration: none !important;
+    font-size: 0.9rem;
+    
+    &:hover, &:focus {
+      color: #6c757d !important;
+      text-decoration: underline !important;
+    }
+  }
+
+  .color-preview-bars {
+    gap: 1px;
+    vertical-align: middle;
+    align-items: center;
+    .color-bar {
+      width: 8px !important;
+      height: 16px !important;
+      display: block;
+      flex-shrink: 0;
+      border-radius: 1px;
+    }
+  }
+
+  .camelot-table {
+    font-size: 0.9rem;
+    
+    th, td {
+      vertical-align: middle !important;
+      padding: 0.75rem 0.5rem;
+    }
+    
+    .assessment-col {
+      width: 50px;
+      min-width: 50px;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .edit-btn {
+      white-space: nowrap;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  .header-top-row {
+    background-color: #E9ECEF;
+    color: #152536;
+    
+    th {
+      border-bottom: none !important;
+      padding: 1rem 0.5rem;
+    }
+  }
+
+  .group-header {
+    background-color: #E9ECEF;
+  }
+
+  .header-overall-group {
+    background-color: #D8EBF5 !important;
+  }
+
+  .header-second-row {
+    background-color: #D8DAE5 !important;
+    color: #495057;
+    
+    th {
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+  }
+
+  .header-overall-row {
+    background-color: #D8EBF5 !important;
+    color: #495057;
+    th {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.assessment-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.2);
+  }
+}
+
+.circle-filled {
+  border: none;
+}
+
+.circle-not-completed {
+  border: 2px dashed #B3B3B3;
+  background-color: transparent;
+}
+
+.camelot-modal-header {
   background-color: #1E2137;
   color: #fff;
-  font-size: 1.375rem;
+  border-bottom: none;
+  padding: 1.5rem;
+
+  .modal-breadcrumb {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+  }
+
+  .modal-main-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .close {
+    color: #fff;
+    text-shadow: none;
+    opacity: 0.8;
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
-.modal-body {
+
+.camelot-modal-footer {
+  background-color: #F8F9FA;
+  padding: 1.5rem;
+  border-top: 1px solid #DEE2E6;
+
+  .nav-footer-link {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: color 0.2s;
+    
+    &:hover {
+      color: #1065AB;
+      text-decoration: none !important;
+    }
+  }
+}
+
+.camelot-modal-body {
   color: #152536;
+  background-color: #E9E9EB;
+  
+  h3 {
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding-bottom: 0.5rem;
+  }
+  
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #495057;
+    margin-bottom: 0;
+    
+    &:hover {
+      color: #1065AB;
+    }
+  }
+  
+  h5 {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #152536;
+    text-transform: uppercase;
+  }
+  
+  p {
+    font-size: 0.9rem;
+    color: #212529;
+  }
 }
 .modal-author {
   font-size: 1rem;
 }
 .modal-active-tab {
   font-weight: bold;
-  background-color: #9B9EB6 !important;
+  background: linear-gradient(180deg, #287BDC 0%, #2C649B 100%) !important;
+  border-color: #2C649B !important;
 }
 .modal-active-tab-text {
-  color: #152536;
+  color: #ffffff !important;
 }
 .modal-normal-tab {
-  background-color: #D8DAE5 !important;
+  background-color: #E3E3E3 !important;
+  border-color: #848E98 !important;
 }
 .modal-normal-tab-text {
-  color: #6C6C6C;
+  font-weight: bold;
+  color: #212529 !important;
+}
+
+.column-header {
+  margin-bottom: 1.5rem;
+}
+
+.text-wrap-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.edit-category-btn {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  
+  &:hover {
+    color: #0056b3 !important;
+  }
+}
+
+.item-card {
+  border: 1px solid #b6b6b6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  .card-header {
+    background-color: #CACACA;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #b6b6b6;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  h3, h4 {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+.field-section {
+  padding: 0.5rem;
+  background-color: #fff;
+  border-radius: 0.25rem;
+}
+
+.edit-btn-thin {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.modal-column-scroll {
+  max-height: max-content;
+  overflow-y: auto;
+  padding-right: 10px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #D8DAE5;
+    border-radius: 3px;
+  }
+}
+
+.not-completed-alert {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .alert-strip {
+    width: 5px;
+    flex-shrink: 0;
+  }
+
+  &.alert-warning {
+    background: linear-gradient(90deg, #fff3cd 0%, #fff9e6 100%) !important;
+    .alert-strip {
+      background-color: #856404;
+    }
+  }
+
+  &.alert-danger {
+    background: linear-gradient(90deg, rgba(179, 21, 41, 0.5) 0%, rgba(179, 21, 41, 0.35) 100%) !important;
+    border-color: #B31529;
+    color: #B31529;
+
+    .alert-strip {
+      background-color: #B31529;
+    }
+  }
+  
+  .alert-content {
+    padding: 0.25rem 0.5rem;
+  }
 }
 </style>

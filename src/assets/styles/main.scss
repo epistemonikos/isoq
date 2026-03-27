@@ -150,33 +150,42 @@ body {
 #modal-evidence-profile-form {
   .modal-dialog {
     max-width: 98% !important;
+    margin: 1.75rem auto;
   }
 }
 
-@media (min-width: 576px) {
-  .modal-xl {
-    max-width: fit-content;
-    margin: 1rem;
+.modal-header.bg-custom-blue {
+  background-color: #1E2137 !important;
+  color: #fff !important;
+  .close {
+    color: #fff !important;
   }
 }
 
-@media (min-width: 768px) {
-  .modal-xl {
-    max-width: fit-content;
-    margin: 1rem;
-  }
-}
+// @media (min-width: 576px) {
+//   .modal-xl {
+//     max-width: fit-content;
+//     margin: 1.75rem auto;
+//   }
+// }
 
-@media (min-width: 992px) {
-  .modal-xl {
-    max-width: fit-content;
-    margin: 1rem;
-  }
-}
+// @media (min-width: 768px) {
+//   .modal-xl {
+//     max-width: fit-content;
+//     margin: 1.75rem auto;
+//   }
+// }
 
-@media (min-width: 1200px) {
-  .modal-xl {
-    max-width: fit-content;
-    margin: 1rem;
-  }
-}
+// @media (min-width: 992px) {
+//   .modal-xl {
+//     max-width: fit-content;
+//     margin: 1.75rem auto;
+//   }
+// }
+
+// @media (min-width: 1200px) {
+//   .modal-xl {
+//     max-width: fit-content;
+//     margin: 1.75rem auto;
+//   }
+// }

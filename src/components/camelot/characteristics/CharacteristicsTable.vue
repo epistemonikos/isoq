@@ -1,18 +1,34 @@
 <template>
     <div>
+        <div class="d-flex justify-content-end mb-3">
+            <b-button
+                size="sm"
+                variant="outline-info"
+                @click="showComments = !showComments">
+                <template v-if="showComments">
+                    {{ $t('worksheet.actions.hide_concerns') }}
+                </template>
+                <template v-else>
+                    {{ $t('worksheet.actions.show_concerns') }}
+                </template>
+            </b-button>
+        </div>
         <table class="table table-bordered table-striped table-responsive">
             <!-- Primera fila de cabecera -->
             <thead>
                 <tr>
-                    <th rowspan="2">Author(s), Year</th>
-                    <!-- Campos personalizados -->
-                    <th v-for="customField in sortedCustomFields" :key="customField" rowspan="2">{{ customField }}</th>
-                    <!-- Categorías CAMELOT -->
-                    <th v-for="category in camelot.categories" :key="category.key" :colspan="2">{{ category.label }}</th>
+                    <th rowspan="2">{{ $t('camelot.step_three.authors_label') }}</th>
+                    <th 
+                        v-for="header in unifiedHeaders" 
+                        :key="header.key" 
+                        :rowspan="header.type === 'custom' ? 2 : 1"
+                        :colspan="header.colspan">
+                        {{ header.label }}
+                    </th>
                 </tr>
                 <!-- Segunda fila de cabecera - solo para opciones CAMELOT -->
-                <tr>
-                    <th v-for="option in allCamelotOptions" :key="option.key">{{ option.label }}</th>
+                <tr v-if="subHeaders.length > 0">
+                    <th v-for="subHeader in subHeaders" :key="subHeader.key">{{ subHeader.label }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -20,11 +36,22 @@
                     <!-- Authors, Year -->
                     <td>{{ formatAuthorsYear(item) }}</td>
 
-                    <!-- Campos personalizados -->
-                    <td v-for="customField in sortedCustomFields" :key="customField">{{ item[customField] || '' }}</td>
-
-                    <!-- Valores CAMELOT -->
-                    <td v-for="option in allCamelotOptions" :key="option.key">{{ item[option.key] || '' }}</td>
+                    <!-- Unified Cells -->
+                    <td v-for="(cell, cellIndex) in dataCells(item)" :key="cellIndex">
+                        <div v-if="shouldTruncate(cell.value) && !isExpanded(item.ref_id, cell.key)">
+                            {{ truncate(cell.value) }}...
+                            <p class="mb-0">
+                                <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_more') }}</b-link>
+                            </p>
+                        </div>
+                        <div v-else-if="shouldTruncate(cell.value) && isExpanded(item.ref_id, cell.key)">
+                            {{ cell.value }}
+                            <b-link @click="toggleExpand(item.ref_id, cell.key)" style="font-size: 12px;">{{ $t('common.read_less') }}</b-link>
+                        </div>
+                        <div v-else>
+                            {{ cell.value }}
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -33,6 +60,7 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import Commons from '@/utils/commons'
 
 export default {
     name: 'CharacteristicsTable',
@@ -43,27 +71,71 @@ export default {
             required: true
         }
     },
+    data() {
+        return {
+            showComments: false,
+            expandedCells: {}
+        }
+    },
     computed: {
-        sortedCustomFields() {
-            if (!this.charsOfStudies.items || this.charsOfStudies.items.length === 0) {
-                return []
+        unifiedHeaders() {
+            const headers = []
+            if (!this.charsOfStudies.fields) return headers
+
+            for (const field of this.charsOfStudies.fields) {
+                if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
+                if (field.key.endsWith('_comments')) continue
+
+                const isCamelot = field.key.endsWith('_extractedData')
+                
+                if (isCamelot) {
+                    let categoryLabel = field.label
+                    let options = []
+                    
+                    if (this.camelot && this.camelot.categories) {
+                        const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
+                        if (categoryMatch) {
+                            categoryLabel = categoryMatch.label
+                            options = categoryMatch.options
+                        }
+                    }
+
+                    if (options.length === 0) {
+                        options = [
+                            { key: field.key, label: field.label },
+                            { key: field.key.replace('_extractedData', '_comments'), label: this.$t('camelot.step_three.concerns_label') || 'Comments' }
+                        ]
+                    }
+
+                    headers.push({
+                        type: 'camelot',
+                        key: field.key,
+                        label: categoryLabel,
+                        options: options,
+                        colspan: this.showComments ? 2 : 1
+                    })
+                } else {
+                    headers.push({
+                        type: 'custom',
+                        key: field.key,
+                        label: field.label,
+                        colspan: 1
+                    })
+                }
             }
-
-            // Obtener todas las claves que empiezan con "column_"
-            const customFields = Object.keys(this.charsOfStudies.items[0]).filter(key =>
-                key.startsWith('column_')
-            )
-
-            // Ordenar numéricamente
-            return customFields.sort((a, b) => {
-                const numA = parseInt(a.replace('column_', ''))
-                const numB = parseInt(b.replace('column_', ''))
-                return numA - numB
-            })
+            return headers
         },
-        allCamelotOptions() {
-            // Aplanar todas las opciones de todas las categorías
-            return this.camelot.categories.flatMap(category => category.options)
+        subHeaders() {
+            const subH = []
+            for (const header of this.unifiedHeaders) {
+                if (header.type === 'camelot') {
+                    for (const option of header.options) {
+                        if (!this.showComments && option.key.endsWith('_comments')) continue
+                        subH.push(option)
+                    }
+                }
+            }
+            return subH
         }
     },
     methods: {
@@ -71,6 +143,33 @@ export default {
             const authors = item.authors || ''
             const year = item.year || ''
             return `${authors} ${year}`.trim()
+        },
+        dataCells(item) {
+            const cells = []
+            for (const header of this.unifiedHeaders) {
+                if (header.type === 'camelot') {
+                    for (const option of header.options) {
+                        if (!this.showComments && option.key.endsWith('_comments')) continue
+                        cells.push({ key: option.key, value: item[option.key] || '' })
+                    }
+                } else {
+                    cells.push({ key: header.key, value: item[header.key] || '' })
+                }
+            }
+            return cells
+        },
+        shouldTruncate(text) {
+            return Commons.shouldTruncate(text)
+        },
+        truncate(text) {
+            return Commons.truncate(text)
+        },
+        toggleExpand(refId, fieldKey) {
+            const key = `${refId}-${fieldKey}`
+            this.$set(this.expandedCells, key, !this.expandedCells[key])
+        },
+        isExpanded(refId, fieldKey) {
+            return !!this.expandedCells[`${refId}-${fieldKey}`]
         }
     }
 }

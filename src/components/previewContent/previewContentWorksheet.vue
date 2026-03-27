@@ -5,7 +5,7 @@
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
             <b-link class="return" :to="{ name: 'previewContentSoQf', params: { org_id: project.organization, isoqf_id: project.id, token: $route.params.token }}">
-              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('back')" />
+              <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
               return to ISoQ table
             </b-link>
           </b-col>
@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
 import backToTop from '../backToTop'
 import { saveAs } from 'file-saver'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation } from 'docx'
@@ -118,8 +118,10 @@ import charsOfStudies from '../list/editListCharsOfStudies.vue'
 import methAssessments from '../list/editListMethAssessments.vue'
 import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
+import { camelotMixin } from '@/mixins/camelotMixin'
 
 export default {
+  mixins: [camelotMixin],
   components: {
     'back-to-top': backToTop,
     'evidence-profile': evidenceProfile,
@@ -187,10 +189,10 @@ export default {
       evidence_profile_fields_print_version: [
         { key: 'isoqf_id', label: '#' },
         { key: 'name', label: 'Summarised review finding' },
-        { key: 'methodological-limit', label: 'Methodological limitations' },
-        { key: 'coherence', label: 'Coherence' },
-        { key: 'adequacy', label: 'Adequacy' },
-        { key: 'relevance', label: 'Relevance' },
+        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
+        { key: 'coherence', label: this.$t('worksheet.coherence') },
+        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
+        { key: 'relevance', label: this.$t('worksheet.relevance') },
         { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
         {
           key: 'references',
@@ -335,7 +337,7 @@ export default {
       return data
     },
     getList: function (fromModal = false) {
-      axios.get(`/api/isoqf_lists/${this.$route.params.id}`)
+      Api.get(`/isoqf_lists/${this.$route.params.id}`)
         .then((response) => {
           this.list = JSON.parse(JSON.stringify(response.data))
           this.list.sources = []
@@ -357,7 +359,7 @@ export default {
         })
     },
     getProject: function (projectId) {
-      axios.get(`/api/isoqf_projects/${projectId}`)
+      Api.get(`/isoqf_projects/${projectId}`)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken !== this.$route.params.token && this.project.public_type === 'private') {
@@ -369,7 +371,7 @@ export default {
         })
     },
     getAllReferences: function () {
-      axios.get(`/api/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+      Api.get(`/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
         .then((response) => {
           let _references = response.data
           let _refs = []
@@ -391,7 +393,7 @@ export default {
         organization: this.list.organization,
         list_id: this.list.id
       }
-      axios.get('/api/isoqf_findings', {params})
+      Api.get('/isoqf_findings', params)
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
@@ -420,7 +422,7 @@ export default {
         finding_id: this.findings.id
       }
 
-      axios.get('/api/isoqf_extracted_data', {params})
+      Api.get('/isoqf_extracted_data', params)
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
@@ -457,7 +459,7 @@ export default {
                 if (item.ref_id === reference) {
                   _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
                   for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
+                    if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
                       if (item[i] === '') {
                         haveContent++
                       }
@@ -486,31 +488,98 @@ export default {
         organization: this.list.organization,
         project_id: this.list.project_id
       }
-      axios.get('/api/isoqf_characteristics', {params})
+      Api.get('/isoqf_characteristics', params)
         .then((response) => {
           if (response.data.length) {
             let data = response.data[0]
             let items = []
 
             let haveContent = 0
+            const camelotCharKeys = [
+              'research_extractedData', 'stakeholders_extractedData', 
+              'researchers_extractedData', 'context_extractedData',
+              'strategy_extractedData', 'theory_extractedData',
+              'ethical_extractedData', 'equity_extractedData',
+              'participant_extractedData', 'data_extractedData',
+              'analysis_extractedData', 'presentation_extractedData'
+            ]
+
+            let bibliographicRefs = []
+            if (this.list.fullreferences) {
+              if (typeof this.list.fullreferences === 'string') {
+                try {
+                  bibliographicRefs = JSON.parse(this.list.fullreferences)
+                } catch (e) {
+                  console.error('Error parsing fullreferences', e)
+                }
+              } else {
+                bibliographicRefs = this.list.fullreferences
+              }
+            }
+            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+            const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
+            if (this.project.use_camelot) {
+              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+            }
+
             for (let item of data.items) {
               for (let reference of this.list.references) {
                 if (reference === item.ref_id) {
+                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                  item.authors = this.parseReference(bibRef || item, true)
+                  
+                  // Clean item from orphans
+                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
+                  for (const key in item) {
+                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                      cleanedItem[key] = item[key]
+                    }
+                  }
+                  item = cleanedItem
                   items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'ref_id' && item[i] !== 'authors') {
-                      if (item[i] === '') {
+
+                  if (this.project.use_camelot) {
+                    let camelotDataCount = 0
+                    let hasAnyCamelotDataKey = false
+                    for (const key of camelotCharKeys) {
+                      if (item[key] !== undefined) {
+                        hasAnyCamelotDataKey = true
+                        if (item[key] !== '') {
+                          camelotDataCount++
+                        }
+                      }
+                    }
+                    if (hasAnyCamelotDataKey && camelotDataCount === 0) {
+                      haveContent++
+                    }
+                    // Still check for CUSTOM fields in Camelot projects
+                    for (const key in item) {
+                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
+                        haveContent++
+                      }
+                    }
+                  } else {
+                    // NON-CAMELOT
+                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+                    for (let key of fieldKeys) {
+                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                        haveContent++
+                      }
+                    }
+                    // If fields definition is missing, we can't reliably check content
+                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
+                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                      if (!hasAnyContent) {
                         haveContent++
                       }
                     }
                   }
-                  if (data.fields.length > Object.keys(item).length) {
-                    haveContent++
-                  }
                 }
               }
             }
-            if (data.fields.length < 3) {
+            if (data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
 
@@ -565,7 +634,7 @@ export default {
         organization: this.list.organization,
         project_id: this.list.project_id
       }
-      axios.get('/api/isoqf_assessments', {params})
+      Api.get('/isoqf_assessments', params)
         .then((response) => {
           if (response.data.length) {
             const _references = JSON.parse(JSON.stringify(this.list.references))
@@ -573,24 +642,83 @@ export default {
             let items = []
 
             let haveContent = 0
+            let bibliographicRefs = []
+            if (this.list.fullreferences) {
+              if (typeof this.list.fullreferences === 'string') {
+                try {
+                  bibliographicRefs = JSON.parse(this.list.fullreferences)
+                } catch (e) {
+                  console.error('Error parsing fullreferences', e)
+                }
+              } else {
+                bibliographicRefs = this.list.fullreferences
+              }
+            }
+            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+            const allowedKeys = new Set([...excluded, ...fieldKeys])
+            if (this.project.use_camelot) {
+              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+            }
+
             for (let item of data.items) {
               for (let reference of _references) {
                 if (reference === item.ref_id) {
+                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                  item.authors = this.parseReference(bibRef || item, true)
+                  
+                  // Clean item from orphans
+                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
+                  for (const key in item) {
+                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                      cleanedItem[key] = item[key]
+                    }
+                  }
+                  item = cleanedItem
                   items.push(item)
-                  for (let i in item) {
-                    if (item[i] !== 'author' && item[i] !== 'ref_id') {
-                      if (item[i] === '') {
+
+                  if (this.project.use_camelot) {
+                    // Check for Camelot Assessment Stages
+                    if (item.stages) {
+                      for (const stage of item.stages) {
+                        if (stage.options) {
+                          for (const option of stage.options) {
+                            if (option.option === null || option.option === '') {
+                              haveContent++
+                            }
+                          }
+                        }
+                      }
+                    }
+                    // Still check for CUSTOM fields in Camelot projects
+                    for (const key in item) {
+                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !key.endsWith('_concerns')) {
+                        if (item[key] === '') {
+                          haveContent++
+                        }
+                      }
+                    }
+                  } else {
+                    // NON-CAMELOT
+                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
+                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+                    for (let key of fieldKeys) {
+                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                        haveContent++
+                      }
+                    }
+                    // If fields definition is missing, we can't reliably check content
+                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
+                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                      if (!hasAnyContent) {
                         haveContent++
                       }
                     }
                   }
-                  if (data.fields.length > Object.keys(item).length) {
-                    haveContent++
-                  }
                 }
               }
             }
-            if (data.fields.length < 3) {
+            if (data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
             this.ui.methodological_assessments.display_warning = true
@@ -633,25 +761,7 @@ export default {
       return ''
     },
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length < 1) {
-          result = 'no autho(s)'
-        } else if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-        } else {
-          result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-        }
-        if (!onlyAuthors) {
-          result = result + reference.title
-        }
-        return result
-      } else {
-        return result
-      }
+      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     print: function () {
       window.print()

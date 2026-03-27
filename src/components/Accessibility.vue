@@ -1,8 +1,8 @@
 <template>
   <div :class="{'navbar-nav ml-auto': isMenu}">
     <template v-if="isMenu">
-      <b-nav-item @click="increaseFontSize">+A</b-nav-item>
-      <b-nav-item @click="decreaseFontSize">-A</b-nav-item>
+      <b-nav-item @click="increaseFontSize">{{ $t('accessibility.increase_font') }}</b-nav-item>
+      <b-nav-item @click="decreaseFontSize">{{ $t('accessibility.decrease_font') }}</b-nav-item>
     </template>
     <template v-else>
       <b-container fluid class="float-right">
@@ -10,8 +10,8 @@
           <b-col cols="1" class="mt-2">
             <ul class="list-inline text-center accessibility">
               <!-- <li class="list-inline-item">Font size</li> -->
-              <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">+A</li>
-              <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">-A</li>
+              <li class="list-inline-item" style="cursor: pointer" @click="increaseFontSize">{{ $t('accessibility.increase_font') }}</li>
+              <li class="list-inline-item" style="cursor: pointer" @click="decreaseFontSize">{{ $t('accessibility.decrease_font') }}</li>
             </ul>
           </b-col>
         </b-row>
