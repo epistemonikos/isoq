@@ -125,17 +125,18 @@
               Your personal data will be deleted from our active systems.
             </li>
             <li>
-              All the projects you created in iSoQ and all the data created and entered into those projects will be a
-              deleted permanently. If a project was created by you and shared with others, deleting your account will
-              delete the project for all shared users. Before deleting your account, you may want to ask those you
-              shared the project with to create a copy of the project in their Workspace so that they retain a copy of
-              the shared project before you delete your account.
+              All the projects you created in iSoQ and all the data created and entered into those projects will be
+              deleted permanently.
+            </li>
+            <li>
+              If a project was created by you and shared with others, you will be asked to assign a new owner to the
+              project(s) before deleting your account.
             </li>
             <li>
               Some records may be retained as required by law (e.g. legal compliance, or security logs).
             </li>
             <li>
-              Data that has been anonymized or aggregated (not linked to you) may be kept for research or statistical
+              Data that has been anonymised or aggregated (not linked to you) may be kept for research or statistical
               purposes.
             </li>
             <li>
@@ -150,7 +151,7 @@
       </b-card>
 
       <b-card no-body class="mt-3 p-3">
-        <h3>Privacy preferences</h3>
+        <h3>Privacy contact request</h3>
         <div>
           <div>
             <p class="m-0">Your data is processed according to our Privacy Policy. This is required to provide the
@@ -245,8 +246,8 @@
         </b-table-simple>
 
         <p class="text-muted">
-          * Users with an asterisk (*) only have read access to the project. If you select a user with read access as
-          the new owner, they will be able to edit the project.
+          * Users with an asterisk (*) were granted "view" access to the project. If you select a user with view-only
+          access as the new owner, their access will be updated to "can view and edit the project".
         </p>
       </div>
 
@@ -278,7 +279,7 @@ import { RouterLink } from 'vue-router'
 
 export default {
   name: 'viewProfile',
-  data () {
+  data() {
     return {
       new_password: null,
       new_password_repeat: null,
@@ -304,7 +305,7 @@ export default {
       isLoadingSharedProjects: false
     }
   },
-  mounted () {
+  mounted() {
     this.initCheckboxes()
   },
   computed: {
@@ -332,19 +333,19 @@ export default {
     }
   },
   watch: {
-    new_password () {
+    new_password() {
       this.checkDisabled()
     },
-    new_password_repeat () {
+    new_password_repeat() {
       this.checkDisabled()
     },
-    newsletter () {
+    newsletter() {
       this.checkDisabled()
     },
-    improvement () {
+    improvement() {
       this.checkDisabled()
     },
-    msg () {
+    msg() {
       if (this.msg.length) {
         this.showAlert()
       }
