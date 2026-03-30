@@ -86,7 +86,7 @@ export default class Api {
   static getHeaders () {
     let authToken = localStorage.getItem('l_s')
     return {
-      Authorization: `Token session="${authToken}"`
+      Authorization: `Bearer ${authToken}`
     }
   }
 
@@ -172,8 +172,7 @@ export default class Api {
       url: url,
       method: 'GET',
       headers: this.getHeaders(),
-      params: data,
-      withCredentials: true
+      params: data
     }
 
     // Función helper para intentar servir desde cache
@@ -271,7 +270,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.put(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.put(url, data, { headers: this.getHeaders() })
       // También actualizamos cache si estamos online para mantener consistencia
       if (this.shouldCache(path)) {
          await tryOptimisticUpdate(path, data)
@@ -325,7 +324,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.patch(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.patch(url, data, { headers: this.getHeaders() })
       if (this.shouldCache(path)) {
          await tryOptimisticUpdate(path, data)
       }
@@ -378,7 +377,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.post(url, data, { headers: this.getHeaders(), withCredentials: true })
+      const response = await axios.post(url, data, { headers: this.getHeaders() })
       if (this.shouldCache(path)) {
          // Para POST es más complejo porque el ID puede venir del servidor
          // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
@@ -419,7 +418,7 @@ export default class Api {
     }
 
     try {
-      return await axios.delete(url, { data, headers: this.getHeaders(), withCredentials: true })
+      return await axios.delete(url, { data, headers: this.getHeaders() })
     } catch (error) {
       if (!error.response) {
         isOnline = false
@@ -441,16 +440,16 @@ export default class Api {
         try {
           switch (op.method) {
             case 'POST':
-              await axios.post(op.endpoint, op.payload, { headers: this.getHeaders(), withCredentials: true })
+              await axios.post(op.endpoint, op.payload, { headers: this.getHeaders() })
               break
             case 'PUT':
-              await axios.put(op.endpoint, op.payload, { headers: this.getHeaders(), withCredentials: true })
+              await axios.put(op.endpoint, op.payload, { headers: this.getHeaders() })
               break
             case 'PATCH':
-              await axios.patch(op.endpoint, op.payload, { headers: this.getHeaders(), withCredentials: true })
+              await axios.patch(op.endpoint, op.payload, { headers: this.getHeaders() })
               break
             case 'DELETE':
-              await axios.delete(op.endpoint, { data: op.payload, headers: this.getHeaders(), withCredentials: true })
+              await axios.delete(op.endpoint, { data: op.payload, headers: this.getHeaders() })
               break
           }
           // Operación exitosa, remover de la cola

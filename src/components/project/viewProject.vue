@@ -1144,7 +1144,7 @@ export default {
             id: this.$route.params.id
           },
           hash: `${hash}`
-        })
+        }).catch(() => {}) // Silenciar error de navegación duplicada
         this.resetFindingName()
         this.resetItemData()
       }

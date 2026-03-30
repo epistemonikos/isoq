@@ -45,7 +45,7 @@ class LockService {
           ...Api.getHeaders(),
           'X-Suppress-Lock-Error': 'true'
         },
-        withCredentials: true
+
       })
       if (response.data.status) {
         this.isLocked = true
@@ -87,7 +87,7 @@ class LockService {
         // For now simple axios.
         await axios.delete(`/api/lock/${projectId}`, {
           headers: Api.getHeaders(),
-          withCredentials: true
+
         })
       } catch (e) {
         // Silently ignore 401 errors during release as they often happen during logout
@@ -113,7 +113,7 @@ class LockService {
     try {
       await axios.post(`/api/lock/${this.projectId}/heartbeat`, {}, {
         headers: Api.getHeaders(),
-        withCredentials: true
+
       })
     } catch (error) {
       if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {

@@ -54,10 +54,19 @@ export const store = new Vuex.Store({
         formData.append('password', user.password)
         Api.post('/auth/login', formData)
           .then(response => {
-            const user = response.data
-            if (user.status !== 'false') {
-              commit('auth_success', user)
-              // Actualizar el promise para que los guardias de navegación lo vean resuelto
+            const data = response.data
+            if (data.status !== 'false') {
+              // Si el backend envía access_token, lo guardamos en l_s
+              if (data.access_token) {
+                localStorage.setItem('l_s', data.access_token)
+              }
+              
+              // El objeto usuario puede venir en data.user o ser data directamente
+              const userObject = data.user ? data.user : data
+              // Asegurar que el status se mantenga si venía en la raíz
+              if (!userObject.status && data.status) userObject.status = data.status
+
+              commit('auth_success', userObject)
               commit('save_promise', Promise.resolve())
               resolve(response)
             } else {
@@ -105,8 +114,14 @@ export const store = new Vuex.Store({
       if (this.state.status === '' || this.state.status === 'error') {
         let promise = new Promise((resolve, reject) => {
           Api.post('/auth/user', null).then((response) => {
-            if (response.data.status !== 'not_logged') {
-              commit('auth_success', response.data)
+            const data = response.data
+            if (data.status !== 'not_logged' && data.status !== 'false') {
+              // El objeto usuario puede venir en data.user o ser data directamente
+              const userObject = data.user ? data.user : data
+              // Asegurar que el status se mantenga
+              if (!userObject.status && data.status) userObject.status = data.status
+              
+              commit('auth_success', userObject)
             } else {
               commit('logout')
             }

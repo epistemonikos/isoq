@@ -63,8 +63,13 @@ export default {
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
-          const personalInfo = response.data
-          const basePath = `/workspace/${personalInfo.personal_organization}`
+          const data = response.data
+          // Obtener el ID de la organización buscando en data.user o data directamente
+          const personalOrg = (data.user && data.user.personal_organization) 
+            ? data.user.personal_organization 
+            : data.personal_organization
+          
+          const basePath = `/workspace/${personalOrg}`
           let redirectPath = (this.$route.query.redirect) ? this.$route.query.redirect : basePath
           
           // Si el hash está separado (común en modo hash de vue-router 3), lo adjuntamos
