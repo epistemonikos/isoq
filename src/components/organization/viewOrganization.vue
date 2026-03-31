@@ -430,9 +430,11 @@ export default {
 
     usersCanList: function (id) {
       this.users_allowed = []
+      const currentUserId = this.$store.state.user.id
       let _project = this.buffer_project
       if (Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
         for (let user of _project.can_read) {
+          if (user === currentUserId) continue
           Api.get(`/users/${user}`).then((response) => {
             const _user = response.data
             if (_user.status) {
@@ -445,6 +447,7 @@ export default {
       }
       if (Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
         for (let user of _project.can_write) {
+          if (user === currentUserId) continue
           Api.get(`/users/${user}`).then((response) => {
             const _user = response.data
             if (_user.status) {
