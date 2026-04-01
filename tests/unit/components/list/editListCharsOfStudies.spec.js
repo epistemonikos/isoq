@@ -47,6 +47,9 @@ describe('editListCharsOfStudies.vue', () => {
     const wrapper = shallowMount(editListCharsOfStudies, {
       localVue,
       propsData,
+      mocks: {
+        $t: (key) => key
+      },
       stubs: {
         'font-awesome-icon': true,
         'b-link': true,
@@ -83,6 +86,9 @@ describe('editListCharsOfStudies.vue', () => {
       const wrapper = shallowMount(editListCharsOfStudies, {
         localVue,
         propsData,
+        mocks: {
+          $t: (key) => key
+        },
         stubs: {
           'font-awesome-icon': true,
           'camelot-characteristics-table': true
@@ -132,6 +138,9 @@ describe('editListCharsOfStudies.vue', () => {
       const wrapper = shallowMount(editListCharsOfStudies, {
         localVue,
         propsData,
+        mocks: {
+          $t: (key) => key
+        },
         stubs: {
           'camelot-characteristics-table': true
         }
