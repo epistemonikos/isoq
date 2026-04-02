@@ -49,7 +49,7 @@ Single Vuex store at `src/store.js`:
 Advanced API wrapper at `src/utils/Api.js`:
 
 - **Base URL:** Set via `process.env.API_URL`
-- **Authentication:** Token-based via `Authorization: Token session="..."` header
+- **Authentication:** Token-based via `Authorization: Bearer <token>` header
 - **Offline Capabilities:**
   - **Caching:** GET requests are cached using `strategies` (in `OfflineStrategies.js`) and stored in IndexedDB via `Dexie`
   - **Queuing:** POST/PUT/PATCH/DELETE operations are queued when offline and automatically synced when connection is restored

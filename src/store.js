@@ -21,6 +21,9 @@ export const store = new Vuex.Store({
       state.status = 'success'
       state.user = user
       localStorage.setItem('user-data', JSON.stringify(user))
+      if (user.access_token) {
+        localStorage.setItem('l_s', user.access_token)
+      }
     },
     auth_error (state) {
       state.status = 'error'
@@ -56,13 +59,14 @@ export const store = new Vuex.Store({
           .then(response => {
             const data = response.data
             if (data.status !== 'false') {
-              // Si el backend envía access_token, lo guardamos en l_s
-              if (data.access_token) {
-                localStorage.setItem('l_s', data.access_token)
-              }
-              
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data
+              
+              // Si el backend envía access_token, lo aseguramos en el userObject
+              if (data.access_token) {
+                userObject.access_token = data.access_token
+              }
+
               // Asegurar que el status se mantenga si venía en la raíz
               if (!userObject.status && data.status) userObject.status = data.status
 
@@ -118,6 +122,12 @@ export const store = new Vuex.Store({
             if (data.status !== 'not_logged' && data.status !== 'false') {
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data
+              
+              // Si el backend envía access_token (ej: en el refresco o reconexión), lo aseguramos
+              if (data.access_token) {
+                userObject.access_token = data.access_token
+              }
+
               // Asegurar que el status se mantenga
               if (!userObject.status && data.status) userObject.status = data.status
               
@@ -138,6 +148,9 @@ export const store = new Vuex.Store({
               if (userData) {
                 try {
                   const user = JSON.parse(userData)
+                  if (user.access_token) {
+                    localStorage.setItem('l_s', user.access_token)
+                  }
                   commit('auth_success', user)
                   console.log('Restored user session from local storage (offline mode)')
                   resolve()

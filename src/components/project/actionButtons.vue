@@ -94,7 +94,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import Commons from '@/utils/commons'
 import { displayExplanation } from '../utils/commons'
 import PublishModal from '@/components/project/PublishModal'
@@ -135,35 +134,7 @@ export default {
   data () {
     return {
       exportService: getWordExportService(),
-      risExportService: getRisExportService(),
-      modalProject: {name: ''},
-      yes_or_no: [
-        { value: false, text: 'no' },
-        { value: true, text: 'yes' }
-      ],
-      errors: [],
-      state: {
-        name: null,
-        authors: null,
-        author: null,
-        author_email: null,
-        review_question: null,
-        published_status: null,
-        url_doi: null,
-        complete_by_author: null,
-        lists_authors: null,
-        public_type: null,
-        license_type: null
-      },
-      errorsResponse: {
-        message: '',
-        items: []
-      }
-    }
-  },
-  watch: {
-    'modalProject.name': function (val) {
-      this.state.name = val.length > 0 ? null : false
+      risExportService: getRisExportService()
     }
   },
   methods: {
@@ -205,60 +176,6 @@ export default {
         this.$emit('changeTableSettings', {perPage: this.lists.length, currentPage: 1})
       } else {
         this.$emit('changeTableSettings', {perPage: 5, currentPage: 1})
-      }
-    },
-    savePublicStatus: async function (event) {
-      event.preventDefault()
-      this.$emit('uiPublishShowLoader', true)
-      let params = {}
-      params.id = this.project.id
-      params.public_type = this.modalProject.public_type
-      const isModal = this.modalProject.isModal || false
-      params.private = true
-      params.is_public = false
-
-      if (this.modalProject.public_type !== 'private') {
-        params.private = false
-        params.is_public = true
-        params.license_type = this.modalProject.license_type
-        if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
-          this.state.license_type = false
-          this.$emit('uiPublishShowLoader', false)
-          return
-        }
-      } else {
-        params.license_type = ''
-      }
-
-      if (this.modalProject.public_type !== 'private') {
-        const canPublish = await axios.get('/api/project/can_publish', {params: {id: this.project.id, workspace: this.$route.params.org_id, isModal: isModal}})
-        if (canPublish.data.status) {
-          axios.patch('/api/publish', {params})
-            .then(() => {
-              this.modalProject = {name: ''}
-              this.$emit('getProject')
-              this.$emit('uiPublishShowLoader', false)
-              this.$refs['modal-change-status'].hide()
-            })
-            .catch((error) => {
-              // Error handling
-            })
-        } else {
-          document.getElementById('modal-change-status___BV_modal_body_').scrollTo({ top: 0, behavior: 'smooth' })
-          this.errorsResponse.message = canPublish.data.message
-          this.$emit('uiPublishShowLoader', false)
-        }
-      } else {
-        axios.patch('/api/publish', {params})
-          .then(() => {
-            this.modalProject = {name: ''}
-            this.$emit('getProject')
-            this.$emit('uiPublishShowLoader', false)
-            this.$refs['modal-change-status'].hide()
-          })
-          .catch((error) => {
-            // Error handling
-          })
       }
     },
     exportToRIS: function () {
