@@ -116,14 +116,15 @@ export const store = new Vuex.Store({
       commit('change_status')
     },
     getLogginInfo ({commit}) {
-      // Si ya estamos logueados satisfactoriamente, nos aseguramos de tener un promise resuelto
-      if (this.state.status === 'success') {
+      const hasToken = !!localStorage.getItem('l_s')
+      // Si ya estamos logueados satisfactoriamente y tenemos token, nos aseguramos de tener un promise resuelto
+      if (this.state.status === 'success' && hasToken) {
         commit('save_promise', Promise.resolve())
         return
       }
 
-      // Si no tenemos status o hubo un error previo, pedimos info al servidor
-      if (this.state.status === '' || this.state.status === 'error') {
+      // Si no tenemos status o hubo un error previo, o si perdimos el token estando logueados, pedimos info al servidor
+      if (this.state.status === '' || this.state.status === 'error' || (this.state.status === 'success' && !hasToken)) {
         let promise = new Promise((resolve, reject) => {
           Api.post('/auth/user', null).then((response) => {
             const data = response.data
@@ -139,7 +140,14 @@ export const store = new Vuex.Store({
               // Asegurar que el status se mantenga
               if (!userObject.status && data.status) userObject.status = data.status
               
-              commit('auth_success', userObject)
+              // Verificamos si al final tenemos un token (ya sea del server o del localStorage previo)
+              const finalToken = userObject.access_token || localStorage.getItem('l_s')
+              if (!finalToken || finalToken === 'null') {
+                console.warn('Session is valid by cookie but missing access_token header. Forcing logout for robustness.')
+                commit('logout')
+              } else {
+                commit('auth_success', userObject)
+              }
             } else {
               commit('logout')
             }
@@ -181,7 +189,7 @@ export const store = new Vuex.Store({
     }
   },
   getters: {
-    isLoggedIn: state => !!state.user.status,
+    isLoggedIn: state => !!state.user.status && !!localStorage.getItem('l_s') && localStorage.getItem('l_s') !== 'null',
     authStatus: state => state.status
   }
 })
