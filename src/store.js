@@ -21,8 +21,16 @@ export const store = new Vuex.Store({
       state.status = 'success'
       state.user = user
       localStorage.setItem('user-data', JSON.stringify(user))
-      if (user.access_token) {
+      // Solo guardar en l_s si realmente viene un token, para no borrar uno existente
+      if (user.access_token && user.access_token !== 'null') {
         localStorage.setItem('l_s', user.access_token)
+      } else {
+        // Si no viene en el objeto user, intentamos ver si ya estaba en localStorage
+        // para mantener la consistencia en el estado del usuario en Vuex
+        const savedToken = localStorage.getItem('l_s')
+        if (savedToken && savedToken !== 'null') {
+          state.user.access_token = savedToken
+        }
       }
     },
     auth_error (state) {

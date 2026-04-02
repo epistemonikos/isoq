@@ -85,9 +85,11 @@ export default class Api {
 
   static getHeaders () {
     let authToken = localStorage.getItem('l_s')
-    return {
-      Authorization: `Bearer ${authToken}`
+    const headers = {}
+    if (authToken && authToken !== 'null') {
+      headers.Authorization = `Bearer ${authToken}`
     }
+    return headers
   }
 
   static isOnline () {
