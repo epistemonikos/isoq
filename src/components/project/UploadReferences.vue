@@ -2,26 +2,17 @@
   <div>
     <h4 v-html="$t('references.step_title')"></h4>
     <p class="font-weight-light">
-    {{ $t('references.must_import') }}
+      {{ $t('references.must_import') }}
     </p>
 
     <!-- Incomplete operation recovery message -->
-    <b-alert
-      v-if="showRestorePrompt"
-      show
-      variant="info"
-      dismissible>
+    <b-alert v-if="showRestorePrompt" show variant="info" dismissible>
       <h5>{{ $t('references.incomplete_upload') }}</h5>
       <p>{{ $t('references.restore_upload') }}</p>
-      <b-button
-        variant="outline-primary"
-        class="mr-2"
-        @click="restoreSavedProgress">
+      <b-button variant="outline-primary" class="mr-2" @click="restoreSavedProgress">
         {{ $t('references.restore_yes') }}
       </b-button>
-      <b-button
-        variant="outline-secondary"
-        @click="clearSavedProgress">
+      <b-button variant="outline-secondary" @click="clearSavedProgress">
         {{ $t('references.start_new') }}
       </b-button>
     </b-alert>
@@ -30,8 +21,7 @@
       <b-tabs id="import-data" card>
         <b-tab :title="$t('references.file_upload')" active>
           <b-row>
-            <b-col
-              cols="12">
+            <b-col cols="12">
               <videoHelp :txt="$t('references.file_upload')" tag="h4" urlId="449247762"></videoHelp>
             </b-col>
           </b-row>
@@ -41,82 +31,53 @@
           <p class="font-weight-light">
             {{ $t('references.import_step') }}
           </p>
-          <b-form-file
-            id="input-ris-file-key"
-            ref="file-input"
-            plain
-            :disabled="!canEdit || !isOnline"
+          <b-form-file id="input-ris-file-key" ref="file-input" plain :disabled="!canEdit || !isOnline"
             v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
             @change="loadRefs($event)"></b-form-file>
-          <b-button
-            block
-            :disabled="((fileReferences.length >= 1) ? false : true) || !isOnline"
-            v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
-            class="mt-2"
-            variant="success"
+          <b-button block :disabled="((fileReferences.length >= 1) ? false : true) || !isOnline" v-b-tooltip.hover
+            :title="isOnline ? '' : $t('offline.action_disabled')" class="mt-2" variant="success"
             @click="saveReferences()">
             {{ $t('common.upload') }}
           </b-button>
           <p>
-              {{ $t('references.reminder') }}
+            {{ $t('references.reminder') }}
           </p>
         </b-tab>
         <b-tab :title="$t('references.import_pubmed')">
           <b-row>
-            <b-col
-              cols="12">
-                <videoHelp :txt="$t('references.import_pubmed')" tag="h4" urlId="449248998"></videoHelp>
+            <b-col cols="12">
+              <videoHelp :txt="$t('references.import_pubmed')" tag="h4" urlId="449248998"></videoHelp>
             </b-col>
           </b-row>
           <b-row>
-            <b-col
-              sm="6">
+            <b-col sm="6">
               <p class="font-weight-light">
                 {{ $t('references.pubmed_instructions') }}
               </p>
-              <b-form-textarea
-                v-model="pubmed_request"
-                :placeholder="$t('references.pmid_example')"
-                rows="6"
+              <b-form-textarea v-model="pubmed_request" :placeholder="$t('references.pmid_example')" rows="6"
                 max-rows="100"></b-form-textarea>
-              <b-button
-                v-if="canEdit && !btnSearchPubMed && pubmed_request.length"
-                id="btnEpisteRequest"
-                class="mt-2"
-                block
-                variant="outline-primary"
-                :disabled="!isOnline"
-                v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
-                @click="PubmedRequest">{{ $t('common.find') }}</b-button>
-              <b-button
-                v-if="canEdit && (pubmed_requested.length || pubmedErrorImported.length)"
-                :disabled="btnCleanDisabled"
-                class="mt-1"
-                block
-                variant="outline-secondary"
+              <b-button v-if="canEdit && !btnSearchPubMed && pubmed_request.length" id="btnEpisteRequest" class="mt-2"
+                block variant="outline-primary" :disabled="!isOnline" v-b-tooltip.hover
+                :title="isOnline ? '' : $t('offline.action_disabled')" @click="PubmedRequest">{{ $t('common.find')
+                }}</b-button>
+              <b-button v-if="canEdit && (pubmed_requested.length || pubmedErrorImported.length)"
+                :disabled="btnCleanDisabled" class="mt-1" block variant="outline-secondary"
                 @click="PubmedRequestClean">{{ $t('common.clean') }}</b-button>
             </b-col>
-            <b-col
-              sm="6">
-              <template
-                v-if="pubmed_loading">
+            <b-col sm="6">
+              <template v-if="pubmed_loading">
                 <div class="text-center text-danger my-2">
                   <b-spinner class="align-middle"></b-spinner>
                   <strong>{{ $t('common.loading') }}</strong>
                 </div>
               </template>
-              <template
-                v-else-if="pubmed_error">
+              <template v-else-if="pubmed_error">
                 <p class="font-weight-light">
                   {{ $t('references.ref_not_found') }}
-                  </p>
+                </p>
               </template>
               <template v-else>
-                <b-alert
-                  class="mt-2"
-                  variant="info"
-                  :show="pubmed_batch_feedback !== null"
-                  dismissible
+                <b-alert class="mt-2" variant="info" :show="pubmed_batch_feedback !== null" dismissible
                   @dismissed="pubmed_batch_feedback = null">
                   {{ pubmed_batch_feedback }}
                 </b-alert>
@@ -124,13 +85,9 @@
                   <p>{{ $t('references.select_to_import') }}</p>
                   <ul class="list-unstyled">
                     <li v-for="(r, index) in pubmed_requested" :key="index">
-                      <b-form-checkbox
-                        :id="`checkbox-${index}`"
-                        v-model="pubmed_selected"
-                        :name="`checkbox-${index}`"
-                        :value="index"
-                        :disabled="r.disabled">
-                          {{ r.title }}
+                      <b-form-checkbox :id="`checkbox-${index}`" v-model="pubmed_selected" :name="`checkbox-${index}`"
+                        :value="index" :disabled="r.disabled">
+                        {{ r.title }}
                       </b-form-checkbox>
                     </li>
                   </ul>
@@ -141,27 +98,19 @@
                     <li>{{ id }}</li>
                   </ul>
                 </template>
-                <b-button
-                  v-if="pubmed_selected.length && canEdit"
-                  variant="outline-success"
-                  block
-                  :disabled="!isOnline"
-                  v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
-                  @click="importReferences">{{ $t('references.import_references') }}</b-button>
+                <b-button v-if="pubmed_selected.length && canEdit" variant="outline-success" block :disabled="!isOnline"
+                  v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')" @click="importReferences">{{
+                    $t('references.import_references') }}</b-button>
               </template>
             </b-col>
           </b-row>
         </b-tab>
       </b-tabs>
     </b-card>
-    <b-row
-      class="mt-3 mb-3">
-      <b-col
-        cols="12">
-        <b-card
-          bg-variant="light">
-          <template
-            v-if="loadReferences">
+    <b-row class="mt-3 mb-3">
+      <b-col cols="12">
+        <b-card bg-variant="light">
+          <template v-if="loadReferences">
             <div class="text-center text-danger my-2">
               <b-spinner class="align-middle"></b-spinner>
               <strong>{{ $t('common.loading') }}</strong>
@@ -169,15 +118,14 @@
           </template>
           <template v-else>
             <b-row v-if="!references.length">
-              <b-col
-                cols="12">
+              <b-col cols="12">
                 <p class="text-center my-0">{{ $t('references.no_references') }}</p>
               </b-col>
             </b-row>
             <b-row v-else>
-              <b-col
-                cols="12">
-                <p class="text-center my-0" v-html="$t('references.references_loaded', { count: references.length })"></p>
+              <b-col cols="12">
+                <p class="text-center my-0" v-html="$t('references.references_loaded', { count: references.length })">
+                </p>
               </b-col>
             </b-row>
           </template>
@@ -187,85 +135,57 @@
     <b-row v-if="references.length">
       <b-col>
         <b-card>
-        <template v-if="appearMsgRemoveReferences">
-          <b-row>
-            <b-col
-              cols="12">
-              <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
-            </b-col>
-          </b-row>
-          <b-row align-h="center">
-            <b-col
-              cols="3">
-              <b-button
-                block
-                @click="removeAllReferences"
-                variant="outline-danger">
-                {{ $t('common.yes') }}
-              </b-button>
-            </b-col>
-            <b-col
-              cols="3">
-              <b-button
-                block
-                @click="appearMsgRemoveReferences = false"
-                variant="outline-success">
-                {{ $t('common.no') }}
-              </b-button>
-            </b-col>
-          </b-row>
-        </template>
-        <template v-else>
-          <b-table
-            sort-by="authors"
-            responsive
-            hover
-            bordered
-            borderless
-            striped
-            :fields="translatedReferencesTableFields"
-            :items="references"
-            head-variant="light"
-            outlined>
-            <template v-slot:cell(action)="data">
-              <b-button
-                v-if="canEdit"
-                variant="outline-danger"
-                @click="data.toggleDetails">
-                <font-awesome-icon
-                  icon="trash"></font-awesome-icon>
-              </b-button>
-            </template>
-            <template v-slot:row-details="data">
-              <b-card>
-                <p>{{ $t('references.exclude_study_warning') }}</p>
-                <p>{{ findRelatedFindings(data.item.id) }}</p>
-                <p>{{ $t('references.confirm_delete') }}</p>
-                <div>
-                  <b-row align-h="center">
-                    <b-col cols="3">
-                      <b-button
-                        block
-                        variant="outline-success"
-                        @click="data.toggleDetails">{{ $t('common.no') }}</b-button>
-                    </b-col>
-                    <b-col cols="3">
-                      <b-button
-                        block
-                        variant="outline-danger"
-                        @click="confirmRemoveReferenceById(data.item.id)">{{ $t('common.yes') }}</b-button>
-                    </b-col>
-                  </b-row>
-                </div>
-              </b-card>
-            </template>
-          </b-table>
-          <div v-if="canEdit" class="mt-2">
-            <b-button
-            @click="confirmRemoveAllReferences($event)"
-              >{{ $t('references.delete_all') }}</b-button>
-          </div>
-        </template>
+          <template v-if="appearMsgRemoveReferences">
+            <b-row>
+              <b-col cols="12">
+                <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
+              </b-col>
+            </b-row>
+            <b-row align-h="center">
+              <b-col cols="3">
+                <b-button block @click="removeAllReferences" variant="outline-danger">
+                  {{ $t('common.yes') }}
+                </b-button>
+              </b-col>
+              <b-col cols="3">
+                <b-button block @click="appearMsgRemoveReferences = false" variant="outline-success">
+                  {{ $t('common.no') }}
+                </b-button>
+              </b-col>
+            </b-row>
+          </template>
+          <template v-else>
+            <b-table sort-by="authors" responsive hover bordered borderless striped
+              :fields="translatedReferencesTableFields" :items="references" head-variant="light" outlined>
+              <template v-slot:cell(action)="data">
+                <b-button v-if="canEdit" variant="outline-danger" @click="data.toggleDetails">
+                  <font-awesome-icon icon="trash"></font-awesome-icon>
+                </b-button>
+              </template>
+              <template v-slot:row-details="data">
+                <b-card>
+                  <p>{{ $t('references.exclude_study_warning') }}</p>
+                  <p>{{ findRelatedFindings(data.item.id) }}</p>
+                  <p>{{ $t('references.confirm_delete') }}</p>
+                  <div>
+                    <b-row align-h="center">
+                      <b-col cols="3">
+                        <b-button block variant="outline-success" @click="data.toggleDetails">{{ $t('common.no')
+                        }}</b-button>
+                      </b-col>
+                      <b-col cols="3">
+                        <b-button block variant="outline-danger" @click="confirmRemoveReferenceById(data.item.id)">{{
+                          $t('common.yes') }}</b-button>
+                      </b-col>
+                    </b-row>
+                  </div>
+                </b-card>
+              </template>
+            </b-table>
+            <div v-if="canEdit" class="mt-2">
+              <b-button @click="confirmRemoveAllReferences($event)">{{ $t('references.delete_all') }}</b-button>
+            </div>
+          </template>
         </b-card>
       </b-col>
     </b-row>
@@ -295,7 +215,7 @@ export default {
   components: {
     videoHelp
   },
-  data () {
+  data() {
     return {
       pre_references: '',
       fileReferences: [],
@@ -348,7 +268,7 @@ export default {
         ]
     }
   },
-  created () {
+  created() {
     this.checkIncompleteOperations()
   },
   computed: {
@@ -385,17 +305,17 @@ export default {
     }
   },
   methods: {
-    formatAuthors (authors) {
+    formatAuthors(authors) {
       return Commons.getAuthorsFormat(authors)
     },
-    storeProgress () {
+    storeProgress() {
       const progress = {
         fileReferences: this.fileReferences,
         timestamp: Date.now()
       }
       localStorage.setItem('reference-upload-progress', JSON.stringify(progress))
     },
-    checkIncompleteOperations () {
+    checkIncompleteOperations() {
       const saved = localStorage.getItem('reference-upload-progress')
       if (saved) {
         try {
@@ -412,20 +332,20 @@ export default {
         }
       }
     },
-    restoreSavedProgress () {
+    restoreSavedProgress() {
       if (this.savedProgress && this.savedProgress.fileReferences) {
         this.fileReferences = this.savedProgress.fileReferences
         this.showRestorePrompt = false
       }
     },
-    clearSavedProgress () {
+    clearSavedProgress() {
       localStorage.removeItem('reference-upload-progress')
       this.showRestorePrompt = false
     },
-    generateOperationId () {
+    generateOperationId() {
       return Date.now() + '-' + Math.random().toString(36).substring(2)
     },
-    saveCheckpoint (data) {
+    saveCheckpoint(data) {
       localStorage.setItem('reference-upload-checkpoint', JSON.stringify({
         timestamp: Date.now(),
         ...data
@@ -476,7 +396,7 @@ export default {
         if (response.data && response.data.references) {
           this.localReferences = response.data.references
           const _references = JSON.parse(JSON.stringify(this.localReferences))
-          
+
           await this.syncAllSteps([...this.references, ..._references])
           this.msgUploadReferences = response.data.message || `${response.data.references.length} references have been added.`
         }
@@ -498,7 +418,7 @@ export default {
       this.$emit('statusLoadReferences', true)
       try {
         if (this.$refs['file-input'] && this.$refs['file-input'].$el &&
-            this.$refs['file-input'].$el.files && this.$refs['file-input'].$el.files[0]) {
+          this.$refs['file-input'].$el.files && this.$refs['file-input'].$el.files[0]) {
           return this.uploadRisFile(this.$refs['file-input'].$el.files[0])
         }
 
@@ -627,13 +547,13 @@ export default {
               const data = result.value.data
 
               if (Object.prototype.hasOwnProperty.call(data, 'error') ||
-                  Object.prototype.hasOwnProperty.call(data, 'esummaryresult')) {
+                Object.prototype.hasOwnProperty.call(data, 'esummaryresult')) {
                 this.pubmedErrorImported.push(pubMedId)
                 return
               }
 
               if (!Object.prototype.hasOwnProperty.call(data.result, 'uids') ||
-                  !data.result.uids.length) {
+                !data.result.uids.length) {
                 this.pubmedErrorImported.push(pubMedId)
                 return
               }
@@ -1034,7 +954,7 @@ export default {
             _characteristics.items = updatedItems
             await Api.patch(`/isoqf_characteristics/${charId}`, _characteristics)
           }
-        } else if (allReferences.length > 0) {
+        } else if (allReferences.length > 0 && this.useCamelot) {
           // Create new characteristics table
           const items = allReferences.map(ref => createCharacteristicItem(ref))
 
@@ -1043,8 +963,8 @@ export default {
             organization: this.$route.params.org_id,
             project_id: this.$route.params.id,
             fields: [
-              { key: 'ref_id', label: 'Reference ID' },
-              { key: 'authors', label: 'Author(s), Year' }
+              { key: 'ref_id', label: this.$t('table_headers.reference_id') },
+              { key: 'authors', label: this.$t('table_headers.author_year') }
             ],
             items: items
           })
