@@ -49,6 +49,9 @@
               <!-- Columna 2: Navigation and Dynamic content -->
               <b-col cols="8">
                 <div id="navegacion">
+                  <div class="column-header mb-3">
+                    <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
+                  </div>
                   <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs nav-fill" align="right"
                     @input="selectedMeta = $event">
                     <b-tab v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex"
