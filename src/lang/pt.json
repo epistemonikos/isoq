@@ -1133,6 +1133,7 @@
       }
     },
     "step_four": {
+      "data_missing": "Faltam dados.",
       "loading": "Carregando dados...",
       "how_to_read": {
         "title": "Como ler esta tabela",

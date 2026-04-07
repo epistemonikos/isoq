@@ -4,7 +4,11 @@
       <div class="d-flex justify-content-between align-items-end">
         <h4 class="mb-0 font-weight-bold">
           {{ label }}
-          <font-awesome-icon v-if="isExclamationActive" icon="exclamation-circle" class="text-danger ml-1" />
+          <b-tooltip :target='`data-missing-${metaIndex}-${itemIndex}`'>
+            {{ $t('camelot.step_four.data_missing') }}
+          </b-tooltip>
+          <font-awesome-icon v-if="isExclamationActive" icon="exclamation-circle" class="text-danger ml-1"
+            :id='`data-missing-${metaIndex}-${itemIndex}`' />
         </h4>
       </div>
     </template>
@@ -13,12 +17,12 @@
     <div class="field-section mb-3">
       <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
         <h5 class="small m-0 pb-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-        <b-button v-if="!isEditing('extractedData')"
-          size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing('extractedData')">
+        <b-button v-if="!isEditing('extractedData')" size="sm" variant="outline-primary" class="edit-btn-thin"
+          @click="startEditing('extractedData')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
-      
+
       <template v-if="isEditing('extractedData')">
         <b-form-textarea v-model="editValue" size="sm" rows="3" class="mb-2"></b-form-textarea>
         <b-alert show variant="danger" class="mb-2 small not-completed-alert">
@@ -46,8 +50,8 @@
     <div class="field-section">
       <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
         <h5 class="small m-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
-        <b-button v-if="!isEditing('concerns')"
-          size="sm" variant="outline-primary" class="edit-btn-thin" @click="startEditing('concerns')">
+        <b-button v-if="!isEditing('concerns')" size="sm" variant="outline-primary" class="edit-btn-thin"
+          @click="startEditing('concerns')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
       </div>
@@ -107,9 +111,9 @@ export default {
   },
   methods: {
     isEditing(type) {
-      return this.editingField.metaIndex === this.metaIndex && 
-             this.editingField.itemIndex === this.itemIndex && 
-             this.editingField.type === type
+      return this.editingField.metaIndex === this.metaIndex &&
+        this.editingField.itemIndex === this.itemIndex &&
+        this.editingField.type === type
     },
     startEditing(type) {
       this.editValue = type === 'extractedData' ? this.extractedData : this.concerns
