@@ -1,7 +1,7 @@
 <template>
   <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" @ok="handleModalOk"
-    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue"
-    :no-close-on-esc="isSaving" :no-close-on-backdrop="isSaving">
+    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue" :no-close-on-esc="isSaving"
+    :no-close-on-backdrop="isSaving">
     <template v-if="localReference">
       <b-row>
         <!-- Menú flotante a la izquierda -->
@@ -12,7 +12,13 @@
               <div v-for="(field, index) in customFields" :key="'menu-custom-' + index" class="menu-item"
                 :class="{ 'active-menu-item': activeSection === 'custom-field-' + index }"
                 @click="scrollToSection('custom-field-' + index)">
-                {{ field.isCamelot ? (field.categoryLabel || field.label) : (field.label || 'Sin título') }}
+                <div class="d-flex align-items-center">
+                  <span class="text-truncate mr-1">
+                    {{ field.isCamelot ? (field.categoryLabel || field.label) : (field.label || 'Sin título') }}
+                  </span>
+                  <img v-if="field.isCamelot" :src="camelotLogo" class="flex-shrink-0" width="16" height="16"
+                    v-b-tooltip.hover="$t('camelot.step_three.camelot_field')" />
+                </div>
               </div>
             </div>
           </div>
@@ -419,14 +425,39 @@ export default {
   border-radius: 3px;
   cursor: pointer;
   font-size: 0.85rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .menu-item:hover {
   background-color: #e9ecef;
   color: #007bff;
+}
+
+.active-menu-item {
+  font-weight: bold;
+  color: #007bff;
+  background-color: #e9ecef;
+}
+
+.menu-sidebar {
+  max-height: 100%;
+}
+
+@keyframes highlightBackground {
+  0% {
+    background-color: rgba(40, 167, 69, 0.2);
+  }
+
+  50% {
+    background-color: rgba(40, 167, 69, 0.1);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+.highlight-new-field {
+  animation: highlightBackground 2s ease-out;
 }
 
 .active-menu-item {
