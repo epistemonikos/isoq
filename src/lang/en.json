@@ -320,8 +320,8 @@
       "to_camelot_body": "If you change your selection, iSoQ will create two copies of your project. One will have CAMELOT disabled and preserve all the data you extracted and assessments you have made so far. The other will have CAMELOT enabled and Step 3 (Characteristics of Studies table) and Step 4 (Methodological Assessments table) in My Data will be blank, as will any GRADE-CERQual assessments informed by this data.",
       "from_camelot_body": "If you change your selection, iSoQ will create two copies of your project. One will have CAMELOT enabled and preserve all the data you extracted and assessments you have made so far. The other will have CAMELOT disabled and Step 3 (Characteristics of Studies table) and Step 4 (Methodological Assessments table) in My Data will be blank, as will any GRADE-CERQual assessments informed by this data"
     },
-    "use_camelot_label": "Would you like to use CAMELOT for this project?",
-    "use_camelot_desc": "CAMELOT provides additional tools for quality assessment and data extraction.",
+    "use_camelot_label": "Would you like to use CAMELOT as your critical appraisal tool in this project?",
+    "use_camelot_desc": "",
     "use_camelot_yes": "Yes, use CAMELOT (recommended)",
     "use_camelot_no": "No, do not use CAMELOT",
     "use_camelot_active": "Active",

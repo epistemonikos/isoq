@@ -320,8 +320,8 @@
       "to_camelot_body": "Si cambias tu selección, iSoQ creará dos copias de tu proyecto. Una tendrá CAMELOT desactivado y preservará todos los datos que extrajiste y evaluaciones que has hecho hasta ahora. La otra tendrá CAMELOT activado y el Paso 3 (tabla de Características de los Estudios) y el Paso 4 (tabla de Evaluaciones Metodológicas) en Mis Datos estarán en blanco, al igual que cualquier evaluación GRADE-CERQual informada por estos datos.",
       "from_camelot_body": "Si cambias tu selección, iSoQ creará dos copias de tu proyecto. Una tendrá CAMELOT activado y preservará todos los datos que extrajiste y evaluaciones que has hecho hasta ahora. La otra tendrá CAMELOT desactivado y el Paso 3 (tabla de Características de los Estudios) y el Paso 4 (tabla de Evaluaciones Metodológicas) en Mis Datos estarán en blanco, al igual que cualquier evaluación GRADE-CERQual informada por estos datos"
     },
-    "use_camelot_label": "¿Le gustaría usar CAMELOT para este proyecto?",
-    "use_camelot_desc": "CAMELOT proporciona herramientas adicionales para la evaluación de calidad y la extracción de datos.",
+    "use_camelot_label": "¿Te gustaría usar CAMELOT como herramienta de evaluación crítica en este proyecto?",
+    "use_camelot_desc": "",
     "use_camelot_yes": "Sí, usar CAMELOT (recomendado)",
     "use_camelot_no": "No, no usar CAMELOT",
     "use_camelot_active": "Activo",
