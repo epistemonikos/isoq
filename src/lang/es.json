@@ -564,7 +564,7 @@
       "explanation_not_added": "Explicación aún no agregada",
       "cerqual_question": "¿En qué medida es el hallazgo de la revisión una representación razonable del fenómeno de interés?",
       "cerqual_explanation_instruction": "A continuación se muestra el texto mínimo requerido para una explicación. Ahora agregue detalles sobre las preocupaciones específicas de los componente(s) que más contribuyeron a su evaluación.",
-      "notes_description": "Espacio opcional para que los revisores dejen notas entre ellos mientras trabajan en las evaluaciones GRADE-CERQual",
+      "notes_description": "Espacio opcional para que los revisores dejen notas entre ellos mientras trabajan en las evaluaciones CAMELOT",
       "guidance_available": "orientación disponible",
       "click_here_example": "para ver un ejemplo",
       "explanation_required_with_link": "El enfoque GRADE-CERQual requiere que incluya una explicación de su juicio. Haga clic {link} para ver un ejemplo",

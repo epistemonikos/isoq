@@ -564,7 +564,7 @@
       "explanation_not_added": "Explanation not yet added",
       "cerqual_question": "To what extent is the review finding a reasonable representation of the phenomenon of interest?",
       "cerqual_explanation_instruction": "Below is the minimum text required for an explanation. Now add detail about the specific concerns for the component(s) that most contributed to your assessment.",
-      "notes_description": "Optional space for reviewers to leave notes for each other while working on GRADE-CERQual assessments",
+      "notes_description": "Optional space for reviewers to leave notes for each other while working on CAMELOT assessments",
       "guidance_available": "guidance available",
       "click_here_example": "to see an example",
       "explanation_required_with_link": "The GRADE-CERQual approach requires you to include an explanation for your judgement. Click {link} to see an example",
