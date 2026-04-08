@@ -1241,7 +1241,7 @@
     },
     "assessment_form": {
       "title": "Evaluación de ajuste",
-      "explain_label": "Explique cualquier preocupación que tenga con sus propias palabras",
+      "explain_label": "Explique su evaluación",
       "text_placeholder": "Ingrese su texto",
       "save_button": "Guardar",
       "overall_assessment": "Evaluación general",

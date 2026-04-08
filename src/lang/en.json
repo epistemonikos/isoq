@@ -1241,7 +1241,7 @@
     },
     "assessment_form": {
       "title": "Fit assessment",
-      "explain_label": "Explain any concerns you have in your own words",
+      "explain_label": "Explain your assessment",
       "text_placeholder": "Enter your text",
       "save_button": "save",
       "overall_assessment": "Overall assessment",
