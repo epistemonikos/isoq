@@ -320,12 +320,24 @@
       "to_camelot_body": "Si cambias tu selección, iSoQ creará dos copias de tu proyecto. Una tendrá CAMELOT desactivado y preservará todos los datos que extrajiste y evaluaciones que has hecho hasta ahora. La otra tendrá CAMELOT activado y el Paso 3 (tabla de Características de los Estudios) y el Paso 4 (tabla de Evaluaciones Metodológicas) en Mis Datos estarán en blanco, al igual que cualquier evaluación GRADE-CERQual informada por estos datos.",
       "from_camelot_body": "Si cambias tu selección, iSoQ creará dos copias de tu proyecto. Una tendrá CAMELOT activado y preservará todos los datos que extrajiste y evaluaciones que has hecho hasta ahora. La otra tendrá CAMELOT desactivado y el Paso 3 (tabla de Características de los Estudios) y el Paso 4 (tabla de Evaluaciones Metodológicas) en Mis Datos estarán en blanco, al igual que cualquier evaluación GRADE-CERQual informada por estos datos"
     },
-    "use_camelot_label": "¿Te gustaría usar CAMELOT como herramienta de evaluación crítica en este proyecto?",
+    "use_camelot_label": "¿Te gustaría usar CAMELOT {logo} como herramienta de evaluación crítica en este proyecto?",
     "use_camelot_desc": "",
     "use_camelot_yes": "Sí, usar CAMELOT (recomendado)",
     "use_camelot_no": "No, no usar CAMELOT",
     "use_camelot_active": "Activo",
-    "use_camelot_inactive": "Inactivo"
+    "use_camelot_inactive": "Inactivo",
+    "camelot_modal_info": {
+      "title": "¿Qué es CAMELOT?",
+      "p1": "CAMELOT es una herramienta basada en evidencia para realizar una evaluación de las fortalezas y limitaciones metodológicas de los estudios de investigación cualitativa primaria que se incluyen en una Síntesis de Evidencia Cualitativa.",
+      "p2": "Realización de una evaluación CAMELOT dentro de iSoQ",
+      "p3": "iSoQ apoya a los equipos de revisión que realizan una evaluación CAMELOT mediante los siguientes pasos:",
+      "li1": "Añadir o importar datos extraídos para cada uno de los cuatro Metadominios y los ocho dominios de Método.",
+      "li2": "Identificación de inquietudes y evaluación de la adecuación del ajuste entre dominios.",
+      "li3": "Realización de una evaluación general de las limitaciones metodológicas de cada estudio.",
+      "li4": "Evaluación del componente de Limitaciones Metodológicas de GRADE-CERQual de cada hallazgo de revisión individual.",
+      "link1": "Acceda a la guía detallada de CAMELOT <a href=\"https://www.cerqual.org/\" target=\"_blank\">aquí</a>.",
+      "link2": "Acceda a la guía sobre la evaluación del componente de Limitaciones Metodológicas de GRADE-CERQual <a href=\"https://www.cerqual.org/\" target=\"_blank\">aquí</a>."
+    }
   },
   "references": {
     "step_title": "PASO 1: Suba las <b>referencias</b> de sus estudios incluidos (requerido)",

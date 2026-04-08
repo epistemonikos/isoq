@@ -163,9 +163,17 @@
             <b-form-invalid-feedback :state="state.lists_authors">{{ $t('project.validation.list_authors_required') }}</b-form-invalid-feedback>
           </b-form-group>
           <b-form-group
-            :label="$t('project.use_camelot_label')"
             label-for="input-project-use-camelot"
             :description="!formData.id ? $t('project.use_camelot_desc') : ''">
+            <template v-slot:label>
+              <i18n path="project.use_camelot_label" tag="span">
+                <template v-slot:logo>
+                  <a href="javascript:void(0)" @click="$bvModal.show('camelot-info-modal')" class="mx-1">
+                    <img src="@/assets/camelot-logo.svg" style="height: 20px; vertical-align: text-bottom;" />
+                  </a>
+                </template>
+              </i18n>
+            </template>
             <b-form-radio-group
               :disabled="!canEdit"
               id="input-project-use-camelot"
@@ -284,6 +292,28 @@
             <b-spinner variant="danger" label="Spinning"></b-spinner>
             <p class="mt-2">{{ $t('project.toggle_camelot.migrating') }}</p>
           </div>
+        </div>
+      </b-modal>
+
+      <!-- CAMELOT Info Modal -->
+      <b-modal
+        id="camelot-info-modal"
+        :title="$t('project.camelot_modal_info.title')"
+        ok-only
+        :ok-title="$t('common.close')"
+        size="lg">
+        <div>
+          <p>{{ $t('project.camelot_modal_info.p1') }}</p>
+          <h6 class="font-weight-bold mt-4">{{ $t('project.camelot_modal_info.p2') }}</h6>
+          <p>{{ $t('project.camelot_modal_info.p3') }}</p>
+          <ul>
+            <li>{{ $t('project.camelot_modal_info.li1') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li2') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li3') }}</li>
+            <li>{{ $t('project.camelot_modal_info.li4') }}</li>
+          </ul>
+          <p class="mt-4" v-html="$t('project.camelot_modal_info.link1')"></p>
+          <p v-html="$t('project.camelot_modal_info.link2')"></p>
         </div>
       </b-modal>
     </template>

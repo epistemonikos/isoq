@@ -320,12 +320,24 @@
       "to_camelot_body": "If you change your selection, iSoQ will create two copies of your project. One will have CAMELOT disabled and preserve all the data you extracted and assessments you have made so far. The other will have CAMELOT enabled and Step 3 (Characteristics of Studies table) and Step 4 (Methodological Assessments table) in My Data will be blank, as will any GRADE-CERQual assessments informed by this data.",
       "from_camelot_body": "If you change your selection, iSoQ will create two copies of your project. One will have CAMELOT enabled and preserve all the data you extracted and assessments you have made so far. The other will have CAMELOT disabled and Step 3 (Characteristics of Studies table) and Step 4 (Methodological Assessments table) in My Data will be blank, as will any GRADE-CERQual assessments informed by this data"
     },
-    "use_camelot_label": "Would you like to use CAMELOT as your critical appraisal tool in this project?",
+    "use_camelot_label": "Would you like to use CAMELOT {logo} as your critical appraisal tool in this project?",
     "use_camelot_desc": "",
     "use_camelot_yes": "Yes, use CAMELOT (recommended)",
     "use_camelot_no": "No, do not use CAMELOT",
     "use_camelot_active": "Active",
-    "use_camelot_inactive": "Inactive"
+    "use_camelot_inactive": "Inactive",
+    "camelot_modal_info": {
+      "title": "What is CAMELOT?",
+      "p1": "CAMELOT is an evidence‐based tool for making an assessment of the methodological strengths and limitations of primary qualitative research studies that are included in a Qualitative Evidence Synthesis.",
+      "p2": "Making a CAMELOT assessment within iSoQ",
+      "p3": "iSoQ supports review teams making a CAMELOT assessment using the following steps:",
+      "li1": "Add or import data extracted for each one of the four Meta domains and the eight Method domains.",
+      "li2": "Identification of concerns and assessment of appropriateness of fit between domains.",
+      "li3": "Making an overall assessment of methodological limitations for each study.",
+      "li4": "Assessing the Methodological Limitations component of GRADE-CERQual of each individual review finding.",
+      "link1": "Access to detailed CAMELOT guidance <a href=\"https://www.cerqual.org/\" target=\"_blank\">here</a>.",
+      "link2": "Access to guidance on assessing the Methodological Limitations component of GRADE-CERQual <a href=\"https://www.cerqual.org/\" target=\"_blank\">here</a>."
+    }
   },
   "references": {
     "step_title": "STEP 1: Upload the <b>references</b> for your included studies (required)",
