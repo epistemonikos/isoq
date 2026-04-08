@@ -1145,7 +1145,7 @@
         "section_3": "3. The \"Edit\" button",
         "content_3": "<p>The Edit button in each cell allows you to:</p><ul><li>Visualise the extracted data and comments for each domain on which you are basing your fit assessment</li><li>Edit extracted data or comments if needed</li><li>Select a level of concern and add an explanation</li><li>Add notes</li><li>Return to and modify assessments if needed</li></ul><p>This supports consistent and well-documented methodological assessments.</p>",
         "section_4": "4. How to use this table",
-        "content_4": "<p>Use this table to:</p><ul><li>Build the final CAMELOT assessment table for your review</li><li>Inform the methodological judgments used in GRADE-CERQual assessments</li><li>Quickly spot assessments that may need revision or team discussion</li></ul>"
+        "content_4": "<p>Use this table to:</p><ul><li>Build the final CAMELOT assessment table for your review</li><li>Inform your assessment of the Methodological Limitations component of GRADE-CERQual.</li><li>Quickly spot assessments that may need revision or team discussion</li></ul>"
       },
       "legend": {
         "show": "Show colour legend",
