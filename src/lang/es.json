@@ -1138,9 +1138,9 @@
       "how_to_read": {
         "title": "Cómo leer esta tabla",
         "section_1": "1. Qué muestra esta tabla",
-        "content_1": "<p>Cada fila representa un estudio individual.</p><p>Cada columna representa una evaluación de ajuste CAMELOT entre dominios metodológicos específicos.</p><p>Los dominios se agrupan en tres categorías principales:</p><ul><li>Dominios Meta vs. Dominios de diseño de investigación (FA1–FA4)</li><li>Dominios Meta vs. Dominios de conducta de investigación (FA5–FA8)</li><li>Dominios de diseño de investigación vs. Dominios de conducta de investigación (FA9)</li></ul><p>Al final de cada fila, encontrará una Evaluación General (OA) que resume el ajuste metodológico para el estudio.</p>",
+        "content_1": "<p>Cada fila representa un estudio individual.</p><p>Cada columna representa una evaluación de ajuste CAMELOT entre dominios metodológicos específicos.</p><p>Los dominios se agrupan en tres categorías principales:</p><ul><li>Dominios Meta vs. Dominios de diseño de investigación (FA1–FA4)</li><li>Dominios Meta vs. Dominios de conducta de investigación (FA5–FA8)</li><li>Dominios de diseño de investigación vs. Dominios de conducta de investigación (FA9)</li></ul><p>En la última columna, encontrará una Evaluación General (OA).</p>",
         "section_2": "2. Cómo interpretar los colores e íconos",
-        "content_2_pre": "Cada celda contiene un marcador de color que indica el nivel de preocupación identificado durante la evaluación:",
+        "content_2_pre": "Cada celda contiene un círculo. Si la evaluación no se ha completado, el círculo es una línea gris discontinua. A medida que se realizan las evaluaciones CAMELOT, los círculos cambian de color según el nivel de preocupación seleccionado:",
         "content_2_post": "Estos indicadores le ayudan a identificar visualmente las fortalezas metodológicas y los problemas potenciales en los estudios.",
         "section_3": "3. El botón \"Editar\"",
         "content_3": "<p>El botón Editar en cada celda le permite:</p><ul><li>Ver la justificación de la calificación asignada</li><li>Modificar la evaluación si es necesario</li><li>Añadir notas o explicaciones para asegurar la transparencia</li></ul><p>Esto apoya evaluaciones metodológicas consistentes y bien documentadas.</p>",
