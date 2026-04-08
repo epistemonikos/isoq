@@ -549,8 +549,8 @@
       "do_it_later": "Do it later",
       "show_example": "Show example",
       "hide_example": "Hide example",
-      "show_concerns": "Show concerns",
-      "hide_concerns": "Hide concerns"
+      "show_concerns": "Show comments",
+      "hide_concerns": "Hide comments"
     },
     "labels": {
       "explanation_required": "The GRADE-CERQual approach requires you to include an explanation for your judgement.",
@@ -1083,8 +1083,8 @@
       "loading": "Loading data...",
       "description": "This table will be used later on for the following purposes:<ul><li>Generate a Characteristics of studies table to be included in your review</li><li>Serve as reference material for making CAMELOT assessments for each included study (columns marked with the icon {icon} correspond to CAMELOT domains).</li><li>Serve as reference material for making GRADE-CERQual assessments for each review finding (Adequacy and Relevance components). <a href='https://grade-cerqual.org/' target='_blank'>Learn more</a></li></ul><p>Open the Data extraction form by clicking the edit buttons.</p><p>Add other characteristics of studies relevant for your review by clicking the Add or edit columns button.</p>",
       "no_records": "No records available",
-      "show_concerns": "Show concerns",
-      "hide_concerns": "Hide concerns",
+      "show_concerns": "Show comments",
+      "hide_concerns": "Hide comments",
       "edit_button": "Edit",
       "delete_button": "Delete",
       "references_header": "References",
@@ -1097,7 +1097,7 @@
       "author_year": "Author(s), Year",
       "export_csv": "Export to CSV",
       "add_edit_columns": "Add or edit columns",
-      "show_hide_concerns": "Show/Hide concerns",
+      "show_hide_concerns": "Show/Hide comments",
       "columns_modal": {
         "title": "Manage custom columns",
         "description": "Add, edit or delete custom columns. These columns will be available for all references.",

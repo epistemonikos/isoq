@@ -549,8 +549,8 @@
       "do_it_later": "Fazer mais tarde",
       "show_example": "Mostrar exemplo",
       "hide_example": "Ocultar exemplo",
-      "show_concerns": "Mostrar preocupações",
-      "hide_concerns": "Ocultar preocupações"
+      "show_concerns": "Mostrar comentários",
+      "hide_concerns": "Ocultar comentários"
     },
     "labels": {
       "explanation_required": "A abordagem GRADE-CERQual exige que você inclua uma explicação para o seu julgamento.",
@@ -1083,8 +1083,8 @@
       "loading": "Carregando datos...",
       "description": "Esta tabela será utilizada posteriormente para os seguintes fins:<ul><li>Gerar uma tabela de Características dos estudos a ser incluída na sua revisão</li><li>Servir como material de referência para realizar avaliações CAMELOT para cada estudo incluído (as colunas marcadas com o ícone {icon} correspondem aos domínios CAMELOT).</li><li>Servir como material de referência para realizar avaliações GRADE-CERQual para cada descoberta de revisão (componentes de Adequação e Relevância). <a href='https://www.cerqual.org/' target='_blank'>Saiba mais</a></li></ul><p>Abra o formulário de extração de dados clicando nos botões de edição.</p><p>Adicione outras características dos estudos relevantes para a sua revisão clicando no botão Adicionar ou editar colunas.</p>",
       "no_records": "Nenhum registro disponível",
-      "show_concerns": "Mostrar preocupações",
-      "hide_concerns": "Ocultar preocupações",
+      "show_concerns": "Mostrar comentários",
+      "hide_concerns": "Ocultar comentários",
       "edit_button": "Editar",
       "delete_button": "Excluir",
       "references_header": "Referências",
@@ -1097,7 +1097,7 @@
       "author_year": "Autor(es), Ano",
       "export_csv": "Exportar para CSV",
       "add_edit_columns": "Adicionar ou editar colunas",
-      "show_hide_concerns": "Mostrar/Ocultar preocupações",
+      "show_hide_concerns": "Mostrar/Ocultar comentários",
       "columns_modal": {
         "title": "Gerenciar colunas personalizadas",
         "description": "Adicione, edite ou exclua colunas personalizadas. Essas colunas estarão disponíveis para todas as referências.",
