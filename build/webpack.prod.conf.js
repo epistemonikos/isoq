@@ -32,14 +32,32 @@ const webpackConfig = merge(baseWebpackConfig, {
   optimization: {
     splitChunks: {
       chunks: 'all',
-      minSize: 30000,
+      minSize: 20000,
       maxSize: 0,
       minChunks: 1,
-      maxAsyncRequests: 5,
-      maxInitialRequests: 3,
+      maxAsyncRequests: 30,
+      maxInitialRequests: 30,
       automaticNameDelimiter: '~',
       name: true,
       cacheGroups: {
+        docx: {
+          name: 'chunk-docx',
+          test: /[\\/]node_modules[\\/]docx[\\/]/,
+          priority: 20,
+          chunks: 'all'
+        },
+        bootstrap: {
+          name: 'chunk-bootstrap',
+          test: /[\\/]node_modules[\\/](bootstrap|bootstrap-vue)[\\/]/,
+          priority: 20,
+          chunks: 'all'
+        },
+        fortawesome: {
+          name: 'chunk-fortawesome',
+          test: /[\\/]node_modules[\\/]@fortawesome[\\/]/,
+          priority: 20,
+          chunks: 'all'
+        },
         vendors: {
           name: 'chunk-vendors',
           test: /[\\/]node_modules[\\/]/,
@@ -50,7 +68,7 @@ const webpackConfig = merge(baseWebpackConfig, {
           name: 'chunk-common',
           minChunks: 2,
           priority: -20,
-          chunks: 'initial',
+          chunks: 'all',
           reuseExistingChunk: true
         }
       }

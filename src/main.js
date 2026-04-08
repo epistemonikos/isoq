@@ -7,7 +7,38 @@ import App from './App'
 
 import { store } from './store'
 import routes from './router/index'
-import VueBootstrap from 'bootstrap-vue'
+import {
+  AlertPlugin,
+  BadgePlugin,
+  ButtonPlugin,
+  CardPlugin,
+  CollapsePlugin,
+  DropdownPlugin,
+  EmbedPlugin,
+  FormPlugin,
+  FormCheckboxPlugin,
+  FormFilePlugin,
+  FormGroupPlugin,
+  FormInputPlugin,
+  FormRadioPlugin,
+  FormSelectPlugin,
+  FormTextareaPlugin,
+  ImagePlugin,
+  InputGroupPlugin,
+  LayoutPlugin,
+  LinkPlugin,
+  ListGroupPlugin,
+  ModalPlugin,
+  NavPlugin,
+  NavbarPlugin,
+  PaginationPlugin,
+  ProgressPlugin,
+  SidebarPlugin,
+  SpinnerPlugin,
+  TabsPlugin,
+  TablePlugin,
+  TooltipPlugin
+} from 'bootstrap-vue'
 
 
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -40,7 +71,37 @@ if (token) {
 */
 
 Vue.use(Router)
-Vue.use(VueBootstrap)
+Vue.use(AlertPlugin)
+Vue.use(BadgePlugin)
+Vue.use(ButtonPlugin)
+Vue.use(CardPlugin)
+Vue.use(CollapsePlugin)
+Vue.use(DropdownPlugin)
+Vue.use(EmbedPlugin)
+Vue.use(FormPlugin)
+Vue.use(FormCheckboxPlugin)
+Vue.use(FormFilePlugin)
+Vue.use(FormGroupPlugin)
+Vue.use(FormInputPlugin)
+Vue.use(FormRadioPlugin)
+Vue.use(FormSelectPlugin)
+Vue.use(FormTextareaPlugin)
+Vue.use(ImagePlugin)
+Vue.use(InputGroupPlugin)
+Vue.use(LayoutPlugin)
+Vue.use(LinkPlugin)
+Vue.use(ListGroupPlugin)
+Vue.use(ModalPlugin)
+Vue.use(NavPlugin)
+Vue.use(NavbarPlugin)
+Vue.use(PaginationPlugin)
+Vue.use(ProgressPlugin)
+Vue.use(SidebarPlugin)
+Vue.use(SpinnerPlugin)
+Vue.use(TabsPlugin)
+Vue.use(TablePlugin)
+Vue.use(TooltipPlugin)
+
 Vue.prototype.$i18nRoute = Trans.i18nRoute.bind(Trans)
 Vue.config.productionTip = false
 
