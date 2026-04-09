@@ -1,32 +1,25 @@
 <template>
   <div class="camelot-summary-table-container">
     <div v-if="!hideActions" class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="h5 mb-0 font-weight-bold text-secondary">{{ $t('camelot.step_four.breadcrumb_sub') }}</h4>
-      
-      <b-dropdown
-        id="dropdown-filter-assessments"
-        variant="outline-primary"
-        size="sm"
-        no-caret
-        right
-        class="assessment-filter-dropdown"
-        @show="handleFilterDropdownShow"
-      >
+      <h4 class="h5 mr-auto mb-0 font-weight-bold text-secondary">{{ $t('camelot.step_four.breadcrumb_sub') }}</h4>
+
+      <b-button variant="link" class="text-secondary" v-b-toggle.sidebar-right>
+        {{ $t('camelot.assessment_table.sidebar.title') }}
+      </b-button>
+
+      <b-dropdown id="dropdown-filter-assessments" variant="outline-primary" size="sm" no-caret right
+        class="assessment-filter-dropdown" @show="handleFilterDropdownShow">
         <template #button-content>
           {{ $t('camelot.step_four.show_details_across_studies') }}
           <font-awesome-icon icon="filter" class="ml-1" />
         </template>
         <b-dropdown-form class="p-3" style="min-width: 320px; max-height: 500px; overflow-y: auto;">
           <h6 class="dropdown-header px-0 mb-2 font-weight-bold">{{ $t('common.filter_columns') }}</h6>
-          
-          <b-form-checkbox
-            v-model="allVisible"
-            class="mb-2 font-weight-bold"
-            @change="toggleAllAssessments"
-          >
+
+          <b-form-checkbox v-model="allVisible" class="mb-2 font-weight-bold" @change="toggleAllAssessments">
             {{ $t('common.show_all') }}
           </b-form-checkbox>
-          
+
           <div v-for="(group, gIdx) in filterGroups" :key="gIdx" class="filter-group-section mt-3">
             <div class="filter-group-title text-muted small font-weight-bold text-uppercase border-bottom mb-2 pb-1">
               {{ group.title }}
@@ -41,20 +34,17 @@
       </b-dropdown>
     </div>
 
-    <b-table
-      :fields="fields"
-      :items="tableItems"
-      bordered
-      responsive
-      class="camelot-table"
-      thead-tr-class="header-second-row"
-    >
+    <b-table :fields="fields" :items="tableItems" bordered responsive class="camelot-table"
+      thead-tr-class="header-second-row">
       <template v-slot:thead-top>
         <tr class="header-top-row">
           <th class="border-bottom-0 bg-grey-light">{{ $t('camelot.step_four.table_headers.authors') }}</th>
-          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_meta_design') }}</th>
-          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}</th>
-          <th class="text-center group-header border-left bg-grey-lighter">{{ $t('camelot.step_four.tabs.fit_design_conduct') }}</th>
+          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{
+            $t('camelot.step_four.tabs.fit_meta_design') }}</th>
+          <th colspan="4" class="text-center group-header border-left bg-grey-lighter">{{
+            $t('camelot.step_four.tabs.fit_meta_conduct') }}</th>
+          <th class="text-center group-header border-left bg-grey-lighter">{{
+            $t('camelot.step_four.tabs.fit_design_conduct') }}</th>
           <th class="text-center group-header border-left bg-grey-light">{{ $t('camelot.step_four.tabs.overall') }}</th>
           <th v-if="!hideActions" class="border-bottom-0 bg-grey-light"></th>
         </tr>
@@ -66,114 +56,80 @@
 
       <!-- Dynamic Clickable Headers -->
       <template v-for="field in fields.filter(f => f.assessmentKey)" v-slot:[`head(${field.key})`]="data">
-        <div 
-          v-if="clickableHeaders" 
-          :key="field.key" 
-          class="w-100 h-100 d-flex align-items-center justify-content-center cursor-pointer" 
-          @click="handleHeaderClick(field.assessmentKey)"
-          v-b-tooltip.hover
-          :title="$t('camelot.step_four.tooltips.filter_by_this')"
-        >
+        <div v-if="clickableHeaders" :key="field.key"
+          class="w-100 h-100 d-flex align-items-center justify-content-center cursor-pointer"
+          @click="handleHeaderClick(field.assessmentKey)" v-b-tooltip.hover
+          :title="$t('camelot.step_four.tooltips.filter_by_this')">
           {{ data.label }}
         </div>
-        <span v-else :key="field.key">{{ data.label }}</span>
+        <template v-else><span :key="field.key">{{ data.label }}</span></template>
       </template>
 
       <!-- Step One: FA 1-4 -->
       <template v-slot:cell(fa1)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(0, 0, data.item)]"
-            :style="getCircleStyle(0, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 0, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(0, 0, data.item)]" :style="getCircleStyle(0, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 0, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa2)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(0, 1, data.item)]"
-            :style="getCircleStyle(0, 1, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 1, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(0, 1, data.item)]" :style="getCircleStyle(0, 1, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 1, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa3)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(0, 2, data.item)]"
-            :style="getCircleStyle(0, 2, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 2, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(0, 2, data.item)]" :style="getCircleStyle(0, 2, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 2, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa4)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(0, 3, data.item)]"
-            :style="getCircleStyle(0, 3, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(0, 3, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(0, 3, data.item)]" :style="getCircleStyle(0, 3, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(0, 3, data.item)"></div>
         </div>
       </template>
 
       <!-- Step Two: FA 5-8 -->
       <template v-slot:cell(fa5)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(1, 0, data.item)]"
-            :style="getCircleStyle(1, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 0, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(1, 0, data.item)]" :style="getCircleStyle(1, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 0, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa6)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(1, 1, data.item)]"
-            :style="getCircleStyle(1, 1, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 1, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(1, 1, data.item)]" :style="getCircleStyle(1, 1, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 1, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa7)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(1, 2, data.item)]"
-            :style="getCircleStyle(1, 2, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 2, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(1, 2, data.item)]" :style="getCircleStyle(1, 2, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 2, data.item)"></div>
         </div>
       </template>
       <template v-slot:cell(fa8)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(1, 3, data.item)]"
-            :style="getCircleStyle(1, 3, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(1, 3, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(1, 3, data.item)]" :style="getCircleStyle(1, 3, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(1, 3, data.item)"></div>
         </div>
       </template>
 
       <!-- Step Three: FA 9 -->
       <template v-slot:cell(fa9)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(2, 0, data.item)]"
-            :style="getCircleStyle(2, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(2, 0, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(2, 0, data.item)]" :style="getCircleStyle(2, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(2, 0, data.item)"></div>
         </div>
       </template>
 
       <!-- Step Four: OA -->
       <template v-slot:cell(oa)="data">
         <div class="d-flex justify-content-center">
-          <div
-            :class="['assessment-circle', getCircleClass(3, 0, data.item)]"
-            :style="getCircleStyle(3, 0, data.item)"
-            v-b-tooltip.hover="getCircleTooltip(3, 0, data.item)"
-          ></div>
+          <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]" :style="getCircleStyle(3, 0, data.item)"
+            v-b-tooltip.hover="getCircleTooltip(3, 0, data.item)"></div>
         </div>
       </template>
 
@@ -192,7 +148,7 @@
             <div v-for="stageIdx in activeStages" :key="stageIdx" class="stage-section mb-4">
               <template v-if="data.item.stages[stageIdx]">
                 <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
-                
+
                 <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
                   <b-tbody>
                     <template v-if="data.item.stages[stageIdx].options">
@@ -202,7 +158,8 @@
                             {{ getAssessmentLabel(stageIdx, oIdx) }}
                           </b-td>
                           <b-td class="text-center vertical-middle">
-                            <div v-if="option.option" class="assessment-circle circle-filled mx-auto" :style="{ backgroundColor: getOptionColor(option.option) }"></div>
+                            <div v-if="option.option" class="assessment-circle circle-filled mx-auto"
+                              :style="{ backgroundColor: getOptionColor(option.option) }"></div>
                             <div v-else class="assessment-circle circle-not-completed mx-auto"></div>
                           </b-td>
                           <b-td>
@@ -210,7 +167,8 @@
                               <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
                               <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
                             </div>
-                            <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed') }}</div>
+                            <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed')
+                              }}</div>
                           </b-td>
                         </b-tr>
                       </template>
@@ -227,6 +185,31 @@
         </div>
       </template>
     </b-table>
+
+    <b-sidebar id="sidebar-right" :title="$t('camelot.assessment_table.sidebar.title')" right backdrop shadow>
+      <div class="px-3 py-2 sidebar-instructions">
+        <p>
+          {{ $t('camelot.assessment_table.sidebar.intro') }}
+        </p>
+
+        <p>{{ $t('camelot.assessment_table.sidebar.tips.title') }}</p>
+        <ul>
+          <li>
+            {{ $t('camelot.assessment_table.sidebar.tips.tip_1') }}
+          </li>
+          <li>
+            {{ $t('camelot.assessment_table.sidebar.tips.tip_2') }}
+          </li>
+          <li>
+            {{ $t('camelot.assessment_table.sidebar.tips.tip_3') }}
+          </li>
+          <li>
+            {{ $t('camelot.assessment_table.sidebar.tips.tip_4') }}
+          </li>
+        </ul>
+      </div>
+
+    </b-sidebar>
   </div>
 </template>
 
@@ -273,7 +256,7 @@ export default {
     fields() {
       const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
-      
+
       const thClass = `header-second-row text-center ${this.clickableHeaders ? 'clickable-header' : ''}`
 
       const fields = [
@@ -380,7 +363,7 @@ export default {
   methods: {
     handleHeaderClick(assessmentKey) {
       if (!this.clickableHeaders) return
-      
+
       this.visibleAssessments = [assessmentKey]
       this.expandAllDetails(true)
     },
@@ -402,7 +385,7 @@ export default {
           this.$set(item, '_showDetails', false)
         }
       })
-      
+
       this.toggleAllAssessments(true)
       data.toggleDetails()
     },
@@ -440,7 +423,7 @@ export default {
       }
       const option = item.stages[stage].options[optionIndex].option
       if (option === null) return {}
-      
+
       const response = this.responses.find(r => r.value === option)
       return {
         backgroundColor: response ? response.color : '#B3B3B3'
@@ -504,20 +487,22 @@ export default {
 .camelot-summary-table-container {
   ::v-deep .table-bordered {
     border: 1px solid #AAADB0 !important;
-    
-    th, td {
+
+    th,
+    td {
       border: 1px solid #AAADB0 !important;
     }
   }
 
   .camelot-table {
     font-size: 0.9rem;
-    
-    ::v-deep th, ::v-deep td {
+
+    ::v-deep th,
+    ::v-deep td {
       vertical-align: middle !important;
       padding: 0.75rem 0.5rem;
     }
-    
+
     .assessment-col {
       width: 45px;
       min-width: 45px;
@@ -527,7 +512,7 @@ export default {
 
   .header-top-row {
     color: #152536;
-    
+
     th {
       border-bottom: none !important;
       padding: 1rem 0.5rem;
@@ -540,12 +525,6 @@ export default {
     .bg-grey-lighter {
       background-color: #E9ECEF !important;
     }
-  }
-
-  .group-header {
-  }
-
-  .header-overall-group {
   }
 
   ::v-deep .header-second-row {
@@ -616,7 +595,7 @@ export default {
     .first-col {
       width: 25%;
     }
-    
+
     ::v-deep th {
       text-transform: uppercase;
       font-size: 0.75rem;
