@@ -19,11 +19,18 @@
             {{ $t('camelot.step_four.breadcrumb_sub') }} &gt;
             <span class="text-white">{{ ui.authors }}</span>
           </div>
-          <div class="modal-main-title mt-1">
+          <div class="modal-main-title mt-1 d-flex align-items-center">
             {{ modalSubtitle }}
+            <font-awesome-icon icon="info-circle" class="ml-2 cursor-pointer" style="font-size: 1.2rem;"
+              v-b-toggle.sidebar-section-help />
           </div>
         </div>
       </template>
+
+      <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
+        <div class="px-4 py-3" v-html="helpContent[modal.stage]">
+        </div>
+      </b-sidebar>
       <b-row>
         <b-col cols="12" class="camelot-modal-body">
           <template v-if="modal.stage < 2">
@@ -399,6 +406,14 @@ export default {
     }
   },
   computed: {
+    helpContent() {
+      return {
+        0: this.$t('camelot.step_four.help_modal.0'),
+        1: this.$t('camelot.step_four.help_modal.1'),
+        2: this.$t('camelot.step_four.help_modal.2'),
+        3: this.$t('camelot.step_four.help_modal.3')
+      }
+    },
     exportFields() {
       return [
         { key: 'authors', label: 'Author(s), Year' },
@@ -768,6 +783,10 @@ export default {
 </script>
 
 <style lang="scss">
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .step-four-container {
   .help-link {
     color: #898989 !important;

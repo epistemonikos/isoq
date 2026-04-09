@@ -1187,7 +1187,7 @@
         "fit_between_design_conduct": "Fit between Research design domains and Research conduct domains"
       },
       "meta_items": {
-        "research": "Research",
+        "research": "Research aim & question(s)",
         "stakeholders": "Stakeholders",
         "researchers": "Researchers",
         "context": "Context"
@@ -1217,7 +1217,7 @@
         "fa_prefix": "FA",
         "oa_label": "OA",
         "overall": "Overall assessment",
-        "research": "Research",
+        "research": "Research aim & question(s)",
         "stakeholders": "Stakeholders",
         "researchers": "Researchers",
         "context": "Context",
@@ -1241,6 +1241,12 @@
       },
       "tooltips": {
         "filter_by_this": "Filter by this assessment"
+      },
+      "help_modal": {
+        "0": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Meta domains (FA1-FA4). In the first column you will see the data you extracted for each Research design domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
+        "1": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research conduct domains and the four Meta domains (FA5-FA8). In the first column you will see the data you extracted for each Research conduct domain and any comments you made.  In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
+        "2": "It is here that you assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Research conduct domains. In the first two columns you will see the data you extracted for each domain and any comments you made.  In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement.<br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context.",
+        "3": "It is here that you make an overall assessment of concerns, taking into consideration concerns identified in all of the nine fit assessments (FA1-FA9). In the first column are the assessments you made of the appropriateness of fit between Research design domains and each Meta domain. In the second column are the assessments you made of the appropriateness of fit between Research conduct domains and each Meta domain. In the third column are the assessments you made of the appropriateness of fit between Research design domains and Research conduct domains.<br><br>assess whether you have concerns regarding the appropriateness of fit between the four Research design domains and the four Meta domains. In the first column you will see the data you extracted for each Research design domain and any comments you made. In the second column you will see the data you extracted for each Meta domain and any comments you made. You can navigate between meta domains using the tabs. In the final column you select a level of concern about the appropriateness of fit and add an explanation for your judgement. <br><br>The term appropriateness of fit in CAMELOT refers to the degree to which the design and conduct of the study is: (1) well suited to address the research aim and/or question(s), (2) aligns with the researchers and/or stakeholders involved in the study, and/or; (3) is suitable given the study context."
       }
     },
     "responses": {
@@ -1280,7 +1286,7 @@
         "overall_assessment": "Overall assessment",
         "research_design": "Research design domains",
         "research_conduct": "Research conduct domains",
-        "research": "Research",
+        "research": "Research aim & question(s)",
         "stakeholders": "Stakeholders",
         "researchers": "Researchers",
         "context": "Context",

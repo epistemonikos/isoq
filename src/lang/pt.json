@@ -1187,7 +1187,7 @@
         "fit_between_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa"
       },
       "meta_items": {
-        "research": "Pesquisa",
+        "research": "Objetivo e pergunta(s) de pesquisa",
         "stakeholders": "Partes interessadas",
         "researchers": "Pesquisadores",
         "context": "Contexto"
@@ -1226,7 +1226,7 @@
       "camelot_mixin": {
         "extracted_data": "Dados extraídos",
         "concerns": "Comentários",
-        "meta_domain_1": "Objetivo da pesquisa e perguntas",
+        "meta_domain_1": "Objetivo e pergunta(s) de pesquisa",
         "meta_domain_2": "Partes interessadas",
         "meta_domain_3": "Pesquisadores",
         "meta_domain_4": "Contexto",
@@ -1241,6 +1241,12 @@
       },
       "tooltips": {
         "filter_by_this": "Filtrar por esta avaliação"
+      },
+      "help_modal": {
+        "0": "É aqui que você avalia se tem preocupações em relação à adequação do ajuste entre os quatro domínios de Desenho de pesquisa e os quatro domínios Meta. Na primeira coluna, você verá os dados extraídos para cada domínio de Desenho de pesquisa e quaisquer comentários que tenha feito. Na segunda coluna, você verá os dados extraídos para cada domínio Meta e quaisquer comentários que tenha feito. Você pode navegar entre os domínios Meta usando as abas. Na coluna final, você seleciona um nível de preocupação sobre a adequação do ajuste e adiciona uma explicação para o seu julgamento. <br><br>O termo adequação do ajuste no CAMELOT refere-se ao grau em que o desenho e a condução do estudo são: (1) adequados para abordar o objetivo e/ou pergunta(s) da pesquisa, (2) alinhados com os pesquisadores e/ou partes interessadas envolvidas no estudo, e/ou; (3) adequados considerando o contexto do estudo.",
+        "1": "É aqui que você avalia se tem preocupações em relação à adequação do ajuste entre os quatro domínios de Condução de pesquisa e os quatro domínios Meta. Na primeira coluna, você verá os dados extraídos para cada domínio de Condução de pesquisa e quaisquer comentários que tenha feito. Na segunda coluna, você verá os dados extraídos para cada domínio Meta e quaisquer comentários que tenha feito. Você pode navegar entre os domínios Meta usando as abas. Na coluna final, você seleciona um nível de preocupação sobre a adequação do ajuste e adiciona uma explicação para o seu julgamento. <br><br>O termo adequação do ajuste no CAMELOT refere-se ao grau em que o desenho e a condução do estudo são: (1) adequados para abordar o objetivo e/ou pergunta(s) da pesquisa, (2) alinhados com os pesquisadores e/ou partes interessadas envolvidas no estudo, e/ou; (3) adequados considerando o contexto do estudo.",
+        "2": "É aqui que você avalia se tem preocupações em relação à adequação do ajuste entre os quatro domínios de Desenho de pesquisa e os quatro domínios de Condução de pesquisa. Nas duas primeiras colunas, você verá os dados extraídos para cada domínio e quaisquer comentários que tenha feito. Na coluna final, você seleciona um nível de preocupação sobre a adequação do ajuste e adiciona uma explicação para o seu julgamento. <br><br>O termo adequação do ajuste no CAMELOT refere-se ao grau em que o desenho e a condução do estudo são: (1) adequados para abordar o objetivo e/ou pergunta(s) da pesquisa, (2) alinhados com os pesquisadores e/ou partes interessadas envolvidas no estudo, e/ou; (3) adequados considerando o contexto do estudo.",
+        "3": "É aqui que você faz uma avaliação geral das preocupações, levando em consideração as preocupações identificadas em todas as nove avaliações de ajuste (FA1-FA9). Na primeira coluna estão as avaliações que você fez da adequação do ajuste entre os domínios de Desenho de pesquisa e cada domínio Meta. Na segunda coluna estão as avaliações que você fez da adequação do ajuste entre os domínios de Condução de pesquisa e cada domínio Meta. Na terceira coluna estão as avaliações que você fez da adequação do ajuste entre os domínios de Desenho de pesquisa e os domínios de Condução de pesquisa.<br><br>avalie se você tem preocupações em relação à adequação do ajuste entre os quatro domínios de Desenho de pesquisa e os quatro domínios Meta. Na primeira coluna, você verá os dados extraídos para cada domínio de Desenho de pesquisa e quaisquer comentários que tenha feito. Na segunda coluna, você verá os dados extraídos para cada domínio Meta e quaisquer comentários que tenha feito. Você pode navegar entre os domínios Meta usando as abas. Na coluna final, você seleciona um nível de preocupação sobre a adequação do ajuste e adiciona uma explicação para o seu julgamento. <br><br>O termo adequação do ajuste no CAMELOT refere-se ao grau em que o desenho e a condução do estudo são: (1) adequados para abordar o objetivo e/ou pergunta(s) da pesquisa, (2) alinhados com os pesquisadores e/ou partes interessadas envolvidas no estudo, e/ou; (3) adequados considerando o contexto do estudo."
       }
     },
     "responses": {
@@ -1280,7 +1286,7 @@
         "overall_assessment": "Avaliação geral",
         "research_design": "Domínios de desenho de pesquisa",
         "research_conduct": "Domínios de condução de pesquisa",
-        "research": "Pesquisa",
+        "research": "Objetivo e pergunta(s) de pesquisa",
         "stakeholders": "Partes interessadas",
         "researchers": "Pesquisadores",
         "context": "Contexto",
