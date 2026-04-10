@@ -27,10 +27,6 @@
         </div>
       </template>
 
-      <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
-        <div class="px-4 py-3" v-html="helpContent[modal.stage]">
-        </div>
-      </b-sidebar>
       <b-row>
         <b-col cols="12" class="camelot-modal-body">
           <template v-if="modal.stage < 2">
@@ -203,7 +199,7 @@
                       <div class="d-flex justify-content-between align-items-end">
                         <h4 id="fa9" class="mb-0">FA9</h4>
                         <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
-                        }}</b-tooltip>
+                          }}</b-tooltip>
                       </div>
                     </template>
                     <div class="p-1">
@@ -224,6 +220,7 @@
           </template>
         </b-col>
       </b-row>
+
       <template #modal-footer>
         <div class="w-100 d-flex justify-content-between align-items-end px-3">
           <div v-if="modal.stage > 0" @click="goToStage(modal.stage - 1)" class="nav-footer-link">
@@ -240,6 +237,11 @@
         </div>
       </template>
     </b-modal>
+
+    <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
+      <div class="px-4 py-3" v-html="helpContent[modal.stage]">
+      </div>
+    </b-sidebar>
   </div>
 </template>
 
