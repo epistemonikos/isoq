@@ -1184,7 +1184,16 @@
         "research_conduct": "Dominios de conducta de investigación",
         "fit_between_design_meta": "Ajuste entre Dominios de diseño de investigación y cada Dominio Meta",
         "fit_between_conduct_meta": "Ajuste entre Dominios de conducta de investigación y cada Dominio Meta",
-        "fit_between_design_conduct": "Ajuste entre Dominios de diseño de investigación y Dominios de conducta de investigación"
+        "fit_between_design_conduct": "Ajuste entre Dominios de diseño de investigación y Dominios de conducta de investigación",
+        "fa1": "Ajuste entre dominios de diseño de investigación y el dominio Meta Objetivo y pregunta(s) de investigación",
+        "fa2": "Ajuste entre dominios de diseño de investigación y el dominio Meta Partes interesadas",
+        "fa3": "Ajuste entre dominios de diseño de investigación y el dominio Meta Investigadores",
+        "fa4": "Ajuste entre dominios de diseño de investigación y el dominio Meta Contexto",
+        "fa5": "Ajuste entre dominios de conducta de investigación y el dominio Meta Objetivo y pregunta(s) de investigación",
+        "fa6": "Ajuste entre dominios de conducta de investigación y el dominio Meta Partes interesadas",
+        "fa7": "Ajuste entre dominios de conducta de investigación y el dominio Meta Investigadores",
+        "fa8": "Ajuste entre dominios de conducta de investigación y el dominio Meta Contexto",
+        "fa9": "Ajuste entre dominios de diseño de investigación y dominios de conducta de investigación"
       },
       "meta_items": {
         "research": "Objetivo y pregunta(s) de investigación",

@@ -1184,7 +1184,16 @@
         "research_conduct": "Research conduct domains",
         "fit_between_design_meta": "Fit between Research design domains and each Meta domain",
         "fit_between_conduct_meta": "Fit between Research conduct domains and each Meta domain",
-        "fit_between_design_conduct": "Fit between Research design domains and Research conduct domains"
+        "fit_between_design_conduct": "Fit between Research design domains and Research conduct domains",
+        "fa1": "Fit between research design domains and Meta domain Research aim & question(s)",
+        "fa2": "Fit between Research design domains and Meta domain Stakeholders",
+        "fa3": "Fit between Research design domains and Meta domain Researchers",
+        "fa4": "Fit between Research design domains and Meta domain Context",
+        "fa5": "Fit between Research conduct domains and Meta domain Research aim & question(s)",
+        "fa6": "Fit between Research conduct domains and Meta domain Stakeholders",
+        "fa7": "Fit between Research conduct domains and Meta domain Researchers",
+        "fa8": "Fit between Research conduct domains and Meta domain Context",
+        "fa9": "Fit between Research design domains and Research conduct domains"
       },
       "meta_items": {
         "research": "Research aim & question(s)",

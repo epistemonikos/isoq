@@ -1179,12 +1179,21 @@
         "overall": "Avaliação geral"
       },
       "sections": {
-        "meta_domains": "Domínios Meta",
+        "meta_domains": "Dominios Meta",
         "research_design": "Domínios de desenho de pesquisa",
         "research_conduct": "Domínios de condução de pesquisa",
         "fit_between_design_meta": "Ajuste entre Domínios de desenho de pesquisa e cada Domínio Meta",
         "fit_between_conduct_meta": "Ajuste entre Domínios de condução de pesquisa e cada Domínio Meta",
-        "fit_between_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa"
+        "fit_between_design_conduct": "Ajuste entre Domínios de desenho de pesquisa e Domínios de condução de pesquisa",
+        "fa1": "Ajuste entre domínios de desenho de pesquisa e o domínio Meta Objetivo e pergunta(s) de pesquisa",
+        "fa2": "Ajuste entre domínios de desenho de pesquisa e o domínio Meta Partes interessadas",
+        "fa3": "Ajuste entre domínios de desenho de pesquisa e o domínio Meta Pesquisadores",
+        "fa4": "Ajuste entre domínios de desenho de pesquisa e o domínio Meta Contexto",
+        "fa5": "Ajuste entre domínios de condução de pesquisa e o domínio Meta Objetivo e pergunta(s) de pesquisa",
+        "fa6": "Ajuste entre domínios de condução de pesquisa e o domínio Meta Partes interessadas",
+        "fa7": "Ajuste entre domínios de condução de pesquisa e o domínio Meta Pesquisadores",
+        "fa8": "Ajuste entre domínios de condução de pesquisa e o domínio Meta Contexto",
+        "fa9": "Ajuste entre domínios de desenho de pesquisa e domínios de condução de pesquisa"
       },
       "meta_items": {
         "research": "Objetivo e pergunta(s) de pesquisa",

@@ -160,7 +160,7 @@
                         <div class="d-flex justify-content-between align-items-end">
                           <h4 :id="'fa' + dIndex + 1" class="mb-0 font-weight-bold">FA{{ dIndex + 1 }}</h4>
                           <b-tooltip :target="'fa' + dIndex + 1">{{
-                            $t('camelot.step_four.sections.fit_between_design_meta') }}</b-tooltip>
+                            $t('camelot.step_four.sections.fa' + (dIndex + 1)) }}</b-tooltip>
                         </div>
                       </template>
                       <div class="field-section" v-if="assessments.items.length">
@@ -184,7 +184,7 @@
                         <div class="d-flex justify-content-between align-items-end">
                           <h4 :id="'fa' + dIndex + 5" class="mb-0 font-weight-bold">FA{{ dIndex + 5 }}</h4>
                           <b-tooltip :target="'fa' + dIndex + 5">{{
-                            $t('camelot.step_four.sections.fit_between_conduct_meta') }}</b-tooltip>
+                            $t('camelot.step_four.sections.fa' + (dIndex + 5)) }}</b-tooltip>
                         </div>
                       </template>
                       <div class="field-section" v-if="assessments.items.length">
@@ -202,7 +202,7 @@
                     <template #header>
                       <div class="d-flex justify-content-between align-items-end">
                         <h4 id="fa9" class="mb-0">FA9</h4>
-                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fit_between_design_conduct')
+                        <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
                         }}</b-tooltip>
                       </div>
                     </template>
