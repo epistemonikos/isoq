@@ -45,7 +45,15 @@
               <div class="d-flex justify-content-between mb-2">
                 <div class="d-flex align-items-center">
                   <label v-if="!field.isCamelot" :for="idPrefix + 'label-' + index" class="mb-0">{{ labelText }}</label>
-                  <strong v-else class="mb-0" style="font-size: 1.1em; color: #333;">{{ field.categoryLabel || field.label }}</strong>
+                  <strong v-else class="mb-0" style="font-size: 1.1em; color: #333;">
+                    {{ field.categoryLabel || field.label }}
+                    <font-awesome-icon 
+                      icon="info-circle" 
+                      class="ml-1 text-info" 
+                      style="cursor: pointer; font-size: 0.8em;"
+                      @click="showGuidance(field)"
+                    />
+                  </strong>
                 </div>
                 <div>
                   <b-button
@@ -108,6 +116,40 @@
         </div>
       </draggable>
     </div>
+
+    <!-- CAMELOT Guidance Sidebar -->
+    <b-sidebar
+      v-model="isSidebarOpen"
+      id="camelot-guidance-sidebar"
+      :title="guidanceContent.title"
+      right
+      shadow
+      width="400px"
+      backdrop
+      no-header-close
+    >
+      <div class="px-3 py-2" v-if="selectedGuidanceField">
+        <section class="mb-4">
+          <h6 class="text-primary font-weight-bold">{{ $t('camelot.guidance_labels.definition') }}</h6>
+          <div v-html="guidanceContent.definition"></div>
+        </section>
+
+        <section class="mb-4">
+          <h6 class="text-primary font-weight-bold">{{ $t('camelot.guidance_labels.what_to_do') }}</h6>
+          <div v-html="guidanceContent.what_to_do"></div>
+        </section>
+
+        <section class="mb-4">
+          <h6 class="text-primary font-weight-bold">{{ $t('camelot.guidance_labels.tips') }}</h6>
+          <div v-html="guidanceContent.tips"></div>
+        </section>
+
+        <section class="mb-4">
+          <h6 class="text-primary font-weight-bold">{{ $t('camelot.guidance_labels.examples') }}</h6>
+          <div v-html="guidanceContent.examples"></div>
+        </section>
+      </div>
+    </b-sidebar>
   </div>
 </template>
 
@@ -188,7 +230,21 @@ export default {
   data() {
     return {
       localFields: [],
-      drag: false
+      drag: false,
+      isSidebarOpen: false,
+      selectedGuidanceField: null
+    }
+  },
+  computed: {
+    guidanceContent() {
+      if (!this.selectedGuidanceField) return {}
+      return {
+        title: this.$t(`camelot.guidance.${this.selectedGuidanceField}.title`),
+        definition: this.$t(`camelot.guidance.${this.selectedGuidanceField}.definition`),
+        what_to_do: this.$t(`camelot.guidance.${this.selectedGuidanceField}.what_to_do`),
+        tips: this.$t(`camelot.guidance.${this.selectedGuidanceField}.tips`),
+        examples: this.$t(`camelot.guidance.${this.selectedGuidanceField}.examples`)
+      }
     }
   },
   watch: {
@@ -248,6 +304,31 @@ export default {
       document.body.classList.remove('dragging-active')
       this.emitChange()
     },
+    showGuidance(field) {
+      if (!field || !field.key) return
+
+      // Map field keys like "research_extractedData" or "research_comments" to "research"
+      const domainMap = {
+        'research': 'research',
+        'stakeholders': 'stakeholders',
+        'researchers': 'researchers',
+        'context': 'context',
+        'strategy': 'strategy',
+        'theory': 'theory',
+        'ethical': 'ethical',
+        'equity': 'equity',
+        'participant': 'participant',
+        'data': 'data',
+        'analysis': 'analysis',
+        'presentation': 'presentation'
+      }
+
+      const keyPrefix = field.key.split('_')[0]
+      if (domainMap[keyPrefix]) {
+        this.selectedGuidanceField = domainMap[keyPrefix]
+        this.isSidebarOpen = true
+      }
+    },
     emitChange() {
       this.$emit('change', this.localFields)
       this.$emit('input', this.localFields) // Support v-model
@@ -280,5 +361,9 @@ export default {
   0% { background-color: rgba(40, 167, 69, 0.2); }
   50% { background-color: rgba(40, 167, 69, 0.1); }
   100% { background-color: transparent; }
+}
+
+#camelot-guidance-sidebar >>> ul {
+  padding-left: 1.2rem;
 }
 </style>
