@@ -1417,7 +1417,7 @@
         "intro": "This table shows you the nine CAMELOT fit assessments (FA1-FA9) and the overall assessment (OA) for all of the studies that support this individual review finding. The colour of the circle indicates the level of concern. You can view the details for an individual study by clicking the Show button in the final column. You can see details across studies for each fit assessment by clicking the button “show details across studies” and making a selection.",
         "tips": {
           "title": "Tips",
-          "tip_1": "Remember that in making a GRADE-CERQual assessment of methodological limitations, what’s important are the concerns you identified with individual CAMELOT fit assessment (FA1-FA9) and not the overall assessment (OA).",
+          "tip_1": "Remember that in making a GRADE-CERQual assessment of methodological limitations, the individual CAMELOT fit assessments (FA1-FA9) are more important than the overall assessment (OA).",
           "tip_2": "Since you are assessing methodological limitations for the body of evidence supporting this review finding, you may want to pay particular attention to where you had moderate (light red) and serious concerns (dark red) regarding the same fit assessment across studies. You can see the details by fit assessment by clicking FA1, FA2, FA3, in the second row.",
           "tip_3": "You are always to consider the concern in relation to the review finding. Some concerns may be more of a concern for some review findings and less for others.",
           "tip_4": "You should also consider how much an individual study contributes to the review finding by looking at the Extracted Data"
