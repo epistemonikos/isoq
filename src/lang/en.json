@@ -1277,12 +1277,24 @@
         "fit_meta_conduct": "Fit between Meta domains and Research conduct domains",
         "fit_design_conduct": "Fit between Research design domains and Research conduct domains"
       },
+      "prompts": {
+        "meta_research_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Research aim & question(s)</b>?",
+        "meta_stakeholders_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Stakeholders</b>?",
+        "meta_researchers_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Researchers</b>?",
+        "meta_context_vs_design": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the Meta domain <b>Context</b>?",
+        "meta_research_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Research aim & question(s)</b>?",
+        "meta_stakeholders_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Stakeholders</b>?",
+        "meta_researchers_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Researchers</b>?",
+        "meta_context_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research conduct domains</b> and the Meta domain <b>Context</b>?",
+        "design_vs_conduct": "Do you have concerns regarding the appropriateness of fit between the <b>Research design domains</b> and the <b>Research conduct domains</b>?",
+        "overall": "What is your <b>Overall assessment</b> of the appropriateness of fit between <b>domains</b>?"
+      },
       "descriptions": {
-        "meta_research_vs_design": "Meta domain <b>Research</b> against <b>Research design domains</b>",
+        "meta_research_vs_design": "Meta domain <b>Research aim & question(s)</b> against <b>Research design domains</b>",
         "meta_stakeholders_vs_design": "Meta domain <b>Stakeholders</b> against <b>Research design domains</b>",
         "meta_researchers_vs_design": "Meta domain <b>Researchers</b> against <b>Research design domains</b>",
         "meta_context_vs_design": "Meta domain <b>Context</b> against <b>Research design domains</b>",
-        "meta_research_vs_conduct": "Meta domain <b>Research</b> against <b>Research conduct domains</b>",
+        "meta_research_vs_conduct": "Meta domain <b>Research aim & question(s)</b> against <b>Research conduct domains</b>",
         "meta_stakeholders_vs_conduct": "Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>",
         "meta_researchers_vs_conduct": "Meta domain <b>Researchers</b> against <b>Research conduct domains</b>",
         "meta_context_vs_conduct": "Meta domain <b>Context</b> against <b>Research conduct domains</b>",

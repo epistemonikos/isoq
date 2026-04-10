@@ -1277,12 +1277,24 @@
         "fit_meta_conduct": "Ajuste entre Dominios Meta y Dominios de conducta de investigación",
         "fit_design_conduct": "Ajuste entre Dominios de diseño de investigación y Dominios de conducta de investigación"
       },
+      "prompts": {
+        "meta_research_vs_design": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de diseño de investigación</b> y el Dominio Meta <b>Objetivo y pregunta(s) de investigación</b>?",
+        "meta_stakeholders_vs_design": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de diseño de investigación</b> y el Dominio Meta <b>Partes interesadas</b>?",
+        "meta_researchers_vs_design": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de diseño de investigación</b> y el Dominio Meta <b>Investigadores</b>?",
+        "meta_context_vs_design": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de diseño de investigación</b> y el Dominio Meta <b>Contexto</b>?",
+        "meta_research_vs_conduct": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de conducta de investigación</b> y el Dominio Meta <b>Objetivo y pregunta(s) de investigación</b>?",
+        "meta_stakeholders_vs_conduct": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de conducta de investigación</b> y el Dominio Meta <b>Partes interesadas</b>?",
+        "meta_researchers_vs_conduct": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de conducta de investigación</b> y el Dominio Meta <b>Investigadores</b>?",
+        "meta_context_vs_conduct": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de conducta de investigación</b> y el Dominio Meta <b>Contexto</b>?",
+        "design_vs_conduct": "¿Tiene inquietudes con respecto a la adecuación del ajuste entre los <b>Dominios de diseño de investigación</b> y los <b>Dominios de conducta de investigación</b>?",
+        "overall": "¿Cuál es su <b>Evaluación general</b> de la adecuación del ajuste entre los <b>dominios</b>?"
+      },
       "descriptions": {
-        "meta_research_vs_design": "Dominio Meta <b>Investigación</b> contra <b>Dominios de diseño de investigación</b>",
+        "meta_research_vs_design": "Dominio Meta <b>Objetivo y pregunta(s) de investigación</b> contra <b>Dominios de diseño de investigación</b>",
         "meta_stakeholders_vs_design": "Dominio Meta <b>Partes interesadas</b> contra <b>Dominios de diseño de investigación</b>",
         "meta_researchers_vs_design": "Dominio Meta <b>Investigadores</b> contra <b>Dominios de diseño de investigación</b>",
         "meta_context_vs_design": "Dominio Meta <b>Contexto</b> contra <b>Dominios de diseño de investigación</b>",
-        "meta_research_vs_conduct": "Dominio Meta <b>Investigación</b> contra <b>Dominios de conducta de investigación</b>",
+        "meta_research_vs_conduct": "Dominio Meta <b>Objetivo y pregunta(s) de investigación</b> contra <b>Dominios de conducta de investigación</b>",
         "meta_stakeholders_vs_conduct": "Dominio Meta <b>Partes interesadas</b> contra <b>Dominios de conducta de investigación</b>",
         "meta_researchers_vs_conduct": "Dominio Meta <b>Investigadores</b> contra <b>Dominios de conducta de investigación</b>",
         "meta_context_vs_conduct": "Dominio Meta <b>Contexto</b> contra <b>Dominios de conducta de investigación</b>",

@@ -1,90 +1,69 @@
 <template>
   <div class="assessment-form-wrapper">
     <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
-    <!-- <template #header>
+      <!-- <template #header>
       <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
     </template> -->
 
-    <div class="assessment-description mb-2 py-2">
-      <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
-    </div>
-
-    <b-form-group label="" class="mb-4">
-      <b-form-radio
-        v-for="(value, index) in options[modalStage][selectedMeta].values"
-        v-model="selected"
-        :key="index"
-        :value="value.value"
-        :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
-        {{ value.text }}
-      </b-form-radio>
-    </b-form-group>
-
-    <b-form-group
-      :label="$t('camelot.assessment_form.explain_label')"
-      label-for="textarea-formatter"
-      class="font-weight-bold small">
-      <b-form-textarea
-        id="textarea-formatter"
-        v-model="text1"
-        rows="3"
-        :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
-    </b-form-group>
-
-    <div class="mt-4 pt-3 border-top">
-      <h3 class="notes-title">{{ $t('common.notes') }}</h3>
-      <b-form-group label="" label-for="textarea-notes">
-        <b-form-textarea
-          id="textarea-notes"
-          v-model="notes"
-          rows="3"
-          :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
-        <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
-      </b-form-group>
-    </div>
-
-    <template #footer>
-      <div class="d-flex justify-content-end gap-2">
-        <b-button
-          variant="outline-secondary"
-          class="mr-2"
-          size="sm"
-          @click="cancel">
-          {{ $t('common.cancel') }}
-        </b-button>
-        <b-button
-          :disabled="button.disabled"
-          size="sm"
-          :variant="(button.disabled) ? 'outline-primary' : 'primary'"
-          @click="save">
-          <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
-          {{ $t('camelot.assessment_form.save_button') }}
-        </b-button>
+      <div class="assessment-description mb-2 py-2">
+        <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
       </div>
-    </template>
-  </b-card>
 
-  <b-modal
-    :id="'warning-explanation-modal-' + modalStage + '-' + selectedMeta"
-    :title="$t('common.warning')"
-    :hide-footer="true">
-    <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
-    <b-container>
-      <b-row align-h="between">
-        <b-col cols="4">
-          <b-button block @click="doItNow">
-            {{ $t('worksheet.actions.do_it_now') }}
+      <b-form-group label="" class="mb-4">
+        <b-form-radio v-for="(value, index) in options[modalStage][selectedMeta].values" v-model="selected" :key="index"
+          :value="value.value" :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
+          {{ value.text }}
+        </b-form-radio>
+      </b-form-group>
+
+      <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
+        class="font-weight-bold small">
+        <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
+          :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+      </b-form-group>
+
+      <div class="mt-4 pt-3 border-top">
+        <h3 class="notes-title">{{ $t('common.notes') }}</h3>
+        <b-form-group label="" label-for="textarea-notes">
+          <b-form-textarea id="textarea-notes" v-model="notes" rows="3"
+            :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+          <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+        </b-form-group>
+      </div>
+
+      <template #footer>
+        <div class="d-flex justify-content-end gap-2">
+          <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
+            {{ $t('common.cancel') }}
           </b-button>
-        </b-col>
-        <b-col cols="4">
-          <b-button block @click="doItLater">
-            {{ $t('worksheet.actions.do_it_later') }}
+          <b-button :disabled="button.disabled" size="sm" :variant="(button.disabled) ? 'outline-primary' : 'primary'"
+            @click="save">
+            <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
+            {{ $t('camelot.assessment_form.save_button') }}
           </b-button>
-        </b-col>
-      </b-row>
-    </b-container>
-  </b-modal>
-</div>
+        </div>
+      </template>
+    </b-card>
+
+    <b-modal :id="'warning-explanation-modal-' + modalStage + '-' + selectedMeta" :title="$t('common.warning')"
+      :hide-footer="true">
+      <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
+      <b-container>
+        <b-row align-h="between">
+          <b-col cols="4">
+            <b-button block @click="doItNow">
+              {{ $t('worksheet.actions.do_it_now') }}
+            </b-button>
+          </b-col>
+          <b-col cols="4">
+            <b-button block @click="doItLater">
+              {{ $t('worksheet.actions.do_it_later') }}
+            </b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
+  </div>
 </template>
 
 <script>
@@ -92,7 +71,7 @@ import Api from '@/utils/Api'
 
 export default {
   name: 'AssessmentForm',
-  data () {
+  data() {
     return {
       categories: [
         this.$t('camelot.assessment_form.categories.fit_meta_design'),
@@ -107,7 +86,7 @@ export default {
       options: [
         [
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_design'),
+            text: this.$t('camelot.assessment_form.prompts.meta_research_vs_design'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -117,7 +96,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_design'),
+            text: this.$t('camelot.assessment_form.prompts.meta_stakeholders_vs_design'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -127,7 +106,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_design'),
+            text: this.$t('camelot.assessment_form.prompts.meta_researchers_vs_design'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -137,7 +116,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_design'),
+            text: this.$t('camelot.assessment_form.prompts.meta_context_vs_design'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -149,7 +128,7 @@ export default {
         ],
         [
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_research_vs_conduct'),
+            text: this.$t('camelot.assessment_form.prompts.meta_research_vs_conduct'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -159,7 +138,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_stakeholders_vs_conduct'),
+            text: this.$t('camelot.assessment_form.prompts.meta_stakeholders_vs_conduct'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -169,7 +148,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_researchers_vs_conduct'),
+            text: this.$t('camelot.assessment_form.prompts.meta_researchers_vs_conduct'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -179,7 +158,7 @@ export default {
             ]
           },
           {
-            text: this.$t('camelot.assessment_form.descriptions.meta_context_vs_conduct'),
+            text: this.$t('camelot.assessment_form.prompts.meta_context_vs_conduct'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -191,7 +170,7 @@ export default {
         ],
         [
           {
-            text: this.$t('camelot.assessment_form.descriptions.design_vs_conduct'),
+            text: this.$t('camelot.assessment_form.prompts.design_vs_conduct'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -203,7 +182,7 @@ export default {
         ],
         [
           {
-            text: this.$t('camelot.assessment_form.overall_assessment'),
+            text: this.$t('camelot.assessment_form.prompts.overall'),
             values: [
               { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
               { text: this.$t('camelot.responses.minor'), value: 'B' },
@@ -242,14 +221,14 @@ export default {
     }
   },
   watch: {
-    modalStage (newValue) {
+    modalStage(newValue) {
       if (this.assessments.items.length) {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
         this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
       }
     },
-    selectedMeta (newValue) {
+    selectedMeta(newValue) {
       if (this.assessments.items) {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
@@ -257,7 +236,7 @@ export default {
       }
     },
     assessments: {
-      handler (newValue) {
+      handler(newValue) {
         if (newValue.items.length) {
           this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
           this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
@@ -266,13 +245,13 @@ export default {
       },
       deep: true
     },
-    selected (newValue) {
+    selected(newValue) {
       this.checkChanges()
     },
-    text1 (newValue) {
+    text1(newValue) {
       this.checkChanges()
     },
-    notes (newValue) {
+    notes(newValue) {
       this.checkChanges()
     }
   },
@@ -284,7 +263,7 @@ export default {
     }
   },
   methods: {
-    checkChanges () {
+    checkChanges() {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
       if (item.option === this.selected && item.text === this.text1 && (item.notes || '') === this.notes) {
         this.button.disabled = true
@@ -292,7 +271,7 @@ export default {
         this.button.disabled = false
       }
     },
-    getOptionColor (value) {
+    getOptionColor(value) {
       const colors = {
         'A': '#1065AB', // No or minimal
         'B': '#8EC4DE', // Minor
@@ -302,28 +281,28 @@ export default {
       }
       return colors[value] || '#B3B3B3'
     },
-    cancel () {
+    cancel() {
       this.$bvModal.hide('modal-1')
     },
-    doItNow () {
+    doItNow() {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.$nextTick(() => {
         const el = document.getElementById('textarea-formatter')
         if (el) el.focus()
       })
     },
-    doItLater () {
+    doItLater() {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.performSave()
     },
-    save () {
+    save() {
       if (this.selected && (!this.text1 || this.text1.trim() === '')) {
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return
       }
       this.performSave()
     },
-    performSave () {
+    performSave() {
       this.isSaving = true
       const stages = [
         {
@@ -479,6 +458,7 @@ export default {
   padding-bottom: 0.5rem;
   margin-bottom: 0.5rem;
 }
+
 .italic {
   font-style: italic;
 }
@@ -501,29 +481,78 @@ export default {
 
   // Definición de colores por nivel
   &.radio-color-A {
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #1065AB !important; border-color: #1065AB !important; }
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231065AB'/%3e%3c/svg%3e") !important; }
-    ::v-deep .custom-control-label::before { border-color: #1065AB !important; }
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #1065AB !important;
+      border-color: #1065AB !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231065AB'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #1065AB !important;
+    }
   }
+
   &.radio-color-B {
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #8EC4DE !important; border-color: #8EC4DE !important; }
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238EC4DE'/%3e%3c/svg%3e") !important; }
-    ::v-deep .custom-control-label::before { border-color: #8EC4DE !important; }
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #8EC4DE !important;
+      border-color: #8EC4DE !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238EC4DE'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #8EC4DE !important;
+    }
   }
+
   &.radio-color-C {
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #F6A482 !important; border-color: #F6A482 !important; }
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23F6A482'/%3e%3c/svg%3e") !important; }
-    ::v-deep .custom-control-label::before { border-color: #F6A482 !important; }
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #F6A482 !important;
+      border-color: #F6A482 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23F6A482'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #F6A482 !important;
+    }
   }
+
   &.radio-color-D {
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B31529 !important; border-color: #B31529 !important; }
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B31529'/%3e%3c/svg%3e") !important; }
-    ::v-deep .custom-control-label::before { border-color: #B31529 !important; }
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #B31529 !important;
+      border-color: #B31529 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B31529'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #B31529 !important;
+    }
   }
+
   &.radio-color-E {
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::before { background-color: #B3B3B3 !important; border-color: #B3B3B3 !important; }
-    ::v-deep .custom-control-input:checked ~ .custom-control-label::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B3B3B3'/%3e%3c/svg%3e") !important; }
-    ::v-deep .custom-control-label::before { border-color: #B3B3B3 !important; }
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #B3B3B3 !important;
+      border-color: #B3B3B3 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B3B3B3'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #B3B3B3 !important;
+    }
   }
 }
 </style>
