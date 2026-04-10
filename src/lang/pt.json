@@ -1421,6 +1421,18 @@
           "tip_3": "Você deve sempre considerar a preocupação em relação à conclusão da revisão. Algumas preocupações podem ser mais preocupantes para algumas conclusões de revisão e menos para outras.",
           "tip_4": "Você também deve considerar quanto um estudo individual contribui para a conclusão da revisão olhando para os Dados Extraídos"
         }
+      },
+      "tooltips": {
+        "fa1": "FA 1: Avaliação do ajuste entre o domínio Meta <b>Objetivo e pergunta(s) de pesquisa</b> e os domínios de Desenho da pesquisa",
+        "fa2": "FA 2: Avaliação do ajuste entre o domínio Meta <b>Partes interessadas</b> e os domínios de Desenho da pesquisa",
+        "fa3": "FA 3: Avaliação do ajuste entre o domínio Meta <b>Investigadores</b> e os domínios de Desenho da pesquisa",
+        "fa4": "FA 4: Avaliação do ajuste entre o domínio Meta <b>Contexto</b> e os domínios de Desenho da pesquisa",
+        "fa5": "FA 5: Avaliação do ajuste entre o domínio Meta <b>Objetivo e pergunta(s) de pesquisa</b> e os domínios de Condução da pesquisa",
+        "fa6": "FA 6: Avaliação do ajuste entre o domínio Meta <b>Partes interessadas</b> e os domínios de Condução da pesquisa",
+        "fa7": "FA 7: Avaliação do ajuste entre o domínio Meta <b>Investigadores</b> e os domínios de Condução da pesquisa",
+        "fa8": "FA 8: Avaliação do ajuste entre o domínio Meta <b>Contexto</b> e os domínios de Condução da pesquisa",
+        "fa9": "FA 9: Avaliação do ajuste entre os domínios de <b>Desenho da pesquisa</b> e os domínios de <b>Condução da pesquisa</b>",
+        "oa": "Avaliação geral"
       }
     }
   }

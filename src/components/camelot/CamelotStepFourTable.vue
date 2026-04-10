@@ -2,15 +2,21 @@
   <b-table :fields="fields" :items="items" bordered responsive class="camelot-table" thead-tr-class="header-second-row">
     <template v-slot:thead-top>
       <tr class="header-top-row">
-        <th class="border-bottom-0">{{ $t('camelot.step_four.table_headers.authors') }}</th>
-        <th colspan="5" class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_meta_design') }}
+        <th class="border-bottom-0">
+          {{ $t('camelot.step_four.table_headers.authors') }}
         </th>
-        <th colspan="5" class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_meta_conduct') }}
+        <th colspan="5" class="text-center group-header border-left">
+          {{ $t('camelot.step_four.tabs.fit_meta_design') }}
         </th>
-        <th colspan="2" class="text-center group-header border-left">{{ $t('camelot.step_four.tabs.fit_design_conduct')
-          }}</th>
-        <th colspan="2" class="text-center group-header border-left header-overall-group">{{
-          $t('camelot.step_four.tabs.overall') }}</th>
+        <th colspan="5" class="text-center group-header border-left">
+          {{ $t('camelot.step_four.tabs.fit_meta_conduct') }}
+        </th>
+        <th colspan="2" class="text-center group-header border-left">
+          {{ $t('camelot.step_four.tabs.fit_design_conduct') }}
+        </th>
+        <th colspan="2" class="text-center group-header border-left header-overall-group">
+          {{ $t('camelot.step_four.tabs.overall') }}
+        </th>
       </tr>
     </template>
 

@@ -1422,6 +1422,18 @@
           "tip_3": "Siempre debe considerar la preocupación en relación con el hallazgo de la revisión. Algunas preocupaciones pueden ser más preocupantes para algunos hallazgos de revisión y menos para otros.",
           "tip_4": "También debe considerar cuánto contribuye un estudio individual al hallazgo de la revisión al observar los Datos extraídos"
         }
+      },
+      "tooltips": {
+        "fa1": "FA 1: Evaluación del ajuste entre el dominio Meta Objetivo y pregunta(s) de investigación y los dominios de Diseño de la investigación",
+        "fa2": "FA 2: Evaluación del ajuste entre el dominio Meta Partes interesadas y los dominios de Diseño de la investigación",
+        "fa3": "FA 3: Evaluación del ajuste entre el dominio Meta Investigadores y los dominios de Diseño de la investigación",
+        "fa4": "FA 4: Evaluación del ajuste entre el dominio Meta Contexto y los dominios de Diseño de la investigación",
+        "fa5": "FA 5: Evaluación del ajuste entre el dominio Meta Objetivo y pregunta(s) de investigación y los dominios de Conducta de la investigación",
+        "fa6": "FA 6: Evaluación del ajuste entre el dominio Meta Partes interesadas y los dominios de Conducta de la investigación",
+        "fa7": "FA 7: Evaluación del ajuste entre el dominio Meta Investigadores y los dominios de Conducta de la investigación",
+        "fa8": "FA 8: Evaluación del ajuste entre el dominio Meta Contexto y los dominios de Conducta de la investigación",
+        "fa9": "FA 9: Evaluación del ajuste entre los dominios de Diseño de la investigación y los dominios de Conducta de la investigación",
+        "oa": "Evaluación general"
       }
     }
   }

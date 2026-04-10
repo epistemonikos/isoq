@@ -1422,6 +1422,18 @@
           "tip_3": "You are always to consider the concern in relation to the review finding. Some concerns may be more of a concern for some review findings and less for others.",
           "tip_4": "You should also consider how much an individual study contributes to the review finding by looking at the Extracted Data"
         }
+      },
+      "tooltips": {
+        "fa1": "FA 1: Fit assessment between Meta domain <b>Research aim & question(s)</b> and Research design domains",
+        "fa2": "FA 2: Fit assessment between Meta domain Stakeholders and Research design domains",
+        "fa3": "FA 3: Fit assessment between Meta domain Researchers and Research design domains",
+        "fa4": "FA 4: Fit assessment between Meta domain Context and Research design domains",
+        "fa5": "FA 5: Fit assessment between Meta domain Research aim & question(s) and Research conduct domains",
+        "fa6": "FA 6: Fit assessment between Meta domain Stakeholders and Research conduct domains",
+        "fa7": "FA 7: Fit assessment between Meta domain Researchers and Research conduct domains",
+        "fa8": "FA 8: Fit assessment between Meta domain Context and Research conduct domains",
+        "fa9": "FA 9: Fit assessment between Research design domains and Research conduct domains",
+        "oa": "Overall assessment"
       }
     }
   }
