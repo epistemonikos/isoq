@@ -3,98 +3,82 @@
     <b-container fluid class="workspace-header">
       <div class="pt-3">
         <b-row align-h="end">
-          <b-col
-            class="text-right">
-            <b-link :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: {hash: `p-${this.project.id}`}}" class="d-print-none return">
+          <b-col class="text-right">
+            <b-link
+              :to="{ name: 'viewOrganization', params: { id: this.$store.state.user.personal_organization }, query: { hash: `p-${this.project.id}` } }"
+              class="d-print-none return">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('project.return_workspace')" />
               {{ $t('project.return_workspace') }}
             </b-link>
           </b-col>
-          <b-col
-            cols="12" class="toDoc">
+          <b-col cols="12" class="toDoc">
             <h2 id="project-title">{{ project.name }}</h2>
           </b-col>
         </b-row>
         <b-nav id="tabsTitle" tabs fill class="pt-3">
-          <b-nav-item
-            :active="(tabOpened === 0) ? true : false"
-            @click="clickTab(0)">{{ $t('project.properties') }}</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 1) ? true : false"
-            @click="clickTab(1)">{{ $t('project.my_data') }}</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 2) ? true : false"
-            :disabled="(references.length) ? false : true"
+          <b-nav-item :active="(tabOpened === 0) ? true : false" @click="clickTab(0)">{{ $t('project.properties')
+          }}</b-nav-item>
+          <b-nav-item :active="(tabOpened === 1) ? true : false" @click="clickTab(1)">{{ $t('project.my_data')
+          }}</b-nav-item>
+          <b-nav-item :active="(tabOpened === 2) ? true : false" :disabled="(references.length) ? false : true"
             @click="clickTab(2)">{{ $t('project.isoq') }}</b-nav-item>
-          <b-nav-item
-            :active="(tabOpened === 3) ? true : false"
-            @click="clickTab(3)">{{ $t('project.guidance_applying') }}</b-nav-item>
+          <b-nav-item :active="(tabOpened === 3) ? true : false" @click="clickTab(3)">{{ $t('project.guidance_applying')
+          }}</b-nav-item>
         </b-nav>
       </div>
     </b-container>
     <b-container fluid class="mb-5">
-      <div :class="{'block mt-3': (tabOpened===0)?true:false, 'd-none': (tabOpened===0)?!true:!false}">
-        <propertiesProject
-          :project="project"
-          @update-modification="updateModificationTime()"
-          :canEdit="isEditing"
-          :highlight="$route.query.highlight"
-          @update-project="updateDataProject">
+      <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
+        <propertiesProject :project="project" @update-modification="updateModificationTime()" :canEdit="isEditing"
+          :highlight="$route.query.highlight" @update-project="updateDataProject">
         </propertiesProject>
       </div>
-      <div :class="{'block mt-3': (tabOpened===1)?true:false, 'd-none': (tabOpened===1)?!true:!false}">
+      <div :class="{ 'block mt-3': (tabOpened === 1) ? true : false, 'd-none': (tabOpened === 1) ? !true : !false }">
         <b-row>
-          <b-col
-            cols="12">
+          <b-col cols="12">
             <videoHelp :txt="$t('modals.add_data_title')" tag="h3" urlId="449265292"></videoHelp>
             <p>
               {{ $t('project.optimize_info') }}
             </p>
           </b-col>
           <b-card no-body class="col-12">
-            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap" active-nav-item-class="btn-success" v-model="stepStage" lazy>
+            <b-tabs pills card small vertical nav-wrapper-class="w-15" content-class="w-85" class="link-steps nowrap"
+              active-nav-item-class="btn-success" v-model="stepStage" lazy>
               <b-tab :title="$t('steps.step_1_references')">
-                <UploadReferences
-                  :canEdit="isEditing"
-                  :loadReferences="loadReferences"
-                  :references="references"
-                  :lists="lists"
-                  :charsOfStudies="charsOfStudies"
-                  :methodologicalTableRefs="methodologicalTableRefs"
-                  :useCamelot="project.use_camelot"
-                  @CallGetReferences="getReferences"
-                  @statusLoadReferences="statusLoadReferences"
-                  @CallGetProject="getProject"></UploadReferences>
+                <UploadReferences :canEdit="isEditing" :loadReferences="loadReferences" :references="references"
+                  :lists="lists" :charsOfStudies="charsOfStudies" :methodologicalTableRefs="methodologicalTableRefs"
+                  :useCamelot="project.use_camelot" @CallGetReferences="getReferences"
+                  @statusLoadReferences="statusLoadReferences" @CallGetProject="getProject"></UploadReferences>
                 <div class="mt-3">
                   <b-row v-if="references.length">
                     <b-col cols="auto" class="mr-auto">
                     </b-col>
                     <b-col cols="auto">
-                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2' }}</a>
+                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2'
+                      }}</a>
                     </b-col>
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length?false:true">
+              <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length ? false : true">
                 <div>
-                  <InclusionExclusioCriteria
-                    :canEdit="isEditing"
-                    :project="project"
-                    :ui="ui"
+                  <InclusionExclusioCriteria :canEdit="isEditing" :project="project" :ui="ui"
                     @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
                   <div class="mt-3">
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
-                        <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1' }}</a>
+                        <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1'
+                        }}</a>
                       </b-col>
                       <b-col cols="auto">
-                        <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3' }}</a>
+                        <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3'
+                        }}</a>
                       </b-col>
                     </b-row>
                   </div>
                 </div>
               </b-tab>
-              <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length?false:true">
+              <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length ? false : true">
                 <h4 v-html="$t('characteristics.step_title')"></h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="formattedCamelotDescription">
                 </p>
@@ -105,34 +89,27 @@
                   <CamelotStepThree type="isoqf_characteristics" :references="references"></CamelotStepThree>
                 </template>
                 <template v-else>
-                  <crudTables
-                    type="isoqf_characteristics"
-                    prefix="ch"
-                    :canEdit="isEditing"
-                    :project="project"
-                    :ui="ui"
-                    :references="references"
-                    :refs="refs"
-                    :lists="lists"
-                    @get-project="getProject"
-                    @print-errors="printErrors"
-                    @updateDataTable="updateDataTable"
-                    @set-item-data="setItemData"
-                    ></crudTables>
+                  <crudTables type="isoqf_characteristics" prefix="ch" :canEdit="isEditing" :project="project" :ui="ui"
+                    :references="references" :refs="refs" :lists="lists" @get-project="getProject"
+                    @print-errors="printErrors" @updateDataTable="updateDataTable" @set-item-data="setItemData">
+                  </crudTables>
                 </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
-                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2' }}</a>
+                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2'
+                      }}</a>
                     </b-col>
                     <b-col cols="auto">
-                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4' }}</a>
+                      <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4'
+                      }}</a>
                     </b-col>
                   </b-row>
                 </div>
               </b-tab>
-              <b-tab :title="$t('steps.step_4_methodological')" :disabled="references.length?false:true">
-                <h4 v-html="$t('steps.step_4_description')"></h4>
+              <b-tab :title="$t('steps.step_4_methodological')" :disabled="references.length ? false : true">
+                <h4 v-if="project.use_camelot" v-html="$t('steps.step_4_description_camelot')"></h4>
+                <h4 v-else v-html="$t('steps.step_4_description')"></h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="$t('camelot.step_four.description')">
                 </p>
                 <p class="font-weight-light" v-else>
@@ -142,32 +119,19 @@
                   <CamelotStepFour type="isoqf_methodological" :references="references"></CamelotStepFour>
                 </template>
                 <template v-else>
-                  <crudTables
-                    type="isoqf_assessments"
-                    prefix="as"
-                    :canEdit="isEditing"
-                    :project="project"
-                    :ui="ui"
-                    :references="references"
-                    :refs="refs"
-                    :lists="lists"
-                    @get-project="getProject"
-                    @print-errors="printErrors"
-                    @updateDataTable="updateDataTable"
-                    @set-item-data="setItemData"
-                  ></crudTables>
+                  <crudTables type="isoqf_assessments" prefix="as" :canEdit="isEditing" :project="project" :ui="ui"
+                    :references="references" :refs="refs" :lists="lists" @get-project="getProject"
+                    @print-errors="printErrors" @updateDataTable="updateDataTable" @set-item-data="setItemData">
+                  </crudTables>
                 </template>
                 <div class="mt-3">
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
-                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3' }}</a>
+                      <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3'
+                      }}</a>
                     </b-col>
                     <b-col cols="auto">
-                      <b-button
-                        block
-                        variant="success"
-                        class="mb-3"
-                        @click="continueToIsoq">
+                      <b-button block variant="success" class="mb-3" @click="continueToIsoq">
                         {{ $t('common.continue_to_isoq') || 'Continue to iSoQ' }}
                       </b-button>
                     </b-col>
@@ -178,32 +142,17 @@
           </b-card>
         </b-row>
       </div>
-      <div :class="{'block mt-3': (tabOpened===2)?true:false, 'd-none': (tabOpened===2)?!true:!false}" :disabled="(references.length) ? false : true">
-        <action-buttons
-          :mode="effectiveMode"
-          :canWrite="canWrite"
-          :isLocked="isLockedByOther"
-          :project="project"
-          :ui="ui"
-          :lists="lists"
-          :findings="findings"
-          :references="references"
-          :charsOfStudies="charsOfStudies"
-          :methodologicalTableRefs="methodologicalTableRefs"
-          :listsPrintVersion="lists_print_version"
-          :selectOptions="translatedSelectOptions"
-          :cerqualConfidence="translatedCerqualConfidence"
-          :printableItems="printableItems"
-          @uiPublishShowLoader="uiShowLoaders"
-          @getProject="getProject"
-          @changeMode="changeMode"
-          @changeTableSettings="changeTableSettings"></action-buttons>
+      <div :class="{ 'block mt-3': (tabOpened === 2) ? true : false, 'd-none': (tabOpened === 2) ? !true : !false }"
+        :disabled="(references.length) ? false : true">
+        <action-buttons :mode="effectiveMode" :canWrite="canWrite" :isLocked="isLockedByOther" :project="project"
+          :ui="ui" :lists="lists" :findings="findings" :references="references" :charsOfStudies="charsOfStudies"
+          :methodologicalTableRefs="methodologicalTableRefs" :listsPrintVersion="lists_print_version"
+          :selectOptions="translatedSelectOptions" :cerqualConfidence="translatedCerqualConfidence"
+          :printableItems="printableItems" @uiPublishShowLoader="uiShowLoaders" @getProject="getProject"
+          @changeMode="changeMode" @changeTableSettings="changeTableSettings"></action-buttons>
         <b-row class="mb-3">
           <b-col cols="12" class="toDoc">
-            <videoHelp
-              :txt="title"
-              :tag="'h2'"
-              :urlId="'449743080'"></videoHelp>
+            <videoHelp :txt="title" :tag="'h2'" :urlId="'449743080'"></videoHelp>
           </b-col>
         </b-row>
         <b-row>
@@ -212,15 +161,10 @@
               <template v-slot:header>
                 <b-container fluid>
                   <b-row v-b-toggle.info-project>
-                    <b-col
-                      cols="11">
-                      <p
-                      class="mb-0 text-left"
-                      >{{ $t('common.see_more_info') || 'See more information' }}</p>
+                    <b-col cols="11">
+                      <p class="mb-0 text-left">{{ $t('common.see_more_info') || 'See more information' }}</p>
                     </b-col>
-                    <b-col
-                      cols="1"
-                      align-self="end">
+                    <b-col cols="1" align-self="end">
                       <p class="text-right">
                         {{ changeTxtProjectProperties }}
                       </p>
@@ -232,13 +176,15 @@
                 <b-row>
                   <b-col cols="12" md="8" class="toDoc">
                     <h5>{{ $t('publish.review_question') }}</h5>
-                    <p>{{project.review_question}}</p>
+                    <p>{{ project.review_question }}</p>
 
                     <h5>{{ $t('publish.review_published') }}</h5>
-                    <p>{{(project.published_status) ? $t('common.yes'): $t('common.no')}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                    <p>{{ (project.published_status) ? $t('common.yes') : $t('common.no') }} <span
+                        v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{
+                          project.url_doi }}</b-link></span></p>
 
                     <h5 v-if="project.description">{{ $t('publish.additional_info') }}</h5>
-                    <p v-if="project.description">{{project.description}}</p>
+                    <p v-if="project.description">{{ project.description }}</p>
 
                     <template v-if="project.public_type !== 'private'">
                       <h5>{{ $t('common.license') || 'License' }}</h5>
@@ -246,76 +192,52 @@
                     </template>
                   </b-col>
                   <b-col cols="12" md="4" class="toDoc">
-                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review') }}</h5>
+                    <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review')
+                    }}
+                    </h5>
                     <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                       <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
                     </ul>
 
                     <h5>{{ $t('publish.corresponding_author') }}</h5>
-                    <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
+                    <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{
+                      project.author_email }}</span></p>
 
-                    <h5 v-if="!project.complete_by_author">{{ $t('common.completed_by_authors') || 'Is the iSoQ being completed by the review authors?' }}</h5>
-                    <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? $t('common.yes') : $t('common.no')}}</p>
+                    <h5 v-if="!project.complete_by_author">
+                      {{ $t('common.completed_by_authors') }}</h5>
+                    <p v-if="!project.complete_by_author">
+                      {{ (project.complete_by_author) ? $t('common.yes') : $t('common.no') }}
+                    </p>
                   </b-col>
                 </b-row>
               </b-collapse>
             </b-card>
           </b-col>
         </b-row>
-        <b-row
-          class="mt-2">
-          <b-col
-            v-if="canWrite"
-            cols="12">
-            <b-row
-              class="mb-2">
-              <b-col
-                v-if="effectiveMode === 'edit'"
-                md="3"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  v-b-tooltip.hover :title="(isOnline) ? ($t('common.add_review_finding_tooltip') || 'Copy and paste one summarised review finding at a time into the iSoQ') : $t('offline.action_disabled')"
-                  :variant="(lists.length) ? 'outline-success' : 'success'"
-                  :disabled="!isOnline"
-                  @click="modalAddList"
+        <b-row class="mt-2">
+          <b-col v-if="canWrite" cols="12">
+            <b-row class="mb-2">
+              <b-col v-if="effectiveMode === 'edit'" md="3" cols="12">
+                <b-button class="mt-1" v-b-tooltip.hover
+                  :title="(isOnline) ? ($t('common.add_review_finding_tooltip') || 'Copy and paste one summarised review finding at a time into the iSoQ') : $t('offline.action_disabled')"
+                  :variant="(lists.length) ? 'outline-success' : 'success'" :disabled="!isOnline" @click="modalAddList"
                   block>
                   {{ $t('common.add_review_finding_table') || 'Add review finding to the table' }}
                 </b-button>
               </b-col>
-              <b-col
-                v-if="effectiveMode === 'edit'"
-                md="4"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  v-b-tooltip.hover :title="(isOnline) ? ($t('common.organize_groups_tooltip') || 'If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.') : $t('offline.action_disabled')"
-                  variant="outline-secondary"
-                  :disabled="!isOnline"
-                  @click="modalListCategories"
-                  block>
+              <b-col v-if="effectiveMode === 'edit'" md="4" cols="12">
+                <b-button class="mt-1" v-b-tooltip.hover
+                  :title="(isOnline) ? ($t('common.organize_groups_tooltip') || 'If you want to organise your review findings into groups, for example by theme or topic, you can do so by creating review finding groups here.') : $t('offline.action_disabled')"
+                  variant="outline-secondary" :disabled="!isOnline" @click="modalListCategories" block>
                   {{ $t('common.organize_groups') || 'Organise review findings into groups' }}
                 </b-button>
               </b-col>
-              <b-col
-                v-if="effectiveMode === 'edit' && lists.length > 1"
-                md="3"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  block
-                  variant="outline-secondary"
-                  @click="modalSortFindings">{{ $t('common.reorder_findings') || 'Re-order your review findings' }}</b-button>
+              <b-col v-if="effectiveMode === 'edit' && lists.length > 1" md="3" cols="12">
+                <b-button class="mt-1" block variant="outline-secondary" @click="modalSortFindings">{{
+                  $t('common.reorder_findings') || 'Re-order your review findings' }}</b-button>
 
-                <b-modal
-                  ref="modal-sort-findings"
-                  id="modal-sort-findings"
-                  size="xl"
-                  :ok-title="$t('common.save')"
-                  ok-variant="outline-success"
-                  cancel-variant="outline-danger"
-                  scrollable
-                  @ok="saveSortedLists">
+                <b-modal ref="modal-sort-findings" id="modal-sort-findings" size="xl" :ok-title="$t('common.save')"
+                  ok-variant="outline-success" cancel-variant="outline-danger" scrollable @ok="saveSortedLists">
                   <template v-slot:modal-title>
                     <videoHelp :txt="$t('modals.reorder_findings_title')" tag="none" urlId="462176102"></videoHelp>
                   </template>
@@ -323,14 +245,10 @@
                     {{ $t('modals.drag_drop_instruction') }}
                   </p>
                   <b-list-group>
-                    <draggable v-model="sorted_lists" group="columns" @start="drag=true" @end="drag=false">
-                      <b-list-group-item
-                        v-for="(item, index) of sorted_lists"
-                        :key="index"
-                        class="flex-column align-items-start"
-                        style="cursor: move">
-                        <div
-                          class="d-flex w-100 justify-content-between">
+                    <draggable v-model="sorted_lists" group="columns" @start="drag = true" @end="drag = false">
+                      <b-list-group-item v-for="(item, index) of sorted_lists" :key="index"
+                        class="flex-column align-items-start" style="cursor: move">
+                        <div class="d-flex w-100 justify-content-between">
                           <h5 class="mb-1">{{ item.name }}</h5>
                         </div>
                         <p class="font-weight-bold">
@@ -344,49 +262,33 @@
                   </b-list-group>
                 </b-modal>
               </b-col>
-              <b-col
-                v-if="effectiveMode === 'edit' && lists.length > 1"
-                md="2"
-                cols="12">
-                <b-button
-                  class="mt-1"
-                  block
-                  variant="outline-secondary"
-                  @click="toggleSearch(ui.project.displaySearch)">{{ $t('common.search') }}</b-button>
+              <b-col v-if="effectiveMode === 'edit' && lists.length > 1" md="2" cols="12">
+                <b-button class="mt-1" block variant="outline-secondary"
+                  @click="toggleSearch(ui.project.displaySearch)">{{
+                    $t('common.search') }}</b-button>
               </b-col>
             </b-row>
           </b-col>
-          <b-col
-            v-if="effectiveMode === 'edit' && lists.length && ui.project.displaySearch"
-            cols="12"
+          <b-col v-if="effectiveMode === 'edit' && lists.length && ui.project.displaySearch" cols="12"
             class="my-2 d-print-none">
-            <b-card
-              id="card-search"
-              bg-variant="light">
+            <b-card id="card-search" bg-variant="light">
               <b-row>
-                <b-col
-                  cols="11">
+                <b-col cols="11">
                   <videoHelp :txt="$t('common.search')" tag="h4" urlId="462176356"></videoHelp>
                 </b-col>
-                <b-col
-                  cols="1">
-                  <b-button
-                    class="close mb-1"
-                    @click="toggleSearch(ui.project.displaySearch)">×</b-button>
+                <b-col cols="1">
+                  <b-button class="close mb-1" @click="toggleSearch(ui.project.displaySearch)">×</b-button>
                 </b-col>
               </b-row>
               <b-row>
-                <b-col
-                  cols="12">
+                <b-col cols="12">
                   <b-form-group>
                     <b-input-group>
-                      <b-form-input
-                        v-model="table_settings.filter"
-                        type="search"
-                        id="filterInput"
+                      <b-form-input v-model="table_settings.filter" type="search" id="filterInput"
                         :placeholder="$t('action_table.search_placeholder')"></b-form-input>
                       <b-input-group-append>
-                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">{{ $t('common.clear') }}</b-button>
+                        <b-button :disabled="!table_settings.filter" @click="table_settings.filter = null">{{
+                          $t('common.clear') }}</b-button>
                       </b-input-group-append>
                     </b-input-group>
                   </b-form-group>
@@ -396,80 +298,49 @@
             </b-card>
           </b-col>
           <b-col cols="12" class="toDoc">
-            <template
-              v-if="checkPermissions(['can_read', 'can_write'])">
-              <ViewTable
-                :class="{'d-none': effectiveMode === 'view', 'd-print-none': true}"
-                :lists="lists"
-                :list_categories="list_categories"
-                :fields="translatedTableFields"
-                :project="project"
-                :mode="effectiveMode"
-                :isBusy="table_settings.isBusy"
-                :references="references"
-                :refs="refs"
-                @update-modification-time="updateModificationTime"
-                @get-lists="getLists"
-                @get-project="getProject"
-                @add-list="modalAddList"
-                @set-busy="setBusy"
-                @set-load-references="statusLoadReferences"
-                @get-references="getReferences"
-                @update-project-status="getProject"
-                 />
+            <template v-if="checkPermissions(['can_read', 'can_write'])">
+              <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
+                :list_categories="list_categories" :fields="translatedTableFields" :project="project"
+                :mode="effectiveMode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
+                @update-modification-time="updateModificationTime" @get-lists="getLists" @get-project="getProject"
+                @add-list="modalAddList" @set-busy="setBusy" @set-load-references="statusLoadReferences"
+                @get-references="getReferences" @update-project-status="getProject" />
             </template>
             <!-- printed version -->
-            <PrintViewTable
-              :class="{'d-none': effectiveMode === 'edit', 'd-print-block': true}"
-              :dataPrintVersion="lists_print_version"
-              :references="references"
-              :categories="list_categories"
-              :printableItems="printableItems"
-              :project="project"
-              :hasPermission="checkPermissions('can_read')"></PrintViewTable>
+            <PrintViewTable :class="{ 'd-none': effectiveMode === 'edit', 'd-print-block': true }"
+              :dataPrintVersion="lists_print_version" :references="references" :categories="list_categories"
+              :printableItems="printableItems" :project="project" :hasPermission="checkPermissions('can_read')">
+            </PrintViewTable>
             <!-- eopv -->
-            <b-modal
-              size="xl"
-              centered
-              id="add-summarized"
-              ref="add-summarized"
+            <b-modal size="xl" centered id="add-summarized" ref="add-summarized"
               :title="$t('common.add_summarized_finding') || 'Add Summarised review finding'"
-              :ok-disabled="(summarized_review)?false:true"
-              @ok="createList"
-              :ok-title="$t('common.save')"
-              ok-variant="outline-success"
-              cancel-variant="outline-secondary">
-              <b-form-group
-                :label="$t('soqf_table.summarised_finding')"
-                label-for="summarized-review">
-                <template slot="description">{{ $t('common.click') || 'Click' }} <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1" target="_blank">{{ $t('common.here') || 'here' }}</a> {{ $t('soqf_table.tips_writing') || 'for tips for writing a summarised review finding' }}</template>
-                <b-form-textarea
-                  id="summarized-review"
-                  v-model="summarized_review"
-                  rows="6"
+              :ok-disabled="(summarized_review) ? false : true" @ok="createList" :ok-title="$t('common.save')"
+              ok-variant="outline-success" cancel-variant="outline-secondary">
+              <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="summarized-review">
+                <template slot="description">
+                  {{ $t('common.click') || 'Click' }}
+                  <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1"
+                    target="_blank">
+                    {{ $t('common.here') || 'here' }}
+                  </a>
+                  {{ $t('soqf_table.tips_writing') }}
+                </template>
+                <b-form-textarea id="summarized-review" v-model="summarized_review" rows="6"
                   max-rows="100"></b-form-textarea>
               </b-form-group>
-              <b-form-group
-                v-if="list_categories.options.length"
-                :label="$t('soqf_table.select_group')"
+              <b-form-group v-if="list_categories.options.length" :label="$t('soqf_table.select_group')"
                 :description="$t('soqf_table.group_optional')">
-                <b-form-select
-                  v-model="list_categories.selected"
-                  value-field="id"
-                  text-field="text"
+                <b-form-select v-model="list_categories.selected" value-field="id" text-field="text"
                   :options="list_categories.options"></b-form-select>
               </b-form-group>
             </b-modal>
 
-            <b-modal
-              size="xl"
-              id="modalEditListCategories"
-              ref="modalEditListCategories"
-              scrollable>
+            <b-modal size="xl" id="modalEditListCategories" ref="modalEditListCategories" scrollable>
               <template v-slot:modal-title>
                 <videoHelp :txt="$t('modals.review_finding_groups')" tag="none" urlId="451100564"></videoHelp>
               </template>
-              <template v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
+              <template
+                v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
                 <p class="font-weight-light">
                   {{ $t('modals.categories_long_description') }}
                 </p>
@@ -479,128 +350,93 @@
               </template>
               <template
                 v-if="modal_edit_list_categories.options.length && !(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)">
-                <b-table
-                  head-variant="highlight"
-                  striped
-                  :fields="translatedModalFields"
+                <b-table head-variant="highlight" striped :fields="translatedModalFields"
                   :items="modal_edit_list_categories.options">
                   <template v-slot:cell(actions)="data">
-                    <b-button
-                      block
-                      variant="outline-success"
-                      @click="editListCategoryName(data.index)">{{ $t('common.edit') }}</b-button>
-                    <b-button
-                      block
-                      variant="outline-danger"
-                      class="mt-1"
-                      @click="removeListCategory(data)">{{ $t('common.remove') }}</b-button>
+                    <b-button block variant="outline-success" @click="editListCategoryName(data.index)">{{
+                      $t('common.edit') }}</b-button>
+                    <b-button block variant="outline-danger" class="mt-1" @click="removeListCategory(data)">{{
+                      $t('common.remove') }}</b-button>
                   </template>
                 </b-table>
               </template>
-              <template
-                v-if="modal_edit_list_categories.new">
+              <template v-if="modal_edit_list_categories.new">
                 <p class="text-danger">
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
-                <b-form-group
-                  class="mt-3"
-                  :label="$t('common.add_group_name') || 'Add group name'">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.text"></b-form-input>
+                <b-form-group class="mt-3" :label="$t('common.add_group_name') || 'Add group name'">
+                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
-                <b-form-group
-                  class="mt-3"
+                <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template
-                class="mt-3"
-                v-if="modal_edit_list_categories.edit">
+              <template class="mt-3" v-if="modal_edit_list_categories.edit">
                 <p class="text-danger">
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
-                <b-form-group
-                  :label="$t('common.edit_group_name') || 'Edit group name'">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.text"></b-form-input>
+                <b-form-group :label="$t('common.edit_group_name') || 'Edit group name'">
+                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
                 </b-form-group>
-                <b-form-group
-                  class="mt-3"
+                <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
-                  <b-form-input
-                    v-model="modal_edit_list_categories.extra_info"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.extra_info"></b-form-input>
                 </b-form-group>
               </template>
-              <template
-                class="mt-3"
-                v-if="modal_edit_list_categories.remove">
+              <template class="mt-3" v-if="modal_edit_list_categories.remove">
                 <p>
                   {{ $t('modals.confirm_delete_group') }} <b>{{ modal_edit_list_categories.text }}</b>?
                 </p>
               </template>
-              <template
-                v-slot:modal-footer>
-                <div
-                  v-if="modal_edit_list_categories.remove">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
-                  <b-button
-                    variant="outline-danger"
-                    @click="removeCategory()">{{ $t('common.confirm') || 'Confirm' }}</b-button>
+              <template v-slot:modal-footer>
+                <div v-if="modal_edit_list_categories.remove">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
+                  }}</b-button>
+                  <b-button variant="outline-danger" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
+                  }}</b-button>
                 </div>
-                <div
-                  v-if="modal_edit_list_categories.new">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
-                  <b-button
-                    variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === ''"
+                <div v-if="modal_edit_list_categories.new">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
+                  }}</b-button>
+                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
-                <div
-                  v-if="!modal_edit_list_categories.new">
+                <div v-if="!modal_edit_list_categories.new">
                   <b-button
                     v-if="!(modal_edit_list_categories.new) && !(modal_edit_list_categories.edit) && !(modal_edit_list_categories.remove)"
-                    variant="outline-primary"
-                    :disabled="!isOnline"
-                    @click="modal_edit_list_categories.new=true">
-                    {{ $t('common.add_new_finding_group') || 'Add new review finding group' }}
+                    variant="outline-primary" :disabled="!isOnline" @click="modal_edit_list_categories.new = true">
+                    {{ $t('common.add_new_finding_group') }}
                   </b-button>
                 </div>
-                <div
-                  v-if="modal_edit_list_categories.edit">
-                  <b-button
-                    variant="outline-primary"
-                    @click="modalCancelCategoryButtons">{{ $t('common.cancel') }}</b-button>
-                  <b-button
-                    variant="outline-success"
-                    :disabled="modal_edit_list_categories.text === ''"
+                <div v-if="modal_edit_list_categories.edit">
+                  <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
+                  }}</b-button>
+                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
               </template>
             </b-modal>
             <back-to-top></back-to-top>
             <!-- Lock Modals -->
-            <b-modal id="modal-lock-lost" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
-                <div class="text-center">
-                    <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
-                    <p>{{ $t('lock.lock_lost_message') || 'The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.' }}</p>
-                </div>
+            <b-modal id="modal-lock-lost" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage"
+              no-close-on-backdrop no-close-on-esc hide-header-close>
+              <div class="text-center">
+                <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
+                <p>{{ $t('lock.lock_lost_message') }}</p>
+              </div>
             </b-modal>
-             <b-modal id="modal-lock-idle" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
-                <div class="text-center">
-                    <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
-                    <p>{{ $t('lock.idle_message') || 'You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.' }}</p>
-                </div>
+            <b-modal id="modal-lock-idle" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage"
+              no-close-on-backdrop no-close-on-esc hide-header-close>
+              <div class="text-center">
+                <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
+                <p>{{ $t('lock.idle_message') }}</p>
+              </div>
             </b-modal>
           </b-col>
         </b-row>
       </div>
-      <div :class="{'block mt-3': (tabOpened===3)?true:false, 'd-none': (tabOpened===3)?!true:!false}">
+      <div :class="{ 'block mt-3': (tabOpened === 3) ? true : false, 'd-none': (tabOpened === 3) ? !true : !false }">
         <content-guidance></content-guidance>
       </div>
     </b-container>
@@ -639,7 +475,7 @@ export default {
     CamelotStepThree: () => import(/* webpackChunkName: "camelotStepThree" */ '@/components/camelot/StepThree.vue'),
     CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
   },
-  data () {
+  data() {
     return {
       stepStage: 0,
       camelotLogo: require('@/assets/camelot-logo.svg'),
@@ -853,11 +689,11 @@ export default {
       printableItems: []
     }
   },
-  async mounted () {
+  async mounted() {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
-    
+
     // Load categories first as they are needed for sorting findings
     await this.getListCategories()
     // Load references next
@@ -868,7 +704,7 @@ export default {
     this.getCharacteristicsData()
     this.getAssessmentsData()
   },
-  beforeDestroy () {
+  beforeDestroy() {
     LockService.release()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -1041,7 +877,7 @@ export default {
         console.error('Error cargando evaluaciones:', error)
       }
     },
-    async attemptLock () {
+    async attemptLock() {
       const res = await LockService.acquire(this.project.id)
       if (res.success) {
         this.lockInfo.locked = true
@@ -1058,20 +894,20 @@ export default {
         })
       }
     },
-    handleLockLost (e) {
+    handleLockLost(e) {
       if ((e.detail && e.detail.projectId === this.project.id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-lost')
       }
     },
-    handleIdle (e) {
-        if (e.detail && e.detail.projectId === this.project.id) {
+    handleIdle(e) {
+      if (e.detail && e.detail.projectId === this.project.id) {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-idle')
       }
     },
-    reloadPage () {
-        window.location.reload()
+    reloadPage() {
+      window.location.reload()
     },
     processGetListCategories: function (data) {
       this.list_categories.options = []
@@ -1085,7 +921,7 @@ export default {
         }
         options.sort((a, b) => a.text.localeCompare(b.text))
         let modalOptions = JSON.parse(JSON.stringify(options))
-        options.splice(0, 0, {id: null, text: this.$t('categories.no_group')})
+        options.splice(0, 0, { id: null, text: this.$t('categories.no_group') })
         this.list_categories.options = options
         this.modal_edit_list_categories.options = modalOptions
       }
@@ -1104,7 +940,7 @@ export default {
       for (const reference of data) {
         let content = await this.parseReference(reference)
         if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-          refs.push({'id': reference.id, 'content': content})
+          refs.push({ 'id': reference.id, 'content': content })
         }
       }
 
@@ -1144,7 +980,7 @@ export default {
             id: this.$route.params.id
           },
           hash: `${hash}`
-        }).catch(() => {}) // Silenciar error de navegación duplicada
+        }).catch(() => { }) // Silenciar error de navegación duplicada
         this.resetFindingName()
         this.resetItemData()
       }
@@ -1180,7 +1016,7 @@ export default {
         }
         this.$router.push({
           query: query
-        }).catch(() => {})
+        }).catch(() => { })
       }
     },
     uiShowLoaders: function (status) {
@@ -1293,7 +1129,7 @@ export default {
               })
             }
           }
-          categories.push({'name': this.$t('categories.uncategorised_findings'), 'id': 'uncategorized', 'value': null, 'items': [], is_category: true})
+          categories.push({ 'name': this.$t('categories.uncategorised_findings'), 'id': 'uncategorized', 'value': null, 'items': [], is_category: true })
 
           for (let list of data) {
             if (categories.length) {
@@ -1807,7 +1643,7 @@ export default {
           Commons.printErrors(error)
         })
     },
-    countDownChanged (dismissCountDown) {
+    countDownChanged(dismissCountDown) {
       if (this.ui.project.type === 'inclusion') {
         this.ui.project.inclusion.success.dismissCountDown = dismissCountDown
       }
@@ -1815,10 +1651,10 @@ export default {
         this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
       }
     },
-    nextTab () {
+    nextTab() {
       window.scrollTo({ 'top': 0, 'behavior': 'smooth' })
     },
-    toggleSearch (show) {
+    toggleSearch(show) {
       if (show) {
         this.ui.project.displaySearch = false
       } else {
@@ -1997,79 +1833,79 @@ export default {
 </script>
 
 <style scoped>
-  .return {
-    font-size: 1.2rem;
-  }
-  div >>>
-    h2>span>svg,
-    h3>span>svg,
-    h4>span>svg {
-      font-size: 1rem;
-    }
-  div >>>
-    .nav-fill .nav-item {
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-  div >>>
-    a.table-edit-list {
-      color: #000;
-      text-decoration: underline;
-    }
-  div >>>
-    #chars-of-studies-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #methodological-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #extracted-data-table thead th:first-child {
-      width: 25%;
-    }
-  div >>>
-    #chars-of-studies-table thead th:last-child {
-      width: 13%;
-    }
-  div >>>
-    #methodological-table thead th:last-child {
-      width: 13%;
-    }
-  div >>>
-    #findings.table thead th {
-      width: 15%;
-    }
-  div >>>
-    #findings.table thead th:nth-child(2) {
-      width: 45%;
-    }
-  div >>>
-    #findings.table thead th:first-child {
-      width: 5%;
-    }
-  div >>>
-    #findings.table thead th:last-child {
-      width: 5%;
-    }
-  div >>>
-    .text-danger.remove-opt {
-      cursor: pointer;
-    }
-  div >>>
-    #findings-print.table thead th {
-      width: 15%;
-    }
-  div >>>
-    #findings-print.table thead th:nth-child(2) {
-      width: 35%;
-    }
-  div >>>
-    #findings-print.table thead th:first-child {
-      width: 5%;
-    }
-  div >>>
-    #findings-print.table thead th:last-child {
-      width: 15%;
-    }
+.return {
+  font-size: 1.2rem;
+}
+
+div>>>h2>span>svg,
+h3>span>svg,
+h4>span>svg {
+  font-size: 1rem;
+}
+
+div>>>.nav-fill .nav-item {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+div>>>a.table-edit-list {
+  color: #000;
+  text-decoration: underline;
+}
+
+div>>>#chars-of-studies-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#methodological-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#extracted-data-table thead th:first-child {
+  width: 25%;
+}
+
+div>>>#chars-of-studies-table thead th:last-child {
+  width: 13%;
+}
+
+div>>>#methodological-table thead th:last-child {
+  width: 13%;
+}
+
+div>>>#findings.table thead th {
+  width: 15%;
+}
+
+div>>>#findings.table thead th:nth-child(2) {
+  width: 45%;
+}
+
+div>>>#findings.table thead th:first-child {
+  width: 5%;
+}
+
+div>>>#findings.table thead th:last-child {
+  width: 5%;
+}
+
+div>>>.text-danger.remove-opt {
+  cursor: pointer;
+}
+
+div>>>#findings-print.table thead th {
+  width: 15%;
+}
+
+div>>>#findings-print.table thead th:nth-child(2) {
+  width: 35%;
+}
+
+div>>>#findings-print.table thead th:first-child {
+  width: 5%;
+}
+
+div>>>#findings-print.table thead th:last-child {
+  width: 15%;
+}
 </style>

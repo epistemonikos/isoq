@@ -964,6 +964,7 @@
     "step_3_characteristics": "PASO 3: Tabla de características de los estudios",
     "step_4_methodological": "PASO 4: Tabla de evaluaciones metodológicas",
     "step_4_description": "PASO 4: Cree o importe su tabla de evaluaciones metodológicas (recomendado)",
+    "step_4_description_camelot": "PASO 4: Cree su tabla de evaluaciones metodológicas (recomendado)",
     "step_4_long_description": "Evaluaciones metodológicas de cada estudio incluido utilizando una herramienta de evaluación crítica/de calidad existente (ej. CASP)"
   },
   "modals": {

@@ -964,6 +964,7 @@
     "step_3_characteristics": "STEP 3: Characteristics of studies table",
     "step_4_methodological": "STEP 4: Methodological assessments table",
     "step_4_description": "STEP 4: Create or import your methodological assessments table (recommended)",
+    "step_4_description_camelot": "STEP 4: Create your methodological assessments table (recommended)",
     "step_4_long_description": "Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)"
   },
   "modals": {
