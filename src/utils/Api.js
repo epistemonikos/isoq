@@ -83,12 +83,18 @@ const NO_CACHE_PATTERNS = [
 export default class Api {
   static host = process.env.API_URL
 
-  static getHeaders () {
+  static getHeaders (config = {}, data = null) {
     let authToken = localStorage.getItem('l_s')
-    const headers = {}
+    const headers = { ...config.headers }
     if (authToken && authToken !== 'null') {
       headers.Authorization = `Bearer ${authToken}`
     }
+
+    // Explicitly set Content-Type to application/json if data is present and not FormData
+    if (data && !(typeof FormData !== 'undefined' && data instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json'
+    }
+
     return headers
   }
 
@@ -168,12 +174,13 @@ export default class Api {
     }
   }
 
-  static async get (path, data) {
+  static async get (path, data, config = {}) {
     const url = this.getUrl(path)
     const options = {
+      ...config,
       url: url,
       method: 'GET',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(config),
       params: data
     }
 
@@ -233,7 +240,7 @@ export default class Api {
     }
   }
 
-  static async put (path, data) {
+  static async put (path, data, config = {}) {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
@@ -272,7 +279,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.put(url, data, { headers: this.getHeaders() })
+      const response = await axios.put(url, data, { ...config, headers: this.getHeaders(config, data) })
       // También actualizamos cache si estamos online para mantener consistencia
       if (this.shouldCache(path)) {
          await tryOptimisticUpdate(path, data)
@@ -288,7 +295,7 @@ export default class Api {
     }
   }
 
-  static async patch (path, data) {
+  static async patch (path, data, config = {}) {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
@@ -326,7 +333,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.patch(url, data, { headers: this.getHeaders() })
+      const response = await axios.patch(url, data, { ...config, headers: this.getHeaders(config, data) })
       if (this.shouldCache(path)) {
          await tryOptimisticUpdate(path, data)
       }
@@ -341,7 +348,7 @@ export default class Api {
     }
   }
 
-  static async post (path, data) {
+  static async post (path, data, config = {}) {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
@@ -379,7 +386,7 @@ export default class Api {
     }
 
     try {
-      const response = await axios.post(url, data, { headers: this.getHeaders() })
+      const response = await axios.post(url, data, { ...config, headers: this.getHeaders(config, data) })
       if (this.shouldCache(path)) {
          // Para POST es más complejo porque el ID puede venir del servidor
          // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
@@ -398,7 +405,7 @@ export default class Api {
     }
   }
 
-  static async delete (path, data) {
+  static async delete (path, data, config = {}) {
     const url = this.getUrl(path)
     // Helper para encolar operación
     const queueOperation = async () => {
@@ -420,7 +427,7 @@ export default class Api {
     }
 
     try {
-      return await axios.delete(url, { data, headers: this.getHeaders() })
+      return await axios.delete(url, { ...config, data, headers: this.getHeaders(config, data) })
     } catch (error) {
       if (!error.response) {
         isOnline = false
