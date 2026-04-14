@@ -382,6 +382,7 @@
   },
   "characteristics": {
     "step_title": "PASO 3: Cree o importe su <b>tabla de características de estudios</b> (recomendado)",
+    "step_title_camelot": "PASO 3: Cree su <b>tabla de características de estudios</b> (recomendado)",
     "description": "Información descriptiva extraída de los estudios incluidos (ej. contexto, país, perspectivas, métodos, etc.)",
     "table_title": "Tabla de Características de Estudios",
     "create_table": "Crear Tabla",
@@ -963,8 +964,8 @@
     "step_2_inclusion_exclusion": "PASO 2: Criterios de inclusión y exclusión",
     "step_3_characteristics": "PASO 3: Tabla de características de los estudios",
     "step_4_methodological": "PASO 4: Tabla de evaluaciones metodológicas",
-    "step_4_description": "PASO 4: Cree o importe su tabla de evaluaciones metodológicas (recomendado)",
-    "step_4_description_camelot": "PASO 4: Cree su tabla de evaluaciones metodológicas (recomendado)",
+    "step_4_description": "PASO 4: Cree o importe su <b>tabla de evaluaciones metodológicas</b> (recomendado)",
+    "step_4_description_camelot": "PASO 4: Cree su <b>tabla de evaluaciones metodológicas</b> (recomendado)",
     "step_4_long_description": "Evaluaciones metodológicas de cada estudio incluido utilizando una herramienta de evaluación crítica/de calidad existente (ej. CASP)"
   },
   "modals": {

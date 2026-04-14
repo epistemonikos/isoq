@@ -17,13 +17,13 @@
         </b-row>
         <b-nav id="tabsTitle" tabs fill class="pt-3">
           <b-nav-item :active="(tabOpened === 0) ? true : false" @click="clickTab(0)">{{ $t('project.properties')
-          }}</b-nav-item>
+            }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 1) ? true : false" @click="clickTab(1)">{{ $t('project.my_data')
-          }}</b-nav-item>
+            }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 2) ? true : false" :disabled="(references.length) ? false : true"
             @click="clickTab(2)">{{ $t('project.isoq') }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 3) ? true : false" @click="clickTab(3)">{{ $t('project.guidance_applying')
-          }}</b-nav-item>
+            }}</b-nav-item>
         </b-nav>
       </div>
     </b-container>
@@ -55,7 +55,7 @@
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2'
-                      }}</a>
+                        }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -68,18 +68,19 @@
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
                         <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1'
-                        }}</a>
+                          }}</a>
                       </b-col>
                       <b-col cols="auto">
                         <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3'
-                        }}</a>
+                          }}</a>
                       </b-col>
                     </b-row>
                   </div>
                 </div>
               </b-tab>
               <b-tab :title="$t('steps.step_3_characteristics')" :disabled="references.length ? false : true">
-                <h4 v-html="$t('characteristics.step_title')"></h4>
+                <h4 v-if="!project.use_camelot" v-html="$t('characteristics.step_title')"></h4>
+                <h4 v-else v-html="$t('characteristics.step_title_camelot')"></h4>
                 <p class="font-weight-light" v-if="project.use_camelot" v-html="formattedCamelotDescription">
                 </p>
                 <p class="font-weight-light" v-else>
@@ -98,11 +99,11 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2'
-                      }}</a>
+                        }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4'
-                      }}</a>
+                        }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -128,7 +129,7 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3'
-                      }}</a>
+                        }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <b-button block variant="success" class="mb-3" @click="continueToIsoq">
@@ -193,7 +194,7 @@
                   </b-col>
                   <b-col cols="12" md="4" class="toDoc">
                     <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review')
-                    }}
+                      }}
                     </h5>
                     <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                       <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
@@ -392,13 +393,13 @@
               <template v-slot:modal-footer>
                 <div v-if="modal_edit_list_categories.remove">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-danger" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
-                  }}</b-button>
+                    }}</b-button>
                 </div>
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
@@ -411,7 +412,7 @@
                 </div>
                 <div v-if="modal_edit_list_categories.edit">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>

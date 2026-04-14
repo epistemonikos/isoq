@@ -382,6 +382,7 @@
   },
   "characteristics": {
     "step_title": "STEP 3: Create or import your <b>characteristics of studies table</b> (recommended)",
+    "step_title_camelot": "STEP 3: Create your <b>characteristics of studies table</b> (recommended)",
     "description": "Descriptive information extracted from the included studies (e.g. setting, country, perspectives, methods, etc.)",
     "table_title": "Characteristics of Studies Table",
     "create_table": "Create Table",
@@ -963,8 +964,8 @@
     "step_2_inclusion_exclusion": "STEP 2: Inclusion & Exclusion criteria",
     "step_3_characteristics": "STEP 3: Characteristics of studies table",
     "step_4_methodological": "STEP 4: Methodological assessments table",
-    "step_4_description": "STEP 4: Create or import your methodological assessments table (recommended)",
-    "step_4_description_camelot": "STEP 4: Create your methodological assessments table (recommended)",
+    "step_4_description": "STEP 4: Create or import your <b>methodological assessments table</b> (recommended)",
+    "step_4_description_camelot": "STEP 4: Create your <b>methodological assessments table</b> (recommended)",
     "step_4_long_description": "Methodological assessments of each included study using an existing critical/quality appraisal tool (e.g. CASP)"
   },
   "modals": {
