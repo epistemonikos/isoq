@@ -52,7 +52,7 @@ describe('RemoveProjectModal.vue', () => {
   it('shows shared project warning and select if project is shared', async () => {
     const sharedProject = { ...mockProject, can_write: ['user-2'] }
     const usersAllowed = [{ id: 'user-2', username: 'User 2', user_can: 1 }]
-    
+
     await wrapper.setProps({ project: sharedProject, usersAllowed })
 
     expect(wrapper.text()).toContain('common.delete_shared_project_warning')
@@ -62,12 +62,12 @@ describe('RemoveProjectModal.vue', () => {
   it('disables ok button if project is shared and no new owner is selected', async () => {
     const sharedProject = { ...mockProject, can_write: ['user-2'] }
     const usersAllowed = [{ id: 'user-2', username: 'User 2', user_can: 1 }]
-    
+
     await wrapper.setProps({ project: sharedProject, usersAllowed })
     await wrapper.setData({ password: 'my-password' })
-    
+
     expect(wrapper.vm.isOkDisabled).toBe(true)
-    
+
     await wrapper.setData({ newOwner: 'user-2' })
     expect(wrapper.vm.isOkDisabled).toBe(false)
   })
@@ -114,5 +114,20 @@ describe('RemoveProjectModal.vue', () => {
     expect(wrapper.vm.serverError).toBe(errorMessage)
     expect(wrapper.text()).toContain(errorMessage)
     expect(wrapper.emitted('project-removed')).toBeFalsy()
+  })
+
+  it('shows shared project warning and allows selection if project is shared with read-only user (user_can: 0)', async () => {
+    const sharedProject = { ...mockProject }
+    const usersAllowed = [{ id: 'user-3', username: 'Read Only User', user_can: 0 }]
+
+    await wrapper.setProps({ project: sharedProject, usersAllowed })
+
+    expect(wrapper.vm.isShared).toBe(true)
+    expect(wrapper.text()).toContain('common.delete_shared_project_warning')
+    expect(wrapper.find('b-form-select-stub').exists()).toBe(true)
+
+    // Check if read-only user is in options
+    const options = wrapper.vm.eligibleUsersOptions
+    expect(options).toContainEqual({ value: 'user-3', text: 'Read Only User' })
   })
 })
