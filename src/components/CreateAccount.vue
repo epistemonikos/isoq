@@ -1,7 +1,14 @@
 <template>
   <div>
     <b-container>
-      <b-row>
+      <b-row v-if="!registrationEnabled">
+        <b-col class="mt-5" cols="12" md="6" lg="4" offset-md="3" offset-lg="4">
+          <b-alert show variant="warning" class="text-center">
+            {{ $t('account.registration_disabled') }}
+          </b-alert>
+        </b-col>
+      </b-row>
+      <b-row v-else>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-form>
             <b-card
@@ -302,6 +309,9 @@ export default {
     subscribe
   },
   computed: {
+    registrationEnabled () {
+      return process.env.ENABLE_REGISTRATION === 'true'
+    },
     plans () {
       return this.plansData.map(plan => {
         const textKey = `account.plan_${plan.value}`

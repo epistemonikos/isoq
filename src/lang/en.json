@@ -226,7 +226,8 @@
     "plan_1000": "1000 USD a year",
     "plan_contact": "Contact us",
     "create_error": "An error occurred while creating your account. Please try again.",
-    "login_error": "An error occurred while logging in. Please try again."
+    "login_error": "An error occurred while logging in. Please try again.",
+    "registration_disabled": "Registration is currently disabled. Please contact the iSoQ team for more information."
   },
   "subscribe": {
     "title": "Newsletter",

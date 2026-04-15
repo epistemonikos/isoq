@@ -4,5 +4,6 @@ module.exports = {
   BASE_URL: '"/"',
   API_URL: '"/api"',
   PUBLIC_PATH: '"/"',
-  ENABLE_CONCURRENCY_CONTROL: '"off"'
+  ENABLE_CONCURRENCY_CONTROL: '"off"',
+  ENABLE_REGISTRATION: '"true"'
 }
