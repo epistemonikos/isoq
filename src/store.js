@@ -66,6 +66,12 @@ export const store = new Vuex.Store({
         Api.post('/auth/login', formData)
           .then(response => {
             const data = response.data
+            if (data.status === 'email_not_verified') {
+              commit('auth_error')
+              localStorage.removeItem('token')
+              reject({ response: { data } })
+              return
+            }
             if (data.status !== 'false') {
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data

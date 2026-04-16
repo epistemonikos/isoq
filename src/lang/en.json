@@ -227,7 +227,18 @@
     "plan_contact": "Contact us",
     "create_error": "An error occurred while creating your account. Please try again.",
     "login_error": "An error occurred while logging in. Please try again.",
-    "registration_disabled": "Registration is currently disabled. Please contact the iSoQ team for more information."
+    "registration_disabled": "Registration is currently disabled. Please contact the iSoQ team for more information.",
+    "check_email_title": "Check your email",
+    "check_email_message": "We've sent a verification email to {email}. Please check your inbox and click the link to activate your account.",
+    "check_email_no_email": "We've sent you a verification email. Please check your inbox and click the link to activate your account.",
+    "resend_email_btn": "Resend verification email",
+    "resend_email_sent": "Verification email resent. Please check your inbox.",
+    "resend_email_error": "An error occurred while resending the email. Please try again.",
+    "verifying_email": "Verifying your email address...",
+    "email_verified": "Your email has been verified. Redirecting to login...",
+    "verification_failed": "The verification link is invalid or has expired.",
+    "email_not_verified": "Your email address has not been verified yet. Please check your inbox.",
+    "resend_verification_btn": "Resend verification email"
   },
   "subscribe": {
     "title": "Newsletter",

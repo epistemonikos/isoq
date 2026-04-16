@@ -227,7 +227,18 @@
     "plan_contact": "Contáctenos",
     "create_error": "Ocurrió un error al crear tu cuenta. Por favor, intenta nuevamente.",
     "login_error": "Ocurrió un error al iniciar sesión. Por favor, intenta nuevamente.",
-    "registration_disabled": "El registro está actualmente deshabilitado. Por favor contacta al equipo de iSoQ para más información."
+    "registration_disabled": "El registro está actualmente deshabilitado. Por favor contacta al equipo de iSoQ para más información.",
+    "check_email_title": "Revisa tu correo electrónico",
+    "check_email_message": "Enviamos un correo de verificación a {email}. Por favor revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.",
+    "check_email_no_email": "Te enviamos un correo de verificación. Por favor revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.",
+    "resend_email_btn": "Reenviar correo de verificación",
+    "resend_email_sent": "Correo de verificación reenviado. Por favor revisa tu bandeja de entrada.",
+    "resend_email_error": "Ocurrió un error al reenviar el correo. Por favor, intenta nuevamente.",
+    "verifying_email": "Verificando tu dirección de correo electrónico...",
+    "email_verified": "Tu correo electrónico ha sido verificado. Redirigiendo al inicio de sesión...",
+    "verification_failed": "El enlace de verificación no es válido o ha expirado.",
+    "email_not_verified": "Tu dirección de correo electrónico aún no ha sido verificada. Por favor revisa tu bandeja de entrada.",
+    "resend_verification_btn": "Reenviar correo de verificación"
   },
   "subscribe": {
     "title": "Boletín informativo",

@@ -11,9 +11,7 @@
       <b-row v-else>
         <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
           <b-form>
-            <b-card
-              v-if="ui.display_create_account"
-              :header="$t('account.create_account')">
+            <b-card :header="$t('account.create_account')">
               <b-form-group
                 id="input_group_name"
                 :label="$t('account.name_label')"
@@ -51,17 +49,6 @@
                   v-if="!ui.username_validation && ui.username_validation !== null">{{ $t('account.email_exists_error') }}</b-form-text>
                 <b-form-text
                   id="input-live-help">{{ $t('account.email_username_hint') }}</b-form-text>
-              </b-form-group>
-              <b-form-group
-                v-if="false"
-                id="input_group_affiliation"
-                :label="$t('account.affiliation_label')"
-                label-for="input_affiliation">
-                <b-form-input
-                  id="input_affiliation"
-                  type="text"
-                  :placeholder="$t('account.affiliation_placeholder')"
-                  v-model="user.affiliation"></b-form-input>
               </b-form-group>
               <b-form-group
                 id="input_group_password"
@@ -112,154 +99,14 @@
             </b-card>
           </b-form>
         </b-col>
-        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
-          <b-card
-            v-if="ui.display_join_org_or_create_org"
-            :header="$t('account.account_created')">
-            <p>
-              {{ $t('account.individual_info') }}
-            </p>
-            <p>
-              {{ $t('account.share_info') }}
-            </p>
-            <b-row>
-              <b-col cols="12" sm="6" class="text-center">
-                <b-button
-                  variant="outline-success"
-                  block
-                  size="lg"
-                  @click="showJoinOrgCard">{{ $t('common.join') }}</b-button>
-              </b-col>
-              <b-col cols="12" sm="6" class="text-center">
-                <b-button
-                  variant="outline-success"
-                  block
-                  size="lg"
-                  @click="showCreateOrgCard">{{ $t('common.create') }}</b-button>
-              </b-col>
-            </b-row>
-          </b-card>
-        </b-col>
-        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
-          <b-card
-            v-if="ui.display_join_org"
-            :header="$t('account.join_organization')">
-            <b-form-group
-              :label="$t('account.organization_label')"
-              label-for="input-select-organization">
-              <b-form-select
-                v-model="org_selected"
-                :options="all_organizations"
-                value-field="id"
-                text-field="name"></b-form-select>
-            </b-form-group>
-            <div
-              slot="footer"
-              class="text-right">
-              <b-button
-                variant="outline-danger"
-                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
-              <b-button
-                variant="outline-primary"
-                @click="jointToOrg">{{ $t('common.join') }}</b-button>
-            </div>
-          </b-card>
-        </b-col>
-        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
-          <b-card
-            v-if="ui.display_create_org"
-            :header="$t('account.create_organization')">
-            <b-form-group
-              :label="$t('common.name')"
-              label-for="organization-name">
-              <b-form-input
-                id="organization-name"
-                type="text"
-                v-model="organization.name">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group
-              :label="$t('account.website_label')"
-              label-for="organization-website">
-              <b-form-input
-                id="organization-website"
-                type="url"
-                :placeholder="$t('account.website_placeholder')"
-                v-model="organization.website">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group>
-              <b-form-checkbox
-                v-model="organization.nonprofit"
-                value="false"
-                unchecked-value="true">{{ $t('account.nonprofit_confirm') }}</b-form-checkbox>
-            </b-form-group>
-            <b-form-group :label="$t('account.plan_label')">
-              <b-form-radio-group
-                id="option-plans"
-                v-model="organization.selected_plan"
-                :options="plans"></b-form-radio-group>
-            </b-form-group>
-            <b-row>
-              <b-col
-                cols="12" sm="4"
-                v-for="(plan, index) in plans"
-                :key="index">
-                <b-card
-                  :header="plan.text">
-                  <ul class="list-unstyled">
-                    <li>{{ $t('account.users_label') }}: {{plan.specs.users}}</li>
-                    <li>{{ $t('account.tables_label') }}: {{plan.specs.tables}}</li>
-                    <li>{{ $t('account.price_label') }}: {{plan.specs.price}}</li>
-                  </ul>
-                </b-card>
-              </b-col>
-            </b-row>
-            <div
-              slot="footer"
-              class="text-right">
-              <b-button
-                variant="outline-danger"
-                @click="cancelCardShowOptions">{{ $t('common.cancel') }}</b-button>
-              <b-button
-                variant="outline-primary"
-                @click="organizationRequest">{{ $t('account.create_and_join') }}</b-button>
-            </div>
-          </b-card>
-        </b-col>
-        <b-col class="mt-4" cols="12" md="10" lg="8" offset-md="1" offset-lg="2">
-          <b-card
-            v-if="ui.display_end_affiliation"
-            :header="$t('account.you_are_done')">
-            <p>{{ $t('account.can_create_share') }}</p>
-            <div class="text-right">
-              <b-button
-                variant="outline-success"
-                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
-            </div>
-          </b-card>
-          <b-card
-            v-if="ui.display_end_org_creation"
-            :header="$t('account.thanks_registering')">
-            <p>{{ $t('account.start_using_now') }}</p>
-            <div class="text-right">
-              <b-button
-                variant="outline-success"
-                :to="{name: 'Organizations'}">{{ $t('account.go_to_organizations') }}</b-button>
-            </div>
-          </b-card>
-        </b-col>
       </b-row>
     </b-container>
-
-    <subscribe :show="showSubscribe" :isCreatedAccount="true" @doLogin="login()"></subscribe>
   </div>
 </template>
 
 <script>
 import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
-import subscribe from '@/components/commons/subscribe.vue'
 
 export default {
   data () {
@@ -267,65 +114,21 @@ export default {
       ui: {
         username_validation: null,
         password_validation: false,
-        display_create_account: true,
-        display_join_org_or_create_org: false,
-        display_join_org: false,
-        display_create_org: false,
-        display_end_affiliation: false,
-        display_end_org_creation: false,
         isProcessing: false
       },
       errorMessage: '',
-      loginCredentials: null,
-      organizations: [
-        {id: 'examples', name: 'Examples'},
-        {id: 'episte', name: 'Test organisation'}
-      ],
       user: {
         first_name: '',
         last_name: '',
-        affiliation: '',
         username: '',
         password: '',
         password_2: ''
-      },
-      org_selected: '',
-      all_organizations: [],
-      organization: {
-        name: '',
-        website: '',
-        nonprofit: true,
-        selected_plan: false
-      },
-      plansData: [
-        {value: 'small', specs: {users: 10, tables: 20, priceKey: 'plan_free'}},
-        {value: 'medium', specs: {users: 50, tables: 200, priceKey: 'plan_1000'}},
-        {value: 'large', specs: {usersKey: 'plan_contact', tablesKey: 'plan_contact', priceKey: 'plan_contact'}}
-      ],
-      showSubscribe: false
+      }
     }
-  },
-  components: {
-    subscribe
   },
   computed: {
     registrationEnabled () {
       return process.env.ENABLE_REGISTRATION === 'true'
-    },
-    plans () {
-      return this.plansData.map(plan => {
-        const textKey = `account.plan_${plan.value}`
-        const specs = {
-          users: plan.specs.usersKey ? this.$t(`account.${plan.specs.usersKey}`) : plan.specs.users,
-          tables: plan.specs.tablesKey ? this.$t(`account.${plan.specs.tablesKey}`) : plan.specs.tables,
-          price: this.$t(`account.${plan.specs.priceKey}`)
-        }
-        return {
-          text: this.$t(textKey),
-          value: plan.value,
-          specs: specs
-        }
-      })
     }
   },
   watch: {
@@ -339,35 +142,18 @@ export default {
       this.comparePassword()
     }
   },
-  mounted () {
-    this.getOrganizations()
-  },
-  created: function () {
+  created () {
     this.checkEmail = _debounce(this.checkEmailExist, 500)
   },
   methods: {
-    validEmail: function (email) {
+    validEmail (email) {
       var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      if (re.test(email)) {
-        this.ui.username_validation = true
-      } else {
-        this.ui.username_validation = false
-      }
+      this.ui.username_validation = re.test(email)
     },
-    createAccount: function () {
+    createAccount () {
       this.ui.isProcessing = true
       this.errorMessage = ''
-
-      // Guardar credenciales antes de cualquier operación
-      this.loginCredentials = {
-        username: this.user.username,
-        password: this.user.password
-      }
-
-      let params = {
-        user: this.user,
-        organizations: this.organizations
-      }
+      let params = { user: this.user }
       if (Object.prototype.hasOwnProperty.call(this.$route.query, 'o') &&
         Object.prototype.hasOwnProperty.call(this.$route.query, 'p') &&
         Object.prototype.hasOwnProperty.call(this.$route.query, 'r')) {
@@ -379,8 +165,7 @@ export default {
       }
       Api.post('/create_user', params)
         .then(() => {
-          this.ui.isProcessing = false
-          this.showSubscribe = true
+          this.$router.push({ name: 'checkEmail', query: { email: this.user.username } })
         })
         .catch((error) => {
           this.ui.isProcessing = false
@@ -389,85 +174,14 @@ export default {
           } else {
             this.errorMessage = this.$t('account.create_error')
           }
-          console.log(error)
         })
     },
-    login (username, password) {
-      // Cancelar cualquier debounce pendiente antes del login
-      if (this.checkEmail && this.checkEmail.cancel) {
-        this.checkEmail.cancel()
-      }
-
-      // Usar credenciales guardadas si no se proporcionan
-      const loginUsername = username || (this.loginCredentials && this.loginCredentials.username)
-      const loginPassword = password || (this.loginCredentials && this.loginCredentials.password)
-
-      if (!loginUsername || !loginPassword) {
-        this.errorMessage = this.$t('account.login_error')
-        return
-      }
-
-      this.ui.isProcessing = true
-      this.$store
-        .dispatch('login', {username: loginUsername, password: loginPassword})
-        .then((response) => {
-          this.ui.display_create_account = false
-          this.ui.display_join_org_or_create_org = false
-          let orgPath = {'id': response.data.personal_organization}
-          const path = { 'name': 'viewOrganization', 'params': orgPath }
-          this.$router.push(path)
-        })
-        .catch((error) => {
-          this.ui.isProcessing = false
-          if (error.response && error.response.data && error.response.data.message) {
-            this.errorMessage = error.response.data.message
-          } else {
-            this.errorMessage = this.$t('account.login_error')
-          }
-          console.log(error)
-        })
-    },
-    jointToOrg: function () {
-      let params = {
-        org_to_join: this.org_selected
-      }
-      Api.patch('/users/update_my_profile', params)
-        .then((response) => {
-          this.ui.display_join_org = false
-          this.ui.display_end_affiliation = true
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    organizationRequest: function () {
-      let params = {
-        billing: {
-          plan: this.organization.selected_plan
-        },
-        for_profit: this.organization.nonprofit,
-        name: this.organization.name,
-        website: this.organization.website
-      }
-      Api.post('/organizations/request_new', params)
-        .then((response) => {
-          this.ui.display_create_org = false
-          this.ui.display_end_org_creation = true
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    checkEmailExist: function () {
+    checkEmailExist () {
       if (!this.user.username) return
       const email = this.user.username.trim()
-      Api.get('/users/check_email', { email: email })
+      Api.get('/users/check_email', { email })
         .then((response) => {
-          if (response.data.error === false) {
-            this.ui.username_validation = true
-          } else {
-            this.ui.username_validation = false
-          }
+          this.ui.username_validation = response.data.error === false
         })
         .then(() => {
           if (this.ui.username_validation) {
@@ -480,7 +194,7 @@ export default {
           console.log(error)
         })
     },
-    comparePassword: function () {
+    comparePassword () {
       if (!this.user.password || !this.user.password_2) {
         this.ui.password_validation = false
         return
@@ -489,33 +203,11 @@ export default {
         this.ui.password_validation = false
         return
       }
-      if (this.user.password.length < 8 || this.user.password_2.length < 8) {
+      if (this.user.password.length < 8) {
         this.ui.password_validation = false
         return
       }
       this.ui.password_validation = true
-    },
-    getOrganizations: function () {
-      Api.get('/api/organizations', { personal_organization: false })
-        .then((response) => {
-          this.all_organizations = response.data
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    showJoinOrgCard: function () {
-      this.ui.display_join_org_or_create_org = false
-      this.ui.display_join_org = true
-    },
-    showCreateOrgCard: function () {
-      this.ui.display_join_org_or_create_org = false
-      this.ui.display_create_org = true
-    },
-    cancelCardShowOptions: function () {
-      this.ui.display_join_org_or_create_org = true
-      this.ui.display_create_org = false
-      this.ui.display_join_org = false
     }
   }
 }

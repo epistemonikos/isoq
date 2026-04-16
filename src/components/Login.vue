@@ -7,11 +7,27 @@
             <b-card
               :header="$t('common.login')">
                 <b-alert
-                  :show="$store.state.status === 'error'"
+                  :show="$store.state.status === 'error' && !emailNotVerified"
                   variant="warning"
                   dismissible
                   @dismissed="changeStatus">
                     {{ $t('auth.login_error') }}
+                </b-alert>
+                <b-alert
+                  :show="emailNotVerified"
+                  variant="warning">
+                  {{ $t('account.email_not_verified') }}
+                  <div class="mt-2">
+                    <b-button
+                      variant="outline-warning"
+                      size="sm"
+                      :disabled="isResendingVerification"
+                      @click="resendVerification">
+                      <b-spinner small v-if="isResendingVerification" class="mr-1"></b-spinner>
+                      {{ $t('account.resend_verification_btn') }}
+                    </b-button>
+                    <span v-if="resendVerificationSent" class="ml-2">{{ $t('account.resend_email_sent') }}</span>
+                  </div>
                 </b-alert>
                 <b-form-group
                   id="input_group_email"
@@ -49,38 +65,70 @@
 </template>
 
 <script>
+import Api from '@/utils/Api'
+
 export default {
   data () {
     return {
       username: null,
-      password: null
+      password: null,
+      emailNotVerified: false,
+      isResendingVerification: false,
+      resendVerificationSent: false
+    }
+  },
+  watch: {
+    username () {
+      this.emailNotVerified = false
+      this.resendVerificationSent = false
+    },
+    password () {
+      this.emailNotVerified = false
     }
   },
   methods: {
     login () {
       let username = this.username
       let password = this.password
+      this.emailNotVerified = false
+      this.resendVerificationSent = false
       this.$store
         .dispatch('login', {username, password})
         .then((response) => {
           const data = response.data
-          // Obtener el ID de la organización buscando en data.user o data directamente
-          const personalOrg = (data.user && data.user.personal_organization) 
-            ? data.user.personal_organization 
+          const personalOrg = (data.user && data.user.personal_organization)
+            ? data.user.personal_organization
             : data.personal_organization
-          
+
           const basePath = `/workspace/${personalOrg}`
           let redirectPath = (this.$route.query.redirect) ? this.$route.query.redirect : basePath
-          
-          // Si el hash está separado (común en modo hash de vue-router 3), lo adjuntamos
+
           if (this.$route.hash && !redirectPath.includes('#')) {
             redirectPath += this.$route.hash
           }
-          
-          const path = { 'path': redirectPath }
-          this.$router.push(path)
+
+          this.$router.push({ 'path': redirectPath })
         })
-        .catch((error) => console.log(error))
+        .catch((error) => {
+          if (error && error.response && error.response.data &&
+              error.response.data.status === 'email_not_verified') {
+            this.emailNotVerified = true
+          } else {
+            console.log(error)
+          }
+        })
+    },
+    resendVerification () {
+      this.isResendingVerification = true
+      this.resendVerificationSent = false
+      Api.post('/auth/resend_verification', { email: this.username })
+        .then(() => {
+          this.resendVerificationSent = true
+          this.isResendingVerification = false
+        })
+        .catch(() => {
+          this.isResendingVerification = false
+        })
     },
     changeStatus () {
       this.$store.dispatch('changeStatus')
