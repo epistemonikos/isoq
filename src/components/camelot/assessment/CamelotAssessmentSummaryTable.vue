@@ -60,7 +60,9 @@
           class="w-100 h-100 d-flex align-items-center justify-content-center cursor-pointer"
           @click="handleHeaderClick(field.assessmentKey)" v-b-tooltip.hover
           :title="$t('camelot.step_four.tooltips.filter_by_this')">
-          {{ data.label }}
+          <u>
+            {{ data.label }}
+          </u>
         </div>
         <template v-else><span :key="field.key">{{ data.label }}</span></template>
       </template>
