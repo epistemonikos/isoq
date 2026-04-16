@@ -42,7 +42,7 @@
                     :key="iIndex" :meta-index="modal.stage === 0 ? 1 : 2" :item-index="iIndex"
                     :label="getMetaItemLabel(modal.stage === 0 ? 1 : 2, iIndex)"
                     :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
-                    :comments="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
+                    :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
                     :editing-field="editingField" :is-saving="isSavingField" @start-editing="onStartEditing"
                     @cancel-editing="onCancelEditing" @save-field="onSaveField" />
@@ -78,7 +78,7 @@
                         <b-col cols="6" class="modal-column-scroll 00000">
                           <camelot-assessment-card :meta-index="0" :item-index="dIndex" :label="domain.label"
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
-                            :comments="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
+                            :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
                             :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                             @save-field="onSaveField" />
@@ -109,7 +109,7 @@
                     <camelot-assessment-card v-for="(item, iIndex) in meta[1].items" :key="iIndex" :meta-index="1"
                       :item-index="iIndex" :label="getMetaItemLabel(1, iIndex)"
                       :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
-                      :comments="meta[1].values[iIndex][item + 'comments']"
+                      :concerns="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
                       :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" />
@@ -125,7 +125,7 @@
                     <camelot-assessment-card v-for="(item, iIndex) in meta[2].items" :key="iIndex" :meta-index="2"
                       :item-index="iIndex" :label="getMetaItemLabel(2, iIndex)"
                       :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
-                      :comments="meta[2].values[iIndex][item + 'comments']"
+                      :concerns="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
                       :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" />
@@ -199,7 +199,7 @@
                       <div class="d-flex justify-content-between align-items-end">
                         <h4 id="fa9" class="mb-0">FA9</h4>
                         <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
-                          }}</b-tooltip>
+                        }}</b-tooltip>
                       </div>
                     </template>
                     <div class="p-1">
