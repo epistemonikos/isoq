@@ -10,7 +10,7 @@
         @open-modal="onOpenModal" />
     </div>
 
-    <b-modal id="modal-1" size="xl" header-class="camelot-modal-header" footer-class="camelot-modal-footer"
+    <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header" footer-class="camelot-modal-footer"
       body-class="camelot-modal-body">
       <template #modal-title>
         <div class="modal-title-container">
@@ -1047,6 +1047,13 @@ export default {
     border-bottom: none !important;
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .camelot-modal-dialog {
+    max-width: calc(100% - 80px) !important;
+    margin: 1.75rem auto !important;
   }
 }
 
