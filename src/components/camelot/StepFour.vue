@@ -199,7 +199,7 @@
                       <div class="d-flex justify-content-between align-items-end">
                         <h4 id="fa9" class="mb-0">FA9</h4>
                         <b-tooltip target="fa9">{{ $t('camelot.step_four.sections.fa9')
-                        }}</b-tooltip>
+                          }}</b-tooltip>
                       </div>
                     </template>
                     <div class="p-1">
@@ -1075,6 +1075,10 @@ export default {
     background: #D8DAE5;
     border-radius: 3px;
   }
+}
+
+.b-sidebar-outer {
+  z-index: 1060 !important;
 }
 
 .not-completed-alert {
