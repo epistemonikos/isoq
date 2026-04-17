@@ -1354,6 +1354,18 @@
         "research_conduct_3": "Analysis & interpretation",
         "research_conduct_4": "Presentation of findings"
       },
+      "camelot_assessment_summary_table": {
+        "meta_domain_1": "FA1. Fit between the <b>Research design domains</b> and the Meta domain <b>Research aim & question(s)</b>",
+        "meta_domain_2": "FA2. Fit between the <b>Research design domains</b> and the Meta domain <b>Stakeholders</b>",
+        "meta_domain_3": "FA3. Fit between the <b>Research design domains</b> and the Meta domain <b>Researchers</b>",
+        "meta_domain_4": "FA4. Fit between the <b>Research design domains</b> and the Meta domain <b>Context</b>",
+        "meta_domain_5": "FA5. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Research aim & question(s)</b>",
+        "meta_domain_6": "FA6. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Stakeholders</b>",
+        "meta_domain_7": "FA7. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Researchers</b>",
+        "meta_domain_8": "FA8. Fit between the <b>Research conduct domains</b> and the Meta domain <b>Context</b>",
+        "meta_domain_9": "FA9. Fit between the <b>Research design domains</b> and the <b>Research conduct domains</b>",
+        "overall": "Overall assessment of the appropiateness of fit between domains"
+      },
       "tooltips": {
         "filter_by_this": "Filter by this assessment"
       },

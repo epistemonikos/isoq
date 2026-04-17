@@ -149,15 +149,14 @@
           <template v-if="data.item.stages">
             <div v-for="stageIdx in activeStages" :key="stageIdx" class="stage-section mb-4">
               <template v-if="data.item.stages[stageIdx]">
-                <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5>
+                <!-- <h5 class="stage-header px-2 py-1 mb-2">{{ getStageTitle(stageIdx) }}</h5> -->
 
                 <b-table-simple small striped hover responsive class="summary-sub-table bg-white border">
                   <b-tbody>
                     <template v-if="data.item.stages[stageIdx].options">
                       <template v-for="(option, oIdx) in data.item.stages[stageIdx].options">
                         <b-tr v-if="isAssessmentVisible(stageIdx, oIdx)" :key="oIdx">
-                          <b-td class="font-weight-bold text-left vertical-middle first-col">
-                            {{ getAssessmentLabel(stageIdx, oIdx) }}
+                          <b-td class="text-left vertical-middle first-col" v-html="getAssessmentLabel(stageIdx, oIdx)">
                           </b-td>
                           <b-td class="text-center vertical-middle">
                             <div v-if="option.option" class="assessment-circle circle-filled mx-auto"
@@ -170,7 +169,7 @@
                               <div class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
                             </div>
                             <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed')
-                              }}</div>
+                            }}</div>
                           </b-td>
                         </b-tr>
                       </template>
@@ -460,22 +459,22 @@ export default {
       return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
     },
     getAssessmentLabel(stage, index) {
-      if (stage === 3) return this.$t('camelot.step_four.tabs.overall')
+      if (stage === 3) return this.$t('camelot.step_four.camelot_assessment_summary_table.overall')
       const keys = [
         [
-          'camelot.step_four.camelot_mixin.meta_domain_1',
-          'camelot.step_four.camelot_mixin.meta_domain_2',
-          'camelot.step_four.camelot_mixin.meta_domain_3',
-          'camelot.step_four.camelot_mixin.meta_domain_4'
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_1',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_2',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_3',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_4'
         ],
         [
-          'camelot.step_four.camelot_mixin.meta_domain_1',
-          'camelot.step_four.camelot_mixin.meta_domain_2',
-          'camelot.step_four.camelot_mixin.meta_domain_3',
-          'camelot.step_four.camelot_mixin.meta_domain_4'
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_5',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_6',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_7',
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_8'
         ],
         [
-          'camelot.step_four.sections.fit_between_design_conduct'
+          'camelot.step_four.camelot_assessment_summary_table.meta_domain_9'
         ]
       ]
       const key = keys[stage] ? keys[stage][index] : null

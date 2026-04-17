@@ -1354,6 +1354,18 @@
         "research_conduct_3": "Análisis e interpretación",
         "research_conduct_4": "Presentación de hallazgos"
       },
+      "camelot_assessment_summary_table": {
+        "meta_domain_1": "FA1. Adecuación del ajuste entre los dominios de Diseño de la investigación y el dominio Meta Objetivo y pregunta(s) de investigación",
+        "meta_domain_2": "FA2. Adecuación del ajuste entre los dominios de Diseño de la investigación y el dominio Meta Partes interesadas",
+        "meta_domain_3": "FA3. Adecuación del ajuste entre los dominios de Diseño de la investigación y el dominio Meta Investigadores",
+        "meta_domain_4": "FA4. Adecuación del ajuste entre los dominios de Diseño de la investigación y el dominio Meta Contexto",
+        "meta_domain_5": "FA5. Adecuación del ajuste entre los dominios de Realización de la investigación y el dominio Meta Objetivo y pregunta(s) de investigación",
+        "meta_domain_6": "FA6. Adecuación del ajuste entre los dominios de Realización de la investigación y el dominio Meta Partes interesadas",
+        "meta_domain_7": "FA7. Adecuación del ajuste entre los dominios de Realización de la investigación y el dominio Meta Investigadores",
+        "meta_domain_8": "FA8. Adecuación del ajuste entre los dominios de Realización de la investigación y el dominio Meta Contexto",
+        "meta_domain_9": "FA9. Adecuación del ajuste entre los dominios de Diseño de la investigación y los dominios de Realización de la investigación",
+        "overall": "Evaluación general de la adecuación del ajuste entre dominios"
+      },
       "tooltips": {
         "filter_by_this": "Filtrar por esta evaluación"
       },
