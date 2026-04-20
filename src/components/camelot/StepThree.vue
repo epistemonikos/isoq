@@ -427,7 +427,11 @@ export default {
         .then(response => {
           if (response.data && response.data.length > 0) {
             // Save received data
-            this.charsData = response.data[0] || { fields: [], items: [] }
+            const serverData = response.data[0] || { fields: [], items: [] }
+            if (!serverData.fields || serverData.fields.length === 0) {
+              serverData.fields = this.camelot && this.camelot.fields ? [...this.camelot.fields] : []
+            }
+            this.charsData = serverData
           } else {
             // If there's no data, initialize with empty structure and default Camelot fields if available
             this.charsData = {
