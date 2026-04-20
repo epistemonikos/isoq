@@ -586,6 +586,13 @@ export default {
       }
       Api.get('/isoqf_characteristics', params)
         .then(response => {
+          for (let y = 0; y < this.meta.length; y++) {
+            for (let z = 0; z < this.meta[y].items.length; z++) {
+              this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = ''
+              this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = ''
+            }
+          }
+
           if (!response.data || !response.data.length) return;
 
           const data = response.data[0]
