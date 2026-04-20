@@ -70,6 +70,13 @@
                             borderRadius: '50%',
                             display: 'inline-block'
                           }"></div>
+                          <div v-else class="assessment-circle mr-2" :style="{
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: getTabColor(modal.stage, dIndex),
+                            borderRadius: '50%',
+                            display: 'inline-block'
+                          }"></div>
                           {{ domain.label }}
                         </div>
                       </template>
@@ -757,6 +764,16 @@ export default {
     },
     onSaveField(newValue) {
       this.saveField(newValue)
+    },
+    getTabColor(stage, dIndex) {
+      if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
+      const currentItem = this.assessments.items[this.modal.index]
+      if (!currentItem.stages || !currentItem.stages[stage]) return null
+      if (!currentItem.stages[stage].options || !currentItem.stages[stage].options[dIndex]) return null
+      const option = currentItem.stages[stage].options[dIndex].option
+      if (!option) return null
+      const response = this.ui.responses.find(r => r.value === option)
+      return response ? response.color : null
     },
     isTabCompleted(stage, tabIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
