@@ -122,8 +122,9 @@ router.onError((error) => {
 
 // Asegurarse que el router esté listo antes de crear la instancia de Vue
 router.beforeEach((to, from, next) => {
-  store.dispatch('getLogginInfo', {})
-  store.state.promise.then(() => {
+  store.dispatch('getLogginInfo').then(() => {
+    return store.state.promise || Promise.resolve()
+  }).then(() => {
     const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
     if (nearestWithTitle) document.title = nearestWithTitle.meta.title
 
