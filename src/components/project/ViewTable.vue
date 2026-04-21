@@ -307,7 +307,7 @@ export default {
         perPage: 5,
         filter: null,
         totalRows: 1,
-        filterOn: ['filter_cerqual', 'category_name', 'explanation']
+        filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation']
       },
       editingUser: {
         show: false,
@@ -424,6 +424,15 @@ export default {
       type: Boolean,
       required: true,
       default: false
+    },
+    filter: {
+      type: String,
+      default: null
+    }
+  },
+  watch: {
+    filter (newVal) {
+      this.table_settings.filter = newVal
     }
   },
   methods: {
@@ -555,7 +564,8 @@ export default {
           this.$emit('update-modification-time')
         })
         .catch((error) => {
-          console.log(Commons.printErrors(error))
+          console.error(error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     },
     processDataList: async function () {
@@ -590,9 +600,11 @@ export default {
       Api.patch(`/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
           this.$emit('get-lists')
+          this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
-          console.log(Commons.printErrors(error))
+          console.error(error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     },
     confirmRemoveList: function () {
@@ -606,11 +618,13 @@ export default {
       }
       Api.post('/finding/remove', params)
         .then(() => {
+          this.$notify.success(this.$t('notifications.deleted'))
           this.$emit('get-project')
         })
         .catch((error) => {
           this.$emit('set-busy', false)
-          console.log(Commons.printErrors(error))
+          console.error(error)
+          this.$notify.error(this.$t('notifications.delete_error'))
         })
     },
     cancelReferencesList: function () {
@@ -715,7 +729,8 @@ export default {
           this.$emit('get-lists')
         })
         .catch((error) => {
-          console.log(Commons.printErrors(error))
+          console.error(error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     },
 
@@ -733,9 +748,11 @@ export default {
         .then(() => {
           this.cleanReferencesList()
           this.$emit('set-load-references', false)
+          this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
-          console.log(Commons.printErrors(error))
+          console.error(error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     }
   }

@@ -303,6 +303,7 @@
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
                 :mode="effectiveMode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
+                :filter="table_settings.filter"
                 @update-modification-time="updateModificationTime" @get-lists="getLists" @get-project="getProject"
                 @add-list="modalAddList" @set-busy="setBusy" @set-load-references="statusLoadReferences"
                 @get-references="getReferences" @update-project-status="getProject" />
@@ -1228,6 +1229,7 @@ export default {
         })
         .catch((error) => {
           Commons.printErrors(error)
+          this.$notify.error(this.$t('notifications.create_error'))
         })
     },
     createFinding: function (listId, listName) {
@@ -1271,9 +1273,11 @@ export default {
       Api.post('/isoqf_findings', params)
         .then(async (response) => {
           await this.createExtractedData(response.data.id)
+          this.$notify.success(this.$t('notifications.created'))
         })
         .catch((error) => {
           Commons.printErrors(error)
+          this.$notify.error(this.$t('notifications.create_error'))
         })
     },
     generateEvidenceProfileTableWithCategories: function (findings) {
@@ -1513,9 +1517,11 @@ export default {
             this.modal_edit_list_categories.extra_info = ''
             this.modal_edit_list_categories.index = null
             this.modal_edit_list_categories.id = null
+            this.$notify.success(this.$t('notifications.deleted'))
           })
           .catch((error) => {
             Commons.printErrors(error)
+            this.$notify.error(this.$t('notifications.delete_error'))
           })
       }
     },
@@ -1572,10 +1578,12 @@ export default {
         .then(() => {
           this.getLists()
           this.$refs['modal-sort-findings'].hide()
+          this.$notify.success(this.$t('notifications.saved'))
         })
         .catch((error) => {
           this.table_settings.isBusy = false
           Commons.printErrors(error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     },
     updateFindingSort: function (listId, sort, getList = true) {

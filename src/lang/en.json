@@ -1462,5 +1462,17 @@
         "oa": "Overall assessment"
       }
     }
+  },
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "saved": "Changes saved",
+    "save_error": "Error saving changes. Please try again.",
+    "created": "Created successfully",
+    "create_error": "Could not create. Please try again.",
+    "deleted": "Deleted successfully",
+    "delete_error": "Error deleting. Please try again.",
+    "load_error": "Error loading data. Please try again."
   }
 }

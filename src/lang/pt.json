@@ -1461,5 +1461,17 @@
         "oa": "Avaliação geral"
       }
     }
+  },
+  "notifications": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "warning": "Aviso",
+    "saved": "Alterações salvas",
+    "save_error": "Erro ao salvar as alterações. Por favor, tente novamente.",
+    "created": "Criado com sucesso",
+    "create_error": "Não foi possível criar. Por favor, tente novamente.",
+    "deleted": "Excluído com sucesso",
+    "delete_error": "Erro ao excluir. Por favor, tente novamente.",
+    "load_error": "Erro ao carregar os dados. Por favor, tente novamente."
   }
 }

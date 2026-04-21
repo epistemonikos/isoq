@@ -40,6 +40,11 @@ describe('AssessmentForm.vue', () => {
     show: jest.fn(),
     hide: jest.fn()
   }
+  const $notify = {
+    success: jest.fn(),
+    error: jest.fn(),
+    warning: jest.fn()
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -54,7 +59,8 @@ describe('AssessmentForm.vue', () => {
             id: 'proj1'
           }
         },
-        $bvModal
+        $bvModal,
+        $notify
       },
       stubs: {
         'b-card': true,
@@ -114,15 +120,69 @@ describe('AssessmentForm.vue', () => {
 
   it('saves directly if explanation is present', async () => {
     Api.patch.mockResolvedValue({ data: {} })
-    
+
     await wrapper.setData({
       selected: 'B',
       text1: 'Some explanation'
     })
-    
+
     await wrapper.vm.save()
-    
+
     expect(Api.patch).toHaveBeenCalled()
     expect($bvModal.show).not.toHaveBeenCalledWith('warning-explanation-modal-0-0')
+  })
+
+  describe('user notifications', () => {
+    it('shows success notification after successful patch', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setData({ selected: 'B', text1: 'Explanation' })
+      await wrapper.vm.save()
+      await wrapper.vm.$nextTick()
+      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    })
+
+    it('shows error notification when patch fails', async () => {
+      Api.patch.mockRejectedValue(new Error('network error'))
+      await wrapper.setData({ selected: 'B', text1: 'Explanation' })
+      await wrapper.vm.save()
+      await wrapper.vm.$nextTick()
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    it('shows success notification after successful post (new assessment)', async () => {
+      const propsWithoutId = {
+        ...propsData,
+        assessments: { items: [{ ref_id: 'ref1', stages: [{ key: 0, options: [{ option: null, text: '' }] }] }] }
+      }
+      Api.post.mockResolvedValue({ data: {} })
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: propsWithoutId,
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await localWrapper.setData({ selected: 'A', text1: 'Explanation' })
+      await localWrapper.vm.save()
+      await localWrapper.vm.$nextTick()
+      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+      localWrapper.destroy()
+    })
+
+    it('shows error notification when post fails', async () => {
+      const propsWithoutId = {
+        ...propsData,
+        assessments: { items: [{ ref_id: 'ref1', stages: [{ key: 0, options: [{ option: null, text: '' }] }] }] }
+      }
+      Api.post.mockRejectedValue(new Error('network error'))
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: propsWithoutId,
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await localWrapper.setData({ selected: 'A', text1: 'Explanation' })
+      await localWrapper.vm.save()
+      await localWrapper.vm.$nextTick()
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+      localWrapper.destroy()
+    })
   })
 })

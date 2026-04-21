@@ -402,20 +402,24 @@ export default {
           Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
             .then(response => {
               this.$emit('getAssessments')
+              this.$notify.success(this.$t('notifications.saved'))
               this.isSaving = false
             })
             .catch(error => {
               console.error('Error updating data:', error)
+              this.$notify.error(this.$t('notifications.save_error'))
               this.isSaving = false
             })
         } else {
           Api.post('/isoqf_assessments', params)
             .then(response => {
               this.$emit('getAssessments')
+              this.$notify.success(this.$t('notifications.saved'))
               this.isSaving = false
             })
             .catch(error => {
               console.error('Error saving data:', error)
+              this.$notify.error(this.$t('notifications.save_error'))
               this.isSaving = false
             })
         }

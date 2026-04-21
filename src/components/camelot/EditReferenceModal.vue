@@ -375,14 +375,13 @@ export default {
             _id: response.data._id || this.charsData._id
           }
 
-          // Visibility logic: only add truly NEW columns
           const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
           const newKeys = customFieldsArray
             .filter(f =>
               f.key !== 'authors' &&
               f.key !== 'ref_id' &&
               f.key !== 'actions' &&
-              !oldFieldKeys.includes(f.key) // Only if it wasn't there before
+              !oldFieldKeys.includes(f.key)
             )
             .map(f => f.key)
 
@@ -390,12 +389,14 @@ export default {
             this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
           }
 
+          this.$notify.success(this.$t('notifications.saved'))
           this.$emit('saved', savedData)
           this.hide()
         })
         .catch(error => {
           this.isSaving = false
           console.error('Error saving reference characteristics:', error)
+          this.$notify.error(this.$t('notifications.save_error'))
         })
     }
   }

@@ -579,6 +579,7 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching Assessments data:', error)
+          this.$notify.error(this.$t('notifications.load_error'))
         })
         .finally(() => {
           this.isLoading = false
@@ -618,6 +619,7 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching characteristics:', error)
+          this.$notify.error(this.$t('notifications.load_error'))
         })
     },
     openModal: function (stage = 0, data, tab = 0, faLabel = null) {
@@ -742,7 +744,6 @@ export default {
       savePromise
         .then(response => {
           const responseData = response.data.$set || response.data
-          // Sincronizar objeto local con respuesta del servidor
           this.characteristics = {
             ...this.characteristics,
             ...responseData,
@@ -750,12 +751,13 @@ export default {
           }
 
           this.cancelEditing()
+          this.$notify.success(this.$t('notifications.saved'))
           this.isSavingField = false
-          // Notificar a otros componentes (Paso 3)
           this.$root.$emit('characteristics-updated', this.characteristics)
         })
         .catch(error => {
           console.error('Error saving characteristic field:', error)
+          this.$notify.error(this.$t('notifications.save_error'))
           this.isSavingField = false
           this.getCharacteristics()
         })

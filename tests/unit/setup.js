@@ -41,6 +41,13 @@ if (typeof window.URL.revokeObjectURL === 'undefined') {
   Object.defineProperty(window.URL, 'revokeObjectURL', { value: jest.fn() })
 }
 
+// Mock $notify plugin so component tests don't need to set it up individually
+Vue.prototype.$notify = {
+  success: jest.fn(),
+  error: jest.fn(),
+  warning: jest.fn()
+}
+
 // Suppress Bootstrap Vue warnings
 Vue.config.silent = true
 

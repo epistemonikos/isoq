@@ -960,6 +960,7 @@ export default {
           })
           .catch((error) => {
             this.printErrors(error)
+            this.$notify.error(this.$t('notifications.save_error'))
           })
       } else {
         this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
