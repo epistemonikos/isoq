@@ -7,6 +7,7 @@ Vue.use(Vuex)
 export const store = new Vuex.Store({
   state: {
     status: '',
+    token: localStorage.getItem('l_s') || null,
     user: {},
     isOnline: navigator.onLine
   },
@@ -20,24 +21,22 @@ export const store = new Vuex.Store({
     auth_success (state, user) {
       state.status = 'success'
       state.user = user
-      localStorage.setItem('user-data', JSON.stringify(user))
-      // Solo guardar en l_s si realmente viene un token, para no borrar uno existente
-      if (user.access_token && user.access_token !== 'null') {
-        localStorage.setItem('l_s', user.access_token)
-      } else {
-        // Si no viene en el objeto user, intentamos ver si ya estaba en localStorage
-        // para mantener la consistencia en el estado del usuario en Vuex
-        const savedToken = localStorage.getItem('l_s')
-        if (savedToken && savedToken !== 'null') {
-          state.user.access_token = savedToken
-        }
+      const token = (user.access_token && user.access_token !== 'null')
+        ? user.access_token
+        : state.token
+      if (token && token !== 'null') {
+        state.token = token
+        state.user.access_token = token
+        localStorage.setItem('l_s', token)
       }
+      localStorage.setItem('user-data', JSON.stringify(state.user))
     },
     auth_error (state) {
       state.status = 'error'
     },
     logout (state) {
       state.status = ''
+      state.token = null
       state.user = {}
       localStorage.removeItem('user-data')
       localStorage.removeItem('l_s')
@@ -122,7 +121,7 @@ export const store = new Vuex.Store({
       commit('change_status')
     },
     getLogginInfo ({commit}) {
-      const hasToken = !!localStorage.getItem('l_s')
+      const hasToken = !!this.state.token
       // Si ya estamos logueados satisfactoriamente y tenemos token, nos aseguramos de tener un promise resuelto
       if (this.state.status === 'success' && hasToken) {
         commit('save_promise', Promise.resolve())
@@ -147,7 +146,7 @@ export const store = new Vuex.Store({
               if (!userObject.status && data.status) userObject.status = data.status
               
               // Verificamos si al final tenemos un token (ya sea del server o del localStorage previo)
-              const finalToken = userObject.access_token || localStorage.getItem('l_s')
+              const finalToken = userObject.access_token || this.state.token
               if (!finalToken || finalToken === 'null') {
                 console.warn('Session is valid by cookie but missing access_token header. Forcing logout for robustness.')
                 commit('logout')
@@ -170,9 +169,6 @@ export const store = new Vuex.Store({
               if (userData) {
                 try {
                   const user = JSON.parse(userData)
-                  if (user.access_token) {
-                    localStorage.setItem('l_s', user.access_token)
-                  }
                   commit('auth_success', user)
                   console.log('Restored user session from local storage (offline mode)')
                   resolve()
@@ -195,7 +191,7 @@ export const store = new Vuex.Store({
     }
   },
   getters: {
-    isLoggedIn: state => !!state.user.status && !!localStorage.getItem('l_s') && localStorage.getItem('l_s') !== 'null',
+    isLoggedIn: state => !!state.user.status && !!state.token && state.token !== 'null',
     authStatus: state => state.status
   }
 })
