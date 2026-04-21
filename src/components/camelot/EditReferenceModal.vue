@@ -51,7 +51,7 @@
       <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
         {{ $t('common.cancel') }}
       </b-button>
-      <b-button size="md" variant="primary" @click="ok()" :disabled="isSaving">
+      <b-button size="md" variant="primary" @click="ok()" :disabled="isSaving || hasInvalidCustomFields">
         <b-spinner v-if="isSaving" small></b-spinner>
         {{ $t('camelot.step_three.modal.save_button') }}
       </b-button>
@@ -105,6 +105,9 @@ export default {
         return `${this.$t('camelot.step_three.modal.title', { reference_id: authorInfo })}`
       }
       return this.$t('camelot.step_three.modal.title')
+    },
+    hasInvalidCustomFields() {
+      return this.customFields.some(f => !f.isCamelot && !f.locked && (!f.label || !f.label.trim()))
     }
   },
   watch: {

@@ -185,4 +185,45 @@ describe('AssessmentForm.vue', () => {
       localWrapper.destroy()
     })
   })
+
+  describe('explanationState computed', () => {
+    it('returns null when no option is selected', async () => {
+      await wrapper.setData({ selected: null, text1: '' })
+      expect(wrapper.vm.explanationState).toBe(null)
+    })
+
+    it('returns null when no option is selected even if text is present', async () => {
+      await wrapper.setData({ selected: null, text1: 'Some text' })
+      expect(wrapper.vm.explanationState).toBe(null)
+    })
+
+    it('returns false when option is selected and explanation is empty', async () => {
+      await wrapper.setData({ selected: 'B', text1: '' })
+      expect(wrapper.vm.explanationState).toBe(false)
+    })
+
+    it('returns false when option is selected and explanation is whitespace only', async () => {
+      await wrapper.setData({ selected: 'C', text1: '   ' })
+      expect(wrapper.vm.explanationState).toBe(false)
+    })
+
+    it('returns true when option is selected and explanation has content', async () => {
+      await wrapper.setData({ selected: 'A', text1: 'My explanation' })
+      expect(wrapper.vm.explanationState).toBe(true)
+    })
+
+    it('updates reactively when selected changes from null to a value', async () => {
+      await wrapper.setData({ selected: null, text1: '' })
+      expect(wrapper.vm.explanationState).toBe(null)
+      await wrapper.setData({ selected: 'D' })
+      expect(wrapper.vm.explanationState).toBe(false)
+    })
+
+    it('updates reactively when text1 is filled after selecting an option', async () => {
+      await wrapper.setData({ selected: 'B', text1: '' })
+      expect(wrapper.vm.explanationState).toBe(false)
+      await wrapper.setData({ text1: 'Now I wrote something' })
+      expect(wrapper.vm.explanationState).toBe(true)
+    })
+  })
 })

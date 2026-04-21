@@ -150,12 +150,67 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
     // Estado alterado
     await wrapper.setData({ visibleAssessments: ['0-0'], allVisible: false })
     wrapper.vm.expandAllDetails(true)
-    
+
     wrapper.vm.resetTableState()
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.vm.allVisible).toBe(true)
     expect(wrapper.vm.visibleAssessments.length).toBe(wrapper.vm.allAssessmentValues.length)
     expect(wrapper.vm.tableItems.every(item => !item._showDetails)).toBe(true)
+  })
+
+  describe('empty explanation feedback in row-details', () => {
+    function createWrapperWithSlotContent (assessmentData) {
+      return shallowMount(CamelotAssessmentSummaryTable, {
+        localVue,
+        propsData: { assessments: assessmentData },
+        mocks: { $t: key => key },
+        stubs: {
+          'b-table': {
+            template: '<div><slot name="row-details" :item="items[0]" /></div>',
+            props: ['items', 'fields']
+          },
+          'b-table-simple': { template: '<table><slot /></table>' },
+          'b-tbody': { template: '<tbody><slot /></tbody>' },
+          'b-tr': { template: '<tr><slot /></tr>' },
+          'b-td': { template: '<td><slot /></td>' },
+          'b-sidebar': true
+        }
+      })
+    }
+
+    it('shows explanation text when option.text is present', () => {
+      const w = createWrapperWithSlotContent({
+        items: [{
+          ref_id: '1',
+          authors: 'A',
+          stages: [{ options: [{ option: 'B', text: 'My explanation' }] }]
+        }]
+      })
+      expect(w.html()).toContain('My explanation')
+      expect(w.html()).not.toContain('worksheet.labels.explanation_not_added')
+    })
+
+    it('shows warning when option is selected but text is empty', () => {
+      const w = createWrapperWithSlotContent({
+        items: [{
+          ref_id: '1',
+          authors: 'A',
+          stages: [{ options: [{ option: 'B', text: '' }] }]
+        }]
+      })
+      expect(w.html()).toContain('worksheet.labels.explanation_not_added')
+    })
+
+    it('does not show warning when option is not selected', () => {
+      const w = createWrapperWithSlotContent({
+        items: [{
+          ref_id: '1',
+          authors: 'A',
+          stages: [{ options: [{ option: null, text: '' }] }]
+        }]
+      })
+      expect(w.html()).not.toContain('worksheet.labels.explanation_not_added')
+    })
   })
 })

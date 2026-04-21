@@ -17,9 +17,11 @@
       </b-form-group>
 
       <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
-        class="font-weight-bold small">
+        class="font-weight-bold small" :state="explanationState">
         <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
-          :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+          :placeholder="$t('camelot.assessment_form.text_placeholder')"
+          :state="explanationState"></b-form-textarea>
+        <b-form-invalid-feedback>{{ $t('camelot.assessment_form.explanation_required') }}</b-form-invalid-feedback>
       </b-form-group>
 
       <div class="mt-4 pt-3 border-top">
@@ -218,6 +220,12 @@ export default {
     modalIndex: {
       type: Number,
       default: 0
+    }
+  },
+  computed: {
+    explanationState() {
+      if (this.selected === null) return null
+      return this.text1 && this.text1.trim().length > 0 ? true : false
     }
   },
   watch: {

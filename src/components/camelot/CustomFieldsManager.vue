@@ -78,14 +78,18 @@
               <b-form-group
                 v-if="!field.isCamelot"
                 :label-for="idPrefix + 'label-' + index"
+                :state="getLabelState(field)"
                 class="mb-2">
                 <b-form-input
                   :id="idPrefix + 'label-' + index"
                   v-model="field.label"
                   :placeholder="placeholderLabel"
                   :disabled="field.locked"
-                  @input="emitChange">
+                  :state="getLabelState(field)"
+                  @input="emitChange"
+                  @blur="markLabelTouched(field.id)">
                 </b-form-input>
+                <b-form-invalid-feedback>{{ $t('common.field_required') }}</b-form-invalid-feedback>
               </b-form-group>
 
               <!-- Value Input (Optional) -->
@@ -232,7 +236,8 @@ export default {
       localFields: [],
       drag: false,
       isSidebarOpen: false,
-      selectedGuidanceField: null
+      selectedGuidanceField: null,
+      touchedLabelIds: []
     }
   },
   computed: {
@@ -292,8 +297,22 @@ export default {
       })
     },
     removeField(index) {
+      const removed = this.localFields[index]
+      if (removed && removed.id) {
+        const i = this.touchedLabelIds.indexOf(removed.id)
+        if (i !== -1) this.touchedLabelIds.splice(i, 1)
+      }
       this.localFields.splice(index, 1)
       this.emitChange()
+    },
+    markLabelTouched(id) {
+      if (id && !this.touchedLabelIds.includes(id)) {
+        this.touchedLabelIds.push(id)
+      }
+    },
+    getLabelState(field) {
+      if (!this.touchedLabelIds.includes(field.id)) return null
+      return field.label && field.label.trim().length > 0 ? null : false
     },
     onDragStart() {
       this.drag = true

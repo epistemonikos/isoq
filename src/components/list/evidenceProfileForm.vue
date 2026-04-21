@@ -1,21 +1,24 @@
 <template>
   <div>
-    <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
-      :ok-disabled="!permission"
+    <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable :ok-disabled="!permission"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
-      cancel-variant="outline-secondary"
-      @show="onModalShow">
+      cancel-variant="outline-secondary" @show="onModalShow">
       <template v-slot:modal-title>
         <videoHelp v-if="selectedOptions.type === 'methodological-limitations'"
-          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835272"></videoHelp>
-        <videoHelp v-if="selectedOptions.type === 'coherence'" :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title"
-          tag="none" urlId="450835237"></videoHelp>
-        <videoHelp v-if="selectedOptions.type === 'adequacy'" :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title"
-          tag="none" urlId="450835188"></videoHelp>
-        <videoHelp v-if="selectedOptions.type === 'relevance'" :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title"
-          tag="none" urlId="450835406"></videoHelp>
-        <videoHelp v-if="selectedOptions.type === 'cerqual'" :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title"
-          tag="none" urlId="450835499"></videoHelp>
+          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835272">
+        </videoHelp>
+        <videoHelp v-if="selectedOptions.type === 'coherence'"
+          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835237">
+        </videoHelp>
+        <videoHelp v-if="selectedOptions.type === 'adequacy'"
+          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835188">
+        </videoHelp>
+        <videoHelp v-if="selectedOptions.type === 'relevance'"
+          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835406">
+        </videoHelp>
+        <videoHelp v-if="selectedOptions.type === 'cerqual'"
+          :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835499">
+        </videoHelp>
       </template>
       <b-container fluid>
         <b-row>
@@ -74,21 +77,28 @@
                 {{ $t('worksheet.labels.select_level') }}
               </p>
               <b-form-group v-if="selectedOptions.methodological_limitations.option !== null"
-                class="mt-4 font-weight-light" label-for="input-ml-explanation">
+                class="mt-4 font-weight-light" label-for="input-ml-explanation"
+                :state="explanationStateFor('methodological_limitations')">
                 <template slot="label">
                   <p class="font-weight-bold">
                     {{ showMessage(selectedOptions.methodological_limitations.option, 'methodological_limitations') }}
                   </p>
                 </template>
                 <template slot="description">
-                  {{ $t('worksheet.labels.explanation_required') }}
-                  <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
-                    target="_blank">{{ $t('common.click') }} {{ $t('common.here') }}</a>
-                  {{ $t('worksheet.labels.click_here_example') }}
+                  <span
+                    :class="explanationStateFor('methodological_limitations') === false ? 'text-danger' : 'text-muted'">
+                    {{ $t('worksheet.labels.explanation_required') }}
+                    <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
+                      target="_blank"
+                      :class="explanationStateFor('methodological_limitations') === false ? 'text-danger' : ''">
+                      <u>{{ $t('common.click') }} {{ $t('common.here') }}</u>
+                    </a>
+                    {{ $t('worksheet.labels.click_here_example') }}
+                  </span>
                 </template>
                 <b-form-textarea id="input-ml-explanation"
-                  v-model="selectedOptions.methodological_limitations.explanation" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                  v-model="selectedOptions.methodological_limitations.explanation" rows="6" max-rows="100"
+                  :disabled="!permission" :state="explanationStateFor('methodological_limitations')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
@@ -119,26 +129,23 @@
               <p class="font-weight-light">
                 {{ $t('worksheet.reminders.coherence') }}
               </p>
-              <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked :disabled="!permission">
+              <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked
+                :disabled="!permission">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.coherence.no_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.coherence.no_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="1">
                   {{ $t('worksheet.options.minor_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.coherence.minor_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.coherence.minor_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="2">
                   {{ $t('worksheet.options.moderate_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.coherence.moderate_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.coherence.moderate_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="3">
                   {{ $t('worksheet.options.serious_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.coherence.serious_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.coherence.serious_concerns')">*</small>
                 </b-form-radio>
               </b-form-radio-group>
               <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
@@ -150,27 +157,34 @@
               <p class="pt-3">
                 {{ $t('worksheet.labels.select_level') }}
               </p>
-              <b-form-group v-if="selectedOptions.coherence.option !== null" class="mt-4 font-weight-light" label-for="input-coherence-explanation">
+              <b-form-group v-if="selectedOptions.coherence.option !== null" class="mt-4 font-weight-light"
+                label-for="input-coherence-explanation" :state="explanationStateFor('coherence')">
                 <template slot="label">
                   <p class="font-weight-bold">
                     {{ showMessage(selectedOptions.coherence.option, 'coherence') }}
                   </p>
                 </template>
                 <template slot="description">
-                  {{ $t('worksheet.labels.explanation_required') }}
-                  <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
-                    target="_blank">{{ $t('common.click') }} {{ $t('common.here') }}</a>
-                  {{ $t('worksheet.labels.click_here_example') }}
+                  <span :class="explanationStateFor('coherence') === false ? 'text-danger' : 'text-muted'">
+                    {{ $t('worksheet.labels.explanation_required') }}
+                    <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
+                      target="_blank" :class="explanationStateFor('coherence') === false ? 'text-danger' : ''">
+                      <u>{{ $t('common.click') }} {{ $t('common.here') }}</u>
+                    </a>
+                    {{ $t('worksheet.labels.click_here_example') }}
+                  </span>
                 </template>
-                <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation" :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation"
+                  :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100"
+                  :disabled="!permission" :state="explanationStateFor('coherence')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
-                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.coherence.notes" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.coherence.notes" rows="6" max-rows="100"
+                  :disabled="!permission"></b-form-textarea>
               </b-form-group>
               <!-- adequacy -->
             </div>
@@ -188,26 +202,23 @@
                   query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
                 }">{{ $t('common.here') }}</b-link>)
               </p>
-              <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked :disabled="!permission">
+              <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked
+                :disabled="!permission">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.adequacy.no_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.adequacy.no_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="1">
                   {{ $t('worksheet.options.minor_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.adequacy.minor_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.adequacy.minor_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="2">
                   {{ $t('worksheet.options.moderate_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.adequacy.moderate_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.adequacy.moderate_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="3">
                   {{ $t('worksheet.options.serious_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.adequacy.serious_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.adequacy.serious_concerns')">*</small>
                 </b-form-radio>
               </b-form-radio-group>
               <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
@@ -216,27 +227,33 @@
                   {{ $t('worksheet.actions.clear_selection') }}
                 </a>
               </p>
-              <b-form-group v-if="selectedOptions.adequacy.option !== null" class="mt-4 font-weight-light" label-for="input-adequacy-explanation">
+              <b-form-group v-if="selectedOptions.adequacy.option !== null" class="mt-4 font-weight-light"
+                label-for="input-adequacy-explanation" :state="explanationStateFor('adequacy')">
                 <template slot="label">
                   <p class="font-weight-bold">
                     {{ showMessage(selectedOptions.adequacy.option, 'adequacy') }}
                   </p>
                 </template>
                 <template slot="description">
-                  {{ $t('worksheet.labels.explanation_required') }}
-                  <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
-                    target="_blank">{{ $t('common.click') }} {{ $t('common.here') }}</a>
-                  {{ $t('worksheet.labels.click_here_example') }}
+                  <span :class="explanationStateFor('adequacy') === false ? 'text-danger' : 'text-muted'">
+                    {{ $t('worksheet.labels.explanation_required') }}
+                    <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
+                      target="_blank" :class="explanationStateFor('adequacy') === false ? 'text-danger' : ''">
+                      <u>{{ $t('common.click') }} {{ $t('common.here') }}</u></a>
+                    {{ $t('worksheet.labels.click_here_example') }}
+                  </span>
                 </template>
-                <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation" :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation"
+                  :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100"
+                  :disabled="!permission" :state="explanationStateFor('adequacy')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
-                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.adequacy.notes" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.adequacy.notes" rows="6" max-rows="100"
+                  :disabled="!permission"></b-form-textarea>
               </b-form-group>
               <!-- relevance -->
             </div>
@@ -256,26 +273,23 @@
                   query: { tab: 'Guidance-on-applying-GRADE-CERQual' }
                 }">{{ $t('common.here') }}</b-link>)
               </p>
-              <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked :disabled="!permission">
+              <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked
+                :disabled="!permission">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.relevance.no_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.relevance.no_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="1">
                   {{ $t('worksheet.options.minor_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.relevance.minor_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.relevance.minor_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="2">
                   {{ $t('worksheet.options.moderate_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.relevance.moderate_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.relevance.moderate_concerns')">*</small>
                 </b-form-radio>
                 <b-form-radio value="3">
                   {{ $t('worksheet.options.serious_concerns') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.relevance.serious_concerns')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.relevance.serious_concerns')">*</small>
                 </b-form-radio>
               </b-form-radio-group>
               <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
@@ -285,13 +299,20 @@
                 </a>
               </p>
               <b-form-group v-if="selectedOptions.relevance.option !== null" class="mt-4 font-weight-light"
-                label-for="input-relevance-explanation" :description="$t('worksheet.labels.explanation_required')">
+                label-for="input-relevance-explanation" :state="explanationStateFor('relevance')">
                 <template slot="label">
                   <p class="font-weight-bold">
                     {{ showMessage(selectedOptions.relevance.option, 'relevance') }}
                   </p>
                 </template>
-                <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation" :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
+                <template slot="description">
+                  <span :class="explanationStateFor('relevance') === false ? 'text-danger' : 'text-muted'">
+                    {{ $t('worksheet.labels.explanation_required') }}
+                  </span>
+                </template>
+                <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation"
+                  :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100"
+                  :disabled="!permission" :state="explanationStateFor('relevance')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes">
                 <template slot="label">
@@ -300,11 +321,13 @@
                 <template slot="description">
                   {{ $t('worksheet.labels.notes_description') }}. {{ $t('common.click') }}
                   <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/4"
-                    target="_blank">{{ $t('common.here') }}</a>
+                    target="_blank">
+                    <u>{{ $t('common.here') }}</u>
+                  </a>
                   {{ $t('worksheet.labels.click_here_example') }}.
                 </template>
-                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6" max-rows="100"
+                  :disabled="!permission"></b-form-textarea>
               </b-form-group>
               <!-- CERQual assessment -->
             </div>
@@ -319,26 +342,23 @@
                   target="_blank">{{ $t('common.here') }}</a>
                 {{ $t('worksheet.labels.cerqual_guidance_link') }}
               </p>
-              <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()" name="cerqual" stacked :disabled="!permission">
+              <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()"
+                name="cerqual" stacked :disabled="!permission">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.high_confidence') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.cerqual.high')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.cerqual.high')">*</small>
                 </b-form-radio>
                 <b-form-radio value="1">
                   {{ $t('worksheet.options.moderate_confidence') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.cerqual.moderate')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.cerqual.moderate')">*</small>
                 </b-form-radio>
                 <b-form-radio value="2">
                   {{ $t('worksheet.options.low_confidence') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.cerqual.low')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.cerqual.low')">*</small>
                 </b-form-radio>
                 <b-form-radio value="3">
                   {{ $t('worksheet.options.very_low_confidence') }}
-                  <small v-b-tooltip.hover
-                    :title="$t('worksheet.tooltips.cerqual.very_low')">*</small>
+                  <small v-b-tooltip.hover :title="$t('worksheet.tooltips.cerqual.very_low')">*</small>
                 </b-form-radio>
               </b-form-radio-group>
               <p v-if="permission" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
@@ -348,15 +368,15 @@
                 </a>
               </p>
               <b-form-group v-if="selectedOptions.cerqual.option !== null" class="mt-4 font-weight-light"
-                label-for="input-cerqual"
-                :description="$t('worksheet.labels.explanation_required')">
+                label-for="input-cerqual" :state="explanationStateFor('cerqual')">
                 <template slot="label">
                   {{ $t('worksheet.labels.cerqual_explanation_instruction') }}
                   <a href="#" @click="
                     ui.showExample
                       ? (ui.showExample = false)
                       : (ui.showExample = true)
-                    ">{{ ui.showExample ? $t('worksheet.actions.hide_example') : $t('worksheet.actions.show_example') }}</a>
+                    ">{{ ui.showExample ? $t('worksheet.actions.hide_example') : $t('worksheet.actions.show_example')
+                    }}</a>
                   <!-- Add detail about any concerns you identified for the four components into the minimum text provided below. Click <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/3" target="_blank">here</a> for an example.-->
                   <div class="mt-2 bg-light text-dark p-1" v-if="ui.showExample">
                     <p class="font-italic">
@@ -373,16 +393,24 @@
                     </p>
                   </div>
                 </template>
+                <template slot="description">
+                  <span :class="explanationStateFor('cerqual') === false ? 'text-danger' : 'text-muted'">
+                    <font-awesome-icon v-if="explanationStateFor('cerqual') === false" icon="exclamation-triangle"
+                      class="mr-1"></font-awesome-icon>
+                    {{ $t('worksheet.labels.explanation_required') }}
+                  </span>
+                </template>
                 <b-form-textarea id="input-cerqual" v-model="selectedOptions.cerqual.explanation"
-                  :placeholder="$t('common.enter_explanation')" rows="6" max-rows="100" :disabled="!permission"></b-form-textarea>
+                  :placeholder="$t('common.enter_explanation')" rows="6" max-rows="100" :disabled="!permission"
+                  :state="explanationStateFor('cerqual')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
                 <template slot="label">
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
-                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.cerqual.notes" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                <b-form-textarea id="input-ml-notes" v-model="selectedOptions.cerqual.notes" rows="6" max-rows="100"
+                  :disabled="!permission"></b-form-textarea>
               </b-form-group>
             </div>
           </b-col>
@@ -410,24 +438,22 @@
                     }">{{ $t('common.my_data') }}</b-link>.
                   </p>
                   <template v-if="project.use_camelot">
-                    <assessment-table 
-                      ref="camelotTable"
-                      :assessments="methAssessments" 
-                      :references="list.references"
-                      :hideActions="false"
-                      :clickableHeaders="true" />
+                    <assessment-table ref="camelotTable" :assessments="methAssessments" :references="list.references"
+                      :hideActions="false" :clickableHeaders="true" />
                   </template>
                   <template v-else>
                     <b-table class="table-small-font" responsive head-variant="light" outlined
                       :fields="methAssessments.fieldsObj" :items="methAssessments.items">
                       <template v-slot:cell(authors)="data">
-                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
+                        }}</span>
                       </template>
                     </b-table>
                   </template>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
-                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
+                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings"
+                    :permission="permission">
                   </edit-review-finding>
                 </b-tab>
                 <b-tab>
@@ -445,46 +471,27 @@
                     {{ $t('worksheet.warnings.extracted_data_missing') }}
                     {{ $t('common.add') }} {{ $t('common.here') }}
                   </p>
-                  <table-extracted-data
-                    :showTitle="false"
-                    :showFilters="false"
-                    :ui="ui"
-                    :show="show"
-                    :mode="mode"
-                    :list="list"
-                    :permission="permission"
-                    :extractedData="extractedData"
-                    :modePrintFieldObject="modePrintFieldObject"
-                    :refsWithTitle="refsWithTitle"
-                    :showParagraph="false"
-                    @printErrors="printErrors"
-                    @getExtractedData="getExtractedData"></table-extracted-data>
+                  <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
+                    :list="list" :permission="permission" :extractedData="extractedData"
+                    :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
+                    @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
                 </b-tab>
               </b-tabs>
             </div>
 
             <div v-if="selectedOptions.type === 'coherence'">
-              <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
+              <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings"
+                :permission="permission">
               </edit-review-finding>
               <h4>{{ $t('worksheet.extracted_data') }}</h4>
               <p v-if="ui.adequacy.extracted_data.display_warning" class="text-danger">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                 {{ $t('worksheet.warnings.extracted_data_missing_detail') }}
               </p>
-              <table-extracted-data
-                :showTitle="false"
-                :showFilters="false"
-                :ui="ui"
-                :show="show"
-                :mode="mode"
-                :list="list"
-                :permission="permission"
-                :extractedData="extractedData"
-                :modePrintFieldObject="modePrintFieldObject"
-                :refsWithTitle="refsWithTitle"
-                :showParagraph="false"
-                @printErrors="printErrors"
-                @getExtractedData="getExtractedData"></table-extracted-data>
+              <table-extracted-data :showTitle="false" :showFilters="false" :ui="ui" :show="show" :mode="mode"
+                :list="list" :permission="permission" :extractedData="extractedData"
+                :modePrintFieldObject="modePrintFieldObject" :refsWithTitle="refsWithTitle" :showParagraph="false"
+                @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
             </div>
 
             <div v-if="selectedOptions.type === 'adequacy'">
@@ -501,8 +508,8 @@
                     {{ $t('worksheet.warnings.extracted_data_missing_detail') }}
                   </p>
                   <b-table class="table-small-font extracted-data" responsive head-variant="light" outlined :fields="mode === 'view'
-                      ? mode_print_fieldsObj
-                      : extractedData.fieldsObj
+                    ? mode_print_fieldsObj
+                    : extractedData.fieldsObj
                     " :items="extractedData.items">
                     <template v-slot:cell(authors)="data">
                       <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
@@ -536,7 +543,8 @@
                         </b-button>
                       </template>
                       <template v-else>
-                        <b-button v-if="permission" variant="outline-success" @click="editExtractedDataInPlace(data.index)">
+                        <b-button v-if="permission" variant="outline-success"
+                          @click="editExtractedDataInPlace(data.index)">
                           <font-awesome-icon icon="edit" :title="$t('common.edit')" />
                         </b-button>
                       </template>
@@ -569,13 +577,15 @@
                     <b-table class="table-small-font" responsive head-variant="light" outlined
                       :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
                       <template v-slot:cell(authors)="data">
-                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
+                        }}</span>
                       </template>
                     </b-table>
                   </template>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
-                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
+                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings"
+                    :permission="permission">
                   </edit-review-finding>
                 </b-tab>
               </b-tabs>
@@ -587,8 +597,8 @@
                   <template slot="title">
                     {{ $t('worksheet.titles.question_criteria') }}
                     <font-awesome-icon v-if="
-                      project.review_question === '' || 
-                      project.inclusion === '' || 
+                      project.review_question === '' ||
+                      project.inclusion === '' ||
                       project.exclusion === ''
                     " class="text-danger" icon="exclamation-circle"></font-awesome-icon>
                   </template>
@@ -662,13 +672,15 @@
                     <b-table class="table-small-font" responsive head-variant="light" outlined
                       :fields="charsOfStudies.fieldsObj" :items="charsOfStudies.items">
                       <template v-slot:cell(authors)="data">
-                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
+                        <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors
+                        }}</span>
                       </template>
                     </b-table>
                   </template>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
-                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
+                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings"
+                    :permission="permission">
                   </edit-review-finding>
                 </b-tab>
               </b-tabs>
@@ -680,10 +692,13 @@
                   <h5>{{ $t('worksheet.domains.methodological_limitations') }}</h5>
                   <p>
                     <b>{{ displaySelectedOption(evidenceProfile[0].methodological_limitations.option) }}</b>
-                    <template v-if="parseInt( evidenceProfile[0].methodological_limitations.option ) > 0">
+                    <template v-if="parseInt(evidenceProfile[0].methodological_limitations.option) > 0">
                       <br />
                       {{ $t('common.explanation_colon') }}
-                      <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{ getExplanation('methodological-limitations', evidenceProfile[0].methodological_limitations.option, evidenceProfile[0].methodological_limitations.explanation) }}</span>
+                      <span v-if="evidenceProfile[0].methodological_limitations.explanation">{{
+                        getExplanation('methodological-limitations',
+                          evidenceProfile[0].methodological_limitations.option,
+                          evidenceProfile[0].methodological_limitations.explanation) }}</span>
                       <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                     </template>
                   </p>
@@ -693,7 +708,8 @@
                     <template v-if="parseInt(evidenceProfile[0].coherence.option) > 0">
                       <br />
                       {{ $t('common.explanation_colon') }}
-                      <span v-if="evidenceProfile[0].coherence.explanation">{{ getExplanation('coherence', evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
+                      <span v-if="evidenceProfile[0].coherence.explanation">{{ getExplanation('coherence',
+                        evidenceProfile[0].coherence.option, evidenceProfile[0].coherence.explanation) }}</span>
                       <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                     </template>
                   </p>
@@ -703,7 +719,8 @@
                     <template v-if="parseInt(evidenceProfile[0].adequacy.option) > 0">
                       <br />
                       {{ $t('common.explanation_colon') }}
-                      <span v-if="evidenceProfile[0].adequacy.explanation">{{ getExplanation('adequacy', evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
+                      <span v-if="evidenceProfile[0].adequacy.explanation">{{ getExplanation('adequacy',
+                        evidenceProfile[0].adequacy.option, evidenceProfile[0].adequacy.explanation) }}</span>
                       <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                     </template>
                   </p>
@@ -713,13 +730,15 @@
                     <template v-if="parseInt(evidenceProfile[0].relevance.option) > 0">
                       <br />
                       {{ $t('common.explanation_colon') }}
-                      <span v-if="evidenceProfile[0].relevance.explanation">{{ getExplanation('relevance', evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
+                      <span v-if="evidenceProfile[0].relevance.explanation">{{ getExplanation('relevance',
+                        evidenceProfile[0].relevance.option, evidenceProfile[0].relevance.explanation) }}</span>
                       <span v-else>{{ $t('worksheet.labels.explanation_not_added') }}</span>
                     </template>
                   </p>
                 </b-tab>
                 <b-tab :title="$t('worksheet.titles.review_finding')">
-                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings" :permission="permission">
+                  <edit-review-finding @update-list-data="getList(true)" :list="list" :finding="findings"
+                    :permission="permission">
                   </edit-review-finding>
                 </b-tab>
               </b-tabs>
@@ -729,36 +748,24 @@
       </b-container>
     </b-modal>
 
-    <b-modal
-      id="modal-warning-same-txt"
-      ref="modal-warning-same-txt"
-      :title="$t('common.warning')"
-      :hide-footer="true">
+    <b-modal id="modal-warning-same-txt" ref="modal-warning-same-txt" :title="$t('common.warning')" :hide-footer="true">
       <p>
         {{ $t('worksheet.warnings.incomplete_explanation') }}
       </p>
       <b-container>
         <b-row align-h="between">
-          <b-col
-            cols="4">
-            <b-button
-              block
-              @click="closeWarningModalDoItNow(selectedOptions.type)">{{ $t('worksheet.actions.do_it_now') }}</b-button>
+          <b-col cols="4">
+            <b-button block @click="closeWarningModalDoItNow(selectedOptions.type)">{{ $t('worksheet.actions.do_it_now')
+            }}</b-button>
           </b-col>
-          <b-col
-            cols="4">
-            <b-button
-              block
-              @click="closeWarningModalDoItLater()">{{ $t('worksheet.actions.do_it_later') }}</b-button>
+          <b-col cols="4">
+            <b-button block @click="closeWarningModalDoItLater()">{{ $t('worksheet.actions.do_it_later') }}</b-button>
           </b-col>
         </b-row>
       </b-container>
     </b-modal>
 
-    <b-modal
-      id="modal-warning-changed-option"
-      ref="modal-warning-changed-option"
-      :title="$t('common.warning')"
+    <b-modal id="modal-warning-changed-option" ref="modal-warning-changed-option" :title="$t('common.warning')"
       :hide-footer="true">
       <p>
         {{ $t('worksheet.warnings.changed_option') }}
@@ -772,23 +779,16 @@
       <b-container>
         <b-row>
           <b-col>
-            <b-button
-              block
-              @click="updateOptions(selectedOptions.type, true)">{{ $t('common.yes') }}</b-button>
+            <b-button block @click="updateOptions(selectedOptions.type, true)">{{ $t('common.yes') }}</b-button>
           </b-col>
           <b-col>
-            <b-button
-              block
-              @click="updateOptions(selectedOptions.type, false)">{{ $t('common.no') }}</b-button>
+            <b-button block @click="updateOptions(selectedOptions.type, false)">{{ $t('common.no') }}</b-button>
           </b-col>
         </b-row>
       </b-container>
     </b-modal>
 
-    <b-modal
-      id="modal-warning-cleaning-cerqual"
-      ref="modal-warning-cleaning-cerqual"
-      :title="$t('common.warning')"
+    <b-modal id="modal-warning-cleaning-cerqual" ref="modal-warning-cleaning-cerqual" :title="$t('common.warning')"
       :hide-footer="true">
       <p>
         {{ clearCerqualWarningMessage }}
@@ -799,14 +799,10 @@
       <b-container>
         <b-row>
           <b-col>
-            <b-button
-              block
-              @click="updateOptions(selectedOptions.type, true)">{{ $t('common.yes') }}</b-button>
+            <b-button block @click="updateOptions(selectedOptions.type, true)">{{ $t('common.yes') }}</b-button>
           </b-col>
           <b-col>
-            <b-button
-              block
-              @click="updateOptions(selectedOptions.type, false)">{{ $t('common.no') }}</b-button>
+            <b-button block @click="updateOptions(selectedOptions.type, false)">{{ $t('common.no') }}</b-button>
           </b-col>
         </b-row>
       </b-container>
@@ -846,7 +842,7 @@ export default {
     show: Object,
     modePrintFieldObject: Array
   },
-  data () {
+  data() {
     return {
       selectedOptions: {
         methodological_limitations: {
@@ -865,6 +861,11 @@ export default {
           notes: ''
         },
         relevance: {
+          option: null,
+          explanation: '',
+          notes: ''
+        },
+        cerqual: {
           option: null,
           explanation: '',
           notes: ''
@@ -916,7 +917,7 @@ export default {
       }
     }
   },
-  mounted () {
+  mounted() {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     this.localExtractedData = JSON.parse(JSON.stringify(this.extractedData))
   },
@@ -930,6 +931,11 @@ export default {
     }
   },
   methods: {
+    explanationStateFor: function (domain) {
+      const d = this.selectedOptions[domain]
+      if (!d || d.option === null) return null
+      return d.explanation && d.explanation.trim().length > 0 ? true : false
+    },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
@@ -1013,30 +1019,12 @@ export default {
       return false
     },
     checkValidationExplanationText: function (type, prop) {
-      switch (type) {
-        case 'methodological-limitations':
-          if (parseInt(prop.methodological_limitations.option) > 0 && prop.methodological_limitations.explanation === '') {
-            return true
-          }
-          return false
-        case 'coherence':
-          if (parseInt(prop.coherence.option) > 0 && prop.coherence.explanation === '') {
-            return true
-          }
-          return false
-        case 'adequacy':
-          if (parseInt(prop.adequacy.option) > 0 && prop.adequacy.explanation === '') {
-            return true
-          }
-          return false
-        case 'relevance':
-          if (parseInt(prop.relevance.option) > 0 && prop.relevance.explanation === '') {
-            return true
-          }
-          return false
-        default:
-          return false
-      }
+      if (!type) return false
+      const domain = type.replace(/-/g, '_')
+      const d = prop[domain]
+      if (!d || d.option === null) return false
+      // Explicación requerida si se seleccionó cualquier opción (incluyendo No Concerns / High)
+      return !(d.explanation && d.explanation.trim().length > 0)
     },
     updateOptions: function (option, status) {
       if (option === 'methodological-limitations') {

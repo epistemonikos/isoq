@@ -84,12 +84,12 @@ describe('EditReferenceModal.vue', () => {
 
   it('calls Api.patch when handleModalOk is triggered', async () => {
     await wrapper.vm.handleModalOk()
-    
+
     expect(Api.patch).toHaveBeenCalledWith(
       '/isoqf_characteristics/char1/',
       expect.objectContaining({
         items: expect.arrayContaining([
-          expect.objectContaining({ 
+          expect.objectContaining({
             ref_id: 'ref1',
             column_1: 'Custom Value',
             design_extractedData: 'Data Value',
@@ -99,5 +99,49 @@ describe('EditReferenceModal.vue', () => {
       })
     )
     expect(wrapper.emitted('saved')).toBeTruthy()
+  })
+
+  describe('hasInvalidCustomFields', () => {
+    it('returns false when all non-Camelot fields have labels', async () => {
+      await wrapper.setData({
+        customFields: [
+          { isCamelot: false, locked: false, label: 'My column' },
+          { isCamelot: true, locked: true, label: 'Camelot field' }
+        ]
+      })
+      expect(wrapper.vm.hasInvalidCustomFields).toBe(false)
+    })
+
+    it('returns true when a non-Camelot field has an empty label', async () => {
+      await wrapper.setData({
+        customFields: [
+          { isCamelot: false, locked: false, label: '' }
+        ]
+      })
+      expect(wrapper.vm.hasInvalidCustomFields).toBe(true)
+    })
+
+    it('returns true when a non-Camelot field has a whitespace-only label', async () => {
+      await wrapper.setData({
+        customFields: [
+          { isCamelot: false, locked: false, label: '   ' }
+        ]
+      })
+      expect(wrapper.vm.hasInvalidCustomFields).toBe(true)
+    })
+
+    it('ignores Camelot fields with empty labels', async () => {
+      await wrapper.setData({
+        customFields: [
+          { isCamelot: true, locked: true, label: '' }
+        ]
+      })
+      expect(wrapper.vm.hasInvalidCustomFields).toBe(false)
+    })
+
+    it('returns false when there are no custom fields', async () => {
+      await wrapper.setData({ customFields: [] })
+      expect(wrapper.vm.hasInvalidCustomFields).toBe(false)
+    })
   })
 })

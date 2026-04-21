@@ -157,14 +157,18 @@
     <!-- modals -->
     <b-modal size="xl" id="edit-finding-name" ref="edit-finding-name" :title="$t('soqf_table.edit_finding')"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary"
-      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName">
+      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName"
+      @hidden="findingNameDirty = false">
       <b-alert :show="editingUser.show" variant="danger">
         <span
           v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
       </b-alert>
       <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="finding-name">
         <template slot="description">{{ $t('soqf_table.tips_writing') }}</template>
-        <b-form-textarea id="finding-name" v-model="editFindingName.name" rows="6" max-rows="100"></b-form-textarea>
+        <b-form-textarea id="finding-name" v-model="editFindingName.name" rows="6" max-rows="100"
+          :state="findingNameDirty && !(editFindingName.name && editFindingName.name.trim().length) ? false : null"
+          @input="findingNameDirty = true"></b-form-textarea>
+        <b-form-invalid-feedback>{{ $t('common.field_required') }}</b-form-invalid-feedback>
       </b-form-group>
       <b-form-group v-if="list_categories.options.length" :label="$t('soqf_table.select_group')"
         :description="$t('soqf_table.group_optional')">
@@ -360,7 +364,8 @@ export default {
       selected_references: [],
       original_references: [],
       finding: {},
-      pendingSaveReferences: false
+      pendingSaveReferences: false,
+      findingNameDirty: false
     }
   },
   props: {

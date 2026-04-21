@@ -69,6 +69,7 @@
     "sent": "Sent",
     "match": "Match",
     "notes": "Notes",
+    "field_required": "This field is required.",
     "interactive": "Interactive",
     "my_data": "My Data",
     "project_properties": "Project Properties",
@@ -1387,6 +1388,7 @@
     "assessment_form": {
       "title": "Fit assessment",
       "explain_label": "Explain your assessment",
+      "explanation_required": "An explanation is required when a concern level is selected.",
       "text_placeholder": "Enter your text",
       "save_button": "save",
       "overall_assessment": "Overall assessment",

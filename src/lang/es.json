@@ -69,6 +69,7 @@
     "sent": "Enviado",
     "match": "Coincide",
     "notes": "Notas",
+    "field_required": "Este campo es requerido.",
     "interactive": "Interactivo",
     "my_data": "Mis Datos",
     "project_properties": "Propiedades del Proyecto",
@@ -1387,6 +1388,7 @@
     "assessment_form": {
       "title": "Evaluación de ajuste",
       "explain_label": "Explique su evaluación",
+      "explanation_required": "Se requiere una explicación cuando se selecciona un nivel de preocupación.",
       "text_placeholder": "Ingrese su texto",
       "save_button": "Guardar",
       "overall_assessment": "Evaluación general",

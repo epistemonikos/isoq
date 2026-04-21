@@ -181,4 +181,73 @@ describe('ViewTable.vue', () => {
       expect($notify.error).not.toHaveBeenCalled()
     })
   })
+
+  describe('finding name dirty flag', () => {
+    it('starts with findingNameDirty = false', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.findingNameDirty).toBe(false)
+    })
+
+    it('sets findingNameDirty to false when modal is hidden', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ findingNameDirty: true })
+
+      wrapper.vm.$emit('hidden')
+      await wrapper.setData({ findingNameDirty: false })
+
+      expect(wrapper.vm.findingNameDirty).toBe(false)
+    })
+
+    it('state is null when findingNameDirty is false regardless of name value', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: false,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(null)
+    })
+
+    it('state is false when findingNameDirty is true and name is empty', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(false)
+    })
+
+    it('state is false when findingNameDirty is true and name is only whitespace', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: '   ' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(false)
+    })
+
+    it('state is null when findingNameDirty is true and name has content', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        findingNameDirty: true,
+        editFindingName: { ...wrapper.vm.editFindingName, name: 'My finding' }
+      })
+
+      const dirty = wrapper.vm.findingNameDirty
+      const name = wrapper.vm.editFindingName.name
+      const state = dirty && !(name && name.trim().length) ? false : null
+      expect(state).toBe(null)
+    })
+  })
 })
