@@ -93,9 +93,6 @@ export default {
             for (let list of response.data) {
               if (list.category === newCategory.value) {
                 Api.patch(`/isoqf_lists/${list.id}`, {category: newCategory.id})
-                  .then(() => {
-                    console.log(`list id ${list.id} updated!`)
-                  })
               }
             }
           }

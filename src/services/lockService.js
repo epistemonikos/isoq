@@ -54,10 +54,6 @@ class LockService {
         return { success: true }
       }
     } catch (error) {
-      console.log('LockService acquire error:', error)
-      if (error.response) {
-        console.log('LockService acquire error response:', error.response.status, error.response.data)
-      }
       if (error.response && error.response.status === 409) {
         this.isLocked = false
         this.lockedBy = error.response.data.locked_by

@@ -401,7 +401,6 @@ export default {
         if (this.assessments.id) {
           Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
             .then(response => {
-              console.log('Data updated successfully:', response.data)
               this.$emit('getAssessments')
               this.isSaving = false
             })
@@ -413,7 +412,6 @@ export default {
           Api.post('/isoqf_assessments', params)
             .then(response => {
               this.$emit('getAssessments')
-              console.log('Data saved successfully:', response.data)
               this.isSaving = false
             })
             .catch(error => {
@@ -422,7 +420,6 @@ export default {
             })
         }
       } else {
-        console.log('no ref id')
         this.isSaving = false
       }
     }

@@ -24,7 +24,7 @@
       <span class="font-weight-bold">{{ data.item.authors }}</span>
     </template>
 
-    <!-- Step One: FA 1-4 + Edit -->
+    <!-- FA 1-4 + Edit -->
     <template v-slot:cell(fa1)="data">
       <div class="d-flex justify-content-center">
         <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(0, 0, data.item)]"
@@ -50,14 +50,15 @@
       </div>
     </template>
     <template v-slot:cell(edit1)="data">
-      <div class="d-flex justify-content-center">
+      <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn">
           <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
+        <font-awesome-icon v-if="isGroupComplete(0, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
 
-    <!-- Step Two: FA 5-8 + Edit -->
+    <!-- FA 5-8 + Edit -->
     <template v-slot:cell(fa5)="data">
       <div class="d-flex justify-content-center">
         <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(1, 0, data.item)]"
@@ -83,14 +84,15 @@
       </div>
     </template>
     <template v-slot:cell(edit2)="data">
-      <div class="d-flex justify-content-center">
+      <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn">
           <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
+        <font-awesome-icon v-if="isGroupComplete(1, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
 
-    <!-- Step Three: FA 9 + Edit -->
+    <!-- FA 9 + Edit -->
     <template v-slot:cell(fa9)="data">
       <div class="d-flex justify-content-center">
         <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(2, 0, data.item)]"
@@ -98,14 +100,15 @@
       </div>
     </template>
     <template v-slot:cell(edit3)="data">
-      <div class="d-flex justify-content-center">
+      <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn">
           <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
+        <font-awesome-icon v-if="isGroupComplete(2, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
 
-    <!-- Step Four: OA + Edit -->
+    <!-- OA + Edit -->
     <template v-slot:cell(oa)="data">
       <div class="d-flex justify-content-center">
         <div style="cursor: pointer" :class="['assessment-circle', getCircleClass(3, 0, data.item)]"
@@ -113,42 +116,36 @@
       </div>
     </template>
     <template v-slot:cell(edit4)="data">
-      <div class="d-flex justify-content-center">
+      <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn">
           <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
+        <font-awesome-icon v-if="isGroupComplete(3, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
     </template>
   </b-table>
 </template>
 
 <script>
+import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+
 export default {
   name: 'CamelotStepFourTable',
+  mixins: [camelotCircleMixin],
   props: {
     fields: { type: Array, required: true },
     items: { type: Array, required: true },
     responses: { type: Array, required: true }
   },
   methods: {
-    getCircleClass(stage, optionIndex, item) {
-      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
-        return 'circle-not-completed'
+    isGroupComplete(stage, optionCount, item) {
+      if (!item || !item.stages || !item.stages[stage]) return false
+      const options = item.stages[stage].options
+      if (!options) return false
+      for (let i = 0; i < optionCount; i++) {
+        if (!options[i] || options[i].option === null) return false
       }
-      const option = item.stages[stage].options[optionIndex].option
-      return option === null ? 'circle-not-completed' : 'circle-filled'
-    },
-    getCircleStyle(stage, optionIndex, item) {
-      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
-        return {}
-      }
-      const option = item.stages[stage].options[optionIndex].option
-      if (option === null) return {}
-
-      const response = this.responses.find(r => r.value === option)
-      return {
-        backgroundColor: response ? response.color : '#B3B3B3'
-      }
+      return true
     },
     openModal(stage, data, tab = 0, faLabel = null) {
       this.$emit('open-modal', { stage, data, tab, faLabel })

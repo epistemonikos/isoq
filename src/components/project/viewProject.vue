@@ -823,10 +823,8 @@ export default {
       try {
         const response = await Api.get('/isoqf_characteristics', params)
         if (response.data && response.data.length > 0) {
-          console.log('Características cargadas:', response.data[0])
           this.charsOfStudies = response.data[0]
         } else {
-          console.log('No se encontraron características, manteniendo estructura vacía')
           // Mantener la estructura vacía pero con IDs nulos
           this.charsOfStudies = {
             id: null,
@@ -855,10 +853,8 @@ export default {
       try {
         const response = await Api.get('/isoqf_assessments', params)
         if (response.data && response.data.length > 0) {
-          console.log('Evaluaciones cargadas:', response.data[0])
           this.methodologicalTableRefs = response.data[0]
         } else {
-          console.log('No se encontraron evaluaciones, manteniendo estructura vacía')
           // Mantener la estructura vacía pero con IDs nulos
           this.methodologicalTableRefs = {
             id: null,

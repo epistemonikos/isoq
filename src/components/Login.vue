@@ -114,7 +114,7 @@ export default {
               error.response.data.status === 'email_not_verified') {
             this.emailNotVerified = true
           } else {
-            console.log(error)
+            console.error(error)
           }
         })
     },

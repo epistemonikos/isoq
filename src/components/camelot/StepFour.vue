@@ -502,7 +502,6 @@ export default {
     },
     references: {
       handler(newVal) {
-        console.log('watch references')
         this.getAssessments()
       },
       immediate: true
@@ -529,7 +528,6 @@ export default {
       return ''
     },
     getAssessments: function () {
-      console.log('getAssessments')
       this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
@@ -765,7 +763,7 @@ export default {
     onSaveField(newValue) {
       this.saveField(newValue)
     },
-    getTabColor(stage, dIndex) {
+    getTabColor (stage, dIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
       const currentItem = this.assessments.items[this.modal.index]
       if (!currentItem.stages || !currentItem.stages[stage]) return null
@@ -775,7 +773,7 @@ export default {
       const response = this.ui.responses.find(r => r.value === option)
       return response ? response.color : null
     },
-    isTabCompleted(stage, tabIndex) {
+    isTabCompleted (stage, tabIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
 
       const currentItem = this.assessments.items[this.modal.index]
@@ -784,25 +782,6 @@ export default {
 
       const option = currentItem.stages[stage].options[tabIndex].option
       return option !== null
-    },
-    getCircleClass: function (stage, optionIndex, item) {
-      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
-        return 'circle-not-completed'
-      }
-      const option = item.stages[stage].options[optionIndex].option
-      return option === null ? 'circle-not-completed' : 'circle-filled'
-    },
-    getCircleStyle: function (stage, optionIndex, item) {
-      if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
-        return {}
-      }
-      const option = item.stages[stage].options[optionIndex].option
-      if (option === null) return {}
-
-      const response = this.ui.responses.find(r => r.value === option)
-      return {
-        backgroundColor: response ? response.color : '#B3B3B3'
-      }
     }
   }
 }

@@ -116,7 +116,7 @@ export default {
           this.table_settings.isBusy = false
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     }
   }

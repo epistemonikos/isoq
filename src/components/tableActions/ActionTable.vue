@@ -277,7 +277,7 @@ export default {
               this.$emit('response-ok-api')
             })
             .catch((error) => {
-              console.log(error)
+              console.error(error)
             })
         } else {
           Api.post(`${this.importUrl}`, params)
@@ -285,7 +285,7 @@ export default {
               this.$emit('response-ok-api')
             })
             .catch((error) => {
-              console.log(error)
+              console.error(error)
             })
         }
       }
@@ -331,7 +331,7 @@ export default {
           this.$emit('response-ok-api')
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     },
     createTableOpenModal: function () {},
@@ -341,7 +341,7 @@ export default {
           this.$emit('response-ok-api')
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     },
     modalCreateTable: function () {
@@ -376,7 +376,7 @@ export default {
           this.$emit('response-ok-api')
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     },
     saveUpdateFields: function () {
@@ -407,7 +407,7 @@ export default {
           this.$emit('response-ok-api')
         })
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     },
     addNewColumn: function () {
