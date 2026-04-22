@@ -383,6 +383,7 @@
     "no_findings_affected": "Ningún hallazgo de revisión será afectado.",
     "empty_file": "Contenido de archivo vacío",
     "refs_processed": "{count} referencias procesadas localmente",
+    "upload_result": "{saved} referencias añadidas. {duplicates} duplicadas omitidas.",
     "reference_id": "ID de Referencia",
     "author_year": "Autor(es), Año"
   },

@@ -42,6 +42,29 @@
           <p>
             {{ $t('references.reminder') }}
           </p>
+          <b-alert
+            v-if="uploadResult"
+            :variant="uploadResult.saved === 0 && uploadResult.duplicates > 0 ? 'warning' : 'success'"
+            dismissible
+            show
+            @dismissed="uploadResult = null"
+          >
+            {{ $t('references.upload_result', { saved: uploadResult.saved, duplicates: uploadResult.duplicates }) }}
+            <span
+              v-if="uploadResult.duplicates > 0"
+              class="ml-2"
+              style="cursor:pointer; text-decoration:underline"
+              @click="showDuplicates = !showDuplicates"
+            >
+              {{ showDuplicates ? $t('common.hide') : $t('common.show') }}
+            </span>
+            <ul v-if="uploadResult.duplicates > 0 && showDuplicates" class="mt-2 mb-0">
+              <li v-for="(dup, i) in uploadResult.duplicate_list" :key="i">
+                <strong>{{ dup.title }}</strong>
+                <br><small>{{ dup.authors }} ({{ dup.year }})</small>
+              </li>
+            </ul>
+          </b-alert>
         </b-tab>
         <b-tab :title="$t('references.import_pubmed')">
           <b-row>
@@ -230,6 +253,8 @@ export default {
       localReferences: [],
       btnCleanDisabled: true,
       pubmed_batch_feedback: null,
+      uploadResult: null,
+      showDuplicates: false,
       disableBtnRemoveAllRefs: false,
       appearMsgRemoveReferences: false,
       operationId: null,
@@ -398,8 +423,11 @@ export default {
           const _references = JSON.parse(JSON.stringify(this.localReferences))
 
           await this.syncAllSteps([...this.references, ..._references])
-          this.msgUploadReferences = response.data.message || `${response.data.references.length} references have been added.`
         }
+
+        const { parsed = 0, saved = 0, duplicates = 0, duplicate_list = [] } = response.data || {}
+        this.uploadResult = { parsed, saved, duplicates, duplicate_list }
+        this.showDuplicates = false
 
         this.pre_references = ''
         this.fileReferences = []

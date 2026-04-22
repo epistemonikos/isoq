@@ -383,6 +383,7 @@
     "no_findings_affected": "No review findings will be affected.",
     "empty_file": "Empty file content",
     "refs_processed": "{count} references processed locally",
+    "upload_result": "{saved} references added. {duplicates} duplicates skipped.",
     "reference_id": "Reference ID",
     "author_year": "Author(s), Year"
   },
