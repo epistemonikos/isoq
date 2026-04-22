@@ -18,30 +18,32 @@ export default class Project {
   static canPublish = canPublish
 
   static async validations (data) {
-    if (data.public_type !== 'private') {
-      let cnt = 0
-      let responses = {
-        state: {
-          id: null,
-          name: null,
-          authors: null,
-          author: null,
-          author_email: null,
-          review_question: null,
-          url_doi: null,
-          complete_by_author: null,
-          lists_authors: null,
-          license: null
-        }
+    let cnt = 0
+    let responses = {
+      state: {
+        id: null,
+        name: null,
+        authors: null,
+        author: null,
+        author_email: null,
+        review_question: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null,
+        license: null
       }
+    }
+
+    // Basic validation for all projects
+    if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
+      responses.state.name = false
+      cnt++
+    }
+
+    if (data.public_type !== 'private') {
       // check if project has an id
       if (data.id === '' || data.id === null || data.id === undefined || Object.prototype.hasOwnProperty.call(data, 'id') === false) {
         responses.state.id = false
-        cnt++
-      }
-      // check if project has a name with at least 3 characters
-      if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
-        responses.state.name = false
         cnt++
       }
       // check if project has authors
@@ -80,13 +82,6 @@ export default class Project {
         cnt++
       }
 
-      // const canPublish = await Project.canPublish(data)
-      // if (canPublish.data.status === false) {
-      //   responses.message = canPublish.data.message
-      //   responses.state.can_publish = false
-      //   cnt++
-      // }
-
       if (cnt > 0) {
         return { data: { status: false, message: 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.', ...responses } }
       } else {
@@ -99,6 +94,11 @@ export default class Project {
         return { data: { status: true } }
       }
     }
+
+    if (cnt > 0) {
+      return { data: { status: false, message: 'project.notifications.required_fields_error', ...responses } }
+    }
+
     return { data: { status: true } }
   }
 

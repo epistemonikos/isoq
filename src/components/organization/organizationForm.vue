@@ -31,17 +31,6 @@
     </template>
     <template v-if="canEdit">
       <b-row>
-        <b-col>
-          <b-alert
-            :show="msgUpdateProject !== null && msgUpdateProject.length"
-            dismissible
-            :variant="variant"
-            @dismissed="dismissAlertProject">
-            {{ msgUpdateProject }}
-          </b-alert>
-        </b-col>
-      </b-row>
-      <b-row>
         <b-col
           cols="12">
           <b-form-group
@@ -248,6 +237,7 @@
           <b-button
             block
             variant="outline-success"
+            :disabled="isInvalid"
             @click="save">
             {{ $t('common.save') }}
           </b-button>
@@ -352,8 +342,6 @@ export default {
   },
   data: function () {
     return {
-      variant: 'info',
-      msgUpdateProject: null,
       state: {
         id: null,
         name: null,
@@ -402,13 +390,13 @@ export default {
           }
         } else {
           this.isMigrating = false
-          this.setMsgUpdateProject(response.data.message)
+          this.$notify.error(response.data.message)
           this.$bvModal.hide('camelot-toggle-modal')
         }
       } catch (error) {
         console.error('Error updating methodology', error)
         this.isMigrating = false
-        this.setMsgUpdateProject('Error updating methodology')
+        this.$notify.error(this.$t('project.notifications.error_updating_methodology'))
         this.$bvModal.hide('camelot-toggle-modal')
       }
     },
@@ -426,9 +414,6 @@ export default {
         license: null,
         can_publish: null
       }
-    },
-    dismissAlertProject: function () {
-      this.msgUpdateProject = null
     },
     handlePublishWarningContinue: function () {
       // User confirmed they want to make the project private
@@ -504,16 +489,18 @@ export default {
       }
     },
     executeSave: async function (data) {
-      if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
-        const response = await Project.update(data)
-        if (response.data.status) {
-          this.variant = 'success'
-          this.msgUpdateProject = 'The project has been updated'
+      try {
+        if (Object.prototype.hasOwnProperty.call(data, 'id') && data.id !== null) {
+          const response = await Project.update(data)
+          if (response.data && response.data.status === false) {
+            this.state = { ...this.state, ...response.data.state }
+            this.$notify.error(this.$t(response.data.message))
+            return
+          }
+          this.$notify.success(this.$t('project.notifications.project_updated'))
           if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('modal-notification')
           } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
             this.$emit('update-form-data', data)
           }
           // Update the original form data to reflect the new state
@@ -524,37 +511,48 @@ export default {
             this.$router.push({ query }).catch(() => {})
           }
         } else {
-          this.variant = 'danger'
-          this.state = { ...this.state, ...response.data.state }
-          this.msgUpdateProject = response.data.message
-          if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
+          const response = await Project.create(data)
+          if (response.data && response.data.status === false) {
+            this.state = { ...this.state, ...response.data.state }
+            this.$notify.error(this.$t(response.data.message))
+            return
+          }
+          if (response.data && response.data.id) {
+            this.$notify.success(this.$t('project.notifications.project_created'))
+            this.$emit('modal-notification', response)
+            // Update the original form data to reflect the new state
+            this.originalFormData = JSON.parse(JSON.stringify(data))
+            if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
+              const query = { ...this.$route.query }
+              delete query.highlight
+              this.$router.push({ query }).catch(() => {})
+            }
           }
         }
-      } else {
-        const response = await Project.create(data)
-        if (response.data.id) {
-          this.variant = 'success'
-          this.msgUpdateProject = 'The project has been created'
-          this.$emit('modal-notification', response)
-          // Update the original form data to reflect the new state
-          this.originalFormData = JSON.parse(JSON.stringify(data))
-          if (Object.prototype.hasOwnProperty.call(this.$route.query, 'highlight')) {
-            const query = { ...this.$route.query }
-            delete query.highlight
-            this.$router.push({ query }).catch(() => {})
+      } catch (error) {
+        if (error.response && error.response.data) {
+          const errData = error.response.data
+          if (errData.type === 'missing_fields' && Array.isArray(errData.fields)) {
+            const newState = { ...this.state }
+            errData.fields.forEach(field => {
+              if (Object.prototype.hasOwnProperty.call(newState, field)) {
+                newState[field] = false
+              }
+            })
+            this.state = newState
+            this.$notify.error(this.$t('project.notifications.required_fields_error'))
+          } else if (errData.message) {
+            let errorMsg = errData.message
+            if (errorMsg === "Validation error in isoqf_projects: '' should be non-empty") {
+              errorMsg = this.$t('project.validation.title_min_length')
+            }
+            this.$notify.error(errorMsg)
+          } else {
+            this.$notify.error(this.$t('common.error') || 'Error saving project')
           }
         } else {
-          this.variant = 'danger'
-          this.msgUpdateProject = response.data.message
-          this.state = { ...this.state, ...response.data.state }
-          if (this.isModal) {
-            document.getElementById('new-project').scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+          console.error(error)
+          this.$notify.error(error.message || 'An error occurred')
         }
       }
     },
@@ -565,9 +563,7 @@ export default {
       return Project.validUrl(url)
     },
     setMsgUpdateProject: function (msg) {
-      this.msgUpdateProject = msg
-      this.variant = 'danger'
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.$notify.error(msg)
     }
   },
   computed: {
@@ -601,6 +597,9 @@ export default {
       // A project requires validation if it's not private
       return this.formData.public_type !== 'private' ||
              (this.originalFormData && this.originalFormData.public_type !== 'private')
+    },
+    isInvalid () {
+      return !this.formData.name || this.formData.name.trim().length < 3
     }
   },
   watch: {

@@ -253,6 +253,12 @@
     "idle_message": "You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing."
   },
   "project": {
+    "notifications": {
+      "project_created": "The project has been created",
+      "project_updated": "The project has been updated",
+      "error_updating_methodology": "Error updating methodology",
+      "required_fields_error": "Please complete the required fields."
+    },
     "validation": {
       "title_min_length": "The project must have a title that contain at least 3 characters",
       "at_least_one_author": "The project must have at least one author",

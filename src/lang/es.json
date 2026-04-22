@@ -253,6 +253,12 @@
     "idle_message": "Has estado inactivo por un tiempo. Para permitir que otros editen, se ha liberado tu acceso de escritura. Por favor recarga para resumir la edición."
   },
   "project": {
+    "notifications": {
+      "project_created": "El proyecto ha sido creado",
+      "project_updated": "El proyecto ha sido actualizado",
+      "error_updating_methodology": "Error al actualizar la metodología",
+      "required_fields_error": "Por favor, complete los campos requeridos."
+    },
     "validation": {
       "title_min_length": "El proyecto debe tener un título con al menos 3 caracteres",
       "at_least_one_author": "El proyecto debe tener al menos un autor",
