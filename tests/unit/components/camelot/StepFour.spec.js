@@ -113,6 +113,43 @@ describe('StepFour.vue - TDD for inline editing', () => {
     )
   })
 
+  describe('getAssessments synchronization', () => {
+    it('should add missing references from props to assessments.items when loading from API', async () => {
+      // 1. Setup mock with 2 references but API returns only 1 assessment item
+      const references = [
+        { id: 'ref1', authors: 'Author A' },
+        { id: 'ref2', authors: 'Author B' }
+      ]
+      const mockAssessments = {
+        id: 'assess123',
+        items: [
+          { ref_id: 'ref1', authors: 'Author A', stages: [] }
+        ]
+      }
+      Api.get.mockResolvedValue({ data: [mockAssessments] })
+
+      // 2. Re-mount or call getAssessments manually
+      const syncWrapper = shallowMount(StepFour, {
+        localVue,
+        propsData: { type: 'camelot', references },
+        mocks: {
+          $t: (msg) => msg,
+          $route: { params: { org_id: 'org1', id: 'proj1' } }
+        },
+        stubs: { 'font-awesome-icon': true, 'b-modal': true, 'b-table': true, 'b-tabs': true, 'b-tab': true, 'b-row': true, 'b-col': true, 'b-collapse': true, 'assessmentForm': true, 'responses': true }
+      })
+
+      // Wait for Api.get and the internal logic
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      // 3. Assertions
+      expect(syncWrapper.vm.assessments.items.length).toBe(2)
+      const newItem = syncWrapper.vm.assessments.items.find(i => i.ref_id === 'ref2')
+      expect(newItem).toBeDefined()
+      expect(newItem.stages.length).toBe(4) // Default empty structure added
+    })
+  })
+
   describe('exportItems computed property', () => {
     it('should correctly map assessment values and comments to export format', () => {
       // Mock some assessments items

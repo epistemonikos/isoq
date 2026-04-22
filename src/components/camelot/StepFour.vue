@@ -537,7 +537,40 @@ export default {
         .then(response => {
           if (response.data.length) {
             this.assessments = { ...response.data[0] }
-            if (this.assessments.items && this.assessments.items.length > 0) {
+            if (!this.assessments.items) {
+              this.$set(this.assessments, 'items', [])
+            }
+
+            // Sync references: add those that are in this.references but not in assessments.items
+            this.references.forEach(ref => {
+              const exists = this.assessments.items.find(item => item.ref_id === ref.id)
+              if (!exists) {
+                this.assessments.items.push({
+                  ref_id: ref.id,
+                  authors: this.getReferenceData(ref),
+                  stages: [
+                    {
+                      key: 0,
+                      options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
+                    },
+                    {
+                      key: 1,
+                      options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
+                    },
+                    {
+                      key: 2,
+                      options: [{ option: null, text: '' }]
+                    },
+                    {
+                      key: 3,
+                      options: [{ option: null, text: '' }]
+                    }
+                  ]
+                })
+              }
+            })
+
+            if (this.assessments.items.length > 0) {
               this.assessments.items = this.assessments.items.map(item => {
                 const ref = this.references.find(r => r.id === item.ref_id)
                 if (ref) {
