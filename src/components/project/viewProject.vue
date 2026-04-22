@@ -812,6 +812,9 @@ export default {
           this.getLists()
         })
         .catch((error) => {
+          if (error.isOfflineError) {
+            this.$notify.warning(this.$t('offline.projectNotCached'))
+          }
           Commons.printErrors(error)
         })
     },

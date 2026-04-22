@@ -87,7 +87,7 @@ export const strategies = [
       if (singleMatch) {
          return await hydrateWorksheet(singleMatch[1])
       }
-      
+
       // 2. Single worksheet by ID in params
       if ((url === '/getLists' || url === '/getLists/') && params && params.id) {
         return await hydrateWorksheet(params.id)
@@ -97,15 +97,15 @@ export const strategies = [
       const projectMatch = url.match(/isoqf_lists\?project_id=([a-zA-Z0-9]+)/)
       if (projectMatch) {
         const cached = await getWorksheetsByProject(projectMatch[1])
-        if (cached && cached.length > 0) return cached.map(w => w.data)
+        return cached.map(w => w.data)
       }
 
       // 4. By Project ID in params
       if ((url === '/isoqf_lists' || url === '/isoqf_lists/') && params && params.project_id) {
          const cached = await getWorksheetsByProject(params.project_id)
-         if (cached && cached.length > 0) return cached.map(w => w.data)
+         return cached.map(w => w.data)
       }
-      
+
       return null
     },
     update: async (data, url) => {
@@ -144,20 +144,18 @@ export const strategies = [
     },
     serve: async (url, params) => {
       if (!params) return null
-      
+
       if (params.list_id) {
         const cached = await getFindingsByWorksheet(params.list_id)
-        if (cached && cached.length > 0) return cached.map(r => r.data)
+        return cached.map(r => r.data)
       } else if (params.list_ids) {
         const ids = params.list_ids.split(',').map(id => id.trim()).filter(id => id)
         let allFindings = []
         for (const id of ids) {
-            const cached = await getFindingsByWorksheet(id)
-            if (cached && cached.length > 0) {
-                allFindings = allFindings.concat(cached.map(r => r.data))
-            }
+          const cached = await getFindingsByWorksheet(id)
+          allFindings = allFindings.concat(cached.map(r => r.data))
         }
-        if (allFindings.length > 0) return allFindings
+        return allFindings
       }
       return null
     },
@@ -195,8 +193,8 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        const cached = await getReferencesByProject(pId)
-        if (cached && cached.length > 0) return cached.map(r => r.data)
+        const records = await getReferencesByProject(pId)
+        return records.map(r => r.data)
       }
       return null
     }
@@ -214,8 +212,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        const cached = await getCharacteristicsByProject(pId)
-        if (cached && cached.length > 0) return cached
+        return await getCharacteristicsByProject(pId)
       }
       return null
     }
@@ -233,8 +230,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        const cached = await getAssessmentsByProject(pId)
-        if (cached && cached.length > 0) return cached
+        return await getAssessmentsByProject(pId)
       }
       return null
     }
@@ -314,8 +310,7 @@ export const strategies = [
     serve: async (url, params) => {
       const pId = getProjectIdFromParams(params)
       if (pId) {
-        const cached = await getListCategoriesByProject(pId)
-        if (cached && cached.length > 0) return cached
+        return await getListCategoriesByProject(pId)
       }
       return null
     }

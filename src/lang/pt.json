@@ -1103,7 +1103,8 @@
     "pendingOperations": "operações pendentes",
     "refresh": "Atualizar",
     "noInternetAndNoCache": "Sem conexão com a Internet e sem dados em cache para",
-    "action_disabled": "Esta ação está desativada enquanto estiver offline"
+    "action_disabled": "Esta ação está desativada enquanto estiver offline",
+    "projectNotCached": "Este projeto não está disponível offline. Por favor, conecte-se à internet para visualizá-lo."
   },
   "camelot": {
     "guidance_labels": {
