@@ -309,7 +309,7 @@ export default {
 
       const item = {
         ref_id: this.localReference.id || '',
-        authors: this.localReference.authors || []
+        authors: Commons.parseReference(this.localReference, true, false)
       }
 
       const newFieldsArray = []

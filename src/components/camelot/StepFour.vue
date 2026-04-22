@@ -538,6 +538,13 @@ export default {
           if (response.data.length) {
             this.assessments = { ...response.data[0] }
             if (this.assessments.items && this.assessments.items.length > 0) {
+              this.assessments.items = this.assessments.items.map(item => {
+                const ref = this.references.find(r => r.id === item.ref_id)
+                if (ref) {
+                  item.authors = Commons.parseReference(ref, true, false)
+                }
+                return item
+              })
               this.assessments.items.sort((a, b) => {
                 const authorsA = a.authors || '';
                 const authorsB = b.authors || '';
@@ -604,18 +611,29 @@ export default {
           const data = response.data[0]
           const items = data.items
 
-          for (let x = 0; x < items.length; x++) {
-            if (items[x].ref_id === this.refId) {
+          // Standardize authors to be strings instead of arrays
+          if (items && Array.isArray(items)) {
+            data.items = items.map(item => {
+              const ref = this.references.find(r => r.id === item.ref_id)
+              if (ref) {
+                item.authors = Commons.parseReference(ref, true, false)
+              }
+              return item
+            })
+          }
+
+          for (let x = 0; x < data.items.length; x++) {
+            if (data.items[x].ref_id === this.refId) {
               for (let y = 0; y < this.meta.length; y++) {
                 for (let z = 0; z < this.meta[y].items.length; z++) {
-                  this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = items[x][this.meta[y].items[z] + 'extractedData']
-                  this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = items[x][this.meta[y].items[z] + 'comments']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'extractedData'] = data.items[x][this.meta[y].items[z] + 'extractedData']
+                  this.meta[y].values[z][this.meta[y].items[z] + 'comments'] = data.items[x][this.meta[y].items[z] + 'comments']
                 }
               }
             }
           }
 
-          this.characteristics = response.data[0]
+          this.characteristics = data
         })
         .catch(error => {
           console.error('Error fetching characteristics:', error)

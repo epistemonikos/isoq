@@ -431,6 +431,18 @@ export default {
             if (!serverData.fields || serverData.fields.length === 0) {
               serverData.fields = this.camelot && this.camelot.fields ? [...this.camelot.fields] : []
             }
+
+            // Standardize authors to be strings instead of arrays for backward compatibility and consistency
+            if (serverData.items && Array.isArray(serverData.items)) {
+              serverData.items = serverData.items.map(item => {
+                const ref = this.references.find(r => r.id === item.ref_id)
+                if (ref) {
+                  item.authors = Commons.parseReference(ref, true, false)
+                }
+                return item
+              })
+            }
+
             this.charsData = serverData
           } else {
             // If there's no data, initialize with empty structure and default Camelot fields if available

@@ -19,6 +19,10 @@ export default class Commons {
     return authors
   }
 
+  static getLastName (author) {
+    return author.split(',')[0].trim().split(/\s+/)[0]
+  }
+
   static parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
     let result = ''
     const semicolon = hasSemicolon ? '; ' : ''
@@ -28,11 +32,11 @@ export default class Commons {
       }
       if (Array.isArray(reference.authors) && reference.authors.length) {
         if (reference.authors.length === 1) {
-          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + ' ' + reference.publication_year + semicolon
+          result = this.getLastName(reference.authors[0]) + ' ' + reference.publication_year + semicolon
         } else if (reference.authors.length === 2) {
-          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.and') + reference.authors[1].split(',').map(s => s.trim()).join(' ') + ' ' + reference.publication_year + semicolon
+          result = this.getLastName(reference.authors[0]) + ' & ' + this.getLastName(reference.authors[1]) + ' ' + reference.publication_year + semicolon
         } else {
-          result = reference.authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.et_al') + reference.publication_year + semicolon
+          result = this.getLastName(reference.authors[0]) + i18n.t('common.et_al') + reference.publication_year + semicolon
         }
         if (!onlyAuthors) {
           result = result + reference.title
@@ -51,11 +55,11 @@ export default class Commons {
     if (Array.isArray(authors) && authors.length) {
       const nroAuthors = authors.length
       if (nroAuthors === 1) {
-        return authors[0].split(',').map(s => s.trim()).join(' ') + ' ' + pubYear
+        return this.getLastName(authors[0]) + ' ' + pubYear
       } else if (nroAuthors === 2) {
-        return authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.and') + authors[1].split(',').map(s => s.trim()).join(' ') + ' ' + pubYear
+        return this.getLastName(authors[0]) + ' & ' + this.getLastName(authors[1]) + ' ' + pubYear
       } else {
-        return authors[0].split(',').map(s => s.trim()).join(' ') + i18n.t('common.et_al') + pubYear
+        return this.getLastName(authors[0]) + i18n.t('common.et_al') + pubYear
       }
     } else {
       return i18n.t('common.author_not_found')

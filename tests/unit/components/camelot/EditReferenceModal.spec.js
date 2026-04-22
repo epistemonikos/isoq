@@ -91,6 +91,7 @@ describe('EditReferenceModal.vue', () => {
         items: expect.arrayContaining([
           expect.objectContaining({
             ref_id: 'ref1',
+            authors: 'Smith 2020',
             column_1: 'Custom Value',
             design_extractedData: 'Data Value',
             design_comments: 'Concern Value'
