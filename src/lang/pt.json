@@ -772,7 +772,7 @@
     "edit_finding": "Editar descoberta de revisão resumida",
     "user_editing": "O usuário <b>{first_name} {last_name}</b> está editando esta descoberta. O modo de edição está desabilitado.",
     "summarised_finding": "Descoberta de revisão resumida",
-    "tips_writing": "Clique aqui para dicas sobre como escrever uma descoberta de revisão resumida",
+    "tips_writing": "para dicas sobre como escrever uma descoberta de revisão resumida",
     "select_group": "Selecionar grupo de descoberta de revisão",
     "group_optional": "Você pode deixar esta opção em branco. Você sempre pode atribuir uma descoberta a um grupo mais tarde.",
     "notes_placeholder": "Espaço opcional para os revisores deixarem notas uns para os outros sobre esta descoberta de revisão",

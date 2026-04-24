@@ -78,7 +78,7 @@
         <span v-else>
           <template v-if="mode === 'view' && data.item.references.length">
             <b-link class="table-edit-list" :to="{ name: 'editList', params: { id: data.item.id } }">{{ data.item.name
-              }}</b-link>
+            }}</b-link>
           </template>
           <template v-else>
             {{ data.item.name }}
@@ -144,7 +144,7 @@
       <template v-slot:empty>
         <p class="text-center my-5">
           {{ $t('soqf_table.no_findings') }} <a href="#" @click="modalAddList">{{ $t('soqf_table.add_review_finding')
-            }}</a>
+          }}</a>
         </p>
       </template>
       <template v-slot:table-busy>
@@ -164,7 +164,14 @@
           v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
       </b-alert>
       <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="finding-name">
-        <template slot="description">{{ $t('soqf_table.tips_writing') }}</template>
+        <template slot="description">
+          {{ $t('common.click') || 'Click' }}
+          <a href="https://implementationscience.biomedcentral.com/articles/10.1186/s13012-017-0689-2/tables/1"
+            target="_blank">
+            {{ $t('common.here') || 'here' }}
+          </a>
+          {{ $t('soqf_table.tips_writing') }}
+        </template>
         <b-form-textarea id="finding-name" v-model="editFindingName.name" rows="6" max-rows="100"
           :state="findingNameDirty && !(editFindingName.name && editFindingName.name.trim().length) ? false : null"
           @input="findingNameDirty = true"></b-form-textarea>
@@ -436,7 +443,7 @@ export default {
     }
   },
   watch: {
-    filter (newVal) {
+    filter(newVal) {
       this.table_settings.filter = newVal
     }
   },

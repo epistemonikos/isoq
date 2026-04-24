@@ -772,7 +772,7 @@
     "edit_finding": "Edit Summarised review finding",
     "user_editing": "The user <b>{first_name} {last_name}</b> is editing this finding. The edit mode is disabled.",
     "summarised_finding": "Summarised review finding",
-    "tips_writing": "Click here for tips for writing a summarised review finding",
+    "tips_writing": "for tips for writing a summarised review finding",
     "select_group": "Select review finding group",
     "group_optional": "You can leave this option blank. You can always assign a finding to a group later.",
     "notes_placeholder": "Optional space for reviewers to leave notes for each other about this review finding",

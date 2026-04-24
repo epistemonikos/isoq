@@ -772,7 +772,7 @@
     "edit_finding": "Editar hallazgo de revisión resumido",
     "user_editing": "El usuario <b>{first_name} {last_name}</b> está editando este hallazgo. El modo de edición está deshabilitado.",
     "summarised_finding": "Hallazgo de revisión resumido",
-    "tips_writing": "Haga clic aquí para consejos sobre cómo escribir un hallazgo de revisión resumido",
+    "tips_writing": "aquí para consejos sobre cómo escribir un hallazgo de revisión resumido",
     "select_group": "Seleccionar grupo de hallazgo de revisión",
     "group_optional": "Puede dejar esta opción en blanco. Siempre puede asignar un hallazgo a un grupo más tarde.",
     "notes_placeholder": "Espacio opcional para que los revisores dejen notas entre sí sobre este hallazgo de revisión",
