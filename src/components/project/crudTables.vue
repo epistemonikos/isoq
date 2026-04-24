@@ -373,11 +373,14 @@ export default {
   },
   computed: {
     isDataTableFieldsModalInvalid() {
-      if (!this.dataTableFieldsModal.fields || !this.dataTableFieldsModal.fields.length) return true
-      return this.dataTableFieldsModal.fields.some(field => {
+      const nro = parseInt(this.dataTableFieldsModal.nroColumns)
+      if (!nro || nro === 0) return true
+      for (let i = 0; i < nro; i++) {
+        const field = this.dataTableFieldsModal.fields[i]
         const label = typeof field === 'object' ? field.label : field
-        return !label || (typeof label === 'string' && label.trim().length === 0)
-      })
+        if (!label || (typeof label === 'string' && label.trim().length === 0)) return true
+      }
+      return false
     },
     isDataTableFieldsModalEditInvalid() {
       if (!this.dataTableFieldsModalEdit.fields || !this.dataTableFieldsModalEdit.fields.length) return false

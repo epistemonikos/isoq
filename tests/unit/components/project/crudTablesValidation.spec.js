@@ -60,6 +60,15 @@ describe('crudTables.vue Validation and Fixes', () => {
         }
       })
       expect(wrapper.vm.isDataTableFieldsModalInvalid).toBe(false)
+
+      // nroColumns is 2 but second field was never typed (array slot absent)
+      await wrapper.setData({
+        dataTableFieldsModal: {
+          fields: ['Valid Column'],
+          nroColumns: 2
+        }
+      })
+      expect(wrapper.vm.isDataTableFieldsModalInvalid).toBe(true)
     })
 
     it('should identify dataTableFieldsModalEdit as invalid if any field label is empty', async () => {
