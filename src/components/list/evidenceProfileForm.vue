@@ -898,7 +898,7 @@ export default {
         if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option'].show()
-        } else {
+        } else if (val != 0) {
           this.focusExplanation('input-ml-explanation')
         }
       }
@@ -908,7 +908,7 @@ export default {
         if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option'].show()
-        } else {
+        } else if (val != 0) {
           this.focusExplanation('input-coherence-explanation')
         }
       }
@@ -918,7 +918,7 @@ export default {
         if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option'].show()
-        } else {
+        } else if (val != 0) {
           this.focusExplanation('input-adequacy-explanation')
         }
       }
@@ -928,7 +928,7 @@ export default {
         if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
           this.$refs['modal-warning-changed-option'].show()
-        } else {
+        } else if (val != 0) {
           this.focusExplanation('input-relevance-explanation')
         }
       }
@@ -950,7 +950,7 @@ export default {
   methods: {
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
-      if (!d || d.option === null) return null
+      if (!d || d.option === null || d.option == 0) return null
       return d.explanation && d.explanation.trim().length > 0 ? true : false
     },
     focusExplanation: function (id) {
@@ -1060,8 +1060,7 @@ export default {
       if (!type) return false
       const domain = type.replace(/-/g, '_')
       const d = prop[domain]
-      if (!d || d.option === null) return false
-      // Explicación requerida si se seleccionó cualquier opción (incluyendo No Concerns / High)
+      if (!d || d.option === null || d.option == 0) return false
       return !(d.explanation && d.explanation.trim().length > 0)
     },
     updateOptions: function (option, status) {
