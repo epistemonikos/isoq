@@ -182,6 +182,36 @@ describe('ViewTable.vue', () => {
     })
   })
 
+  describe('edit finding name ok-disabled condition', () => {
+    it('ok-disabled is true when name is null', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = null
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is true when name is empty string', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = ''
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is true when name is only whitespace', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = '   '
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('ok-disabled is false when name has content', () => {
+      const { wrapper } = createWrapper()
+      wrapper.vm.editFindingName.name = 'My finding'
+      const disabled = !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(false)
+    })
+  })
+
   describe('finding name dirty flag', () => {
     it('starts with findingNameDirty = false', () => {
       const { wrapper } = createWrapper()
