@@ -748,7 +748,7 @@
       </b-container>
     </b-modal>
 
-    <b-modal id="modal-warning-same-txt" ref="modal-warning-same-txt" :title="$t('common.warning')" :hide-footer="true">
+    <b-modal id="modal-warning-same-txt" ref="modal-warning-same-txt" :title="$t('common.warning')" :hide-footer="true" @hidden="onWarningExplanationModalHidden">
       <p>
         {{ $t('worksheet.warnings.incomplete_explanation') }}
       </p>
@@ -879,7 +879,8 @@ export default {
         items: [],
         fields: []
       },
-      showModalWarningChangedOption: false
+      showModalWarningChangedOption: false,
+      pendingExplanationFocusId: null
     }
   },
   watch: {
@@ -893,27 +894,43 @@ export default {
       this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     },
     'selectedOptions.methodological_limitations.option': function (val) {
-      if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
-        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-        this.$refs['modal-warning-changed-option'].show()
+      if (val !== null) {
+        if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
+          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
+          this.$refs['modal-warning-changed-option'].show()
+        } else {
+          this.focusExplanation('input-ml-explanation')
+        }
       }
     },
     'selectedOptions.coherence.option': function (val) {
-      if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
-        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-        this.$refs['modal-warning-changed-option'].show()
+      if (val !== null) {
+        if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
+          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
+          this.$refs['modal-warning-changed-option'].show()
+        } else {
+          this.focusExplanation('input-coherence-explanation')
+        }
       }
     },
     'selectedOptions.adequacy.option': function (val) {
-      if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
-        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-        this.$refs['modal-warning-changed-option'].show()
+      if (val !== null) {
+        if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
+          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
+          this.$refs['modal-warning-changed-option'].show()
+        } else {
+          this.focusExplanation('input-adequacy-explanation')
+        }
       }
     },
     'selectedOptions.relevance.option': function (val) {
-      if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
-        this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-        this.$refs['modal-warning-changed-option'].show()
+      if (val !== null) {
+        if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
+          this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
+          this.$refs['modal-warning-changed-option'].show()
+        } else {
+          this.focusExplanation('input-relevance-explanation')
+        }
       }
     }
   },
@@ -936,11 +953,18 @@ export default {
       if (!d || d.option === null) return null
       return d.explanation && d.explanation.trim().length > 0 ? true : false
     },
+    focusExplanation: function (id) {
+      setTimeout(() => {
+        const el = document.getElementById(id)
+        if (el) el.focus()
+      }, 0)
+    },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
     commonGenerateCerqualExplanation: function () {
       this.selectedOptions.cerqual.explanation = generateCerqualExplanation(this.selectedOptions)
+      this.focusExplanation('input-cerqual')
     },
     onModalShow: function () {
       this.$nextTick(() => {
@@ -983,7 +1007,21 @@ export default {
     },
     closeWarningModalDoItNow: function (type = '') {
       this.selectedOptions.type = type
+      const idMap = {
+        'methodological-limitations': 'input-ml-explanation',
+        'coherence': 'input-coherence-explanation',
+        'adequacy': 'input-adequacy-explanation',
+        'relevance': 'input-relevance-explanation',
+        'cerqual': 'input-cerqual'
+      }
+      this.pendingExplanationFocusId = idMap[type] || null
       this.$refs['modal-warning-same-txt'].hide()
+    },
+    onWarningExplanationModalHidden: function () {
+      if (this.pendingExplanationFocusId) {
+        this.focusExplanation(this.pendingExplanationFocusId)
+        this.pendingExplanationFocusId = null
+      }
     },
     closeWarningModalDoItLater: function () {
       this.continueSavingDataModal()
