@@ -136,6 +136,17 @@ describe('evidenceProfileForm.vue', () => {
       expect(wrapper.vm.explanationStateFor('cerqual')).toBe(true)
     })
 
+    it('returns null for option "0" (no concerns — no explanation required)', async () => {
+      const wrapper = makeWrapper()
+      await wrapper.setData({
+        selectedOptions: {
+          ...wrapper.vm.selectedOptions,
+          coherence: { option: '0', explanation: '', notes: '' }
+        }
+      })
+      expect(wrapper.vm.explanationStateFor('coherence')).toBe(null)
+    })
+
     it('returns null when domain does not exist in selectedOptions', () => {
       const wrapper = makeWrapper()
       expect(wrapper.vm.explanationStateFor('nonexistent_domain')).toBe(null)

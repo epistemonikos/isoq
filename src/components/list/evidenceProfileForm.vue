@@ -897,7 +897,7 @@ export default {
       if (val !== null) {
         if (this.modalData.methodological_limitations.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option'].show()
+          this.$refs['modal-warning-changed-option']?.show()
         } else if (val != 0) {
           this.focusExplanation('input-ml-explanation')
         }
@@ -907,7 +907,7 @@ export default {
       if (val !== null) {
         if (this.modalData.coherence.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option'].show()
+          this.$refs['modal-warning-changed-option']?.show()
         } else if (val != 0) {
           this.focusExplanation('input-coherence-explanation')
         }
@@ -917,7 +917,7 @@ export default {
       if (val !== null) {
         if (this.modalData.adequacy.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option'].show()
+          this.$refs['modal-warning-changed-option']?.show()
         } else if (val != 0) {
           this.focusExplanation('input-adequacy-explanation')
         }
@@ -927,7 +927,7 @@ export default {
       if (val !== null) {
         if (this.modalData.relevance.option !== val && this.modalData.cerqual.option !== null) {
           this.showModalWarningChangedOption = this.checkIfIsTheOnlyPublished()
-          this.$refs['modal-warning-changed-option'].show()
+          this.$refs['modal-warning-changed-option']?.show()
         } else if (val != 0) {
           this.focusExplanation('input-relevance-explanation')
         }
@@ -950,7 +950,7 @@ export default {
   methods: {
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
-      if (!d || d.option === null || d.option == 0) return null
+      if (!d || d.option === null || parseInt(d.option) === 0) return null
       return d.explanation && d.explanation.trim().length > 0 ? true : false
     },
     focusExplanation: function (id) {
@@ -1003,7 +1003,7 @@ export default {
       }
     },
     openWarningModalForExplanationText: function () {
-      this.$refs['modal-warning-same-txt'].show()
+      this.$refs['modal-warning-same-txt']?.show()
     },
     closeWarningModalDoItNow: function (type = '') {
       this.selectedOptions.type = type
@@ -1015,7 +1015,7 @@ export default {
         'cerqual': 'input-cerqual'
       }
       this.pendingExplanationFocusId = idMap[type] || null
-      this.$refs['modal-warning-same-txt'].hide()
+      this.$refs['modal-warning-same-txt']?.hide()
     },
     onWarningExplanationModalHidden: function () {
       if (this.pendingExplanationFocusId) {
@@ -1025,7 +1025,7 @@ export default {
     },
     closeWarningModalDoItLater: function () {
       this.continueSavingDataModal()
-      this.$refs['modal-warning-same-txt'].hide()
+      this.$refs['modal-warning-same-txt']?.hide()
     },
     saveEvidenceProfile: function (type, e) {
       e.preventDefault()
@@ -1060,7 +1060,7 @@ export default {
       if (!type) return false
       const domain = type.replace(/-/g, '_')
       const d = prop[domain]
-      if (!d || d.option === null || d.option == 0) return false
+      if (!d || d.option === null || parseInt(d.option) === 0) return false
       return !(d.explanation && d.explanation.trim().length > 0)
     },
     updateOptions: function (option, status) {
@@ -1071,27 +1071,26 @@ export default {
         this.selectedOptions.cerqual.option = null
         this.selectedOptions.cerqual.explanation = ''
         if (option === 'cerqual') {
-          this.$refs['modal-warning-cleaning-cerqual'].hide()
+          this.$refs['modal-warning-cleaning-cerqual']?.hide()
         } else {
-          this.$refs['modal-warning-changed-option'].hide()
+          this.$refs['modal-warning-changed-option']?.hide()
         }
       } else {
         this.selectedOptions[option].option = this.modalData[option].option
         if (option === 'cerqual') {
-          this.$refs['modal-warning-cleaning-cerqual'].hide()
+          this.$refs['modal-warning-cleaning-cerqual']?.hide()
         } else {
-          this.$refs['modal-warning-changed-option'].hide()
+          this.$refs['modal-warning-changed-option']?.hide()
         }
       }
     },
     continueSavingDataModal: function (status = false) {
-      const selectedOptions = this.selectedOptions
+      const { type, title, isoqf_id, ...evidenceProfileData } = this.selectedOptions
       this.$emit('busyEvidenceProfileTable', true)
-      delete this.selectedOptions.type
       let params = {
         organization: this.list.organization,
         list_id: this.list.id,
-        evidence_profile: selectedOptions
+        evidence_profile: evidenceProfileData
       }
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         Api.patch(`/isoqf_findings/${this.findings.id}`, params)
@@ -1101,7 +1100,7 @@ export default {
                 .then(() => {
                   this.$emit('callGetStageOneData', false)
                   this.saveListName()
-                  this.$refs['modal-evidence-profile-form'].hide()
+                  this.$refs['modal-evidence-profile-form']?.hide()
                 })
                 .catch((error) => {
                   this.printErrors(error)
@@ -1109,7 +1108,7 @@ export default {
             } else {
               this.$emit('callGetStageOneData', false)
               this.saveListName()
-              this.$refs['modal-evidence-profile-form'].hide()
+              this.$refs['modal-evidence-profile-form']?.hide()
             }
           })
           .catch((error) => {
@@ -1119,7 +1118,7 @@ export default {
         Api.post(`/isoqf_findings`, params)
           .then(() => {
             this.$emit('callGetStageOneData', false)
-            this.$refs['modal-evidence-profile-form'].hide()
+            this.$refs['modal-evidence-profile-form']?.hide()
           })
           .catch((error) => {
             this.printErrors(error)
@@ -1137,7 +1136,7 @@ export default {
           cerqual: this.selectedOptions.cerqual
         }
       }
-      Api.patch(`/isoqf_lists/${this.$route.params.id}`, params)
+      Api.patch(`/isoqf_lists/${this.list.id}`, params)
         .then((response) => {
           this.$emit('update-list-data')
         })
@@ -1147,7 +1146,7 @@ export default {
     },
     openModalEvidenceProfie: function () {
       this.showPanel = true
-      this.$refs['modal-evidence-profile-form'].show()
+      this.$refs['modal-evidence-profile-form']?.show()
     },
     printErrors: function (error) {
       if (error.response) {
@@ -1272,7 +1271,7 @@ export default {
         case 'cerqual':
           this.selectedOptions.cerqual.option = null
           this.selectedOptions.cerqual.explanation = ''
-          this.$refs['modal-warning-cleaning-cerqual'].show()
+          this.$refs['modal-warning-cleaning-cerqual']?.show()
           break
       }
     }
