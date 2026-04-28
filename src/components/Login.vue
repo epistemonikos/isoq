@@ -107,7 +107,9 @@ export default {
             redirectPath += this.$route.hash
           }
 
-          this.$router.push({ 'path': redirectPath })
+          this.$router.push({ 'path': redirectPath }).catch(err => {
+            if (err && err.name !== 'NavigationDuplicated') throw err
+          })
         })
         .catch((error) => {
           if (error && error.response && error.response.data &&

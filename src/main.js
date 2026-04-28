@@ -117,7 +117,9 @@ const router = new Router({
 
 // Manejar errores de navegación
 router.onError((error) => {
-  console.error('Error de navegación:', error)
+  if (error && error.name !== 'NavigationDuplicated') {
+    console.error('Error de navegación:', error)
+  }
 })
 
 // Asegurarse que el router esté listo antes de crear la instancia de Vue
