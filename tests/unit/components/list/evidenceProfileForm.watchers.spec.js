@@ -219,6 +219,67 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
     expect(wrapper.vm.selectedOptions.methodological_limitations.option).toBe('2')
     wrapper.destroy()
   })
+
+  ;[
+    ['coherence', 'input-coherence-explanation'],
+    ['adequacy', 'input-adequacy-explanation'],
+    ['relevance', 'input-relevance-explanation'],
+    ['methodological_limitations', 'input-ml-explanation']
+  ].forEach(([domain, focusId]) => {
+    it(`sets pendingChangedOptionFocusId="${focusId}" when accepting ${domain} change with option > 0`, async () => {
+      const wrapper = makeWrapper()
+      setupRefs(wrapper)
+      await wrapper.setData({
+        selectedOptions: { ...wrapper.vm.selectedOptions, [domain]: { option: '2', explanation: 'old text', notes: '' } }
+      })
+      wrapper.vm.updateOptions(domain, true)
+      expect(wrapper.vm.pendingChangedOptionFocusId).toBe(focusId)
+      wrapper.destroy()
+    })
+  })
+
+  it('does not set pendingChangedOptionFocusId when new option is "0" (No concerns)', async () => {
+    const wrapper = makeWrapper()
+    setupRefs(wrapper)
+    await wrapper.setData({
+      selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '0', explanation: '', notes: '' } }
+    })
+    wrapper.vm.updateOptions('coherence', true)
+    expect(wrapper.vm.pendingChangedOptionFocusId).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('does not set pendingChangedOptionFocusId when accepting cerqual option change', () => {
+    const wrapper = makeWrapper()
+    setupRefs(wrapper)
+    wrapper.vm.updateOptions('cerqual', true)
+    expect(wrapper.vm.pendingChangedOptionFocusId).toBeNull()
+    wrapper.destroy()
+  })
+})
+
+// ─── onWarningChangedOptionModalHidden ────────────────────────────────────────
+
+describe('evidenceProfileForm.vue — onWarningChangedOptionModalHidden()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('calls focusExplanation with the pending ID and clears it', async () => {
+    const wrapper = makeWrapper()
+    const focusSpy = jest.spyOn(wrapper.vm, 'focusExplanation').mockImplementation(() => {})
+    await wrapper.setData({ pendingChangedOptionFocusId: 'input-coherence-explanation' })
+    wrapper.vm.onWarningChangedOptionModalHidden()
+    expect(focusSpy).toHaveBeenCalledWith('input-coherence-explanation')
+    expect(wrapper.vm.pendingChangedOptionFocusId).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('does nothing when pendingChangedOptionFocusId is null', () => {
+    const wrapper = makeWrapper()
+    const focusSpy = jest.spyOn(wrapper.vm, 'focusExplanation').mockImplementation(() => {})
+    wrapper.vm.onWarningChangedOptionModalHidden()
+    expect(focusSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
 })
 
 // ─── clearMySelection ─────────────────────────────────────────────────────────

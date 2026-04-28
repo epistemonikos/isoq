@@ -766,7 +766,7 @@
     </b-modal>
 
     <b-modal id="modal-warning-changed-option" ref="modal-warning-changed-option" :title="$t('common.warning')"
-      :hide-footer="true">
+      :hide-footer="true" @hidden="onWarningChangedOptionModalHidden">
       <p>
         {{ $t('worksheet.warnings.changed_option') }}
       </p>
@@ -880,7 +880,8 @@ export default {
         fields: []
       },
       showModalWarningChangedOption: false,
-      pendingExplanationFocusId: null
+      pendingExplanationFocusId: null,
+      pendingChangedOptionFocusId: null
     }
   },
   watch: {
@@ -1073,6 +1074,16 @@ export default {
         if (option === 'cerqual') {
           this.$refs['modal-warning-cleaning-cerqual']?.hide()
         } else {
+          const idMap = {
+            methodological_limitations: 'input-ml-explanation',
+            coherence: 'input-coherence-explanation',
+            adequacy: 'input-adequacy-explanation',
+            relevance: 'input-relevance-explanation'
+          }
+          const newOption = this.selectedOptions[option]?.option
+          if (newOption && parseInt(newOption) !== 0) {
+            this.pendingChangedOptionFocusId = idMap[option] || null
+          }
           this.$refs['modal-warning-changed-option']?.hide()
         }
       } else {
@@ -1082,6 +1093,12 @@ export default {
         } else {
           this.$refs['modal-warning-changed-option']?.hide()
         }
+      }
+    },
+    onWarningChangedOptionModalHidden: function () {
+      if (this.pendingChangedOptionFocusId) {
+        this.focusExplanation(this.pendingChangedOptionFocusId)
+        this.pendingChangedOptionFocusId = null
       }
     },
     continueSavingDataModal: function (status = false) {
