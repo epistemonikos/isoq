@@ -260,37 +260,7 @@ export default {
       operationId: null,
       uploadProgress: '',
       showRestorePrompt: false,
-      savedProgress: null,
-      fields_references_table:
-        [
-          {
-            key: 'authors',
-            label: 'Author(s)',
-            formatter: (value, key, item) => this.formatAuthors(item.authors)
-          },
-          { key: 'title', label: 'Title' },
-          { key: 'publication_year', label: 'Year' },
-          {
-            key: 'id',
-            label: 'Related to review finding(s)',
-            formatter: value => {
-              let findings = []
-              for (let list of this.lists) {
-                for (let ref of list.raw_ref) {
-                  if (ref.id === value) {
-                    if (Object.prototype.hasOwnProperty.call(list, 'cnt')) {
-                      findings.push(`#${list.cnt}`)
-                    } else {
-                      findings.push(`#${list.sort}`)
-                    }
-                  }
-                }
-              }
-              return findings.join(', ')
-            }
-          },
-          { key: 'action', label: '' }
-        ]
+      savedProgress: null
     }
   },
   created() {
@@ -696,10 +666,8 @@ export default {
           project_id: this.$route.params.id
         })
 
-        if (response.data && response.data.references) {
-          const importedRefs = response.data.references
-          await this.syncAllSteps([...this.references, ...importedRefs])
-        }
+        const importedRefs = (response.data && response.data.references) ? response.data.references : []
+        await this.syncAllSteps([...this.references, ...importedRefs])
 
         this.pubmed_request = ''
         this.pubmed_requested = []
@@ -852,7 +820,7 @@ export default {
     confirmRemoveReferenceById: function (refId) {
       if (!refId) return
 
-      Api.post('/api/isoqf_references/batch-delete', {
+      Api.post('/isoqf_references/batch-delete', {
         reference_ids: [refId],
         project_id: this.$route.params.id,
         organization: this.$route.params.org_id
@@ -1006,7 +974,7 @@ export default {
     pre_references: function (data) {
       try {
         if (!data || data.trim() === '') {
-          console.log('Contenido de archivo vacío')
+          this.fileReferences = []
           this.uploadProgress = ''
           return
         }
