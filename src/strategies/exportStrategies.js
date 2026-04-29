@@ -212,12 +212,11 @@ export class IsoQExportStrategy extends BaseExportStrategy {
     formatReferenceList(refIds) {
         if (!refIds || refIds.length === 0) return ''
 
-        const refs = refIds.map(id => {
-            const ref = this.data.references?.find(r => r.id === id)
-            if (!ref) return null
-
-            return Commons.parseReference(ref, true, false)
-        }).filter(Boolean)
+        const refs = refIds
+            .map(id => this.data.references?.find(r => r.id === id))
+            .filter(Boolean)
+            .sort((a, b) => a.id - b.id)
+            .map(ref => Commons.parseReference(ref, true, false))
 
         return refs.join('; ')
     }
@@ -1167,7 +1166,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     }
 
     generateReferences() {
-        const allReferences = JSON.parse(JSON.stringify(this.references))
+        const allReferences = JSON.parse(JSON.stringify(this.references)).sort((a, b) => a.id - b.id)
         const listReferences = JSON.parse(JSON.stringify(this.list.references))
         let epReferences = []
         for (let reference of allReferences) {

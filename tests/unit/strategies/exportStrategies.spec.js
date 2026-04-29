@@ -232,6 +232,24 @@ describe('ExportStrategies', () => {
         expect(result).not.toContain('undefined')
       })
 
+      it('should sort references by id ascending regardless of refIds order', () => {
+        const data = {
+          findings: [],
+          references: [
+            { id: 1, authors: ['Zebra Z'], publication_year: '2020' },
+            { id: 2, authors: ['Alpha A'], publication_year: '2021' },
+            { id: 3, authors: ['Middle M'], publication_year: '2019' }
+          ]
+        }
+        const strategy = new IsoQExportStrategy(mockProject, data)
+        // Pass IDs in reverse order — result should still be sorted by id
+        const result = strategy.formatReferenceList([3, 1, 2])
+        const parts = result.split('; ')
+        expect(parts[0]).toContain('Zebra')
+        expect(parts[1]).toContain('Alpha')
+        expect(parts[2]).toContain('Middle')
+      })
+
       it('should populate references column using evidence_profile.references', async () => {
         const strategy = new IsoQExportStrategy(mockProject, mockData)
         await strategy.export()
