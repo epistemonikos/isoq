@@ -433,7 +433,7 @@ export default {
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
               list.raw_ref = []
-              for (let r of this.references) {
+              for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
                 for (let ref of list.references) {
                   if (ref === r.id) {
                     list.ref_list = list.ref_list + this.parseReference(r, true)

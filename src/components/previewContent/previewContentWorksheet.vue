@@ -381,8 +381,8 @@ export default {
             _refsWithTitles.push({'id': reference.id, 'content': this.parseReference(reference, false)})
           }
 
-          this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
-          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
+          this.references = _refs.sort((a, b) => a.id - b.id)
+          this.refsWithTitle = _refsWithTitles.sort((a, b) => a.id - b.id)
         })
         .catch((error) => {
           this.printErrors(error)
