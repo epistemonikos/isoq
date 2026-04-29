@@ -202,6 +202,59 @@ describe('ExportStrategies', () => {
         expect(strategy.getLicenseText()).toBe('')
       })
     })
+
+    describe('enrichFindings', () => {
+      it('should preserve evidence_profile.references when originalFindings lacks them', () => {
+        const data = {
+          findings: [{ id: 1, name: 'F1', evidence_profile: { cerqual: { option: '0', explanation: '' }, references: [1, 2] } }],
+          originalFindings: [{ id: 1, name: 'F1', evidence_profile: { cerqual: { option: '0', explanation: '' } } }],
+          references: [
+            { id: 1, authors: ['Author A'], publication_year: '2020' },
+            { id: 2, authors: ['Author B'], publication_year: '2021' }
+          ]
+        }
+        const strategy = new IsoQExportStrategy(mockProject, data)
+        expect(strategy.data.findings[0].evidence_profile.references).toEqual([1, 2])
+      })
+    })
+
+    describe('formatReferenceList', () => {
+      it('should return empty string for empty or null refIds', () => {
+        const strategy = new IsoQExportStrategy(mockProject, mockData)
+        expect(strategy.formatReferenceList([])).toBe('')
+        expect(strategy.formatReferenceList(null)).toBe('')
+      })
+
+      it('should skip missing reference IDs silently without crash', () => {
+        const strategy = new IsoQExportStrategy(mockProject, mockData)
+        const result = strategy.formatReferenceList([1, 99])
+        expect(result).toContain('A1')
+        expect(result).not.toContain('undefined')
+      })
+
+      it('should populate references column using evidence_profile.references', async () => {
+        const strategy = new IsoQExportStrategy(mockProject, mockData)
+        await strategy.export()
+        const rows = builderMock.addTable.mock.calls[0][0]
+        expect(rows[0][4].text).toContain('A1')
+      })
+
+      it('should populate references column using top-level finding.references when evidence_profile.references is missing', async () => {
+        const dataTopLevel = {
+          findings: [{
+            isoqf_id: 1,
+            name: 'Finding 1',
+            references: [1],
+            evidence_profile: { cerqual: { option: '1', explanation: 'Exp' } }
+          }],
+          references: [{ id: 1, authors: ['A1'], publication_year: '2020' }]
+        }
+        const strategy = new IsoQExportStrategy(mockProject, dataTopLevel)
+        await strategy.export()
+        const rows = builderMock.addTable.mock.calls[0][0]
+        expect(rows[0][4].text).toContain('A1')
+      })
+    })
   })
 
   describe('CamelotExportStrategy', () => {

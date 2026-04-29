@@ -86,9 +86,15 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 
             const detail = findingsMap.get(item.id) || findingsMap.get(item.list_id)
             if (detail) {
+                const mergedEvidenceProfile = detail.evidence_profile
+                    ? {
+                        ...detail.evidence_profile,
+                        references: detail.evidence_profile.references ?? item.evidence_profile?.references
+                      }
+                    : item.evidence_profile
                 return {
                     ...item,
-                    evidence_profile: detail.evidence_profile || item.evidence_profile,
+                    evidence_profile: mergedEvidenceProfile,
                     name: detail.name || item.name
                 }
             }
@@ -173,7 +179,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             const cerqualExplanation = cerqual.explanation || ''
             
             // Format references
-            const refIds = finding.evidence_profile?.references || []
+            const refIds = finding.evidence_profile?.references || finding.references || []
             const refList = this.formatReferenceList(refIds)
             
             rows.push([
@@ -265,7 +271,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             }
 
             const ep = finding.evidence_profile || {}
-            const refIds = ep.references || []
+            const refIds = ep.references || finding.references || []
             const refList = this.formatReferenceList(refIds)
             
             rows.push([
