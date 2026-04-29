@@ -5,7 +5,7 @@
         <b-col cols="12" class="text-right d-print-none">
           <!-- disabled for v1 -->
           <!--<b-link class="return" @click="returnTo()">-->
-          <b-link class="return" :to="{name: 'viewProject', params: {org_id: organizationId, id: projectId}, query: {hash: `a-${list.id}`}}">
+          <b-link class="return" :to="{name: 'viewProject', params: {org_id: organizationId, id: projectId}, query: {tab: 'iSoQ', hash: `a-${list.id}`}}">
             <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
             {{ $t('worksheet_nav.return_isoq') }}
           </b-link>

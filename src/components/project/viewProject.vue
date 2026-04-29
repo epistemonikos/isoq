@@ -977,11 +977,16 @@ export default {
             tab: this.$route.query.tab
           },
           params: {
-            organization: this.$route.params.org_id,
+            org_id: this.$route.params.org_id,
             id: this.$route.params.id
           },
           hash: `${hash}`
         }).catch(() => { }) // Silenciar error de navegación duplicada
+        const elementId = hash.replace('#', '')
+        setTimeout(() => {
+          const el = document.getElementById(elementId)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 0)
         this.resetFindingName()
         this.resetItemData()
       }
