@@ -10,7 +10,16 @@
       <div class="assessment-circle circle-not-completed"></div>
       <div class="ml-2 text-muted">{{ $t('camelot.step_four.legend.not_completed') }}</div>
     </div>
-    <p v-if="text"><strong>{{ $t('camelot.responses.explanation') }}:</strong> {{ text }}</p>
+    <p :class="{ 'text-danger': !text }">
+      <strong>{{ $t('camelot.responses.explanation') }}:</strong>
+      <template v-if="text">
+        {{ text }}
+      </template>
+      <template v-else>
+        <font-awesome-icon :icon="['fas', 'exclamation-circle']" />
+        {{ $t('camelot.step_four.no_explanation') }}
+      </template>
+    </p>
   </div>
 </template>
 
@@ -35,7 +44,7 @@ export default {
       default: ''
     }
   },
-  data () {
+  data() {
     return {
       // Define any local state here if needed
       options: [
@@ -161,12 +170,14 @@ export default {
   width: 20px;
   height: 20px;
 }
+
 .assessment-circle {
   width: 20px;
   height: 20px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .circle-not-completed {
   border: 2px dashed #B3B3B3;
   background-color: transparent;

@@ -1262,6 +1262,7 @@
     "step_four": {
       "data_missing": "Data are missing.",
       "loading": "Loading data...",
+      "no_explanation": "No explanation added.",
       "how_to_read": {
         "title": "How to read this table",
         "section_1": "1. What this table shows",
