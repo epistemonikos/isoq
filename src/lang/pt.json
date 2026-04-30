@@ -1262,7 +1262,7 @@
     "step_four": {
       "data_missing": "Faltam dados.",
       "loading": "Carregando dados...",
-      "no_explanation": "Falta a explicação.",
+      "no_explanation": "Explicação não adicionada",
       "how_to_read": {
         "title": "Como ler esta tabela",
         "section_1": "1. O que esta tabela mostra",
