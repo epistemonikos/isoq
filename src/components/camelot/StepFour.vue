@@ -10,8 +10,8 @@
         @open-modal="onOpenModal" />
     </div>
 
-    <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header" footer-class="camelot-modal-footer"
-      body-class="camelot-modal-body">
+    <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
+      footer-class="camelot-modal-footer" body-class="camelot-modal-body">
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -816,7 +816,7 @@ export default {
     onSaveField(newValue) {
       this.saveField(newValue)
     },
-    getTabColor (stage, dIndex) {
+    getTabColor(stage, dIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
       const currentItem = this.assessments.items[this.modal.index]
       if (!currentItem.stages || !currentItem.stages[stage]) return null
@@ -826,7 +826,7 @@ export default {
       const response = this.ui.responses.find(r => r.value === option)
       return response ? response.color : null
     },
-    isTabCompleted (stage, tabIndex) {
+    isTabCompleted(stage, tabIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
 
       const currentItem = this.assessments.items[this.modal.index]
@@ -1164,7 +1164,7 @@ export default {
   }
 
   &.alert-warning {
-    background: linear-gradient(90deg, #fff3cd 0%, #fff9e6 100%) !important;
+    background: linear-gradient(90deg, #fff3cd 0%, #fff9e6 1%) !important;
 
     .alert-strip {
       background-color: #856404;
@@ -1172,7 +1172,7 @@ export default {
   }
 
   &.alert-danger {
-    background: linear-gradient(90deg, rgba(179, 21, 41, 0.5) 0%, rgba(179, 21, 41, 0.35) 100%) !important;
+    background: linear-gradient(90deg, rgba(179, 21, 41, 0.1) 0%, rgba(179, 21, 41, 0.1) 100%) !important;
     border-color: #B31529;
     color: #B31529;
 
