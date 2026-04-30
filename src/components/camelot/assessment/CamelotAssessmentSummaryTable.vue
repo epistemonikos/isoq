@@ -165,15 +165,20 @@
                           </b-td>
                           <b-td>
                             <div v-if="option.option">
-                              <div class="font-weight-bold">{{ getOptionText(option.option) }}</div>
-                              <div v-if="option.text" class="text-muted small italic text-wrap-pre">{{ option.text }}</div>
+                              <div class="font-weight-bold">
+                                <b-badge :style="{ backgroundColor: getOptionColor(option.option) }">
+                                  {{ getOptionText(option.option) }}
+                                </b-badge>
+                              </div>
+                              <div v-if="option.text" class="text-muted small italic text-wrap-pre">{{ option.text }}
+                              </div>
                               <div v-else class="text-danger small">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
                                 {{ $t('worksheet.labels.explanation_not_added') }}
                               </div>
                             </div>
                             <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed')
-                            }}</div>
+                              }}</div>
                           </b-td>
                         </b-tr>
                       </template>
