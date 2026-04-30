@@ -170,7 +170,7 @@
                                   {{ getOptionText(option.option) }}
                                 </b-badge>
                               </div>
-                              <div v-if="option.text" class="text-muted small italic text-wrap-pre">{{ option.text }}
+                              <div v-if="option.text" class="text-muted small text-wrap-pre">{{ option.text }}
                               </div>
                               <div v-else class="text-danger small">
                                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
@@ -178,7 +178,7 @@
                               </div>
                             </div>
                             <div v-else class="text-muted small italic">{{ $t('camelot.step_four.legend.not_completed')
-                              }}</div>
+                            }}</div>
                           </b-td>
                         </b-tr>
                       </template>
