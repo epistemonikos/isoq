@@ -473,7 +473,7 @@ export default {
     tableItems() {
       if (!this.assessments.items) return []
       return this.assessments.items.map(item => {
-        const ref = this.references.find(r => r.id === item.ref_id)
+        const ref = this.references.find(r => String(r.id) === String(item.ref_id))
         if (ref) {
           return {
             ...ref,
@@ -507,9 +507,6 @@ export default {
       immediate: true
     }
   },
-  mounted() {
-    this.getAssessments()
-  },
   methods: {
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
@@ -528,6 +525,7 @@ export default {
       return ''
     },
     getAssessments: function () {
+      if (!this.references.length) return
       this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
@@ -536,14 +534,47 @@ export default {
       Api.get('/isoqf_assessments', params)
         .then(response => {
           if (response.data.length) {
-            this.assessments = { ...response.data[0] }
-            if (!this.assessments.items) {
-              this.$set(this.assessments, 'items', [])
+            // Build a set of current reference IDs for fast lookup
+            const currentRefIds = new Set(this.references.map(r => String(r.id)))
+
+            // Count non-null votes in an item (used to prefer items with real data)
+            const countVotes = it => (it.stages || []).reduce(
+              (n, s) => n + (s.options || []).filter(o => o.option !== null).length, 0
+            )
+
+            // Collect items from ALL assessment documents, keeping only active references.
+            // When the same ref_id appears in multiple documents, prefer the one with more votes.
+            const itemsByRefId = new Map()
+            for (const doc of response.data) {
+              for (const item of (doc.items || [])) {
+                const key = String(item.ref_id)
+                if (!currentRefIds.has(key)) continue
+                const existing = itemsByRefId.get(key)
+                if (!existing || countVotes(item) > countVotes(existing)) {
+                  itemsByRefId.set(key, item)
+                }
+              }
             }
 
-            // Sync references: add those that are in this.references but not in assessments.items
+            // Use the document with the most matching items as the primary (its id is used for PATCH saves)
+            let primaryDoc = response.data[0]
+            let maxMatches = 0
+            for (const doc of response.data) {
+              const matches = (doc.items || []).filter(it => currentRefIds.has(String(it.ref_id))).length
+              if (matches > maxMatches) {
+                maxMatches = matches
+                primaryDoc = doc
+              }
+            }
+
+            this.assessments = {
+              ...primaryDoc,
+              items: JSON.parse(JSON.stringify(Array.from(itemsByRefId.values())))
+            }
+
+            // Sync references: add items for refs not yet in the assessment
             this.references.forEach(ref => {
-              const exists = this.assessments.items.find(item => item.ref_id === ref.id)
+              const exists = this.assessments.items.find(item => String(item.ref_id) === String(ref.id))
               if (!exists) {
                 this.assessments.items.push({
                   ref_id: ref.id,
@@ -572,7 +603,7 @@ export default {
 
             if (this.assessments.items.length > 0) {
               this.assessments.items = this.assessments.items.map(item => {
-                const ref = this.references.find(r => r.id === item.ref_id)
+                const ref = this.references.find(r => String(r.id) === String(item.ref_id))
                 if (ref) {
                   item.authors = Commons.parseReference(ref, true, false)
                 }
