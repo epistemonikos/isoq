@@ -82,7 +82,7 @@
     "leave_project_confirm": "Dejar el proyecto",
     "delete_project": "Eliminar proyecto",
     "confirm_remove_project": "¿Estás seguro de querer eliminar",
-    "and_all_data": "y todos los datos relacionados",
+    "and_all_data": "y todos los datos relacionados?",
     "edit_summarized_finding": "Editar hallazgo de revisión resumido",
     "enter_summarized_finding": "Ingrese un hallazgo de revisión resumido",
     "add_review_finding_tooltip": "Copie y pegue un hallazgo de revisión resumido a la vez en el iSoQ",

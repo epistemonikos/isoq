@@ -82,7 +82,7 @@
     "leave_project_confirm": "Sair do projeto",
     "delete_project": "Excluir projeto",
     "confirm_remove_project": "Tem certeza que deseja remover",
-    "and_all_data": "e todos os dados relacionados",
+    "and_all_data": "e todos os dados relacionados?",
     "edit_summarized_finding": "Editar descoberta de revisão resumida",
     "enter_summarized_finding": "Insira uma descoberta de revisão resumida",
     "add_review_finding_tooltip": "Copie e cole uma descoberta de revisão resumida por vez no iSoQ",
