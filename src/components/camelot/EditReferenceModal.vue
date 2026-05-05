@@ -14,7 +14,8 @@
                 @click="scrollToSection('custom-field-' + index)">
                 <div class="d-flex align-items-center">
                   <span class="text-truncate mr-1">
-                    {{ field.isCamelot ? (field.categoryLabel || field.label) : (field.label || 'Sin título') }}
+                    {{ field.isCamelot ? (field.categoryLabel || field.label) : (field.label ||
+                      $t('camelot.step_three.modal.no_title')) }}
                   </span>
                   <img v-if="field.isCamelot" :src="camelotLogo" class="flex-shrink-0" width="16" height="16"
                     v-b-tooltip.hover="$t('camelot.step_three.camelot_field')" />

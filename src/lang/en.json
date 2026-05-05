@@ -1256,7 +1256,8 @@
         "field_content_placeholder": "Column content",
         "camelot_fields_title": "Camelot fields",
         "no_selection": "No reference has been selected for editing",
-        "save_button": "Save"
+        "save_button": "Save",
+        "no_title": "No title"
       }
     },
     "step_four": {

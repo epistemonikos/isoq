@@ -1256,7 +1256,8 @@
         "field_content_placeholder": "Contenido de la columna",
         "camelot_fields_title": "Campos Camelot",
         "no_selection": "No se ha seleccionado ninguna referencia para editar",
-        "save_button": "Guardar"
+        "save_button": "Guardar",
+        "no_title": "Sin título"
       }
     },
     "step_four": {
