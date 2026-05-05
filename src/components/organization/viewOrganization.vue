@@ -8,24 +8,33 @@
     <b-container fluid>
       <div class="my-4">
         <h3>{{ $t("menu.projects") }}</h3>
-        <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
+        <!-- <b-row align-h="end" v-if="$store.state.user.personal_organization === this.$route.params.id">
           <b-col cols="12" class="text-right">
             <b-button v-b-tooltip.hover
               :title="(isOnline) ? $t('project.create_new_isoq') : $t('offline.action_disabled')" variant="success"
               :disabled="!isOnline" @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
           </b-col>
-        </b-row>
+        </b-row> -->
         <b-row class="mt-3" v-if="projects.length > 10">
-          <b-col cols="12" md="6" class="ml-auto">
-            <b-form-group>
-              <b-input-group>
-                <b-form-input v-model="searchQuery" type="search" id="filterInput"
-                  :placeholder="$t('common.search')"></b-form-input>
-                <b-input-group-append>
-                  <b-button :disabled="!searchQuery" @click="searchQuery = ''">{{ $t('common.clear') }}</b-button>
-                </b-input-group-append>
-              </b-input-group>
-            </b-form-group>
+          <b-col class="w-100 d-flex justify-content-end p-0 m-0">
+            <b-row align-h="end">
+              <b-col cols="7">
+                <b-form-group>
+                  <b-input-group>
+                    <b-form-input v-model="searchQuery" type="search" id="filterInput"
+                      :placeholder="$t('common.search')"></b-form-input>
+                    <b-input-group-append>
+                      <b-button :disabled="!searchQuery" @click="searchQuery = ''">{{ $t('common.clear') }}</b-button>
+                    </b-input-group-append>
+                  </b-input-group>
+                </b-form-group>
+              </b-col>
+              <b-col>
+                <b-button v-b-tooltip.hover
+                  :title="(isOnline) ? $t('project.create_new_isoq') : $t('offline.action_disabled')" variant="success"
+                  :disabled="!isOnline" @click="openModalNewFindingTable">{{ $t("project.add_new") }}</b-button>
+              </b-col>
+            </b-row>
           </b-col>
         </b-row>
         <b-row class="mt-3">
