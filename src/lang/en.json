@@ -1397,7 +1397,7 @@
     "assessment_form": {
       "title": "Fit assessment",
       "explain_label": "Explain your assessment",
-      "explanation_required": "An explanation is required when a concern level is selected.",
+      "explanation_required": "An explanation is required.",
       "text_placeholder": "Enter your text",
       "save_button": "save",
       "overall_assessment": "Overall assessment",

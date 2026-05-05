@@ -1397,7 +1397,7 @@
     "assessment_form": {
       "title": "Evaluación de ajuste",
       "explain_label": "Explique su evaluación",
-      "explanation_required": "Se requiere una explicación cuando se selecciona un nivel de preocupación.",
+      "explanation_required": "Se requiere una explicación",
       "text_placeholder": "Ingrese su texto",
       "save_button": "Guardar",
       "overall_assessment": "Evaluación general",
