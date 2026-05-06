@@ -7,7 +7,7 @@
             <b-card
               :header="$t('common.login')">
                 <b-alert
-                  :show="$store.state.status === 'error' && !emailNotVerified"
+                  :show="$store.state.status === 'error' && !emailNotVerified && !passwordCompromised"
                   variant="warning"
                   dismissible
                   @dismissed="changeStatus">
@@ -28,6 +28,11 @@
                     </b-button>
                     <span v-if="resendVerificationSent" class="ml-2">{{ $t('account.resend_email_sent') }}</span>
                   </div>
+                </b-alert>
+                <b-alert
+                  :show="passwordCompromised"
+                  variant="danger">
+                  {{ $t('auth.password_compromised') }}
                 </b-alert>
                 <b-form-group
                   id="input_group_email"
@@ -73,6 +78,7 @@ export default {
       username: null,
       password: null,
       emailNotVerified: false,
+      passwordCompromised: false,
       isResendingVerification: false,
       resendVerificationSent: false
     }
@@ -80,10 +86,12 @@ export default {
   watch: {
     username () {
       this.emailNotVerified = false
+      this.passwordCompromised = false
       this.resendVerificationSent = false
     },
     password () {
       this.emailNotVerified = false
+      this.passwordCompromised = false
     }
   },
   methods: {
@@ -91,6 +99,7 @@ export default {
       let username = this.username
       let password = this.password
       this.emailNotVerified = false
+      this.passwordCompromised = false
       this.resendVerificationSent = false
       this.$store
         .dispatch('login', {username, password})
@@ -115,6 +124,9 @@ export default {
           if (error && error.response && error.response.data &&
               error.response.data.status === 'email_not_verified') {
             this.emailNotVerified = true
+          } else if (error && error.response && error.response.data &&
+              error.response.data.status === 'password_compromised') {
+            this.passwordCompromised = true
           } else {
             console.error(error)
           }

@@ -71,6 +71,12 @@ export const store = new Vuex.Store({
               reject({ response: { data } })
               return
             }
+            if (data.status === 'password_compromised') {
+              commit('auth_error')
+              localStorage.removeItem('token')
+              reject({ response: { data } })
+              return
+            }
             if (data.status !== 'false') {
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data

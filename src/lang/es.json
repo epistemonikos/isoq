@@ -175,7 +175,8 @@
     "forgot_password": "¿olvidaste tu contraseña?",
     "et_al": " y cols. ",
     "no_authors": "Sin autor(es)",
-    "new_account": "nueva cuenta"
+    "new_account": "nueva cuenta",
+    "password_compromised": "Tu contraseña fue encontrada en una filtración de datos. Te enviamos un email para que la cambies."
   },
   "account": {
     "create_account": "Crear una cuenta",

@@ -175,7 +175,8 @@
     "forgot_password": "esqueceu sua senha?",
     "et_al": " et al. ",
     "no_authors": "Sem autor(es)",
-    "new_account": "nova conta"
+    "new_account": "nova conta",
+    "password_compromised": "Sua senha foi encontrada em um vazamento de dados. Enviamos um e-mail para você alterá-la."
   },
   "account": {
     "create_account": "Criar uma conta",

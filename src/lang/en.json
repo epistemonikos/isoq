@@ -175,7 +175,8 @@
     "forgot_password": "forgot your password?",
     "et_al": " et al. ",
     "no_authors": "No author(s)",
-    "new_account": "new account"
+    "new_account": "new account",
+    "password_compromised": "Your password was found in a data breach. We sent you an email to change it."
   },
   "account": {
     "create_account": "Create an account",
