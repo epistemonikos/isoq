@@ -65,12 +65,12 @@ describe('CreateAccount.vue', () => {
     expect(wrapper.vm.ui.isProcessing).toBe(false)
   })
 
-  it('includes shared params when o/p/r are in query', async () => {
+  it('includes shared token when token is in query', async () => {
     Api.post.mockResolvedValue({ data: {} })
-    const wrapper = mountCreateAccount({ o: 'org1', p: 'proj1', r: 'ref1' })
+    const wrapper = mountCreateAccount({ token: 'TOKEN-ID-123' })
     await wrapper.vm.createAccount()
     expect(Api.post).toHaveBeenCalledWith('/create_user', expect.objectContaining({
-      shared: { o: 'org1', p: 'proj1', r: 'ref1' }
+      shared: { token: 'TOKEN-ID-123' }
     }))
   })
 

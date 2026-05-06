@@ -154,13 +154,9 @@ export default {
       this.ui.isProcessing = true
       this.errorMessage = ''
       let params = { user: this.user }
-      if (Object.prototype.hasOwnProperty.call(this.$route.query, 'o') &&
-        Object.prototype.hasOwnProperty.call(this.$route.query, 'p') &&
-        Object.prototype.hasOwnProperty.call(this.$route.query, 'r')) {
+      if (Object.prototype.hasOwnProperty.call(this.$route.query, 'token')) {
         params.shared = {
-          o: this.$route.query['o'],
-          p: this.$route.query['p'],
-          r: this.$route.query['r']
+          token: this.$route.query['token']
         }
       }
       Api.post('/create_user', params)
