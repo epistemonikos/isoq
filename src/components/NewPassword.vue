@@ -127,6 +127,7 @@ export default {
         })
     },
     cleanVars: function () {
+      if (this.classBanner === 'success') return
       if (this.redirectTimer) {
         clearInterval(this.redirectTimer)
         this.redirectTimer = null
