@@ -8,8 +8,15 @@
               dismissible
               @dismissed="cleanVars"
               :variant="classBanner"
-              :show="showBanner">
+              :show="showBanner && classBanner !== 'success'">
               {{ msgBanner }}
+            </b-alert>
+            <b-alert
+              variant="success"
+              :show="showBanner && classBanner === 'success'">
+              {{ $t('account.password_changed') }}
+              — <router-link :to="{ name: 'Login' }">{{ $t('common.login') }}</router-link>
+              <span class="ml-2 text-muted">{{ $t('account.redirect_countdown', { seconds: countdown }) }}</span>
             </b-alert>
             <b-form-group
               :label="$t('common.password')"
@@ -55,7 +62,9 @@ export default {
       password: '',
       repassword: '',
       msgPassword: '',
-      touched: false
+      touched: false,
+      countdown: 5,
+      redirectTimer: null
     }
   },
   computed: {
@@ -79,6 +88,9 @@ export default {
       return this.state ? this.$t('common.match') : ''
     }
   },
+  beforeDestroy () {
+    if (this.redirectTimer) clearInterval(this.redirectTimer)
+  },
   methods: {
     changePassword: function () {
       const params = {
@@ -91,8 +103,15 @@ export default {
           const data = response.data
           if (data.status === 'password_changed') {
             this.showBanner = true
-            this.msgBanner = this.$t('account.password_changed')
             this.classBanner = 'success'
+            this.countdown = 5
+            this.redirectTimer = setInterval(() => {
+              this.countdown--
+              if (this.countdown <= 0) {
+                clearInterval(this.redirectTimer)
+                this.$router.push({ name: 'Login' })
+              }
+            }, 1000)
           } else if (data.status === 'password_compromised') {
             this.showBanner = true
             this.msgBanner = this.$t('account.password_compromised')
@@ -108,6 +127,10 @@ export default {
         })
     },
     cleanVars: function () {
+      if (this.redirectTimer) {
+        clearInterval(this.redirectTimer)
+        this.redirectTimer = null
+      }
       this.showBanner = false
       this.msgBanner = ''
       this.classBanner = ''
@@ -115,6 +138,7 @@ export default {
       this.repassword = ''
       this.msgPassword = ''
       this.touched = false
+      this.countdown = 5
     }
   }
 }

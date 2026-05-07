@@ -221,6 +221,7 @@
     "password_mismatch": "As senhas não coincidem",
     "password_min_chars": "Digite uma senha com pelo menos 8 caracteres",
     "password_changed": "A senha foi alterada. Por favor, faça login com sua nova senha.",
+    "redirect_countdown": "Redirecionando para o login em {seconds}s...",
     "invalid_token": "Usuário ou Token inválido",
     "plan_small": "Pequeno",
     "plan_medium": "Médio",
