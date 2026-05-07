@@ -216,6 +216,7 @@
     "start_using_now": "Puedes comenzar a usar iSoQ ahora mismo y mover tu trabajo a la organización cuando esté creada.",
     "reset_password": "Restablecer tu contraseña",
     "email_not_registered": "Este correo no está registrado",
+    "password_compromised": "Tu contraseña fue encontrada en una filtración de datos. Por favor, elige una contraseña diferente.",
     "email_sent": "Se envió un correo con instrucciones para restablecer tu contraseña.",
     "password_mismatch": "Las contraseñas no coinciden",
     "password_min_chars": "Ingresa una contraseña de al menos 8 caracteres",

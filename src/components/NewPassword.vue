@@ -22,14 +22,15 @@
             <b-form-group
               :label="$t('account.repeat_password_label')"
               label-for="repassword"
-              :state="state"
+              :state="inputState"
               :valid-feedback="validMatch"
               :invalid-feedback="invalidMatch">
               <b-form-input
                 id="repassword"
                 type="password"
                 v-model="repassword"
-                :state="state"></b-form-input>
+                :state="inputState"
+                @blur="touched = true"></b-form-input>
             </b-form-group>
             <b-button
               variant="success"
@@ -53,15 +54,17 @@ export default {
       classBanner: '',
       password: '',
       repassword: '',
-      msgPassword: ''
+      msgPassword: '',
+      touched: false
     }
   },
   computed: {
     state () {
-      if (this.password === this.repassword && this.password !== '' && this.password.length > 7) {
-        return true
-      }
-      return false
+      return this.password !== '' && this.password.length > 7 && this.password === this.repassword
+    },
+    inputState () {
+      if (!this.touched) return null
+      return this.state
     },
     invalidMatch () {
       if (this.password.length > 7) {
@@ -90,6 +93,10 @@ export default {
             this.showBanner = true
             this.msgBanner = this.$t('account.password_changed')
             this.classBanner = 'success'
+          } else if (data.status === 'password_compromised') {
+            this.showBanner = true
+            this.msgBanner = this.$t('account.password_compromised')
+            this.classBanner = 'danger'
           } else {
             this.showBanner = true
             this.msgBanner = this.$t('account.invalid_token')
@@ -107,6 +114,7 @@ export default {
       this.password = ''
       this.repassword = ''
       this.msgPassword = ''
+      this.touched = false
     }
   }
 }
