@@ -56,7 +56,7 @@
                 </b-form-group>
                 <p>{{ $t('auth.subscribe_text') }} <br><b><a href="https://docs.google.com/forms/d/e/1FAIpQLSctGa_fZ0A9XclGWcT2PHxP_I2FD0k4ylOeW93G8w18VRP11g/viewform" target="_blank">{{ $t('auth.subscribe_link') }}</a></b></p>
                 <b-card-text class="text-center text-forgot-create">
-                  <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link> | <router-link :to="{name: 'CreateAccount'}">{{ $t('auth.new_account') }}</router-link>
+                  <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link><template v-if="registrationEnabled"> | <router-link :to="{name: 'CreateAccount'}">{{ $t('auth.new_account') }}</router-link></template>
                 </b-card-text>
                 <div slot="footer" class="text-right">
                   <b-button type="submit" variant="outline-primary">{{ $t('common.login') }}</b-button>
@@ -92,6 +92,11 @@ export default {
     password () {
       this.emailNotVerified = false
       this.passwordCompromised = false
+    }
+  },
+  computed: {
+    registrationEnabled () {
+      return process.env.ENABLE_REGISTRATION === 'true'
     }
   },
   methods: {
