@@ -17,7 +17,9 @@
   "plugins": [
     "transform-vue-jsx",
     "@babel/plugin-transform-runtime",
-    "@babel/plugin-proposal-class-properties"
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-transform-nullish-coalescing-operator",
+    "@babel/plugin-transform-optional-chaining"
   ],
   "env": {
     "test": {
