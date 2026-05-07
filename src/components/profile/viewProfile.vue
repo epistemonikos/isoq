@@ -6,7 +6,7 @@
       </b-container>
     </b-container>
     <b-container class="pt-3 pb-5">
-      <b-alert variant="success" :show="showAlert()" dismissible>{{msg}}</b-alert>
+      <b-alert :variant="msgVariant" :show="showAlert()" dismissible>{{msg}}</b-alert>
       <b-table-simple>
         <b-tbody>
           <b-tr>
@@ -65,26 +65,21 @@
       </b-table-simple>
       <b-button @click="update" :disabled="isDisabled">{{ $t('common.save') }}</b-button>
     </b-container>
-    <subscribe :show="showSubscribe" @resetshowSubscribe="resetshowSubscribe"></subscribe>
   </div>
 </template>
 
 <script>
 import Api from '@/utils/Api'
-import subscribe from '@/components/commons/subscribe.vue'
 import { Trans } from '@/plugins/Translation'
 
 export default {
   name: 'viewProfile',
-  components: {
-    subscribe
-  },
   data () {
     return {
       new_password: null,
       new_password_repeat: null,
       msg: '',
-      showSubscribe: false,
+      msgVariant: 'success',
       isDisabled: true,
       selectedLanguage: Trans.currentLanguage
     }
@@ -104,7 +99,7 @@ export default {
     }
   },
   watch: {
-    password () {
+    new_password () {
       this.checkDisabled()
     },
     new_password_repeat () {
@@ -130,10 +125,16 @@ export default {
       }
       Api.post(`/users/change_password`, params)
         .then((r) => {
-          this.new_password = null
-          this.new_password_repeat = null
-          this.msg = this.$t('profile.password_changed')
-          this.showSubscribe = true
+          const data = r.data
+          if (data.status === 'password_compromised') {
+            this.msgVariant = 'danger'
+            this.msg = this.$t('account.password_compromised')
+          } else {
+            this.new_password = null
+            this.new_password_repeat = null
+            this.msgVariant = 'success'
+            this.msg = this.$t('profile.password_changed')
+          }
         })
     },
     showAlert: function () {
@@ -141,9 +142,6 @@ export default {
         return true
       }
       return false
-    },
-    resetshowSubscribe: function () {
-      this.showSubscribe = false
     },
     checkDisabled: function () {
       if (this.new_password !== this.new_password_repeat) {
