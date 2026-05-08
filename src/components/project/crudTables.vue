@@ -263,6 +263,7 @@ import Commmons from '@/utils/commons.js'
 import { parseCSVData } from '@/utils/csvImporter'
 
 import { exportTableToCSV } from '@/utils/csvExporter'
+import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 
 export default {
   name: 'crudTables',
@@ -434,19 +435,13 @@ export default {
           const fields = Commmons.deepClone(this.dataTable.fields)
           const items = Commmons.deepClone(this.dataTable.items)
 
-          const _items = items.filter(item => item.ref_id && item.authors).sort((a, b) => {
-            const authorsA = (a.authors || '').toString()
-            const authorsB = (b.authors || '').toString()
-            return authorsA.localeCompare(authorsB)
-          })
+          const _items = sortByAuthors(items.filter(item => item.ref_id && item.authors))
           this.dataTable.items = _items
 
           this.dataTableFieldsModal.fields = []
-          for (const f of fields) {
-            if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-              this.dataTableFieldsModal.fields.push(f.label)
-              this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
-            }
+          for (const f of filterDisplayFields(fields)) {
+            this.dataTableFieldsModal.fields.push(f.label)
+            this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
           }
 
           this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
@@ -762,15 +757,7 @@ export default {
       link.click()
     },
     loadTableImportData: function (event) {
-      const file = event.target.files[0]
-      if (!file) {
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.pre_ImportDataTable = e.target.result
-      }
-      reader.readAsText(file)
+      loadFileAsText(event).then(text => { this.pre_ImportDataTable = text })
     },
     cleanVars: function (isCancel = false) {
       this.importDataTable = {

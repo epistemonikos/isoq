@@ -349,6 +349,7 @@ import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commons from '@/utils/commons.js'
 import { exportTableToCSV } from '@/utils/csvExporter'
+import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 
 export default {
   name: 'CharacteristicsOfStudiesTable',
@@ -508,19 +509,13 @@ export default {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-              const _items = items.sort((a, b) => {
-            const authorsA = (a.authors || '').toString()
-            const authorsB = (b.authors || '').toString()
-            return authorsA.localeCompare(authorsB)
-          })
+              const _items = sortByAuthors(items)
               this.charsOfStudies.items = _items
 
               this.charsOfStudiesFieldsModal.fields = []
-              for (let f of fields) {
-                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
-                  this.charsOfStudiesFieldsModal.fields.push(f.label)
-                  this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
-                }
+              for (const f of filterDisplayFields(fields)) {
+                this.charsOfStudiesFieldsModal.fields.push(f.label)
+                this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
               }
 
               this.charsOfStudies.fieldsObj.push({'key': 'actions', 'label': ''})
@@ -816,16 +811,11 @@ export default {
           this.$emit('get-project')
         })
         .catch((error) => {
-          this.printErrors(error)
+          this.$emit('print-errors', error)
         })
     },
     loadTableImportData: function (event) {
-      const file = event.target.files[0]
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        this.pre_ImportDataTable = e.target.result
-      }
-      reader.readAsText(file)
+      loadFileAsText(event).then(text => { this.pre_ImportDataTable = text })
     },
     cleanVars: function (str = '', modal) {
       this.importDataTable = {
@@ -903,7 +893,7 @@ export default {
           this.getCharacteristics()
         })
         .catch((error) => {
-          this.printErrors(error)
+          this.$emit('print-errors', error)
         })
     },
     exportTableToCSV: function (type) {
@@ -983,8 +973,7 @@ export default {
       }
 
       Api.patch(`/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
-          this.getProject()
+        .then(() => {
           this.$emit('get-project')
         }).catch((error) => {
           console.log('error: ', error)
