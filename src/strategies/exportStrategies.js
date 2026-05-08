@@ -1,10 +1,10 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } from 'docx'
-import { documentExportMixin } from '@/mixins/documentExportMixin'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableCell, TableRow, WidthType, VerticalAlign, PageOrientation, HeightRule } from 'docx'
 import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 import { i18n } from '@/plugins/i18n'
 import { TEXT_LIMITS } from '@/utils/textSanitizer'
 import { displayExplanation } from '@/components/utils/commons'
 import Commons from '@/utils/commons'
+import { generateAuthorInfo, getStandardBorders, createParagraph } from '@/utils/documentHelpers'
 
 export class BaseExportStrategy {
     constructor(project, data, locale = 'en') {
@@ -51,7 +51,6 @@ export class BaseExportStrategy {
 export class IsoQExportStrategy extends BaseExportStrategy {
     constructor(project, data, locale = 'en') {
         super(project, data, locale)
-        this.mixin = documentExportMixin
         this.enrichFindings()
     }
 
@@ -108,7 +107,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
         this.builder.addSpacing()
         this.builder.addInfoParagraph(this.t('actionButtons.word_export.authors_of_review'), this.project.authors)
         this.builder.addSpacing()
-        this.builder.addInfoParagraph(this.t('actionButtons.word_export.corresponding_author'), this.generateAuthorInfo())
+        this.builder.addInfoParagraph(this.t('actionButtons.word_export.corresponding_author'), generateAuthorInfo(this.project))
         this.builder.addSpacing()
         this.builder.addInfoParagraph(
             this.t('actionButtons.word_export.review_published_question'),
@@ -130,18 +129,6 @@ export class IsoQExportStrategy extends BaseExportStrategy {
         return doc
     }
 
-
-    generateAuthorInfo() {
-        let data = ''
-        if (this.project.author && this.project.author.length) {
-            data = this.project.author.toString()
-            if (this.project.author_email && this.project.author_email.length) {
-                const email = this.project.author_email.toString()
-                data = data.concat(' - ' + email)
-            }
-        }
-        return data
-    }
 
     createFindingsTable() {
         if (!this.data.findings || this.data.findings.length === 0) {
@@ -336,8 +323,6 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 export class CamelotExportStrategy extends BaseExportStrategy {
     constructor(project, data, locale = 'en') {
         super(project, data, locale)
-        this.mixin = documentExportMixin
-        
         // Destructure data for easier access, matching original component props
         this.evidenceProfile = data.evidenceProfile || []
         this.characteristicStudies = data.characteristicStudies || {}
@@ -447,7 +432,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         }
 
         const table = new Table({
-            borders: this.getBorders(),
+            borders: getStandardBorders(),
             width: {
                 size: 100,
                 type: WidthType.PERCENTAGE
@@ -487,15 +472,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
     createCharacteristicsSection() {
         return [
-            new Paragraph({
-                children: [
-                    new TextRun({
-                        text: this.t('worksheet.characteristics_of_studies'),
-                        size: 24,
-                        bold: true
-                    })
-                ]
-            }),
+            createParagraph(this.t('worksheet.characteristics_of_studies'), { size: 24, bold: true }),
             this.createCharacteristicsTable(JSON.parse(JSON.stringify(this.characteristicStudies))),
             new Paragraph('')
         ]
@@ -592,7 +569,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         })
 
         return new Table({
-            borders: this.getBorders(),
+            borders: getStandardBorders(),
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: rows
         })
@@ -723,15 +700,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
     createMethodologicalSection() {
         return [
-            new Paragraph({
-                children: [
-                    new TextRun({
-                        text: this.t('worksheet.methodological_assessments'),
-                        size: 24,
-                        bold: true
-                    })
-                ]
-            }),
+            createParagraph(this.t('worksheet.methodological_assessments'), { size: 24, bold: true }),
             this.createMethodologicalAssessmentTable(JSON.parse(JSON.stringify(this.methodologicalAssessments))),
             new Paragraph('')
         ]
@@ -860,7 +829,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         })
 
         return new Table({
-             borders: this.getBorders(),
+             borders: getStandardBorders(),
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: rows
         })
@@ -928,15 +897,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
 
     createExtractedDataSection() {
         return [
-            new Paragraph({
-                children: [
-                    new TextRun({
-                        text: this.t('worksheet.extracted_data'),
-                        size: 24,
-                        bold: true
-                    })
-                ]
-            }),
+            createParagraph(this.t('worksheet.extracted_data'), { size: 24, bold: true }),
             this.generateTable(JSON.parse(JSON.stringify(this.extractedData)))
         ]
     }
@@ -958,17 +919,6 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     }
 
     // Helpers
-    getBorders() {
-        return {
-            top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            left: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            right: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            insideHorizontal: { size: 1, color: '000000', style: BorderStyle.SINGLE },
-            insideVertical: { style: BorderStyle.NONE }
-        }
-    }
-
     createHeaderCell(text, widthPercent) {
         return new TableCell({
             verticalAlign: VerticalAlign.CENTER,
@@ -1046,7 +996,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         if (!data || !data.fields || !data.items) return new Paragraph('')
         
         return new Table({
-            borders: this.getBorders(),
+            borders: getStandardBorders(),
             width: {
                 size: 100,
                 type: WidthType.PERCENTAGE
