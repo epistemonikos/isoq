@@ -2,8 +2,7 @@
  * Unified CSV export utility for iSoQ tables.
  *
  * Consolidates the CSV export logic previously duplicated across
- * crudTables.vue, Filters.vue, CharacteristicsOfStudiesTable.vue,
- * and tableImportExportMixin.js.
+ * crudTables.vue and Filters.vue.
  */
 const ExportCSV = require('export-to-csv').ExportToCsv
 
