@@ -270,6 +270,7 @@ export default {
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
 
       const thClass = `header-second-row text-center ${this.clickableHeaders ? 'clickable-header' : ''}`
+      const oaThClass = `header-overall-row text-center ${this.clickableHeaders ? 'clickable-header' : ''}`
 
       const fields = [
         { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: 'header-second-row text-left', tdClass: 'border-right' },
@@ -282,7 +283,7 @@ export default {
         { key: 'fa7', assessmentKey: '1-2', label: `${faPrefix} 7`, thClass, tdClass: 'assessment-col' },
         { key: 'fa8', assessmentKey: '1-3', label: `${faPrefix} 8`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
         { key: 'fa9', assessmentKey: '2-0', label: `${faPrefix} 9`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
-        { key: 'oa', assessmentKey: '3-0', label: oaLabel, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' }
+        { key: 'oa', assessmentKey: '3-0', label: oaLabel, thClass: `${oaThClass} border-right`, tdClass: 'border-right assessment-col' }
       ]
 
       if (!this.hideActions) {

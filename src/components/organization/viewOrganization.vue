@@ -16,7 +16,7 @@
           </b-col>
         </b-row> -->
         <b-row class="mt-3" v-if="projects.length > 10">
-          <b-col class="w-100 d-flex justify-content-end p-0 m-0">
+          <b-col class="w-100 d-flex justify-content-end">
             <b-row align-h="end">
               <b-col cols="7">
                 <b-form-group>
