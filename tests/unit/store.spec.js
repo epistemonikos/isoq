@@ -9,7 +9,7 @@ jest.mock('@/utils/Api', () => ({
   }
 }))
 
-import { store } from '@/store'
+import { store, parseUserFromResponse } from '@/store'
 import Api from '@/utils/Api'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
@@ -28,6 +28,39 @@ const emptyState = (overrides = {}) => ({
   user: {},
   isOnline: true,
   ...overrides
+})
+
+describe('parseUserFromResponse', () => {
+  it('returns data directly when data.user is absent', () => {
+    const data = { status: 'active', access_token: 'tok' }
+    expect(parseUserFromResponse(data)).toMatchObject({ status: 'active', access_token: 'tok' })
+  })
+
+  it('returns data.user when present', () => {
+    const data = { user: { status: 'active' }, access_token: 'tok' }
+    const result = parseUserFromResponse(data)
+    expect(result.status).toBe('active')
+  })
+
+  it('promotes access_token from root to userObject', () => {
+    const data = { user: { status: 'active' }, access_token: 'root-token' }
+    expect(parseUserFromResponse(data).access_token).toBe('root-token')
+  })
+
+  it('preserves access_token already in userObject', () => {
+    const data = { user: { status: 'active', access_token: 'user-token' }, access_token: 'root-token' }
+    expect(parseUserFromResponse(data).access_token).toBe('user-token')
+  })
+
+  it('promotes status from root when userObject has none', () => {
+    const data = { user: { access_token: 'tok' }, status: 'active' }
+    expect(parseUserFromResponse(data).status).toBe('active')
+  })
+
+  it('preserves status already in userObject', () => {
+    const data = { user: { status: 'active', access_token: 'tok' }, status: 'other' }
+    expect(parseUserFromResponse(data).status).toBe('active')
+  })
 })
 
 describe('Vuex store', () => {

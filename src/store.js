@@ -4,6 +4,17 @@ import Api from '@/utils/Api'
 
 Vue.use(Vuex)
 
+export function parseUserFromResponse (data) {
+  const userObject = data.user ? data.user : data
+  if (data.access_token && !userObject.access_token) {
+    userObject.access_token = data.access_token
+  }
+  if (!userObject.status && data.status) {
+    userObject.status = data.status
+  }
+  return userObject
+}
+
 export const store = new Vuex.Store({
   state: {
     status: '',
@@ -86,18 +97,7 @@ export const store = new Vuex.Store({
               return
             }
             if (data.status !== 'false') {
-              // El objeto usuario puede venir en data.user o ser data directamente
-              const userObject = data.user ? data.user : data
-
-              // Si el backend envía access_token, lo aseguramos en el userObject
-              if (data.access_token) {
-                userObject.access_token = data.access_token
-              }
-
-              // Asegurar que el status se mantenga si venía en la raíz
-              if (!userObject.status && data.status) userObject.status = data.status
-
-              commit('auth_success', userObject)
+              commit('auth_success', parseUserFromResponse(data))
               commit('save_promise', Promise.resolve())
               resolve(response)
             } else {
@@ -114,8 +114,7 @@ export const store = new Vuex.Store({
     },
     logout ({commit}) {
       return new Promise((resolve, reject) => {
-        Api.get('/auth/logout').then((response) => {
-          console.log(response)
+        Api.get('/auth/logout').then(() => {
           commit('logout')
           // Al desloguearse, resetear el promise para que la próxima navegación dispare getLogginInfo
           commit('save_promise', null)
@@ -148,18 +147,7 @@ export const store = new Vuex.Store({
           Api.post('/auth/user', null).then((response) => {
             const data = response.data
             if (data.status !== 'not_logged' && data.status !== 'false') {
-              // El objeto usuario puede venir en data.user o ser data directamente
-              const userObject = data.user ? data.user : data
-
-              // Si el backend envía access_token (ej: en el refresco o reconexión), lo aseguramos
-              if (data.access_token) {
-                userObject.access_token = data.access_token
-              }
-
-              // Asegurar que el status se mantenga
-              if (!userObject.status && data.status) userObject.status = data.status
-
-              // Verificamos si al final tenemos un token (ya sea del server o del localStorage previo)
+              const userObject = parseUserFromResponse(data)
               const finalToken = userObject.access_token || this.state.token
               if (!finalToken || finalToken === 'null') {
                 console.warn('Session is valid by cookie but missing access_token header. Forcing logout for robustness.')
