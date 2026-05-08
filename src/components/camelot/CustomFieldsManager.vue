@@ -45,7 +45,7 @@
               <div class="d-flex justify-content-between mb-2">
                 <div class="d-flex align-items-center">
                   <label v-if="!field.isCamelot" :for="idPrefix + 'label-' + index" class="mb-0">{{ labelText }}</label>
-                  <strong v-else class="mb-0" style="font-size: 1.1em; color: #333;">
+                  <strong v-else class="mb-0" style="font-size: 1.1em; color: var(--camelot-label-color, #333);">
                     {{ field.categoryLabel || field.label }}
                     <font-awesome-icon 
                       icon="info-circle" 

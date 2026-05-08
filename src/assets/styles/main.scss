@@ -235,6 +235,8 @@ body {
 // }
 
 html[data-theme="dark"] {
+  --camelot-label-color: #e0e0e0;
+
   body {
     background-color: #1e1e1e;
     color: #e0e0e0;
@@ -292,7 +294,8 @@ html[data-theme="dark"] {
     }
 
     &.b-table tbody tr:hover {
-      background-color: rgba(255, 255, 255, 0.07);
+      background-color: rgba(255, 255, 255, 0.10);
+      color: #e0e0e0;
     }
   }
 

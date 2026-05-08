@@ -492,4 +492,24 @@ export default {
 .highlight-new-field {
   animation: highlightBackground 2s ease-out;
 }
+
+html[data-theme="dark"] .sticky-menu {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+html[data-theme="dark"] .menu-section-title {
+  color: #aaa;
+}
+
+html[data-theme="dark"] .menu-item:hover {
+  background-color: #3a3a3a;
+  color: #90b8d8;
+}
+
+html[data-theme="dark"] .active-menu-item {
+  background-color: #2d3d50;
+  color: #90b8d8;
+}
 </style>
