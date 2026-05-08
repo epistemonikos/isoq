@@ -348,6 +348,7 @@
     "use_camelot_no": "No, do not use CAMELOT",
     "use_camelot_active": "Active",
     "use_camelot_inactive": "Inactive",
+    "uses_camelot": "This project uses CAMELOT",
     "camelot_modal_info": {
       "title": "What is CAMELOT?",
       "p1": "CAMELOT is an evidence‐based tool for making an assessment of the methodological strengths and limitations of primary qualitative research studies that are included in a Qualitative Evidence Synthesis.",

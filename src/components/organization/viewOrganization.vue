@@ -53,10 +53,8 @@
                 <b-link :id="`p-${data.item.id}`" class="link-project"
                   :to="{ name: 'viewProject', params: { org_id: data.item.organization, id: data.item.id } }">
                   {{ data.item.name }}
-                  <b-badge v-if="data.item.use_camelot" variant="info" class="ml-2" v-b-tooltip.hover
-                    title="This project uses CAMELOT">
-                    C
-                  </b-badge>
+                  <img v-if="data.item.use_camelot" :src="camelotLogo" class="ml-2" width="16" height="16"
+                    style="vertical-align: text-bottom;" v-b-tooltip.hover="$t('project.uses_camelot')" />
                 </b-link>
               </template>
               <template v-slot:cell(actions)="data">
@@ -235,7 +233,8 @@ export default {
       searchQuery: '',
       hashId: null,
       canEditProject: false,
-      lockedByUser: null
+      lockedByUser: null,
+      camelotLogo: require('@/assets/camelot-logo.svg')
     }
   },
   computed: {
