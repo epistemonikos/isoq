@@ -1,194 +1,119 @@
 <template>
   <div>
     <!-- Lock Modals -->
-    <b-modal id="modal-lock-lost-sheet" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
-        <div class="text-center">
-            <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
-            <p>{{ $t('lock.lock_lost_message') || 'The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.' }}</p>
-        </div>
+    <b-modal id="modal-lock-lost-sheet" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage"
+      no-close-on-backdrop no-close-on-esc hide-header-close>
+      <div class="text-center">
+        <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
+        <p>
+          {{ $t('lock.lock_lost_message') }}
+        </p>
+      </div>
     </b-modal>
-      <b-modal id="modal-lock-idle-sheet" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage" no-close-on-backdrop no-close-on-esc hide-header-close>
-        <div class="text-center">
-            <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
-            <p>{{ $t('lock.idle_message') || 'You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.' }}</p>
-        </div>
+    <b-modal id="modal-lock-idle-sheet" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage"
+      no-close-on-backdrop no-close-on-esc hide-header-close>
+      <div class="text-center">
+        <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />
+        <p>
+          {{ $t('lock.idle_message') }}
+        </p>
+      </div>
     </b-modal>
-    <b-alert
-      :show="editingUser.show"
-      class="position-fixed fixed-bottom m-0 rounded-0"
-      style="z-index: 2000;"
-      variant="danger"
-      dismissible
-    >
-      <span v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
+    <b-alert :show="editingUser.show" class="position-fixed fixed-bottom m-0 rounded-0" style="z-index: 2000;"
+      variant="danger" dismissible>
+      <span
+        v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
     </b-alert>
 
-    <edit-header-list
-      :organizationId="project.organization"
-      :projectId="project.id"
-      :name="list.name"
-      :mode="mode"
+    <edit-header-list :organizationId="project.organization" :projectId="project.id" :name="list.name" :mode="mode"
       :list="list"></edit-header-list>
     <b-container fluid>
-      <edit-list-actions-buttons
-        :mode="mode"
-        :permission="checkPermissions(list.organization)"
-        :project="project"
-        :evidenceProfile="evidence_profile"
-        :selectOptions="select_options"
-        :levelConfidence="level_confidence"
-        :references="references"
-        :list="list"
-        :characteristicStudies="characteristics_studies"
-        :methodologicalAssessments="meth_assessments"
-        :extractedData="extracted_data"
-        :license="theLicense(this.project.license_type)"
-        @changeMode="changeMode"
-        ></edit-list-actions-buttons>
-      <b-row
-        class="sticky-top"
-        style="background-color: #fff; padding-bottom: 0.3rem"
-        v-if="mode==='edit'">
-        <b-col
-          class="d-print-none"
-          cols="12">
+      <edit-list-actions-buttons :mode="mode" :permission="checkPermissions(list.organization)" :project="project"
+        :evidenceProfile="evidence_profile" :selectOptions="select_options" :levelConfidence="level_confidence"
+        :references="references" :list="list" :characteristicStudies="characteristics_studies"
+        :methodologicalAssessments="meth_assessments" :extractedData="extracted_data"
+        :license="theLicense(this.project.license_type)" @changeMode="changeMode"></edit-list-actions-buttons>
+      <b-row class="sticky-top progress-worksheet" style="padding-bottom: 0.3rem" v-if="mode === 'edit'">
+        <b-col class="d-print-none" cols="12">
           <b-nav class="mt-2">
             <b-nav-item disabled>{{ $t('worksheet_nav.navigate_page') }}</b-nav-item>
             <b-nav-item href="#evidence-profile">
               {{ $t('worksheet_nav.evidence_profile') }}
               <span
-                v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true: false || (project.exclusion === '') ? true: false"
-                class="text-danger"
-                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+                v-if="ui.adequacy.chars_of_studies.display_warning || ui.methodological_assessments.display_warning || ui.adequacy.extracted_data.display_warning || (project.review_question === '') ? true : false || (project.inclusion === '') ? true : false || (project.exclusion === '') ? true : false"
+                class="text-danger" v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#characteristics-of-studies">
               {{ $t('worksheet.characteristics_of_studies') }}
-              <span
-                v-if="ui.adequacy.chars_of_studies.display_warning"
-                class="text-danger"
-                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+              <span v-if="ui.adequacy.chars_of_studies.display_warning" class="text-danger" v-b-tooltip.hover
+                :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#methodological-assessments">
               {{ $t('worksheet.methodological_assessments') }}
-              <span
-                v-if="ui.methodological_assessments.display_warning"
-                class="text-danger"
-                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+              <span v-if="ui.methodological_assessments.display_warning" class="text-danger" v-b-tooltip.hover
+                :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
             <b-nav-item href="#extracted-data">
               {{ $t('worksheet.extracted_data') }}
-              <span
-                v-if="ui.adequacy.extracted_data.display_warning"
-                class="text-danger"
-                v-b-tooltip.hover :title="$t('worksheet.tooltips.data_missing')">
+              <span v-if="ui.adequacy.extracted_data.display_warning" class="text-danger" v-b-tooltip.hover
+                :title="$t('worksheet.tooltips.data_missing')">
                 <font-awesome-icon icon="exclamation-circle"></font-awesome-icon>
               </span>
             </b-nav-item>
           </b-nav>
         </b-col>
       </b-row>
-      <b-row
-        class="justify-content-end"
-        v-if="mode==='edit' && checkPermissions(list.organization)">
-        <b-col
-          cols="12"
-          md="3">
-            <b-button
-              class="mt-2"
-              @click="changeMode"
-              variant="outline-success"
-              block>
-              {{ $t('publish.print_export') }}
-            </b-button>
+      <b-row class="justify-content-end" v-if="mode === 'edit' && checkPermissions(list.organization)">
+        <b-col cols="12" md="3">
+          <b-button class="mt-2" @click="changeMode" variant="outline-success" block>
+            {{ $t('publish.print_export') }}
+          </b-button>
         </b-col>
       </b-row>
 
       <b-row class="mt-4">
         <b-col cols="12">
-          <div id="progress-status"
-            v-if="mode==='edit'"
-            class="d-print-none">
-            <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
+          <div id="progress-status" v-if="mode === 'edit'" class="d-print-none">
+            <h5>{{ $t('worksheet.progress_status') }} <span v-b-tooltip.hover
+                :title="$t('worksheet.tooltips.progress_bar')">*</span></h5>
             <p v-if="list.cerqual.option !== null">
               {{ $t('worksheet.assessment_added_isoq') }}
             </p>
-            <b-progress
-              :value="status_evidence_profile.value"
-              :max="status_evidence_profile.max"
-              :variant="status_evidence_profile.variant"
-              class="mb-3">
+            <b-progress :value="status_evidence_profile.value" :max="status_evidence_profile.max"
+              :variant="status_evidence_profile.variant" class="mb-3">
             </b-progress>
           </div>
 
-          <evidence-profile-table
-            :evidenceProfile="evidence_profile"
-            :ui="ui"
-            :show="show"
-            :evidenceProfileTableSettings="evidence_profile_table_settings"
-            :references="references"
-            :mode="mode"
-            :list="list"
-            :refsWithTitle="refsWithTitle"
-            :project="project"
-            :permission="checkPermissions(list.organization)"
-            :selectOptions="select_options"
-            :levelConfidence="level_confidence"
-            :findings="findings"
-            :methAssessments="meth_assessments"
-            :extractedData="extracted_data"
-            :modePrintFieldObject="mode_print_fieldsObj"
-            :showEditExtractedDataInPlace="showEditExtractedDataInPlace"
-            :modalData="buffer_modal_stage_two"
-            :charsOfStudies="characteristics_studies"
-            @update-list-data="getList"
-            @printErrors="printErrors"
-            @modalDataChanged="modalDataChanged"
-            @busyEvidenceProfileTable="busyEvidenceProfileTable"
-            @callGetFinding="callGetFinding"
-            @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
-            @getExtractedData="getExtractedData"
-          ></evidence-profile-table>
+          <evidence-profile-table :evidenceProfile="evidence_profile" :ui="ui" :show="show"
+            :evidenceProfileTableSettings="evidence_profile_table_settings" :references="references" :mode="mode"
+            :list="list" :refsWithTitle="refsWithTitle" :project="project"
+            :permission="checkPermissions(list.organization)" :selectOptions="select_options"
+            :levelConfidence="level_confidence" :findings="findings" :methAssessments="meth_assessments"
+            :extractedData="extracted_data" :modePrintFieldObject="mode_print_fieldsObj"
+            :showEditExtractedDataInPlace="showEditExtractedDataInPlace" :modalData="buffer_modal_stage_two"
+            :charsOfStudies="characteristics_studies" @update-list-data="getList" @printErrors="printErrors"
+            @modalDataChanged="modalDataChanged" @busyEvidenceProfileTable="busyEvidenceProfileTable"
+            @callGetFinding="callGetFinding" @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
+            @getExtractedData="getExtractedData"></evidence-profile-table>
 
-          <table-chars-of-studies
-            :useCamelot="project.use_camelot"
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :charsOfStudies="characteristics_studies"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"></table-chars-of-studies>
+          <table-chars-of-studies :useCamelot="project.use_camelot" :ui="ui" :show="show" :mode="mode" :list="list"
+            :permission="checkPermissions(list.organization)" :charsOfStudies="characteristics_studies"
+            :refsWithTitle="refsWithTitle" :showParagraph="true"></table-chars-of-studies>
 
-          <table-meth-assessments
-            :useCamelot="project.use_camelot"
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :methAssessments="meth_assessments"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"></table-meth-assessments>
+          <table-meth-assessments :useCamelot="project.use_camelot" :ui="ui" :show="show" :mode="mode" :list="list"
+            :permission="checkPermissions(list.organization)" :methAssessments="meth_assessments"
+            :refsWithTitle="refsWithTitle" :showParagraph="true"></table-meth-assessments>
 
-          <table-extracted-data
-            :ui="ui"
-            :show="show"
-            :mode="mode"
-            :list="list"
-            :permission="checkPermissions(list.organization)"
-            :extractedData="extracted_data"
-            :modePrintFieldObject="mode_print_fieldsObj"
-            :refsWithTitle="refsWithTitle"
-            :showParagraph="true"
-            @printErrors="printErrors"
-            @getExtractedData="getExtractedData"></table-extracted-data>
+          <table-extracted-data :ui="ui" :show="show" :mode="mode" :list="list"
+            :permission="checkPermissions(list.organization)" :extractedData="extracted_data"
+            :modePrintFieldObject="mode_print_fieldsObj" :refsWithTitle="refsWithTitle" :showParagraph="true"
+            @printErrors="printErrors" @getExtractedData="getExtractedData"></table-extracted-data>
 
           <template v-if="Object.prototype.hasOwnProperty.call(this.project, 'license_type') && this.project.is_public">
             <div class="mt-5 alert alert-info" role="alert">
@@ -224,7 +149,7 @@ export default {
     'table-extracted-data': editListExtractedData
   },
   mixins: [camelotMixin],
-  data () {
+  data() {
     return {
       licenseUrl: require('../../assets/by-88x31.png'),
       ui: {
@@ -413,14 +338,14 @@ export default {
       }
     }
   },
-  mounted () {
+  mounted() {
     this.updateTranslations()
     this.getList()
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
   },
-  beforeDestroy () {
+  beforeDestroy() {
     LockService.release()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -454,11 +379,11 @@ export default {
       for (const item of items) {
         itemsMap.set(item.ref_id, item)
       }
-      
+
       const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields'])
       let haveContent = 0
       const filteredItems = []
-      
+
       let bibliographicRefs = []
       if (this.list.fullreferences) {
         if (typeof this.list.fullreferences === 'string') {
@@ -474,7 +399,7 @@ export default {
 
       // Camelot characteristics meta-domains
       const camelotCharKeys = this.camelot.categories.map(cat => `${cat.key}_extractedData`)
-      
+
       // Collect ALL allowed keys to remove orphans
       const fieldKeys = (Array.isArray(fields)) ? fields.map(f => f.key) : []
       const allowedKeys = new Set([...excludedKeys, ...fieldKeys])
@@ -485,7 +410,7 @@ export default {
       for (const refId of references) {
         let originalItem = itemsMap.get(refId)
         let item = { ref_id: refId }
-        
+
         if (originalItem) {
           // Only copy allowed keys to the item (removes orphans)
           for (const key in originalItem) {
@@ -509,10 +434,10 @@ export default {
         filteredItems.push(item)
 
         const itemKeys = Object.keys(item)
-        
+
         if (this.project.use_camelot) {
           // CAMELOT LOGIC
-          
+
           // 1. Check for Camelot Assessment Stages (Step 4)
           if (item.stages) {
             for (const stage of item.stages) {
@@ -525,7 +450,7 @@ export default {
               }
             }
           }
-          
+
           // 2. Check for Camelot Characteristics (Step 3)
           if (!item.stages) {
             let hasAtLeastOneEmptyCamelotKey = false
@@ -604,22 +529,23 @@ export default {
         })
         _refsWithTitles.push({
           'id': reference.id,
-          'content': this.parseReference(reference, false)})
+          'content': this.parseReference(reference, false)
+        })
       }
 
       this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
       this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
     },
     getList: function (fromModal = false) {
-      Api.get('/getLists', {id: this.$route.params.id})
+      Api.get('/getLists', { id: this.$route.params.id })
         .then((response) => {
           if (response.data && response.data.length > 0) {
             this.list = JSON.parse(JSON.stringify(response.data[0]))
-            
+
             // Attempt lock if we have write permissions
             // Note: We need 'project' loaded to check permissions properly, or check list.organization
             if (this.checkPermissions(this.list.organization)) {
-                 this.attemptLock()
+              this.attemptLock()
             }
           } else {
             console.log('Empty list response')
@@ -677,7 +603,7 @@ export default {
             }
             for (let reference of this.references) {
               if (!_itemsChecks.includes(reference.id)) {
-                _extractedData.push({ref_id: reference.id, authors: reference.content})
+                _extractedData.push({ ref_id: reference.id, authors: reference.content })
               }
             }
             _items.push(..._extractedData)
@@ -865,7 +791,7 @@ export default {
     getExtractedData: function (status = false) {
       let extractedData = JSON.parse(JSON.stringify(this.list.extracted_data))
       if (status) {
-        Api.get(`/isoqf_extracted_data`, {finding_id: this.findings.id})
+        Api.get(`/isoqf_extracted_data`, { finding_id: this.findings.id })
           .then((response) => {
             extractedData = response.data
             this.processExtractedData(extractedData)
@@ -874,11 +800,11 @@ export default {
       this.processExtractedData(extractedData)
     },
     processExtractedData: function (extractedData) {
-      let localData = {id: null, fields: [], items: []}
+      let localData = { id: null, fields: [], items: [] }
       if (extractedData.length) {
         localData = extractedData[0]
         this.extracted_data = extractedData[0]
-        localData.fields.push({key: 'actions', label: ''})
+        localData.fields.push({ key: 'actions', label: '' })
         let _fields = JSON.parse(JSON.stringify(localData.fields))
         localData.fieldsObj = []
         this.mode_print_fieldsObj = []
@@ -956,51 +882,51 @@ export default {
           .then((response) => {
             this.list.editing = false
             this.list.userEditing = ''
-            this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
+            this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
           })
           .catch((error) => {
             this.printErrors(error)
             this.$notify.error(this.$t('notifications.save_error'))
           })
       } else {
-        this.$router.push({name: 'viewProject', params: {org_id: this.list.organization, id: this.list.project_id}})
+        this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
       }
     },
 
-    async attemptLock () {
+    async attemptLock() {
       // Use list.project_id if available, otherwise wait for getProject?
       // list object has project_id
       if (this.list.project_id) {
         const res = await LockService.acquire(this.list.project_id)
         if (res.success) {
-            this.lockInfo.locked = true
+          this.lockInfo.locked = true
         } else if (res.lockedBy) {
-            this.lockInfo.locked = false
-            this.lockInfo.lockedBy = res.lockedBy
-            this.mode = 'view'
-            this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }), {
+          this.lockInfo.locked = false
+          this.lockInfo.lockedBy = res.lockedBy
+          this.mode = 'view'
+          this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }), {
             title: this.$t('lock.locked_title'),
             variant: 'warning',
             solid: true,
             noAutoHide: true
-            })
+          })
         }
       }
     },
-    handleLockLost (e) {
+    handleLockLost(e) {
       if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-lost-sheet')
       }
     },
-    handleIdle (e) {
-        if (e.detail && e.detail.projectId === this.list.project_id) {
+    handleIdle(e) {
+      if (e.detail && e.detail.projectId === this.list.project_id) {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-idle-sheet')
       }
     },
-    reloadPage () {
-        window.location.reload()
+    reloadPage() {
+      window.location.reload()
     },
 
     modalDataChanged: function (data) {
@@ -1016,15 +942,15 @@ export default {
       this.showEditExtractedDataInPlace = data
     }
   },
-  mounted () {
+  mounted() {
     this.updateTranslations()
     this.getList()
   },
   watch: {
-    '$i18n.locale' (val) {
+    '$i18n.locale'(val) {
       this.updateTranslations()
     },
-    '$route' (to, from) {
+    '$route'(to, from) {
       if (to.params.id !== from.params.id) {
         this.getList()
       }
@@ -1034,78 +960,78 @@ export default {
 </script>
 
 <style scoped>
-  div >>>
-    .navlink {
-      padding: 0.5rem 0.9rem;
-    }
-  div >>>
-    a.return {
-      font-size: 1.2rem;
-    }
-  div >>>
-    h3 span {
-      font-size: 1.55rem
-    }
-  div >>>
-    h3 span.title-finding {
-      font-weight: 300;
-    }
-  div >>>
-    #assessments.table thead th:first-child {
-      width: 2%;
-    }
-  div >>>
-    #assessments.table thead th:last-child {
-      width: 3%;
-    }
-  div >>>
-    #assessments.table thead th {
-      width: 19%;
-    }
-  div >>>
-    #assessments-print.table thead th:first-child {
-      width: 2%;
-    }
-  div >>>
-    #assessments-print.table thead th:nth-child(2) {
-      width: 35%;
-    }
-  div >>>
-    #assessments-print.table thead th:last-child {
-      width: 15%;
-    }
-  div >>>
-    .table tbody td div li {
-      font-size: 0.8rem;
-      padding-top: 0.4rem;
-      list-style-type: none;
-    }
-  div >>>
-    #extracted.table thead th:last-child {
-      text-align: right;
-      width: 13%;
-    }
-  div >>>
-    .table-small-font {
-      font-size: 14px;
-    }
-  div >>>
-    .table-small-font.extracted-data thead th:last-child {
-      width: 3%;
-    }
-  div >>>
-    .reference-txt {
-      font-size: 12px;
-    }
-  div >>>
-    #span-txt {
-      font-size: 2rem;
-    }
-  div >>>
-    label b {
-      font-weight: bold;
-    }
-  /* .extracted-data-table tbody tr td:last-child button {
+div>>>.navlink {
+  padding: 0.5rem 0.9rem;
+}
+
+div>>>a.return {
+  font-size: 1.2rem;
+}
+
+div>>>h3 span {
+  font-size: 1.55rem
+}
+
+div>>>h3 span.title-finding {
+  font-weight: 300;
+}
+
+div>>>#assessments.table thead th:first-child {
+  width: 2%;
+}
+
+div>>>#assessments.table thead th:last-child {
+  width: 3%;
+}
+
+div>>>#assessments.table thead th {
+  width: 19%;
+}
+
+div>>>#assessments-print.table thead th:first-child {
+  width: 2%;
+}
+
+div>>>#assessments-print.table thead th:nth-child(2) {
+  width: 35%;
+}
+
+div>>>#assessments-print.table thead th:last-child {
+  width: 15%;
+}
+
+div>>>.table tbody td div li {
+  font-size: 0.8rem;
+  padding-top: 0.4rem;
+  list-style-type: none;
+}
+
+div>>>#extracted.table thead th:last-child {
+  text-align: right;
+  width: 13%;
+}
+
+div>>>.table-small-font {
+  font-size: 14px;
+}
+
+div>>>.table-small-font.extracted-data thead th:last-child {
+  width: 3%;
+}
+
+div>>>.reference-txt {
+  font-size: 12px;
+}
+
+div>>>#span-txt {
+  font-size: 2rem;
+}
+
+div>>>label b {
+  font-weight: bold;
+}
+
+/* .extracted-data-table tbody tr td:last-child button {
     display: none;
   }
   .extracted-data-table tbody tr:hover td:last-child button {

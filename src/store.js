@@ -9,7 +9,8 @@ export const store = new Vuex.Store({
     status: '',
     token: localStorage.getItem('l_s') || null,
     user: {},
-    isOnline: navigator.onLine
+    isOnline: navigator.onLine,
+    theme: localStorage.getItem('user_theme') || 'light'
   },
   mutations: {
     SET_ONLINE (state, status) {
@@ -53,9 +54,16 @@ export const store = new Vuex.Store({
     },
     save_promise (state, promise) {
       state.promise = promise
+    },
+    SET_THEME (state, theme) {
+      state.theme = theme
+      localStorage.setItem('user_theme', theme)
     }
   },
   actions: {
+    setTheme ({ commit }, theme) {
+      commit('SET_THEME', theme)
+    },
     login ({commit}, user) {
       return new Promise((resolve, reject) => {
         commit('auth_request')
@@ -80,7 +88,7 @@ export const store = new Vuex.Store({
             if (data.status !== 'false') {
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data
-              
+
               // Si el backend envía access_token, lo aseguramos en el userObject
               if (data.access_token) {
                 userObject.access_token = data.access_token
@@ -142,7 +150,7 @@ export const store = new Vuex.Store({
             if (data.status !== 'not_logged' && data.status !== 'false') {
               // El objeto usuario puede venir en data.user o ser data directamente
               const userObject = data.user ? data.user : data
-              
+
               // Si el backend envía access_token (ej: en el refresco o reconexión), lo aseguramos
               if (data.access_token) {
                 userObject.access_token = data.access_token
@@ -150,7 +158,7 @@ export const store = new Vuex.Store({
 
               // Asegurar que el status se mantenga
               if (!userObject.status && data.status) userObject.status = data.status
-              
+
               // Verificamos si al final tenemos un token (ya sea del server o del localStorage previo)
               const finalToken = userObject.access_token || this.state.token
               if (!finalToken || finalToken === 'null') {

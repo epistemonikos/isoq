@@ -944,6 +944,12 @@
       "en": "English",
       "es": "Español",
       "pt": "Português"
+    },
+    "theme": "Tema",
+    "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
     }
   },
   "updates": {

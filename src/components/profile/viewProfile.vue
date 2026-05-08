@@ -39,6 +39,18 @@
           </b-tr>
           <b-tr>
             <b-td>
+              <p>{{ $t('profile.theme') }}</p>
+            </b-td>
+            <b-td>
+              <b-form-select
+                v-model="selectedTheme"
+                :options="themeOptions"
+                @change="onThemeChange">
+              </b-form-select>
+            </b-td>
+          </b-tr>
+          <b-tr>
+            <b-td>
               <p>{{ $t('profile.new_password') }}</p>
             </b-td>
             <b-td>
@@ -81,7 +93,8 @@ export default {
       msg: '',
       msgVariant: 'success',
       isDisabled: true,
-      selectedLanguage: Trans.currentLanguage
+      selectedLanguage: Trans.currentLanguage,
+      selectedTheme: this.$store.state.theme
     }
   },
   computed: {
@@ -95,6 +108,12 @@ export default {
       return Trans.supportedLanguages.map(lang => ({
         value: lang,
         text: this.$t(`profile.languages.${lang}`)
+      }))
+    },
+    themeOptions: function () {
+      return ['light', 'dark', 'system'].map(t => ({
+        value: t,
+        text: this.$t(`profile.themes.${t}`)
       }))
     }
   },
@@ -116,6 +135,9 @@ export default {
       Trans.changeLanguage(lang).then(() => {
         this.selectedLanguage = lang
       })
+    },
+    onThemeChange: function (theme) {
+      this.$store.dispatch('setTheme', theme)
     },
     update: function () {
       this.msg = ''
