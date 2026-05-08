@@ -477,4 +477,22 @@ html[data-theme="dark"] {
   .close {
     color: #ccc;
   }
+
+  .table-content-refs {
+    td.b-table-sticky-column {
+      background-color: #1e1e1e;
+    }
+
+    th.b-table-sticky-column {
+      background-color: #2a2a2a;
+    }
+
+    &.b-table-striped tbody tr:nth-of-type(odd) td.b-table-sticky-column {
+      background-color: #232323;
+    }
+
+    tbody tr:hover td.b-table-sticky-column {
+      background-color: rgba(255, 255, 255, 0.10);
+    }
+  }
 }
