@@ -335,6 +335,7 @@ export default {
       }
     },
     createAccount: function () {
+      this.user.username = this.user.username.trim()
       let params = {
         user: this.user,
         organizations: this.organizations
@@ -406,6 +407,7 @@ export default {
         return
       }
       const email = this.user.username.trim()
+      this.user.username = email
       axios.get(`/users/check_email?email=${email}`)
         .then((response) => {
           if (response.data.error === false) {
