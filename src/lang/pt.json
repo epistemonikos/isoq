@@ -987,7 +987,8 @@
   },
   "accessibility": {
     "increase_font": "+A",
-    "decrease_font": "-A"
+    "decrease_font": "-A",
+    "toggle_theme": "Alternar modo escuro/claro"
   },
   "steps": {
     "step_1_references": "ETAPA 1: Referências",
