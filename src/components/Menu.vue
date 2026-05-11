@@ -33,7 +33,7 @@
           <template v-else>
             <b-nav-item :to="$i18nRoute({ name: 'Login'})">{{ $t("common.login") }}</b-nav-item>
           </template>
-          <accessibility v-if="$route.name !== 'MainPage'" :isMenu="true"/>
+          <accessibility :isMenu="true"/>
           <!-- <switch-language/> -->
         </b-navbar-nav>
       </b-collapse>
