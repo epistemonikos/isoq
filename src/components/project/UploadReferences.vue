@@ -1094,7 +1094,7 @@ export default {
 }
 
 .warning-text {
-  color: #dc3545;
+  color: var(--red-primary);
   font-weight: 500;
 }
 </style>

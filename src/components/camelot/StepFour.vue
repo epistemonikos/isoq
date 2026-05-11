@@ -65,7 +65,7 @@
                           <div v-if="!isTabCompleted(modal.stage, dIndex)" class="assessment-circle mr-2" :style="{
                             width: '20px',
                             height: '20px',
-                            border: '2.5px dashed ' + (modal.tab === dIndex ? '#ffffff' : '#212529') + ' !important',
+                            border: '2.5px dashed ' + (modal.tab === dIndex ? '#ffffff' : (isDarkMode ? '#888888' : '#212529')) + ' !important',
                             background: 'transparent',
                             borderRadius: '50%',
                             display: 'inline-block'
@@ -411,8 +411,18 @@ export default {
       editValueExtracted: '',
       editValueComments: '',
       isSavingField: false,
-      showLegend: false
+      showLegend: false,
+      isDarkMode: document.documentElement.getAttribute('data-theme') === 'dark'
     }
+  },
+  mounted() {
+    this._themeObserver = new MutationObserver(() => {
+      this.isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark'
+    })
+    this._themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  },
+  beforeDestroy() {
+    this._themeObserver.disconnect()
   },
   computed: {
     helpContent() {
@@ -987,8 +997,8 @@ export default {
 }
 
 .camelot-modal-header {
-  background-color: #1E2137;
-  color: #fff;
+  background-color: var(--modal-header-bg);
+  color: var(--modal-header-color);
   border-bottom: none;
   padding: 1.5rem;
 
