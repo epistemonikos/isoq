@@ -4,7 +4,7 @@
 **Interactive Summary of Qualitative Findings (iSoQ)** - A Vue.js 2 application for creating and managing interactive summaries of qualitative research findings using the GRADE-CERQual approach. Built for the Epistemonikos Foundation.
 
 **Tech Stack:** Vue 2.6, Vuex, Vue Router, Bootstrap-Vue, Webpack 4, Axios
-**Node Version:** >= 14.0.0
+**Node Version:** >= 14.15.0 (limitado por `css-minimizer-webpack-plugin`; el alias nvm `isoq` apunta a v14.21.3)
 
 ## Architecture
 
