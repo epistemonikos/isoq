@@ -41,6 +41,14 @@ module.exports = {
         include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
       },
       {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        include: [resolve('node_modules/axios')],
+        options: {
+          plugins: ['@babel/plugin-transform-nullish-coalescing-operator']
+        }
+      },
+      {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
         loader: 'url-loader',
         options: {
