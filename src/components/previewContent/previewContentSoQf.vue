@@ -684,6 +684,9 @@ export default {
     #tabsTitle a {
       color: #3d3d3d;
     }
+    html[data-theme="dark"] div >>> #tabsTitle a {
+      color: #fff;
+    }
     #tabsTitle li:first-child,
     #tabsTitle li:last-child {
       margin-left: 0px;
