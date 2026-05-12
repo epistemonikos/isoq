@@ -1,4 +1,5 @@
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
+const AdminPanel = () => import(/* webpackChunkName: "admin" */ '@/components/admin/AdminPanel.vue')
 const About = () => import(/* webpackChunkName: "about" */ '@/components/About')
 const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
 const ForgotPassword = () => import(/* webpackChunkName: "forgotpassword" */ '@/components/ForgotPassword')
@@ -166,6 +167,16 @@ var routes = [
     component: WhatsNew,
     meta: {
       title: 'Whats new - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminPanel,
+    meta: {
+      title: 'Admin - iSoQ',
+      requiresAuth: true,
+      requiresAdmin: true
     }
   }
 ]

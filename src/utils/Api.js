@@ -77,7 +77,8 @@ const NO_CACHE_PATTERNS = [
   /^\/share\//,
   /^\/clone\//,
   /^\/remove\//,
-  /^\/publish/
+  /^\/publish/,
+  /^\/admin\//
 ]
 
 export default class Api {
@@ -110,7 +111,7 @@ export default class Api {
     if (path.startsWith('http')) return path
     if (path.startsWith('/api')) return path
     
-    const rootEndpoints = ['/users', '/share', '/auth', '/organizations', '/project', '/create_user']
+    const rootEndpoints = ['/users', '/share', '/auth', '/organizations', '/project', '/create_user', '/admin']
     for (const endpoint of rootEndpoints) {
         if (path === endpoint || path.startsWith(endpoint + '/')) {
             return path

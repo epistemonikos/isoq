@@ -133,6 +133,20 @@ export const store = new Vuex.Store({
     changeStatus ({commit}) {
       commit('change_status')
     },
+    forcedLogin ({ commit }, userId) {
+      return new Promise((resolve, reject) => {
+        Api.post('/auth/forced_login', { user_id: userId })
+          .then(response => {
+            const data = response.data
+            commit('auth_success', parseUserFromResponse(data))
+            commit('save_promise', Promise.resolve())
+            resolve(data)
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
     getLogginInfo ({commit}) {
       const hasToken = !!this.state.token
       // Si ya estamos logueados satisfactoriamente y tenemos token, nos aseguramos de tener un promise resuelto

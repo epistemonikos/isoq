@@ -132,6 +132,13 @@ router.beforeEach((to, from, next) => {
 
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
+        if (to.matched.some(record => record.meta.requiresAdmin)) {
+          const u = store.state.user
+          if (!u.support && !u.superadmin) {
+            next({ name: 'Organizations' })
+            return
+          }
+        }
         next()
         return
       }
