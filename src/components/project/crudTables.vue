@@ -550,6 +550,8 @@ export default {
               ]
             }
           }
+          if (!this.dataTable.fields) this.dataTable.fields = []
+          if (!this.dataTable.items) this.dataTable.items = []
           this.$emit('updateDataTable', this.dataTable, this.type)
           this.dataTableSettings.isBusy = false
           // this.$emit('fill-dataTable', this.dataTable, this.dataTableFieldsModal)
