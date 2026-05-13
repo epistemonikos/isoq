@@ -612,8 +612,16 @@ export default {
       for (let item of _items) {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
             item[field.key] = ''
+          }
+        }
+      }
+
+      const fieldKeys = new Set(fields.map(f => f.key))
+      for (let item of _items) {
+        for (let key of Object.keys(item)) {
+          if (!fieldKeys.has(key)) {
+            delete item[key]
           }
         }
       }
@@ -1028,21 +1036,30 @@ export default {
       return result
     },
     deleteFieldFromCharsSudies: function (index) {
-      let fields = JSON.parse(JSON.stringify(this.charsOfStudiesFieldsModal.fields))
       let params = {}
-      params.fields = [{'key': 'ref_id', 'label': 'Reference ID'}, {'key': 'authors', 'label': 'Author(s), Year'}]
+      const keyToRemove = 'column_' + index
+      const _items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
 
-      fields.splice(index, 1)
+      const excluded = ['ref_id', 'authors']
+      const customFields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+        .filter(f => !excluded.includes(f.key) && f.key !== keyToRemove)
 
-      for (let cnt in fields) {
-        let objField = {}
-        objField.key = 'column_' + cnt
-        objField.label = fields[cnt]
-        params.fields.push(objField)
+      params.fields = [
+        { 'key': 'ref_id', 'label': 'Reference ID' },
+        { 'key': 'authors', 'label': 'Author(s), Year' },
+        ...customFields
+      ]
+
+      for (let item of _items) {
+        if (Object.prototype.hasOwnProperty.call(item, keyToRemove)) {
+          delete item[keyToRemove]
+        }
       }
 
+      params.items = _items
+
       axios.patch(`/api/isoqf_characteristics/${this.charsOfStudies.id}`, params)
-        .then((response) => {
+        .then(() => {
           this.getProject()
           this.$emit('get-project')
         }).catch((error) => {

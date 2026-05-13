@@ -657,8 +657,16 @@ export default {
       for (let item of _items) {
         for (let field of fields) {
           if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            delete item[field.key]
             item[field.key] = ''
+          }
+        }
+      }
+
+      const fieldKeys = new Set(fields.map(f => f.key))
+      for (let item of _items) {
+        for (let key of Object.keys(item)) {
+          if (!fieldKeys.has(key)) {
+            delete item[key]
           }
         }
       }
