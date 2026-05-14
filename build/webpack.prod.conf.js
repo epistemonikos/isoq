@@ -197,4 +197,19 @@ if (config.build.bundleAnalyzerReport) {
   webpackConfig.plugins.push(new BundleAnalyzerPlugin())
 }
 
+if (process.env.SENTRY_AUTH_TOKEN) {
+  const SentryWebpackPlugin = require('@sentry/webpack-plugin')
+  webpackConfig.plugins.push(
+    new SentryWebpackPlugin({
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      include: './dist',
+      ignore: ['node_modules'],
+      release: process.env.SENTRY_RELEASE || require('../package.json').version,
+      deleteAfterUpload: true,
+    })
+  )
+}
+
 module.exports = webpackConfig

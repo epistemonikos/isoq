@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Api from '@/utils/Api'
+import * as Sentry from '@sentry/vue'
 
 Vue.use(Vuex)
 
@@ -42,6 +43,7 @@ export const store = new Vuex.Store({
         localStorage.setItem('l_s', token)
       }
       localStorage.setItem('user-data', JSON.stringify(state.user))
+      Sentry.setUser({ id: user.id, email: user.email, username: user.email })
     },
     auth_error (state) {
       state.status = 'error'
@@ -53,6 +55,7 @@ export const store = new Vuex.Store({
       localStorage.removeItem('user-data')
       localStorage.removeItem('l_s')
       localStorage.removeItem('token')
+      Sentry.setUser(null)
     },
     user_can (state, _bool) {
       state.user.can_write_other_orgs = _bool

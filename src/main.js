@@ -4,6 +4,7 @@ import Vue from 'vue'
 import axios from 'axios'
 import Router from 'vue-router'
 import App from './App'
+import * as Sentry from '@sentry/vue'
 
 import { store } from './store'
 import routes from './router/index'
@@ -114,6 +115,22 @@ const router = new Router({
   routes,
   scrollBehavior: () => ({ x: 0, y: 0 })
 })
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    Vue,
+    dsn: process.env.SENTRY_DSN,
+    integrations: [
+      new Sentry.BrowserTracing({
+        routingInstrumentation: Sentry.vueRouterInstrumentation(router),
+      }),
+    ],
+    tracesSampleRate: 0.1,
+    environment: process.env.NODE_ENV,
+    release: process.env.SENTRY_RELEASE,
+    logErrors: true,
+  })
+}
 
 // Manejar errores de navegación
 router.onError((error) => {
