@@ -67,7 +67,7 @@
                   <font-awesome-icon icon="edit"></font-awesome-icon>
                 </b-button>
               </b-col>
-              <b-col class="pt-2">
+              <b-col>
                 <b-button v-if="canEdit" block variant="outline-danger"
                   @click="openModalRemoveContentDataTable(data.item.ref_id)">
                   <font-awesome-icon icon="trash"></font-awesome-icon>
@@ -97,8 +97,8 @@
       </b-col>
 
       <b-modal size="xl" id="open-dataTable-modal" ref="open-dataTable-modal" scrollable
-        :ok-disabled="isDataTableFieldsModalInvalid" @ok="saveDataTableFields"
-        :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary">
+        :ok-disabled="isDataTableFieldsModalInvalid" @ok="saveDataTableFields" :ok-title="$t('common.save')"
+        ok-variant="outline-success" cancel-variant="outline-secondary">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.column_headers')" tag="none" urlId="449742512"></videoHelp>
         </template>
@@ -113,12 +113,10 @@
           <b-form-input id="nro-columns" v-model="dataTableFieldsModal.nroColumns" type="number" min="1"></b-form-input>
         </b-form-group>
         <b-form-group v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)" :key="cnt"
-          :label="$t('characteristics.column_n', { n: cnt })"
-          :state="fieldState('create', cnt - 1)"
+          :label="$t('characteristics.column_n', { n: cnt })" :state="fieldState('create', cnt - 1)"
           :invalid-feedback="$t('common.field_required')">
           <b-input-group>
-            <b-form-input :id="`column_${cnt}`" v-model="dataTableFieldsModal.fields[cnt - 1]"
-              type="text"
+            <b-form-input :id="`column_${cnt}`" v-model="dataTableFieldsModal.fields[cnt - 1]" type="text"
               :state="fieldState('create', cnt - 1)"
               @blur="$set(dataTableFieldsModal.touched, cnt - 1, true)"></b-form-input>
             <b-input-group-append v-if="dataTable.id">
@@ -131,9 +129,8 @@
       </b-modal>
 
       <b-modal size="xl" id="open-dataTable-modal-edit" ref="open-dataTable-modal-edit" scrollable
-        :ok-disabled="isDataTableFieldsModalEditInvalid"
-        @ok="updateDataTableFields" ok-variant="outline-success" :ok-title="$t('common.save')"
-        cancel-variant="outline-secondary">
+        :ok-disabled="isDataTableFieldsModalEditInvalid" @ok="updateDataTableFields" ok-variant="outline-success"
+        :ok-title="$t('common.save')" cancel-variant="outline-secondary">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.edit_columns')" tag="none" urlId="449742512"></videoHelp>
         </template>
@@ -142,12 +139,10 @@
         </p>
         <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true" @end="drag = false">
           <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="index"
-            :label="$t('characteristics.column_n', { n: index })"
-            :state="fieldState('edit', index)"
+            :label="$t('characteristics.column_n', { n: index })" :state="fieldState('edit', index)"
             :invalid-feedback="$t('common.field_required')">
             <b-input-group>
-              <b-form-input :id="`column_${index}`" v-model="field.label" type="text"
-                :state="fieldState('edit', index)"
+              <b-form-input :id="`column_${index}`" v-model="field.label" type="text" :state="fieldState('edit', index)"
                 @blur="$set(dataTableFieldsModalEdit.touched, index, true)"></b-form-input>
               <b-input-group-append>
                 <b-button v-if="dataTableFieldsModalEdit.fields.length > 1" :id="`drag-button-chars-${index}`"
