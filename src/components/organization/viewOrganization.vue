@@ -424,6 +424,17 @@ export default {
 
     openCloneModal: function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
+      this.ui.copy = {
+        project: false,
+        lists: false,
+        references: false,
+        findings: false,
+        replaceReferences: false,
+        copyOf: false,
+        referencesTable: false,
+        showWarning: null,
+        disableCloneModalBtn: false
+      }
       this.$refs.cloneProjectModal.show()
     },
     updateCopyState: function ({ key, value }) {
