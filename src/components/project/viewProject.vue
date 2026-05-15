@@ -17,13 +17,13 @@
         </b-row>
         <b-nav id="tabsTitle" tabs fill class="pt-3">
           <b-nav-item :active="(tabOpened === 0) ? true : false" @click="clickTab(0)">{{ $t('project.properties')
-            }}</b-nav-item>
+          }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 1) ? true : false" @click="clickTab(1)">{{ $t('project.my_data')
-            }}</b-nav-item>
+          }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 2) ? true : false" :disabled="(references.length) ? false : true"
             @click="clickTab(2)">{{ $t('project.isoq') }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 3) ? true : false" @click="clickTab(3)">{{ $t('project.guidance_applying')
-            }}</b-nav-item>
+          }}</b-nav-item>
         </b-nav>
       </div>
     </b-container>
@@ -55,7 +55,7 @@
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2'
-                        }}</a>
+                      }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -68,11 +68,11 @@
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
                         <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1'
-                          }}</a>
+                        }}</a>
                       </b-col>
                       <b-col cols="auto">
                         <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3'
-                          }}</a>
+                        }}</a>
                       </b-col>
                     </b-row>
                   </div>
@@ -99,11 +99,11 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2'
-                        }}</a>
+                      }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4'
-                        }}</a>
+                      }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -129,7 +129,7 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3'
-                        }}</a>
+                      }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <b-button block variant="success" class="mb-3" @click="continueToIsoq">
@@ -145,15 +145,20 @@
       </div>
       <div :class="{ 'block mt-3': (tabOpened === 2) ? true : false, 'd-none': (tabOpened === 2) ? !true : !false }"
         :disabled="(references.length) ? false : true">
-        <action-buttons :mode="effectiveMode" :canWrite="canWrite" :isLocked="isLockedByOther" :project="project"
-          :ui="ui" :lists="lists" :findings="findings" :references="references" :charsOfStudies="charsOfStudies"
-          :methodologicalTableRefs="methodologicalTableRefs" :listsPrintVersion="lists_print_version"
-          :selectOptions="translatedSelectOptions" :cerqualConfidence="translatedCerqualConfidence"
-          :printableItems="printableItems" @uiPublishShowLoader="uiShowLoaders" @getProject="getProject"
-          @changeMode="changeMode" @changeTableSettings="changeTableSettings"></action-buttons>
+
         <b-row class="mb-3">
           <b-col cols="12" class="toDoc">
             <videoHelp :txt="title" :tag="'h2'" :urlId="'449743080'"></videoHelp>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <action-buttons :mode="effectiveMode" :canWrite="canWrite" :isLocked="isLockedByOther" :project="project"
+              :ui="ui" :lists="lists" :findings="findings" :references="references" :charsOfStudies="charsOfStudies"
+              :methodologicalTableRefs="methodologicalTableRefs" :listsPrintVersion="lists_print_version"
+              :selectOptions="translatedSelectOptions" :cerqualConfidence="translatedCerqualConfidence"
+              :printableItems="printableItems" @uiPublishShowLoader="uiShowLoaders" @getProject="getProject"
+              @changeMode="changeMode" @changeTableSettings="changeTableSettings"></action-buttons>
           </b-col>
         </b-row>
         <b-row>
@@ -194,7 +199,7 @@
                   </b-col>
                   <b-col cols="12" md="4" class="toDoc">
                     <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review')
-                      }}
+                    }}
                     </h5>
                     <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                       <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
@@ -303,10 +308,10 @@
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
                 :mode="effectiveMode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
-                :filter="table_settings.filter"
-                @update-modification-time="updateModificationTime" @get-lists="getLists" @get-project="getProject"
-                @add-list="modalAddList" @set-busy="setBusy" @set-load-references="statusLoadReferences"
-                @get-references="getReferences" @update-project-status="getProject" />
+                :filter="table_settings.filter" @update-modification-time="updateModificationTime" @get-lists="getLists"
+                @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
+                @set-load-references="statusLoadReferences" @get-references="getReferences"
+                @update-project-status="getProject" />
             </template>
             <!-- printed version -->
             <PrintViewTable :class="{ 'd-none': effectiveMode === 'edit', 'd-print-block': true }"
@@ -394,13 +399,13 @@
               <template v-slot:modal-footer>
                 <div v-if="modal_edit_list_categories.remove">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                    }}</b-button>
+                  }}</b-button>
                   <b-button variant="outline-danger" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
-                    }}</b-button>
+                  }}</b-button>
                 </div>
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                    }}</b-button>
+                  }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
@@ -413,7 +418,7 @@
                 </div>
                 <div v-if="modal_edit_list_categories.edit">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                    }}</b-button>
+                  }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
