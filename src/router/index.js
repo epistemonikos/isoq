@@ -14,8 +14,7 @@ const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 const WhatsNew = () => import(/* webpackChunkName: "whatsnew" */ '@/components/WhatsNew')
-const TermsAndConditions = () => import(/* webpackChunkName: "termsandconditions" */ '@/components/TermsAndConditions')
-const PrivacyPolicy = () => import(/* webpackChunkName: "privacypolicy" */ '@/components/PrivacyPolicy')
+const PrivacyAndTerms = () => import(/* webpackChunkName: "privacyandterms" */ '@/components/PrivacyAndTerms')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -45,20 +44,20 @@ var routes = [
     }
   },
   {
-    path: '/terms-and-conditions',
-    name: 'TermsAndConditions',
-    component: TermsAndConditions,
+    path: '/privacy-and-terms',
+    name: 'PrivacyAndTerms',
+    component: PrivacyAndTerms,
     meta: {
-      title: 'Terms and Conditions - Interactive Summary of Qualitative Findings'
+      title: 'Privacy and Terms - Interactive Summary of Qualitative Findings'
     }
   },
   {
+    path: '/terms-and-conditions',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'terms' } }
+  },
+  {
     path: '/privacy-policy',
-    name: 'PrivacyPolicy',
-    component: PrivacyPolicy,
-    meta: {
-      title: 'Privacy Policy - Interactive Summary of Qualitative Findings'
-    }
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'privacy' } }
   },
   {
     path: '/login',

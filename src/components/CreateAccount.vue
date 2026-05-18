@@ -82,7 +82,7 @@
               <b-card-text class="text-forgot-create">
                 <div>
                   <p class="font-weight-bold">
-                    Your personal data is processed for the provision of the service according to our <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link>
+                    Your personal data is processed for the provision of the service according to our <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'privacy'}}">Privacy Policy</router-link>
                   </p>
                   <p>
                     <b-form-checkbox v-model="user.newsletter"> I agree to receive email communications about important service updates and news (optional)</b-form-checkbox>
@@ -100,7 +100,7 @@
                 class="d-flex flex-row justify-content-between">
                 <div>
                   <p>
-                    By creating an account, you accept our <router-link :to="{name: 'TermsAndConditions'}">Terms and Conditions</router-link> and <router-link :to="{name: 'PrivacyPolicy'}">Privacy Policy</router-link>
+                    By creating an account, you accept our <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'terms'}}">Terms and Conditions</router-link> and <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'privacy'}}">Privacy Policy</router-link>
                   </p>
                 </div>
                 <div>

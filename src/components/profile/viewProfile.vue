@@ -100,7 +100,7 @@
             </li>
           </ul>
 
-          <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link></p>
+          <p>For full details, see our <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }">Privacy Policy</router-link></p>
         </b-alert>
 
         <div class="d-flex flex-row justify-content-between align-items-center">
@@ -144,8 +144,8 @@
             </li>
           </ul>
 
-          <p>For full details, see our <router-link :to="{ name: 'PrivacyPolicy' }">Privacy Policy</router-link> and
-            <router-link :to="{ name: 'TermsAndConditions' }">Terms and conditions</router-link>
+          <p>For full details, see our <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }">Privacy Policy</router-link> and
+            <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }">Terms and conditions</router-link>
           </p>
         </b-alert>
       </b-card>

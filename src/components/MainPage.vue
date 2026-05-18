@@ -1,15 +1,13 @@
 <template>
-  <div
-    id="mainContainer"
-    class="vh-100"
-    :style="{ backgroundImage: `url(${require('@/assets/a.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', color: '#FFF' }"
-  >
+  <div id="mainContainer" class="vh-100"
+    :style="{ backgroundImage: `url(${require('@/assets/a.jpg')})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', color: '#FFF' }">
     <div class="d-flex flex-column h-100">
       <b-container fluid class="mb-auto">
         <b-row>
           <b-col cols="12" md="3" class="pt-5">
             <h2>iSoQ <span>Version 1.0</span></h2>
-            <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/" target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
+            <p class="slogan">An online tool for applying the <a href="https://www.cerqual.org/"
+                target="_blank">GRADE-CERQual</a> approach to findings of a qualitative evidence synthesis</p>
           </b-col>
           <b-col cols="12">
             <ul id="main-page-nav" class="unstyled-list">
@@ -29,7 +27,8 @@
                   <b-img fluid :src="require('@/assets/logo-niph.png')" height="30" alt="NIPH"></b-img>
                 </b-col>
                 <b-col class="text-center" cols="3" align-self="center">
-                  <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30" alt="Epistemonikos Foundation"></b-img>
+                  <b-img fluid :src="require('@/assets/logo-epistemonikos.png')" height="30"
+                    alt="Epistemonikos Foundation"></b-img>
                 </b-col>
                 <b-col class="text-center" cols="3" align-self="center">
                   <b-img fluid :src="require('@/assets/logo-nust.png')" height="30" alt="NTNU"></b-img>
@@ -42,7 +41,7 @@
           </b-col>
           <b-col>
             <div class="d-flex flex-row justify-content-end">
-              <div class="col-md-1">
+              <!-- <div class="col-md-1">
                 <h6 class="font-weight-bold">About</h6>
                 <ul class="list-unstyled">
                   <li>
@@ -52,15 +51,12 @@
                     <router-link :to="{name: 'Help'}" class="text-reset text-decoration-none">Help</router-link>
                   </li>
                 </ul>
-              </div>
+              </div> -->
               <div class="col-md-3">
-                <h6 class="font-weight-bold">Legal</h6>
+                <!-- <h6 class="font-weight-bold">Legal</h6> -->
                 <ul class="list-unstyled">
                   <li>
-                    <router-link :to="{name: 'TermsAndConditions'}" class="text-reset text-decoration-none">Terms and Conditions</router-link>
-                  </li>
-                  <li>
-                    <router-link :to="{name: 'PrivacyPolicy'}" class="text-reset text-decoration-none">Privacy Policy</router-link>
+                    <router-link :to="{ name: 'PrivacyAndTerms' }" class="text-reset text-decoration-none">Privacy and Terms</router-link>
                   </li>
                 </ul>
               </div>
@@ -80,7 +76,7 @@
 <script>
 export default {
   name: 'MainPage',
-  data () {
+  data() {
     return {
       ui: {
         error: null
@@ -91,29 +87,34 @@ export default {
 </script>
 
 <style scoped>
-  #mainContainer {
-    color: #FFF;
-  }
-  div >>>
-    h2 {
-      font-size: 80px;
-    }
-    h2>span {
-      font-size: 1rem;
-    }
-    .slogan {
-      font-style: italic;
-      font-weight: 200;
-      font-size: 26px;
-    }
-    .slogan a {
-      color: #FFF;
-      text-decoration: underline;
-    }
-    .uea {
-      font-size: 12px;
-    }
-  .credit {
-    font-size: 0.75rem;
-  }
+#mainContainer {
+  color: #FFF;
+}
+
+div>>>h2 {
+  font-size: 80px;
+}
+
+h2>span {
+  font-size: 1rem;
+}
+
+.slogan {
+  font-style: italic;
+  font-weight: 200;
+  font-size: 26px;
+}
+
+.slogan a {
+  color: #FFF;
+  text-decoration: underline;
+}
+
+.uea {
+  font-size: 12px;
+}
+
+.credit {
+  font-size: 0.75rem;
+}
 </style>

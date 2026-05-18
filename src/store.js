@@ -35,6 +35,9 @@ export const store = new Vuex.Store({
     },
     save_promise (state, promise) {
       state.promise = promise
+    },
+    update_user (state, fields) {
+      state.user = { ...state.user, ...fields }
     }
   },
   actions: {
@@ -81,6 +84,9 @@ export const store = new Vuex.Store({
     },
     changeStatus ({commit}) {
       commit('change_status')
+    },
+    updateUser ({commit}, fields) {
+      commit('update_user', fields)
     },
     getLogginInfo ({commit}) {
       if (this.state.status === '') {
