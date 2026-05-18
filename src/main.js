@@ -53,9 +53,7 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
         if (!store.state.user.terms_accepted) {
-          store.dispatch('logout').then(() => {
-            next({ name: 'Login' })
-          })
+          next({ name: 'Login', query: { show_terms: 'true', redirect: to.fullPath } })
           return
         }
         next()

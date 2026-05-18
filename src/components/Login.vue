@@ -124,6 +124,13 @@ export default {
       isDownloading: false
     }
   },
+  mounted () {
+    if (this.$route.query.show_terms && this.$store.getters.isLoggedIn) {
+      const user = this.$store.state.user
+      this.pendingRoute = this.$route.query.redirect || `/workspace/${user.personal_organization}`
+      this.$bvModal.show('modal-terms-acceptance')
+    }
+  },
   methods: {
     login () {
       let username = this.username
