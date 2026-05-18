@@ -261,6 +261,7 @@
 import axios from 'axios'
 import _debounce from 'lodash.debounce'
 import subscribe from '@/components/commons/subscribe.vue'
+import { TERMS_VERSION } from '@/constants/terms'
 
 export default {
   data () {
@@ -337,7 +338,11 @@ export default {
     createAccount: function () {
       this.user.username = this.user.username.trim()
       let params = {
-        user: this.user,
+        user: {
+          ...this.user,
+          terms_accepted: true,
+          terms_version: TERMS_VERSION
+        },
         organizations: this.organizations
       }
       if (Object.prototype.hasOwnProperty.call(this.$route.query, 'o') &&
