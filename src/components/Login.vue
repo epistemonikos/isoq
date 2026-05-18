@@ -108,6 +108,7 @@
 
 <script>
 import axios from 'axios'
+import { TERMS_VERSION } from '@/constants/terms'
 
 export default {
   data () {
@@ -142,7 +143,7 @@ export default {
           const basePath = `/workspace/${personalInfo.personal_organization}`
           const destination = this.$route.query.redirect ? this.$route.query.redirect : basePath
 
-          if (!personalInfo.terms_accepted) {
+          if (!personalInfo.terms_accepted || personalInfo.terms_version < TERMS_VERSION) {
             this.pendingRoute = destination
             this.$bvModal.show('modal-terms-acceptance')
           } else {
@@ -159,6 +160,7 @@ export default {
       try {
         await axios.patch('/users/update_my_profile', {
           terms_accepted: true,
+          terms_version: TERMS_VERSION,
           newsletter: this.newsletterAccepted
         })
         this.$store.dispatch('updateUser', { terms_accepted: true, newsletter: this.newsletterAccepted })

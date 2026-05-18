@@ -13,6 +13,7 @@ import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltL
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
+import { TERMS_VERSION } from './constants/terms'
 
 library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faComments, faArrowsAlt, faCaretDown, faUsers, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faChevronDown, faChevronUp)
 
@@ -52,7 +53,7 @@ router.beforeEach((to, from, next) => {
 
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
-        if (!store.state.user.terms_accepted) {
+        if (!store.state.user.terms_accepted || store.state.user.terms_version < TERMS_VERSION) {
           next({ name: 'Login', query: { show_terms: 'true', redirect: to.fullPath } })
           return
         }
