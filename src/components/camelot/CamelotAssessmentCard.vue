@@ -24,17 +24,26 @@
       </div>
 
       <template v-if="isEditing('extractedData')">
-        <b-form-textarea v-model="editValue" size="sm" rows="3" class="mb-2"></b-form-textarea>
+        <b-form-textarea v-model="editValue" size="sm" rows="3" class="mb-2" @input="onInput"></b-form-textarea>
         <b-alert show variant="danger" class="mb-2 small not-completed-alert">
           <div class="alert-strip"></div>
           <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
         </b-alert>
-        <div class="d-flex justify-content-end gap-2 mb-2">
-          <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
-          <b-button size="sm" variant="primary" :disabled="isSaving" @click="saveField">
-            <b-spinner small v-if="isSaving"></b-spinner>
-            {{ $t('common.save') }}
-          </b-button>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted small">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+          <span v-else></span>
+          <div>
+            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+            <b-button size="sm" variant="primary" :disabled="isSaving" @click="saveField">
+              <b-spinner small v-if="isSaving"></b-spinner>
+              {{ $t('common.save') }}
+            </b-button>
+          </div>
         </div>
       </template>
       <template v-else>
@@ -57,17 +66,26 @@
       </div>
 
       <template v-if="isEditing('concerns')">
-        <b-form-textarea v-model="editValue" size="sm" rows="3" class="mb-2"></b-form-textarea>
+        <b-form-textarea v-model="editValue" size="sm" rows="3" class="mb-2" @input="onInput"></b-form-textarea>
         <b-alert show variant="danger" class="mb-2 small not-completed-alert">
           <div class="alert-strip"></div>
           <div class="alert-content">{{ $t('camelot.step_four.inline_edit.warning') }}</div>
         </b-alert>
-        <div class="d-flex justify-content-end gap-2 mb-2">
-          <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
-          <b-button size="sm" variant="primary" :disabled="isSaving" @click="saveField">
-            <b-spinner small v-if="isSaving"></b-spinner>
-            {{ $t('common.save') }}
-          </b-button>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted small">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+          <span v-else></span>
+          <div>
+            <b-button size="sm" variant="danger" @click="cancelEditing" class="mr-2">{{ $t('common.cancel') }}</b-button>
+            <b-button size="sm" variant="primary" :disabled="isSaving" @click="saveField">
+              <b-spinner small v-if="isSaving"></b-spinner>
+              {{ $t('common.save') }}
+            </b-button>
+          </div>
         </div>
       </template>
       <template v-else>
@@ -82,6 +100,8 @@
 </template>
 
 <script>
+import _debounce from 'lodash.debounce'
+
 export default {
   name: 'CamelotAssessmentCard',
   props: {
@@ -96,8 +116,14 @@ export default {
   },
   data() {
     return {
-      editValue: ''
+      editValue: '',
+      autoSaveStatus: null
     }
+  },
+  created() {
+    this.autoSaveDebounced = _debounce(function () {
+      this.$emit('auto-save-field', this.editValue)
+    }.bind(this), 1500)
   },
   watch: {
     editingField: {
@@ -107,6 +133,12 @@ export default {
         }
       },
       deep: true
+    },
+    isSaving(newVal, oldVal) {
+      if (oldVal === true && newVal === false && this.autoSaveStatus === 'saving') {
+        this.autoSaveStatus = 'saved'
+        setTimeout(() => { this.autoSaveStatus = null }, 2000)
+      }
     }
   },
   methods: {
@@ -120,10 +152,18 @@ export default {
       this.$emit('start-editing', { metaIndex: this.metaIndex, itemIndex: this.itemIndex, type })
     },
     cancelEditing() {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       this.$emit('cancel-editing')
     },
     saveField() {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       this.$emit('save-field', this.editValue)
+    },
+    onInput() {
+      this.autoSaveStatus = 'saving'
+      this.autoSaveDebounced()
     }
   }
 }

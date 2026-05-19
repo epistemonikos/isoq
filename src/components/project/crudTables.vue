@@ -164,6 +164,14 @@
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
         @ok="saveContentDataTable" :ok-title="$t('common.save')" ok-variant="outline-success"
         cancel-variant="outline-secondary">
+        <div v-if="autoSaveStatus" class="mb-2 small">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+        </div>
         <template v-if="dataTableFieldsModal.items.length">
           <template v-for="field of dataTable.fields">
             <b-form-group v-if="field.key !== 'ref_id'" :key="field.id" :label="field.label"
@@ -175,7 +183,7 @@
                 <b-form-textarea v-if="!['ref_id', 'authors'].includes(field.key)"
                   v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
                   :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''" rows="2"
-                  max-rows="100"></b-form-textarea>
+                  max-rows="100" @input="onFieldInput"></b-form-textarea>
               </template>
             </b-form-group>
           </template>
@@ -256,6 +264,7 @@ import Api from '@/utils/Api'
 import Papa from 'papaparse'
 import Commmons from '@/utils/commons.js'
 import { parseCSVData } from '@/utils/csvImporter'
+import _debounce from 'lodash.debounce'
 
 import { exportTableToCSV } from '@/utils/csvExporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
@@ -304,6 +313,7 @@ export default {
   mounted() {
     this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
     this.updateMyDataTables()
+    this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
   },
   data() {
     return {
@@ -347,7 +357,8 @@ export default {
           { key: 'authors', label: 'Author(s), Year' }
         ]
       },
-      expandedCells: {}
+      expandedCells: {},
+      autoSaveStatus: null
     }
   },
   watch: {
@@ -643,6 +654,20 @@ export default {
       this.dataTableFieldsModal.items = items
       this.dataTableFieldsModal.selected_item_index = index
       this.$refs['edit-content-dataTable'].show()
+    },
+    onFieldInput: function () {
+      this.autoSaveDebounced()
+    },
+    performAutoSave: function () {
+      const id = this.dataTable.id
+      if (!id) return
+      this.autoSaveStatus = 'saving'
+      Api.patch(`/${this.type}/${id}`, { items: this.dataTableFieldsModal.items })
+        .then(() => {
+          this.autoSaveStatus = 'saved'
+          setTimeout(() => { this.autoSaveStatus = null }, 2000)
+        })
+        .catch(() => { this.autoSaveStatus = 'error' })
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id

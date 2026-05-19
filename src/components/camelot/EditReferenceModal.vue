@@ -1,11 +1,15 @@
 <template>
   <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" @ok="handleModalOk"
-    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue" :no-close-on-esc="isSaving"
-    :no-close-on-backdrop="isSaving">
+    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue" no-close-on-esc
+    no-close-on-backdrop>
     <template v-if="localReference">
       <b-row>
         <!-- Menú flotante a la izquierda -->
         <b-col cols="3" class="menu-sidebar">
+          <b-button size="sm" variant="success" class="mb-2 w-100" @click="$refs.customFieldsManager.addField()">
+            <font-awesome-icon icon="plus" class="mr-1"></font-awesome-icon>
+            {{ $t('camelot.step_three.modal.add_field_button') }}
+          </b-button>
           <div class="sticky-menu p-2">
             <div class="menu-section-title mb-1">{{ $t('camelot.step_three.study_characteristics') }}</div>
             <div class="menu-section mb-0" v-if="customFields.length > 0">
@@ -29,8 +33,9 @@
         <b-col cols="9">
           <!-- Campos unificados -->
           <div class="mb-4">
-            <CustomFieldsManager v-model="customFields" :with-values="true"
-              :title="$t('camelot.step_three.modal.custom_fields_title')"
+            <CustomFieldsManager ref="customFieldsManager" v-model="customFields" @change="onFieldChanged" :with-values="true"
+              :show-header="false"
+              :show-add-button="false"
               :add-button-text="$t('camelot.step_three.modal.add_field_button')"
               :empty-text="$t('camelot.step_three.modal.no_custom_fields')"
               :move-instruction-text="$t('camelot.step_three.modal.move_instruction')"
@@ -49,6 +54,13 @@
     </template>
 
     <template #modal-footer="{ ok, cancel }">
+      <span v-if="autoSaveStatus === 'saving'" class="text-muted mr-auto small align-self-center">
+        <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+      </span>
+      <span v-else-if="autoSaveStatus === 'saved'" class="text-success mr-auto small align-self-center">
+        <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+      </span>
+      <span v-else class="mr-auto"></span>
       <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
         {{ $t('common.cancel') }}
       </b-button>
@@ -64,6 +76,7 @@
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
 import { isCustomField, cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
+import _debounce from 'lodash.debounce'
 
 export default {
   name: 'EditReferenceModal',
@@ -96,7 +109,8 @@ export default {
       customFields: [],
       activeSection: null,
       observer: null,
-      isSaving: false
+      isSaving: false,
+      autoSaveStatus: null
     }
   },
   computed: {
@@ -110,6 +124,9 @@ export default {
     hasInvalidCustomFields() {
       return this.customFields.some(f => !f.isCamelot && !f.locked && (!f.label || !f.label.trim()))
     }
+  },
+  created() {
+    this.autoSaveDebounced = _debounce(function () { this.performSave(false) }.bind(this), 1500)
   },
   watch: {
     reference: {
@@ -143,11 +160,13 @@ export default {
     },
     resetModal() {
       this.destroyScrollSpy()
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.editForm = {}
       this.customFields = []
       this.activeSection = null
       this.localReference = null
       this.isSaving = false
+      this.autoSaveStatus = null
       this.$emit('close')
     },
     initScrollSpy() {
@@ -302,11 +321,18 @@ export default {
         }
       }
     },
+    onFieldChanged() {
+      this.autoSaveDebounced()
+    },
     handleModalOk(bvModalEvent) {
       if (bvModalEvent) bvModalEvent.preventDefault()
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.performSave(true)
+    },
+    performSave(closeAfter) {
       if (this.isSaving) return
-
       this.isSaving = true
+      if (!closeAfter) this.autoSaveStatus = 'saving'
 
       const item = {
         ref_id: this.localReference.id || '',
@@ -314,6 +340,7 @@ export default {
       }
 
       const newFieldsArray = []
+      const generatedKeys = {}
 
       const systemFields = (this.charsData.fields || []).filter(field =>
         ['authors', 'ref_id', 'actions', 'edit'].includes(field.key)
@@ -323,11 +350,8 @@ export default {
         if (field.label && field.label.trim() !== '') {
           let fieldKey = field.key
           if (!field.locked && (!fieldKey || !fieldKey.startsWith('column_'))) {
-            const existingCustomFields = this.charsData.fields.filter(f => isCustomField(f.key))
-            const lastIndex = existingCustomFields.length > 0
-              ? Math.max(...existingCustomFields.map(ef => parseInt(ef.key.split('_')[1])))
-              : -1
             fieldKey = `column_${Date.now()}_${index}`
+            generatedKeys[index] = fieldKey
           }
 
           item[fieldKey] = field.value || ''
@@ -372,6 +396,13 @@ export default {
       savePromise
         .then(response => {
           this.isSaving = false
+
+          Object.entries(generatedKeys).forEach(([index, key]) => {
+            if (this.customFields[index]) {
+              this.customFields[index].key = key
+            }
+          })
+
           const responseData = response.data.$set || response.data
           const savedData = {
             ...responseData,
@@ -393,14 +424,24 @@ export default {
             this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
           }
 
-          this.$notify.success(this.$t('notifications.saved'))
           this.$emit('saved', savedData)
-          this.hide()
+
+          if (closeAfter) {
+            this.$notify.success(this.$t('notifications.saved'))
+            this.hide()
+          } else {
+            this.autoSaveStatus = 'saved'
+            setTimeout(() => { this.autoSaveStatus = null }, 2000)
+          }
         })
         .catch(error => {
           this.isSaving = false
           console.error('Error saving reference characteristics:', error)
-          this.$notify.error(this.$t('notifications.save_error'))
+          if (closeAfter) {
+            this.$notify.error(this.$t('notifications.save_error'))
+          } else {
+            this.autoSaveStatus = 'error'
+          }
         })
     }
   }

@@ -21,7 +21,7 @@
     </template>
 
     <template v-slot:cell(authors)="data">
-      <span class="font-weight-bold">{{ data.item.authors }}</span>
+      <span class="font-weight-bold" style="white-space: nowrap">{{ data.item.authors }}</span>
     </template>
 
     <!-- FA 1-4 + Edit -->

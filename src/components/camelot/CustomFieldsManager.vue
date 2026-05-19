@@ -3,6 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2" v-if="showHeader">
       <h5 class="mb-0">{{ title }}</h5>
       <b-button
+        v-if="showAddButton"
         size="sm"
         variant="success"
         @click="addField">
@@ -10,7 +11,7 @@
       </b-button>
     </div>
 
-    <div class="mb-3" v-else>
+    <div class="mb-3" v-else-if="showAddButton">
       <b-button
         size="sm"
         variant="success"
@@ -221,6 +222,10 @@ export default {
     placeholderValue: {
       type: String,
       default: 'Enter content'
+    },
+    showAddButton: {
+      type: Boolean,
+      default: true
     },
     showMoveInstruction: {
       type: Boolean,

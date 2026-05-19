@@ -20,11 +20,11 @@
 
       <b-table :items="tableItems" :fields="tableFields" striped hover responsive>
         <template v-slot:cell(authors)="data">
-          {{ formatAuthors(data.item) }}
+          <span style="white-space: nowrap; font-weight: bold">{{ formatAuthors(data.item) }}</span>
         </template>
 
         <template v-slot:cell(edit)="data">
-          <b-button size="sm" variant="outline-primary" class="mr-1" @click="editReference(data.item)">
+          <b-button size="sm" variant="outline-primary" class="mr-1 d-inline-flex align-items-center" @click="editReference(data.item)">
             {{ $t('camelot.step_three.edit_button') }}
             <font-awesome-icon icon="edit" class="ml-1" />
           </b-button>
@@ -94,7 +94,7 @@
         </template>
 
         <template v-slot:cell(actions)="data">
-          <b-button size="sm" variant="outline-primary" class="mr-1" @click="editReference(data.item)">
+          <b-button size="sm" variant="outline-primary" class="mr-1 d-inline-flex align-items-center" @click="editReference(data.item)">
             {{ $t('camelot.step_three.edit_button') }}
             <font-awesome-icon icon="edit" class="ml-1" />
           </b-button>

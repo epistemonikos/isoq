@@ -70,6 +70,8 @@
     "match": "Match",
     "notes": "Notes",
     "field_required": "This field is required.",
+    "auto_saving": "Saving...",
+    "auto_saved": "Saved",
     "interactive": "Interactive",
     "my_data": "My Data",
     "project_properties": "Project Properties",

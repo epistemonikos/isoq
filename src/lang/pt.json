@@ -70,6 +70,8 @@
     "match": "Coincide",
     "notes": "Notas",
     "field_required": "Este campo é obrigatório.",
+    "auto_saving": "Salvando...",
+    "auto_saved": "Salvo",
     "interactive": "Interativo",
     "my_data": "Meus Dados",
     "project_properties": "Propriedades do Projeto",

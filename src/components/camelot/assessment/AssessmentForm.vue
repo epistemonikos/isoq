@@ -34,15 +34,24 @@
       </div>
 
       <template #footer>
-        <div class="d-flex justify-content-end gap-2">
-          <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
-            {{ $t('common.cancel') }}
-          </b-button>
-          <b-button :disabled="button.disabled" size="sm" :variant="(button.disabled) ? 'outline-primary' : 'primary'"
-            @click="save">
-            <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
-            {{ $t('camelot.assessment_form.save_button') }}
-          </b-button>
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted small">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+          <span v-else></span>
+          <div>
+            <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
+              {{ $t('common.cancel') }}
+            </b-button>
+            <b-button :disabled="button.disabled" size="sm" :variant="(button.disabled) ? 'outline-primary' : 'primary'"
+              @click="save">
+              <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
+              {{ $t('camelot.assessment_form.save_button') }}
+            </b-button>
+          </div>
         </div>
       </template>
     </b-card>
@@ -70,6 +79,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import _debounce from 'lodash.debounce'
 
 export default {
   name: 'AssessmentForm',
@@ -85,6 +95,7 @@ export default {
       text1: '',
       notes: '',
       isSaving: false,
+      autoSaveStatus: null,
       options: [
         [
           {
@@ -230,6 +241,8 @@ export default {
   },
   watch: {
     modalStage(newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       if (this.assessments.items.length) {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
@@ -237,6 +250,8 @@ export default {
       }
     },
     selectedMeta(newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       if (this.assessments.items) {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
@@ -269,14 +284,20 @@ export default {
       this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
       this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
+    this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
+  },
+  beforeDestroy() {
+    if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
   },
   methods: {
     checkChanges() {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
-      if (item.option === this.selected && item.text === this.text1 && (item.notes || '') === this.notes) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
+      const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
+      this.button.disabled = !hasChanges
+      if (hasChanges && this.autoSaveDebounced) {
+        this.autoSaveDebounced()
+      } else if (!hasChanges && this.autoSaveDebounced) {
+        this.autoSaveDebounced.cancel()
       }
     },
     getOptionColor(value) {
@@ -310,8 +331,9 @@ export default {
       }
       this.performSave()
     },
-    performSave() {
+    performSave(silent = false) {
       this.isSaving = true
+      if (silent) this.autoSaveStatus = 'saving'
       const stages = [
         {
           key: 0,
@@ -406,30 +428,33 @@ export default {
         } else {
           params.items.push(data)
         }
+        const onSuccess = () => {
+          this.$emit('getAssessments')
+          this.isSaving = false
+          if (silent) {
+            this.autoSaveStatus = 'saved'
+            setTimeout(() => { this.autoSaveStatus = null }, 2000)
+          } else {
+            this.$notify.success(this.$t('notifications.saved'))
+          }
+        }
+        const onError = (error) => {
+          console.error('Error saving assessment data:', error)
+          this.isSaving = false
+          if (silent) {
+            this.autoSaveStatus = 'error'
+          } else {
+            this.$notify.error(this.$t('notifications.save_error'))
+          }
+        }
         if (this.assessments.id) {
           Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
-            .then(response => {
-              this.$emit('getAssessments')
-              this.$notify.success(this.$t('notifications.saved'))
-              this.isSaving = false
-            })
-            .catch(error => {
-              console.error('Error updating data:', error)
-              this.$notify.error(this.$t('notifications.save_error'))
-              this.isSaving = false
-            })
+            .then(onSuccess)
+            .catch(onError)
         } else {
           Api.post('/isoqf_assessments', params)
-            .then(response => {
-              this.$emit('getAssessments')
-              this.$notify.success(this.$t('notifications.saved'))
-              this.isSaving = false
-            })
-            .catch(error => {
-              console.error('Error saving data:', error)
-              this.$notify.error(this.$t('notifications.save_error'))
-              this.isSaving = false
-            })
+            .then(onSuccess)
+            .catch(onError)
         }
       } else {
         this.isSaving = false

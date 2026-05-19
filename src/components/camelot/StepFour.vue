@@ -11,7 +11,7 @@
     </div>
 
     <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
-      footer-class="camelot-modal-footer" body-class="camelot-modal-body">
+      footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc>
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -45,7 +45,7 @@
                     :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
                     :editing-field="editingField" :is-saving="isSavingField" @start-editing="onStartEditing"
-                    @cancel-editing="onCancelEditing" @save-field="onSaveField" />
+                    @cancel-editing="onCancelEditing" @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                 </div>
               </b-col>
 
@@ -88,7 +88,7 @@
                             :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
                             :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
-                            @save-field="onSaveField" />
+                            @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                         </b-col>
 
                         <!-- Columna 2.2: Assessment Evaluation -->
@@ -119,7 +119,7 @@
                       :concerns="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
                       :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
-                      @save-field="onSaveField" />
+                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
 
@@ -135,7 +135,7 @@
                       :concerns="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
                       :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
-                      @save-field="onSaveField" />
+                      @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
 
@@ -788,7 +788,7 @@ export default {
     onCancelEditing() {
       this.cancelEditing()
     },
-    saveField(newValue) {
+    saveField(newValue, keepEditing = false) {
       if (!this.characteristics) return
 
       this.isSavingField = true
@@ -842,8 +842,10 @@ export default {
             id: response.data.id || this.characteristics.id || response.data._id
           }
 
-          this.cancelEditing()
-          this.$notify.success(this.$t('notifications.saved'))
+          if (!keepEditing) {
+            this.cancelEditing()
+            this.$notify.success(this.$t('notifications.saved'))
+          }
           this.isSavingField = false
           this.$root.$emit('characteristics-updated', this.characteristics)
         })
@@ -856,6 +858,9 @@ export default {
     },
     onSaveField(newValue) {
       this.saveField(newValue)
+    },
+    onAutoSaveField(newValue) {
+      this.saveField(newValue, true)
     },
     getTabColor(stage, dIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
@@ -1164,6 +1169,10 @@ export default {
   padding: 0.1rem 0.4rem;
   font-size: 0.75rem;
   line-height: 1.2;
+  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .modal-column-scroll {
