@@ -629,6 +629,15 @@ html[data-theme="dark"] {
     }
   }
 
+  .modal-active-tab {
+    background: linear-gradient(180deg, #1a2d40 0%, #0d1a2a 100%) !important;
+    border-color: #5ba3d0 !important;
+  }
+
+  .modal-active-tab-text {
+    color: #e8f4ff !important;
+  }
+
   .modal-normal-tab {
     background-color: #2a2a2a !important;
     border-color: #555 !important;

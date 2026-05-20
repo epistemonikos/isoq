@@ -482,6 +482,20 @@ export default {
   }
 }
 
+html[data-theme="dark"] {
+  .assessment-card {
+    .card-header {
+      background-color: #2a2a2a;
+      border-bottom-color: #444;
+    }
+
+    .card-footer {
+      background-color: #2a2a2a;
+      border-top-color: #444;
+    }
+  }
+}
+
 .assessment-description {
   line-height: 1.4;
 }

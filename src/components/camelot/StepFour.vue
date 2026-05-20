@@ -1092,12 +1092,12 @@ export default {
 
 .modal-active-tab {
   font-weight: bold;
-  background: linear-gradient(180deg, #287BDC 0%, #2C649B 100%) !important;
-  border-color: #2C649B !important;
+  background: linear-gradient(180deg, #dde3ec 0%, #cfd7e4 100%) !important;
+  border-color: #287BDC !important;
 }
 
 .modal-active-tab-text {
-  color: #ffffff !important;
+  color: #1a5fa8 !important;
 }
 
 .modal-normal-tab {
@@ -1233,6 +1233,20 @@ export default {
 
   .alert-content {
     padding: 0.25rem 0.5rem;
+  }
+}
+
+html[data-theme="dark"] {
+  .not-completed-alert {
+    &.alert-warning {
+      background: rgba(180, 120, 20, 0.2) !important;
+      border-color: #a07820 !important;
+      color: #f0c060;
+
+      .alert-strip {
+        background-color: #d4a017;
+      }
+    }
   }
 }
 </style>

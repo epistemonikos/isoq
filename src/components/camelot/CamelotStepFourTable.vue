@@ -52,7 +52,7 @@
     <template v-slot:cell(edit1)="data">
       <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn">
-          <font-awesome-icon icon="edit" class="ml-1" />
+          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(0, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -86,7 +86,7 @@
     <template v-slot:cell(edit2)="data">
       <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn">
-          <font-awesome-icon icon="edit" class="ml-1" />
+          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(1, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -102,7 +102,7 @@
     <template v-slot:cell(edit3)="data">
       <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn">
-          <font-awesome-icon icon="edit" class="ml-1" />
+          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(2, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -118,7 +118,7 @@
     <template v-slot:cell(edit4)="data">
       <div class="d-flex justify-content-center align-items-center">
         <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn">
-          <font-awesome-icon icon="edit" class="ml-1" />
+          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(3, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
