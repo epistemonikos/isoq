@@ -516,6 +516,18 @@ html[data-theme="dark"] {
 
   .progress-worksheet {
     background-color: #2a2a2a;
+
+    .nav-link {
+      color: var(--blue-link);
+
+      &:hover {
+        color: var(--blue-link-hover);
+      }
+
+      &.disabled {
+        color: #666;
+      }
+    }
   }
 
   .progress {
