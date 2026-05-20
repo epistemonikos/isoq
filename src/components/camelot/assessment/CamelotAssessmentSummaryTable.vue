@@ -587,7 +587,11 @@ export default {
     table-layout: fixed;
 
     .first-col {
-      width: 25%;
+      width: 50%;
+    }
+
+    ::v-deep td:nth-child(2) {
+      width: 5%;
     }
 
     ::v-deep th {
