@@ -63,7 +63,8 @@
               <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length ? false : true">
                 <div>
                   <InclusionExclusioCriteria :canEdit="isEditing" :project="project" :ui="ui"
-                    @update-modification="updateModificationTime()"></InclusionExclusioCriteria>
+                    @update-modification="updateModificationTime()"
+                    @criteria-saved="onCriteriaSaved($event)"></InclusionExclusioCriteria>
                   <div class="mt-3">
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
@@ -1726,6 +1727,9 @@ export default {
       }
 
       return false
+    },
+    onCriteriaSaved: function (payload) {
+      this.$set(this.project, payload.field, payload.value)
     },
     updateModificationTime: function () {
       const params = {

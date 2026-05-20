@@ -155,6 +155,7 @@ export default {
               // this.getProject()
             }
             this.$emit('update-modification')
+            this.$emit('criteria-saved', { field: type, value: this.local_data })
           })
           .catch((error) => {
             this.printErrors(error)

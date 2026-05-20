@@ -58,6 +58,16 @@ export const strategies = [
         if (cached) return cached.data
       }
       return null
+    },
+    update: async (data, url) => {
+      const match = url.match(/\/isoqf_projects\/([a-zA-Z0-9]+)/)
+      if (!match) return
+      const projectId = match[1]
+      const existing = await getProject(projectId)
+      if (existing) {
+        const newData = { ...existing.data, ...data }
+        await saveProject({ id: projectId, data: newData })
+      }
     }
   },
   {

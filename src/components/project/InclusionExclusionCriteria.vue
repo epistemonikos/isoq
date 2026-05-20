@@ -13,7 +13,8 @@
             :canEdit="canEdit"
             criteria="inclusion"
             :dataTxt="project.inclusion"
-            @update-modification="updateModificationTime()">
+            @update-modification="updateModificationTime()"
+            @criteria-saved="$emit('criteria-saved', $event)">
           </criteria>
         </b-col>
         <b-col
@@ -26,7 +27,8 @@
             :canEdit="canEdit"
             criteria="exclusion"
             :dataTxt="project.exclusion"
-            @update-modification="updateModificationTime()">
+            @update-modification="updateModificationTime()"
+            @criteria-saved="$emit('criteria-saved', $event)">
           </criteria>
         </b-col>
       </b-row>
