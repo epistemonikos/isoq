@@ -597,7 +597,8 @@ export default {
     },
     getCleanedItems: function (items, fields) {
       if (!items) return []
-      const allowedKeys = fields ? fields.map(f => f.key) : []
+      if (!fields || !fields.length) return items
+      const allowedKeys = fields.map(f => f.key)
 
       return items
         .filter(item => item.ref_id && item.authors)
