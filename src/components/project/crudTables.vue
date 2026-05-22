@@ -852,6 +852,7 @@ export default {
         })
     },
     updateMyDataTables: function () {
+      if (!this.references || !this.references.length) return
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
