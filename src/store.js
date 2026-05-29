@@ -99,7 +99,7 @@ export const store = new Vuex.Store({
               reject({ response: { data } })
               return
             }
-            if (data.status !== 'false') {
+            if (data.status !== 'invalid_credentials') {
               commit('auth_success', parseUserFromResponse(data))
               commit('save_promise', Promise.resolve())
               resolve(response)
@@ -163,7 +163,7 @@ export const store = new Vuex.Store({
         let promise = new Promise((resolve, reject) => {
           Api.post('/auth/user', null).then((response) => {
             const data = response.data
-            if (data.status !== 'not_logged' && data.status !== 'false') {
+            if (data.status !== 'not_logged' && data.status !== 'invalid_credentials') {
               const userObject = parseUserFromResponse(data)
               const finalToken = userObject.access_token || this.state.token
               if (!finalToken || finalToken === 'null') {
