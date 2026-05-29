@@ -225,4 +225,106 @@ describe('crudTables.vue', () => {
     // We don't check exactly what Commons does, but ensure it runs without crashing
     expect(formatted).toBeDefined()
   })
+
+  describe('onEditModalHidden', () => {
+    it('cancels pending debounce and clears editingRefId when modal is hidden', () => {
+      const cancelSpy = jest.fn()
+      wrapper.vm.autoSaveDebounced = { cancel: cancelSpy }
+      wrapper.setData({
+        autoSaveStatus: 'saving',
+        dataTableFieldsModal: {
+          ...wrapper.vm.dataTableFieldsModal,
+          editingRefId: 'ref1'
+        }
+      })
+
+      wrapper.vm.onEditModalHidden()
+
+      expect(cancelSpy).toHaveBeenCalled()
+      expect(wrapper.vm.autoSaveStatus).toBe(null)
+      expect(wrapper.vm.dataTableFieldsModal.editingRefId).toBe(null)
+    })
+  })
+
+  describe('editingRefId tracking for concurrent editing safety', () => {
+    const tableData = {
+      id: 'table-1',
+      fields: [
+        { key: 'ref_id', label: 'ID' },
+        { key: 'authors', label: 'Authors' },
+        { key: 'column_0', label: 'Col 0' }
+      ],
+      items: [
+        { ref_id: 'ref1', authors: 'Author A 2020', column_0: 'data A' },
+        { ref_id: 'ref2', authors: 'Author B 2021', column_0: 'data B' }
+      ],
+      fieldsObj: [
+        { key: 'authors', label: 'Authors' },
+        { key: 'actions', label: '' },
+        { key: 'column_0', label: 'Col 0' }
+      ]
+    }
+
+    it('saves editingRefId of the clicked item when opening edit modal', () => {
+      wrapper.setData({ dataTable: tableData })
+      wrapper.vm.$refs = { 'edit-content-dataTable': { show: jest.fn() } }
+
+      wrapper.vm.addContentDataTable(1)
+
+      expect(wrapper.vm.dataTableFieldsModal.editingRefId).toBe('ref2')
+      expect(wrapper.vm.dataTableFieldsModal.selected_item_index).toBe(1)
+    })
+
+    it('updates selected_item_index by refId when handleResponseData re-sorts items', () => {
+      // Simulate modal open for ref2 (index 1)
+      wrapper.setData({
+        dataTable: tableData,
+        dataTableFieldsModal: {
+          ...wrapper.vm.dataTableFieldsModal,
+          editingRefId: 'ref2',
+          selected_item_index: 1
+        }
+      })
+
+      // Server returns items in a different order (ref2 now at index 0)
+      const reorderedData = [{
+        id: 'table-1',
+        fields: tableData.fields,
+        items: [
+          { ref_id: 'ref2', authors: 'Author B 2021', column_0: 'data B' },
+          { ref_id: 'ref1', authors: 'Author A 2020', column_0: 'data A' }
+        ]
+      }]
+
+      wrapper.vm.handleResponseData(reorderedData)
+
+      // selected_item_index should now point to ref2's new position
+      const newIdx = wrapper.vm.dataTableFieldsModal.items.findIndex(it => it.ref_id === 'ref2')
+      expect(wrapper.vm.dataTableFieldsModal.selected_item_index).toBe(newIdx)
+    })
+
+    it('does not change selected_item_index when editingRefId is null', () => {
+      wrapper.setData({
+        dataTable: tableData,
+        dataTableFieldsModal: {
+          ...wrapper.vm.dataTableFieldsModal,
+          editingRefId: null,
+          selected_item_index: 0
+        }
+      })
+
+      const freshData = [{
+        id: 'table-1',
+        fields: tableData.fields,
+        items: [
+          { ref_id: 'ref2', authors: 'Author B 2021', column_0: 'data B' },
+          { ref_id: 'ref1', authors: 'Author A 2020', column_0: 'data A' }
+        ]
+      }]
+
+      wrapper.vm.handleResponseData(freshData)
+
+      expect(wrapper.vm.dataTableFieldsModal.selected_item_index).toBe(0)
+    })
+  })
 })

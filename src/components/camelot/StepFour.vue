@@ -829,11 +829,46 @@ export default {
       // Actualizar la vista local meta para feedback inmediato
       this.meta[metaIndex].values[itemIndex][fieldName] = fieldValue
 
-      const savePromise = this.characteristics.id
-        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/`, this.characteristics)
-        : Api.post('/isoqf_characteristics/', this.characteristics)
+      const getBase = () => {
+        if (!this.characteristics.id) return Promise.resolve(this.characteristics)
+        return Api.get('/isoqf_characteristics', {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+          .then(res => {
+            if (res.data && res.data.length > 0) {
+              return res.data.find(d => String(d.id) === String(this.characteristics.id)) || res.data[0]
+            }
+            return this.characteristics
+          })
+          .catch(() => this.characteristics)
+      }
 
-      savePromise
+      getBase()
+        .then(baseDoc => {
+          const freshChars = { ...baseDoc }
+          if (!freshChars.organization) {
+            freshChars.organization = this.$route.params.org_id
+            freshChars.project_id = this.$route.params.id
+          }
+          if (!freshChars.items) freshChars.items = []
+
+          const freshItemIdx = freshChars.items.findIndex(it => String(it.ref_id) === String(this.refId))
+          if (freshItemIdx !== -1) {
+            freshChars.items = [...freshChars.items]
+            freshChars.items[freshItemIdx] = { ...freshChars.items[freshItemIdx], [fieldName]: fieldValue }
+          } else {
+            freshChars.items = [...freshChars.items, {
+              ref_id: this.refId,
+              authors: this.ui.authors,
+              [fieldName]: fieldValue
+            }]
+          }
+
+          return freshChars.id
+            ? Api.patch(`/isoqf_characteristics/${freshChars.id}/`, freshChars)
+            : Api.post('/isoqf_characteristics/', freshChars)
+        })
         .then(response => {
           const responseData = response.data.$set || response.data
           this.characteristics = {

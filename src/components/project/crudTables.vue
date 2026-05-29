@@ -162,7 +162,7 @@
       </b-modal>
 
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
-        @ok="saveContentDataTable" :ok-title="$t('common.save')" ok-variant="outline-success"
+        @ok="saveContentDataTable" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
         cancel-variant="outline-secondary">
         <div v-if="autoSaveStatus" class="mb-2 small">
           <span v-if="autoSaveStatus === 'saving'" class="text-muted">
@@ -330,6 +330,7 @@ export default {
         fields: [],
         items: [],
         selected_item_index: 0,
+        editingRefId: null,
         touched: []
       },
       dataTableFieldsModalEdit: {
@@ -455,6 +456,11 @@ export default {
           this.dataTableFieldsModal.items = []
           for (const item of _items) {
             this.dataTableFieldsModal.items.push(item)
+          }
+
+          if (this.dataTableFieldsModal.editingRefId) {
+            const newIdx = _items.findIndex(it => String(it.ref_id) === String(this.dataTableFieldsModal.editingRefId))
+            if (newIdx !== -1) this.dataTableFieldsModal.selected_item_index = newIdx
           }
         }
       } else {
@@ -647,6 +653,11 @@ export default {
         }
       }
     },
+    onEditModalHidden: function () {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.dataTableFieldsModal.editingRefId = null
+    },
     addContentDataTable: function (index = 0) {
       const items = Commmons.deepClone(this.dataTable.items)
 
@@ -654,16 +665,43 @@ export default {
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
       this.dataTableFieldsModal.selected_item_index = index
+      this.dataTableFieldsModal.editingRefId = items[index] ? items[index].ref_id : null
       this.$refs['edit-content-dataTable'].show()
     },
     onFieldInput: function () {
       this.autoSaveDebounced()
     },
+    _getFreshItems: function () {
+      return Api.get(`/${this.type}`, {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      })
+        .then(res => {
+          if (res.data && res.data.length > 0) {
+            const doc = res.data.find(d => String(d.id) === String(this.dataTable.id)) || res.data[0]
+            return doc.items || []
+          }
+          return this.dataTableFieldsModal.items
+        })
+        .catch(() => this.dataTableFieldsModal.items)
+    },
+    _mergeEditedItem: function (freshItems, editedItem) {
+      const merged = freshItems.map(it =>
+        String(it.ref_id) === String(editedItem.ref_id) ? { ...it, ...editedItem } : it
+      )
+      if (!merged.find(it => String(it.ref_id) === String(editedItem.ref_id))) {
+        merged.push(editedItem)
+      }
+      return merged
+    },
     performAutoSave: function () {
       const id = this.dataTable.id
       if (!id) return
+      const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
+      if (!editedItem) return
       this.autoSaveStatus = 'saving'
-      Api.patch(`/${this.type}/${id}`, { items: this.dataTableFieldsModal.items })
+      this._getFreshItems()
+        .then(freshItems => Api.patch(`/${this.type}/${id}`, { items: this._mergeEditedItem(freshItems, editedItem) }))
         .then(() => {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
@@ -672,15 +710,13 @@ export default {
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
-      const params = {
-        items: this.dataTableFieldsModal.items
-      }
+      const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
 
-      Api.patch(`/${this.type}/${id}`, params)
+      this._getFreshItems()
+        .then(freshItems => Api.patch(`/${this.type}/${id}`, { items: this._mergeEditedItem(freshItems, editedItem) }))
         .then(() => {
-          this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
+          this.$emit('set-item-data', `${this.prefix}-${editedItem.ref_id}`)
           this.$emit('get-project')
-
           this.getData()
           this.$refs['edit-content-dataTable'].hide()
         })

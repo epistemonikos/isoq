@@ -371,29 +371,51 @@ export default {
 
       const customFieldsArray = [...systemFields, ...newFieldsArray]
 
-      const updatedCharsData = { ...this.charsData }
-      const itemIndex = updatedCharsData.items.findIndex(existingItem =>
-        existingItem.ref_id === item.ref_id
-      )
-
-      if (itemIndex !== -1) {
-        updatedCharsData.items[itemIndex] = { ...updatedCharsData.items[itemIndex], ...item }
-      } else {
-        updatedCharsData.items.push(item)
+      const getFreshBase = () => {
+        if (!this.charsData.id) return Promise.resolve(this.charsData)
+        return Api.get('/isoqf_characteristics', {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+          .then(res => {
+            if (res.data && res.data.length > 0) {
+              return res.data.find(d => String(d.id) === String(this.charsData.id)) || res.data[0]
+            }
+            return this.charsData
+          })
+          .catch(() => this.charsData)
       }
 
-      updatedCharsData.fields = customFieldsArray
-      updatedCharsData.items = cleanOrphanedCustomFieldKeys(updatedCharsData.items, customFieldsArray)
+      getFreshBase()
+        .then(baseDoc => {
+          const updatedCharsData = { ...baseDoc }
+          updatedCharsData.items = [...(baseDoc.items || [])]
 
-      const savePromise = updatedCharsData.id
-        ? Api.patch(`/isoqf_characteristics/${updatedCharsData.id}/`, updatedCharsData)
-        : Api.post('/isoqf_characteristics/', {
-          organization: this.$route.params.org_id || '',
-          project_id: this.$route.params.id || '',
-          ...updatedCharsData
+          const itemIndex = updatedCharsData.items.findIndex(existingItem =>
+            existingItem.ref_id === item.ref_id
+          )
+          if (itemIndex !== -1) {
+            updatedCharsData.items[itemIndex] = { ...updatedCharsData.items[itemIndex], ...item }
+          } else {
+            updatedCharsData.items.push(item)
+          }
+
+          const serverFields = baseDoc.fields || []
+          const customKeys = new Set(customFieldsArray.map(f => f.key))
+          updatedCharsData.fields = [
+            ...customFieldsArray,
+            ...serverFields.filter(sf => !customKeys.has(sf.key))
+          ]
+          updatedCharsData.items = cleanOrphanedCustomFieldKeys(updatedCharsData.items, updatedCharsData.fields)
+
+          return updatedCharsData.id
+            ? Api.patch(`/isoqf_characteristics/${updatedCharsData.id}/`, updatedCharsData)
+            : Api.post('/isoqf_characteristics/', {
+              organization: this.$route.params.org_id || '',
+              project_id: this.$route.params.id || '',
+              ...updatedCharsData
+            })
         })
-
-      savePromise
         .then(response => {
           this.isSaving = false
 

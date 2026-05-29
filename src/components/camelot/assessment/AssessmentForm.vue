@@ -258,6 +258,15 @@ export default {
         this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
       }
     },
+    modalIndex(newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      if (this.assessments.items && this.assessments.items[newValue]) {
+        this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
+        this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
+        this.notes = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].notes || ''
+      }
+    },
     assessments: {
       handler(newValue) {
         if (newValue.items.length) {
@@ -311,6 +320,14 @@ export default {
       return colors[value] || '#B3B3B3'
     },
     cancel() {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      if (this.assessments.items && this.assessments.items[this.modalIndex]) {
+        const opts = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+        this.selected = opts.option
+        this.text1 = opts.text
+        this.notes = opts.notes || ''
+      }
       this.$bvModal.hide('modal-1')
     },
     doItNow() {
@@ -447,8 +464,43 @@ export default {
             this.$notify.error(this.$t('notifications.save_error'))
           }
         }
+
         if (this.assessments.id) {
-          Api.patch(`/isoqf_assessments/${this.assessments.id}`, params)
+          const getFreshParams = () => {
+            return Api.get('/isoqf_assessments', {
+              organization: this.$route.params.org_id,
+              project_id: this.$route.params.id
+            })
+              .then(res => {
+                if (!res.data || !res.data.length) return params
+                const freshDoc = res.data.find(d => String(d.id) === String(this.assessments.id)) || res.data[0]
+                const freshItems = freshDoc.items || []
+                let found = false
+                const mergedItems = freshItems.map(it => {
+                  if (String(it.ref_id) !== String(this.refId)) return it
+                  found = true
+                  const merged = JSON.parse(JSON.stringify(it))
+                  if (merged.stages && merged.stages[this.modalStage] &&
+                      merged.stages[this.modalStage].options &&
+                      merged.stages[this.modalStage].options[this.selectedMeta]) {
+                    merged.stages[this.modalStage].options[this.selectedMeta].option = this.selected
+                    merged.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+                    merged.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
+                  }
+                  return merged
+                })
+                if (!found) mergedItems.push(data)
+                return {
+                  organization: this.$route.params.org_id,
+                  project_id: this.$route.params.id,
+                  items: mergedItems
+                }
+              })
+              .catch(() => params)
+          }
+
+          getFreshParams()
+            .then(finalParams => Api.patch(`/isoqf_assessments/${this.assessments.id}`, finalParams))
             .then(onSuccess)
             .catch(onError)
         } else {

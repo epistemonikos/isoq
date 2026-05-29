@@ -48,6 +48,7 @@ describe('AssessmentForm.vue', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    Api.get.mockResolvedValue({ data: [] })
     wrapper = mount(AssessmentForm, {
       localVue,
       propsData,
@@ -94,15 +95,16 @@ describe('AssessmentForm.vue', () => {
 
   it('proceeds with save when "Do it later" is clicked', async () => {
     Api.patch.mockResolvedValue({ data: {} })
-    
+
     await wrapper.setData({
       selected: 'B',
       text1: ''
     })
-    
+
     // Simulate clicking "Do it later"
     await wrapper.vm.doItLater()
-    
+    await new Promise(resolve => setTimeout(resolve, 0))
+
     expect(Api.patch).toHaveBeenCalled()
     expect($bvModal.hide).toHaveBeenCalledWith('warning-explanation-modal-0-0')
   })
@@ -127,6 +129,7 @@ describe('AssessmentForm.vue', () => {
     })
 
     await wrapper.vm.save()
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(Api.patch).toHaveBeenCalled()
     expect($bvModal.show).not.toHaveBeenCalledWith('warning-explanation-modal-0-0')
@@ -137,7 +140,7 @@ describe('AssessmentForm.vue', () => {
       Api.patch.mockResolvedValue({ data: {} })
       await wrapper.setData({ selected: 'B', text1: 'Explanation' })
       await wrapper.vm.save()
-      await wrapper.vm.$nextTick()
+      await new Promise(resolve => setTimeout(resolve, 0))
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
     })
 
@@ -145,7 +148,7 @@ describe('AssessmentForm.vue', () => {
       Api.patch.mockRejectedValue(new Error('network error'))
       await wrapper.setData({ selected: 'B', text1: 'Explanation' })
       await wrapper.vm.save()
-      await wrapper.vm.$nextTick()
+      await new Promise(resolve => setTimeout(resolve, 0))
       expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
     })
 
@@ -224,6 +227,213 @@ describe('AssessmentForm.vue', () => {
       expect(wrapper.vm.explanationState).toBe(false)
       await wrapper.setData({ text1: 'Now I wrote something' })
       expect(wrapper.vm.explanationState).toBe(true)
+    })
+  })
+
+  describe('cancel()', () => {
+    const propsWithData = {
+      selectedMeta: 0,
+      modalStage: 0,
+      modalIndex: 0,
+      refId: 'ref1',
+      assessments: {
+        id: 'assess1',
+        items: [
+          {
+            ref_id: 'ref1',
+            authors: 'Author A 2020',
+            stages: [
+              {
+                key: 0,
+                options: [
+                  { option: 'B', text: 'Original explanation', notes: 'Original note' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    it('cancels pending debounced save and resets local state to server values', async () => {
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: propsWithData,
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal,
+          $notify
+        },
+        stubs: {
+          'b-card': true, 'b-form-group': true, 'b-form-radio-group': true,
+          'b-form-radio': true, 'b-form-textarea': true, 'b-button': true, 'b-modal': true
+        }
+      })
+
+      const cancelSpy = jest.fn()
+      const mockDebounced = Object.assign(jest.fn(), { cancel: cancelSpy })
+      localWrapper.vm.autoSaveDebounced = mockDebounced
+
+      // Simulate user editing
+      await localWrapper.setData({ selected: 'D', text1: 'Changed explanation', notes: 'Changed note' })
+
+      await localWrapper.vm.cancel()
+      await localWrapper.vm.$nextTick()
+
+      expect(cancelSpy).toHaveBeenCalled()
+      expect(localWrapper.vm.autoSaveStatus).toBe(null)
+      // State reverted to server values
+      expect(localWrapper.vm.selected).toBe('B')
+      expect(localWrapper.vm.text1).toBe('Original explanation')
+      expect(localWrapper.vm.notes).toBe('Original note')
+      expect($bvModal.hide).toHaveBeenCalledWith('modal-1')
+
+      localWrapper.destroy()
+    })
+
+    it('hides the modal even when assessments.items is empty', async () => {
+      const emptyProps = {
+        ...propsWithData,
+        assessments: { id: 'assess1', items: [] }
+      }
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: emptyProps,
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal,
+          $notify
+        },
+        stubs: {
+          'b-card': true, 'b-form-group': true, 'b-form-radio-group': true,
+          'b-form-radio': true, 'b-form-textarea': true, 'b-button': true, 'b-modal': true
+        }
+      })
+
+      await localWrapper.vm.cancel()
+      expect($bvModal.hide).toHaveBeenCalledWith('modal-1')
+
+      localWrapper.destroy()
+    })
+  })
+
+  describe('modalIndex watcher', () => {
+    const twoItemProps = {
+      selectedMeta: 0,
+      modalStage: 0,
+      modalIndex: 0,
+      refId: 'ref1',
+      assessments: {
+        id: 'assess1',
+        items: [
+          {
+            ref_id: 'ref1',
+            authors: 'Author A 2020',
+            stages: [
+              {
+                key: 0,
+                options: [
+                  { option: 'A', text: 'Explanation A', notes: 'Note A' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' }
+                ]
+              }
+            ]
+          },
+          {
+            ref_id: 'ref2',
+            authors: 'Author B 2021',
+            stages: [
+              {
+                key: 0,
+                options: [
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' },
+                  { option: null, text: '', notes: '' }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    it('resets selected/text1/notes to the new index item when modalIndex changes', async () => {
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: twoItemProps,
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal,
+          $notify
+        },
+        stubs: {
+          'b-card': true,
+          'b-form-group': true,
+          'b-form-radio-group': true,
+          'b-form-radio': true,
+          'b-form-textarea': true,
+          'b-button': true,
+          'b-modal': true
+        }
+      })
+
+      // Initially shows item 0 (ref1) data
+      expect(localWrapper.vm.selected).toBe('A')
+      expect(localWrapper.vm.text1).toBe('Explanation A')
+      expect(localWrapper.vm.notes).toBe('Note A')
+
+      // Switch to item 1 (ref2) — empty fields
+      await localWrapper.setProps({ modalIndex: 1 })
+      await localWrapper.vm.$nextTick()
+
+      expect(localWrapper.vm.selected).toBe(null)
+      expect(localWrapper.vm.text1).toBe('')
+      expect(localWrapper.vm.notes).toBe('')
+
+      localWrapper.destroy()
+    })
+
+    it('cancels pending debounced save when modalIndex changes', async () => {
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: twoItemProps,
+        mocks: {
+          $t,
+          $route: { params: { org_id: 'org1', id: 'proj1' } },
+          $bvModal,
+          $notify
+        },
+        stubs: {
+          'b-card': true,
+          'b-form-group': true,
+          'b-form-radio-group': true,
+          'b-form-radio': true,
+          'b-form-textarea': true,
+          'b-button': true,
+          'b-modal': true
+        }
+      })
+
+      const cancelSpy = jest.fn()
+      const mockDebounced = Object.assign(jest.fn(), { cancel: cancelSpy })
+      localWrapper.vm.autoSaveDebounced = mockDebounced
+
+      await localWrapper.setProps({ modalIndex: 1 })
+      await localWrapper.vm.$nextTick()
+
+      expect(cancelSpy).toHaveBeenCalled()
+      expect(localWrapper.vm.autoSaveStatus).toBe(null)
+
+      localWrapper.destroy()
     })
   })
 })

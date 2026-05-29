@@ -4,6 +4,7 @@ import Api from '@/utils/Api'
 
 // Mock Api
 jest.mock('@/utils/Api', () => ({
+  get: jest.fn(() => Promise.resolve({ data: [] })),
   patch: jest.fn(() => Promise.resolve({ data: {} })),
   post: jest.fn(() => Promise.resolve({ data: {} }))
 }))
@@ -84,6 +85,7 @@ describe('EditReferenceModal.vue', () => {
 
   it('calls Api.patch when handleModalOk is triggered', async () => {
     await wrapper.vm.handleModalOk()
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(Api.patch).toHaveBeenCalledWith(
       '/isoqf_characteristics/char1/',

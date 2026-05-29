@@ -67,6 +67,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
 
     // 2. Trigger save
     await wrapper.vm.saveField('New extracted data')
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     // 3. Assertions
     expect(Api.patch).toHaveBeenCalledWith(
@@ -96,6 +97,7 @@ describe('StepFour.vue - TDD for inline editing', () => {
 
     // 2. Trigger save
     await wrapper.vm.saveField('New comments')
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     // 3. Assertions
     expect(Api.patch).toHaveBeenCalledWith(
