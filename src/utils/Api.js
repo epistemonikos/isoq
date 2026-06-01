@@ -27,6 +27,10 @@ export default class Api {
     return axios.post(Api.host + path, data, {headers: this.getHeaders()})
   }
 
+  static patch (path, data) {
+    return axios.patch(Api.host + path, data, {headers: this.getHeaders()})
+  }
+
   static delete (path, data) {
     return axios.delete(Api.host + path, {headers: this.getHeaders()})
   }
