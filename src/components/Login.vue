@@ -108,7 +108,6 @@
 
 <script>
 import axios from 'axios'
-import Api from '@/utils/Api'
 import { TERMS_VERSION } from '@/constants/terms'
 
 export default {
@@ -159,11 +158,11 @@ export default {
     async acceptTerms () {
       this.isAccepting = true
       try {
-        await Api.patch('/users/update_my_profile', {
+        await axios.patch('/users/update_my_profile', {
           terms_accepted: true,
           terms_version: TERMS_VERSION,
           newsletter: this.newsletterAccepted
-        })
+        }, { withCredentials: true })
         this.$store.dispatch('updateUser', { terms_accepted: true, newsletter: this.newsletterAccepted })
         this.$bvModal.hide('modal-terms-acceptance')
         this.$router.push({ path: this.pendingRoute })
@@ -191,7 +190,7 @@ export default {
         const response = await axios.post('/users/get_full_data', {
           user_id: this.$store.state.user.id,
           password: this.downloadPassword
-        }, { responseType: 'blob', headers: Api.getHeaders() })
+        }, { responseType: 'blob', withCredentials: true })
 
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
