@@ -21,6 +21,15 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.prototype.$http = axios
 
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('l_s')
+  if (token && token !== 'null') {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Token session="${token}"`
+  }
+  return config
+})
+
 /*
 const token = localStorage.getItem('user-token')
 if (token) {

@@ -164,7 +164,7 @@ export default {
           terms_version: TERMS_VERSION,
           newsletter: this.newsletterAccepted
         }, { headers: { Authorization: `Token session="${token}"` } })
-        this.$store.dispatch('updateUser', { terms_accepted: true, newsletter: this.newsletterAccepted })
+        this.$store.dispatch('updateUser', { terms_accepted: true, terms_version: TERMS_VERSION, newsletter: this.newsletterAccepted })
         this.$bvModal.hide('modal-terms-acceptance')
         this.$router.push({ path: this.pendingRoute })
       } catch (e) {

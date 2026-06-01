@@ -54,14 +54,19 @@ export const store = new Vuex.Store({
         axios({url: '/auth/login', data: formData, method: 'POST'})
           .then(response => {
             const user = response.data
-            if (user.status !== 'false') {
+            if (user.status !== false && user.status !== 'false') {
               commit('auth_success', user)
               // /auth/login doesn't return access_token; fetch it via /auth/user
-              const instance = axios.create({ withCredentials: true })
-              instance.post('/auth/user')
+              axios.post('/auth/user', {}, { withCredentials: true })
                 .then(userResponse => {
+                  if (userResponse.data.status === 'not_logged') {
+                    commit('auth_error')
+                    localStorage.removeItem('l_s')
+                    reject(new Error('Login failed'))
+                    return
+                  }
                   commit('auth_success', userResponse.data)
-                  resolve(response)
+                  resolve(userResponse)
                 })
                 .catch(() => resolve(response))
             } else {
@@ -102,10 +107,7 @@ export const store = new Vuex.Store({
     getLogginInfo ({commit}) {
       if (this.state.status === '') {
         let promise = new Promise((resolve, reject) => {
-          let instance = axios.create({
-            withCredentials: true
-          })
-          instance.post('/auth/user').then((response) => {
+          axios.post('/auth/user', {}, { withCredentials: true }).then((response) => {
             if (response.data.status !== 'not_logged') {
               commit('auth_success', response.data)
             } else {
