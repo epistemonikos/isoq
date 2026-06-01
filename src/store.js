@@ -16,6 +16,9 @@ export const store = new Vuex.Store({
     auth_success (state, user) {
       state.status = 'success'
       state.user = user
+      if (user.access_token && user.access_token !== 'null') {
+        localStorage.setItem('l_s', user.access_token)
+      }
     },
     auth_error (state) {
       state.status = 'error'
@@ -23,6 +26,7 @@ export const store = new Vuex.Store({
     logout (state) {
       state.status = ''
       state.user = {}
+      localStorage.removeItem('l_s')
     },
     user_can (state, _bool) {
       state.user.can_write_other_orgs = _bool
