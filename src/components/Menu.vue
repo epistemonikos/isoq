@@ -54,13 +54,7 @@ export default {
   components: { SwitchLanguage, Accessibility },
   computed: {
     username: function () {
-      if (this.$store.state.user.first_name.length) {
-        return this.$store.state.user.first_name
-      }
-      if (this.$store.state.user.name.length) {
-        return this.$store.state.user.name
-      }
-      return 'User'
+      return this.$store.state.user.first_name || this.$store.state.user.name || 'User'
     }
   },
   methods: {
