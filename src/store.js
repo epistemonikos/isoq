@@ -56,7 +56,14 @@ export const store = new Vuex.Store({
             const user = response.data
             if (user.status !== 'false') {
               commit('auth_success', user)
-              resolve(response)
+              // /auth/login doesn't return access_token; fetch it via /auth/user
+              const instance = axios.create({ withCredentials: true })
+              instance.post('/auth/user')
+                .then(userResponse => {
+                  commit('auth_success', userResponse.data)
+                  resolve(response)
+                })
+                .catch(() => resolve(response))
             } else {
               commit('auth_error')
               localStorage.removeItem('token')
