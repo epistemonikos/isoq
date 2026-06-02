@@ -169,12 +169,11 @@ export default {
     async acceptTerms () {
       this.isAccepting = true
       try {
-        const token = localStorage.getItem('l_s')
         await axios.patch('/users/update_my_profile', {
           terms_accepted: true,
           terms_version: TERMS_VERSION,
           newsletter: this.newsletterAccepted
-        }, { headers: { Authorization: `Token session="${token}"` } })
+        }, { withCredentials: true })
         this.$store.dispatch('updateUser', { terms_accepted: true, terms_version: TERMS_VERSION, newsletter: this.newsletterAccepted })
         this.$bvModal.hide('modal-terms-acceptance')
         this.$router.push({ path: this.pendingRoute })
@@ -199,11 +198,10 @@ export default {
       }
       this.isDownloading = true
       try {
-        const token = localStorage.getItem('l_s')
         const response = await axios.post('/users/get_full_data', {
           user_id: this.$store.state.user.id,
           password: this.downloadPassword
-        }, { responseType: 'blob', headers: { Authorization: `Token session="${token}"` } })
+        }, { responseType: 'blob', withCredentials: true })
 
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
