@@ -72,7 +72,12 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
         if (!store.state.user.terms_accepted || store.state.user.terms_version < TERMS_VERSION) {
-          next({ name: 'Login', query: { show_terms: 'true', redirect: to.fullPath } })
+          store.dispatch('logout')
+            .catch(() => {})
+            .finally(() => {
+              store.commit('logout')
+              next({ name: 'Login', query: { redirect: to.fullPath } })
+            })
           return
         }
         next()
