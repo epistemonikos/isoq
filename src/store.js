@@ -54,7 +54,15 @@ export const store = new Vuex.Store({
         axios({url: '/auth/login', data: formData, method: 'POST'})
           .then(response => {
             const user = response.data
-            if (user.status !== false && user.status !== 'false') {
+            const status = user.status
+
+            if (status === 'password_compromised' || status === 'email_not_verified') {
+              commit('auth_error')
+              reject({ status })
+              return
+            }
+
+            if (status !== false && status !== 'false') {
               commit('auth_success', user)
               // /auth/login doesn't return access_token; fetch it via /auth/user
               axios.post('/auth/user', {}, { withCredentials: true })
@@ -71,12 +79,13 @@ export const store = new Vuex.Store({
                 .catch(() => resolve(response))
             } else {
               commit('auth_error')
-              localStorage.removeItem('token')
+              localStorage.removeItem('l_s')
+              reject({ status: 'invalid_credentials' })
             }
           })
           .catch(error => {
             commit('auth_error')
-            localStorage.removeItem('token')
+            localStorage.removeItem('l_s')
             reject(error)
           })
       })

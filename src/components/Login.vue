@@ -11,7 +11,15 @@
                   variant="warning"
                   dismissible
                   @dismissed="changeStatus">
-                    The user or password are wrong or doesn't exist. try again.
+                  <span v-if="loginError === 'password_compromised'">
+                    We detected that your password appeared in a known data breach. We've reset it and sent you an email with instructions to set a new one.
+                  </span>
+                  <span v-else-if="loginError === 'email_not_verified'">
+                    Please check your inbox to verify your email address before logging in.
+                  </span>
+                  <span v-else>
+                    The user or password are wrong or doesn't exist. Try again.
+                  </span>
                 </b-alert>
                 <b-form-group
                   id="input_group_email"
@@ -115,6 +123,7 @@ export default {
     return {
       username: null,
       password: null,
+      loginError: null,
       termsAccepted: false,
       newsletterAccepted: false,
       pendingRoute: null,
@@ -150,9 +159,12 @@ export default {
             this.$router.push({ path: destination })
           }
         })
-        .catch((error) => console.log(error))
+        .catch((error) => {
+          this.loginError = (error && error.status) || null
+        })
     },
     changeStatus () {
+      this.loginError = null
       this.$store.dispatch('changeStatus')
     },
     async acceptTerms () {
