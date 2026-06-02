@@ -55,6 +55,15 @@ router.onError((error) => {
 
 // Asegurarse que el router esté listo antes de crear la instancia de Vue
 router.beforeEach((to, from, next) => {
+  if (to.name === 'newPassword') {
+    if (store.getters.isLoggedIn) {
+      store.dispatch('logout').finally(() => next())
+    } else {
+      store.commit('logout')
+      next()
+    }
+    return
+  }
   store.dispatch('getLogginInfo', {})
   store.state.promise.then(() => {
     const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)

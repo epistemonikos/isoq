@@ -90,6 +90,7 @@ export default {
             this.showBanner = true
             this.msgBanner = 'Password has been changed. Please login with your new password.'
             this.classBanner = 'success'
+            setTimeout(() => this.$router.push({ name: 'Login' }), 2000)
           } else if (data.status === 'password_compromised') {
             this.showBanner = true
             this.msgBanner = 'This password has appeared in a known data breach. Please choose a different password.'
