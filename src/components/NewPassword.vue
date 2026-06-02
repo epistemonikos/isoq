@@ -90,6 +90,10 @@ export default {
             this.showBanner = true
             this.msgBanner = 'Password has been changed. Please login with your new password.'
             this.classBanner = 'success'
+          } else if (data.status === 'password_compromised') {
+            this.showBanner = true
+            this.msgBanner = 'This password has appeared in a known data breach. Please choose a different password.'
+            this.classBanner = 'danger'
           } else {
             this.showBanner = true
             this.msgBanner = 'Invalid username or Token'
