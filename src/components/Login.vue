@@ -22,6 +22,20 @@
                   </span>
                   <span v-else-if="loginError === 'email_not_verified'">
                     Please check your inbox to verify your email address before logging in.
+                    <div class="mt-2">
+                      <b-button
+                        v-if="!resendSuccess"
+                        variant="outline-warning"
+                        size="sm"
+                        :disabled="isResending"
+                        @click="resendVerification">
+                        <b-spinner v-if="isResending" small class="mr-1"></b-spinner>
+                        Resend verification email
+                      </b-button>
+                      <span v-else>
+                        Verification email sent. Please check your inbox.
+                      </span>
+                    </div>
                   </span>
                   <span v-else>
                     The user or password are wrong or doesn't exist. Try again.
@@ -130,6 +144,8 @@ export default {
       password: null,
       loginError: null,
       emailVerified: false,
+      isResending: false,
+      resendSuccess: false,
       termsAccepted: false,
       newsletterAccepted: false,
       pendingRoute: null,
@@ -152,6 +168,7 @@ export default {
   },
   methods: {
     login () {
+      this.resendSuccess = false
       let username = this.username
       let password = this.password
       this.$store
@@ -174,7 +191,19 @@ export default {
     },
     changeStatus () {
       this.loginError = null
+      this.resendSuccess = false
       this.$store.dispatch('changeStatus')
+    },
+    async resendVerification () {
+      this.isResending = true
+      try {
+        await axios.post('/auth/resend_verification', { username: this.username })
+        this.resendSuccess = true
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.isResending = false
+      }
     },
     async acceptTerms () {
       this.isAccepting = true
