@@ -376,7 +376,7 @@ export default {
             return
           }
           if (response.data && response.data.status === 'verification_email_sent') {
-            this.ui.verification_sent = true
+            this.$router.push({ name: 'accountCreated', query: { email: this.user.username } })
             return
           }
           this.showSubscribe = false
