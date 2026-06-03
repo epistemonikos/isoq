@@ -10,6 +10,7 @@ const EditList = () => import(/* webpackChunkName: "editlist" */ '@/components/l
 const ViewProject = () => import(/* webpackChunkName: "viewproject" */ '@/components/project/viewProject')
 const Browse = () => import(/* webpackChunkName: "browse" */ '@/components/Browse')
 const NewPassword = () => import(/* webpackChunkName: "newpassword" */ '@/components/NewPassword')
+const VerifyEmail = () => import(/* webpackChunkName: "verifyemail" */ '@/components/VerifyEmail')
 const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf" */ '@/components/previewContent/previewContentSoQf')
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
@@ -140,6 +141,14 @@ var routes = [
     component: NewPassword,
     meta: {
       title: 'New password - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
+    path: '/accounts/verify_email/:token',
+    name: 'verifyEmail',
+    component: VerifyEmail,
+    meta: {
+      title: 'Verify email - Interactive Summary of Qualitative Findings'
     }
   },
   {

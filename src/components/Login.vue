@@ -7,6 +7,12 @@
             <b-card
               header="Login">
                 <b-alert
+                  variant="success"
+                  dismissible
+                  :show="emailVerified">
+                  Your email has been verified. You can now log in.
+              </b-alert>
+              <b-alert
                   :show="$store.state.status === 'error'"
                   variant="warning"
                   dismissible
@@ -123,6 +129,7 @@ export default {
       username: null,
       password: null,
       loginError: null,
+      emailVerified: false,
       termsAccepted: false,
       newsletterAccepted: false,
       pendingRoute: null,
@@ -134,6 +141,9 @@ export default {
     }
   },
   mounted () {
+    if (this.$route.query.verified === 'true') {
+      this.emailVerified = true
+    }
     if (this.$route.query.show_terms && this.$store.getters.isLoggedIn) {
       const user = this.$store.state.user
       this.pendingRoute = this.$route.query.redirect || `/workspace/${user.personal_organization}`
