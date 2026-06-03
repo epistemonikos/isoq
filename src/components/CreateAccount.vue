@@ -79,6 +79,18 @@
                   v-model="user.password_2"></b-form-input>
               </b-form-group>
 
+              <b-alert
+                dismissible
+                variant="danger"
+                :show="!!ui.password_error"
+                @dismissed="ui.password_error = ''">
+                {{ ui.password_error }}
+              </b-alert>
+              <b-alert
+                variant="success"
+                :show="ui.verification_sent">
+                Your account has been created. Please check your inbox and click the verification link to activate your account.
+              </b-alert>
               <b-card-text class="text-forgot-create">
                 <div>
                   <p class="font-weight-bold">
@@ -269,6 +281,8 @@ export default {
       ui: {
         username_validation: null,
         password_validation: false,
+        password_error: '',
+        verification_sent: false,
         display_create_account: true,
         display_join_org_or_create_org: false,
         display_join_org: false,
@@ -337,6 +351,7 @@ export default {
     },
     createAccount: function () {
       this.user.username = this.user.username.trim()
+      this.ui.password_error = ''
       let params = {
         user: {
           ...this.user,
@@ -355,12 +370,24 @@ export default {
         }
       }
       axios.post('/create_user', params)
-        .then(() => {
+        .then((response) => {
+          if (response.data && response.data.status === 'password_compromised') {
+            this.ui.password_error = 'This password has appeared in a known data breach. Please choose a different password.'
+            return
+          }
+          if (response.data && response.data.status === 'verification_email_sent') {
+            this.ui.verification_sent = true
+            return
+          }
           this.showSubscribe = false
           this.login(this.user.username, this.user.password)
         })
         .catch((error) => {
-          console.log(error)
+          if (error.response && error.response.data && error.response.data.status === 'password_compromised') {
+            this.ui.password_error = 'This password has appeared in a known data breach. Please choose a different password.'
+          } else {
+            console.log(error)
+          }
         })
     },
     login (username, password) {
