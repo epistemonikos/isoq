@@ -5,6 +5,9 @@ import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
 import * as xlsxExporter from '@/utils/xlsxExporter'
 import writeXlsxFile from 'write-excel-file'
+import { parseCSVData } from '@/utils/csvImporter'
+import { parseXLSXData } from '@/utils/xlsxImporter'
+import { loadFileAsText } from '@/utils/tableDataUtils'
 
 jest.mock('@/utils/xlsxExporter', () => ({
   exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
@@ -13,6 +16,21 @@ jest.mock('@/utils/xlsxExporter', () => ({
 jest.mock('write-excel-file', () => ({
   __esModule: true,
   default: jest.fn().mockResolvedValue(undefined)
+}))
+
+jest.mock('@/utils/csvImporter', () => ({
+  parseTableRows: jest.fn(),
+  parseCSVData: jest.fn()
+}))
+
+jest.mock('@/utils/xlsxImporter', () => ({
+  parseXLSXData: jest.fn()
+}))
+
+jest.mock('@/utils/tableDataUtils', () => ({
+  loadFileAsText: jest.fn(),
+  sortByAuthors: jest.fn(items => items),
+  filterDisplayFields: jest.fn(fields => fields)
 }))
 
 const localVue = createLocalVue()
@@ -377,6 +395,68 @@ describe('crudTables.vue', () => {
       expect(rows[2]).toEqual([{ value: '2' }, { value: 'Jones 2021' }])
 
       expect(opts.fileName).toBe('my_data.xlsx')
+    })
+  })
+
+  describe('loadTableImportData', () => {
+    const parsedResult = {
+      error: null,
+      fields: [
+        { key: 'ref_id', label: 'Ref ID' },
+        { key: 'authors', label: 'Author' },
+        { key: 'column_0', label: 'Country' }
+      ],
+      fieldsObj: [{ key: 'column_0', label: 'Country' }],
+      items: [{ ref_id: '1', authors: 'Smith 2020', column_0: 'Chile' }]
+    }
+
+    function makeEvent (filename) {
+      return { target: { files: [new File([''], filename)] } }
+    }
+
+    beforeEach(() => {
+      parseXLSXData.mockReset()
+      parseCSVData.mockReset()
+      loadFileAsText.mockReset()
+    })
+
+    it('routes .xlsx files to parseXLSXData and updates importDataTable', async () => {
+      parseXLSXData.mockResolvedValue(parsedResult)
+
+      await wrapper.vm.loadTableImportData(makeEvent('data.xlsx'))
+
+      expect(parseXLSXData).toHaveBeenCalled()
+      expect(parseCSVData).not.toHaveBeenCalled()
+      expect(wrapper.vm.importDataTable.items).toEqual(parsedResult.items)
+      expect(wrapper.vm.importDataTable.fields).toEqual(parsedResult.fields)
+    })
+
+    it('routes .csv files to parseCSVData and updates importDataTable', async () => {
+      loadFileAsText.mockResolvedValue('Ref ID,Author,Country\n1,Smith 2020,Chile')
+      parseCSVData.mockReturnValue(parsedResult)
+
+      await wrapper.vm.loadTableImportData(makeEvent('data.csv'))
+
+      expect(parseCSVData).toHaveBeenCalled()
+      expect(parseXLSXData).not.toHaveBeenCalled()
+      expect(wrapper.vm.importDataTable.items).toEqual(parsedResult.items)
+    })
+
+    it('sets importDataTable.error when parse returns an error', async () => {
+      parseXLSXData.mockResolvedValue({
+        error: 'Format error', fields: [], items: [], fieldsObj: []
+      })
+
+      await wrapper.vm.loadTableImportData(makeEvent('bad.xlsx'))
+
+      expect(wrapper.vm.importDataTable.error).toBe('Format error')
+    })
+
+    it('does nothing when no file is selected', async () => {
+      await wrapper.vm.loadTableImportData({ target: { files: [] } })
+
+      expect(parseXLSXData).not.toHaveBeenCalled()
+      expect(parseCSVData).not.toHaveBeenCalled()
     })
   })
 })

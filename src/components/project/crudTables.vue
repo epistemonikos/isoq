@@ -234,6 +234,7 @@
         </b-button>
         <h4 class="mt-5">{{ $t('import_modal.step2') }}</h4>
         <b-form-file ref="import-file" id="input-template-chars-file" plain
+          accept=".xlsx,.csv"
           @change="loadTableImportData($event)"></b-form-file>
         <h4 class="mt-5">{{ $t('import_modal.step3') }}</h4>
         <p>{{ $t('import_modal.accept_info') }}</p>
@@ -267,6 +268,7 @@ import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
 
 import { exportTableToXLSX } from '@/utils/xlsxExporter'
+import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 
 export default {
@@ -349,7 +351,6 @@ export default {
         id: null,
         findings: []
       },
-      pre_ImportDataTable: '',
       importDataTable: {
         error: null,
         fields: [],
@@ -363,18 +364,6 @@ export default {
     }
   },
   watch: {
-    pre_ImportDataTable: function (data) {
-      const parsed = parseCSVData(data, this.$t('import_modal.format_error'))
-      this.importDataTable.error = parsed.error
-      if (parsed.fieldsObj.length > 0) {
-        this.importDataTable.fieldsObj = [
-          { key: 'authors', label: this.$t('table_headers.author_year') },
-          ...parsed.fieldsObj
-        ]
-      }
-      this.importDataTable.fields = parsed.fields
-      this.importDataTable.items = parsed.items
-    },
     references() {
       this.updateMyDataTables()
     }
@@ -806,8 +795,28 @@ export default {
 
       await writeXlsxFile(rows, { fileName: 'my_data.xlsx' })
     },
-    loadTableImportData: function (event) {
-      loadFileAsText(event).then(text => { this.pre_ImportDataTable = text })
+    loadTableImportData: async function (event) {
+      const file = event.target.files[0]
+      if (!file) return
+
+      let parsed
+      if (file.name.toLowerCase().endsWith('.xlsx')) {
+        parsed = await parseXLSXData(file, this.$t('import_modal.format_error'))
+      } else {
+        const text = await loadFileAsText(event)
+        if (!text) return
+        parsed = parseCSVData(text, this.$t('import_modal.format_error'))
+      }
+
+      this.importDataTable.error = parsed.error
+      if (parsed.fieldsObj.length > 0) {
+        this.importDataTable.fieldsObj = [
+          { key: 'authors', label: this.$t('table_headers.author_year') },
+          ...parsed.fieldsObj
+        ]
+      }
+      this.importDataTable.fields = parsed.fields
+      this.importDataTable.items = parsed.items
     },
     cleanVars: function (isCancel = false) {
       this.importDataTable = {
@@ -818,7 +827,6 @@ export default {
           { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       }
-      this.pre_ImportDataTable = ''
       this.$refs['import-file'].reset()
       if (isCancel) {
         this.$refs[`import-table-${this.type}`].hide()
@@ -856,12 +864,10 @@ export default {
           { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       }
-      this.pre_ImportDataTable = ''
     },
     cleanImportedData: function (id = '', params = {}) {
       Api.delete(`/${this.type}/${id}`)
         .then(() => {
-          this.pre_ImportDataTable = ''
           this.insertImportedData(params)
         })
         .catch((error) => {

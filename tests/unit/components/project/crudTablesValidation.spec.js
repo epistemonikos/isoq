@@ -12,6 +12,32 @@ jest.mock('write-excel-file', () => ({
   default: jest.fn().mockResolvedValue(undefined)
 }))
 
+jest.mock('@/utils/xlsxImporter', () => ({
+  parseXLSXData: jest.fn()
+}))
+
+jest.mock('@/utils/csvImporter', () => ({
+  parseTableRows: jest.fn(),
+  parseCSVData: jest.fn()
+}))
+
+jest.mock('@/utils/tableDataUtils', () => ({
+  loadFileAsText: jest.fn(),
+  sortByAuthors: jest.fn(items => items),
+  filterDisplayFields: jest.fn(fields => fields)
+}))
+
+jest.mock('@/utils/Api', () => {
+  const mock = {
+    get: jest.fn(() => Promise.resolve({ data: [] })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+    patch: jest.fn(() => Promise.resolve({ data: { '$set': { fields: [] } } })),
+    delete: jest.fn(() => Promise.resolve({ data: {} }))
+  }
+  mock.default = mock
+  return mock
+})
+
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 
