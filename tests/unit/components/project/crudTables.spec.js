@@ -3,6 +3,11 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import crudTables from '@/components/project/crudTables.vue'
 import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
+import * as xlsxExporter from '@/utils/xlsxExporter'
+
+jest.mock('@/utils/xlsxExporter', () => ({
+  exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
+}))
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -325,6 +330,18 @@ describe('crudTables.vue', () => {
       wrapper.vm.handleResponseData(freshData)
 
       expect(wrapper.vm.dataTableFieldsModal.selected_item_index).toBe(0)
+    })
+  })
+
+  describe('exportTableToXLSX method', () => {
+    it('calls exportTableToXLSX with dataTable fields and items', async () => {
+      await wrapper.vm.exportTableToXLSX()
+
+      expect(xlsxExporter.exportTableToXLSX).toHaveBeenCalledWith({
+        fields: wrapper.vm.dataTable.fields,
+        items: wrapper.vm.dataTable.items,
+        filename: 'exportable_table'
+      })
     })
   })
 })

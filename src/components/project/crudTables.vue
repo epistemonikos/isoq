@@ -23,7 +23,7 @@
         </b-button>
       </b-col>
       <b-col sm="3" v-if="dataTable.fields && dataTable.fields.length > 2">
-        <b-button variant="outline-secondary" block @click="exportTableToCSV()">
+        <b-button variant="outline-secondary" block @click="exportTableToXLSX()">
           {{ $t('characteristics.export_xls') }}
         </b-button>
       </b-col>
@@ -266,7 +266,7 @@ import Commmons from '@/utils/commons.js'
 import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
 
-import { exportTableToCSV } from '@/utils/csvExporter'
+import { exportTableToXLSX } from '@/utils/xlsxExporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 
 export default {
@@ -834,8 +834,8 @@ export default {
     openModalImportTable: function () {
       this.$refs[`import-table-${this.type}`].show()
     },
-    exportTableToCSV: function () {
-      exportTableToCSV({
+    exportTableToXLSX: async function () {
+      await exportTableToXLSX({
         fields: this.dataTable.fields,
         items: this.dataTable.items,
         filename: 'exportable_table'
