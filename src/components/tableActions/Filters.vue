@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { exportTableToCSV } from '@/utils/csvExporter'
+import { exportTableToXLSX } from '@/utils/xlsxExporter'
 import Commons from '@/utils/commons.js'
 
 export default {
@@ -79,13 +79,13 @@ export default {
     orderKeys: function (obj) {
       return Commons.orderKeys(obj)
     },
-    toCSV: function (type) {
+    toCSV: async function (type) {
       const types = {
         'chars_of_studies': 'Characteristics of studies',
         'meth_assessments': 'Methodological assessments',
         'extracted_data': 'Extracted data'
       }
-      exportTableToCSV({
+      await exportTableToXLSX({
         fields: this.local_fields,
         items: this.local_items,
         filename: types[type] || 'exportable_table',
