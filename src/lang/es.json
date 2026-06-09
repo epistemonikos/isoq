@@ -435,9 +435,7 @@
     "beware_text": "La función de importación de iSoQ no importa datos con formato. Por ejemplo, si su tabla tiene celdas con texto en negrita, superíndice, subíndice, sangría, viñetas, etc., estos no se mostrarán.",
     "overwrite_warning": "Los datos recién importados y guardados eliminarán y reemplazarán cualquier dato anterior ingresado manualmente o mediante importación.",
     "steps_title": "Para subir una tabla, siga estos pasos:",
-    "step1": "PASO 1: Descargue la plantilla (archivo Excel), guárdela en su computadora y complétela con su información.",
-    "save_as_csv": "Al guardar el archivo, elija 'CSV-UTF-8 (Delimitado por comas) (*.csv)' como \"Tipo de archivo\"",
-    "template_problems": "Si tiene problemas con la plantilla, puede deberse a la versión de Excel que usa o su configuración. Recomendamos trabajar en la tabla en Google Sheets (Gdrive)",
+    "step1": "PASO 1: Descargue la plantilla, complétela con su información (se recomienda Excel .xlsx) y súbala en el Paso 2.",
     "columns_warning": "Las dos primeras columnas «ID de Referencia» y «Autor(es), Año» no deben alterarse de ninguna manera.",
     "download_template": "Descargar plantilla",
     "step2": "PASO 2: Importe la plantilla completa a iSoQ",
@@ -445,7 +443,7 @@
     "accept_info": "Si se ve bien, acepte la importación haciendo clic en el botón \"Guardar\" en la parte inferior de la página.",
     "reject_info": "Si algo no se ve bien, elimínela haciendo clic en el botón \"Rechazar\" en la parte inferior de la página y vuelva al Paso 2.",
     "see_help": "Ver video de ayuda",
-    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que guardó su archivo como el siguiente tipo: CSV-UTF-8 (Delimitado por comas) (*.csv). También verifique que su tabla tenga al menos una columna."
+    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que su archivo sea un .xlsx o .csv válido y que su tabla tenga al menos una columna más allá de las dos primeras."
   },
   "meth_assessments": {
     "table_title": "Tabla de Evaluaciones Metodológicas",

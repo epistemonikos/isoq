@@ -435,9 +435,7 @@
     "beware_text": "O recurso de importação do iSoQ não importa dados formatados de nenhuma maneira. Por exemplo, se sua tabela tiver células formatadas com texto em negrito, sobrescrito, subscrito, recuo, marcadores, etc., estes não serão exibidos.",
     "overwrite_warning": "Os dados recém-importados e salvos excluirão e substituirão quaisquer dados anteriores inseridos manualmente ou por meio de importação.",
     "steps_title": "Para enviar uma tabela, siga estas etapas:",
-    "step1": "ETAPA 1: Baixe o modelo (arquivo Excel), salve-o em seu computador e preencha-o com suas informações.",
-    "save_as_csv": "Ao salvar o arquivo, escolha 'CSV-UTF-8 (Delimitado por vírgulas) (*.csv)' como \"Tipo de arquivo\"",
-    "template_problems": "Se você tiver problemas com o modelo, pode ser devido à versão do Excel que está usando ou suas configurações. Recomendamos trabalhar na tabela no Google Sheets (Gdrive)",
+    "step1": "ETAPA 1: Baixe o modelo, preencha-o com suas informações (recomenda-se Excel .xlsx) e envie-o na Etapa 2.",
     "columns_warning": "As duas primeiras colunas «ID da Referência» e «Autor(es), Ano» não devem ser alteradas de forma alguma.",
     "download_template": "Baixar modelo",
     "step2": "ETAPA 2: Importe o modelo preenchido para o iSoQ",
@@ -445,7 +443,7 @@
     "accept_info": "Se parecer correto, aceite a importação clicando no botão \"Salvar\" na parte inferior da página.",
     "reject_info": "Se algo não parecer correto, remova clicando no botão \"Rejeitar\" na parte inferior da página e volte à Etapa 2.",
     "see_help": "Ver vídeo de ajuda",
-    "format_error": "Seus dados podem estar formatados incorretamente e, portanto, não serão exibidos. Verifique se você salvou seu arquivo como o seguinte tipo: CSV-UTF-8 (Delimitado por vírgulas) (*.csv). Também verifique se sua tabela tem pelo menos uma coluna."
+    "format_error": "Seus dados podem estar formatados incorretamente e, portanto, não serão exibidos. Verifique se o arquivo é um .xlsx ou .csv válido e se sua tabela tem pelo menos uma coluna além das duas primeiras."
   },
   "meth_assessments": {
     "table_title": "Tabela de Avaliações Metodológicas",

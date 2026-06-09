@@ -221,12 +221,6 @@
         </p>
         <h4>{{ $t('import_modal.step1') }}</h4>
         <p class="text-danger">
-          <b>{{ $t('import_modal.save_as_csv') }}</b>
-        </p>
-        <p class="text-danger">
-          <b>{{ $t('import_modal.template_problems') }}</b>
-        </p>
-        <p class="text-danger">
           <b>{{ $t('import_modal.columns_warning') }}</b>
         </p>
         <b-button variant="info" @click="generateTemplate">

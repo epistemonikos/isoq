@@ -435,9 +435,7 @@
     "beware_text": "The iSoQ import feature does not import data that is formatted in any way. For example, if your table has cells formatted with bold text, superscript, subscript, indentation, bullet points etc. these will not be displayed.",
     "overwrite_warning": "The newly imported and saved data will delete and replace any previous data entered manually or through import.",
     "steps_title": "To upload a table, follow these steps:",
-    "step1": "STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.",
-    "save_as_csv": "When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the \"Save as type\"",
-    "template_problems": "If you have problems with the template this may be due to the version of Excel you are using or your settings. We recommend you work on the table in Google Sheets (Gdrive)",
+    "step1": "STEP 1: Download the template, fill it in with your data (Excel .xlsx recommended), and upload it in Step 2.",
     "columns_warning": "The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.",
     "download_template": "Download template",
     "step2": "STEP 2: Import the populated template to iSoQ",
@@ -445,7 +443,7 @@
     "accept_info": "If it looks right, accept the import by clicking the \"Save\" button at the bottom of the page.",
     "reject_info": "If something doesn't look right, remove it by clicking the \"Reject\" button at the bottom of the page and return to Step 2.",
     "see_help": "See help video",
-    "format_error": "Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column."
+    "format_error": "Your data may be incorrectly formatted and therefore will not be displayed. Please verify your file is a valid .xlsx or .csv file and that your table has at least one column beyond the first two."
   },
   "meth_assessments": {
     "table_title": "Methodological Assessments Table",
