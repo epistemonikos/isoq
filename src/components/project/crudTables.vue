@@ -261,7 +261,7 @@
 <script>
 /* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
-import Papa from 'papaparse'
+import writeXlsxFile from 'write-excel-file'
 import Commmons from '@/utils/commons.js'
 import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
@@ -790,28 +790,21 @@ export default {
           this.$emit('print-errors', error)
         })
     },
-    generateTemplate: function () {
+    generateTemplate: async function () {
       const _refs = Commmons.deepClone(this.refs)
-      let obj = {
-        fields: [this.$t('table_headers.reference_id'), this.$t('table_headers.author_year')],
-        data: []
-      }
 
-      for (const ref of _refs) {
-        obj.data.push([ref.id, ref.content.split(';')[0]])
-      }
+      const rows = [
+        [
+          { value: this.$t('table_headers.reference_id'), fontWeight: 'bold' },
+          { value: this.$t('table_headers.author_year'), fontWeight: 'bold' }
+        ],
+        ..._refs.map(ref => [
+          { value: String(ref.id) },
+          { value: ref.content.split(';')[0] }
+        ])
+      ]
 
-      const data = Papa.unparse(obj)
-
-      var csvData = new Blob([data], { type: 'text/csv;charset=utf-8;' })
-      var csvURL = window.URL.createObjectURL(csvData)
-
-      let link = document.createElement('a')
-      link.setAttribute('href', csvURL)
-      link.setAttribute('download', 'my_data.csv')
-      document.body.appendChild(link)
-
-      link.click()
+      await writeXlsxFile(rows, { fileName: 'my_data.xlsx' })
     },
     loadTableImportData: function (event) {
       loadFileAsText(event).then(text => { this.pre_ImportDataTable = text })

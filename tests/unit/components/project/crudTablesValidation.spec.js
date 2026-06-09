@@ -3,6 +3,15 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import crudTables from '@/components/project/crudTables.vue'
 import BootstrapVue from 'bootstrap-vue'
 
+jest.mock('@/utils/xlsxExporter', () => ({
+  exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
+}))
+
+jest.mock('write-excel-file', () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue(undefined)
+}))
+
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 
