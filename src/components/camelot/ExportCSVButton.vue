@@ -1,16 +1,15 @@
 <template>
-      <b-button
-        variant="outline-primary"
-        size="sm"
-        @click="exportToCSV">
-        {{ $t('camelot.step_three.export_csv') }}
-        <font-awesome-icon icon="file-export" class="ml-1" />
-      </b-button>
-  
+    <b-button
+      variant="outline-primary"
+      size="sm"
+      @click="exportToXLSX">
+      {{ $t('camelot.step_three.export_xlsx') }}
+      <font-awesome-icon icon="file-export" class="ml-1" />
+    </b-button>
 </template>
 
 <script>
-import { exportTableToCSV } from '@/utils/csvExporter'
+import { exportTableToXLSX } from '@/utils/xlsxExporter'
 import Commons from '@/utils/commons'
 
 export default {
@@ -33,8 +32,7 @@ export default {
     formatAuthors (item) {
       return Commons.parseReference(item, true, false)
     },
-    exportToCSV () {
-      // Pre-process items: format authors and replace undefined/null with empty strings
+    async exportToXLSX () {
       const processedItems = this.items.map(item => {
         const processed = {}
         this.fields.forEach(field => {
@@ -48,7 +46,7 @@ export default {
         return processed
       })
 
-      exportTableToCSV({
+      await exportTableToXLSX({
         fields: this.fields,
         items: processedItems,
         filename: this.filename,

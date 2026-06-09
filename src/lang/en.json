@@ -1235,7 +1235,7 @@
       "camelot_field": "Camelot field",
       "reference_id": "Reference ID",
       "author_year": "Author(s), Year",
-      "export_csv": "Export to CSV",
+      "export_xlsx": "Export to Excel",
       "add_edit_columns": "Add or edit columns",
       "show_hide_concerns": "Show/Hide comments",
       "columns_modal": {

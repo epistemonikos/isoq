@@ -1235,7 +1235,7 @@
       "camelot_field": "Campo Camelot",
       "reference_id": "ID de Referência",
       "author_year": "Autor(es), Ano",
-      "export_csv": "Exportar para CSV",
+      "export_xlsx": "Exportar para Excel",
       "add_edit_columns": "Adicionar ou editar colunas",
       "show_hide_concerns": "Mostrar/Ocultar comentários",
       "columns_modal": {

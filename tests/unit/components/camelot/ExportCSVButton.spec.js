@@ -1,10 +1,9 @@
 import { shallowMount } from '@vue/test-utils'
 import ExportCSVButton from '@/components/camelot/ExportCSVButton.vue'
-import * as csvExporter from '@/utils/csvExporter'
+import * as xlsxExporter from '@/utils/xlsxExporter'
 
-// Mock csvExporter
-jest.mock('@/utils/csvExporter', () => ({
-  exportTableToCSV: jest.fn()
+jest.mock('@/utils/xlsxExporter', () => ({
+  exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
 }))
 
 const $t = (key) => key
@@ -28,12 +27,8 @@ describe('ExportCSVButton.vue', () => {
         items: mockItems,
         filename: 'test_export'
       },
-      mocks: {
-        $t
-      },
-      stubs: {
-        'b-button': true
-      }
+      mocks: { $t },
+      stubs: { 'b-button': true }
     })
   })
 
@@ -45,21 +40,27 @@ describe('ExportCSVButton.vue', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('calls exportTableToCSV with processed items when clicked', async () => {
-    wrapper.vm.exportToCSV()
-    
-    expect(csvExporter.exportTableToCSV).toHaveBeenCalled()
-    const callArgs = csvExporter.exportTableToCSV.mock.calls[0][0]
-    
+  it('calls exportTableToXLSX with processed items when clicked', async () => {
+    await wrapper.vm.exportToXLSX()
+
+    expect(xlsxExporter.exportTableToXLSX).toHaveBeenCalled()
+    const callArgs = xlsxExporter.exportTableToXLSX.mock.calls[0][0]
+
     expect(callArgs.filename).toBe('test_export')
     expect(callArgs.fields).toEqual(mockFields)
     expect(callArgs.items).toHaveLength(2)
-    
-    // Check processed authors
+
+    // Authors field is formatted via Commons.parseReference
     expect(callArgs.items[0].authors).toContain('Smith 2020')
     expect(callArgs.items[1].authors).toContain('Doe 2021')
-    
-    // Check other values
+
     expect(callArgs.items[0].column_1).toBe('Value 1')
+  })
+
+  it('passes excludeKeys for actions and edit columns', async () => {
+    await wrapper.vm.exportToXLSX()
+
+    const callArgs = xlsxExporter.exportTableToXLSX.mock.calls[0][0]
+    expect(callArgs.excludeKeys).toEqual(['ref_id', 'id', 'actions', 'edit'])
   })
 })
