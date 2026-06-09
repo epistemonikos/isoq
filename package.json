@@ -25,7 +25,6 @@
     "bootstrap-vue": "^2.23.1",
     "dexie": "^3.2.7",
     "docx": "^9.5.1",
-    "export-to-csv": "^0.2.1",
     "file-saver": "^2.0.2",
     "jquery": "^3.7.1",
     "lodash.debounce": "^4.0.8",

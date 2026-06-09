@@ -1,7 +1,7 @@
 import { shallowMount, mount } from '@vue/test-utils'
 import StepThree from '@/components/camelot/StepThree.vue'
 import Api from '@/utils/Api'
-import * as csvExporter from '@/utils/csvExporter'
+import * as xlsxExporter from '@/utils/xlsxExporter'
 
 // Mock Api
 jest.mock('@/utils/Api', () => ({
@@ -10,9 +10,9 @@ jest.mock('@/utils/Api', () => ({
   patch: jest.fn(() => Promise.resolve({ data: {} }))
 }))
 
-// Mock csvExporter
-jest.mock('@/utils/csvExporter', () => ({
-  exportTableToCSV: jest.fn()
+// Mock xlsxExporter
+jest.mock('@/utils/xlsxExporter', () => ({
+  exportTableToXLSX: jest.fn()
 }))
 
 // Mock Translation plugin

@@ -7,8 +7,8 @@ jest.mock('@/utils/Api', () => ({
   patch: jest.fn(() => Promise.resolve({ data: {} }))
 }))
 
-jest.mock('@/utils/csvExporter', () => ({
-  exportTableToCSV: jest.fn()
+jest.mock('@/utils/xlsxExporter', () => ({
+  exportTableToXLSX: jest.fn()
 }))
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
