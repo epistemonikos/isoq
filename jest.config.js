@@ -11,8 +11,7 @@ module.exports = {
     '^@/utils/api$': '<rootDir>/tests/unit/__mocks__/Api.js',
     '^@/utils/Api$': '<rootDir>/tests/unit/__mocks__/Api.js',
     '^axios$': require.resolve('axios'),
-    '^write-excel-file$': '<rootDir>/node_modules/write-excel-file/node/index.cjs',
-    '^read-excel-file$': '<rootDir>/node_modules/read-excel-file/node/index.cjs'
+    '^xlsx$': require.resolve('xlsx')
   },
   transformIgnorePatterns: [
     '/node_modules/(?!(axios|@fortawesome)/)'

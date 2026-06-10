@@ -7,11 +7,6 @@ jest.mock('@/utils/xlsxExporter', () => ({
   exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
 }))
 
-jest.mock('write-excel-file', () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(undefined)
-}))
-
 jest.mock('@/utils/xlsxImporter', () => ({
   parseXLSXData: jest.fn()
 }))

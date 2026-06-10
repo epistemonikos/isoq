@@ -1,15 +1,18 @@
-import writeXlsxFile from 'write-excel-file'
-import { exportTableToXLSX } from '@/utils/xlsxExporter'
+import * as XLSX from 'xlsx'
+import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 
-jest.mock('write-excel-file', () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(undefined)
+jest.mock('xlsx', () => ({
+  utils: {
+    aoa_to_sheet: jest.fn().mockReturnValue({}),
+    book_new: jest.fn().mockReturnValue({ SheetNames: [], Sheets: {} }),
+    book_append_sheet: jest.fn()
+  },
+  writeFile: jest.fn()
 }))
 
 describe('exportTableToXLSX', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    writeXlsxFile.mockResolvedValue(undefined)
   })
 
   const sampleFields = [
@@ -24,41 +27,26 @@ describe('exportTableToXLSX', () => {
     { ref_id: '2', authors: 'Jones 2021', column_0: 'Argentina', column_1: '2021' }
   ]
 
-  it('passes headers as bold first row', async () => {
+  it('passes visible field labels as first row', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: sampleItems })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
-    const header = rows[0]
-    expect(header).toEqual([
-      { value: 'Author(s), Year', fontWeight: 'bold' },
-      { value: 'Country', fontWeight: 'bold' },
-      { value: 'Year', fontWeight: 'bold' }
-    ])
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
+    expect(rows[0]).toEqual(['Author(s), Year', 'Country', 'Year'])
   })
 
   it('excludes ref_id and id by default', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: sampleItems })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
-    const header = rows[0]
-    const labels = header.map(c => c.value)
-    expect(labels).not.toContain('Reference ID')
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
+    expect(rows[0]).not.toContain('Reference ID')
   })
 
   it('maps item values to corresponding rows', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: sampleItems })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
-    expect(rows[1]).toEqual([
-      { value: 'Smith 2020' },
-      { value: 'Chile' },
-      { value: '2020' }
-    ])
-    expect(rows[2]).toEqual([
-      { value: 'Jones 2021' },
-      { value: 'Argentina' },
-      { value: '2021' }
-    ])
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
+    expect(rows[1]).toEqual(['Smith 2020', 'Chile', '2020'])
+    expect(rows[2]).toEqual(['Jones 2021', 'Argentina', '2021'])
   })
 
   it('excludes custom keys via excludeKeys param', async () => {
@@ -72,23 +60,20 @@ describe('exportTableToXLSX', () => {
       excludeKeys: ['ref_id', 'id', 'actions', 'edit']
     })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
-    const labels = rows[0].map(c => c.value)
-    expect(labels).not.toContain('Actions')
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
+    expect(rows[0]).not.toContain('Actions')
   })
 
-  it('uses filename with .xlsx extension', async () => {
+  it('calls writeFile with given filename and .xlsx extension', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: sampleItems, filename: 'my_export' })
 
-    const opts = writeXlsxFile.mock.calls[0][1]
-    expect(opts.fileName).toBe('my_export.xlsx')
+    expect(XLSX.writeFile).toHaveBeenCalledWith(expect.anything(), 'my_export.xlsx')
   })
 
   it('defaults filename to exportable_table.xlsx', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: sampleItems })
 
-    const opts = writeXlsxFile.mock.calls[0][1]
-    expect(opts.fileName).toBe('exportable_table.xlsx')
+    expect(XLSX.writeFile).toHaveBeenCalledWith(expect.anything(), 'exportable_table.xlsx')
   })
 
   it('converts undefined and null values to empty string', async () => {
@@ -97,25 +82,35 @@ describe('exportTableToXLSX', () => {
     ]
     await exportTableToXLSX({ fields: sampleFields, items: itemsWithMissing })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
-    expect(rows[1]).toEqual([
-      { value: 'Smith 2020' },
-      { value: '' },
-      { value: '' }
-    ])
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
+    expect(rows[1]).toEqual(['Smith 2020', '', ''])
   })
 
   it('handles empty items array', async () => {
     await exportTableToXLSX({ fields: sampleFields, items: [] })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
     expect(rows).toHaveLength(1)
   })
 
   it('handles empty fields array', async () => {
     await exportTableToXLSX({ fields: [], items: sampleItems })
 
-    const rows = writeXlsxFile.mock.calls[0][0]
+    const rows = XLSX.utils.aoa_to_sheet.mock.calls[0][0]
     expect(rows[0]).toEqual([])
+  })
+})
+
+describe('exportAOAToXLSX', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('writes aoa rows to file with given filename and .xlsx extension', async () => {
+    const rows = [['Col A', 'Col B'], ['val1', 'val2']]
+    await exportAOAToXLSX(rows, 'my_template')
+
+    expect(XLSX.utils.aoa_to_sheet).toHaveBeenCalledWith(rows)
+    expect(XLSX.writeFile).toHaveBeenCalledWith(expect.anything(), 'my_template.xlsx')
   })
 })

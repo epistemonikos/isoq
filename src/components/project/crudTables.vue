@@ -256,12 +256,11 @@
 <script>
 /* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
-import writeXlsxFile from 'write-excel-file'
 import Commmons from '@/utils/commons.js'
 import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
 
-import { exportTableToXLSX } from '@/utils/xlsxExporter'
+import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 
@@ -778,16 +777,16 @@ export default {
 
       const rows = [
         [
-          { value: this.$t('table_headers.reference_id'), fontWeight: 'bold' },
-          { value: this.$t('table_headers.author_year'), fontWeight: 'bold' }
+          this.$t('table_headers.reference_id'),
+          this.$t('table_headers.author_year')
         ],
         ..._refs.map(ref => [
-          { value: String(ref.id) },
-          { value: ref.content.split(';')[0] }
+          String(ref.id),
+          ref.content.split(';')[0]
         ])
       ]
 
-      await writeXlsxFile(rows, { fileName: 'my_data.xlsx' })
+      await exportAOAToXLSX(rows, 'my_data')
     },
     loadTableImportData: async function (event) {
       const file = event.target.files[0]

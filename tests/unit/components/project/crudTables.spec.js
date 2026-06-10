@@ -4,18 +4,13 @@ import crudTables from '@/components/project/crudTables.vue'
 import BootstrapVue from 'bootstrap-vue'
 import Api from '@/utils/Api'
 import * as xlsxExporter from '@/utils/xlsxExporter'
-import writeXlsxFile from 'write-excel-file'
 import { parseCSVData } from '@/utils/csvImporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { loadFileAsText } from '@/utils/tableDataUtils'
 
 jest.mock('@/utils/xlsxExporter', () => ({
-  exportTableToXLSX: jest.fn().mockResolvedValue(undefined)
-}))
-
-jest.mock('write-excel-file', () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(undefined)
+  exportTableToXLSX: jest.fn().mockResolvedValue(undefined),
+  exportAOAToXLSX: jest.fn().mockResolvedValue(undefined)
 }))
 
 jest.mock('@/utils/csvImporter', () => ({
@@ -371,10 +366,10 @@ describe('crudTables.vue', () => {
 
   describe('generateTemplate', () => {
     beforeEach(() => {
-      writeXlsxFile.mockClear()
+      xlsxExporter.exportAOAToXLSX.mockClear()
     })
 
-    it('calls writeXlsxFile with bold header row and reference data rows', async () => {
+    it('calls exportAOAToXLSX with header row and reference data rows', async () => {
       await wrapper.setData({
         refs: [
           { id: '1', content: 'Smith 2020; extra info' },
@@ -384,17 +379,13 @@ describe('crudTables.vue', () => {
 
       await wrapper.vm.generateTemplate()
 
-      expect(writeXlsxFile).toHaveBeenCalledTimes(1)
-      const [rows, opts] = writeXlsxFile.mock.calls[0]
+      expect(xlsxExporter.exportAOAToXLSX).toHaveBeenCalledTimes(1)
+      const [rows, filename] = xlsxExporter.exportAOAToXLSX.mock.calls[0]
 
-      expect(rows[0][0].fontWeight).toBe('bold')
-      expect(rows[0][1].fontWeight).toBe('bold')
       expect(rows[0]).toHaveLength(2)
-
-      expect(rows[1]).toEqual([{ value: '1' }, { value: 'Smith 2020' }])
-      expect(rows[2]).toEqual([{ value: '2' }, { value: 'Jones 2021' }])
-
-      expect(opts.fileName).toBe('my_data.xlsx')
+      expect(rows[1]).toEqual(['1', 'Smith 2020'])
+      expect(rows[2]).toEqual(['2', 'Jones 2021'])
+      expect(filename).toBe('my_data')
     })
   })
 
