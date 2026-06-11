@@ -123,10 +123,15 @@ describe('ShareProjectModal.vue', () => {
   })
 
   it('llama PATCH con enable: false al desactivar y limpia token/URL inmediatamente', async () => {
-    Api.patch.mockResolvedValue({ data: { status: false } })
-    wrapper.vm.project.sharedToken = 'old-token'
-    wrapper.vm.project.temporaryUrl = 'http://old-url'
+    // Primero activar el link (para que haya un cambio real al desactivar)
+    Api.patch.mockResolvedValue({ data: { status: true, sharedToken: 'old-token' } })
+    wrapper.vm.project.sharedTokenOnOff = true
+    await wrapper.vm.$nextTick()
+    await flushPromises()
+    Api.patch.mockClear()
 
+    // Ahora desactivar
+    Api.patch.mockResolvedValue({ data: { status: false } })
     wrapper.vm.project.sharedTokenOnOff = false
     await wrapper.vm.$nextTick()
 

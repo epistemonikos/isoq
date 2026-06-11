@@ -180,28 +180,25 @@ export default {
       }
       this.enabledToShare = enabledButton
     },
-    'project': {
-      handler: function () {
-        const project = this.project
-        const enable = !!(project.sharedTokenOnOff)
-        if (!enable) {
-          project.sharedToken = ''
-          project.temporaryUrl = ''
-        }
-        if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
-          Api.patch('/sharedLink', { params: { project_id: project.id, enable } })
-            .then((response) => {
-              if (enable && response.data && response.data.sharedToken) {
-                project.sharedToken = response.data.sharedToken
-                project.temporaryUrl = window.location.origin + '/#/shared/' + response.data.sharedToken
-              }
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        }
-      },
-      deep: true
+    'project.sharedTokenOnOff': function () {
+      const project = this.project
+      const enable = !!(project.sharedTokenOnOff)
+      if (!enable) {
+        project.sharedToken = ''
+        project.temporaryUrl = ''
+      }
+      if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
+        Api.patch('/sharedLink', { params: { project_id: project.id, enable } })
+          .then((response) => {
+            if (enable && response.data && response.data.sharedToken) {
+              project.sharedToken = response.data.sharedToken
+              project.temporaryUrl = window.location.origin + '/#/shared/' + response.data.sharedToken
+            }
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     }
   },
   methods: {
