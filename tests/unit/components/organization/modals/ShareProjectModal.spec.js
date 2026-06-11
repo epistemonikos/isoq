@@ -102,6 +102,7 @@ describe('ShareProjectModal.vue', () => {
     wrapper.vm.project.sharedTokenOnOff = true
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(Api.patch).toHaveBeenCalledWith('/sharedLink', {
       params: { project_id: 'test-id', enable: true }
