@@ -225,6 +225,7 @@ export default {
   },
   data () {
     return {
+      bundleMode: false,
       name: 'previewContentSoqf',
       tabOpened: 2,
       ui: {
@@ -308,12 +309,18 @@ export default {
     }
   },
   mounted () {
-    this.getProject()
-    this.getListCategories()
-    this.getReferences()
+    if (this.$route.name === 'sharedContent') {
+      this.bundleMode = true
+      this.loadSharedBundle()
+    } else {
+      this.getProject()
+      this.getListCategories()
+      this.getReferences()
+    }
   },
   watch: {
     'list_categories.options': function (newVal) {
+      if (this.bundleMode) return
       if (newVal && newVal.length > 0) {
         this.getLists()
       }
@@ -333,10 +340,7 @@ export default {
       return ''
     },
     getProject: function () {
-      const params = {
-        organization: this.$route.params.org_id
-      }
-      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}`, params)
+      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}?organization=${this.$route.params.org_id}`)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
@@ -663,6 +667,228 @@ export default {
           } else {
             this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
           }
+        })
+    },
+    loadSharedBundle: function () {
+      const token = this.$route.params.token
+      Api.get(`/shared/${token}`)
+        .then((response) => {
+          const bundle = response.data
+
+          this.project = bundle.project
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
+            this.project.inclusion = ''
+          }
+          if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
+            this.project.exclusion = ''
+          }
+          this.ui.project.show_criteria = true
+
+          this.references = bundle.references || []
+          this.findings = bundle.findings || []
+
+          const rawCats = bundle.list_categories || []
+          const catOptions = JSON.parse(JSON.stringify(rawCats))
+          for (let option of catOptions) {
+            if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+              option.text = ''
+            }
+          }
+          catOptions.sort((a, b) => a.text.localeCompare(b.text))
+          catOptions.splice(0, 0, { id: null, text: this.$t('categories.no_group') || 'No group' })
+          this.list_categories.options = catOptions
+
+          const rawLists = bundle.lists || []
+          let data = JSON.parse(JSON.stringify(rawLists))
+          data.sort(function (a, b) {
+            if (a.sort < b.sort) { return -1 }
+            if (a.sort > b.sort) { return 1 }
+            return 0
+          })
+          if (data.length) {
+            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
+            for (let list of data) {
+              if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
+                list.status = 'unfinished'
+                list.explanation = 'without_explanation'
+              } else {
+                list.status = 'completed'
+                list.explanation = 'with_explanation'
+                if (list.evidence_profile.cerqual.option === null) {
+                  list.status = 'unfinished'
+                }
+                if (list.evidence_profile.cerqual.explanation === '') {
+                  list.explanation = 'without_explanation'
+                }
+              }
+              if (!Object.prototype.hasOwnProperty.call(list, 'references')) {
+                list.references = []
+              }
+              if (!Object.prototype.hasOwnProperty.call(list, 'notes')) {
+                list.notes = ''
+              }
+              if (!Object.prototype.hasOwnProperty.call(list, 'category')) {
+                list.category = null
+              } else {
+                list.category_name = ''
+                list.category_extra_info = ''
+                if (this.list_categories.options.length) {
+                  for (let category of this.list_categories.options) {
+                    if (list.category === category.id) {
+                      list.category_name = category.text
+                      list.category_extra_info = category.extra_info
+                    }
+                  }
+                }
+              }
+              list.cerqual_option = ''
+              if (list.cerqual.option != null) {
+                list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
+              }
+              list.filter_cerqual = ''
+              switch (list.cerqual_option) {
+                case 'High confidence': list.filter_cerqual = 'hc'; break
+                case 'Moderate confidence': list.filter_cerqual = 'mc'; break
+                case 'Low confidence': list.filter_cerqual = 'lc'; break
+                case 'Very low confidence': list.filter_cerqual = 'vc'; break
+                default: list.filter_cerqual = ''
+              }
+              list.cerqual_explanation = list.cerqual.explanation
+              list.ref_list = ''
+              list.raw_ref = []
+              for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
+                for (let ref of list.references) {
+                  if (ref === r.id) {
+                    list.ref_list = list.ref_list + this.parseReference(r, true)
+                    list.raw_ref.push(r)
+                  }
+                }
+              }
+            }
+
+            if (this.list_categories.options.length) {
+              this.lists_print_version = []
+              let categories = []
+              for (let category of this.list_categories.options) {
+                if (category.id !== null) {
+                  categories.push({
+                    'name': category.text,
+                    'id': category.id,
+                    'value': category.id,
+                    'items': [],
+                    is_category: true
+                  })
+                }
+              }
+              categories.push({
+                'name': this.$t('categories.uncategorised_findings') || 'Uncategorised findings',
+                'id': 'uncategorized',
+                'value': null,
+                'items': [],
+                is_category: true
+              })
+              for (let list of data) {
+                for (let category of categories) {
+                  const listCatId = list.category ? list.category.toString() : null
+                  const categoryValue = category.value ? category.value.toString() : null
+                  if (categoryValue === listCatId) {
+                    category.items.push({
+                      'id': list.id,
+                      'isoqf_id': list.isoqf_id,
+                      'name': list.name,
+                      'cerqual_option': list.cerqual_option,
+                      'filter_cerqual': list.filter_cerqual,
+                      'cerqual_explanation': list.cerqual_explanation,
+                      'ref_list': list.ref_list,
+                      'sort': list.sort,
+                      'notes': list.notes,
+                      'evidence_profile': list.evidence_profile,
+                      'references': list.references,
+                      'cnt': 0
+                    })
+                  }
+                }
+              }
+              let _items = []
+              let cnt = 1
+              for (const cat of categories) {
+                if (cat.items.length) {
+                  _items.push(cat)
+                  for (const _item of cat.items) {
+                    _item.cnt = cnt
+                    _items.push(_item)
+                    cnt++
+                  }
+                }
+              }
+              this.lists_print_version = _items
+            } else {
+              this.lists_print_version = data
+            }
+
+            this.printableItems = []
+            for (let items of this.lists_print_version) {
+              if (items.id) {
+                this.printableItems.push(items.id)
+              }
+            }
+          }
+          this.lists = data
+          this.table_settings.isBusy = false
+          this.table_settings.totalRows = data.length
+
+          const chars = bundle.characteristics || []
+          if (chars.length) {
+            this.charsOfStudies = JSON.parse(JSON.stringify(chars[0]))
+            if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
+              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
+              const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
+              const _items = items.sort((a, b) => {
+                const authorsA = (a.authors || '').toString()
+                const authorsB = (b.authors || '').toString()
+                return authorsA.localeCompare(authorsB)
+              })
+              this.charsOfStudies.items = _items
+              this.charsOfStudiesFieldsModal.fields = []
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  this.charsOfStudiesFieldsModal.fields.push(f.label)
+                  this.charsOfStudies.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+              this.charsOfStudies.fieldsObj.push({ 'key': 'actions', 'label': '' })
+              this.charsOfStudiesFieldsModal.nroColumns = (this.charsOfStudies.fieldsObj.length === 2) ? 1 : this.charsOfStudies.fieldsObj.length - 2
+              for (let item of _items) {
+                this.charsOfStudiesFieldsModal.items.push(item)
+              }
+            }
+          }
+
+          const assessments = bundle.assessments || []
+          if (assessments.length) {
+            this.methodologicalTableRefs = JSON.parse(JSON.stringify(assessments[0]))
+            if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
+              const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
+              const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
+              const _items = items.sort((a, b) => {
+                const authorsA = (a.authors || '').toString()
+                const authorsB = (b.authors || '').toString()
+                return authorsA.localeCompare(authorsB)
+              })
+              this.methodologicalTableRefs.items = _items
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              for (let f of fields) {
+                if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
+                  this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })
+                }
+              }
+              this.methodologicalTableRefs.fieldsObj.push({ 'key': 'actions', 'label': '' })
+            }
+          }
+        })
+        .catch(() => {
+          this.$router.push({ name: 'MainPage' })
         })
     }
   }
