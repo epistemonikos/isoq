@@ -691,15 +691,17 @@ export default {
           this.findings = bundle.findings || []
 
           const rawCats = bundle.list_categories || []
-          const catOptions = JSON.parse(JSON.stringify(rawCats))
-          for (let option of catOptions) {
-            if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
-              option.text = ''
+          if (rawCats.length) {
+            const catOptions = JSON.parse(JSON.stringify(rawCats))
+            for (let option of catOptions) {
+              if (!Object.prototype.hasOwnProperty.call(option, 'text')) {
+                option.text = ''
+              }
             }
+            catOptions.sort((a, b) => a.text.localeCompare(b.text))
+            catOptions.splice(0, 0, { id: null, text: this.$t('categories.no_group') || 'No group' })
+            this.list_categories.options = catOptions
           }
-          catOptions.sort((a, b) => a.text.localeCompare(b.text))
-          catOptions.splice(0, 0, { id: null, text: this.$t('categories.no_group') || 'No group' })
-          this.list_categories.options = catOptions
 
           const rawLists = bundle.lists || []
           let data = JSON.parse(JSON.stringify(rawLists))
@@ -745,7 +747,7 @@ export default {
                 }
               }
               list.cerqual_option = ''
-              if (list.cerqual.option != null) {
+              if (list.cerqual && list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
               list.filter_cerqual = ''
@@ -756,7 +758,7 @@ export default {
                 case 'Very low confidence': list.filter_cerqual = 'vc'; break
                 default: list.filter_cerqual = ''
               }
-              list.cerqual_explanation = list.cerqual.explanation
+              list.cerqual_explanation = list.cerqual ? list.cerqual.explanation : ''
               list.ref_list = ''
               list.raw_ref = []
               for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
@@ -839,6 +841,8 @@ export default {
           this.lists = data
           this.table_settings.isBusy = false
           this.table_settings.totalRows = data.length
+          this.charsOfStudiesTableSettings.isBusy = false
+          this.methodologicalTableRefsTableSettings.isBusy = false
 
           const chars = bundle.characteristics || []
           if (chars.length) {
