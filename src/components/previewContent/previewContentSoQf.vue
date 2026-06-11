@@ -719,10 +719,10 @@ export default {
               } else {
                 list.status = 'completed'
                 list.explanation = 'with_explanation'
-                if (list.evidence_profile.cerqual.option === null) {
+                if (list.evidence_profile.cerqual && list.evidence_profile.cerqual.option === null) {
                   list.status = 'unfinished'
                 }
-                if (list.evidence_profile.cerqual.explanation === '') {
+                if (list.evidence_profile.cerqual && list.evidence_profile.cerqual.explanation === '') {
                   list.explanation = 'without_explanation'
                 }
               }
