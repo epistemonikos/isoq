@@ -10,6 +10,8 @@ localVue.use(Vuex)
 
 jest.mock('@/utils/Api')
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
 describe('ShareProjectModal.vue', () => {
   let wrapper
   let store
@@ -112,7 +114,7 @@ describe('ShareProjectModal.vue', () => {
     wrapper.vm.project.sharedTokenOnOff = true
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
-    await new Promise(resolve => process.nextTick(resolve))
+    await flushPromises()
 
     expect(wrapper.vm.project.sharedToken).toBe('server-token-abc')
     expect(wrapper.vm.project.temporaryUrl).toContain('server-token-abc')
