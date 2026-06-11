@@ -154,6 +154,14 @@ var routes = [
     }
   },
   {
+    path: '/shared/:token',
+    name: 'sharedContent',
+    component: previewContentSoQf,
+    meta: {
+      title: 'iSoQ Shared - Interactive Summary of Qualitative Findings'
+    }
+  },
+  {
     path: '/preview/worksheet/:id/:token',
     name: 'previewWorksheet',
     component: previewWorksheet,
