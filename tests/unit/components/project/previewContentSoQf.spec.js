@@ -112,6 +112,9 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     shallowMount(previewContentSoQf, { localVue, mocks: publicMocks })
 
     expect(Api.get).not.toHaveBeenCalledWith(expect.stringContaining('/shared/'))
-    expect(Api.get).toHaveBeenCalledWith(expect.stringContaining('isoqf_projects'))
+    expect(Api.get).toHaveBeenCalledWith(
+      expect.stringContaining('isoqf_projects'),
+      expect.any(Object)
+    )
   })
 })

@@ -340,7 +340,10 @@ export default {
       return ''
     },
     getProject: function () {
-      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}?organization=${this.$route.params.org_id}`)
+      const params = {
+        organization: this.$route.params.org_id
+      }
+      Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}`, params)
         .then((response) => {
           this.project = response.data
           if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
