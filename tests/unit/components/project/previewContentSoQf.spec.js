@@ -6,8 +6,10 @@ import BootstrapVue from 'bootstrap-vue'
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
 jest.mock('@/utils/Api', () => ({
-  get: jest.fn()
+  get: jest.fn(() => Promise.resolve({ data: {} }))
 }))
 
 const BUNDLE = {
@@ -57,8 +59,7 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     Api.get.mockResolvedValue({ data: BUNDLE })
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
-    await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.vm.project.name).toBe('Test Project')
     expect(wrapper.vm.ui.project.show_criteria).toBe(true)
@@ -68,8 +69,7 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     Api.get.mockResolvedValue({ data: BUNDLE })
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
-    await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.vm.references).toEqual(BUNDLE.references)
     expect(wrapper.vm.findings).toEqual(BUNDLE.findings)
@@ -79,8 +79,7 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     Api.get.mockResolvedValue({ data: BUNDLE })
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
-    await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     const options = wrapper.vm.list_categories.options
     expect(options.some(o => o.id === 'cat1')).toBe(true)
@@ -91,8 +90,7 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     Api.get.mockResolvedValue({ data: BUNDLE })
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
-    await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.vm.lists.length).toBe(1)
     expect(wrapper.vm.lists[0].cerqual_option).toBe('High confidence')
@@ -103,8 +101,7 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     Api.get.mockRejectedValue(new Error('404'))
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
-    await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(sharedMocks.$router.push).toHaveBeenCalledWith({ name: 'MainPage' })
   })
