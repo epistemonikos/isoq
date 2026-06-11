@@ -94,15 +94,47 @@ describe('ShareProjectModal.vue', () => {
     expect(Api.post).toHaveBeenCalledWith('/share/project/test-id/unshare', null, expect.any(Object))
   })
 
-  it('updates project token when sharedTokenOnOff is toggled', async () => {
-    Api.patch.mockResolvedValue({})
-    
+  it('llama PATCH con { params: { project_id, enable: true } } al activar el toggle', async () => {
+    Api.patch.mockResolvedValue({ data: { status: true, sharedToken: 'server-token-abc' } })
+
     wrapper.vm.project.sharedTokenOnOff = true
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
-    
-    expect(wrapper.vm.project.sharedToken.length).toBeGreaterThan(0)
-    expect(wrapper.vm.project.temporaryUrl).toContain(wrapper.vm.project.sharedToken)
-    expect(Api.patch).toHaveBeenCalled()
+
+    expect(Api.patch).toHaveBeenCalledWith('/sharedLink', {
+      params: { project_id: 'test-id', enable: true }
+    })
+  })
+
+  it('toma el sharedToken de la respuesta del backend y construye URL con /#/shared/', async () => {
+    Api.patch.mockResolvedValue({ data: { status: true, sharedToken: 'server-token-abc' } })
+
+    wrapper.vm.project.sharedTokenOnOff = true
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+    await new Promise(resolve => process.nextTick(resolve))
+
+    expect(wrapper.vm.project.sharedToken).toBe('server-token-abc')
+    expect(wrapper.vm.project.temporaryUrl).toContain('server-token-abc')
+    expect(wrapper.vm.project.temporaryUrl).toContain('/#/shared/')
+  })
+
+  it('llama PATCH con enable: false al desactivar y limpia token/URL inmediatamente', async () => {
+    Api.patch.mockResolvedValue({ data: { status: false } })
+    wrapper.vm.project.sharedToken = 'old-token'
+    wrapper.vm.project.temporaryUrl = 'http://old-url'
+
+    wrapper.vm.project.sharedTokenOnOff = false
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.vm.project.sharedToken).toBe('')
+    expect(wrapper.vm.project.temporaryUrl).toBe('')
+    expect(Api.patch).toHaveBeenCalledWith('/sharedLink', {
+      params: { project_id: 'test-id', enable: false }
+    })
+  })
+
+  it('no tiene el método randomString', () => {
+    expect(typeof wrapper.vm.randomString).not.toBe('function')
   })
 })
