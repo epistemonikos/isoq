@@ -180,39 +180,28 @@ export default {
       }
       this.enabledToShare = enabledButton
     },
-    'project.sharedTokenOnOff': function () {
-      let project = this.project
-      let isPublic = false
-      if (Object.prototype.hasOwnProperty.call(project, 'sharedTokenOnOff')) {
-        if (project.sharedTokenOnOff) {
-          if (!project.sharedToken || !project.sharedToken.length) {
-            project.sharedToken = this.randomString(16, 'bLB8OBkcwzbHLF14MrhMvWCX7Zkfz5jqVPY1vkdU97OOdZVc')
-          }
-          project.temporaryUrl = window.location.origin + '/preview/isoq/' + project.organization + '/' + project.id + '/' + project.sharedToken
-          isPublic = true
-        } else {
+    'project': {
+      handler: function () {
+        const project = this.project
+        const enable = !!(project.sharedTokenOnOff)
+        if (!enable) {
           project.sharedToken = ''
           project.temporaryUrl = ''
-          isPublic = false
         }
-      } else {
-        project.sharedToken = ''
-        project.temporaryUrl = ''
-        isPublic = false
-      }
-      if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
-        const params = {
-          sharedToken: project.sharedToken,
-          is_public: isPublic,
-          temporaryUrl: project.temporaryUrl,
-          project_id: project.id
+        if (Object.prototype.hasOwnProperty.call(project, 'id') && project.id !== null) {
+          Api.patch('/sharedLink', { params: { project_id: project.id, enable } })
+            .then((response) => {
+              if (enable && response.data && response.data.sharedToken) {
+                project.sharedToken = response.data.sharedToken
+                project.temporaryUrl = window.location.origin + '/#/shared/' + response.data.sharedToken
+              }
+            })
+            .catch((error) => {
+              console.log(error)
+            })
         }
-        Api.patch('/sharedLink', { params })
-          .then(() => {})
-          .catch((error) => {
-            console.log(error)
-          })
-      }
+      },
+      deep: true
     }
   },
   methods: {
@@ -301,15 +290,6 @@ export default {
     },
     removeSharedEmail: function (index) {
       this.project.tmp_invite_emails.splice(index, 1)
-    },
-    randomString: function (len, charSet) {
-      charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      var randomString = ''
-      for (var i = 0; i < len; i++) {
-        var randomPoz = Math.floor(Math.random() * charSet.length)
-        randomString += charSet.substring(randomPoz, randomPoz + 1)
-      }
-      return randomString
     },
     changePermission: function (projectId, userId, option, index) {
       const params = {
