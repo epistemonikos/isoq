@@ -22,6 +22,7 @@ export const store = new Vuex.Store({
     },
     auth_error (state) {
       state.status = 'error'
+      state.user = {}
     },
     logout (state) {
       state.status = ''
