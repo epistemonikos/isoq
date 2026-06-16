@@ -118,8 +118,11 @@
                 <div>
                   <b-button
                     variant="outline-primary"
-                    :disabled="!(ui.username_validation && ui.password_validation)"
-                    @click="createAccount">Create account</b-button>
+                    :disabled="!(ui.username_validation && ui.password_validation) || ui.loading"
+                    @click="createAccount">
+                    <b-spinner v-if="ui.loading" small></b-spinner>
+                    {{ ui.loading ? 'Creating...' : 'Create account' }}
+                  </b-button>
                 </div>
               </div>
             </b-card>
@@ -279,6 +282,7 @@ export default {
   data () {
     return {
       ui: {
+        loading: false,
         username_validation: null,
         password_validation: false,
         password_error: '',
@@ -352,6 +356,7 @@ export default {
     createAccount: function () {
       this.user.username = this.user.username.trim()
       this.ui.password_error = ''
+      this.ui.loading = true
       let params = {
         user: {
           ...this.user,
@@ -373,6 +378,7 @@ export default {
         .then((response) => {
           if (response.data && response.data.status === 'password_compromised') {
             this.ui.password_error = 'This password has appeared in a known data breach. Please choose a different password.'
+            this.ui.loading = false
             return
           }
           if (response.data && response.data.status === 'verification_email_sent') {
@@ -380,9 +386,11 @@ export default {
             return
           }
           this.showSubscribe = false
+          this.ui.loading = false
           this.login(this.user.username, this.user.password)
         })
         .catch((error) => {
+          this.ui.loading = false
           if (error.response && error.response.data && error.response.data.status === 'password_compromised') {
             this.ui.password_error = 'This password has appeared in a known data breach. Please choose a different password.'
           } else {
