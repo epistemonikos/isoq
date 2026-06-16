@@ -82,17 +82,14 @@
       size="lg">
 
       <p>
-        We have updated our Terms and Conditions and Privacy Policy.
+        We have updated our Terms and Conditions, Privacy Policy and Intellectual Property.
         You must accept them to continue using iSoQ.
         You can review them
         <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'terms'}}" target="_blank">here</router-link>.
       </p>
 
       <b-form-checkbox v-model="termsAccepted" class="mb-2">
-        I have read and accept the
-        <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'terms'}}" target="_blank">Terms and Conditions</router-link>
-        and
-        <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'privacy'}}" target="_blank">Privacy Policy</router-link>.
+        I have read and accept the <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'terms'}}" target="_blank">Terms and Conditions</router-link>, <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'privacy'}}" target="_blank">Privacy Policy</router-link> and <router-link :to="{name: 'PrivacyAndTerms', query: {tab: 'property'}}" target="_blank">Intellectual Property</router-link>.
       </b-form-checkbox>
 
       <b-form-checkbox v-model="newsletterAccepted" class="mb-4">

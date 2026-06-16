@@ -62,6 +62,10 @@ var routes = [
     redirect: { name: 'PrivacyAndTerms', query: { tab: 'privacy' } }
   },
   {
+    path: '/intellectual-property',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'property' } }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login,

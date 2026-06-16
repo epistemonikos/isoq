@@ -23,6 +23,7 @@
               <b-nav-item href="#funding">How is the iSoQ tool funded?</b-nav-item>
               <b-nav-item href="#licence">How is the iSoQ tool and its contents licenced?</b-nav-item>
               <b-nav-item href="#cite">How do I cite iSoQ?</b-nav-item>
+              <b-nav-item href="#terms-and-conditions">What are the Terms and Conditions?</b-nav-item>
             </b-nav>
           </div>
         </b-col>
@@ -89,6 +90,11 @@
       <p class="text-muted">
         *iSoQ Development Team: Megan Wainwright (Consultant), Simon Lewin (Norwegian University of Science and Technology (NTNU)), Claire Glenton (Western Norway University of Applied Sciences (HVL)), Heather Munthe-Kaas (Norwegian Institute of Public Health).
       </p>
+
+	<h3 id="terms-and-conditions" class="mt-4">What are the Terms and Conditions?</h3>
+	<p>
+	  Terms and conditions, the privacy policy and intellectual property information for iSoQ can be access <b-link :to="{name: "TermsAndConditions"}">here</b-link>.
+	</p>
         </b-col>
       </b-row>
     </b-container>
