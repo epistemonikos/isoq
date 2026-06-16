@@ -94,7 +94,7 @@
 	<h3 id="terms-and-conditions" class="mt-4">What are the Terms and Conditions?</h3>
 	<p>
 	  Terms and conditions, the privacy policy and intellectual property information for iSoQ can be access 
-<b-link :to="{name: 'TermsAndConditions'}">here</b-link>.
+<b-link :to="{name: 'PrivacyAndTerms'}">here</b-link>.
 	</p>
         </b-col>
       </b-row>
