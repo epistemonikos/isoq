@@ -114,9 +114,44 @@
             v-model="buffer_project_list.name"></b-form-input>
         </b-form-group>
       </b-modal>
-      <b-modal id="modal-remove-project" ref="modal-remove-project" title="Delete project" @ok="removeProject"
-        @cancel="cleanProject" ok-title="Remove" ok-variant="outline-danger" cancel-variant="outline-secondary">
-        <p>Are you sure you want to delete "<b>{{ this.buffer_project.name }}</b>" and all related data?</p>
+      <b-modal id="modal-remove-project" ref="modal-remove-project" title="Delete project"
+        @hidden="resetDeleteProject" hide-footer no-close-on-backdrop>
+        <p class="text-danger">
+          <b>Are you sure you want to delete "{{ buffer_project.name }}" and all related data? This action cannot be undone.</b>
+        </p>
+
+        <div v-if="deleteProject.isLoadingCandidates" class="text-center py-3">
+          <b-spinner small></b-spinner>
+          <span class="ml-2">Checking shared users...</span>
+        </div>
+
+        <div v-else-if="deleteProjectIsShared">
+          <p>This project is shared with other users. You must assign a new owner before deleting it.</p>
+          <b-form-group label="New owner" label-for="delete-project-new-owner">
+            <b-form-select id="delete-project-new-owner" v-model="deleteProject.newOwner" :options="deleteProject.candidates">
+              <template #first>
+                <b-form-select-option :value="null" disabled>-- Select a new owner --</b-form-select-option>
+              </template>
+            </b-form-select>
+          </b-form-group>
+        </div>
+
+        <b-form-group label="Enter your password to confirm" label-for="delete-project-password"
+          :invalid-feedback="deleteProject.error" :state="deleteProject.error ? false : null" class="mt-3">
+          <b-form-input id="delete-project-password" type="password" v-model="deleteProject.password"
+            @keyup.enter="removeProject" :state="deleteProject.error ? false : null" required></b-form-input>
+        </b-form-group>
+
+        <div class="d-flex flex-row justify-content-end mt-4">
+          <b-button variant="outline-secondary" @click="$bvModal.hide('modal-remove-project')" class="mr-2">
+            Cancel
+          </b-button>
+          <b-button variant="outline-danger" @click="removeProject"
+            :disabled="deleteProject.isDeleting || !deleteProject.password || (deleteProjectIsShared && !deleteProject.newOwner)">
+            <b-spinner v-if="deleteProject.isDeleting" small class="mr-2"></b-spinner>
+            Delete project
+          </b-button>
+        </div>
       </b-modal>
       <b-modal size="xl" id="modal-share-options" ref="modal-share-options" ok-only ok-title="Close" scrollable>
         <template v-slot:modal-title>
@@ -388,7 +423,23 @@ export default {
       modalCloneId: null,
       modalCloneNewId: null,
       newReferences: [],
-      hashId: null
+      hashId: null,
+      deleteProject: {
+        password: '',
+        error: '',
+        isDeleting: false,
+        isLoadingCandidates: false,
+        candidates: [],
+        newOwner: null
+      }
+    }
+  },
+  computed: {
+    deleteProjectIsShared () {
+      const myId = this.$store.state.user.id
+      const canRead = (this.buffer_project.can_read || []).filter(id => id !== myId)
+      const canWrite = (this.buffer_project.can_write || []).filter(id => id !== myId)
+      return canRead.length > 0 || canWrite.length > 0
     }
   },
   mounted() {
@@ -642,26 +693,73 @@ export default {
       this.buffer_project = _project
       this.$refs['new-project'].show()
     },
-    modalRemoveProject: function (project) {
+    modalRemoveProject: async function (project) {
       this.buffer_project = JSON.parse(JSON.stringify(project))
       this.$refs['modal-remove-project'].show()
+      if (this.deleteProjectIsShared) {
+        this.deleteProject.isLoadingCandidates = true
+        const myId = this.$store.state.user.id
+        const candidateIds = [
+          ...(this.buffer_project.can_write || []).filter(id => id !== myId),
+          ...(this.buffer_project.can_read || []).filter(id => id !== myId && !(this.buffer_project.can_write || []).includes(id))
+        ]
+        const candidates = []
+        for (const uid of candidateIds) {
+          try {
+            const res = await axios.get(`/users/${uid}`)
+            if (res.data && res.data.status) {
+              const u = res.data
+              candidates.push({
+                value: uid,
+                text: `${u.first_name || ''} ${u.last_name || ''} (${u.username})`.trim()
+              })
+            }
+          } catch (e) { /* skip */ }
+        }
+        this.deleteProject.candidates = candidates
+        this.deleteProject.isLoadingCandidates = false
+      }
     },
-    removeProject: function () {
-      this.ui.projectTable.isBusy = true
-      axios.delete(`/api/remove/project/${this.buffer_project.id}`)
-        .then((response) => {
-          if (response.data.status) {
-            this.getProjects()
-            this.ui.projectTable.isBusy = false
-          } else {
-            this.ui.projectTable.isBusy = false
-            console.log(response.data)
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-          this.ui.projectTable.isBusy = false
-        })
+    resetDeleteProject: function () {
+      this.deleteProject.password = ''
+      this.deleteProject.error = ''
+      this.deleteProject.isDeleting = false
+      this.deleteProject.isLoadingCandidates = false
+      this.deleteProject.candidates = []
+      this.deleteProject.newOwner = null
+    },
+    removeProject: async function () {
+      this.deleteProject.error = ''
+      if (!this.deleteProject.password) {
+        this.deleteProject.error = 'Password is required'
+        return
+      }
+      if (this.deleteProjectIsShared && !this.deleteProject.newOwner) {
+        this.deleteProject.error = 'You must select a new owner for this shared project'
+        return
+      }
+      this.deleteProject.isDeleting = true
+      try {
+        const body = { password: this.deleteProject.password }
+        if (this.deleteProjectIsShared) {
+          body.new_owner = this.deleteProject.newOwner
+        }
+        const response = await axios.delete(`/api/remove/project/${this.buffer_project.id}`, { data: body })
+        if (response.data.status) {
+          this.$bvModal.hide('modal-remove-project')
+          this.getProjects()
+        } else {
+          this.deleteProject.error = response.data.message || 'Failed to delete project'
+        }
+      } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+          this.deleteProject.error = error.response.data.message
+        } else {
+          this.deleteProject.error = 'An error occurred while deleting the project'
+        }
+      } finally {
+        this.deleteProject.isDeleting = false
+      }
     },
     getFindings: function (id) {
       const params = {
