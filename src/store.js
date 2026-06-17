@@ -92,14 +92,13 @@ export const store = new Vuex.Store({
       })
     },
     logout ({commit}) {
-      return new Promise((resolve, reject) => {
-        axios.get('/auth/logout').then((response) => {
-          console.log(response)
-          commit('logout')
-          resolve()
-        }).catch((error) => {
-          reject(error)
-        })
+      return new Promise((resolve) => {
+        axios.get('/auth/logout')
+          .catch(() => {})
+          .finally(() => {
+            commit('logout')
+            resolve()
+          })
       })
     },
     usercan ({commit}, _bool) {

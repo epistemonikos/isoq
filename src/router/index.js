@@ -102,7 +102,8 @@ var routes = [
     name: 'Profile',
     component: Profile,
     meta: {
-      title: 'Profile - Interactive Summary of Qualitative Findings'
+      title: 'Profile - Interactive Summary of Qualitative Findings',
+      requiresAuth: true
     }
   },
   {
