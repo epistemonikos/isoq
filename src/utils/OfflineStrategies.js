@@ -225,6 +225,10 @@ export const strategies = [
         return await getCharacteristicsByProject(pId)
       }
       return null
+    },
+    update: async (data, url) => {
+      if (!data || !data.id) return
+      await saveCharacteristic(data)
     }
   },
   {

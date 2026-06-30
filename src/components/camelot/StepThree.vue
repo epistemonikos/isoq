@@ -391,7 +391,11 @@ export default {
       })
     },
     handleReferenceSaved(updatedData) {
-      this.$set(this, 'charsData', updatedData)
+      if (updatedData && updatedData.items) {
+        this.$set(this, 'charsData', updatedData)
+      } else {
+        this.$set(this, 'charsData', { ...this.charsData, ...updatedData })
+      }
       this.$forceUpdate()
     },
     deleteReference(item) {

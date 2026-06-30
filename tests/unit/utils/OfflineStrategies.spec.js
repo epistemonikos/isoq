@@ -100,6 +100,36 @@ describe('OfflineStrategies', () => {
         expect(result).toBeNull()
       })
     })
+
+    describe('update()', () => {
+      it('calls saveCharacteristic with the full document', async () => {
+        const charDoc = {
+          id: 'ch1',
+          project_id: 'proj1',
+          fields: [],
+          items: [
+            { ref_id: 'ref1', authors: 'Smith 2020' },
+            { ref_id: 'ref2', authors: 'Doe 2021' }
+          ]
+        }
+
+        await strategy().update(charDoc, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).toHaveBeenCalledWith(charDoc)
+      })
+
+      it('does nothing when data is null', async () => {
+        await strategy().update(null, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).not.toHaveBeenCalled()
+      })
+
+      it('does nothing when data has no id', async () => {
+        await strategy().update({ project_id: 'proj1', fields: [] }, '/isoqf_characteristics/ch1/')
+
+        expect(db.saveCharacteristic).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('assessments', () => {

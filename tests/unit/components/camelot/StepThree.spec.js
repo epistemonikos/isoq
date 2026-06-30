@@ -80,6 +80,50 @@ describe('StepThree.vue', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
+  describe('handleReferenceSaved()', () => {
+    it('replaces charsData when updatedData has items', async () => {
+      const initialCharsData = {
+        id: 'ch1',
+        fields: [{ key: 'authors', label: 'Authors' }],
+        items: [
+          { ref_id: 'ref1', authors: 'Smith 2020' },
+          { ref_id: 'ref2', authors: 'Doe 2021' }
+        ]
+      }
+      const updatedCharsData = {
+        ...initialCharsData,
+        items: [
+          { ref_id: 'ref1', authors: 'Smith 2020', column_1: 'Updated' },
+          { ref_id: 'ref2', authors: 'Doe 2021' }
+        ]
+      }
+      await wrapper.setData({ charsData: initialCharsData })
+
+      wrapper.vm.handleReferenceSaved(updatedCharsData)
+
+      expect(wrapper.vm.charsData.items).toHaveLength(2)
+      expect(wrapper.vm.charsData.items[0].column_1).toBe('Updated')
+      expect(wrapper.vm.charsData.items[1].ref_id).toBe('ref2')
+    })
+
+    it('merges metadata without wiping items when updatedData has no items', async () => {
+      const initialCharsData = {
+        id: 'ch1',
+        fields: [{ key: 'authors', label: 'Authors' }],
+        items: [
+          { ref_id: 'ref1', authors: 'Smith 2020' },
+          { ref_id: 'ref2', authors: 'Doe 2021' }
+        ]
+      }
+      await wrapper.setData({ charsData: initialCharsData })
+
+      wrapper.vm.handleReferenceSaved({ id: 'ch1', _id: 'ch1-new' })
+
+      expect(wrapper.vm.charsData.items).toHaveLength(2)
+      expect(wrapper.vm.charsData._id).toBe('ch1-new')
+    })
+  })
+
   it('renders all action buttons and modal with correct props', () => {
     // We need to provide some data so tableFields and tableItems are populated
     wrapper.setData({

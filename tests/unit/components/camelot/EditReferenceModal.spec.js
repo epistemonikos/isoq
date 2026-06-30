@@ -147,4 +147,47 @@ describe('EditReferenceModal.vue', () => {
       expect(wrapper.vm.hasInvalidCustomFields).toBe(false)
     })
   })
+
+  describe('performSave()', () => {
+    const fullCharsDoc = {
+      id: 'char1',
+      _id: 'char1-db',
+      project_id: 'proj1',
+      fields: [
+        { key: 'authors', label: 'Authors' },
+        { key: 'column_1', label: 'Custom Field 1' }
+      ],
+      items: [
+        { ref_id: 'ref1', authors: 'Smith 2020', column_1: 'Value A' },
+        { ref_id: 'ref2', authors: 'Doe 2021', column_1: 'Value B' }
+      ]
+    }
+
+    it('emits saved with complete items even when server returns $set partial response', async () => {
+      Api.get.mockResolvedValue({ data: [fullCharsDoc] })
+      Api.patch.mockResolvedValue({ data: { $set: { ethical_considerations: 'new text' } } })
+
+      await wrapper.vm.handleModalOk()
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      expect(wrapper.emitted('saved')).toBeTruthy()
+      const emittedData = wrapper.emitted('saved')[0][0]
+
+      expect(emittedData.items).toBeDefined()
+      expect(emittedData.items.length).toBeGreaterThanOrEqual(2)
+      expect(emittedData.items.find(i => i.ref_id === 'ref2')).toBeDefined()
+    })
+
+    it('emits saved using _id from server response when available', async () => {
+      const serverResponse = { ...fullCharsDoc, _id: 'char1-db-updated' }
+      Api.get.mockResolvedValue({ data: [fullCharsDoc] })
+      Api.patch.mockResolvedValue({ data: serverResponse })
+
+      await wrapper.vm.handleModalOk()
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      const emittedData = wrapper.emitted('saved')[0][0]
+      expect(emittedData._id).toBe('char1-db-updated')
+    })
+  })
 })

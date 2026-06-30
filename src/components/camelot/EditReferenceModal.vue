@@ -408,53 +408,53 @@ export default {
           ]
           updatedCharsData.items = cleanOrphanedCustomFieldKeys(updatedCharsData.items, updatedCharsData.fields)
 
-          return updatedCharsData.id
+          const apiCall = updatedCharsData.id
             ? Api.patch(`/isoqf_characteristics/${updatedCharsData.id}/`, updatedCharsData)
             : Api.post('/isoqf_characteristics/', {
               organization: this.$route.params.org_id || '',
               project_id: this.$route.params.id || '',
               ...updatedCharsData
             })
-        })
-        .then(response => {
-          this.isSaving = false
 
-          Object.entries(generatedKeys).forEach(([index, key]) => {
-            if (this.customFields[index]) {
-              this.customFields[index].key = key
+          return apiCall.then(response => {
+            this.isSaving = false
+
+            Object.entries(generatedKeys).forEach(([index, key]) => {
+              if (this.customFields[index]) {
+                this.customFields[index].key = key
+              }
+            })
+
+            const savedData = {
+              ...updatedCharsData,
+              id: response.data.id || updatedCharsData.id || this.charsData.id,
+              _id: response.data._id || updatedCharsData._id || this.charsData._id
+            }
+
+            const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
+            const newKeys = customFieldsArray
+              .filter(f =>
+                f.key !== 'authors' &&
+                f.key !== 'ref_id' &&
+                f.key !== 'actions' &&
+                !oldFieldKeys.includes(f.key)
+              )
+              .map(f => f.key)
+
+            if (newKeys.length > 0) {
+              this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
+            }
+
+            this.$emit('saved', savedData)
+
+            if (closeAfter) {
+              this.$notify.success(this.$t('notifications.saved'))
+              this.hide()
+            } else {
+              this.autoSaveStatus = 'saved'
+              setTimeout(() => { this.autoSaveStatus = null }, 2000)
             }
           })
-
-          const responseData = response.data.$set || response.data
-          const savedData = {
-            ...responseData,
-            id: response.data.id || this.charsData.id,
-            _id: response.data._id || this.charsData._id
-          }
-
-          const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
-          const newKeys = customFieldsArray
-            .filter(f =>
-              f.key !== 'authors' &&
-              f.key !== 'ref_id' &&
-              f.key !== 'actions' &&
-              !oldFieldKeys.includes(f.key)
-            )
-            .map(f => f.key)
-
-          if (newKeys.length > 0) {
-            this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
-          }
-
-          this.$emit('saved', savedData)
-
-          if (closeAfter) {
-            this.$notify.success(this.$t('notifications.saved'))
-            this.hide()
-          } else {
-            this.autoSaveStatus = 'saved'
-            setTimeout(() => { this.autoSaveStatus = null }, 2000)
-          }
         })
         .catch(error => {
           this.isSaving = false
