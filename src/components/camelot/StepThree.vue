@@ -24,9 +24,18 @@
         </template>
 
         <template v-slot:cell(edit)="data">
-          <b-button size="sm" variant="outline-primary" class="mr-1 d-inline-flex align-items-center" @click="editReference(data.item)">
+          <b-button
+            size="sm"
+            variant="outline-primary"
+            class="mr-1 d-inline-flex align-items-center"
+            :disabled="isRefLocked(data.item.id)"
+            v-b-tooltip.hover
+            :title="refLockedByName(data.item.id)"
+            @click="!isRefLocked(data.item.id) && editReference(data.item)"
+          >
             {{ $t('camelot.step_three.edit_button') }}
-            <font-awesome-icon icon="edit" class="ml-1" />
+            <font-awesome-icon v-if="isRefLocked(data.item.id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
           </b-button>
         </template>
 
@@ -94,9 +103,18 @@
         </template>
 
         <template v-slot:cell(actions)="data">
-          <b-button size="sm" variant="outline-primary" class="mr-1 d-inline-flex align-items-center" @click="editReference(data.item)">
+          <b-button
+            size="sm"
+            variant="outline-primary"
+            class="mr-1 d-inline-flex align-items-center"
+            :disabled="isRefLocked(data.item.id)"
+            v-b-tooltip.hover
+            :title="refLockedByName(data.item.id)"
+            @click="!isRefLocked(data.item.id) && editReference(data.item)"
+          >
             {{ $t('camelot.step_three.edit_button') }}
-            <font-awesome-icon icon="edit" class="ml-1" />
+            <font-awesome-icon v-if="isRefLocked(data.item.id)" icon="user" class="ml-1" />
+            <font-awesome-icon v-else icon="edit" class="ml-1" />
           </b-button>
           <b-button size="sm" variant="danger" @click="deleteReference(data.item)">
             {{ $t('camelot.step_three.delete_button') }}
@@ -114,6 +132,7 @@
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import LockService from '@/services/lockService'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
 import { isCustomField, extractCustomFields } from '@/utils/customFieldsHelper'
@@ -258,7 +277,9 @@ export default {
       isFirstLoad: true,
       showComments: false,
       visibleColumnKeys: [], // Keys of currently visible columns
-      expandedCells: {}
+      expandedCells: {},
+      activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
+      refLocksTimer: null
     }
   },
   computed: {
@@ -390,6 +411,25 @@ export default {
         }
       })
     },
+    isRefLocked(refId) {
+      return this.activeRefLocks.some(l => l.ref_id === refId)
+    },
+    refLockedByName(refId) {
+      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
+      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
+    },
+    async fetchAndUpdateRefLocks() {
+      const locks = await LockService.fetchRefLocks(this.$route.params.id)
+      this.activeRefLocks = locks
+    },
+    startRefLocksPolling() {
+      this.fetchAndUpdateRefLocks()
+      this.refLocksTimer = setInterval(() => this.fetchAndUpdateRefLocks(), 15000)
+    },
+    stopRefLocksPolling() {
+      if (this.refLocksTimer) clearInterval(this.refLocksTimer)
+      this.refLocksTimer = null
+    },
     handleReferenceSaved(updatedData) {
       if (updatedData && updatedData.items) {
         this.$set(this, 'charsData', updatedData)
@@ -480,6 +520,9 @@ export default {
     // Cargamos los datos de características al montar el componente
     this.loadCharacteristicsData()
 
+    // Polling de locks activos por estudio (colaboración simultánea)
+    this.startRefLocksPolling()
+
     // Escuchar actualizaciones globales para sincronizar datos entre pestañas
     this.$root.$on('characteristics-updated', (updatedData) => {
       if (updatedData) {
@@ -489,6 +532,7 @@ export default {
     })
   },
   beforeDestroy() {
+    this.stopRefLocksPolling()
     this.$root.$off('characteristics-updated')
   }
 }
