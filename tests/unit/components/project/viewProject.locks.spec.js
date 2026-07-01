@@ -75,6 +75,21 @@ describe('viewProject.vue — attemptLock()', () => {
   })
 })
 
+describe('viewProject.vue — lock automático al abrir proyecto', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('NO llama LockService.acquire automáticamente al cargar el proyecto en modo edit', async () => {
+    const { wrapper } = createWrapper()
+    // El usuario pertenece a la misma personal_organization → checkPermissions('can_write') = true
+    // por lo que getProject fija mode='edit'. El lock ya NO debe adquirirse automáticamente.
+    await wrapper.vm.getProject()
+    await flushPromises()
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(LockService.acquire).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
 describe('viewProject.vue — handleLockLost()', () => {
   beforeEach(() => jest.clearAllMocks())
 

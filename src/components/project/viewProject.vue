@@ -809,10 +809,9 @@ export default {
             this.mode = ''
           }
 
-          // Attempt to acquire lock if in edit mode
-          if (this.mode === 'edit') {
-            this.attemptLock()
-          }
+          // Granular ref-level locking (Step 3/4) replaces the project-wide lock.
+          // The project lock is no longer acquired automatically on open; attemptLock()
+          // remains available for project-scoped operations (metadata, publish, etc.).
 
           this.ui.project.show_criteria = true
           this.getLists()
