@@ -9,29 +9,36 @@
         <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
       </div>
 
-      <b-form-group label="" class="mb-4">
-        <b-form-radio v-for="(value, index) in options[modalStage][selectedMeta].values" v-model="selected" :key="index"
-          :value="value.value" :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
-          {{ value.text }}
-        </b-form-radio>
-      </b-form-group>
+      <fieldset :disabled="isReadOnly" class="border-0 p-0 m-0">
+        <b-alert v-if="isReadOnly && lockedByUser" show variant="warning" class="mb-3">
+          <font-awesome-icon icon="lock" class="mr-1" />
+          {{ $t('lock.ref_locked_by', { user: lockedByUser }) }}
+        </b-alert>
 
-      <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
-        class="font-weight-bold small" :state="explanationState">
-        <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
-          :placeholder="$t('camelot.assessment_form.text_placeholder')"
-          :state="explanationState"></b-form-textarea>
-        <b-form-invalid-feedback>{{ $t('camelot.assessment_form.explanation_required') }}</b-form-invalid-feedback>
-      </b-form-group>
-
-      <div class="mt-4 pt-3 border-top">
-        <h3 class="notes-title">{{ $t('common.notes') }}</h3>
-        <b-form-group label="" label-for="textarea-notes">
-          <b-form-textarea id="textarea-notes" v-model="notes" rows="3"
-            :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
-          <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+        <b-form-group label="" class="mb-4">
+          <b-form-radio v-for="(value, index) in options[modalStage][selectedMeta].values" v-model="selected" :key="index"
+            :value="value.value" :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
+            {{ value.text }}
+          </b-form-radio>
         </b-form-group>
-      </div>
+
+        <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
+          class="font-weight-bold small" :state="explanationState">
+          <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
+            :placeholder="$t('camelot.assessment_form.text_placeholder')"
+            :state="explanationState"></b-form-textarea>
+          <b-form-invalid-feedback>{{ $t('camelot.assessment_form.explanation_required') }}</b-form-invalid-feedback>
+        </b-form-group>
+
+        <div class="mt-4 pt-3 border-top">
+          <h3 class="notes-title">{{ $t('common.notes') }}</h3>
+          <b-form-group label="" label-for="textarea-notes">
+            <b-form-textarea id="textarea-notes" v-model="notes" rows="3"
+              :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+            <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+          </b-form-group>
+        </div>
+      </fieldset>
 
       <template #footer>
         <div class="d-flex justify-content-between align-items-center w-100">
@@ -46,7 +53,7 @@
             <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
               {{ $t('common.cancel') }}
             </b-button>
-            <b-button :disabled="button.disabled" size="sm" :variant="(button.disabled) ? 'outline-primary' : 'primary'"
+            <b-button :disabled="button.disabled || isReadOnly" size="sm" :variant="(button.disabled || isReadOnly) ? 'outline-primary' : 'primary'"
               @click="save">
               <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
               {{ $t('camelot.assessment_form.save_button') }}
@@ -352,6 +359,9 @@ export default {
       } else {
         this.isReadOnly = true
         this.lockedByUser = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
+        }
       }
     },
     checkChanges() {

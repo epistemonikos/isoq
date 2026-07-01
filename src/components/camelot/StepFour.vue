@@ -426,10 +426,13 @@ export default {
 
     // Polling de locks activos por estudio (colaboración simultánea)
     this.startRefLocksPolling()
+    // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
+    window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
   },
   beforeDestroy() {
     this._themeObserver.disconnect()
     this.stopRefLocksPolling()
+    window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
   },
   computed: {
     helpContent() {

@@ -72,6 +72,31 @@ describe('LockService.releaseRef()', () => {
     expect(LockService.currentRef).toBeNull()
     expect(LockService.refLocked).toBe(false)
   })
+
+  it('dispara el evento ref-locks-changed tras liberar', async () => {
+    axios.delete.mockResolvedValue({})
+    const spy = jest.spyOn(window, 'dispatchEvent')
+    LockService.currentRef = { projectId: 'proj1', refId: 'ref1' }
+    LockService.refLocked = true
+
+    await LockService.releaseRef()
+
+    expect(spy.mock.calls.some(([e]) => e.type === 'ref-locks-changed')).toBe(true)
+    spy.mockRestore()
+  })
+})
+
+describe('LockService.acquireRef() — evento', () => {
+  it('dispara ref-locks-changed tras adquirir con éxito', async () => {
+    axios.post.mockResolvedValue({ data: { status: true } })
+    jest.spyOn(LockService, 'startRefHeartbeat').mockImplementation(() => {})
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.acquireRef('proj1', 'ref1')
+
+    expect(spy.mock.calls.some(([e]) => e.type === 'ref-locks-changed')).toBe(true)
+    spy.mockRestore()
+  })
 })
 
 describe('LockService.fetchRefLocks()', () => {

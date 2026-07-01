@@ -54,6 +54,8 @@ describe('AssessmentForm.vue', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     Api.get.mockResolvedValue({ data: [] })
+    // clearAllMocks no resetea implementaciones → re-establecer el default de acquireRef
+    LockService.acquireRef.mockResolvedValue({ success: true })
     wrapper = mount(AssessmentForm, {
       localVue,
       propsData,
@@ -482,6 +484,20 @@ describe('AssessmentForm.vue', () => {
 
       expect(LockService.releaseRef).toHaveBeenCalled()
       expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref2')
+      localWrapper.destroy()
+    })
+
+    it('marca isReadOnly y notifica cuando acquireRef devuelve 409', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana López' })
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData,
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await flushPromises()
+      expect(localWrapper.vm.isReadOnly).toBe(true)
+      expect(localWrapper.vm.lockedByUser).toBe('Ana López')
+      expect($notify.warning).toHaveBeenCalled()
       localWrapper.destroy()
     })
 

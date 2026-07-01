@@ -63,7 +63,8 @@ describe('EditReferenceModal.vue', () => {
         $bvModal: {
           show: jest.fn(),
           hide: jest.fn()
-        }
+        },
+        $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
       },
       stubs: {
         'b-modal': true,
@@ -218,6 +219,7 @@ describe('EditReferenceModal.vue', () => {
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBe('Ana López')
+      expect(wrapper.vm.$notify.warning).toHaveBeenCalled()
     })
 
     it('llama releaseRef en resetModal', () => {

@@ -185,6 +185,7 @@ class LockService {
       if (response.data.status) {
         this.refLocked = true
         this.startRefHeartbeat()
+        this.emitRefLocksChanged()
         return { success: true }
       }
     } catch (error) {
@@ -215,6 +216,16 @@ class LockService {
         if (e.response && e.response.status === 401) return
         console.error('Error releasing ref lock', e)
       }
+    }
+
+    // Notify same-tab listeners (StepThree/StepFour) so they refresh their lock
+    // table immediately instead of waiting for the next 15s poll.
+    this.emitRefLocksChanged()
+  }
+
+  emitRefLocksChanged () {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ref-locks-changed'))
     }
   }
 

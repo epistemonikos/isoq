@@ -522,6 +522,8 @@ export default {
 
     // Polling de locks activos por estudio (colaboración simultánea)
     this.startRefLocksPolling()
+    // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
+    window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
 
     // Escuchar actualizaciones globales para sincronizar datos entre pestañas
     this.$root.$on('characteristics-updated', (updatedData) => {
@@ -533,6 +535,7 @@ export default {
   },
   beforeDestroy() {
     this.stopRefLocksPolling()
+    window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     this.$root.$off('characteristics-updated')
   }
 }

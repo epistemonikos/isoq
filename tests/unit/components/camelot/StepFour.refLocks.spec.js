@@ -46,4 +46,14 @@ describe('StepFour.vue — isRefLocked()', () => {
     expect(wrapper.vm.activeRefLocks).toEqual([{ ref_id: 'ref1', user_name: 'Ana' }])
     wrapper.destroy()
   })
+
+  it('re-pollea al recibir el evento window ref-locks-changed', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    LockService.fetchRefLocks.mockClear()
+    window.dispatchEvent(new CustomEvent('ref-locks-changed'))
+    await flushPromises()
+    expect(LockService.fetchRefLocks).toHaveBeenCalledWith('proj1')
+    wrapper.destroy()
+  })
 })

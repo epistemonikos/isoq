@@ -10,6 +10,7 @@
       <b-alert v-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
         {{ $t('lock.ref_lock_offline') }}
       </b-alert>
+      <fieldset :disabled="isReadOnly" class="border-0 p-0 m-0">
       <b-row>
         <!-- Menú flotante a la izquierda -->
         <b-col cols="3" class="menu-sidebar">
@@ -55,6 +56,7 @@
           </div>
         </b-col>
       </b-row>
+      </fieldset>
     </template>
     <template v-else>
       <b-alert show variant="info">{{ $t('camelot.step_three.modal.no_selection') }}</b-alert>
@@ -202,6 +204,9 @@ export default {
       } else {
         this.isReadOnly = true
         this.lockedByUser = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
+        }
       }
     },
     handleRefLockConflict(event) {
