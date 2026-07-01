@@ -255,7 +255,14 @@
     "project_locked_by": "El proyecto está siendo editado por {user}. Modo solo lectura.",
     "locked_title": "Proyecto Bloqueado",
     "lock_lost_message": "Se perdió la conexión con el servidor o otro usuario ha tomado el control de edición. Para evitar pérdida de datos, por favor recarga la página.",
-    "idle_message": "Has estado inactivo por un tiempo. Para permitir que otros editen, se ha liberado tu acceso de escritura. Por favor recarga para resumir la edición."
+    "idle_message": "Has estado inactivo por un tiempo. Para permitir que otros editen, se ha liberado tu acceso de escritura. Por favor recarga para resumir la edición.",
+    "ref_locked_by": "Siendo editado por {user}",
+    "ref_lock_offline": "Sin conexión — edición no disponible",
+    "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
+    "ref_conflict_title": "Cambios no guardados",
+    "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
+    "ref_conflict_copy_field": "Copiar",
+    "ref_conflict_close": "Cerrar"
   },
   "project": {
     "notifications": {
