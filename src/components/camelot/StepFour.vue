@@ -11,7 +11,8 @@
     </div>
 
     <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
-      footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc>
+      footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc
+      @hidden="onAssessmentModalClosed">
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -94,7 +95,8 @@
                         <!-- Columna 2.2: Assessment Evaluation -->
                         <b-col cols="6">
                           <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
-                            :refId="refId" :modalIndex="modal.index" @getAssessments="getAssessments"></assessmentForm>
+                            :refId="refId" :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                            @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
                     </b-tab>
@@ -142,7 +144,8 @@
                 <!-- Columna 3: Assessment Evaluation -->
                 <b-col cols="4">
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
-                    :modalIndex="modal.index" @getAssessments="getAssessments"></assessmentForm>
+                    :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
             </div>
@@ -220,7 +223,8 @@
                 <!-- Columna 4: Evaluación de ajuste final -->
                 <b-col cols="3" class="">
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
-                    :modalIndex="modal.index" @getAssessments="getAssessments"></assessmentForm>
+                    :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                    @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
             </div>
@@ -249,6 +253,14 @@
       <div class="px-4 py-3" v-html="helpContent[modal.stage]">
       </div>
     </b-sidebar>
+
+    <RefLockConflictModal
+      ref="conflictModal"
+      :locked-by="conflictLockedBy"
+      :failed-data="conflictData || {}"
+      :ref-id="conflictRefId"
+      @closed="clearConflict"
+    />
   </div>
 </template>
 
@@ -261,6 +273,7 @@ import Responses from './Responses.vue'
 import CamelotAssessmentCard from './CamelotAssessmentCard.vue'
 import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
+import RefLockConflictModal from './RefLockConflictModal.vue'
 
 export default {
   name: 'StepFour',
@@ -275,7 +288,7 @@ export default {
     }
   },
   components: {
-    AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader
+    AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader, RefLockConflictModal
   },
   data() {
     const headerClass = 'header-second-row'
@@ -328,6 +341,11 @@ export default {
       },
       activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
       refLocksTimer: null,
+      isRefReadOnly: false, // lock state for the study currently open in the modal
+      refLockedBy: null,
+      conflictData: null,
+      conflictLockedBy: '',
+      conflictRefId: '',
       selected: null,
       text1: '',
       modal: {
@@ -428,11 +446,14 @@ export default {
     this.startRefLocksPolling()
     // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
     window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   beforeDestroy() {
     this._themeObserver.disconnect()
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    LockService.releaseRef()
   },
   computed: {
     helpContent() {
@@ -752,10 +773,46 @@ export default {
       this.selectedMeta = tab
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
+      this.acquireStudyLock(data.item.ref_id)
       this.$bvModal.show('modal-1')
     },
     onOpenModal({ stage, data, tab, faLabel = null }) {
       this.openModal(stage, data, tab, faLabel)
+    },
+    async acquireStudyLock(refId) {
+      if (!refId) return
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.isRefReadOnly = false
+        this.refLockedBy = null
+      } else {
+        this.isRefReadOnly = true
+        this.refLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.refLockedBy }))
+        }
+      }
+    },
+    onAssessmentModalClosed() {
+      LockService.releaseRef()
+      this.isRefReadOnly = false
+      this.refLockedBy = null
+      this.fetchAndUpdateRefLocks()
+    },
+    handleRefLockConflict(event) {
+      const { refId, failedData, lockedBy } = event.detail
+      if (refId !== this.refId) return
+      this.conflictData = failedData
+      this.conflictLockedBy = lockedBy
+      this.conflictRefId = refId
+      this.$nextTick(() => {
+        if (this.$refs.conflictModal) this.$refs.conflictModal.show()
+      })
+    },
+    clearConflict() {
+      this.conflictData = null
+      this.conflictLockedBy = ''
+      this.conflictRefId = ''
     },
     goToStage(stage) {
       this.modal.stage = stage

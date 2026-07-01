@@ -444,61 +444,28 @@ describe('AssessmentForm.vue', () => {
     })
   })
 
-  describe('AssessmentForm.vue — lock granular', () => {
+  describe('AssessmentForm.vue — lock granular (owned by StepFour)', () => {
     const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
-    it('llama acquireRef al montar con projectId proj1 y ref_id ref1', async () => {
-      // wrapper viene del beforeEach externo (modalIndex=0, items[0].ref_id='ref1')
-      await flushPromises()
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
-    })
-
-    it('llama releaseRef al destruir', () => {
+    it('NO adquiere ni libera locks por sí mismo (el lock lo maneja StepFour)', async () => {
       wrapper.destroy()
-      expect(LockService.releaseRef).toHaveBeenCalled()
+      await flushPromises()
+      expect(LockService.acquireRef).not.toHaveBeenCalled()
+      expect(LockService.releaseRef).not.toHaveBeenCalled()
     })
 
-    it('re-adquiere el lock al cambiar modalIndex', async () => {
-      const twoItemProps = {
-        ...propsData,
-        assessments: {
-          id: 'assess1',
-          items: [
-            { ref_id: 'ref1', authors: 'A', stages: [{ key: 0, options: [{ option: null, text: '', notes: '' }] }] },
-            { ref_id: 'ref2', authors: 'B', stages: [{ key: 0, options: [{ option: null, text: '', notes: '' }] }] }
-          ]
-        }
-      }
-      const localWrapper = mount(AssessmentForm, {
+    it('no guarda (no llama Api.patch) cuando el prop isReadOnly es true', async () => {
+      Api.patch.mockClear()
+      const roWrapper = mount(AssessmentForm, {
         localVue,
-        propsData: twoItemProps,
+        propsData: { ...propsData, isReadOnly: true },
         mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
       })
+      await roWrapper.setData({ selected: 'A', text1: 'x' })
+      roWrapper.vm.performSave(false)
       await flushPromises()
-      LockService.acquireRef.mockClear()
-      LockService.releaseRef.mockClear()
-
-      await localWrapper.setProps({ modalIndex: 1 })
-      await localWrapper.vm.$nextTick()
-      await flushPromises()
-
-      expect(LockService.releaseRef).toHaveBeenCalled()
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref2')
-      localWrapper.destroy()
-    })
-
-    it('marca isReadOnly y notifica cuando acquireRef devuelve 409', async () => {
-      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana López' })
-      const localWrapper = mount(AssessmentForm, {
-        localVue,
-        propsData,
-        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
-      })
-      await flushPromises()
-      expect(localWrapper.vm.isReadOnly).toBe(true)
-      expect(localWrapper.vm.lockedByUser).toBe('Ana López')
-      expect($notify.warning).toHaveBeenCalled()
-      localWrapper.destroy()
+      expect(Api.patch).not.toHaveBeenCalled()
+      roWrapper.destroy()
     })
 
     it('usa PATCH parcial /isoqf_assessments/assess1/item/ref1 al guardar', async () => {

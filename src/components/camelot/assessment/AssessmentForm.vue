@@ -81,27 +81,15 @@
         </b-row>
       </b-container>
     </b-modal>
-
-    <RefLockConflictModal
-      ref="conflictModal"
-      :locked-by="conflictLockedBy"
-      :failed-data="conflictData || {}"
-      :ref-id="conflictRefId"
-      @closed="clearConflict"
-    />
   </div>
 </template>
 
 <script>
 import Api from '@/utils/Api'
-import LockService from '@/services/lockService'
 import _debounce from 'lodash.debounce'
 
 export default {
   name: 'AssessmentForm',
-  components: {
-    RefLockConflictModal: () => import('../RefLockConflictModal.vue')
-  },
   data() {
     return {
       categories: [
@@ -115,11 +103,6 @@ export default {
       notes: '',
       isSaving: false,
       autoSaveStatus: null,
-      isReadOnly: false,
-      lockedByUser: null,
-      conflictData: null,
-      conflictLockedBy: '',
-      conflictRefId: '',
       options: [
         [
           {
@@ -255,6 +238,15 @@ export default {
     modalIndex: {
       type: Number,
       default: 0
+    },
+    // Lock state is owned by StepFour (single acquire per study open) and passed down.
+    isReadOnly: {
+      type: Boolean,
+      default: false
+    },
+    lockedByUser: {
+      type: String,
+      default: null
     }
   },
   computed: {
@@ -285,9 +277,6 @@ export default {
     modalIndex(newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
-      // Navigating to another study: release the current ref lock and acquire the new one.
-      LockService.releaseRef()
-      this.$nextTick(() => this.acquireCurrentRefLock())
       if (this.assessments.items && this.assessments.items[newValue]) {
         this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
         this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
@@ -321,49 +310,11 @@ export default {
       this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
     this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
-    this.acquireCurrentRefLock()
-    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   beforeDestroy() {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
-    LockService.releaseRef()
-    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   methods: {
-    handleRefLockConflict(event) {
-      const { refId, failedData, lockedBy } = event.detail
-      const currentRefId = (this.assessments.items && this.assessments.items[this.modalIndex])
-        ? this.assessments.items[this.modalIndex].ref_id
-        : this.refId
-      if (refId !== currentRefId) return
-      this.conflictData = failedData
-      this.conflictLockedBy = lockedBy
-      this.conflictRefId = refId
-      this.$nextTick(() => {
-        if (this.$refs.conflictModal) this.$refs.conflictModal.show()
-      })
-    },
-    clearConflict() {
-      this.conflictData = null
-      this.conflictLockedBy = ''
-      this.conflictRefId = ''
-    },
-    async acquireCurrentRefLock() {
-      if (!this.assessments || !this.assessments.items || !this.assessments.items[this.modalIndex]) return
-      const refId = this.assessments.items[this.modalIndex].ref_id
-      if (!refId) return
-      const result = await LockService.acquireRef(this.$route.params.id, refId)
-      if (result.success) {
-        this.isReadOnly = false
-        this.lockedByUser = null
-      } else {
-        this.isReadOnly = true
-        this.lockedByUser = result.lockedBy || null
-        if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.lockedByUser }))
-        }
-      }
-    },
     checkChanges() {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
       const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
