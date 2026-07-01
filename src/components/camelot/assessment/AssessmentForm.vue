@@ -74,6 +74,14 @@
         </b-row>
       </b-container>
     </b-modal>
+
+    <RefLockConflictModal
+      ref="conflictModal"
+      :locked-by="conflictLockedBy"
+      :failed-data="conflictData || {}"
+      :ref-id="conflictRefId"
+      @closed="clearConflict"
+    />
   </div>
 </template>
 
@@ -84,6 +92,9 @@ import _debounce from 'lodash.debounce'
 
 export default {
   name: 'AssessmentForm',
+  components: {
+    RefLockConflictModal: () => import('../RefLockConflictModal.vue')
+  },
   data() {
     return {
       categories: [
@@ -99,6 +110,9 @@ export default {
       autoSaveStatus: null,
       isReadOnly: false,
       lockedByUser: null,
+      conflictData: null,
+      conflictLockedBy: '',
+      conflictRefId: '',
       options: [
         [
           {
@@ -301,12 +315,32 @@ export default {
     }
     this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
     this.acquireCurrentRefLock()
+    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   beforeDestroy() {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
     LockService.releaseRef()
+    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   methods: {
+    handleRefLockConflict(event) {
+      const { refId, failedData, lockedBy } = event.detail
+      const currentRefId = (this.assessments.items && this.assessments.items[this.modalIndex])
+        ? this.assessments.items[this.modalIndex].ref_id
+        : this.refId
+      if (refId !== currentRefId) return
+      this.conflictData = failedData
+      this.conflictLockedBy = lockedBy
+      this.conflictRefId = refId
+      this.$nextTick(() => {
+        if (this.$refs.conflictModal) this.$refs.conflictModal.show()
+      })
+    },
+    clearConflict() {
+      this.conflictData = null
+      this.conflictLockedBy = ''
+      this.conflictRefId = ''
+    },
     async acquireCurrentRefLock() {
       if (!this.assessments || !this.assessments.items || !this.assessments.items[this.modalIndex]) return
       const refId = this.assessments.items[this.modalIndex].ref_id

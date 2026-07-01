@@ -57,6 +57,24 @@ axios.interceptors.response.use(
         
         console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
 
+        // Detect a conflict on a partial item PATCH (granular ref lock taken by
+        // another user, e.g. after an offline queue replays). Surface it via a
+        // non-blocking event so the open editor can show copyable fields.
+        const isPartialItemPatch = url.includes('/item/') &&
+          (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments'))
+        if (isPartialItemPatch && typeof window !== 'undefined') {
+          const refId = url.split('/item/')[1] || ''
+          let failedData = {}
+          if (error.config && error.config.data) {
+            try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
+          }
+          const lockedBy = (error.response.data && error.response.data.locked_by) || ''
+          localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
+          window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+            detail: { refId, failedData, lockedBy }
+          }))
+        }
+
         if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
              if (typeof window !== 'undefined') {
                 console.log('Dispatching axios-refresh-lock event')

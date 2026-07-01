@@ -76,6 +76,13 @@
         {{ $t('camelot.step_three.modal.save_button') }}
       </b-button>
     </template>
+    <RefLockConflictModal
+      ref="conflictModal"
+      :locked-by="conflictLockedBy"
+      :failed-data="conflictData || {}"
+      :ref-id="conflictRefId"
+      @closed="clearConflict"
+    />
   </b-modal>
 </template>
 
@@ -89,7 +96,8 @@ import _debounce from 'lodash.debounce'
 export default {
   name: 'EditReferenceModal',
   components: {
-    CustomFieldsManager: () => import('./CustomFieldsManager.vue')
+    CustomFieldsManager: () => import('./CustomFieldsManager.vue'),
+    RefLockConflictModal: () => import('./RefLockConflictModal.vue')
   },
   props: {
     reference: {
@@ -121,7 +129,10 @@ export default {
       autoSaveStatus: null,
       isReadOnly: false,
       lockedByUser: null,
-      isOffline: false
+      isOffline: false,
+      conflictData: null,
+      conflictLockedBy: '',
+      conflictRefId: ''
     }
   },
   computed: {
@@ -138,6 +149,12 @@ export default {
   },
   created() {
     this.autoSaveDebounced = _debounce(function () { this.performSave(false) }.bind(this), 1500)
+  },
+  mounted() {
+    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
+  },
+  beforeDestroy() {
+    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   watch: {
     reference: {
@@ -186,6 +203,21 @@ export default {
         this.isReadOnly = true
         this.lockedByUser = result.lockedBy || null
       }
+    },
+    handleRefLockConflict(event) {
+      const { refId, failedData, lockedBy } = event.detail
+      if (refId !== (this.localReference && this.localReference.id)) return
+      this.conflictData = failedData
+      this.conflictLockedBy = lockedBy
+      this.conflictRefId = refId
+      this.$nextTick(() => {
+        if (this.$refs.conflictModal) this.$refs.conflictModal.show()
+      })
+    },
+    clearConflict() {
+      this.conflictData = null
+      this.conflictLockedBy = ''
+      this.conflictRefId = ''
     },
     resetModal() {
       LockService.releaseRef()
