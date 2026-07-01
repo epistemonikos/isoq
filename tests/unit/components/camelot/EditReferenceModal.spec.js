@@ -1,6 +1,7 @@
 import { shallowMount } from '@vue/test-utils'
 import EditReferenceModal from '@/components/camelot/EditReferenceModal.vue'
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 
 // Mock Api
 jest.mock('@/utils/Api', () => ({
@@ -9,7 +10,13 @@ jest.mock('@/utils/Api', () => ({
   post: jest.fn(() => Promise.resolve({ data: {} }))
 }))
 
+jest.mock('@/services/lockService', () => ({
+  acquireRef: jest.fn().mockResolvedValue({ success: true }),
+  releaseRef: jest.fn()
+}))
+
 const $t = (key) => key
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 describe('EditReferenceModal.vue', () => {
   let wrapper
@@ -83,22 +90,18 @@ describe('EditReferenceModal.vue', () => {
     expect(wrapper.vm.editForm.id).toBe('ref1')
   })
 
-  it('calls Api.patch when handleModalOk is triggered', async () => {
+  it('calls Api.patch (partial /item/{refId}) when handleModalOk is triggered', async () => {
     await wrapper.vm.handleModalOk()
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(Api.patch).toHaveBeenCalledWith(
-      '/isoqf_characteristics/char1/',
+      '/isoqf_characteristics/char1/item/ref1',
       expect.objectContaining({
-        items: expect.arrayContaining([
-          expect.objectContaining({
-            ref_id: 'ref1',
-            authors: 'Smith 2020',
-            column_1: 'Custom Value',
-            design_extractedData: 'Data Value',
-            design_comments: 'Concern Value'
-          })
-        ])
+        ref_id: 'ref1',
+        authors: 'Smith 2020',
+        column_1: 'Custom Value',
+        design_extractedData: 'Data Value',
+        design_comments: 'Concern Value'
       })
     )
     expect(wrapper.emitted('saved')).toBeTruthy()
@@ -163,24 +166,31 @@ describe('EditReferenceModal.vue', () => {
       ]
     }
 
-    it('emits saved with complete items even when server returns $set partial response', async () => {
-      Api.get.mockResolvedValue({ data: [fullCharsDoc] })
-      Api.patch.mockResolvedValue({ data: { $set: { ethical_considerations: 'new text' } } })
+    it('usa PATCH parcial /item/{refId} y emite saved con el doc completo del backend', async () => {
+      // El backend del PATCH parcial devuelve el documento completo actualizado.
+      Api.patch.mockResolvedValue({ data: fullCharsDoc })
 
       await wrapper.vm.handleModalOk()
       await new Promise(resolve => setTimeout(resolve, 0))
 
+      expect(Api.patch).toHaveBeenCalledWith(
+        '/isoqf_characteristics/char1/item/ref1',
+        expect.objectContaining({ ref_id: 'ref1' })
+      )
+      // Ya NO se llama al endpoint del documento completo.
+      expect(Api.patch).not.toHaveBeenCalledWith(
+        expect.stringMatching(/\/isoqf_characteristics\/char1\/$/),
+        expect.any(Object)
+      )
+
       expect(wrapper.emitted('saved')).toBeTruthy()
       const emittedData = wrapper.emitted('saved')[0][0]
-
       expect(emittedData.items).toBeDefined()
-      expect(emittedData.items.length).toBeGreaterThanOrEqual(2)
       expect(emittedData.items.find(i => i.ref_id === 'ref2')).toBeDefined()
     })
 
     it('emits saved using _id from server response when available', async () => {
       const serverResponse = { ...fullCharsDoc, _id: 'char1-db-updated' }
-      Api.get.mockResolvedValue({ data: [fullCharsDoc] })
       Api.patch.mockResolvedValue({ data: serverResponse })
 
       await wrapper.vm.handleModalOk()
@@ -188,6 +198,38 @@ describe('EditReferenceModal.vue', () => {
 
       const emittedData = wrapper.emitted('saved')[0][0]
       expect(emittedData._id).toBe('char1-db-updated')
+    })
+  })
+
+  describe('EditReferenceModal.vue — lock granular', () => {
+    beforeEach(() => jest.clearAllMocks())
+
+    it('llama acquireRef con projectId y refId cuando el modal se muestra', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+      expect(wrapper.vm.isReadOnly).toBe(false)
+    })
+
+    it('deshabilita edición (isReadOnly=true) cuando acquireRef retorna 409', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana López' })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      expect(wrapper.vm.isReadOnly).toBe(true)
+      expect(wrapper.vm.lockedByUser).toBe('Ana López')
+    })
+
+    it('llama releaseRef en resetModal', () => {
+      wrapper.vm.resetModal()
+      expect(LockService.releaseRef).toHaveBeenCalled()
+    })
+
+    it('no guarda (no llama Api.patch) cuando isReadOnly es true', async () => {
+      await wrapper.setData({ isReadOnly: true })
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+      expect(Api.patch).not.toHaveBeenCalled()
     })
   })
 })

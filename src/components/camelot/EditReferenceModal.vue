@@ -1,8 +1,15 @@
 <template>
   <b-modal id="modal-edit-reference" ref="modal-edit-reference" :title="modalTitle" size="xl" @ok="handleModalOk"
-    @hidden="resetModal" @shown="initScrollSpy" header-bg-variant="custom-blue" no-close-on-esc
+    @hidden="resetModal" @shown="onModalShownAll" header-bg-variant="custom-blue" no-close-on-esc
     no-close-on-backdrop>
     <template v-if="localReference">
+      <b-alert v-if="isReadOnly && lockedByUser" show variant="warning" class="mb-3">
+        <font-awesome-icon icon="lock" class="mr-1" />
+        {{ $t('lock.ref_locked_by', { user: lockedByUser }) }}
+      </b-alert>
+      <b-alert v-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
+        {{ $t('lock.ref_lock_offline') }}
+      </b-alert>
       <b-row>
         <!-- Menú flotante a la izquierda -->
         <b-col cols="3" class="menu-sidebar">
@@ -64,7 +71,7 @@
       <b-button size="md" variant="secondary" @click="cancel()" :disabled="isSaving">
         {{ $t('common.cancel') }}
       </b-button>
-      <b-button size="md" variant="primary" @click="ok()" :disabled="isSaving || hasInvalidCustomFields">
+      <b-button size="md" variant="primary" @click="ok()" :disabled="isSaving || hasInvalidCustomFields || isReadOnly">
         <b-spinner v-if="isSaving" small></b-spinner>
         {{ $t('camelot.step_three.modal.save_button') }}
       </b-button>
@@ -74,8 +81,9 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import Commons from '@/utils/commons'
-import { isCustomField, cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
+import { isCustomField } from '@/utils/customFieldsHelper'
 import _debounce from 'lodash.debounce'
 
 export default {
@@ -110,7 +118,10 @@ export default {
       activeSection: null,
       observer: null,
       isSaving: false,
-      autoSaveStatus: null
+      autoSaveStatus: null,
+      isReadOnly: false,
+      lockedByUser: null,
+      isOffline: false
     }
   },
   computed: {
@@ -158,7 +169,26 @@ export default {
     hide() {
       this.$bvModal.hide('modal-edit-reference')
     },
+    onModalShownAll() {
+      this.initScrollSpy()
+      this.onModalShown()
+    },
+    async onModalShown() {
+      if (!this.localReference) return
+      const result = await LockService.acquireRef(
+        this.$route.params.id,
+        this.localReference.id
+      )
+      if (result.success) {
+        this.isReadOnly = false
+        this.lockedByUser = null
+      } else {
+        this.isReadOnly = true
+        this.lockedByUser = result.lockedBy || null
+      }
+    },
     resetModal() {
+      LockService.releaseRef()
       this.destroyScrollSpy()
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.editForm = {}
@@ -167,6 +197,9 @@ export default {
       this.localReference = null
       this.isSaving = false
       this.autoSaveStatus = null
+      this.isReadOnly = false
+      this.lockedByUser = null
+      this.isOffline = false
       this.$emit('close')
     },
     initScrollSpy() {
@@ -330,7 +363,7 @@ export default {
       this.performSave(true)
     },
     performSave(closeAfter) {
-      if (this.isSaving) return
+      if (this.isSaving || this.isReadOnly) return
       this.isSaving = true
       if (!closeAfter) this.autoSaveStatus = 'saving'
 
@@ -370,91 +403,69 @@ export default {
       })
 
       const customFieldsArray = [...systemFields, ...newFieldsArray]
+      const serverFields = this.charsData.fields || []
+      const customKeys = new Set(customFieldsArray.map(f => f.key))
+      const mergedFields = [
+        ...customFieldsArray,
+        ...serverFields.filter(sf => !customKeys.has(sf.key))
+      ]
 
-      const getFreshBase = () => {
-        if (!this.charsData.id) return Promise.resolve(this.charsData)
-        return Api.get('/isoqf_characteristics', {
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
+      // Include `fields` in the body only when new columns were generated — the
+      // backend PATCH-parcial endpoint updates just this item, and optionally the
+      // shared `fields` list when present.
+      const payload = Object.keys(generatedKeys).length > 0
+        ? { ...item, fields: mergedFields }
+        : item
+
+      const apiCall = this.charsData.id
+        ? Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, payload)
+        : Api.post('/isoqf_characteristics/', {
+          organization: this.$route.params.org_id || '',
+          project_id: this.$route.params.id || '',
+          items: [item],
+          fields: mergedFields
         })
-          .then(res => {
-            if (res.data && res.data.length > 0) {
-              return res.data.find(d => String(d.id) === String(this.charsData.id)) || res.data[0]
+
+      apiCall
+        .then(response => {
+          this.isSaving = false
+
+          Object.entries(generatedKeys).forEach(([index, key]) => {
+            if (this.customFields[index]) {
+              this.customFields[index].key = key
             }
-            return this.charsData
           })
-          .catch(() => this.charsData)
-      }
 
-      getFreshBase()
-        .then(baseDoc => {
-          const updatedCharsData = { ...baseDoc }
-          updatedCharsData.items = [...(baseDoc.items || [])]
-
-          const itemIndex = updatedCharsData.items.findIndex(existingItem =>
-            existingItem.ref_id === item.ref_id
-          )
-          if (itemIndex !== -1) {
-            updatedCharsData.items[itemIndex] = { ...updatedCharsData.items[itemIndex], ...item }
-          } else {
-            updatedCharsData.items.push(item)
+          const savedData = {
+            ...this.charsData,
+            ...response.data,
+            id: response.data.id || this.charsData.id,
+            _id: response.data._id || this.charsData._id
           }
 
-          const serverFields = baseDoc.fields || []
-          const customKeys = new Set(customFieldsArray.map(f => f.key))
-          updatedCharsData.fields = [
-            ...customFieldsArray,
-            ...serverFields.filter(sf => !customKeys.has(sf.key))
-          ]
-          updatedCharsData.items = cleanOrphanedCustomFieldKeys(updatedCharsData.items, updatedCharsData.fields)
+          const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
+          const newKeys = customFieldsArray
+            .filter(f =>
+              f.key !== 'authors' &&
+              f.key !== 'ref_id' &&
+              f.key !== 'actions' &&
+              !oldFieldKeys.includes(f.key)
+            )
+            .map(f => f.key)
 
-          const apiCall = updatedCharsData.id
-            ? Api.patch(`/isoqf_characteristics/${updatedCharsData.id}/`, updatedCharsData)
-            : Api.post('/isoqf_characteristics/', {
-              organization: this.$route.params.org_id || '',
-              project_id: this.$route.params.id || '',
-              ...updatedCharsData
-            })
+          if (newKeys.length > 0) {
+            this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
+          }
 
-          return apiCall.then(response => {
-            this.isSaving = false
+          this.$emit('saved', savedData)
 
-            Object.entries(generatedKeys).forEach(([index, key]) => {
-              if (this.customFields[index]) {
-                this.customFields[index].key = key
-              }
-            })
-
-            const savedData = {
-              ...updatedCharsData,
-              id: response.data.id || updatedCharsData.id || this.charsData.id,
-              _id: response.data._id || updatedCharsData._id || this.charsData._id
-            }
-
-            const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
-            const newKeys = customFieldsArray
-              .filter(f =>
-                f.key !== 'authors' &&
-                f.key !== 'ref_id' &&
-                f.key !== 'actions' &&
-                !oldFieldKeys.includes(f.key)
-              )
-              .map(f => f.key)
-
-            if (newKeys.length > 0) {
-              this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, ...newKeys])
-            }
-
-            this.$emit('saved', savedData)
-
-            if (closeAfter) {
-              this.$notify.success(this.$t('notifications.saved'))
-              this.hide()
-            } else {
-              this.autoSaveStatus = 'saved'
-              setTimeout(() => { this.autoSaveStatus = null }, 2000)
-            }
-          })
+          if (closeAfter) {
+            this.$notify.success(this.$t('notifications.saved'))
+            this.hide()
+          } else {
+            this.autoSaveStatus = 'saved'
+            setTimeout(() => { this.autoSaveStatus = null }, 2000)
+          }
         })
         .catch(error => {
           this.isSaving = false
