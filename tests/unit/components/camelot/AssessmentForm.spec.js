@@ -1,10 +1,15 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import AssessmentForm from '@/components/camelot/assessment/AssessmentForm.vue'
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 
 const localVue = createLocalVue()
 
 jest.mock('@/utils/Api')
+jest.mock('@/services/lockService', () => ({
+  acquireRef: jest.fn().mockResolvedValue({ success: true }),
+  releaseRef: jest.fn()
+}))
 
 describe('AssessmentForm.vue', () => {
   let wrapper
@@ -434,6 +439,61 @@ describe('AssessmentForm.vue', () => {
       expect(localWrapper.vm.autoSaveStatus).toBe(null)
 
       localWrapper.destroy()
+    })
+  })
+
+  describe('AssessmentForm.vue — lock granular', () => {
+    const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+    it('llama acquireRef al montar con projectId proj1 y ref_id ref1', async () => {
+      // wrapper viene del beforeEach externo (modalIndex=0, items[0].ref_id='ref1')
+      await flushPromises()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    })
+
+    it('llama releaseRef al destruir', () => {
+      wrapper.destroy()
+      expect(LockService.releaseRef).toHaveBeenCalled()
+    })
+
+    it('re-adquiere el lock al cambiar modalIndex', async () => {
+      const twoItemProps = {
+        ...propsData,
+        assessments: {
+          id: 'assess1',
+          items: [
+            { ref_id: 'ref1', authors: 'A', stages: [{ key: 0, options: [{ option: null, text: '', notes: '' }] }] },
+            { ref_id: 'ref2', authors: 'B', stages: [{ key: 0, options: [{ option: null, text: '', notes: '' }] }] }
+          ]
+        }
+      }
+      const localWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: twoItemProps,
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await flushPromises()
+      LockService.acquireRef.mockClear()
+      LockService.releaseRef.mockClear()
+
+      await localWrapper.setProps({ modalIndex: 1 })
+      await localWrapper.vm.$nextTick()
+      await flushPromises()
+
+      expect(LockService.releaseRef).toHaveBeenCalled()
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref2')
+      localWrapper.destroy()
+    })
+
+    it('usa PATCH parcial /isoqf_assessments/assess1/item/ref1 al guardar', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setData({ selected: 'A', text1: 'explicación' })
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+      expect(Api.patch).toHaveBeenCalledWith(
+        '/isoqf_assessments/assess1/item/ref1',
+        expect.any(Object)
+      )
     })
   })
 })

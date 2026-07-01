@@ -79,6 +79,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import _debounce from 'lodash.debounce'
 
 export default {
@@ -96,6 +97,8 @@ export default {
       notes: '',
       isSaving: false,
       autoSaveStatus: null,
+      isReadOnly: false,
+      lockedByUser: null,
       options: [
         [
           {
@@ -261,6 +264,9 @@ export default {
     modalIndex(newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
+      // Navigating to another study: release the current ref lock and acquire the new one.
+      LockService.releaseRef()
+      this.$nextTick(() => this.acquireCurrentRefLock())
       if (this.assessments.items && this.assessments.items[newValue]) {
         this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
         this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
@@ -294,11 +300,26 @@ export default {
       this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
     this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
+    this.acquireCurrentRefLock()
   },
   beforeDestroy() {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+    LockService.releaseRef()
   },
   methods: {
+    async acquireCurrentRefLock() {
+      if (!this.assessments || !this.assessments.items || !this.assessments.items[this.modalIndex]) return
+      const refId = this.assessments.items[this.modalIndex].ref_id
+      if (!refId) return
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.isReadOnly = false
+        this.lockedByUser = null
+      } else {
+        this.isReadOnly = true
+        this.lockedByUser = result.lockedBy || null
+      }
+    },
     checkChanges() {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
       const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
@@ -349,6 +370,7 @@ export default {
       this.performSave()
     },
     performSave(silent = false) {
+      if (this.isReadOnly) return
       this.isSaving = true
       if (silent) this.autoSaveStatus = 'saving'
       const stages = [
@@ -465,46 +487,30 @@ export default {
           }
         }
 
-        if (this.assessments.id) {
-          const getFreshParams = () => {
-            return Api.get('/isoqf_assessments', {
-              organization: this.$route.params.org_id,
-              project_id: this.$route.params.id
-            })
-              .then(res => {
-                if (!res.data || !res.data.length) return params
-                const freshDoc = res.data.find(d => String(d.id) === String(this.assessments.id)) || res.data[0]
-                const freshItems = freshDoc.items || []
-                let found = false
-                const mergedItems = freshItems.map(it => {
-                  if (String(it.ref_id) !== String(this.refId)) return it
-                  found = true
-                  const merged = JSON.parse(JSON.stringify(it))
-                  if (merged.stages && merged.stages[this.modalStage] &&
-                      merged.stages[this.modalStage].options &&
-                      merged.stages[this.modalStage].options[this.selectedMeta]) {
-                    merged.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-                    merged.stages[this.modalStage].options[this.selectedMeta].text = this.text1
-                    merged.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
-                  }
-                  return merged
-                })
-                if (!found) mergedItems.push(data)
-                return {
-                  organization: this.$route.params.org_id,
-                  project_id: this.$route.params.id,
-                  items: mergedItems
-                }
-              })
-              .catch(() => params)
-          }
+        // Ensure the current edit is reflected in the item we PATCH.
+        const currentItem = this.assessments.items[this.modalIndex]
+        if (currentItem && currentItem.stages && currentItem.stages[this.modalStage] &&
+            currentItem.stages[this.modalStage].options &&
+            currentItem.stages[this.modalStage].options[this.selectedMeta]) {
+          currentItem.stages[this.modalStage].options[this.selectedMeta].option = this.selected
+          currentItem.stages[this.modalStage].options[this.selectedMeta].text = this.text1
+          currentItem.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
+        }
+        const itemPayload = currentItem
+          ? { ref_id: currentItem.ref_id, authors: currentItem.authors, stages: currentItem.stages }
+          : data
 
-          getFreshParams()
-            .then(finalParams => Api.patch(`/isoqf_assessments/${this.assessments.id}`, finalParams))
+        if (this.assessments.id) {
+          // Partial PATCH of a single study — avoids Last-Write-Wins on the items array.
+          Api.patch(`/isoqf_assessments/${this.assessments.id}/item/${this.refId}`, itemPayload)
             .then(onSuccess)
             .catch(onError)
         } else {
-          Api.post('/isoqf_assessments', params)
+          Api.post('/isoqf_assessments', {
+            organization: this.$route.params.org_id,
+            project_id: this.$route.params.id,
+            items: [itemPayload]
+          })
             .then(onSuccess)
             .catch(onError)
         }
