@@ -51,8 +51,11 @@
     </template>
     <template v-slot:cell(edit1)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+        <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn"
+          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          {{ $t('common.edit') }}
+          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+          <font-awesome-icon v-else icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(0, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -85,8 +88,11 @@
     </template>
     <template v-slot:cell(edit2)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+        <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn"
+          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          {{ $t('common.edit') }}
+          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+          <font-awesome-icon v-else icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(1, 4, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -101,8 +107,11 @@
     </template>
     <template v-slot:cell(edit3)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+        <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn"
+          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          {{ $t('common.edit') }}
+          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+          <font-awesome-icon v-else icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(2, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -117,8 +126,11 @@
     </template>
     <template v-slot:cell(edit4)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn">
-          {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
+        <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn"
+          :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
+          {{ $t('common.edit') }}
+          <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
+          <font-awesome-icon v-else icon="edit" class="ml-1" />
         </b-button>
         <font-awesome-icon v-if="isGroupComplete(3, 1, data.item)" icon="check" class="ml-2 text-success" />
       </div>
@@ -135,9 +147,17 @@ export default {
   props: {
     fields: { type: Array, required: true },
     items: { type: Array, required: true },
-    responses: { type: Array, required: true }
+    responses: { type: Array, required: true },
+    activeRefLocks: { type: Array, default: () => [] }
   },
   methods: {
+    isRefLocked(refId) {
+      return this.activeRefLocks.some(l => l.ref_id === refId)
+    },
+    refLockedByName(refId) {
+      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
+      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
+    },
     isGroupComplete(stage, optionCount, item) {
       if (!item || !item.stages || !item.stages[stage]) return false
       const options = item.stages[stage].options
@@ -148,6 +168,11 @@ export default {
       return true
     },
     openModal(stage, data, tab = 0, faLabel = null) {
+      // Guard every edit path (the 4 edit buttons AND the FA circles funnel through
+      // here): don't open a study that lacks a ref_id or is locked by another user.
+      if (!Object.prototype.hasOwnProperty.call(data.item, 'ref_id') || this.isRefLocked(data.item.ref_id)) {
+        return
+      }
       this.$emit('open-modal', { stage, data, tab, faLabel })
     }
   }

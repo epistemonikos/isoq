@@ -7,7 +7,7 @@
       <camelot-step-four-header :responses="ui.responses" :export-fields="exportFields" :export-items="exportItems" />
 
       <camelot-step-four-table :fields="ui.fields" :items="tableItems" :responses="ui.responses"
-        @open-modal="onOpenModal" />
+        :active-ref-locks="activeRefLocks" @open-modal="onOpenModal" />
     </div>
 
     <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
@@ -254,6 +254,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
 import Responses from './Responses.vue'
@@ -325,6 +326,8 @@ export default {
       assessments: {
         items: []
       },
+      activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
+      refLocksTimer: null,
       selected: null,
       text1: '',
       modal: {
@@ -420,9 +423,13 @@ export default {
       this.isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark'
     })
     this._themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+
+    // Polling de locks activos por estudio (colaboración simultánea)
+    this.startRefLocksPolling()
   },
   beforeDestroy() {
     this._themeObserver.disconnect()
+    this.stopRefLocksPolling()
   },
   computed: {
     helpContent() {
@@ -518,6 +525,25 @@ export default {
     }
   },
   methods: {
+    isRefLocked(refId) {
+      return this.activeRefLocks.some(l => l.ref_id === refId)
+    },
+    refLockedByName(refId) {
+      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
+      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
+    },
+    async fetchAndUpdateRefLocks() {
+      const locks = await LockService.fetchRefLocks(this.$route.params.id)
+      this.activeRefLocks = locks
+    },
+    startRefLocksPolling() {
+      this.fetchAndUpdateRefLocks()
+      this.refLocksTimer = setInterval(() => this.fetchAndUpdateRefLocks(), 15000)
+    },
+    stopRefLocksPolling() {
+      if (this.refLocksTimer) clearInterval(this.refLocksTimer)
+      this.refLocksTimer = null
+    },
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
     },

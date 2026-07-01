@@ -70,6 +70,24 @@ describe('CamelotStepFourTable.vue', () => {
     })
   })
 
+  describe('openModal — ref lock guard', () => {
+    it('NO emite open-modal cuando el estudio está lockeado por otro usuario', async () => {
+      await wrapper.setProps({ activeRefLocks: [{ ref_id: 'ref1', user_name: 'Ana' }] })
+      wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1' } })
+      expect(wrapper.emitted('open-modal')).toBeFalsy()
+    })
+
+    it('NO emite open-modal cuando la fila no tiene ref_id', () => {
+      wrapper.vm.openModal(0, { index: 0, item: { authors: 'X' } })
+      expect(wrapper.emitted('open-modal')).toBeFalsy()
+    })
+
+    it('emite open-modal cuando el estudio no está lockeado y tiene ref_id', () => {
+      wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1' } })
+      expect(wrapper.emitted('open-modal')).toBeTruthy()
+    })
+  })
+
   describe('isGroupComplete', () => {
     it('returns false when item has no stages', () => {
       expect(wrapper.vm.isGroupComplete(0, 4, {})).toBe(false)
