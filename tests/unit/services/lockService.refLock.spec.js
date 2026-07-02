@@ -50,6 +50,18 @@ describe('LockService.acquireRef()', () => {
     expect(LockService.refLocked).toBe(false)
   })
 
+  it('retorna { success: false, permissionDenied: true } cuando el backend responde 403 (sin lockedBy)', async () => {
+    const err = { response: { status: 403, data: {} } }
+    axios.post.mockRejectedValue(err)
+
+    const result = await LockService.acquireRef('proj1', 'ref1')
+
+    expect(result).toEqual({ success: false, permissionDenied: true })
+    expect(result.lockedBy).toBeUndefined()
+    expect(LockService.refLocked).toBe(false)
+    expect(LockService.refLockedBy).toBeNull()
+  })
+
   it('retorna { success: true } sin llamar axios cuando isEnabled es false', async () => {
     jest.spyOn(LockService, 'isEnabled', 'get').mockReturnValue(false)
     const result = await LockService.acquireRef('proj1', 'ref1')

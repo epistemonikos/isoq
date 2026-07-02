@@ -344,12 +344,14 @@ export default {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
+    window.addEventListener('permission-denied', this.refreshPermissions)
   },
   beforeDestroy() {
     LockService.release()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)
+    window.removeEventListener('permission-denied', this.refreshPermissions)
   },
   methods: {
     updateTranslations: function () {
@@ -624,6 +626,49 @@ export default {
       }
       if (!Object.prototype.hasOwnProperty.call(this.project, 'exclusion')) {
         this.project.exclusion = ''
+      }
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'can_write')) {
+        this.project.can_write = []
+      }
+      if (!Object.prototype.hasOwnProperty.call(this.project, 'can_read')) {
+        this.project.can_read = []
+      }
+    },
+    // Unlike viewProject.vue, this screen has no tabs/steps to navigate between, so
+    // it never gets a "did my permission change?" check for free. Re-checks it
+    // in reaction to a rejected write anywhere in the app (see the 'permission-denied'
+    // window event dispatched by Api.js) instead.
+    refreshPermissions: async function () {
+      if (!this.project || !this.project.id) {
+        return
+      }
+      const params = { organization: this.project.organization }
+      try {
+        const response = await Api.get(`/isoqf_projects/${this.project.id}`, params)
+        const wasWrite = this.checkPermissions(this.list.organization)
+        this.$set(this.project, 'can_write', response.data.can_write)
+        this.$set(this.project, 'can_read', response.data.can_read)
+        const isWriteNow = this.checkPermissions(this.list.organization)
+
+        if (wasWrite && !isWriteNow) {
+          if (this.mode === 'edit') {
+            this.mode = 'view'
+          }
+          this.$bvToast.toast(this.$t('lock.permissions_revoked'), {
+            title: this.$t('notifications.error'),
+            variant: 'danger',
+            solid: true
+          })
+        } else if (!wasWrite && isWriteNow) {
+          this.mode = 'edit'
+          this.$bvToast.toast(this.$t('lock.permissions_granted'), {
+            title: this.$t('notifications.success'),
+            variant: 'success',
+            solid: true
+          })
+        }
+      } catch (error) {
+        console.warn('refreshPermissions failed', error)
       }
     },
     getFinding: function (fromModal = false) {
@@ -941,10 +986,6 @@ export default {
     setShowEditExtractedDataInPlace: function (data) {
       this.showEditExtractedDataInPlace = data
     }
-  },
-  mounted() {
-    this.updateTranslations()
-    this.getList()
   },
   watch: {
     '$i18n.locale'(val) {

@@ -29,7 +29,8 @@ describe('ManageColumnsButton.vue', () => {
     wrapper = shallowMount(ManageColumnsButton, {
       propsData: {
         charsData: mockCharsData,
-        visibleColumnKeys: mockVisibleKeys
+        visibleColumnKeys: mockVisibleKeys,
+        canEdit: true
       },
       mocks: {
         $t,
@@ -95,5 +96,40 @@ describe('ManageColumnsButton.vue', () => {
       })
     )
     expect(wrapper.emitted('saved')).toBeTruthy()
+  })
+
+  describe('canEdit gating (read-only user protection)', () => {
+    it('defaults canEdit to false when not provided', () => {
+      const readOnlyWrapper = shallowMount(ManageColumnsButton, {
+        propsData: { charsData: mockCharsData, visibleColumnKeys: mockVisibleKeys },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal: { show: jest.fn(), hide: jest.fn() } },
+        stubs: { 'b-button': true, 'b-modal': true, 'b-spinner': true, 'font-awesome-icon': true, CustomFieldsManager: true }
+      })
+      expect(readOnlyWrapper.vm.canEdit).toBe(false)
+      readOnlyWrapper.destroy()
+    })
+
+    it('does not render the trigger button when canEdit is false', async () => {
+      await wrapper.setProps({ canEdit: false })
+      expect(wrapper.find('b-button-stub').exists()).toBe(false)
+    })
+
+    it('renders the trigger button when canEdit is true (regression)', () => {
+      expect(wrapper.find('b-button-stub').exists()).toBe(true)
+    })
+
+    it('openColumnsModal does not open the modal when canEdit is false', async () => {
+      await wrapper.setProps({ canEdit: false })
+      wrapper.vm.openColumnsModal()
+      expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalled()
+      expect(wrapper.vm.columnDefinitions).toEqual([])
+    })
+
+    it('handleSaveColumns does not call Api.patch/Api.post when canEdit is false', async () => {
+      await wrapper.setProps({ canEdit: false })
+      await wrapper.vm.handleSaveColumns()
+      expect(Api.patch).not.toHaveBeenCalled()
+      expect(Api.post).not.toHaveBeenCalled()
+    })
   })
 })

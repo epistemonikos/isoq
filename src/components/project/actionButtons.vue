@@ -36,7 +36,7 @@
               </b-button>
           </b-col>
           <b-col
-            v-if="mode==='view' && !preview"
+            v-if="mode==='view' && !preview && canWrite"
             cols="12"
             md="3"
             xl="3">

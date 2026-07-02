@@ -38,7 +38,8 @@ const defaultProps = {
   references: [],
   refs: [],
   isBusy: false,
-  mode: 'edit'
+  mode: 'edit',
+  canEdit: true
 }
 
 function createWrapper (overrideProps = {}) {
@@ -278,6 +279,66 @@ describe('ViewTable.vue', () => {
       const name = wrapper.vm.editFindingName.name
       const state = dirty && !(name && name.trim().length) ? false : null
       expect(state).toBe(null)
+    })
+  })
+
+  describe('canEdit gating (read-only user protection)', () => {
+    it('defaults canEdit to false when not provided', () => {
+      const { wrapper } = createWrapper({ canEdit: undefined })
+      expect(wrapper.vm.canEdit).toBe(false)
+    })
+
+    it('updateListName does not call Api.patch when canEdit is false', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+
+    it('confirmRemoveList does not call Api.post when canEdit is false, even with a valid id', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+
+      expect(Api.post).not.toHaveBeenCalled()
+    })
+
+    it('saveReferencesList does not call Api.patch when canEdit is false', async () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      await wrapper.setData({ selected_list_index: 0, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+
+    it('confirmRemoveList still calls Api.post when canEdit is true (regression)', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper({ canEdit: true })
+      await wrapper.setData({ editFindingName: { ...wrapper.vm.editFindingName, id: 'list1' } })
+
+      await wrapper.vm.confirmRemoveList()
+
+      expect(Api.post).toHaveBeenCalled()
+    })
+
+    it('edit-finding-name ok-disabled is true when canEdit is false, even with a valid name', () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      wrapper.vm.editFindingName.name = 'My finding'
+      const disabled = !wrapper.vm.canEdit || !wrapper.vm.editFindingName.name || !wrapper.vm.editFindingName.name.trim().length
+      expect(disabled).toBe(true)
+    })
+
+    it('remove-finding modal ok-disabled reflects canEdit', () => {
+      const { wrapper } = createWrapper({ canEdit: false })
+      expect(wrapper.find('#remove-finding').attributes('ok-disabled')).toBe('true')
+    })
+
+    it('remove-finding modal is enabled when canEdit is true (regression)', () => {
+      const { wrapper } = createWrapper({ canEdit: true })
+      expect(wrapper.find('#remove-finding').attributes('ok-disabled')).toBeUndefined()
     })
   })
 })

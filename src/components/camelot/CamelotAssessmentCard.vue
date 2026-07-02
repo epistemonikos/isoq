@@ -17,7 +17,7 @@
     <div class="field-section mb-3">
       <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
         <h5 class="small m-0 pb-1">{{ $t('camelot.step_four.common.extracted_data') }}</h5>
-        <b-button v-if="!isEditing('extractedData')" size="sm" variant="outline-primary" class="edit-btn-thin"
+        <b-button v-if="!isEditing('extractedData') && !isReadOnly" size="sm" variant="outline-primary" class="edit-btn-thin"
           @click="startEditing('extractedData')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
@@ -59,7 +59,7 @@
     <div class="field-section">
       <div class="d-flex justify-content-between align-items-center pb-1 border-bottom">
         <h5 class="small m-0">{{ $t('camelot.step_four.common.concerns') }}</h5>
-        <b-button v-if="!isEditing('concerns')" size="sm" variant="outline-primary" class="edit-btn-thin"
+        <b-button v-if="!isEditing('concerns') && !isReadOnly" size="sm" variant="outline-primary" class="edit-btn-thin"
           @click="startEditing('concerns')">
           {{ $t('common.edit') }} <font-awesome-icon icon="edit" class="ml-1" />
         </b-button>
@@ -112,7 +112,8 @@ export default {
     concerns: { type: String, default: '' },
     isExclamationActive: { type: Boolean, default: false },
     editingField: { type: Object, default: () => ({ metaIndex: null, itemIndex: null, type: null }) },
-    isSaving: { type: Boolean, default: false }
+    isSaving: { type: Boolean, default: false },
+    isReadOnly: { type: Boolean, default: false }
   },
   data() {
     return {
@@ -148,6 +149,9 @@ export default {
         this.editingField.type === type
     },
     startEditing(type) {
+      if (this.isReadOnly) {
+        return
+      }
       this.editValue = type === 'extractedData' ? this.extractedData : this.concerns
       this.$emit('start-editing', { metaIndex: this.metaIndex, itemIndex: this.itemIndex, type })
     },

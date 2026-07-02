@@ -30,7 +30,8 @@ describe('StepThree.vue', () => {
     wrapper = shallowMount(StepThree, {
       propsData: {
         references: mockReferences,
-        type: 'isoqf_characteristics'
+        type: 'isoqf_characteristics',
+        canEdit: true
       },
       mocks: {
         $t,
@@ -66,7 +67,8 @@ describe('StepThree.vue', () => {
         'EditReferenceModal': {
           name: 'EditReferenceModal',
           template: '<div />',
-          props: ['reference', 'charsData', 'camelot', 'visibleColumnKeys']
+          props: ['reference', 'charsData', 'camelot', 'visibleColumnKeys'],
+          methods: { show: jest.fn() }
         }
       }
     })
@@ -146,5 +148,39 @@ describe('StepThree.vue', () => {
     const editModal = wrapper.findComponent({ name: 'EditReferenceModal' })
     expect(editModal.exists()).toBe(true)
     expect(editModal.props('charsData')).toBeDefined()
+  })
+
+  describe('canEdit gating (read-only user protection)', () => {
+    it('defaults canEdit to false when not provided', () => {
+      const readOnlyWrapper = shallowMount(StepThree, {
+        propsData: { references: mockReferences, type: 'isoqf_characteristics' },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } } }
+      })
+      expect(readOnlyWrapper.vm.canEdit).toBe(false)
+    })
+
+    it('editReference does nothing when canEdit is false', async () => {
+      await wrapper.setProps({ canEdit: false })
+      wrapper.vm.editReference(mockReferences[0])
+      expect(wrapper.vm.currentItem).toBe(null)
+    })
+
+    it('editReference sets currentItem when canEdit is true (regression)', async () => {
+      await wrapper.setProps({ canEdit: true })
+      wrapper.vm.editReference(mockReferences[0])
+      expect(wrapper.vm.currentItem).toEqual(mockReferences[0])
+    })
+
+    it('deleteReference does not emit delete-reference when canEdit is false', async () => {
+      await wrapper.setProps({ canEdit: false })
+      wrapper.vm.deleteReference(mockReferences[0])
+      expect(wrapper.emitted('delete-reference')).toBeFalsy()
+    })
+
+    it('deleteReference emits delete-reference when canEdit is true (regression)', async () => {
+      await wrapper.setProps({ canEdit: true })
+      wrapper.vm.deleteReference(mockReferences[0])
+      expect(wrapper.emitted('delete-reference')).toBeTruthy()
+    })
   })
 })

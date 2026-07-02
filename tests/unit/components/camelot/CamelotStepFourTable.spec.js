@@ -1,4 +1,4 @@
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, mount, createLocalVue } from '@vue/test-utils'
 import CamelotStepFourTable from '@/components/camelot/CamelotStepFourTable.vue'
 import BootstrapVue from 'bootstrap-vue'
 
@@ -131,6 +131,35 @@ describe('CamelotStepFourTable.vue', () => {
     it('returns true when OA is set', () => {
       const item = makeItem({ s3: ['A'] })
       expect(wrapper.vm.isGroupComplete(3, 1, item)).toBe(true)
+    })
+  })
+
+  describe('canEdit gating (read-only user protection)', () => {
+    function createWrapperWithEditColumn (canEdit) {
+      return mount(CamelotStepFourTable, {
+        localVue,
+        propsData: {
+          ...propsData,
+          fields: [...propsData.fields, { key: 'edit1', label: '' }],
+          canEdit
+        },
+        mocks: { $t: (msg) => msg },
+        stubs: { 'font-awesome-icon': true }
+      })
+    }
+
+    it('defaults canEdit to false when not provided', () => {
+      expect(wrapper.vm.canEdit).toBe(false)
+    })
+
+    it('does not render the edit button when canEdit is false', () => {
+      const readOnlyWrapper = createWrapperWithEditColumn(false)
+      expect(readOnlyWrapper.find('.edit-btn').exists()).toBe(false)
+    })
+
+    it('renders the edit button when canEdit is true (regression)', () => {
+      const editableWrapper = createWrapperWithEditColumn(true)
+      expect(editableWrapper.find('.edit-btn').exists()).toBe(true)
     })
   })
 })

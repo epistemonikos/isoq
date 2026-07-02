@@ -262,7 +262,9 @@
     "ref_conflict_title": "Cambios no guardados",
     "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
     "ref_conflict_copy_field": "Copiar",
-    "ref_conflict_close": "Cerrar"
+    "ref_conflict_close": "Cerrar",
+    "permissions_revoked": "Tu acceso a este proyecto cambió a solo lectura.",
+    "permissions_granted": "Ahora tienes acceso de edición a este proyecto."
   },
   "project": {
     "notifications": {

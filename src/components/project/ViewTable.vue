@@ -60,13 +60,13 @@
         <span v-if="mode === 'edit'">
           <b-row class="mb-3">
             <b-col lg="6" cols="12">
-              <b-button block v-if="mode === 'edit'" variant="outline-success" @click="editModalFindingName(data)">
+              <b-button block v-if="mode === 'edit' && canEdit" variant="outline-success" @click="editModalFindingName(data)">
                 <font-awesome-icon v-if=(data.item.notes.length) icon="comments"></font-awesome-icon>
                 {{ $t('common.edit') }}
               </b-button>
             </b-col>
             <b-col class="mt-1 mt-lg-0" lg="6" cols="12">
-              <b-button block v-if="mode === 'edit'" variant="outline-danger" @click="removeModalFinding(data)">
+              <b-button block v-if="mode === 'edit' && canEdit" variant="outline-danger" @click="removeModalFinding(data)">
                 {{ $t('common.remove') }}
               </b-button>
             </b-col>
@@ -87,14 +87,14 @@
       </template>
       <template v-slot:cell(category_name)="data">
         <template v-if="data.item.category !== null">
-          <b-button v-if="mode === 'edit'" block variant="outline-info" @click="editModalFindingName(data)">{{
+          <b-button v-if="mode === 'edit' && canEdit" block variant="outline-info" @click="editModalFindingName(data)">{{
             $t('soqf_table.edit_group') }}</b-button>
           {{ data.item.category_name }}
           <span v-if="data.item.category_extra_info !== ''" v-b-tooltip.hover
             :title="data.item.category_extra_info">*</span>
         </template>
         <template v-else>
-          <b-button v-if="mode === 'edit' && data.item.references.length" variant="info" block
+          <b-button v-if="mode === 'edit' && canEdit && data.item.references.length" variant="info" block
             @click="editModalFindingName(data)">{{ $t('soqf_table.assign_group') }}</b-button>
         </template>
       </template>
@@ -104,11 +104,11 @@
           :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
           :to="{ name: 'editList', params: { id: data.item.id } }">
           <font-awesome-icon
-            v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
             icon="comments"></font-awesome-icon>
-          <span v-if="mode === 'edit' && data.item.cerqual_option === ''">{{ $t('common.complete') }}</span>
-          <span v-if="mode === 'edit' && data.item.cerqual_option != ''">{{ $t('common.edit') }}</span>
-          <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
+          <span v-if="mode === 'edit' && canEdit && data.item.cerqual_option === ''">{{ $t('common.complete') }}</span>
+          <span v-if="mode === 'edit' && canEdit && data.item.cerqual_option != ''">{{ $t('common.edit') }}</span>
+          <span v-if="!(mode === 'edit' && canEdit)">{{ $t('common.view') }}</span>
           {{ $t('soqf_table.gc_assessment') }}
         </b-button>
         <b>{{ data.item.cerqual_option }}</b>
@@ -119,17 +119,17 @@
           :variant="(data.item.cerqual_explanation === '') ? 'info' : 'outline-info'"
           :to="{ name: 'editList', params: { id: data.item.id } }">
           <font-awesome-icon
-            v-if="mode === 'edit' && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
             icon="comments"></font-awesome-icon>
-          <span v-if="mode === 'edit' && data.item.cerqual_explanation === ''">{{ $t('common.complete') }}</span>
-          <span v-if="mode === 'edit' && data.item.cerqual_explanation != ''">{{ $t('common.edit') }}</span>
-          <span v-if="mode !== 'edit'">{{ $t('common.view') }}</span>
+          <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation === ''">{{ $t('common.complete') }}</span>
+          <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation != ''">{{ $t('common.edit') }}</span>
+          <span v-if="!(mode === 'edit' && canEdit)">{{ $t('common.view') }}</span>
           GRADE-CERQual Assessment
         </b-button>
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
       </template>
       <template v-slot:cell(ref_list)="data">
-        <template v-if="mode !== 'edit'">
+        <template v-if="!(mode === 'edit' && canEdit)">
           {{ data.item.ref_list }}
         </template>
         <template v-else>
@@ -157,7 +157,7 @@
     <!-- modals -->
     <b-modal size="xl" id="edit-finding-name" ref="edit-finding-name" :title="$t('soqf_table.edit_finding')"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary"
-      :ok-disabled="!editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName"
+      :ok-disabled="!canEdit || !editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName"
       @hidden="findingNameDirty = false">
       <b-alert :show="editingUser.show" variant="danger">
         <span
@@ -192,7 +192,7 @@
 
     <b-modal size="xl" id="remove-finding" ref="remove-finding" :title="$t('soqf_table.remove_finding')"
       :ok-title="$t('common.confirm')" ok-variant="outline-danger" cancel-variant="outline-secondary"
-      @ok="confirmRemoveList">
+      :ok-disabled="!canEdit" @ok="confirmRemoveList">
       <b-alert :show="editingUser.show" variant="danger">
         <span
           v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
@@ -210,7 +210,7 @@
 
     <b-modal v-if="selected_list_index >= 0" id="modal-references-list" ref="modal-references-list"
       :title="$t('soqf_table.references')" @ok="checkReferencesBeforeSaving" @hidden="handleReferencesModalHidden"
-      @cancel="cancelReferencesList" :ok-disabled="(selected_list_index === null) ? true : false"
+      @cancel="cancelReferencesList" :ok-disabled="!canEdit || (selected_list_index === null)"
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
@@ -432,6 +432,11 @@ export default {
       required: false,
       default: ''
     },
+    canEdit: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
     isBusy: {
       type: Boolean,
       required: true,
@@ -568,6 +573,9 @@ export default {
       }
     },
     updateListName: async function () {
+      if (!this.canEdit) {
+        return
+      }
       this.$emit('set-busy', true)
       const list = await this.processDataList()
       Api.patch(`/isoqf_lists/${this.editFindingName.id}`, list)
@@ -620,7 +628,7 @@ export default {
         })
     },
     confirmRemoveList: function () {
-      if (!this.editFindingName.id) {
+      if (!this.canEdit || !this.editFindingName.id) {
         return
       }
       this.$emit('set-busy', true)
@@ -729,6 +737,9 @@ export default {
     },
 
     saveReferencesList: function () {
+      if (!this.canEdit) {
+        return
+      }
       this.$emit('set-load-references', true)
       this.$emit('set-busy', true)
       const index = this.selected_list_index

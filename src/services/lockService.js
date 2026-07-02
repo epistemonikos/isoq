@@ -199,6 +199,13 @@ class LockService {
         this.refLockedBy = error.response.data.locked_by
         return { success: false, lockedBy: this.refLockedBy }
       }
+      if (error.response && error.response.status === 403) {
+        // Different from a 409: nobody else holds the lock, this user simply no
+        // longer has can_write. Callers must not treat this as "locked by X".
+        this.refLocked = false
+        this.refLockedBy = null
+        return { success: false, permissionDenied: true }
+      }
     }
     return { success: false, error: 'Unknown error' }
   }

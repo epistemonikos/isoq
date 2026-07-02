@@ -262,7 +262,9 @@
     "ref_conflict_title": "Unsaved changes",
     "ref_conflict_message": "While you were offline, {user} edited this study. Your changes were not saved. You can copy them and apply them manually.",
     "ref_conflict_copy_field": "Copy",
-    "ref_conflict_close": "Close"
+    "ref_conflict_close": "Close",
+    "permissions_revoked": "Your access to this project changed to read-only.",
+    "permissions_granted": "You now have edit access to this project."
   },
   "project": {
     "notifications": {

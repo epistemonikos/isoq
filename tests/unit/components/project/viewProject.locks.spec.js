@@ -2,6 +2,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import viewProject from '@/components/project/viewProject.vue'
 import BootstrapVue from 'bootstrap-vue'
 import LockService from '@/services/lockService'
+import Api from '@/utils/Api'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -146,7 +147,7 @@ describe('viewProject.vue — handleIdle()', () => {
 describe('viewProject.vue — beforeDestroy', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('releases the lock and removes all three window event listeners', async () => {
+  it('releases the lock and removes all four window event listeners', async () => {
     const { wrapper } = createWrapper()
     await flushPromises()
     const removeSpy = jest.spyOn(window, 'removeEventListener')
@@ -155,6 +156,33 @@ describe('viewProject.vue — beforeDestroy', () => {
     expect(removeSpy).toHaveBeenCalledWith('lock-lost', expect.any(Function))
     expect(removeSpy).toHaveBeenCalledWith('lock-idle', expect.any(Function))
     expect(removeSpy).toHaveBeenCalledWith('axios-refresh-lock', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('permission-denied', expect.any(Function))
     removeSpy.mockRestore()
+  })
+})
+
+describe('viewProject.vue — permission-denied event', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('registers refreshPermissions as the permission-denied listener on mount', async () => {
+    const addSpy = jest.spyOn(window, 'addEventListener')
+    const { wrapper } = createWrapper()
+    await flushPromises()
+
+    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.refreshPermissions)
+    addSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  it('re-fetches permissions when the event fires (Api.get is called)', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    Api.get.mockClear()
+
+    window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url: '/isoqf_findings/f1', method: 'patch' } }))
+    await flushPromises()
+
+    expect(Api.get).toHaveBeenCalledWith(`/isoqf_projects/${wrapper.vm.$route.params.id}`, expect.any(Object))
+    wrapper.destroy()
   })
 })

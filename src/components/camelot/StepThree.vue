@@ -11,7 +11,7 @@
       <!-- Action buttons toolbar -->
       <div class="mb-3 d-flex justify-content-end">
         <ManageColumnsButton :chars-data="charsData" :camelot="camelot" :visible-column-keys.sync="visibleColumnKeys"
-          @saved="charsData = $event" />
+          :can-edit="canEdit" @saved="charsData = $event" />
         <ToggleConcernsButton class="ml-2" v-model="showComments" :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys" :camelot="camelot" />
         <TableColumnFilter class="ml-2" :all-columns="filterableColumns" v-model="visibleColumnKeys" />
@@ -25,6 +25,7 @@
 
         <template v-slot:cell(edit)="data">
           <b-button
+            v-if="canEdit"
             size="sm"
             variant="outline-primary"
             class="mr-1 d-inline-flex align-items-center"
@@ -104,6 +105,7 @@
 
         <template v-slot:cell(actions)="data">
           <b-button
+            v-if="canEdit"
             size="sm"
             variant="outline-primary"
             class="mr-1 d-inline-flex align-items-center"
@@ -116,7 +118,7 @@
             <font-awesome-icon v-if="isRefLocked(data.item.id)" icon="user" class="ml-1" />
             <font-awesome-icon v-else icon="edit" class="ml-1" />
           </b-button>
-          <b-button size="sm" variant="danger" @click="deleteReference(data.item)">
+          <b-button v-if="canEdit" size="sm" variant="danger" @click="deleteReference(data.item)">
             {{ $t('camelot.step_three.delete_button') }}
           </b-button>
         </template>
@@ -155,6 +157,10 @@ export default {
     type: {
       type: String,
       default: 'isoqf_characteristics'
+    },
+    canEdit: {
+      type: Boolean,
+      default: false
     }
   },
   watch: {
@@ -404,6 +410,9 @@ export default {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
     editReference(item) {
+      if (!this.canEdit) {
+        return
+      }
       this.currentItem = { ...item }
       this.$nextTick(() => {
         if (this.$refs.editReferenceModal) {
@@ -439,6 +448,9 @@ export default {
       this.$forceUpdate()
     },
     deleteReference(item) {
+      if (!this.canEdit) {
+        return
+      }
       this.$emit('delete-reference', item)
     },
 

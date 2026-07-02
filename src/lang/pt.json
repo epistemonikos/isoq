@@ -262,7 +262,9 @@
     "ref_conflict_title": "Alterações não salvas",
     "ref_conflict_message": "Enquanto você estava desconectado, {user} editou este estudo. Suas alterações não foram salvas. Você pode copiá-las e aplicá-las manualmente.",
     "ref_conflict_copy_field": "Copiar",
-    "ref_conflict_close": "Fechar"
+    "ref_conflict_close": "Fechar",
+    "permissions_revoked": "Seu acesso a este projeto mudou para somente leitura.",
+    "permissions_granted": "Agora você tem acesso de edição a este projeto."
   },
   "project": {
     "notifications": {

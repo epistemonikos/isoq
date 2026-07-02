@@ -219,7 +219,16 @@ describe('EditReferenceModal.vue', () => {
       await flushPromises()
       expect(wrapper.vm.isReadOnly).toBe(true)
       expect(wrapper.vm.lockedByUser).toBe('Ana López')
-      expect(wrapper.vm.$notify.warning).toHaveBeenCalled()
+      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by')
+    })
+
+    it('deshabilita edición SIN nombre de usuario y avisa "permisos revocados" cuando acquireRef retorna permissionDenied (403)', async () => {
+      LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
+      await wrapper.vm.onModalShown()
+      await flushPromises()
+      expect(wrapper.vm.isReadOnly).toBe(true)
+      expect(wrapper.vm.lockedByUser).toBeNull()
+      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
     })
 
     it('llama releaseRef en resetModal', () => {

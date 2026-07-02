@@ -72,4 +72,35 @@ describe('CamelotAssessmentCard.vue', () => {
     expect(wrapper.emitted('save-field')).toBeTruthy()
     expect(wrapper.emitted('save-field')[0][0]).toBe('Updated data')
   })
+
+  describe('isReadOnly gating (read-only user protection)', () => {
+    function createWrapper (isReadOnly) {
+      return mount(CamelotAssessmentCard, {
+        localVue,
+        propsData: { ...propsData, isReadOnly },
+        mocks: { $t: (msg) => msg },
+        stubs: { 'font-awesome-icon': true }
+      })
+    }
+
+    it('defaults isReadOnly to false when not provided', () => {
+      expect(wrapper.vm.isReadOnly).toBe(false)
+    })
+
+    it('hides both edit buttons when isReadOnly is true', () => {
+      const readOnlyWrapper = createWrapper(true)
+      expect(readOnlyWrapper.findAll('.edit-btn-thin').length).toBe(0)
+    })
+
+    it('shows both edit buttons when isReadOnly is false (regression)', () => {
+      const editableWrapper = createWrapper(false)
+      expect(editableWrapper.findAll('.edit-btn-thin').length).toBe(2)
+    })
+
+    it('startEditing does not emit start-editing when isReadOnly is true', () => {
+      const readOnlyWrapper = createWrapper(true)
+      readOnlyWrapper.vm.startEditing('extractedData')
+      expect(readOnlyWrapper.emitted('start-editing')).toBeFalsy()
+    })
+  })
 })

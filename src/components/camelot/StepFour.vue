@@ -7,7 +7,7 @@
       <camelot-step-four-header :responses="ui.responses" :export-fields="exportFields" :export-items="exportItems" />
 
       <camelot-step-four-table :fields="ui.fields" :items="tableItems" :responses="ui.responses"
-        :active-ref-locks="activeRefLocks" @open-modal="onOpenModal" />
+        :active-ref-locks="activeRefLocks" :can-edit="canEdit" @open-modal="onOpenModal" />
     </div>
 
     <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
@@ -45,7 +45,8 @@
                     :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
                     :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
-                    :editing-field="editingField" :is-saving="isSavingField" @start-editing="onStartEditing"
+                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="isRefReadOnly"
+                    @start-editing="onStartEditing"
                     @cancel-editing="onCancelEditing" @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                 </div>
               </b-col>
@@ -88,7 +89,7 @@
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
                             :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
-                            :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                            :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                             @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                         </b-col>
 
@@ -120,7 +121,7 @@
                       :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
                       :concerns="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -136,7 +137,7 @@
                       :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
                       :concerns="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -285,6 +286,10 @@ export default {
     references: {
       type: Array,
       required: true
+    },
+    canEdit: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
@@ -781,10 +786,24 @@ export default {
     },
     async acquireStudyLock(refId) {
       if (!refId) return
+      if (!this.canEdit) {
+        this.isRefReadOnly = true
+        this.refLockedBy = null
+        return
+      }
       const result = await LockService.acquireRef(this.$route.params.id, refId)
       if (result.success) {
         this.isRefReadOnly = false
         this.refLockedBy = null
+      } else if (result.permissionDenied) {
+        // Nobody else is editing this study — this user's own can_write was
+        // revoked (their canEdit prop just hadn't caught up yet). Don't reuse
+        // the "locked by X" message, there is no X.
+        this.isRefReadOnly = true
+        this.refLockedBy = null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.permissions_revoked'))
+        }
       } else {
         this.isRefReadOnly = true
         this.refLockedBy = result.lockedBy || null
@@ -875,7 +894,7 @@ export default {
       this.cancelEditing()
     },
     saveField(newValue, keepEditing = false) {
-      if (!this.characteristics) return
+      if (!this.characteristics || this.isRefReadOnly) return
 
       this.isSavingField = true
       const { metaIndex, itemIndex, type } = this.editingField

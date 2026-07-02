@@ -2,6 +2,9 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import editList from '@/components/list/editList.vue'
 import BootstrapVue from 'bootstrap-vue'
 import LockService from '@/services/lockService'
+import Api from '@/utils/Api'
+
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [] }),
@@ -204,7 +207,110 @@ describe('editList.vue — beforeDestroy', () => {
     expect(removeSpy).toHaveBeenCalledWith('lock-lost', expect.any(Function))
     expect(removeSpy).toHaveBeenCalledWith('lock-idle', expect.any(Function))
     expect(removeSpy).toHaveBeenCalledWith('axios-refresh-lock', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('permission-denied', expect.any(Function))
     removeSpy.mockRestore()
+  })
+})
+
+// ─── refreshPermissions ──────────────────────────────────────────────────────
+
+describe('editList.vue — refreshPermissions()', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('registers itself as the permission-denied listener on mount', () => {
+    const addSpy = jest.spyOn(window, 'addEventListener')
+    const { wrapper } = createWrapper()
+    expect(addSpy).toHaveBeenCalledWith('permission-denied', wrapper.vm.refreshPermissions)
+    addSpy.mockRestore()
+    wrapper.destroy()
+  })
+
+  it('does nothing when project.id is not set yet', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ project: {} })
+    await wrapper.vm.refreshPermissions()
+    expect(Api.get).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('downgrade: drops mode to view and shows a toast when the user loses can_write while editing', async () => {
+    const { wrapper, bvToastToast } = createWrapper()
+    await wrapper.setData({
+      project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] },
+      list: { organization: 'other_org' },
+      mode: 'edit'
+    })
+    Api.get.mockResolvedValueOnce({ data: { can_write: [], can_read: [42] } })
+
+    await wrapper.vm.refreshPermissions()
+
+    expect(wrapper.vm.project.can_write).toEqual([])
+    expect(wrapper.vm.mode).toBe('view')
+    expect(bvToastToast).toHaveBeenCalledWith('lock.permissions_revoked', expect.objectContaining({
+      title: 'notifications.error'
+    }))
+    wrapper.destroy()
+  })
+
+  it('upgrade: switches mode to edit and shows a toast when the user gains can_write', async () => {
+    const { wrapper, bvToastToast } = createWrapper()
+    await wrapper.setData({
+      project: { id: 'proj1', organization: 'org1', can_write: [], can_read: [42] },
+      list: { organization: 'other_org' },
+      mode: 'view'
+    })
+    Api.get.mockResolvedValueOnce({ data: { can_write: [42], can_read: [42] } })
+
+    await wrapper.vm.refreshPermissions()
+
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(bvToastToast).toHaveBeenCalledWith('lock.permissions_granted', expect.objectContaining({
+      title: 'notifications.success'
+    }))
+    wrapper.destroy()
+  })
+
+  it('no change: does not touch mode or show a toast', async () => {
+    const { wrapper, bvToastToast } = createWrapper()
+    await wrapper.setData({
+      project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] },
+      list: { organization: 'other_org' },
+      mode: 'edit'
+    })
+    Api.get.mockResolvedValueOnce({ data: { can_write: [42], can_read: [] } })
+
+    await wrapper.vm.refreshPermissions()
+
+    expect(wrapper.vm.mode).toBe('edit')
+    expect(bvToastToast).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('re-fetches permissions when the permission-denied window event fires', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      list: { organization: 'other_org' },
+      project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] }
+    })
+    Api.get.mockClear()
+    Api.get.mockResolvedValueOnce({ data: { can_write: [42], can_read: [] } })
+
+    window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url: '/isoqf_findings/f1', method: 'patch' } }))
+    await flushPromises()
+
+    expect(Api.get).toHaveBeenCalledWith('/isoqf_projects/proj1', expect.any(Object))
+    wrapper.destroy()
+  })
+
+  it('fails silently when the request errors', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ project: { id: 'proj1', organization: 'org1', can_write: [42], can_read: [] }, mode: 'edit' })
+    Api.get.mockRejectedValueOnce(new Error('network error'))
+
+    await expect(wrapper.vm.refreshPermissions()).resolves.not.toThrow()
+    expect(wrapper.vm.mode).toBe('edit')
+    wrapper.destroy()
   })
 })
 

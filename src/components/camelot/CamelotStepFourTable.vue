@@ -51,7 +51,7 @@
     </template>
     <template v-slot:cell(edit1)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn"
+        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(0, data)" class="edit-btn"
           :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
           {{ $t('common.edit') }}
           <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
@@ -88,7 +88,7 @@
     </template>
     <template v-slot:cell(edit2)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn"
+        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(1, data)" class="edit-btn"
           :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
           {{ $t('common.edit') }}
           <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
@@ -107,7 +107,7 @@
     </template>
     <template v-slot:cell(edit3)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn"
+        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(2, data)" class="edit-btn"
           :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
           {{ $t('common.edit') }}
           <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
@@ -126,7 +126,7 @@
     </template>
     <template v-slot:cell(edit4)="data">
       <div class="d-flex justify-content-center align-items-center">
-        <b-button size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn"
+        <b-button v-if="canEdit" size="sm" variant="outline-primary" @click="openModal(3, data)" class="edit-btn"
           :disabled="isRefLocked(data.item.ref_id)" v-b-tooltip.hover :title="refLockedByName(data.item.ref_id)">
           {{ $t('common.edit') }}
           <font-awesome-icon v-if="isRefLocked(data.item.ref_id)" icon="user" class="ml-1" />
@@ -148,7 +148,8 @@ export default {
     fields: { type: Array, required: true },
     items: { type: Array, required: true },
     responses: { type: Array, required: true },
-    activeRefLocks: { type: Array, default: () => [] }
+    activeRefLocks: { type: Array, default: () => [] },
+    canEdit: { type: Boolean, default: false }
   },
   methods: {
     isRefLocked(refId) {

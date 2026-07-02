@@ -1,6 +1,6 @@
 <template>
   <div class="d-inline-block">
-    <b-button variant="primary" size="sm" @click="openColumnsModal">
+    <b-button v-if="canEdit" variant="primary" size="sm" @click="openColumnsModal">
       {{ $t('camelot.step_three.add_edit_columns') }}
       <font-awesome-icon icon="plus" class="ml-1" />
     </b-button>
@@ -54,6 +54,10 @@ export default {
     visibleColumnKeys: {
       type: Array,
       required: true
+    },
+    canEdit: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -64,6 +68,9 @@ export default {
   },
   methods: {
     openColumnsModal() {
+      if (!this.canEdit) {
+        return
+      }
       this.columnDefinitions = []
       if (this.charsData && this.charsData.fields) {
         for (const field of this.charsData.fields) {
@@ -116,6 +123,10 @@ export default {
       this.isSavingColumns = false
     },
     handleSaveColumns(bvModalEvt) {
+      if (!this.canEdit) {
+        if (bvModalEvt) bvModalEvt.preventDefault()
+        return
+      }
       if (bvModalEvt) {
         bvModalEvt.preventDefault()
       }

@@ -17,13 +17,13 @@
         </b-row>
         <b-nav id="tabsTitle" tabs fill class="pt-3">
           <b-nav-item :active="(tabOpened === 0) ? true : false" @click="clickTab(0)">{{ $t('project.properties')
-          }}</b-nav-item>
+            }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 1) ? true : false" @click="clickTab(1)">{{ $t('project.my_data')
-          }}</b-nav-item>
+            }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 2) ? true : false" :disabled="(references.length) ? false : true"
             @click="clickTab(2)">{{ $t('project.isoq') }}</b-nav-item>
           <b-nav-item :active="(tabOpened === 3) ? true : false" @click="clickTab(3)">{{ $t('project.guidance_applying')
-          }}</b-nav-item>
+            }}</b-nav-item>
         </b-nav>
       </div>
     </b-container>
@@ -55,7 +55,7 @@
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_2') || 'Step 2'
-                      }}</a>
+                        }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -63,17 +63,17 @@
               <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length ? false : true">
                 <div>
                   <InclusionExclusioCriteria :canEdit="isEditing" :project="project" :ui="ui"
-                    @update-modification="updateModificationTime()"
-                    @criteria-saved="onCriteriaSaved($event)"></InclusionExclusioCriteria>
+                    @update-modification="updateModificationTime()" @criteria-saved="onCriteriaSaved($event)">
+                  </InclusionExclusioCriteria>
                   <div class="mt-3">
                     <b-row>
                       <b-col cols="auto" class="mr-auto">
                         <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_1') || 'Step 1'
-                        }}</a>
+                          }}</a>
                       </b-col>
                       <b-col cols="auto">
                         <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_3') || 'Step 3'
-                        }}</a>
+                          }}</a>
                       </b-col>
                     </b-row>
                   </div>
@@ -88,7 +88,8 @@
                   {{ $t('characteristics.description') }}
                 </p>
                 <template v-if="project.use_camelot">
-                  <CamelotStepThree type="isoqf_characteristics" :references="references"></CamelotStepThree>
+                  <CamelotStepThree type="isoqf_characteristics" :references="references" :canEdit="isEditing">
+                  </CamelotStepThree>
                 </template>
                 <template v-else>
                   <crudTables type="isoqf_characteristics" prefix="ch" :canEdit="isEditing" :project="project" :ui="ui"
@@ -100,11 +101,11 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_2') || 'Step 2'
-                      }}</a>
+                        }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <a class="btn btn-success text-white" @click="stepStage++">{{ $t('common.step_4') || 'Step 4'
-                      }}</a>
+                        }}</a>
                     </b-col>
                   </b-row>
                 </div>
@@ -118,7 +119,8 @@
                   {{ $t('steps.step_4_long_description') }}
                 </p>
                 <template v-if="project.use_camelot">
-                  <CamelotStepFour type="isoqf_methodological" :references="references"></CamelotStepFour>
+                  <CamelotStepFour type="isoqf_methodological" :references="references" :canEdit="isEditing">
+                  </CamelotStepFour>
                 </template>
                 <template v-else>
                   <crudTables type="isoqf_assessments" prefix="as" :canEdit="isEditing" :project="project" :ui="ui"
@@ -130,7 +132,7 @@
                   <b-row>
                     <b-col cols="auto" class="mr-auto">
                       <a class="btn btn-success text-white" @click="stepStage--">{{ $t('common.step_3') || 'Step 3'
-                      }}</a>
+                        }}</a>
                     </b-col>
                     <b-col cols="auto">
                       <b-button block variant="success" class="mb-3" @click="continueToIsoq">
@@ -200,7 +202,7 @@
                   </b-col>
                   <b-col cols="12" md="4" class="toDoc">
                     <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review')
-                    }}
+                      }}
                     </h5>
                     <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                       <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
@@ -308,9 +310,9 @@
             <template v-if="checkPermissions(['can_read', 'can_write'])">
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
-                :mode="effectiveMode" :isBusy="table_settings.isBusy" :references="references" :refs="refs"
-                :filter="table_settings.filter" @update-modification-time="updateModificationTime" @get-lists="getLists"
-                @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
+                :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :references="references"
+                :refs="refs" :filter="table_settings.filter" @update-modification-time="updateModificationTime"
+                @get-lists="getLists" @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
                 @set-load-references="statusLoadReferences" @get-references="getReferences"
                 @update-project-status="getProject" />
             </template>
@@ -400,13 +402,13 @@
               <template v-slot:modal-footer>
                 <div v-if="modal_edit_list_categories.remove">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-danger" @click="removeCategory()">{{ $t('common.confirm') || 'Confirm'
-                  }}</b-button>
+                    }}</b-button>
                 </div>
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
@@ -419,7 +421,7 @@
                 </div>
                 <div v-if="modal_edit_list_categories.edit">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
-                  }}</b-button>
+                    }}</b-button>
                   <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
@@ -701,6 +703,10 @@ export default {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
+    // A write was rejected with 403 somewhere in the app (project properties,
+    // a finding save, a ref-lock attempt, etc.) — re-check this user's permission
+    // right away instead of waiting for them to navigate to a different tab/step.
+    window.addEventListener('permission-denied', this.refreshPermissions)
 
     // Load categories first as they are needed for sorting findings
     await this.getListCategories()
@@ -717,6 +723,7 @@ export default {
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)
+    window.removeEventListener('permission-denied', this.refreshPermissions)
   },
   methods: {
     setBusy: function (value) {
@@ -799,6 +806,12 @@ export default {
               _project.license_type = 'CC-BY-NC-ND'
             }
           }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
+            _project.can_write = []
+          }
+          if (!Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
+            _project.can_read = []
+          }
           this.project = _project
           // set mode based on permissions: prefer write -> edit, otherwise read -> view
           if (this.checkPermissions('can_write')) {
@@ -822,6 +835,44 @@ export default {
           }
           Commons.printErrors(error)
         })
+    },
+    // Re-checks this user's can_write/can_read against the server without a full
+    // reload, so a permission change made by the project owner while this user has
+    // the project open takes effect on their next tab/step navigation.
+    refreshPermissions: async function () {
+      const params = {
+        organization: this.$route.params.org_id
+      }
+      try {
+        const response = await Api.get(`/isoqf_projects/${this.$route.params.id}`, params)
+        const wasWrite = this.checkPermissions('can_write')
+        this.$set(this.project, 'can_write', response.data.can_write)
+        this.$set(this.project, 'can_read', response.data.can_read)
+        const isWriteNow = this.checkPermissions('can_write')
+
+        if (wasWrite && !isWriteNow) {
+          // Lost write access while in edit mode
+          if (this.mode === 'edit') {
+            this.mode = 'view'
+            this.$bvToast.toast(this.$t('lock.permissions_revoked'), {
+              title: this.$t('notifications.error'),
+              variant: 'danger',
+              solid: true
+            })
+          }
+        } else if (!wasWrite && isWriteNow) {
+          // Gained write access: drop the user straight into edit mode so the
+          // toast's promise ("you can edit now") holds without an extra click.
+          this.mode = 'edit'
+          this.$bvToast.toast(this.$t('lock.permissions_granted'), {
+            title: this.$t('notifications.success'),
+            variant: 'success',
+            solid: true
+          })
+        }
+      } catch (error) {
+        console.warn('refreshPermissions failed', error)
+      }
     },
     getCharacteristicsData: async function () {
       const params = {
@@ -1753,11 +1804,13 @@ export default {
       if (index !== -1) {
         this.tabOpened = index
       }
+      this.refreshPermissions()
     },
     '$route.query.step': function (val) {
       if (val) {
         this.stepStage = parseInt(val) - 1
       }
+      this.refreshPermissions()
     },
     '$route.params.id': {
       handler: function (id) {

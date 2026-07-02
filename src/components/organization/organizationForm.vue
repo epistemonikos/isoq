@@ -530,6 +530,15 @@ export default {
           }
         }
       } catch (error) {
+        if (error.response && error.response.status === 403) {
+          // Distinguish "you no longer have can_write" from any other save
+          // error — the generic messages below don't tell the user why nothing
+          // was saved, and Api.js's interceptor already dispatched
+          // 'permission-denied' so viewProject.vue is refreshing this user's
+          // permission/UI state right now.
+          this.$notify.error(this.$t('lock.permissions_revoked'))
+          return
+        }
         if (error.response && error.response.data) {
           const errData = error.response.data
           if (errData.type === 'missing_fields' && Array.isArray(errData.fields)) {

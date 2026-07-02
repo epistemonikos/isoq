@@ -18,10 +18,10 @@ jest.mock('@/services/lockService', () => ({
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
 
-function createWrapper () {
+function createWrapper (overrideProps = {}) {
   return shallowMount(StepFour, {
     localVue,
-    propsData: { type: 'isoqf_assessments', references: [] },
+    propsData: { type: 'isoqf_assessments', references: [], canEdit: true, ...overrideProps },
     mocks: {
       $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key,
       $route: { params: { id: 'proj1', org_id: 'org1' } },
@@ -86,7 +86,18 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     await wrapper.vm.acquireStudyLock('ref1')
     expect(wrapper.vm.isRefReadOnly).toBe(true)
     expect(wrapper.vm.refLockedBy).toBe('Ana López')
-    expect(wrapper.vm.$notify.warning).toHaveBeenCalled()
+    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
+    wrapper.destroy()
+  })
+
+  it('marca isRefReadOnly SIN nombre de usuario y notifica "permisos revocados" cuando el lock devuelve permissionDenied (403)', async () => {
+    LockService.acquireRef.mockResolvedValue({ success: false, permissionDenied: true })
+    const wrapper = createWrapper()
+    await flushPromises()
+    await wrapper.vm.acquireStudyLock('ref1')
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(wrapper.vm.refLockedBy).toBeNull()
+    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
     wrapper.destroy()
   })
 
@@ -101,6 +112,44 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     expect(wrapper.vm.isRefReadOnly).toBe(false)
     expect(wrapper.vm.refLockedBy).toBeNull()
     expect(LockService.fetchRefLocks).toHaveBeenCalledWith('proj1')
+    wrapper.destroy()
+  })
+})
+
+describe('StepFour.vue — canEdit gating (read-only user protection)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  it('acquireStudyLock no llama a LockService.acquireRef cuando canEdit es false', async () => {
+    const wrapper = createWrapper({ canEdit: false })
+    await flushPromises()
+    await wrapper.vm.acquireStudyLock('ref1')
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(wrapper.vm.refLockedBy).toBeNull()
+    wrapper.destroy()
+  })
+
+  it('openModal deja el assessment en solo lectura cuando canEdit es false, sin tomar el lock', async () => {
+    const wrapper = createWrapper({ canEdit: false })
+    await flushPromises()
+    const showSpy = jest.spyOn(wrapper.vm.$bvModal, 'show')
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(showSpy).toHaveBeenCalledWith('modal-1')
+    wrapper.destroy()
+  })
+
+  it('acquireStudyLock sigue adquiriendo el lock cuando canEdit es true (regresión)', async () => {
+    const wrapper = createWrapper({ canEdit: true })
+    await flushPromises()
+    await wrapper.vm.acquireStudyLock('ref1')
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    expect(wrapper.vm.isRefReadOnly).toBe(false)
     wrapper.destroy()
   })
 })

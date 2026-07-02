@@ -83,6 +83,17 @@ axios.interceptors.response.use(
                 window.dispatchEvent(new CustomEvent('axios-refresh-lock'))
              }
         }
+
+        // A 403 on any write request means the user's can_write/can_read may have
+        // just changed server-side (e.g. the project owner revoked their access
+        // while they still had an editor open). Unlike the two checks above, this
+        // is intentionally broad — it doesn't try to guess *why* the 403 happened —
+        // so any listener (viewProject.vue, editList.vue) can re-check permissions
+        // and lock the UI down without waiting for the user to navigate.
+        const isWriteMethod = ['post', 'patch', 'put', 'delete'].includes(method)
+        if (error.response.status === 403 && isWriteMethod && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url, method } }))
+        }
     }
     return Promise.reject(error)
   }

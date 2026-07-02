@@ -201,6 +201,14 @@ export default {
       if (result.success) {
         this.isReadOnly = false
         this.lockedByUser = null
+      } else if (result.permissionDenied) {
+        // Nobody else is editing this study — this user's own can_write was
+        // revoked. Don't reuse the "locked by X" message, there is no X.
+        this.isReadOnly = true
+        this.lockedByUser = null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.permissions_revoked'))
+        }
       } else {
         this.isReadOnly = true
         this.lockedByUser = result.lockedBy || null
