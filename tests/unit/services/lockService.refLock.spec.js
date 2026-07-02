@@ -24,6 +24,7 @@ beforeEach(() => {
   LockService.refLocked = false
   LockService.refLockedBy = null
   LockService.refHeartbeatTimer = null
+  global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
 })
 
 describe('LockService.acquireRef()', () => {
@@ -58,23 +59,21 @@ describe('LockService.acquireRef()', () => {
 })
 
 describe('LockService.releaseRef()', () => {
-  it('llama DELETE y limpia estado', async () => {
-    axios.delete.mockResolvedValue({})
+  it('llama DELETE con keepalive y limpia estado', async () => {
     LockService.currentRef = { projectId: 'proj1', refId: 'ref1' }
     LockService.refLocked = true
 
     await LockService.releaseRef()
 
-    expect(axios.delete).toHaveBeenCalledWith(
+    expect(global.fetch).toHaveBeenCalledWith(
       '/api/lock/proj1/ref/ref1',
-      expect.objectContaining({ headers: expect.any(Object) })
+      expect.objectContaining({ method: 'DELETE', keepalive: true, headers: expect.any(Object) })
     )
     expect(LockService.currentRef).toBeNull()
     expect(LockService.refLocked).toBe(false)
   })
 
   it('dispara el evento ref-locks-changed tras liberar', async () => {
-    axios.delete.mockResolvedValue({})
     const spy = jest.spyOn(window, 'dispatchEvent')
     LockService.currentRef = { projectId: 'proj1', refId: 'ref1' }
     LockService.refLocked = true

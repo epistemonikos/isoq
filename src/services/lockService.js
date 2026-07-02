@@ -32,6 +32,15 @@ class LockService {
           this.release()
         }
       })
+
+      // Best-effort release when the tab is closed/navigated away from while
+      // holding a lock. Uses 'pagehide' (bfcache-safe) rather than
+      // 'beforeunload'. Won't help against a hard crash/power-off — that
+      // requires a server-side heartbeat TTL.
+      window.addEventListener('pagehide', () => {
+        if (this.isLocked) this.release()
+        if (this.refLocked) this.releaseRef()
+      })
     }
   }
 
@@ -84,18 +93,14 @@ class LockService {
     // We also check if l_s exists in localStorage as a double check
     if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
       try {
-        // Use beacon or standard request?
-        // Standard request is fine, but if page is closing, sendBeacon is better.
-        // For now simple axios.
-        await axios.delete(`/api/lock/${projectId}`, {
+        // keepalive ensures the browser still sends this request even if the
+        // page is being unloaded (tab close, navigation) right after this call.
+        await fetch(`/api/lock/${projectId}`, {
+          method: 'DELETE',
           headers: Api.getHeaders(),
-
+          keepalive: true
         })
       } catch (e) {
-        // Silently ignore 401 errors during release as they often happen during logout
-        if (e.response && e.response.status === 401) {
-          return
-        }
         console.error('Error releasing lock', e)
       }
     }
@@ -209,11 +214,12 @@ class LockService {
 
     if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
       try {
-        await axios.delete(`/api/lock/${projectId}/ref/${refId}`, {
-          headers: Api.getHeaders()
+        await fetch(`/api/lock/${projectId}/ref/${refId}`, {
+          method: 'DELETE',
+          headers: Api.getHeaders(),
+          keepalive: true
         })
       } catch (e) {
-        if (e.response && e.response.status === 401) return
         console.error('Error releasing ref lock', e)
       }
     }

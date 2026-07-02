@@ -39,7 +39,8 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         warnings: false,
         errors: true
       },
-      logging: 'warn'
+      logging: 'warn',
+      webSocketURL: 'ws://episte.lo:8090/ws'
     },
     webSocketServer: 'ws'
   },

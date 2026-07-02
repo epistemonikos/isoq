@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 import * as Sentry from '@sentry/vue'
 
 Vue.use(Vuex)
@@ -117,13 +118,18 @@ export const store = new Vuex.Store({
     },
     logout ({commit}) {
       return new Promise((resolve, reject) => {
-        Api.get('/auth/logout').then(() => {
-          commit('logout')
-          // Al desloguearse, resetear el promise para que la próxima navegación dispare getLogginInfo
-          commit('save_promise', null)
-          resolve()
-        }).catch((error) => {
-          reject(error)
+        // Release any held project lock while the token is still valid —
+        // once 'logout' is committed, localStorage.l_s is cleared and the
+        // release request would be sent without auth.
+        LockService.release().catch(() => {}).finally(() => {
+          Api.get('/auth/logout').then(() => {
+            commit('logout')
+            // Al desloguearse, resetear el promise para que la próxima navegación dispare getLogginInfo
+            commit('save_promise', null)
+            resolve()
+          }).catch((error) => {
+            reject(error)
+          })
         })
       })
     },

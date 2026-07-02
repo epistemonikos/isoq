@@ -9,8 +9,16 @@ jest.mock('@/utils/Api', () => ({
   }
 }))
 
+jest.mock('@/services/lockService', () => ({
+  __esModule: true,
+  default: {
+    release: jest.fn(() => Promise.resolve())
+  }
+}))
+
 import { store, parseUserFromResponse } from '@/store'
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -185,6 +193,39 @@ describe('Vuex store', () => {
     it('removes user-data from localStorage', () => {
       store.commit('logout')
       expect(localStorage.getItem('user-data')).toBeNull()
+    })
+  })
+
+  // ─── Action: logout ────────────────────────────────────────────────────────
+
+  describe('action: logout', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+      store.replaceState(loggedInState())
+      localStorage.setItem('l_s', 'some-token')
+      Api.get.mockResolvedValue({ data: {} })
+    })
+
+    it('releases the project lock before the auth token is cleared', async () => {
+      let tokenAtReleaseTime
+      LockService.release.mockImplementation(() => {
+        tokenAtReleaseTime = localStorage.getItem('l_s')
+        return Promise.resolve()
+      })
+
+      await store.dispatch('logout')
+
+      expect(LockService.release).toHaveBeenCalled()
+      expect(tokenAtReleaseTime).toBe('some-token')
+      expect(localStorage.getItem('l_s')).toBeNull()
+    })
+
+    it('still logs out even if releasing the lock fails', async () => {
+      LockService.release.mockRejectedValue(new Error('network error'))
+
+      await store.dispatch('logout')
+
+      expect(store.state.token).toBeNull()
     })
   })
 
