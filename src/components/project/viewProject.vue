@@ -225,7 +225,7 @@
                     <p v-if="project.description">{{project.description}}</p>
 
                     <template v-if="project.public_type !== 'private'">
-                      <h5>License</h5>
+                      <h5>Licence</h5>
                       <p>{{ project.license_type }}</p>
                     </template>
                   </b-col>

@@ -22,7 +22,7 @@
             <p>{{ formData.complete_by_author ? 'Yes' : 'No' }}</p>
             <p v-if="!formData.complete_by_author"><b>{{ $t('Please list the authors of this iSoQ') }}</b></p>
             <p v-if="!formData.complete_by_author">{{ formData.lists_authors }}</p>
-            <p><b>{{ $t('License') }}</b></p>
+            <p><b>{{ $t('Licence') }}</b></p>
             <p>{{ formData.license_type }}</p>
             <p><b>{{ $t('Additional information') }}</b></p>
             <p>{{ formData.description }}</p>
@@ -183,7 +183,7 @@
             <b-form-group
               label-for="select-project-list-license">
               <template v-slot:label>
-                Choose a license
+                Choose a licence
               </template>
               <b-select
                 :disabled="!canWrite"
@@ -193,7 +193,7 @@
                 v-model="formData.license_type"
                 :options="global_licenses"></b-select>
             </b-form-group>
-            <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a license') }}</b-form-invalid-feedback>
+            <b-form-invalid-feedback :state="state.license">{{ $t('The project must have a licence') }}</b-form-invalid-feedback>
             <p v-for="license of global_licenses" :key="license.value">
               <span v-if="license.value === formData.license_type">
                 <b>Explanation:</b> {{ license.explanation }}
@@ -206,7 +206,7 @@
             <b-form-textarea
               :disabled="!canWrite"
               id="input-project-list-description"
-              placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organization or government"
+              placeholder="Add any additional information important to your review, for example, if it was part of a guidelines process or commissioned by an organisation or government"
               v-model="formData.description"
               rows="6"
               max-rows="100"></b-form-textarea>
@@ -282,12 +282,12 @@ export default {
         { value: true, text: 'yes' }
       ],
       global_licenses: [
-        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND', explanation: 'This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-ND', text: 'CC BY-ND', explanation: 'This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY-NC', text: 'CC BY-NC', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-SA', text: 'CC BY-SA', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY', explanation: 'This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND', explanation: 'This licence allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-ND', text: 'CC BY-ND', explanation: 'This licence allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The licence allows for commercial use.' },
+        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA', explanation: 'This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY-NC', text: 'CC BY-NC', explanation: 'This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-SA', text: 'CC BY-SA', explanation: 'This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The licence allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY', text: 'CC BY', explanation: 'This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The licence allows for commercial use.' }
       ],
       state: {
         id: null,

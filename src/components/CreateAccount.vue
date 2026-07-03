@@ -100,7 +100,7 @@
                     <b-form-checkbox v-model="user.newsletter"> I agree to receive email communications about important service updates and news (optional)</b-form-checkbox>
                   </p>
                   <p>
-                    <b-form-checkbox v-model="user.improvement"> I agree to the use of my data in aggregated and anonymized form to help improve the service (optional)</b-form-checkbox>
+                    <b-form-checkbox v-model="user.improvement"> I agree to the use of my data in aggregated and anonymised form to help improve the service (optional)</b-form-checkbox>
                   </p>
                 </div>
                 <div class="text-center">

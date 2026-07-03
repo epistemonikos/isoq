@@ -214,7 +214,7 @@ export default {
                           new Paragraph({
                             children: [
                               new TextRun({
-                                text: 'Summarized Review Finding',
+                                text: 'Summarised Review Finding',
                                 bold: true,
                                 size: 22
                               })

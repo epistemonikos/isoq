@@ -98,7 +98,7 @@
           </div>
           <div v-if="list.is_public">
             <div class="mt-5 alert alert-info" role="alert">
-              <h5>License type</h5>
+              <h5>Licence type</h5>
               <p>{{ theLicense(list.license_type) }}</p>
             </div>
           </div>
@@ -730,7 +730,7 @@ export default {
                   verticalAlign: VerticalAlign.CENTER,
                   shading: { fill: '#EEEEEE' },
                   width: { size: '28%', type: WidthType.PERCENTAGE },
-                  children: [new Paragraph({ children: [new TextRun({ text: 'Summarized Review Finding', bold: true, size: 22 })] })]
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Summarised Review Finding', bold: true, size: 22 })] })]
                 }),
                 new TableCell({
                   verticalAlign: VerticalAlign.CENTER,

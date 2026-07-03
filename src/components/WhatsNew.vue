@@ -47,7 +47,7 @@
       <p class="font-weight-bold">Narrower margins = easier viewing of content</p>
       <ul>
         <li>
-          The margins have been reduced throughout the platform to maximize what you are able to see in tables and modals.
+          The margins have been reduced throughout the platform to maximise what you are able to see in tables and modals.
         </li>
       </ul>
       <p class="font-weight-bold">New section in help tab – iSoQ training</p>

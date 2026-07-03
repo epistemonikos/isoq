@@ -119,8 +119,8 @@
       </b-form-group>
 
       <template v-if="modalProject.public_type !== 'private'">
-        <h5>Choose a license</h5>
-        <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licenses <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
+        <h5>Choose a licence</h5>
+        <p class="font-weight-light">Please choose a Creative Commons licence under which you would like to publish your work to the iSoQ database. The default is CC-BY-NC-ND. Read more about Creative Commons licences <a href="https://creativecommons.org/about/cclicenses/" target="_blnak">here</a>.</p>
         <p class="font-weight-light">It is your responsibility to ensure that publishing your work to the iSoQ database does not violate any existing licencing agreement – e.g. with academic journals or funders.</p>
         <b-form-group>
           <b-form-radio-group
@@ -130,7 +130,7 @@
           @change="state.license_type = null"
           name="modal-radio-license"
           ></b-form-radio-group>
-          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons license.</b-form-invalid-feedback>
+          <b-form-invalid-feedback :state="state.license_type">You must select a Creative Commons licence.</b-form-invalid-feedback>
         </b-form-group>
       </template>
 
@@ -201,12 +201,12 @@ export default {
         { value: 'minimally', text: 'Minimally Public - Your iSoQ table is available on the iSoQ database' }
       ],
       global_licenses: [
-        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-        { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-        { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
+        { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This licence allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-ND', text: 'CC BY-ND: This licence allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The licence allows for commercial use.' },
+        { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY-NC', text: 'CC BY-NC: This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
+        { value: 'CC-BY-SA', text: 'CC BY-SA: This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The licence allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
+        { value: 'CC-BY', text: 'CC BY: This licence allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The licence allows for commercial use.' }
       ],
       yes_or_no: [
         { value: false, text: 'no' },
@@ -823,7 +823,7 @@ export default {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'License',
+                text: 'Licence',
                 bold: true,
                 size: 24
               })

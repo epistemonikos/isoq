@@ -57,7 +57,7 @@
               news (optional)</b-checkbox>
           </li>
           <li>
-            <b-checkbox v-model="improvement">I agree to the use of my data in aggregated and anonymized form to help
+            <b-checkbox v-model="improvement">I agree to the use of my data in aggregated and anonymised form to help
               improve the service (optional)</b-checkbox>
           </li>
         </ul>
