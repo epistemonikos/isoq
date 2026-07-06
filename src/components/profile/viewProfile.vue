@@ -8,7 +8,7 @@
     <b-container class="pt-5 pb-5">
       <p>Manage your information, download your data, configure your privacy settings, contact us, or delete your
         account.</p>
-      <b-alert variant="success" :show="showAlert()" dismissible>{{ msg }}</b-alert>
+      <b-alert :variant="msgVariant" :show="showAlert()" dismissible>{{ msg }}</b-alert>
       <b-card no-body class="p-3">
         <b-table-simple>
           <b-tbody>
@@ -284,6 +284,7 @@ export default {
       new_password: null,
       new_password_repeat: null,
       msg: '',
+      msgVariant: 'success',
       isDisabled: true,
       newsletter: false,
       improvement: false,
@@ -365,6 +366,7 @@ export default {
     },
     update: async function () {
       this.msg = ''
+      this.msgVariant = 'success'
       this.isDisabled = true
       const promises = []
       let passwordPromiseIndex = -1
@@ -410,18 +412,22 @@ export default {
                 break
               case 'password_compromised':
                 this.msg = 'Password has been compromised in known data breaches. Please choose a different password.'
+                this.msgVariant = 'danger'
                 this.checkDisabled()
                 return
               case 'invalid_payload':
                 this.msg = 'Password is empty or invalid.'
+                this.msgVariant = 'danger'
                 this.checkDisabled()
                 return
               case 'error':
                 this.msg = passwordResponse.data.message || 'Failed to update password.'
+                this.msgVariant = 'danger'
                 this.checkDisabled()
                 return
               default:
                 this.msg = 'An unexpected error occurred while updating password.'
+                this.msgVariant = 'danger'
                 this.checkDisabled()
                 return
             }
@@ -436,9 +442,11 @@ export default {
           }
 
           this.msg = `Your ${successMsgs.join(' and ')} ${successMsgs.length > 1 ? 'have' : 'has'} been updated!`
+          this.msgVariant = 'success'
         }
       } catch (error) {
         console.error(error)
+        this.msgVariant = 'danger'
         if (error.response && error.response.data && error.response.data.status === 'password_compromised') {
           this.msg = 'Password has been compromised in known data breaches. Please choose a different password.'
         } else {
