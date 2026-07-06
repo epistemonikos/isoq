@@ -367,6 +367,7 @@ export default {
       this.msg = ''
       this.isDisabled = true
       const promises = []
+      let passwordPromiseIndex = -1
 
       const hasPasswordInput = this.new_password !== null && this.new_password !== ''
       const validPassword = hasPasswordInput && this.new_password === this.new_password_repeat && this.new_password.length >= 8
@@ -379,6 +380,7 @@ export default {
             user_id: this.$store.state.user.id,
             new_password: this.new_password
           }
+          passwordPromiseIndex = promises.length
           promises.push(axios.post(`/users/change_password`, passParams))
         }
 
@@ -392,13 +394,37 @@ export default {
         }
 
         if (promises.length > 0) {
-          await Promise.all(promises)
+          const results = await Promise.all(promises)
 
           let successMsgs = []
+
           if (validPassword) {
-            successMsgs.push('password')
-            this.new_password = null
-            this.new_password_repeat = null
+            const passwordResponse = results[passwordPromiseIndex]
+            const status = passwordResponse.data.status
+
+            switch (status) {
+              case 'success':
+                successMsgs.push('password')
+                this.new_password = null
+                this.new_password_repeat = null
+                break
+              case 'password_compromised':
+                this.msg = 'Password has been compromised in known data breaches. Please choose a different password.'
+                this.checkDisabled()
+                return
+              case 'invalid_payload':
+                this.msg = 'Password is empty or invalid.'
+                this.checkDisabled()
+                return
+              case 'error':
+                this.msg = passwordResponse.data.message || 'Failed to update password.'
+                this.checkDisabled()
+                return
+              default:
+                this.msg = 'An unexpected error occurred while updating password.'
+                this.checkDisabled()
+                return
+            }
           }
 
           if (checkboxesChanged) {
@@ -413,7 +439,11 @@ export default {
         }
       } catch (error) {
         console.error(error)
-        this.msg = 'An error occurred while updating your profile.'
+        if (error.response && error.response.data && error.response.data.status === 'password_compromised') {
+          this.msg = 'Password has been compromised in known data breaches. Please choose a different password.'
+        } else {
+          this.msg = 'An error occurred while updating your profile.'
+        }
       } finally {
         this.checkDisabled()
       }
