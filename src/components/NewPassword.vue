@@ -58,19 +58,20 @@ export default {
   },
   computed: {
     state () {
-      if (this.password === this.repassword && this.password !== '' && this.password.length > 7) {
-        return true
+      if (this.repassword === '') {
+        return null
       }
-      return false
+      return this.password === this.repassword && this.password.length > 7
     },
     invalidMatch () {
-      if (this.password.length > 7) {
+      if (this.repassword === '') {
         return ''
+      } else if (this.password.length <= 7) {
+        return 'Enter a password with at least 8 characters'
       } else if (this.password !== this.repassword) {
         return 'Password mismatch'
-      } else {
-        return 'Enter a password with at least 8 characters'
       }
+      return ''
     },
     validMatch () {
       return this.state ? 'Match' : ''
