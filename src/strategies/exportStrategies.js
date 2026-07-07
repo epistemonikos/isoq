@@ -308,7 +308,8 @@ export class IsoQExportStrategy extends BaseExportStrategy {
                     new TextRun({
                         text: this.getConcernLevelText(data?.option),
                         bold: true,
-                        size: 22
+                        size: 22,
+                        font: { name: 'Calibri' }
                     })
                 ]
             })
@@ -320,7 +321,8 @@ export class IsoQExportStrategy extends BaseExportStrategy {
                 children: [
                     new TextRun({
                         text: `${this.t('common.explanation')}: ${displayExplanation(concernType, data.option, data.explanation)}`,
-                        size: 20
+                        size: 20,
+                        font: { name: 'Calibri' }
                     })
                 ]
             }))
@@ -409,7 +411,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
                     new TextRun({
                         text: this.project.name,
                         size: 24,
-                        font: { name: 'Times New Roman' },
+                        font: { name: 'Calibri' },
                         color: '000000'
                     })
                 ]
@@ -927,7 +929,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
                     new TextRun({
                         text: Object.prototype.hasOwnProperty.call(this.project, 'license_type') ? this.license : '',
                         size: 20,
-                        font: { name: 'Times New Roman' },
+                        font: { name: 'Calibri' },
                         color: '000000'
                     })
                 ]

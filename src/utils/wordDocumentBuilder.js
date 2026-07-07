@@ -40,7 +40,7 @@ export class WordDocumentBuilder {
     this.currentSection = null
     this.options = {
       defaultFontSize: 24,
-      defaultFont: 'Times New Roman',
+      defaultFont: 'Calibri',
       margins: {
         top: 720,
         right: 720,

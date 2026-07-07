@@ -50,17 +50,17 @@ export function createParagraph (text, options = {}) {
   return new Paragraph({
     alignment,
     heading,
-    children: [new TextRun({ text, size, bold })]
+    children: [new TextRun({ text, size, bold, font: { name: 'Calibri' } })]
   })
 }
 
 export function createInfoParagraph (label, content) {
   return [
     new Paragraph({
-      children: [new TextRun({ text: label, bold: true, size: 24 })]
+      children: [new TextRun({ text: label, bold: true, size: 24, font: { name: 'Calibri' } })]
     }),
     new Paragraph({
-      children: [new TextRun({ text: content || '', size: 24 })]
+      children: [new TextRun({ text: content || '', size: 24, font: { name: 'Calibri' } })]
     })
   ]
 }
@@ -69,12 +69,12 @@ export function createDocumentHeader (projectName, title, size = 36) {
   return [
     new Paragraph({
       heading: HeadingLevel.HEADING_2,
-      children: [new TextRun({ text: projectName, bold: true, size, font: { name: 'Times New Roman' }, color: '000000' })]
+      children: [new TextRun({ text: projectName, bold: true, size, font: { name: 'Calibri' }, color: '000000' })]
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
       heading: HeadingLevel.HEADING_2,
-      children: [new TextRun({ text: title, bold: true, size, font: { name: 'Times New Roman' }, color: '000000' })]
+      children: [new TextRun({ text: title, bold: true, size, font: { name: 'Calibri' }, color: '000000' })]
     }),
     new Paragraph('')
   ]
