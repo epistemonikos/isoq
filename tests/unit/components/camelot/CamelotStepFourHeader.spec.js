@@ -36,9 +36,10 @@ describe('CamelotStepFourHeader.vue', () => {
     expect(wrapper.find('exportcsvbutton-stub').exists() || wrapper.find('export-c-s-v-button-stub').exists()).toBe(true)
   })
 
-  it('contains ExportCSVButton with mr-auto class', () => {
-    const button = wrapper.find('exportcsvbutton-stub').exists() ? wrapper.find('exportcsvbutton-stub') : wrapper.find('export-c-s-v-button-stub')
-    expect(button.classes()).toContain('mr-auto')
+  it('aligns all buttons to the right with justify-content-end', () => {
+    const container = wrapper.find('.d-flex')
+    expect(container.classes()).toContain('justify-content-end')
+    expect(container.classes()).toContain('align-items-end')
   })
 
   it('toggles showLegend when dropdown events occur', async () => {
