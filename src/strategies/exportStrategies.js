@@ -962,28 +962,31 @@ export class CamelotExportStrategy extends BaseExportStrategy {
     }
 
     createExplanationCell(type, data) {
-        return new TableCell({
-            children: [
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: this.displaySelectedOption(data.option),
-                            bold: true,
-                            size: 22
-                        })
-                    ]
-                }),
-                new Paragraph(''),
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: `${this.t('common.explanation_colon')} ${displayExplanation(type, data.option, data.explanation)}`,
-                            size: 22
-                        })
-                    ]
-                })
-            ]
-        })
+        const children = [
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: this.displaySelectedOption(data.option),
+                        bold: true,
+                        size: 22
+                    })
+                ]
+            })
+        ]
+
+        if (data.explanation) {
+            children.push(new Paragraph(''))
+            children.push(new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `${this.t('common.explanation_colon')} ${displayExplanation(type, data.option, data.explanation)}`,
+                        size: 22
+                    })
+                ]
+            }))
+        }
+
+        return new TableCell({ children })
     }
 
     createCerqualCell(data) {
