@@ -320,7 +320,7 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             children.push(new Paragraph({
                 children: [
                     new TextRun({
-                        text: `${this.t('common.explanation')}: ${displayExplanation(concernType, data.option, data.explanation)}`,
+                        text: `${this.t('common.explanation_colon')} ${displayExplanation(concernType, data.option, data.explanation)}`,
                         size: 20,
                         font: { name: 'Calibri' }
                     })
