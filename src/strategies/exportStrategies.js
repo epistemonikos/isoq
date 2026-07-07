@@ -977,7 +977,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
                 new Paragraph({
                     children: [
                         new TextRun({
-                            text: displayExplanation(type, data.option, data.explanation),
+                            text: `${this.t('common.explanation_colon')} ${displayExplanation(type, data.option, data.explanation)}`,
                             size: 22
                         })
                     ]
