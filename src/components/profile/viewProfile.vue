@@ -34,7 +34,7 @@
               </b-td>
               <b-td>
                 <b-form-group description="8 characters at least" class="mb-0"
-                  :invalid-feedback="passwordFeedback"
+                  :invalid-feedback="newPasswordFeedback"
                   :state="newPasswordState">
                   <b-form-input type="password" v-model="new_password" :state="newPasswordState"></b-form-input>
                 </b-form-group>
@@ -46,9 +46,9 @@
               </b-td>
               <b-td>
                 <b-form-group description="8 characters at least" class="mb-0"
-                  :invalid-feedback="passwordFeedback"
-                  :state="newPasswordState">
-                  <b-form-input type="password" v-model="new_password_repeat" :state="newPasswordState"></b-form-input>
+                  :invalid-feedback="newPasswordRepeatFeedback"
+                  :state="newPasswordRepeatState">
+                  <b-form-input type="password" v-model="new_password_repeat" :state="newPasswordRepeatState"></b-form-input>
                 </b-form-group>
               </b-td>
             </b-tr>
@@ -337,25 +337,21 @@ export default {
       return this.sharedProjects.every(p => this.projectsNewOwners[p.id] !== null && this.projectsNewOwners[p.id] !== undefined)
     },
     newPasswordState: function () {
-      const hasPasswordInput = this.new_password !== null && this.new_password !== ''
-      if (!hasPasswordInput) return null
-
-      const passwordsMatch = this.new_password === this.new_password_repeat
-      const minLength = this.new_password.length >= 8
-
-      if (!passwordsMatch || !minLength) return false
-      return true
+      if (this.new_password === null || this.new_password === '') return null
+      return this.new_password.length >= 8 ? true : false
     },
-    passwordFeedback: function () {
-      const hasPasswordInput = this.new_password !== null && this.new_password !== ''
-      if (!hasPasswordInput) return ''
-
-      if (this.new_password !== this.new_password_repeat) {
-        return 'Passwords do not match'
-      }
-      if (this.new_password.length < 8) {
-        return 'Password must be at least 8 characters'
-      }
+    newPasswordFeedback: function () {
+      if (this.new_password === null || this.new_password === '') return ''
+      if (this.new_password.length < 8) return 'Password must be at least 8 characters'
+      return ''
+    },
+    newPasswordRepeatState: function () {
+      if (this.new_password_repeat === null || this.new_password_repeat === '') return null
+      return this.new_password === this.new_password_repeat ? true : false
+    },
+    newPasswordRepeatFeedback: function () {
+      if (this.new_password_repeat === null || this.new_password_repeat === '') return ''
+      if (this.new_password !== this.new_password_repeat) return 'Passwords do not match'
       return ''
     }
   },
