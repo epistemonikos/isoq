@@ -269,22 +269,10 @@ export class IsoQExportStrategy extends BaseExportStrategy {
                     text: finding.name || '',
                     maxLength: TEXT_LIMITS.findingName
                 },
-                {
-                    text: this.getConcernLevelText(ep.methodological_limitations?.option),
-                    alignment: AlignmentType.CENTER
-                },
-                {
-                    text: this.getConcernLevelText(ep.coherence?.option),
-                    alignment: AlignmentType.CENTER
-                },
-                {
-                    text: this.getConcernLevelText(ep.adequacy?.option),
-                    alignment: AlignmentType.CENTER
-                },
-                {
-                    text: this.getConcernLevelText(ep.relevance?.option),
-                    alignment: AlignmentType.CENTER
-                },
+                this.createConcernCell('methodological-limitations', ep.methodological_limitations),
+                this.createConcernCell('coherence', ep.coherence),
+                this.createConcernCell('adequacy', ep.adequacy),
+                this.createConcernCell('relevance', ep.relevance),
                 {
                     text: this.getCerqualConfidenceText(ep.cerqual?.option),
                     alignment: AlignmentType.CENTER
@@ -310,6 +298,35 @@ export class IsoQExportStrategy extends BaseExportStrategy {
             '3': this.t('cerqual_options.very_low_confidence')
         }
         return confidenceMap[option.toString()] || ''
+    }
+
+    createConcernCell(concernType, data) {
+        const children = [
+            new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                    new TextRun({
+                        text: this.getConcernLevelText(data?.option),
+                        bold: true,
+                        size: 22
+                    })
+                ]
+            })
+        ]
+
+        if (data?.explanation) {
+            children.push(new Paragraph(''))
+            children.push(new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `${this.t('common.explanation')}: ${displayExplanation(concernType, data.option, data.explanation)}`,
+                        size: 20
+                    })
+                ]
+            }))
+        }
+
+        return { children, alignment: AlignmentType.CENTER, verticalAlign: VerticalAlign.TOP }
     }
 
     getLicenseText() {
