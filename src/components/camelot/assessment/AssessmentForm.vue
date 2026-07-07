@@ -20,6 +20,12 @@
             :value="value.value" :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
             {{ value.text }}
           </b-form-radio>
+          <p v-if="selected !== null" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <a @click="clearSelection">
+              <font-awesome-icon icon="trash"></font-awesome-icon>
+              {{ $t('worksheet.actions.clear_selection') }}
+            </a>
+          </p>
         </b-form-group>
 
         <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
@@ -363,6 +369,11 @@ export default {
         return
       }
       this.performSave()
+    },
+    clearSelection() {
+      this.selected = null
+      this.text1 = ''
+      this.notes = ''
     },
     performSave(silent = false) {
       if (this.isReadOnly) return
