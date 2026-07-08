@@ -63,14 +63,28 @@
             responsive
             :fields="[{key: 'username', label: $t('common.username')}, {key: 'first_name', label: $t('common.first_name')}, {key: 'last_name', label: $t('common.last_name')}, {key: 'user_can', label: $t('common.user_can')}, {key: 'actions', label: $t('common.actions')}]"
             :items="usersAllowed">
+            <template v-slot:cell(username)="data">
+              <!-- Estado: ACTIVO (normal) -->
+              <span v-if="data.item.state === 'active'">
+                {{ data.item.username || data.item.email }}
+              </span>
+              <!-- Estado: INACTIVO (tachado) -->
+              <span v-else-if="data.item.state === 'inactive'" class="text-muted"
+                :style="{ textDecoration: 'line-through' }">
+                {{ data.item.username || data.item.email }}
+                <span style="font-size: 0.9em;">*</span>
+              </span>
+            </template>
             <template v-slot:cell(actions)="data">
               <b-button
                 variant="danger"
-                @click="unshare(data.index, data.item.id)">{{ $t('common.unshare') }}</b-button>
+                @click="unshare(data.index, data.item)">{{ $t('common.unshare') }}</b-button>
             </template>
             <template v-slot:cell(user_can)="data">
               <b-form-select
                 v-model="data.item.user_can"
+                :disabled="data.item.state !== 'active'"
+                :title="data.item.state !== 'active' ? getDisabledTitle(data.item.state) : ''"
                 :options="[{value: 0, text: $t('common.can_view') || 'Can view'}, {value: 1, text: $t('common.can_view_edit') || 'Can view and edit'}]"
                 @change="changePermission(data.item.project_id, data.item.id, data.item.user_can, data.item.index)"></b-form-select>
             </template>
@@ -78,30 +92,39 @@
               <p class="font-weight-light text-center my-3">{{ $t('common.no_users_access') }}</p>
             </template>
           </b-table>
+          <p class="text-muted small mt-2">
+            <span class="font-italic">*{{ $t('common.inactive_user_note') || 'Inactive user - cannot modify permissions' }}</span>
+          </p>
+          <!-- Usuarios pendientes (sin cuenta) -->
           <div
-            v-if="project.invite_emails && project.invite_emails.length">
-            <h4>{{ $t('common.pending_access') }}</h4>
-            <b-table-simple
-              v-if="project.invite_emails && project.invite_emails.length">
-              <b-thead>
-                <b-tr>
-                  <b-th>{{ $t('common.email') }}</b-th>
-                  <b-th>{{ $t('common.actions') }}</b-th>
-                </b-tr>
-              </b-thead>
-              <b-tbody>
-                <b-tr v-for="(email, index) of project.invite_emails" :key="index">
-                  <b-td>{{ email }}</b-td>
-                  <b-td>
-                    <b-button
-                      variant="danger"
-                      @click="unshareInvited(email)">
-                      {{ $t('common.unshare') }}
-                    </b-button>
-                  </b-td>
-                </b-tr>
-              </b-tbody>
-            </b-table-simple>
+            v-if="project.pending_users && project.pending_users.length">
+            <h4 class="mt-4">{{ $t('common.pending_access') }}</h4>
+            <b-table
+              show-empty
+              responsive
+              :fields="[{key: 'email', label: $t('common.email')}, {key: 'permission', label: $t('common.user_can')}, {key: 'expires_at', label: $t('common.expires')}, {key: 'actions', label: $t('common.actions')}]"
+              :items="project.pending_users">
+              <template v-slot:cell(email)="data">
+                <span style="font-style: italic; color: #0066cc;">{{ data.item.email }}</span>
+              </template>
+              <template v-slot:cell(permission)="data">
+                <span>{{ data.item.user_can === 0 ? $t('common.can_view') : $t('common.can_view_edit') }}</span>
+              </template>
+              <template v-slot:cell(expires_at)="data">
+                <span class="small text-muted">{{ formatDate(data.item.expires_at) }}</span>
+              </template>
+              <template v-slot:cell(actions)="data">
+                <b-button
+                  variant="danger"
+                  size="sm"
+                  @click="unshare(data.index, data.item)">
+                  {{ $t('common.revoke') || 'Revoke' }}
+                </b-button>
+              </template>
+              <template v-slot:empty>
+                <p class="font-weight-light text-center my-3">{{ $t('common.no_pending_invitations') || 'No pending invitations' }}</p>
+              </template>
+            </b-table>
           </div>
         </b-container>
       </b-tab>
@@ -192,7 +215,8 @@ export default {
           .then((response) => {
             if (enable && response.data && response.data.sharedToken) {
               project.sharedToken = response.data.sharedToken
-              project.temporaryUrl = window.location.origin + '/#/shared/' + response.data.sharedToken
+              this.$set(project, 'temporaryUrl', window.location.origin + '/#/shared/' + response.data.sharedToken)
+              this.$emit('shared-link-generated', { projectId: project.id, sharedToken: response.data.sharedToken })
             }
           })
           .catch((error) => {
@@ -204,6 +228,9 @@ export default {
   methods: {
     show () {
       this.tabIndex = this.initialTab
+      if (this.project.sharedTokenOnOff && this.project.sharedToken && !this.project.temporaryUrl) {
+        this.project.temporaryUrl = window.location.origin + '/#/shared/' + this.project.sharedToken
+      }
       this.$refs['modal-share-options'].show()
     },
     hide () {
@@ -235,8 +262,10 @@ export default {
       this.$emit('processing', true)
       await Api.post(`/share/project/${projectId}`, params)
         .then((response) => {
-          if (response.status === 200 && response.data && response.data.length) {
-            this.$emit('project-shared', response.data[0])
+          if (response.status === 200 && response.data) {
+            // Backend devuelve el proyecto como objeto, no como array
+            const projectData = Array.isArray(response.data) ? response.data[0] : response.data
+            this.$emit('project-shared', projectData)
             this.project.sharedTo = ''
             this.project.tmp_invite_emails = []
           }
@@ -254,13 +283,20 @@ export default {
         console.log('errors: => ', error)
       }
     },
-    unshare: function (_index, userId) {
+    unshare: function (_index, user) {
       const projectId = this.project.id
       const params = {
-        'user_id': userId,
         'org_id': this.$route.params.id,
         'current_user': this.$store.state.user.id
       }
+
+      // Detectar si es pendiente: tiene email pero NO id
+      if (user.email && !user.id) {
+        params.email = user.email
+      } else {
+        params.user_id = user.id
+      }
+
       this.$emit('processing', true)
       this.removeUser(projectId, params)
         .then((response) => {
@@ -304,6 +340,23 @@ export default {
         }).finally(() => {
           this.$emit('processing', false)
         })
+    },
+    formatDate: function (dateStr) {
+      if (!dateStr) return ''
+      const date = new Date(dateStr)
+      return date.toLocaleDateString(this.$i18n.locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    },
+    getDisabledTitle: function (state) {
+      if (state === 'inactive') {
+        return this.$t('common.inactive_user') || 'Inactive user'
+      } else if (state === 'pending') {
+        return this.$t('common.pending_user_cannot_modify') || 'Pending users cannot have permissions modified until they accept the invitation'
+      }
+      return ''
     }
   }
 }

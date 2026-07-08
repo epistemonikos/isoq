@@ -133,7 +133,7 @@
       <ShareProjectModal ref="shareProjectModal" :project="buffer_project" :usersAllowed="users_allowed"
         :initialTab="ui.tabIndex" @hidden="cleanProject" @processing="setProcessing" @project-shared="onProjectShared"
         @user-unshared="onUserUnshared" @invited-unshared="onInvitedUnshared"
-        @permission-changed="onPermissionChanged" />
+        @permission-changed="onPermissionChanged" @shared-link-generated="onSharedLinkGenerated" />
 
       <CloneProjectModal ref="cloneProjectModal" :project="buffer_project" :uiCopy="ui.copy"
         @update-copy-state="updateCopyState" @clone-started="onCloneStarted" @project-cloned="onProjectCloned"
@@ -301,11 +301,17 @@ export default {
       if (!Object.prototype.hasOwnProperty.call(project, 'created_at')) {
         project.created_at = 0
       }
-      if (
+
+      const currentUserId = this.$store.state.user.id
+      const userHasAccess =
         project.organization === this.$store.state.user.personal_organization ||
-        project.can_read.includes(this.$store.state.user.id) ||
-        project.can_write.includes(this.$store.state.user.id)
-      ) {
+        project.can_read.includes(currentUserId) ||
+        project.can_write.includes(currentUserId) ||
+        // Fallback: verificar en can_read_users y can_write_users (Fase 2: backend devuelve objetos)
+        (project.can_read_users && Array.isArray(project.can_read_users) && project.can_read_users.some(u => u.id === currentUserId)) ||
+        (project.can_write_users && Array.isArray(project.can_write_users) && project.can_write_users.some(u => u.id === currentUserId))
+
+      if (userHasAccess) {
         if (!Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
           project.sharedToken = ''
         }
@@ -330,28 +336,28 @@ export default {
         if (!Object.prototype.hasOwnProperty.call(project, 'tmp_invite_emails')) {
           project.tmp_invite_emails = []
         }
-        project.is_owner = false
-        project.allow_to_write = false
-        project.allow_to_read = false
-        if (project.organization === this.$store.state.user.personal_organization) {
-          project.is_owner = true
-          project.allow_to_write = true
-          project.allow_to_read = true
-        } else {
-          if (project.organization !== this.$store.state.user.personal_organization) {
-            project.is_owner = false
-          }
-          if (Object.prototype.hasOwnProperty.call(project, 'can_read')) {
+
+        // Trust backend permission booleans if present; fall back to local computation if absent (for offline cache compatibility)
+        const hasBackendPermissions =
+          typeof project.is_owner === 'boolean' &&
+          typeof project.allow_to_write === 'boolean' &&
+          typeof project.allow_to_read === 'boolean'
+
+        if (!hasBackendPermissions) {
+          project.is_owner = false
+          project.allow_to_write = false
+          project.allow_to_read = false
+          if (project.organization === this.$store.state.user.personal_organization) {
+            project.is_owner = true
+            project.allow_to_write = true
+            project.allow_to_read = true
+          } else {
             if (project.can_read.includes(this.$store.state.user.id)) {
               project.allow_to_read = true
             }
-          }
-          if (Object.prototype.hasOwnProperty.call(project, 'can_write')) {
             if (project.can_write.includes(this.$store.state.user.id)) {
               project.allow_to_write = true
             }
-          } else {
-            project.can_write = []
           }
         }
         return project
@@ -448,35 +454,76 @@ export default {
     },
 
     usersCanList: function (id) {
-      this.users_allowed = []
       const currentUserId = this.$store.state.user.id
       let _project = this.buffer_project
-      if (Object.prototype.hasOwnProperty.call(_project, 'can_read')) {
-        for (let user of _project.can_read) {
-          if (user === currentUserId) continue
-          Api.get(`/users/${user}`).then((response) => {
+      const userMap = new Map() // Deduplicación: user.id o user.email → user object
+      const hasFallback = ref => !ref || !Array.isArray(ref) || ref.length === 0
+
+      // Intenta usar can_read_users (con estado active/inactive)
+      if (_project.can_read_users && Array.isArray(_project.can_read_users) && _project.can_read_users.length > 0) {
+        for (let user of _project.can_read_users) {
+          if (user.id === currentUserId) continue
+          if (!userMap.has(user.id)) {
+            user.user_can = 0
+            user.project_id = _project.id
+            user.state = user.active ? 'active' : 'inactive'
+            userMap.set(user.id, user)
+          }
+        }
+      } else if (hasFallback(_project.can_read_users) && _project.can_read && Array.isArray(_project.can_read) && _project.can_read.length > 0) {
+        // Fallback: can_read contiene solo IDs, hacer API calls (compatibilidad retroactiva)
+        const readPromises = _project.can_read
+          .filter(userId => userId !== currentUserId)
+          .map(userId => Api.get(`/users/${userId}`).then((response) => {
             const _user = response.data
-            if (_user.status) {
+            if (_user) {
               _user.user_can = 0
               _user.project_id = _project.id
-              this.users_allowed.push(_user)
+              _user.state = _user.active ? 'active' : 'inactive'
+              userMap.set(_user.id, _user)
             }
-          })
-        }
+          }))
+        Promise.all(readPromises).then(() => {
+          this.buildUsersList(userMap)
+        })
+        return
       }
-      if (Object.prototype.hasOwnProperty.call(_project, 'can_write')) {
-        for (let user of _project.can_write) {
-          if (user === currentUserId) continue
-          Api.get(`/users/${user}`).then((response) => {
+
+      // Intenta usar can_write_users (con estado active/inactive, sobrescribe read)
+      if (_project.can_write_users && Array.isArray(_project.can_write_users) && _project.can_write_users.length > 0) {
+        for (let user of _project.can_write_users) {
+          if (user.id === currentUserId) continue
+          user.user_can = 1
+          user.project_id = _project.id
+          user.state = user.active ? 'active' : 'inactive'
+          userMap.set(user.id, user) // Sobrescribe can_read si existe
+        }
+      } else if (hasFallback(_project.can_write_users) && _project.can_write && Array.isArray(_project.can_write) && _project.can_write.length > 0) {
+        // Fallback: can_write contiene solo IDs, hacer API calls
+        const writePromises = _project.can_write
+          .filter(userId => userId !== currentUserId)
+          .map(userId => Api.get(`/users/${userId}`).then((response) => {
             const _user = response.data
-            if (_user.status) {
+            if (_user) {
               _user.user_can = 1
               _user.project_id = _project.id
-              this.users_allowed.push(_user)
+              _user.state = _user.active ? 'active' : 'inactive'
+              userMap.set(_user.id, _user) // Sobrescribe can_read si existe
             }
-          })
-        }
+          }))
+        Promise.all(writePromises).then(() => {
+          this.buildUsersList(userMap)
+        })
+        return
       }
+
+      // Nota: pendientes NO se incluyen en users_allowed
+      // Se muestran en su propia sección "Pending Access"
+
+      this.buildUsersList(userMap)
+    },
+    buildUsersList: function (userMap) {
+      this.users_allowed = Array.from(userMap.values())
     },
     modalShareOptions: function (project, tabIndex = 0) {
       this.ui.tabIndex = tabIndex
@@ -490,21 +537,45 @@ export default {
     onProjectShared: function (updatedProject) {
       const project = this.processProject(updatedProject)
       if (Object.keys(project).length) {
-        this.buffer_project = project
+        // Merge inteligente con spread operator para forzar reactividad en Vue
+        // Actualiza arrays de usuarios y limpia formulario de invitación
+        this.buffer_project = {
+          ...this.buffer_project,
+          can_read_users: project.can_read_users || this.buffer_project.can_read_users,
+          can_write_users: project.can_write_users || this.buffer_project.can_write_users,
+          pending_users: project.pending_users || this.buffer_project.pending_users,
+          invite_emails: project.invite_emails || this.buffer_project.invite_emails,
+          sharedTo: '',
+          tmp_invite_emails: []
+        }
+
         this.updateProjectInList(project)
         this.usersCanList(project.id)
       }
     },
     onUserUnshared: function (projectId) {
-      Api.get('/isoqf_projects', { id: projectId }).then((response) => {
-        if (response.status === 200 && response.data && response.data.length) {
-          const project = this.processProject(response.data[0])
+      Api.get(`/isoqf_projects/${projectId}`).then((response) => {
+        if (response.status === 200 && response.data) {
+          // Backend devuelve objeto único con ruta /isoqf_projects/{id}
+          const projectData = Array.isArray(response.data) ? response.data[0] : response.data
+          const project = this.processProject(projectData)
           if (Object.keys(project).length) {
-            this.buffer_project = project
+            // Merge inteligente: actualiza arrays de usuarios y limpia formulario
+            this.buffer_project = {
+              ...this.buffer_project,
+              can_read_users: project.can_read_users || this.buffer_project.can_read_users,
+              can_write_users: project.can_write_users || this.buffer_project.can_write_users,
+              pending_users: project.pending_users || this.buffer_project.pending_users,
+              invite_emails: project.invite_emails || this.buffer_project.invite_emails,
+              sharedTo: '',
+              tmp_invite_emails: []
+            }
             this.updateProjectInList(project)
-            this.usersCanList(project.id)
+            this.usersCanList(projectId)
           }
         }
+      }).catch((error) => {
+        console.log('onUserUnshared - error:', error)
       })
     },
     onInvitedUnshared: function (response) {
@@ -516,6 +587,12 @@ export default {
     onPermissionChanged: function (project) {
       this.buffer_project = project
       this.getProjects()
+    },
+    onSharedLinkGenerated: function (data) {
+      const { projectId, sharedToken } = data
+      this.buffer_project.sharedToken = sharedToken
+      this.buffer_project.sharedTokenOnOff = true
+      this.updateProjectInList(this.buffer_project)
     },
     updateProjectInList: function (project) {
       let _projects = []
