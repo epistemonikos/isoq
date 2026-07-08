@@ -163,9 +163,217 @@ describe('viewOrganization.vue', () => {
       await wrapper.setData({ projects })
       await wrapper.setData({ searchQuery: 'Non-existent' })
       await localVue.nextTick()
-      
+
       const table = wrapper.find('#organizations')
       expect(table.text()).toContain('common.no_results_for')
+    })
+  })
+
+  describe('processProject - backend permission booleans', () => {
+    it('trusts backend is_owner/allow_to_write/allow_to_read when present, even if they contradict local computation', () => {
+      // El proyecto pertenece a la organización personal del usuario (localmente sería owner),
+      // pero el backend manda lo contrario a propósito para probar que NO se recalcula por encima
+      const project = {
+        id: 'p-1',
+        organization: 'org-123', // coincide con personal_organization del usuario
+        can_read: [],
+        can_write: [],
+        is_owner: false,
+        allow_to_write: false,
+        allow_to_read: true
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result.is_owner).toBe(false)
+      expect(result.allow_to_write).toBe(false)
+      expect(result.allow_to_read).toBe(true)
+    })
+
+    it('falls back to local computation for owner project when backend booleans are absent (simulating stale offline cache)', () => {
+      const project = {
+        id: 'p-2',
+        organization: 'org-123', // = personal_organization del usuario → debería ser owner
+        can_read: [],
+        can_write: []
+        // is_owner/allow_to_write/allow_to_read ausentes
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result.is_owner).toBe(true)
+      expect(result.allow_to_write).toBe(true)
+      expect(result.allow_to_read).toBe(true)
+    })
+
+    it('falls back to local computation for shared (non-owner, read-only) project when backend booleans are absent', () => {
+      const project = {
+        id: 'p-3',
+        organization: 'other-org',
+        can_read: ['user-1'],
+        can_write: []
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result.is_owner).toBe(false)
+      expect(result.allow_to_write).toBe(false)
+      expect(result.allow_to_read).toBe(true)
+    })
+
+    it('still defaults can_write/can_read to empty arrays when absent, independent of backend booleans', () => {
+      const project = {
+        id: 'p-4',
+        organization: 'org-123',
+        is_owner: true,
+        allow_to_write: true,
+        allow_to_read: true
+        // can_write/can_read ausentes por completo
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result.can_write).toEqual([])
+      expect(result.can_read).toEqual([])
+    })
+
+    it('allows access to shared project via can_read/can_write even when backend booleans are absent (permission gate unaffected)', () => {
+      const project = {
+        id: 'p-5',
+        organization: 'other-org',
+        can_read: [],
+        can_write: ['user-1']
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result).not.toEqual({}) // no debe ser rechazado por el gate de acceso
+      expect(result.allow_to_write).toBe(true)
+    })
+
+    it('rejects (returns {}) a project the user has no access to, regardless of backend booleans presence', () => {
+      const project = {
+        id: 'p-6',
+        organization: 'other-org',
+        can_read: [],
+        can_write: [],
+        is_owner: false,
+        allow_to_write: false,
+        allow_to_read: false
+      }
+      const result = wrapper.vm.processProject(project)
+      expect(result).toEqual({})
+    })
+  })
+
+  describe('usersCanList - Fase 2 (eliminar N+1)', () => {
+    beforeEach(() => {
+      wrapper.vm.buffer_project = {
+        id: 'proj-123',
+        can_read_users: [
+          {
+            id: 'charlie_id',
+            name: 'Charlie Brown',
+            email: 'charlie@example.com',
+            username: 'charlie_b',
+            first_name: 'Charlie',
+            last_name: 'Brown',
+            status: 'active'
+          }
+        ],
+        can_write_users: [
+          {
+            id: 'alice_id',
+            name: 'Alice Smith',
+            email: 'alice@example.com',
+            username: 'alice_s',
+            first_name: 'Alice',
+            last_name: 'Smith',
+            status: 'active'
+          },
+          {
+            id: 'bob_id',
+            name: 'Bob Johnson',
+            email: 'bob@example.com',
+            username: 'bob_j',
+            first_name: 'Bob',
+            last_name: 'Johnson',
+            status: 'inactive'
+          }
+        ]
+      }
+    })
+
+    it('populates usersAllowed from can_read_users and can_write_users without N+1 requests', () => {
+      wrapper.vm.usersCanList('proj-123')
+      expect(wrapper.vm.users_allowed).toHaveLength(3)
+      expect(wrapper.vm.users_allowed.some(u => u.id === 'charlie_id')).toBe(true)
+      expect(wrapper.vm.users_allowed.some(u => u.id === 'alice_id')).toBe(true)
+      expect(wrapper.vm.users_allowed.some(u => u.id === 'bob_id')).toBe(true)
+    })
+
+    it('assigns user_can=0 for can_read_users and user_can=1 for can_write_users', () => {
+      wrapper.vm.usersCanList('proj-123')
+      const charlie = wrapper.vm.users_allowed.find(u => u.id === 'charlie_id')
+      const alice = wrapper.vm.users_allowed.find(u => u.id === 'alice_id')
+      expect(charlie.user_can).toBe(0)
+      expect(alice.user_can).toBe(1)
+    })
+
+    it('assigns project_id to each user', () => {
+      wrapper.vm.usersCanList('proj-123')
+      wrapper.vm.users_allowed.forEach(user => {
+        expect(user.project_id).toBe('proj-123')
+      })
+    })
+
+    it('filters out current user from usersAllowed', () => {
+      wrapper.vm.buffer_project.can_read_users.push({
+        id: 'user-1', // current user
+        name: 'Current User',
+        email: 'current@example.com',
+        username: 'current_user',
+        first_name: 'Current',
+        last_name: 'User',
+        status: 'active'
+      })
+      wrapper.vm.usersCanList('proj-123')
+      expect(wrapper.vm.users_allowed.some(u => u.id === 'user-1')).toBe(false)
+    })
+
+    it('handles missing can_read_users gracefully (empty or absent)', () => {
+      wrapper.vm.buffer_project.can_read_users = []
+      wrapper.vm.usersCanList('proj-123')
+      // should still have can_write users
+      expect(wrapper.vm.users_allowed.length).toBeGreaterThan(0)
+    })
+
+    it('handles missing can_write_users gracefully (empty or absent)', () => {
+      wrapper.vm.buffer_project.can_write_users = []
+      wrapper.vm.usersCanList('proj-123')
+      // should still have can_read users
+      expect(wrapper.vm.users_allowed.some(u => u.id === 'charlie_id')).toBe(true)
+    })
+
+    it('deduplicates users that appear in both can_read_users and can_write_users (prefers can_write)', () => {
+      // Scenario: backend devuelve un usuario en ambos arrays (data corruption edge case)
+      wrapper.vm.buffer_project.can_read_users = [
+        {
+          id: 'shared_user_id',
+          name: 'Shared User',
+          email: 'shared@example.com',
+          username: 'shared_u',
+          first_name: 'Shared',
+          last_name: 'User',
+          status: 'active'
+        }
+      ]
+      wrapper.vm.buffer_project.can_write_users = [
+        {
+          id: 'shared_user_id',
+          name: 'Shared User',
+          email: 'shared@example.com',
+          username: 'shared_u',
+          first_name: 'Shared',
+          last_name: 'User',
+          status: 'active'
+        }
+      ]
+      wrapper.vm.usersCanList('proj-123')
+      // Should have only one entry, with user_can = 1 (write takes precedence)
+      const duplicates = wrapper.vm.users_allowed.filter(u => u.id === 'shared_user_id')
+      expect(duplicates).toHaveLength(1)
+      expect(duplicates[0].user_can).toBe(1) // write takes precedence
     })
   })
 })
