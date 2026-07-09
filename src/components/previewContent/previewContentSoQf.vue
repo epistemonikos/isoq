@@ -95,16 +95,26 @@
             </b-row>
           </b-container>
           <div>
+            <camelot-characteristics-table-preview
+              v-if="project.use_camelot && charsOfStudies.fields && charsOfStudies.fields.length"
+              :charsOfStudies="charsOfStudies"
+              :references="references">
+            </camelot-characteristics-table-preview>
             <chars-of-studies-table
-              v-if="charsOfStudies.fields && charsOfStudies.fields.length"
+              v-else-if="!project.use_camelot && charsOfStudies.fields && charsOfStudies.fields.length"
               :tableData="charsOfStudies"
               :tableSettings="charsOfStudiesTableSettings">
             </chars-of-studies-table>
           </div>
           <back-to-top></back-to-top>
           <div>
+            <camelot-assessments-table-preview
+              v-if="project.use_camelot && methodologicalTableRefs.items && methodologicalTableRefs.items.length"
+              :methodologicalTableRefs="methodologicalTableRefs"
+              :references="references">
+            </camelot-assessments-table-preview>
             <meth-assessments-table
-              v-if="methodologicalTableRefs.fieldsObj && methodologicalTableRefs.fieldsObj.length > 1"
+              v-else-if="!project.use_camelot && methodologicalTableRefs.fieldsObj && methodologicalTableRefs.fieldsObj.length > 1"
               :tableData="methodologicalTableRefs"
               :tableSettings="methodologicalTableRefsTableSettings"></meth-assessments-table>
           </div>
@@ -209,6 +219,8 @@ const Criteria = () => import(/* webpackChunkName: "criteria" */'../Criteria')
 const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */'../project/PrintViewTable')
 const charsOfStudiesDisplayDataTable = () => import(/* webpackChunkName: "charsofstudiesdisplaydatatable" */'../charsOfStudies/displayTableData')
 const methAssessmentsDisplayDataTable = () => import(/* webpackChunkName: "methassessmentssisplaysatatable" */'../methAssessments/displayTableData')
+const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
+const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const actionButtons = () => import(/* webpackChunkName: "actionButtonsProject" */'../project/actionButtons.vue')
 
@@ -220,6 +232,8 @@ export default {
     'print-view-table': PrintViewTable,
     'chars-of-studies-table': charsOfStudiesDisplayDataTable,
     'meth-assessments-table': methAssessmentsDisplayDataTable,
+    'camelot-characteristics-table-preview': camelotCharacteristicsTablePreview,
+    'camelot-assessments-table-preview': camelotAssessmentsTablePreview,
     'back-to-top': backToTop,
     'action-buttons': actionButtons
   },
@@ -894,6 +908,16 @@ export default {
               this.methodologicalTableRefs.fieldsObj.push({ 'key': 'actions', 'label': '' })
             }
           }
+
+          // Para proyectos Camelot, si no vinieron los datos en el bundle, intentar cargarlos desde la API
+          if (this.project.use_camelot) {
+            if (!chars.length && this.charsOfStudies.fields && this.charsOfStudies.fields.length === 0) {
+              this.loadCharacteristicsForSharedLink()
+            }
+            if (!assessments.length && (!this.methodologicalTableRefs.items || this.methodologicalTableRefs.items.length === 0)) {
+              this.loadAssessmentsForSharedLink()
+            }
+          }
         })
         .catch((error) => {
           let errorMessage = this.$t('shared.link_invalid')
@@ -923,6 +947,58 @@ export default {
           setTimeout(() => {
             this.$router.push({ name: 'MainPage' })
           }, 2000)
+        })
+    },
+    loadCharacteristicsForSharedLink: function () {
+      const token = this.$route.params.token
+      const params = {
+        organization: this.project.organization || '',
+        project_id: this.project.id
+      }
+      Api.get(`/api/shared/${token}/isoqf_characteristics`, params)
+        .then(response => {
+          if (response.data && response.data.length > 0) {
+            const serverData = response.data[0] || { fields: [], items: [] }
+            if (serverData.items && Array.isArray(serverData.items)) {
+              serverData.items = serverData.items.map(item => {
+                const ref = this.references.find(r => r.id === item.ref_id)
+                if (ref) {
+                  item.authors = Commons.parseReference(ref, true, false)
+                }
+                return item
+              })
+            }
+            this.charsOfStudies = serverData
+          }
+        })
+        .catch(error => {
+          console.error('Error loading characteristics for shared link:', error)
+        })
+    },
+    loadAssessmentsForSharedLink: function () {
+      const token = this.$route.params.token
+      const params = {
+        organization: this.project.organization || '',
+        project_id: this.project.id
+      }
+      Api.get(`/api/shared/${token}/isoqf_assessments`, params)
+        .then(response => {
+          if (response.data && response.data.length > 0) {
+            const serverData = response.data[0] || { items: [] }
+            if (serverData.items && Array.isArray(serverData.items)) {
+              serverData.items = serverData.items.map(item => {
+                const ref = this.references.find(r => String(r.id) === String(item.ref_id))
+                if (ref) {
+                  item.authors = Commons.parseReference(ref, true, false)
+                }
+                return item
+              })
+            }
+            this.methodologicalTableRefs = serverData
+          }
+        })
+        .catch(error => {
+          console.error('Error loading assessments for shared link:', error)
         })
     }
   }
