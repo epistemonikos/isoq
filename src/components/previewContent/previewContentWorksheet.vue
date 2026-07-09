@@ -291,11 +291,7 @@ export default {
     }
   },
   mounted () {
-    const projectJson = sessionStorage.getItem('worksheetProject')
-    if (projectJson) {
-      this.project = JSON.parse(projectJson)
-    }
-    this.getList()
+    this.validateAndLoadProject()
   },
   methods: {
     modalData: function () {
@@ -349,11 +345,56 @@ export default {
       }
       return basePath
     },
+    validateAndLoadProject: function () {
+      const token = this.$route.params.token
+      const projectId = this.$route.params.projectId
+
+      if (!token || !projectId) {
+        this.$router.push({ name: 'MainPage' })
+        return
+      }
+
+      const url = this.getSharedUrl('/isoqf_projects')
+      Api.get(url, { project_id: projectId })
+        .then((response) => {
+          const projects = Array.isArray(response.data) ? response.data : [response.data]
+          if (projects.length > 0) {
+            this.project = projects[0]
+            this.getList()
+          } else {
+            this.$bvToast.toast(this.$t('shared.resource_not_found'), {
+              title: this.$t('common.warning'),
+              variant: 'danger',
+              solid: true,
+              toaster: 'b-toaster-top-center'
+            })
+            setTimeout(() => { this.$router.push({ name: 'MainPage' }) }, 2000)
+          }
+        })
+        .catch((error) => {
+          let errorMessage = this.$t('shared.link_invalid')
+          if (error.response) {
+            const status = error.response.status
+            if (status === 403) {
+              errorMessage = this.$t('shared.access_denied')
+            }
+          }
+          this.$bvToast.toast(errorMessage, {
+            title: this.$t('common.warning'),
+            variant: 'danger',
+            solid: true,
+            toaster: 'b-toaster-top-center'
+          })
+          setTimeout(() => { this.$router.push({ name: 'MainPage' }) }, 2000)
+        })
+    },
     getList: function (fromModal = false) {
-      const projectId = sessionStorage.getItem('worksheetProjectId')
+      if (!this.project || !this.project.id) return
+
+      const projectId = this.project.id
       const listId = this.$route.params.id
       const url = this.getSharedUrl('/isoqf_lists')
-      const params = projectId ? { project_id: projectId } : {}
+      const params = { project_id: projectId }
 
       Api.get(url, params)
         .then((response) => {

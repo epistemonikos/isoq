@@ -162,7 +162,7 @@ var routes = [
     }
   },
   {
-    path: '/preview/worksheet/:id/:token',
+    path: '/preview/worksheet/:id/:projectId/:token',
     name: 'previewWorksheet',
     component: previewWorksheet,
     meta: {
