@@ -36,7 +36,7 @@
               style="vertical-align: top;">
               <template v-if="isPublic && project.public_type !== 'minimally'">
                 <p>
-                  <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: token } }">{{ item.name }}</b-link>
+                  <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: token } }" @click="saveProjectId">{{ item.name }}</b-link>
                 </p>
               </template>
               <template v-else-if="hasPermission">
@@ -113,7 +113,7 @@
                 <b-td style="width: 35%">
                     <template v-if="isPublic && project.public_type !== 'minimally'">
                       <p>
-                        <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: token } }">{{ item.name }}</b-link>
+                        <b-link :to="{ name: 'previewWorksheet', params: { id: item.id, token: token } }" @click="saveProjectId">{{ item.name }}</b-link>
                       </p>
                     </template>
                     <template v-else>
@@ -245,6 +245,11 @@ export default {
     },
     displaySelectedOption: function (option, type) {
       return Commons.displaySelectedOption(option, type)
+    },
+    saveProjectId: function () {
+      if (this.project && this.project.id) {
+        sessionStorage.setItem('worksheetProjectId', this.project.id)
+      }
     }
   }
 }

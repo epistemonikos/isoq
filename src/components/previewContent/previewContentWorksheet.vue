@@ -346,10 +346,16 @@ export default {
       return basePath
     },
     getList: function (fromModal = false) {
-      const url = this.getSharedUrl(`/isoqf_lists/${this.$route.params.id}`)
-      Api.get(url)
+      const projectId = sessionStorage.getItem('worksheetProjectId')
+      const listId = this.$route.params.id
+      const url = this.getSharedUrl('/isoqf_lists')
+      const params = projectId ? { project_id: projectId } : {}
+
+      Api.get(url, params)
         .then((response) => {
-          this.list = JSON.parse(JSON.stringify(response.data))
+          let lists = Array.isArray(response.data) ? response.data : [response.data]
+          const foundList = lists.find(l => l.id === listId)
+          this.list = foundList ? JSON.parse(JSON.stringify(foundList)) : {}
           this.list.sources = []
           this.evidence_profile = []
           this.extracted_data = {
