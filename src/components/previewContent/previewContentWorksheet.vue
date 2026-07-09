@@ -337,16 +337,7 @@ export default {
       return data
     },
     shouldUseSharedUrl: function () {
-      const token = this.$route.params.token
-      if (!token) return false
-
-      if (this.project) {
-        // Si ya cargamos el proyecto, verificar que el token coincida
-        return this.project.sharedToken === token
-      }
-      // Si aún no cargamos el proyecto, asumir que el token es compartido
-      // (la ruta /preview/worksheet/:id/:token siempre usa un sharedToken)
-      return true
+      return !!this.$route.params.token
     },
     getSharedUrl: function (basePath) {
       if (this.shouldUseSharedUrl()) {
