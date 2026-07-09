@@ -336,8 +336,18 @@ export default {
       }
       return data
     },
+    shouldUseSharedUrl: function () {
+      return this.project && this.project.sharedToken === this.$route.params.token
+    },
+    getSharedUrl: function (basePath) {
+      if (this.shouldUseSharedUrl()) {
+        return `/api/shared/${this.$route.params.token}${basePath}`
+      }
+      return basePath
+    },
     getList: function (fromModal = false) {
-      Api.get(`/isoqf_lists/${this.$route.params.id}`)
+      const url = this.getSharedUrl(`/isoqf_lists/${this.$route.params.id}`)
+      Api.get(url)
         .then((response) => {
           this.list = JSON.parse(JSON.stringify(response.data))
           this.list.sources = []
@@ -371,7 +381,8 @@ export default {
         })
     },
     getAllReferences: function () {
-      Api.get(`/isoqf_references?organization=${this.list.organization}&project_id=${this.list.project_id}`)
+      const url = this.getSharedUrl(`/isoqf_references?project_id=${this.list.project_id}`)
+      Api.get(url)
         .then((response) => {
           let _references = response.data
           let _refs = []
@@ -389,11 +400,11 @@ export default {
         })
     },
     getStageOneData: function (fromModal = false) {
+      const url = this.getSharedUrl('/isoqf_findings')
       let params = {
-        organization: this.list.organization,
         list_id: this.list.id
       }
-      Api.get('/isoqf_findings', params)
+      Api.get(url, params)
         .then((response) => {
           if (response.data.length) {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
@@ -417,12 +428,12 @@ export default {
         })
     },
     getExtractedData: function () {
+      const url = this.getSharedUrl('/isoqf_extracted_data')
       let params = {
-        organization: this.list.organization,
         finding_id: this.findings.id
       }
 
-      Api.get('/isoqf_extracted_data', params)
+      Api.get(url, params)
         .then((response) => {
           this.extracted_data = {id: null, fields: [], items: []}
           if (response.data.length) {
@@ -484,11 +495,11 @@ export default {
         })
     },
     getCharsOfStudies: function () {
+      const url = this.getSharedUrl('/isoqf_characteristics')
       let params = {
-        organization: this.list.organization,
         project_id: this.list.project_id
       }
-      Api.get('/isoqf_characteristics', params)
+      Api.get(url, params)
         .then((response) => {
           if (response.data.length) {
             let data = response.data[0]
@@ -630,11 +641,11 @@ export default {
         })
     },
     getMethAssessments: function () {
+      const url = this.getSharedUrl('/isoqf_assessments')
       let params = {
-        organization: this.list.organization,
         project_id: this.list.project_id
       }
-      Api.get('/isoqf_assessments', params)
+      Api.get(url, params)
         .then((response) => {
           if (response.data.length) {
             const _references = JSON.parse(JSON.stringify(this.list.references))

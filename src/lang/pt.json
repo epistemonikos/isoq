@@ -627,6 +627,11 @@
     "extracted_data_intro": "É aqui que você insere os dados extraídos dos estudos incluídos que apoiam este achado de revisão. Esses dados são necessários para fazer uma avaliação GRADE-CERQual.",
     "add_extracted_data_label": "Adicione os dados extraídos deste estudo que apoiam a descoberta de revisão"
   },
+  "shared": {
+    "link_invalid": "O link compartilhado é inválido ou expirou",
+    "resource_not_found": "Recurso não encontrado neste projeto compartilhado",
+    "access_denied": "Você não tem acesso a este projeto compartilhado"
+  },
   "table": {
     "no_studies": "Nenhum estudo foi criado,",
     "add_studies": "adicionar estudos",

@@ -96,7 +96,7 @@
           </b-container>
           <div>
             <chars-of-studies-table
-              v-if="charsOfStudies.fields.length"
+              v-if="charsOfStudies.fields && charsOfStudies.fields.length"
               :tableData="charsOfStudies"
               :tableSettings="charsOfStudiesTableSettings">
             </chars-of-studies-table>
@@ -104,7 +104,7 @@
           <back-to-top></back-to-top>
           <div>
             <meth-assessments-table
-              v-if="methodologicalTableRefs.fieldsObj.length > 1"
+              v-if="methodologicalTableRefs.fieldsObj && methodologicalTableRefs.fieldsObj.length > 1"
               :tableData="methodologicalTableRefs"
               :tableSettings="methodologicalTableRefsTableSettings"></meth-assessments-table>
           </div>
@@ -847,8 +847,8 @@ export default {
           const chars = bundle.characteristics || []
           if (chars.length) {
             this.charsOfStudies = JSON.parse(JSON.stringify(chars[0]))
+            this.charsOfStudies.fieldsObj = this.charsOfStudies.fieldsObj || [{ 'key': 'authors', 'label': 'Author(s), Year' }]
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
-              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
               const _items = items.sort((a, b) => {
@@ -875,6 +875,7 @@ export default {
           const assessments = bundle.assessments || []
           if (assessments.length) {
             this.methodologicalTableRefs = JSON.parse(JSON.stringify(assessments[0]))
+            this.methodologicalTableRefs.fieldsObj = this.methodologicalTableRefs.fieldsObj || [{ 'key': 'authors', 'label': 'Author(s), Year' }]
             if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
@@ -894,8 +895,34 @@ export default {
             }
           }
         })
-        .catch(() => {
-          this.$router.push({ name: 'MainPage' })
+        .catch((error) => {
+          let errorMessage = this.$t('shared.link_invalid')
+
+          if (error.response) {
+            const status = error.response.status
+            const data = error.response.data
+
+            if (status === 404 && data && data.message) {
+              if (data.message.includes('Invalid or expired')) {
+                errorMessage = this.$t('shared.link_invalid')
+              } else if (data.message.includes('Not found')) {
+                errorMessage = this.$t('shared.resource_not_found')
+              }
+            } else if (status === 403) {
+              errorMessage = this.$t('shared.access_denied')
+            }
+          }
+
+          this.$bvToast.toast(errorMessage, {
+            title: this.$t('common.warning'),
+            variant: 'danger',
+            solid: true,
+            toaster: 'b-toaster-top-center'
+          })
+
+          setTimeout(() => {
+            this.$router.push({ name: 'MainPage' })
+          }, 2000)
         })
     }
   }

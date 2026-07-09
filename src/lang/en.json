@@ -627,6 +627,11 @@
     "extracted_data_intro": "It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.",
     "add_extracted_data_label": "Add the extracted data from this study that supports the review finding"
   },
+  "shared": {
+    "link_invalid": "The shared link is invalid or has expired",
+    "resource_not_found": "Resource not found in this shared project",
+    "access_denied": "You do not have access to this shared project"
+  },
   "table": {
     "no_studies": "No studies has been created,",
     "add_studies": "add studies",

@@ -627,6 +627,11 @@
     "extracted_data_intro": "Es aquí donde ingresa los datos extraídos de los estudios incluidos que apoyan este hallazgo de revisión. Estos datos son necesarios para realizar una evaluación GRADE-CERQual.",
     "add_extracted_data_label": "Agregue los datos extraídos de este estudio que apoyan el hallazgo de revisión"
   },
+  "shared": {
+    "link_invalid": "El enlace compartido es inválido o ha expirado",
+    "resource_not_found": "Recurso no encontrado en este proyecto compartido",
+    "access_denied": "No tienes acceso a este proyecto compartido"
+  },
   "table": {
     "no_studies": "No se han creado estudios,",
     "add_studies": "agregar estudios",

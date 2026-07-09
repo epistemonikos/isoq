@@ -104,6 +104,7 @@ const NO_CACHE_PATTERNS = [
   /^\/auth\//,
   /^\/users\//,
   /^\/share\//,
+  /^\/shared\//,
   /^\/clone\//,
   /^\/remove\//,
   /^\/publish/,
