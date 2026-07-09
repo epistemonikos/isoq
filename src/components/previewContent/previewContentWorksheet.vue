@@ -291,6 +291,10 @@ export default {
     }
   },
   mounted () {
+    const projectJson = sessionStorage.getItem('worksheetProject')
+    if (projectJson) {
+      this.project = JSON.parse(projectJson)
+    }
     this.getList()
   },
   methods: {
@@ -362,25 +366,12 @@ export default {
             fields: [],
             items: []
           }
-          this.getProject(this.list.project_id)
           this.getAllReferences()
           this.getStageOneData(fromModal)
           this.getCharsOfStudies()
           this.getMethAssessments()
           this.evidence_profile_table_settings.isBusy = false
           window.scrollTo({ top: 0, behavior: 'smooth' })
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
-    },
-    getProject: function (projectId) {
-      Api.get(`/isoqf_projects/${projectId}`)
-        .then((response) => {
-          this.project = response.data
-          if (this.project.sharedToken !== this.$route.params.token && this.project.public_type === 'private') {
-            this.$router.push({ name: 'MainPage' })
-          }
         })
         .catch((error) => {
           this.printErrors(error)

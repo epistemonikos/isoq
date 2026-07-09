@@ -249,6 +249,7 @@ export default {
     saveProjectId: function () {
       if (this.project && this.project.id) {
         sessionStorage.setItem('worksheetProjectId', this.project.id)
+        sessionStorage.setItem('worksheetProject', JSON.stringify(this.project))
       }
     }
   }
