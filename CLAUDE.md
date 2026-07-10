@@ -47,7 +47,6 @@ src/services/lockService.js    concurrency — acquire/release/heartbeat(5min)/i
 src/services/db.js             Dexie schema for offline cache
 src/strategies/exportStrategies.js  CSV/Word export (45KB)
 src/services/wordExportService.js / risExportService.js
-src/composables/useExportState.js
 src/plugins/Translation.js     legacy :lang logic — current routes have NO lang prefixes
 ```
 
