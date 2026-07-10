@@ -59,54 +59,56 @@
             :showEditExtractedDataInPlace="{}"
             :modalData="modalData()"
             :charsOfStudies="characteristics_studies"></evidence-profile>
-          <div v-if="project.use_camelot">
-            <h4>Characteristics of studies</h4>
-            <camelot-characteristics-table-preview
-              :charsOfStudies="characteristics_studies"
-              :references="camelot_references">
-            </camelot-characteristics-table-preview>
-          </div>
-          <div v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
-            <chars-of-studies
-              :ui="ui"
-              :show="show"
-              :mode="'view'"
-              :list="list"
-              :permission="true"
-              :charsOfStudies="characteristics_studies"
-              :refsWithTitle="[]"
-              ></chars-of-studies>
-          </div>
+          <template v-if="canViewDetails">
+            <div v-if="project.use_camelot">
+              <h4>Characteristics of studies</h4>
+              <camelot-characteristics-table-preview
+                :charsOfStudies="characteristics_studies"
+                :references="camelot_references">
+              </camelot-characteristics-table-preview>
+            </div>
+            <div v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
+              <chars-of-studies
+                :ui="ui"
+                :show="show"
+                :mode="'view'"
+                :list="list"
+                :permission="true"
+                :charsOfStudies="characteristics_studies"
+                :refsWithTitle="[]"
+                ></chars-of-studies>
+            </div>
 
-          <div v-if="project.use_camelot">
-            <h4>Methodological assessments</h4>
-            <camelot-assessments-table-preview
-              :methodologicalTableRefs="meth_assessments"
-              :references="camelot_references">
-            </camelot-assessments-table-preview>
-          </div>
-          <div v-else-if="!project.use_camelot && meth_assessments.items && meth_assessments.items.length">
-            <methodological-assessments
-              :ui="ui"
-              :show="show"
-              :mode="'view'"
-              :list="list"
-              :permission="true"
-              :methAssessments="meth_assessments"
-              :refsWithTitle="[]"></methodological-assessments>
-          </div>
+            <div v-if="project.use_camelot">
+              <h4>Methodological assessments</h4>
+              <camelot-assessments-table-preview
+                :methodologicalTableRefs="meth_assessments"
+                :references="camelot_references">
+              </camelot-assessments-table-preview>
+            </div>
+            <div v-else-if="!project.use_camelot && meth_assessments.items && meth_assessments.items.length">
+              <methodological-assessments
+                :ui="ui"
+                :show="show"
+                :mode="'view'"
+                :list="list"
+                :permission="true"
+                :methAssessments="meth_assessments"
+                :refsWithTitle="[]"></methodological-assessments>
+            </div>
 
-          <div>
-            <extracted-data
-              :ui="ui"
-              :show="show"
-              :mode="'view'"
-              :list="list"
-              :permission="true"
-              :extractedData="extracted_data"
-              :modePrintFieldObject="mode_print_fieldsObj"
-              :refsWithTitle="[]"></extracted-data>
-          </div>
+            <div>
+              <extracted-data
+                :ui="ui"
+                :show="show"
+                :mode="'view'"
+                :list="list"
+                :permission="true"
+                :extractedData="extracted_data"
+                :modePrintFieldObject="mode_print_fieldsObj"
+                :refsWithTitle="[]"></extracted-data>
+            </div>
+          </template>
           <div v-if="list.is_public">
             <div class="mt-5 alert alert-info" role="alert">
               <h5>License type</h5>
@@ -312,6 +314,12 @@ export default {
       return PublicPreviewAccess.resolveReturnRoute({
         token: this.$route.params.token,
         project: this.project
+      })
+    },
+    canViewDetails: function () {
+      return PublicPreviewAccess.canViewDetailedSections({
+        token: this.$route.params.token,
+        publicType: this.project.public_type
       })
     }
   },

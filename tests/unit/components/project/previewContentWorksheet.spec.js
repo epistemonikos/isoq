@@ -111,13 +111,15 @@ describe('previewContentWorksheet.vue', () => {
   })
 
   it('shows detailed data sections only when public_type is fully', async () => {
-    const wrapper = shallowMount(previewContentWorksheet, { 
-      localVue, 
+    const wrapper = shallowMount(previewContentWorksheet, {
+      localVue,
       mocks,
       data() {
         return {
           project: { public_type: 'fully', id: 'p1', sharedToken: 'token' },
-          list: { references: [] }
+          list: { references: [] },
+          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          meth_assessments: { items: [{ ref_id: '1' }] }
         }
       }
     })
@@ -129,13 +131,15 @@ describe('previewContentWorksheet.vue', () => {
   })
 
   it('hides detailed data sections when public_type is minimally', async () => {
-    const wrapper = shallowMount(previewContentWorksheet, { 
-      localVue, 
+    const wrapper = shallowMount(previewContentWorksheet, {
+      localVue,
       mocks,
       data() {
         return {
           project: { public_type: 'minimally', id: 'p1', sharedToken: 'token' },
-          list: { references: [] }
+          list: { references: [] },
+          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          meth_assessments: { items: [{ ref_id: '1' }] }
         }
       }
     })
@@ -153,7 +157,9 @@ describe('previewContentWorksheet.vue', () => {
       data() {
         return {
           project: { public_type: 'partially', id: 'p1', sharedToken: 'token' },
-          list: { references: [] }
+          list: { references: [] },
+          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          meth_assessments: { items: [{ ref_id: '1' }] }
         }
       }
     })
@@ -163,6 +169,25 @@ describe('previewContentWorksheet.vue', () => {
     expect(wrapper.find('chars-of-studies-stub').exists()).toBe(false)
     expect(wrapper.find('methodological-assessments-stub').exists()).toBe(false)
     expect(wrapper.find('extracted-data-stub').exists()).toBe(false)
+  })
+
+  it('shows detailed data sections for a real shared-link token regardless of public_type', () => {
+    const wrapper = shallowMount(previewContentWorksheet, {
+      localVue,
+      mocks: { ...mocks, $route: { params: { id: '1', token: 'abc123realtoken' } } },
+      data() {
+        return {
+          project: { public_type: 'minimally', id: 'p1', sharedToken: 'abc123realtoken' },
+          list: { references: [] },
+          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          meth_assessments: { items: [{ ref_id: '1' }] }
+        }
+      }
+    })
+
+    expect(wrapper.find('chars-of-studies-stub').exists()).toBe(true)
+    expect(wrapper.find('methodological-assessments-stub').exists()).toBe(true)
+    expect(wrapper.find('extracted-data-stub').exists()).toBe(true)
   })
 
   describe('exportToWord', () => {
