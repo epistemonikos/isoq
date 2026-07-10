@@ -4,7 +4,7 @@
       <b-container class="py-5">
         <b-row>
           <b-col cols="12" class="text-right d-print-none">
-            <b-link class="return" :to="{ name: 'sharedContent', params: { token: $route.params.token }}">
+            <b-link class="return" :to="returnLinkTarget">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
               return to ISoQ table
             </b-link>
@@ -305,6 +305,14 @@ export default {
         { value: 3, text: 'Very low confidence' },
         { value: null, text: 'Undefined' }
       ]
+    }
+  },
+  computed: {
+    returnLinkTarget: function () {
+      return PublicPreviewAccess.resolveReturnRoute({
+        token: this.$route.params.token,
+        project: this.project
+      })
     }
   },
   mounted () {

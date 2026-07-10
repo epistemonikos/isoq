@@ -78,6 +78,38 @@ describe('previewContentWorksheet.vue', () => {
     })
   })
 
+  describe('returnLinkTarget', () => {
+    it('points back to previewContentSoQf when accessed via the public browse token', () => {
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return { project: { organization: 'org1', id: 'proj1' } }
+        }
+      })
+
+      expect(wrapper.vm.returnLinkTarget).toEqual({
+        name: 'previewContentSoQf',
+        params: { org_id: 'org1', isoqf_id: 'proj1', token: 'public' }
+      })
+    })
+
+    it('points back to sharedContent when accessed via a real share token', () => {
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: '1', token: 'abc123realtoken' } } },
+        data () {
+          return { project: { organization: 'org1', id: 'proj1' } }
+        }
+      })
+
+      expect(wrapper.vm.returnLinkTarget).toEqual({
+        name: 'sharedContent',
+        params: { token: 'abc123realtoken' }
+      })
+    })
+  })
+
   it('shows detailed data sections only when public_type is fully', async () => {
     const wrapper = shallowMount(previewContentWorksheet, { 
       localVue, 
