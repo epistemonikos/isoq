@@ -59,8 +59,14 @@
             :showEditExtractedDataInPlace="{}"
             :modalData="modalData()"
             :charsOfStudies="characteristics_studies"></evidence-profile>
-          <div
-            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+          <div v-if="project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
+            <h4>Characteristics of studies</h4>
+            <camelot-characteristics-table-preview
+              :charsOfStudies="characteristics_studies"
+              :references="camelot_references">
+            </camelot-characteristics-table-preview>
+          </div>
+          <div v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
             <chars-of-studies
               :ui="ui"
               :show="show"
@@ -72,8 +78,14 @@
               ></chars-of-studies>
           </div>
 
-          <div
-            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+          <div v-if="project.use_camelot">
+            <h4>Methodological assessments</h4>
+            <camelot-assessments-table-preview
+              :methodologicalTableRefs="meth_assessments"
+              :references="camelot_references">
+            </camelot-assessments-table-preview>
+          </div>
+          <div v-else-if="!project.use_camelot && meth_assessments.items && meth_assessments.items.length">
             <methodological-assessments
               :ui="ui"
               :show="show"
@@ -84,8 +96,7 @@
               :refsWithTitle="[]"></methodological-assessments>
           </div>
 
-          <div
-            v-if="((project.public_type === 'fully' && $route.params.token === 'public') || $route.params.token === project.sharedToken)">
+          <div>
             <extracted-data
               :ui="ui"
               :show="show"
@@ -119,6 +130,9 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 
+const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
+const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
+
 export default {
   mixins: [camelotMixin],
   components: {
@@ -126,7 +140,9 @@ export default {
     'evidence-profile': evidenceProfile,
     'chars-of-studies': charsOfStudies,
     'methodological-assessments': methAssessments,
-    'extracted-data': extractedData
+    'extracted-data': extractedData,
+    'camelot-characteristics-table-preview': camelotCharacteristicsTablePreview,
+    'camelot-assessments-table-preview': camelotAssessmentsTablePreview
   },
   data () {
     return {
@@ -263,6 +279,7 @@ export default {
         ]
       },
       references: [],
+      camelot_references: [],
       mode_print_fieldsObj: [
         {
           key: 'authors',
@@ -431,6 +448,9 @@ export default {
 
           this.references = _refs.sort((a, b) => a.id - b.id)
           this.refsWithTitle = _refsWithTitles.sort((a, b) => a.id - b.id)
+          this.camelot_references = _references
+            .filter(reference => this.list.references.some(refId => String(refId) === String(reference.id)))
+            .sort((a, b) => a.id - b.id)
         })
         .catch((error) => {
           this.printErrors(error)
@@ -504,7 +524,7 @@ export default {
             for (let reference of _references) {
               let index = 0
               for (let item of extractedDataItems) {
-                if (item.ref_id === reference) {
+                if (String(item.ref_id) === String(reference)) {
                   _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
                   for (let i in item) {
                     if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
@@ -573,10 +593,10 @@ export default {
 
             for (let item of data.items) {
               for (let reference of this.list.references) {
-                if (reference === item.ref_id) {
-                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                if (String(reference) === String(item.ref_id)) {
+                  const bibRef = bibliographicRefs.find(r => String(r.id) === String(item.ref_id))
                   item.authors = this.parseReference(bibRef || item, true)
-                  
+
                   // Clean item from orphans
                   const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
                   for (const key in item) {
@@ -627,7 +647,7 @@ export default {
                 }
               }
             }
-            if (data.fields.length < 3 && !this.project.use_camelot) {
+            if (Array.isArray(data.fields) && data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
 
@@ -639,7 +659,7 @@ export default {
             }
             data.items = items
             this.characteristics_studies = data
-            if (data.fields.length) {
+            if (Array.isArray(data.fields) && data.fields.length) {
               let fields = JSON.parse(JSON.stringify(data.fields))
               let lastItem = fields.splice(fields.length - 1, 1)
               this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
@@ -711,10 +731,10 @@ export default {
 
             for (let item of data.items) {
               for (let reference of _references) {
-                if (reference === item.ref_id) {
-                  const bibRef = bibliographicRefs.find(r => r.id === item.ref_id)
+                if (String(reference) === String(item.ref_id)) {
+                  const bibRef = bibliographicRefs.find(r => String(r.id) === String(item.ref_id))
                   item.authors = this.parseReference(bibRef || item, true)
-                  
+
                   // Clean item from orphans
                   const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
                   for (const key in item) {
@@ -766,7 +786,7 @@ export default {
                 }
               }
             }
-            if (data.fields.length < 3 && !this.project.use_camelot) {
+            if (Array.isArray(data.fields) && data.fields.length < 3 && !this.project.use_camelot) {
               haveContent++
             }
             this.ui.methodological_assessments.display_warning = true
@@ -776,7 +796,7 @@ export default {
 
             data.items = items
 
-            let _fields = data.fields
+            let _fields = Array.isArray(data.fields) ? data.fields : []
             data.fieldsObj = []
             for (let field of _fields) {
               if (field.key !== 'ref_id') {

@@ -4,7 +4,7 @@
       {{ $t('camelot.step_three.loading') }}
     </b-alert>
     <b-alert show variant="info"
-      v-else-if="references.length === 0 && (!charsData.items || charsData.items.length === 0)">
+      v-else-if="tableItems.length === 0">
       {{ $t('camelot.step_three.no_records') }}
     </b-alert>
     <div v-else>
@@ -112,27 +112,30 @@ export default {
   },
   computed: {
     tableItems() {
-      // Always use references as base to ensure all are displayed
-      if (!this.references || !this.references.length) return []
+      // Base: characteristics items, already scoped to the finding's references by the parent
+      const items = (this.charsData && this.charsData.items) ? [...this.charsData.items] : []
 
-      const items = this.references.map(ref => {
-        // Look for saved data for this reference
-        let charItem = null
-        if (this.charsData && this.charsData.items) {
-          charItem = this.charsData.items.find(item => item.ref_id === ref.id)
+      // Ensure every finding reference has a row, even without saved characteristics data
+      const existingRefIds = new Set(items.map(item => item.ref_id))
+      if (this.references) {
+        this.references.forEach(ref => {
+          if (!existingRefIds.has(ref.id)) {
+            items.push({ ref_id: ref.id })
+          }
+        })
+      }
+
+      // Enrich each row with the raw reference (needed for author/year formatting)
+      const enriched = items.map(item => {
+        const ref = this.references && this.references.find(r => r.id === item.ref_id)
+        if (ref) {
+          return { ...ref, ...item, authors: ref.authors }
         }
-
-        // If there is data, merge it with the reference, but preserve the authors array
-        if (charItem) {
-          return { ...ref, ...charItem, authors: ref.authors }
-        }
-
-        // If not, return the reference as is
-        return ref
+        return item
       })
 
       // Sort alphabetically by authors field using format helper for consistency
-      return items.sort((a, b) => {
+      return enriched.sort((a, b) => {
         const authorsA = this.formatAuthors(a).toLowerCase()
         const authorsB = this.formatAuthors(b).toLowerCase()
         return authorsA.localeCompare(authorsB)
