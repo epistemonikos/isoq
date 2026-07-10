@@ -599,7 +599,7 @@ describe('Camelot Warning Logic Tests', () => {
 
       const Api = require('@/utils/Api')
       Api.get.mockImplementation((url) => {
-        if (url.startsWith('/isoqf_lists/')) {
+        if (url === '/isoqf_lists') {
           return Promise.resolve({
             data: { id: '1', references: ['ref1'], organization: 'org1', project_id: 'p1' }
           })
@@ -658,7 +658,7 @@ describe('Camelot Warning Logic Tests', () => {
 
       const Api = require('@/utils/Api')
       Api.get.mockImplementation((url) => {
-        if (url.startsWith('/isoqf_lists/')) {
+        if (url === '/isoqf_lists') {
           return Promise.resolve({
             data: { id: '1', references: ['ref1'], organization: 'org1', project_id: 'p1' }
           })

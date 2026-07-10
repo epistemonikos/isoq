@@ -1296,6 +1296,7 @@
     "step_four": {
       "data_missing": "Faltan datos.",
       "loading": "Cargando datos...",
+      "no_records": "No hay registros disponibles",
       "no_explanation": "Explicación no agregada",
       "how_to_read": {
         "title": "Cómo leer esta tabla",

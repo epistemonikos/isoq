@@ -3,12 +3,9 @@
     <b-alert show variant="info" v-if="isLoading">
       {{ $t('camelot.step_four.loading') }}
     </b-alert>
-    <b-alert show variant="info"
-      v-else-if="tableItems.length === 0">
-      {{ $t('camelot.step_four.no_records') }}
-    </b-alert>
     <div v-else>
-      <b-table :fields="fields" :items="tableItems" bordered responsive class="camelot-table" thead-tr-class="header-second-row">
+      <b-table :fields="fields" :items="tableItems" bordered responsive class="camelot-table" thead-tr-class="header-second-row"
+        show-empty :empty-text="$t('camelot.step_four.no_records')">
         <template v-slot:thead-top>
           <tr class="header-top-row">
             <th class="border-bottom-0">

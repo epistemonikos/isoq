@@ -59,7 +59,7 @@
             :showEditExtractedDataInPlace="{}"
             :modalData="modalData()"
             :charsOfStudies="characteristics_studies"></evidence-profile>
-          <div v-if="project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
+          <div v-if="project.use_camelot">
             <h4>Characteristics of studies</h4>
             <camelot-characteristics-table-preview
               :charsOfStudies="characteristics_studies"

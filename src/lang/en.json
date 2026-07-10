@@ -1296,6 +1296,7 @@
     "step_four": {
       "data_missing": "Data are missing.",
       "loading": "Loading data...",
+      "no_records": "No records available",
       "no_explanation": "Explanation not yet added",
       "how_to_read": {
         "title": "How to read this table",

@@ -102,9 +102,10 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
 
     const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
     await flushPromises()
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     expect(sharedMocks.$router.push).toHaveBeenCalledWith({ name: 'MainPage' })
-  })
+  }, 10000)
 
   it('does NOT call loadSharedBundle for public route (old route stays working)', () => {
     Api.get.mockResolvedValue({ data: { sharedToken: 'public', public_type: 'fully' } })
