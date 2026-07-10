@@ -129,6 +129,7 @@ import methAssessments from '../list/editListMethAssessments.vue'
 import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
+import PublicPreviewAccess from '@/utils/publicPreviewAccess'
 
 const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
 const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
@@ -353,7 +354,7 @@ export default {
       return data
     },
     shouldUseSharedUrl: function () {
-      return !!this.$route.params.token
+      return PublicPreviewAccess.isSharedLinkToken(this.$route.params.token)
     },
     getSharedUrl: function (basePath) {
       if (this.shouldUseSharedUrl()) {
@@ -376,6 +377,10 @@ export default {
           const projects = Array.isArray(response.data) ? response.data : [response.data]
           if (projects.length > 0) {
             this.project = projects[0]
+            if (!PublicPreviewAccess.isAuthorized({ token, publicType: this.project.public_type })) {
+              this.$router.push({ name: 'MainPage' })
+              return
+            }
             this.getList()
           } else {
             this.$bvToast.toast(this.$t('shared.resource_not_found'), {

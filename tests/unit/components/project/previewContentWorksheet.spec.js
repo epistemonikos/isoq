@@ -3,6 +3,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import previewContentWorksheet from '@/components/previewContent/previewContentWorksheet.vue'
 import BootstrapVue from 'bootstrap-vue'
 import { exportToWord } from '@/services/wordExportService'
+import Api from '@/utils/Api'
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -27,6 +28,54 @@ describe('previewContentWorksheet.vue', () => {
       $route: { params: { id: '1', token: 'public' } },
       $router: { push: jest.fn() }
     }
+  })
+
+  describe('validateAndLoadProject — endpoint resolution', () => {
+    it('calls the plain (non-shared) project endpoint when accessed via the public browse token', () => {
+      shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: '1', projectId: 'p1', token: 'public' } } }
+      })
+
+      expect(Api.get).toHaveBeenCalledWith('/isoqf_projects', { project_id: 'p1' })
+    })
+
+    it('calls the shared-link endpoint when accessed via a real share token', () => {
+      shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: '1', projectId: 'p1', token: 'abc123realtoken' } } }
+      })
+
+      expect(Api.get).toHaveBeenCalledWith('/api/shared/abc123realtoken/isoqf_projects', { project_id: 'p1' })
+    })
+
+    it('redirects to MainPage when accessed via the public browse token but the project is private', async () => {
+      Api.get.mockResolvedValueOnce({ data: [{ id: 'p1', public_type: 'private' }] })
+      const push = jest.fn()
+
+      shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: '1', projectId: 'p1', token: 'public' } }, $router: { push } }
+      })
+
+      await new Promise(process.nextTick)
+
+      expect(push).toHaveBeenCalledWith({ name: 'MainPage' })
+    })
+
+    it('does not redirect a private project when accessed via a real shared-link token', async () => {
+      Api.get.mockResolvedValueOnce({ data: [{ id: 'p1', public_type: 'private' }] })
+      const push = jest.fn()
+
+      shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks: { ...mocks, $route: { params: { id: '1', projectId: 'p1', token: 'abc123realtoken' } }, $router: { push } }
+      })
+
+      await new Promise(process.nextTick)
+
+      expect(push).not.toHaveBeenCalledWith({ name: 'MainPage' })
+    })
   })
 
   it('shows detailed data sections only when public_type is fully', async () => {
