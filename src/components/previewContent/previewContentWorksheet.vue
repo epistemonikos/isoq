@@ -122,7 +122,7 @@
 <script>
 import Api from '@/utils/Api'
 import backToTop from '../backToTop'
-import { WorksheetExportStrategy } from '@/strategies/exportStrategies'
+import { exportToWord } from '@/services/wordExportService'
 import evidenceProfile from '../list/editListEvidenceProfile.vue'
 import charsOfStudies from '../list/editListCharsOfStudies.vue'
 import methAssessments from '../list/editListMethAssessments.vue'
@@ -839,18 +839,29 @@ export default {
     },
     exportToWord: async function () {
       try {
-        const data = {
-          evidenceProfile: this.evidence_profile[0] || {},
-          characteristicsStudies: this.characteristics_studies,
-          methodologicalAssessments: this.meth_assessments,
-          extractedData: this.extracted_data,
-          references: this.references,
-          list: this.list
-        }
-
         const filename = (this.project.name || 'GRADE-CERQual Assessment Worksheet') + '.docx'
-        const strategy = new WorksheetExportStrategy(this.project, data)
-        await strategy.generateAndDownload(filename)
+        const strategy = this.project.use_camelot ? 'camelot' : 'worksheet'
+
+        const data = this.project.use_camelot
+          ? {
+              evidenceProfile: this.evidence_profile,
+              characteristicStudies: this.characteristics_studies,
+              methodologicalAssessments: this.meth_assessments,
+              extractedData: this.extracted_data,
+              references: this.references,
+              list: this.list,
+              license: this.theLicense(this.list.license_type)
+            }
+          : {
+              evidenceProfile: this.evidence_profile[0] || {},
+              characteristicsStudies: this.characteristics_studies,
+              methodologicalAssessments: this.meth_assessments,
+              extractedData: this.extracted_data,
+              references: this.references,
+              list: this.list
+            }
+
+        await exportToWord(this.project, data, { filename, strategy })
       } catch (error) {
         console.error('Error exporting to Word:', error)
         this.$bvToast.toast(this.$t('common.error') + ': ' + error.message, {
