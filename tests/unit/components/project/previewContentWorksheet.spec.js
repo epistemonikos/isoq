@@ -116,6 +116,8 @@ describe('previewContentWorksheet.vue', () => {
       expect(data.evidenceProfile).toEqual([{ concern: 'no_concern' }])
       expect(data.characteristicStudies).toBe(wrapper.vm.characteristics_studies)
       expect(data.license).toBeDefined()
+      expect(data.selectOptions).toBe(wrapper.vm.select_options)
+      expect(data.levelConfidence).toBe(wrapper.vm.level_confidence)
     })
 
     it('uses the worksheet strategy and object-shaped evidenceProfile when project.use_camelot is false', async () => {
@@ -137,6 +139,45 @@ describe('previewContentWorksheet.vue', () => {
       expect(options.strategy).toBe('worksheet')
       expect(data.evidenceProfile).toEqual({ concern: 'no_concern' })
       expect(data.characteristicsStudies).toBe(wrapper.vm.characteristics_studies)
+      expect(data.findings).toEqual([{ ...baseData.list, evidence_profile: baseData.evidence_profile[0] }])
+    })
+
+    it('produces a payload that passes the real WordExportService validation (camelot)', async () => {
+      const { getWordExportService } = jest.requireActual('@/services/wordExportService')
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { public_type: 'fully', id: 'p1', sharedToken: 'token', use_camelot: true, name: 'My Project' },
+            ...baseData
+          }
+        }
+      })
+
+      await wrapper.vm.exportToWord()
+      const [project, data] = exportToWord.mock.calls[0]
+
+      expect(getWordExportService().validateExportData(project, data)).toEqual([])
+    })
+
+    it('produces a payload that passes the real WordExportService validation (worksheet, non-camelot)', async () => {
+      const { getWordExportService } = jest.requireActual('@/services/wordExportService')
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { public_type: 'fully', id: 'p1', sharedToken: 'token', use_camelot: false, name: 'My Project' },
+            ...baseData
+          }
+        }
+      })
+
+      await wrapper.vm.exportToWord()
+      const [project, data] = exportToWord.mock.calls[0]
+
+      expect(getWordExportService().validateExportData(project, data)).toEqual([])
     })
   })
 })
