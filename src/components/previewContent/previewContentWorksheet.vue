@@ -42,7 +42,7 @@
               </camelot-characteristics-table-preview>
             </div>
             <div
-              v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
+              v-else-if="!project.use_camelot && characteristics_studies.items && characteristics_studies.items.length">
               <chars-of-studies :ui="ui" :show="show" :mode="'view'" :list="list" :permission="true"
                 :charsOfStudies="characteristics_studies" :refsWithTitle="[]"></chars-of-studies>
             </div>

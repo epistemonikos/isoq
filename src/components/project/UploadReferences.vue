@@ -728,8 +728,7 @@ export default {
       if (!extractedDataQuerys.length) return
 
       try {
-        const projectRefIds = this.references.map(r => r.id)
-        const allCurrentRefIds = [...new Set([...projectRefIds, ...references.map(r => r.id)])]
+        const allCurrentRefIds = references.map(r => r.id)
 
         const patchPromises = []
 

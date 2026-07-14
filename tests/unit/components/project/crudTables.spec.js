@@ -224,6 +224,24 @@ describe('crudTables.vue', () => {
     expect(patchCall[1].items).toHaveLength(2)
   })
 
+  it('should sync existing table down to empty items when all references are removed', async () => {
+    const mockData = [{
+      id: 'table-1',
+      fields: [{ key: 'ref_id', label: 'ID' }, { key: 'authors', label: 'Authors' }],
+      items: [{ ref_id: 'ref1', authors: 'Auth 1 (2021)' }]
+    }]
+    Api.get.mockResolvedValue({ data: mockData })
+    Api.patch.mockClear()
+
+    // references prop is already [] from the default propsData in beforeEach
+    await wrapper.vm.updateMyDataTables()
+
+    expect(Api.get).toHaveBeenCalled()
+    const patchCall = Api.patch.mock.calls.find(call => call[0].includes('table-1'))
+    expect(patchCall).toBeDefined()
+    expect(patchCall[1].items).toHaveLength(0)
+  })
+
   it('should remove items if references are deleted in processItems', () => {
     // We set references in DATA because processItems uses this.references
     wrapper.setData({

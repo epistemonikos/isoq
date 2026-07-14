@@ -281,6 +281,23 @@ describe('UploadReferences.vue — updateExtractedDataReferences()', () => {
 
     expect(Api.patch).not.toHaveBeenCalled()
   })
+
+  it('removes an orphan using the fresh references param even when the references prop is still stale', async () => {
+    // Simulates the real timing: CallGetReferences hasn't refreshed the prop yet,
+    // so `this.references` still includes the reference that was just deleted (r1).
+    // The freshly-computed param passed in by the caller already excludes it.
+    jest.spyOn(wrapper.vm, 'references', 'get').mockReturnValue([{ id: 'r1' }, { id: 'r2' }])
+    const queries = [{
+      data: [{ id: 'ed1', items: [{ ref_id: 'r1' }, { ref_id: 'r2' }] }]
+    }]
+
+    await wrapper.vm.updateExtractedDataReferences(queries, [{ id: 'r2' }])
+
+    expect(Api.patch).toHaveBeenCalled()
+    const patchCall = Api.patch.mock.calls[0][1]
+    expect(patchCall.items).toHaveLength(1)
+    expect(patchCall.items[0].ref_id).toBe('r2')
+  })
 })
 
 // ─── prefetchDataForExtractedDataUpdate ───────────────────────────────────────

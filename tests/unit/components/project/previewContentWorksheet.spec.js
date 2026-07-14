@@ -118,7 +118,7 @@ describe('previewContentWorksheet.vue', () => {
         return {
           project: { public_type: 'fully', id: 'p1', sharedToken: 'token' },
           list: { references: [] },
-          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          characteristics_studies: { fields: [{ key: 'field_1' }], items: [{ ref_id: '1' }] },
           meth_assessments: { items: [{ ref_id: '1' }] }
         }
       }
@@ -171,6 +171,26 @@ describe('previewContentWorksheet.vue', () => {
     expect(wrapper.find('extracted-data-stub').exists()).toBe(false)
   })
 
+  it('hides characteristics section when it has no items, even if fields exist (aligned with the assessments check)', () => {
+    const wrapper = shallowMount(previewContentWorksheet, {
+      localVue,
+      mocks,
+      data() {
+        return {
+          project: { public_type: 'fully', id: 'p1', sharedToken: 'token' },
+          list: { references: [] },
+          characteristics_studies: { fields: [{ key: 'field_1' }], items: [] },
+          meth_assessments: { items: [{ ref_id: '1' }] }
+        }
+      }
+    })
+
+    // fields describes column structure and can be non-empty with zero items entered
+    expect(wrapper.find('chars-of-studies-stub').exists()).toBe(false)
+    expect(wrapper.find('methodological-assessments-stub').exists()).toBe(true)
+    expect(wrapper.find('extracted-data-stub').exists()).toBe(true)
+  })
+
   it('shows detailed data sections for a real shared-link token regardless of public_type', () => {
     const wrapper = shallowMount(previewContentWorksheet, {
       localVue,
@@ -179,7 +199,7 @@ describe('previewContentWorksheet.vue', () => {
         return {
           project: { public_type: 'minimally', id: 'p1', sharedToken: 'abc123realtoken' },
           list: { references: [] },
-          characteristics_studies: { fields: [{ key: 'field_1' }] },
+          characteristics_studies: { fields: [{ key: 'field_1' }], items: [{ ref_id: '1' }] },
           meth_assessments: { items: [{ ref_id: '1' }] }
         }
       }
