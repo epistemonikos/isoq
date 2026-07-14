@@ -28,7 +28,7 @@
       <p class="text-muted small mb-2" v-if="showMoveInstruction">
         <i class="fas fa-arrows-alt mr-1"></i>{{ moveInstructionText }}
       </p>
-      
+
       <draggable
         v-model="localFields"
         handle=".drag-handle"
@@ -48,9 +48,9 @@
                   <label v-if="!field.isCamelot" :for="idPrefix + 'label-' + index" class="mb-0">{{ labelText }}</label>
                   <strong v-else class="mb-0" style="font-size: 1.1em; color: var(--camelot-label-color, #333);">
                     {{ field.categoryLabel || field.label }}
-                    <font-awesome-icon 
-                      icon="info-circle" 
-                      class="ml-1 text-info" 
+                    <font-awesome-icon
+                      icon="info-circle"
+                      class="ml-1 text-info"
                       style="cursor: pointer; font-size: 0.8em;"
                       @click="showGuidance(field)"
                     />
@@ -103,7 +103,7 @@
                   rows="3"
                   @input="emitChange">
                 </b-form-textarea>
-                
+
                 <!-- Comments Input (Optional for Camelot pairs) -->
                 <template v-if="field.hasComments">
                   <label :for="idPrefix + 'comments-' + index" class="mt-2">{{ field.commentsLabel || $t('camelot.step_three.concerns_label') || 'Comments' }}</label>
@@ -236,7 +236,7 @@ export default {
       default: 'field-'
     }
   },
-  data() {
+  data () {
     return {
       localFields: [],
       drag: false,
@@ -246,7 +246,7 @@ export default {
     }
   },
   computed: {
-    guidanceContent() {
+    guidanceContent () {
       if (!this.selectedGuidanceField) return {}
       return {
         title: this.$t(`camelot.guidance.${this.selectedGuidanceField}.title`),
@@ -259,7 +259,7 @@ export default {
   },
   watch: {
     fields: {
-      handler(newFields) {
+      handler (newFields) {
         // Deep copy to avoid mutating prop directly
         // Ensure each field has an ID for :key binding in v-for to prevent rendering issues
         this.localFields = JSON.parse(JSON.stringify(newFields)).map((field, index) => {
@@ -274,7 +274,7 @@ export default {
     }
   },
   methods: {
-    addField() {
+    addField () {
       const newField = {
         id: `field_${Date.now()}`,
         label: '',
@@ -282,7 +282,7 @@ export default {
       }
       this.localFields.unshift(newField)
       this.emitChange()
-      
+
       // Scroll to new field and focus
       this.$nextTick(() => {
         const index = 0
@@ -294,14 +294,14 @@ export default {
           setTimeout(() => {
             element.classList.remove('highlight-new-field')
           }, 2000)
-          
+
           // Focus input
           const input = document.getElementById(this.idPrefix + 'label-' + index)
           if (input) input.focus()
         }
       })
     },
-    removeField(index) {
+    removeField (index) {
       const removed = this.localFields[index]
       if (removed && removed.id) {
         const i = this.touchedLabelIds.indexOf(removed.id)
@@ -310,25 +310,25 @@ export default {
       this.localFields.splice(index, 1)
       this.emitChange()
     },
-    markLabelTouched(id) {
+    markLabelTouched (id) {
       if (id && !this.touchedLabelIds.includes(id)) {
         this.touchedLabelIds.push(id)
       }
     },
-    getLabelState(field) {
+    getLabelState (field) {
       if (!this.touchedLabelIds.includes(field.id)) return null
       return field.label && field.label.trim().length > 0 ? null : false
     },
-    onDragStart() {
+    onDragStart () {
       this.drag = true
       document.body.classList.add('dragging-active')
     },
-    onDragEnd() {
+    onDragEnd () {
       this.drag = false
       document.body.classList.remove('dragging-active')
       this.emitChange()
     },
-    showGuidance(field) {
+    showGuidance (field) {
       if (!field || !field.key) return
 
       // Map field keys like "research_extractedData" or "research_comments" to "research"
@@ -353,7 +353,7 @@ export default {
         this.isSidebarOpen = true
       }
     },
-    emitChange() {
+    emitChange () {
       this.$emit('change', this.localFields)
       this.$emit('input', this.localFields) // Support v-model
     }

@@ -14,7 +14,7 @@ class LockService {
     this.lockedBy = null
 
     // Granular per-ref lock state (Step 3 / Step 4 studies)
-    this.currentRef = null       // { projectId, refId }
+    this.currentRef = null // { projectId, refId }
     this.refLocked = false
     this.refLockedBy = null
     this.refHeartbeatTimer = null
@@ -59,7 +59,7 @@ class LockService {
         headers: {
           ...Api.getHeaders(),
           'X-Suppress-Lock-Error': 'true'
-        },
+        }
 
       })
       if (response.data.status) {
@@ -119,7 +119,7 @@ class LockService {
 
     try {
       await axios.post(`/api/lock/${this.projectId}/heartbeat`, {}, {
-        headers: Api.getHeaders(),
+        headers: Api.getHeaders()
 
       })
     } catch (error) {

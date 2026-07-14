@@ -1,6 +1,6 @@
 /**
  * RIS Export Service
- * 
+ *
  * Handles the export of references to RIS format files.
  * Provides methods for generating filenames and triggering downloads.
  */
@@ -13,7 +13,7 @@ export default class RisExportService {
    * @param {string} projectName - Optional project name to include in filename
    * @returns {string} Generated filename
    */
-  generateFilename(projectName) {
+  generateFilename (projectName) {
     if (!projectName || typeof projectName !== 'string' || projectName.trim() === '') {
       return 'references.ris'
     }
@@ -34,7 +34,7 @@ export default class RisExportService {
    * @param {string} options.filename - Custom filename (optional)
    * @param {string} options.projectName - Project name for filename generation (optional)
    */
-  exportToRIS(references, options = {}) {
+  exportToRIS (references, options = {}) {
     // Format references to RIS
     const content = formatReferences(references)
 
@@ -57,22 +57,22 @@ export default class RisExportService {
    * @param {string} content - File content
    * @param {string} filename - Filename for download
    */
-  downloadFile(content, filename) {
+  downloadFile (content, filename) {
     // Create Blob with UTF-8 BOM for proper encoding of special characters
     const BOM = '\uFEFF'
     const blob = new Blob([BOM + content], { type: 'text/plain;charset=utf-8' })
-    
+
     // Create download link
     const url = URL.createObjectURL(blob)
     const element = document.createElement('a')
     element.setAttribute('href', url)
     element.setAttribute('download', filename)
     element.style.display = 'none'
-    
+
     // Trigger download
     document.body.appendChild(element)
     element.click()
-    
+
     // Cleanup
     document.body.removeChild(element)
     URL.revokeObjectURL(url)
@@ -83,7 +83,7 @@ export default class RisExportService {
  * Get singleton instance of RisExportService
  * @returns {RisExportService}
  */
-export function getRisExportService() {
+export function getRisExportService () {
   if (!window.__risExportServiceInstance) {
     window.__risExportServiceInstance = new RisExportService()
   }

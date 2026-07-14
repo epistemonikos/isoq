@@ -60,14 +60,14 @@ export default {
       default: false
     }
   },
-  data() {
+  data () {
     return {
       columnDefinitions: [],
       isSavingColumns: false
     }
   },
   methods: {
-    openColumnsModal() {
+    openColumnsModal () {
       if (!this.canEdit) {
         return
       }
@@ -115,14 +115,14 @@ export default {
       }
       this.$bvModal.show('modal-manage-columns')
     },
-    closeColumnsModal() {
+    closeColumnsModal () {
       this.$bvModal.hide('modal-manage-columns')
     },
-    resetColumnsModal() {
+    resetColumnsModal () {
       this.columnDefinitions = []
       this.isSavingColumns = false
     },
-    handleSaveColumns(bvModalEvt) {
+    handleSaveColumns (bvModalEvt) {
       if (!this.canEdit) {
         if (bvModalEvt) bvModalEvt.preventDefault()
         return

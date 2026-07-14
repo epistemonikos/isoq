@@ -1,13 +1,13 @@
 /**
  * WordExportService - Service for orchestrating Word document exports
- * 
+ *
  * Responsibilities:
  * - Validate export data
  * - Select appropriate export strategy
  * - Track export progress
  * - Handle errors
  * - Generate filenames
- * 
+ *
  * @example
  * const service = getWordExportService()
  * service.onProgress((progress, step) => console.log(progress, step))
@@ -20,7 +20,7 @@ import { sanitizeText } from '@/utils/textSanitizer'
 import { i18n } from '@/plugins/i18n'
 
 export class WordExportService {
-  constructor() {
+  constructor () {
     this.progressCallback = null
     this.documentGenerator = new DocumentGenerator()
     this.i18n = i18n
@@ -31,7 +31,7 @@ export class WordExportService {
    * Set progress callback
    * @param {Function} callback - (progress: number, step: string) => void
    */
-  onProgress(callback) {
+  onProgress (callback) {
     this.progressCallback = callback
     this.documentGenerator.setProgressCallback(callback)
   }
@@ -43,11 +43,11 @@ export class WordExportService {
    * @param {Object} options - Export options
    * @returns {Promise<boolean>} Success status
    */
-  async exportToWord(project, data, options = {}) {
+  async exportToWord (project, data, options = {}) {
     try {
       // Get locale from options or use default
       const locale = options.locale || this.i18n.locale || 'en'
-      
+
       // Step 1: Validate data
       this.updateProgress(10, 'Validating data...')
       const validationErrors = this.validateExportData(project, data)
@@ -63,7 +63,7 @@ export class WordExportService {
       // Step 3: Generate document
       this.updateProgress(30, 'Generating document...')
       this.currentExport = strategy
-      
+
       const filename = this.generateFilename(project, options.filename, locale)
       const success = await strategy.generateAndDownload(filename)
 
@@ -88,7 +88,7 @@ export class WordExportService {
    * @param {Object} data
    * @returns {Array<string>} Array of error messages
    */
-  validateExportData(project, data) {
+  validateExportData (project, data) {
     const errors = []
 
     // Validate project
@@ -131,10 +131,10 @@ export class WordExportService {
    * @param {Object} options
    * @returns {string} Strategy type ('isoq' or 'camelot')
    */
-  getStrategyType(project, data, options = {}) {
+  getStrategyType (project, data, options = {}) {
     if (options.strategy) return options.strategy
 
-    // Only use Camelot strategy if it's a Camelot project AND 
+    // Only use Camelot strategy if it's a Camelot project AND
     // we have worksheet-specific data (evidenceProfile as a top-level key)
     if (project.use_camelot && data && data.evidenceProfile) {
       return 'camelot'
@@ -150,22 +150,22 @@ export class WordExportService {
    * @param {string} locale
    * @returns {string}
    */
-  generateFilename(project, customFilename, locale = 'en') {
+  generateFilename (project, customFilename, locale = 'en') {
     if (customFilename) {
-      return customFilename.endsWith('.docx') 
-        ? customFilename 
+      return customFilename.endsWith('.docx')
+        ? customFilename
         : `${customFilename}.docx`
     }
 
     const baseName = project.name || 'iSoQ Export'
     const sanitizedName = this.sanitizeFilename(baseName)
-    
+
     // Temporarily set locale to get translation
     const originalLocale = this.i18n.locale
     this.i18n.locale = locale
     const suffix = this.i18n.t('actionButtons.word_export.filename_suffix')
     this.i18n.locale = originalLocale
-    
+
     return `${sanitizedName} - ${suffix}.docx`
   }
 
@@ -174,12 +174,12 @@ export class WordExportService {
    * @param {string} filename
    * @returns {string}
    */
-  sanitizeFilename(filename) {
+  sanitizeFilename (filename) {
     return filename
       .replace(/[<>:"/\\|?*]/g, '') // Remove invalid filename characters
-      .replace(/\s+/g, ' ')          // Normalize spaces
+      .replace(/\s+/g, ' ') // Normalize spaces
       .trim()
-      .substring(0, 200)             // Limit length
+      .substring(0, 200) // Limit length
   }
 
   /**
@@ -187,7 +187,7 @@ export class WordExportService {
    * @param {number} progress - 0-100
    * @param {string} step - Current step description
    */
-  updateProgress(progress, step) {
+  updateProgress (progress, step) {
     if (this.progressCallback) {
       this.progressCallback(progress, step)
     }
@@ -196,7 +196,7 @@ export class WordExportService {
   /**
    * Cancel current export
    */
-  cancelExport() {
+  cancelExport () {
     if (this.currentExport) {
       this.documentGenerator.cancelGeneration()
       this.currentExport = null
@@ -209,13 +209,13 @@ export class WordExportService {
    * @param {Object} data
    * @returns {Object} Size estimation
    */
-  estimateDocumentSize(data) {
+  estimateDocumentSize (data) {
     const findingsCount = data.findings?.length || 0
     const referencesCount = data.references?.length || 0
-    
+
     // Rough estimation: ~2KB per finding, ~1KB per reference
     const estimatedBytes = (findingsCount * 2048) + (referencesCount * 1024) + 10240 // 10KB base
-    
+
     return {
       findings: findingsCount,
       references: referencesCount,
@@ -232,7 +232,7 @@ let serviceInstance = null
  * Get singleton instance of WordExportService
  * @returns {WordExportService}
  */
-export function getWordExportService() {
+export function getWordExportService () {
   if (!serviceInstance) {
     serviceInstance = new WordExportService()
   }
@@ -246,7 +246,7 @@ export function getWordExportService() {
  * @param {Object} options
  * @returns {Promise<boolean>}
  */
-export async function exportToWord(project, data, options = {}) {
+export async function exportToWord (project, data, options = {}) {
   const service = getWordExportService()
   return service.exportToWord(project, data, options)
 }

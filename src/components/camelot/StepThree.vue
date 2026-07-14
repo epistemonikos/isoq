@@ -166,7 +166,7 @@ export default {
   watch: {
     filterableColumns: {
       immediate: true,
-      handler(newCols, oldCols) {
+      handler (newCols, oldCols) {
         // Initial load
         if (!oldCols) {
           this.visibleColumnKeys = newCols.map(c => c.key)
@@ -190,7 +190,7 @@ export default {
       }
     },
     // Watch showComments to ensure new columns are visible
-    showComments(newVal) {
+    showComments (newVal) {
       if (newVal) {
         // Validation logic is now handled in toggleConcerns to ensure immediate update
         this.$nextTick(() => {
@@ -199,7 +199,7 @@ export default {
       }
     },
     visibleColumnKeys: {
-      handler(newVal, oldVal) {
+      handler (newVal, oldVal) {
         // If showComments is active, we should ensure concern columns follow their parents
         if (this.showComments && oldVal) {
           const added = newVal.filter(k => !oldVal.includes(k))
@@ -237,7 +237,7 @@ export default {
       deep: false
     },
     references: {
-      handler(newReferences, oldReferences) {
+      handler (newReferences, oldReferences) {
         // Only reload if there are actual changes in references
         if (newReferences && newReferences.length !== (oldReferences?.length || 0)) {
           this.loadCharacteristicsData()
@@ -246,7 +246,7 @@ export default {
       immediate: false
     },
     charsData: {
-      handler(newVal) {
+      handler (newVal) {
         if (newVal && newVal.fields) {
           // Force table update when data changes
           this.$nextTick(() => {
@@ -257,7 +257,7 @@ export default {
       deep: true
     }
   },
-  data() {
+  data () {
     return {
       fields: [
         {
@@ -289,7 +289,7 @@ export default {
     }
   },
   computed: {
-    tableItems() {
+    tableItems () {
       // Always use references as base to ensure all are displayed
       const items = this.references.map(ref => {
         // Look for saved data for this reference
@@ -316,7 +316,7 @@ export default {
         return authorsA.localeCompare(authorsB)
       })
     },
-    availableTableFields() {
+    availableTableFields () {
       // Base fields (authors)
       const baseFields = this.fields.filter(f => f.key === 'authors')
       const orderedFields = []
@@ -361,7 +361,7 @@ export default {
       // Return the combination maintaining the custom order
       return [...baseFields, ...editFields, ...orderedFields, ...actionFields]
     },
-    filterableColumns() {
+    filterableColumns () {
       // Return columns that can be filtered (everything except authors, actions and concerns)
       return this.availableTableFields.filter(f =>
         f.key !== 'authors' &&
@@ -370,7 +370,7 @@ export default {
         !f.key.endsWith('_comments')
       )
     },
-    tableFields() {
+    tableFields () {
       // Return columns that should be displayed
       return this.availableTableFields.filter(f => {
         if (f.key === 'authors' || f.key === 'actions' || f.key === 'edit') return true
@@ -384,7 +384,7 @@ export default {
         return this.visibleColumnKeys.includes(f.key)
       })
     },
-    hasVisibleCamelotFields() {
+    hasVisibleCamelotFields () {
       if (!this.camelot || !this.camelot.categories) return false
       return this.camelot.categories.some(cat => {
         const extractedOpt = cat.options.find(opt => !opt.key.endsWith('_comments'))
@@ -393,23 +393,23 @@ export default {
     }
   },
   methods: {
-    formatAuthors(item) {
+    formatAuthors (item) {
       return Commons.parseReference(item, true, false)
     },
-    shouldTruncate(text) {
+    shouldTruncate (text) {
       return Commons.shouldTruncate(text)
     },
-    truncate(text) {
+    truncate (text) {
       return Commons.truncate(text)
     },
-    toggleExpand(refId, fieldKey) {
+    toggleExpand (refId, fieldKey) {
       const key = `${refId}-${fieldKey}`
       this.$set(this.expandedCells, key, !this.expandedCells[key])
     },
-    isExpanded(refId, fieldKey) {
+    isExpanded (refId, fieldKey) {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
-    editReference(item) {
+    editReference (item) {
       if (!this.canEdit) {
         return
       }
@@ -420,26 +420,26 @@ export default {
         }
       })
     },
-    isRefLocked(refId) {
+    isRefLocked (refId) {
       return this.activeRefLocks.some(l => l.ref_id === refId)
     },
-    refLockedByName(refId) {
+    refLockedByName (refId) {
       const lock = this.activeRefLocks.find(l => l.ref_id === refId)
       return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
     },
-    async fetchAndUpdateRefLocks() {
+    async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
     },
-    startRefLocksPolling() {
+    startRefLocksPolling () {
       this.fetchAndUpdateRefLocks()
       this.refLocksTimer = setInterval(() => this.fetchAndUpdateRefLocks(), 15000)
     },
-    stopRefLocksPolling() {
+    stopRefLocksPolling () {
       if (this.refLocksTimer) clearInterval(this.refLocksTimer)
       this.refLocksTimer = null
     },
-    handleReferenceSaved(updatedData) {
+    handleReferenceSaved (updatedData) {
       if (updatedData && updatedData.items) {
         this.$set(this, 'charsData', updatedData)
       } else {
@@ -447,7 +447,7 @@ export default {
       }
       this.$forceUpdate()
     },
-    deleteReference(item) {
+    deleteReference (item) {
       if (!this.canEdit) {
         return
       }
@@ -458,20 +458,20 @@ export default {
      * Gets custom fields from loaded data
      * @returns {Array} Array of objects with key and label for custom fields
      */
-    getCustomFields() {
+    getCustomFields () {
       // Use helper to extract custom fields
       return extractCustomFields(this.charsData.fields)
     },
 
     // Helper method to check if a field is custom
-    isCustomField(fieldKey) {
+    isCustomField (fieldKey) {
       return isCustomField(fieldKey)
     },
 
     /**
      * Loads characteristics data from API
      */
-    loadCharacteristicsData() {
+    loadCharacteristicsData () {
       this.isLoading = true
 
       const params = {
@@ -528,7 +528,7 @@ export default {
         })
     }
   },
-  mounted() {
+  mounted () {
     // Cargamos los datos de características al montar el componente
     this.loadCharacteristicsData()
 
@@ -545,7 +545,7 @@ export default {
       }
     })
   },
-  beforeDestroy() {
+  beforeDestroy () {
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     this.$root.$off('characteristics-updated')

@@ -842,7 +842,7 @@ export default {
     show: Object,
     modePrintFieldObject: Array
   },
-  data() {
+  data () {
     return {
       selectedOptions: {
         methodological_limitations: {
@@ -935,7 +935,7 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     this.localExtractedData = JSON.parse(JSON.stringify(this.extractedData))
   },
@@ -952,7 +952,7 @@ export default {
     explanationStateFor: function (domain) {
       const d = this.selectedOptions[domain]
       if (!d || d.option === null || parseInt(d.option) === 0) return null
-      return d.explanation && d.explanation.trim().length > 0 ? true : false
+      return !!(d.explanation && d.explanation.trim().length > 0)
     },
     focusExplanation: function (id) {
       setTimeout(() => {

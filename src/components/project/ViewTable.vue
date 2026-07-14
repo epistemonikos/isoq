@@ -267,7 +267,7 @@ export default {
   components: {
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  data() {
+  data () {
     return {
       ui: {
         project: {
@@ -448,7 +448,7 @@ export default {
     }
   },
   watch: {
-    filter(newVal) {
+    filter (newVal) {
       this.table_settings.filter = newVal
     }
   },
@@ -458,7 +458,7 @@ export default {
       this.table_settings.totalRows = filteredItems.length
       this.table_settings.currentPage = 1
     },
-    cleanTableFilter() {
+    cleanTableFilter () {
       this.ui.project.showFilterOne = false
       this.ui.project.showFilterTwo = false
       this.ui.project.showFilterThree = false

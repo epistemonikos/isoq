@@ -149,7 +149,7 @@ export default {
     'table-extracted-data': editListExtractedData
   },
   mixins: [camelotMixin],
-  data() {
+  data () {
     return {
       licenseUrl: require('../../assets/by-88x31.png'),
       ui: {
@@ -338,7 +338,7 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     this.updateTranslations()
     this.getList()
     window.addEventListener('lock-lost', this.handleLockLost)
@@ -346,7 +346,7 @@ export default {
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
     window.addEventListener('permission-denied', this.refreshPermissions)
   },
-  beforeDestroy() {
+  beforeDestroy () {
     LockService.release()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -476,7 +476,6 @@ export default {
               haveContent++
             }
           }
-
         } else {
           // NON-CAMELOT LOGIC (Standard)
           // We only check for fields defined in 'fields' property
@@ -938,7 +937,7 @@ export default {
       }
     },
 
-    async attemptLock() {
+    async attemptLock () {
       // Use list.project_id if available, otherwise wait for getProject?
       // list object has project_id
       if (this.list.project_id) {
@@ -958,19 +957,19 @@ export default {
         }
       }
     },
-    handleLockLost(e) {
+    handleLockLost (e) {
       if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-lost-sheet')
       }
     },
-    handleIdle(e) {
+    handleIdle (e) {
       if (e.detail && e.detail.projectId === this.list.project_id) {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-idle-sheet')
       }
     },
-    reloadPage() {
+    reloadPage () {
       window.location.reload()
     },
 
@@ -988,10 +987,10 @@ export default {
     }
   },
   watch: {
-    '$i18n.locale'(val) {
+    '$i18n.locale' (val) {
       this.updateTranslations()
     },
-    '$route'(to, from) {
+    '$route' (to, from) {
       if (to.params.id !== from.params.id) {
         this.getList()
       }

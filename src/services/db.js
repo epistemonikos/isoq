@@ -56,7 +56,7 @@ db.version(3).stores({
   pendingOperations: '++id, type, endpoint, method, timestamp',
   syncMetadata: 'key',
   urlCache: 'url, type, lastSync',
-  
+
   characteristics: 'id, projectId, lastSync',
   assessments: 'id, projectId, lastSync',
   extractedData: 'id, findingId, lastSync',
@@ -72,7 +72,7 @@ db.version(3).stores({
  * @param {Object} project - Project object with id and data
  * @returns {Promise<number>} - The id of the saved project
  */
-export async function saveProject(project) {
+export async function saveProject (project) {
   try {
     const existing = await db.projects.get(project.id)
     let dataToSave = project.data || project
@@ -99,7 +99,7 @@ export async function saveProject(project) {
  * @param {number|string} id - Project id
  * @returns {Promise<Object|undefined>} - The cached project or undefined
  */
-export async function getProject(id) {
+export async function getProject (id) {
   try {
     return await db.projects.get(id)
   } catch (error) {
@@ -112,7 +112,7 @@ export async function getProject(id) {
  * Get all cached projects
  * @returns {Promise<Array>} - Array of all cached projects
  */
-export async function getAllProjects() {
+export async function getAllProjects () {
   try {
     return await db.projects.toArray()
   } catch (error) {
@@ -126,7 +126,7 @@ export async function getAllProjects() {
  * @param {number|string} id - Project id
  * @returns {Promise<void>}
  */
-export async function deleteProject(id) {
+export async function deleteProject (id) {
   try {
     return await db.projects.delete(id)
   } catch (error) {
@@ -144,7 +144,7 @@ export async function deleteProject(id) {
  * @param {Object} worksheet - Worksheet object with id, projectId and data
  * @returns {Promise<number>} - The id of the saved worksheet
  */
-export async function saveWorksheet(worksheet) {
+export async function saveWorksheet (worksheet) {
   try {
     const record = {
       id: worksheet.id,
@@ -164,7 +164,7 @@ export async function saveWorksheet(worksheet) {
  * @param {number|string} id - Worksheet id
  * @returns {Promise<Object|undefined>} - The cached worksheet or undefined
  */
-export async function getWorksheet(id) {
+export async function getWorksheet (id) {
   try {
     return await db.worksheets.get(id)
   } catch (error) {
@@ -178,7 +178,7 @@ export async function getWorksheet(id) {
  * @param {number|string} projectId - Project id
  * @returns {Promise<Array>} - Array of worksheets for the project
  */
-export async function getWorksheetsByProject(projectId) {
+export async function getWorksheetsByProject (projectId) {
   try {
     return await db.worksheets.where('projectId').equals(projectId).toArray()
   } catch (error) {
@@ -192,7 +192,7 @@ export async function getWorksheetsByProject(projectId) {
  * @param {number|string} id - Worksheet id
  * @returns {Promise<void>}
  */
-export async function deleteWorksheet(id) {
+export async function deleteWorksheet (id) {
   try {
     return await db.worksheets.delete(id)
   } catch (error) {
@@ -210,7 +210,7 @@ export async function deleteWorksheet(id) {
  * @param {Object} finding - Finding object with id, worksheetId and data
  * @returns {Promise<number>} - The id of the saved finding
  */
-export async function saveFinding(finding) {
+export async function saveFinding (finding) {
   try {
     const record = {
       id: finding.id,
@@ -230,7 +230,7 @@ export async function saveFinding(finding) {
  * @param {number|string} id - Finding id
  * @returns {Promise<Object|undefined>} - The cached finding or undefined
  */
-export async function getFinding(id) {
+export async function getFinding (id) {
   try {
     return await db.findings.get(id)
   } catch (error) {
@@ -244,7 +244,7 @@ export async function getFinding(id) {
  * @param {number|string} worksheetId - Worksheet id
  * @returns {Promise<Array>} - Array of findings for the worksheet
  */
-export async function getFindingsByWorksheet(worksheetId) {
+export async function getFindingsByWorksheet (worksheetId) {
   try {
     return await db.findings.where('worksheetId').equals(worksheetId).toArray()
   } catch (error) {
@@ -262,7 +262,7 @@ export async function getFindingsByWorksheet(worksheetId) {
  * @param {Object} reference - Reference object with id, projectId and data
  * @returns {Promise<number>} - The id of the saved reference
  */
-export async function saveReference(reference) {
+export async function saveReference (reference) {
   try {
     const record = {
       id: reference.id,
@@ -282,7 +282,7 @@ export async function saveReference(reference) {
  * @param {number|string} id - Reference id
  * @returns {Promise<Object|undefined>} - The cached reference or undefined
  */
-export async function getReference(id) {
+export async function getReference (id) {
   try {
     return await db.references.get(id)
   } catch (error) {
@@ -296,7 +296,7 @@ export async function getReference(id) {
  * @param {number|string} projectId - Project id
  * @returns {Promise<Array>} - Array of references for the project
  */
-export async function getReferencesByProject(projectId) {
+export async function getReferencesByProject (projectId) {
   try {
     return await db.references.where('projectId').equals(projectId).toArray()
   } catch (error) {
@@ -309,7 +309,7 @@ export async function getReferencesByProject(projectId) {
 // Characteristics Functions
 // ============================================
 
-export async function saveCharacteristic(data) {
+export async function saveCharacteristic (data) {
   try {
     const record = {
       id: data.id,
@@ -324,7 +324,7 @@ export async function saveCharacteristic(data) {
   }
 }
 
-export async function getCharacteristicsByProject(projectId) {
+export async function getCharacteristicsByProject (projectId) {
   try {
     const records = await db.characteristics.where('projectId').equals(projectId).toArray()
     return records.map(r => r.data)
@@ -338,7 +338,7 @@ export async function getCharacteristicsByProject(projectId) {
 // Assessments Functions
 // ============================================
 
-export async function saveAssessment(data) {
+export async function saveAssessment (data) {
   try {
     const record = {
       id: data.id,
@@ -353,7 +353,7 @@ export async function saveAssessment(data) {
   }
 }
 
-export async function getAssessmentsByProject(projectId) {
+export async function getAssessmentsByProject (projectId) {
   try {
     const records = await db.assessments.where('projectId').equals(projectId).toArray()
     return records.map(r => r.data)
@@ -367,7 +367,7 @@ export async function getAssessmentsByProject(projectId) {
 // Extracted Data Functions
 // ============================================
 
-export async function saveExtractedData(data) {
+export async function saveExtractedData (data) {
   try {
     const record = {
       id: data.id,
@@ -382,7 +382,7 @@ export async function saveExtractedData(data) {
   }
 }
 
-export async function getExtractedDataByFinding(findingId) {
+export async function getExtractedDataByFinding (findingId) {
   try {
     const records = await db.extractedData.where('findingId').equals(findingId).toArray()
     return records.map(r => r.data)
@@ -396,7 +396,7 @@ export async function getExtractedDataByFinding(findingId) {
 // List Categories Functions
 // ============================================
 
-export async function saveListCategory(data) {
+export async function saveListCategory (data) {
   try {
     const record = {
       id: data.id,
@@ -411,7 +411,7 @@ export async function saveListCategory(data) {
   }
 }
 
-export async function getListCategoriesByProject(projectId) {
+export async function getListCategoriesByProject (projectId) {
   try {
     const records = await db.listCategories.where('projectId').equals(projectId).toArray()
     return records.map(r => r.data)
@@ -430,7 +430,7 @@ export async function getListCategoriesByProject(projectId) {
  * @param {Object} operation - Operation object with type, endpoint, method, and payload
  * @returns {Promise<number>} - The auto-generated id of the operation
  */
-export async function addPendingOperation(operation) {
+export async function addPendingOperation (operation) {
   try {
     const record = {
       type: operation.type,
@@ -450,7 +450,7 @@ export async function addPendingOperation(operation) {
  * Get all pending operations ordered by timestamp
  * @returns {Promise<Array>} - Array of pending operations
  */
-export async function getPendingOperations() {
+export async function getPendingOperations () {
   try {
     return await db.pendingOperations.orderBy('timestamp').toArray()
   } catch (error) {
@@ -464,7 +464,7 @@ export async function getPendingOperations() {
  * @param {number} id - Operation id
  * @returns {Promise<void>}
  */
-export async function removePendingOperation(id) {
+export async function removePendingOperation (id) {
   try {
     return await db.pendingOperations.delete(id)
   } catch (error) {
@@ -477,7 +477,7 @@ export async function removePendingOperation(id) {
  * Get the count of pending operations
  * @returns {Promise<number>} - Number of pending operations
  */
-export async function getPendingOperationsCount() {
+export async function getPendingOperationsCount () {
   try {
     return await db.pendingOperations.count()
   } catch (error) {
@@ -496,7 +496,7 @@ export async function getPendingOperationsCount() {
  * @param {*} value - Metadata value
  * @returns {Promise<string>} - The key of the saved metadata
  */
-export async function setSyncMetadata(key, value) {
+export async function setSyncMetadata (key, value) {
   try {
     return await db.syncMetadata.put({ key, value })
   } catch (error) {
@@ -510,7 +510,7 @@ export async function setSyncMetadata(key, value) {
  * @param {string} key - Metadata key
  * @returns {Promise<*>} - The metadata value or undefined
  */
-export async function getSyncMetadata(key) {
+export async function getSyncMetadata (key) {
   try {
     const record = await db.syncMetadata.get(key)
     return record ? record.value : undefined
@@ -528,7 +528,7 @@ export async function getSyncMetadata(key) {
  * Clear all data from the database (useful for logout)
  * @returns {Promise<void>}
  */
-export async function clearAllData() {
+export async function clearAllData () {
   try {
     await Promise.all([
       db.projects.clear(),
@@ -549,7 +549,7 @@ export async function clearAllData() {
  * Check if the database is available and working
  * @returns {Promise<boolean>} - True if database is available
  */
-export async function isDatabaseAvailable() {
+export async function isDatabaseAvailable () {
   try {
     await db.open()
     return true
@@ -570,7 +570,7 @@ export async function isDatabaseAvailable() {
  * @param {*} data - The data to cache
  * @returns {Promise<string>} - The URL of the saved cache entry
  */
-export async function saveToUrlCache(url, type, data) {
+export async function saveToUrlCache (url, type, data) {
   try {
     const record = {
       url,
@@ -590,7 +590,7 @@ export async function saveToUrlCache(url, type, data) {
  * @param {string} url - The URL to look up
  * @returns {Promise<*>} - The cached data or undefined
  */
-export async function getFromUrlCache(url) {
+export async function getFromUrlCache (url) {
   try {
     const record = await db.urlCache.get(url)
     return record ? record.data : undefined
@@ -605,7 +605,7 @@ export async function getFromUrlCache(url) {
  * @param {string} type - The type of data
  * @returns {Promise<Array>} - Array of cached entries
  */
-export async function getUrlCacheByType(type) {
+export async function getUrlCacheByType (type) {
   try {
     return await db.urlCache.where('type').equals(type).toArray()
   } catch (error) {
@@ -619,7 +619,7 @@ export async function getUrlCacheByType(type) {
  * @param {string} type - The type to clear
  * @returns {Promise<number>} - Number of deleted entries
  */
-export async function clearUrlCacheByType(type) {
+export async function clearUrlCacheByType (type) {
   try {
     return await db.urlCache.where('type').equals(type).delete()
   } catch (error) {

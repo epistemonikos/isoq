@@ -95,7 +95,7 @@ export default {
     }
   },
   computed: {
-    global_status() {
+    global_status () {
       return [
         { value: 'private', text: this.$t('actionButtons.status.private') },
         { value: 'fully', text: this.$t('actionButtons.status.fully') },
@@ -103,7 +103,7 @@ export default {
         { value: 'minimally', text: this.$t('actionButtons.status.minimally') }
       ]
     },
-    global_licenses() {
+    global_licenses () {
       return [
         { value: 'CC-BY-NC-ND', text: this.$t('actionButtons.licenses.cc_by_nc_nd') },
         { value: 'CC-BY-ND', text: this.$t('actionButtons.licenses.cc_by_nd') },
@@ -113,11 +113,11 @@ export default {
         { value: 'CC-BY', text: this.$t('actionButtons.licenses.cc_by') }
       ]
     },
-    isOnline() {
+    isOnline () {
       return this.$store.state.isOnline
     }
   },
-  data() {
+  data () {
     return {
       modalProject: { name: '' },
       state: {
@@ -129,17 +129,17 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     // Listen for modal show event to attach click handler
     this.$root.$on('bv::modal::shown', this.onModalShown)
   },
-  beforeDestroy() {
+  beforeDestroy () {
     // Clean up event listeners
     this.$root.$off('bv::modal::shown', this.onModalShown)
     this.removeErrorLinkListener()
   },
   methods: {
-    openModal() {
+    openModal () {
       this.modalProject = JSON.parse(JSON.stringify(this.project))
       this.modalProject.isModal = true
       if (!Object.prototype.hasOwnProperty.call(this.project, 'license_type')) {
@@ -152,10 +152,10 @@ export default {
       this.$refs['modal-change-status'].show()
     },
 
-    async savePublicStatus(event) {
+    async savePublicStatus (event) {
       event.preventDefault()
       this.$emit('uiPublishShowLoader', true)
-      
+
       let params = {}
       params.id = this.project.id
       params.public_type = this.modalProject.public_type
@@ -167,7 +167,7 @@ export default {
         params.private = false
         params.is_public = true
         params.license_type = this.modalProject.license_type
-        
+
         if (this.modalProject.license_type === '' || this.modalProject.license_type === null) {
           this.state.license_type = false
           this.$emit('uiPublishShowLoader', false)
@@ -183,7 +183,7 @@ export default {
           workspace: this.$route.params.org_id,
           isModal: isModal
         })
-        
+
         if (canPublish.data.status) {
           Api.patch('/api/publish', { params })
             .then(() => {
@@ -214,7 +214,7 @@ export default {
       }
     },
 
-    onModalShown(bvEvent, modalId) {
+    onModalShown (bvEvent, modalId) {
       // Only attach listener for our specific modal
       if (modalId === 'modal-change-status') {
         this.$nextTick(() => {
@@ -226,12 +226,12 @@ export default {
       }
     },
 
-    handleErrorLinkClick(event) {
+    handleErrorLinkClick (event) {
       // Check if the clicked element is a link with hash
       if (event.target.tagName === 'A' && event.target.hash) {
         event.preventDefault()
         const hash = event.target.hash
-        
+
         // Map hash to tab name
         // viewProject.vue expects these specific tab names in the query
         const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
@@ -249,18 +249,18 @@ export default {
 
         // Close the modal
         this.$refs['modal-change-status'].hide()
-        
+
         // Navigate to the route with hash AND tab query to force tab switch
         const query = { ...this.$route.query }
         if (tabName) {
           query.tab = tabName
         }
-        
+
         this.$router.push({ path: this.$route.path, hash: hash, query: query })
       }
     },
 
-    removeErrorLinkListener() {
+    removeErrorLinkListener () {
       const modalBody = document.getElementById('modal-change-status___BV_modal_body_')
       if (modalBody) {
         modalBody.removeEventListener('click', this.handleErrorLinkClick)

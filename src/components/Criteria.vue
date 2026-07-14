@@ -49,7 +49,7 @@ export default {
     this.ui.label = this.label
     this.ui.description = this.description
     this.local_data = this.dataTxt
-    
+
     this.saveCriteria = _debounce(function () { this.criteriaAction(this.local_criteria) }, 1500)
   },
   watch: {

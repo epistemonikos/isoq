@@ -22,9 +22,9 @@
       >
         {{ $t('common.show_all') }}
       </b-form-checkbox>
-      
+
       <b-dropdown-divider></b-dropdown-divider>
-      
+
       <div v-for="column in allColumns" :key="column.key" class="mb-1">
         <b-form-checkbox
           :checked="isColumnVisible(column.key)"
@@ -44,12 +44,12 @@ export default {
   props: {
     allColumns: {
       type: Array,
-      required: true,
+      required: true
       // Expected format: [{ key: 'col_key', label: 'Column Label' }, ...]
     },
     value: {
       type: Array,
-      required: true,
+      required: true
       // Array of visible column keys
     },
     minVisible: {
@@ -59,32 +59,32 @@ export default {
   },
   computed: {
     localVisible: {
-      get() {
+      get () {
         return this.value
       },
-      set(newVal) {
+      set (newVal) {
         this.$emit('input', newVal)
       }
     },
-    validVisibleKeys() {
+    validVisibleKeys () {
       // Keys in localVisible that are actually present in allColumns
       return this.localVisible.filter(k => this.allColumns.some(c => c.key === k))
     },
-    allSelected() {
+    allSelected () {
       return this.allColumns.length > 0 && this.validVisibleKeys.length === this.allColumns.length
     },
-    indeterminate() {
+    indeterminate () {
       return this.validVisibleKeys.length > 0 && this.validVisibleKeys.length < this.allColumns.length
     },
-    isLastVisible() {
+    isLastVisible () {
       return this.validVisibleKeys.length <= this.minVisible
     }
   },
   methods: {
-    isColumnVisible(key) {
+    isColumnVisible (key) {
       return this.localVisible.includes(key)
     },
-    toggleAll(checked) {
+    toggleAll (checked) {
       if (checked) {
         // Select all
         const newKeys = this.allColumns.map(c => c.key)
@@ -93,21 +93,21 @@ export default {
       } else {
         // Deselect all (keep first)
         if (this.allColumns.length > 0) {
-           const keepKey = this.allColumns[0].key
-           // Remove all valid keys except keepKey
-           const validKeysToRemove = this.allColumns.filter(c => c.key !== keepKey).map(c => c.key)
-           this.localVisible = this.localVisible.filter(k => !validKeysToRemove.includes(k))
-           
-           // Ensure keepKey is visible
-           if (!this.localVisible.includes(keepKey)) {
-               this.localVisible.push(keepKey)
-           }
+          const keepKey = this.allColumns[0].key
+          // Remove all valid keys except keepKey
+          const validKeysToRemove = this.allColumns.filter(c => c.key !== keepKey).map(c => c.key)
+          this.localVisible = this.localVisible.filter(k => !validKeysToRemove.includes(k))
+
+          // Ensure keepKey is visible
+          if (!this.localVisible.includes(keepKey)) {
+            this.localVisible.push(keepKey)
+          }
         }
       }
     },
-    toggleColumn(key, checked) {
+    toggleColumn (key, checked) {
       let newVisible = [...this.localVisible]
-      
+
       if (checked) {
         if (!newVisible.includes(key)) {
           newVisible.push(key)
@@ -115,15 +115,15 @@ export default {
       } else {
         // Check constraint against valid visible columns
         const validVisibleColumns = newVisible.filter(k => this.allColumns.some(c => c.key === k))
-        
+
         // Prevent unchecking if it's the last one
         if (validVisibleColumns.length <= this.minVisible && validVisibleColumns.includes(key)) {
           return
         }
-        
+
         newVisible = newVisible.filter(k => k !== key)
       }
-      
+
       this.localVisible = newVisible
     }
   }

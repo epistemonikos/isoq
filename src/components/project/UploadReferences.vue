@@ -238,7 +238,7 @@ export default {
   components: {
     videoHelp
   },
-  data() {
+  data () {
     return {
       pre_references: '',
       fileReferences: [],
@@ -263,7 +263,7 @@ export default {
       savedProgress: null
     }
   },
-  created() {
+  created () {
     this.checkIncompleteOperations()
   },
   computed: {
@@ -300,17 +300,17 @@ export default {
     }
   },
   methods: {
-    formatAuthors(authors) {
+    formatAuthors (authors) {
       return Commons.getAuthorsFormat(authors)
     },
-    storeProgress() {
+    storeProgress () {
       const progress = {
         fileReferences: this.fileReferences,
         timestamp: Date.now()
       }
       localStorage.setItem('reference-upload-progress', JSON.stringify(progress))
     },
-    checkIncompleteOperations() {
+    checkIncompleteOperations () {
       const saved = localStorage.getItem('reference-upload-progress')
       if (saved) {
         try {
@@ -327,20 +327,20 @@ export default {
         }
       }
     },
-    restoreSavedProgress() {
+    restoreSavedProgress () {
       if (this.savedProgress && this.savedProgress.fileReferences) {
         this.fileReferences = this.savedProgress.fileReferences
         this.showRestorePrompt = false
       }
     },
-    clearSavedProgress() {
+    clearSavedProgress () {
       localStorage.removeItem('reference-upload-progress')
       this.showRestorePrompt = false
     },
-    generateOperationId() {
+    generateOperationId () {
       return Date.now() + '-' + Math.random().toString(36).substring(2)
     },
-    saveCheckpoint(data) {
+    saveCheckpoint (data) {
       localStorage.setItem('reference-upload-checkpoint', JSON.stringify({
         timestamp: Date.now(),
         ...data

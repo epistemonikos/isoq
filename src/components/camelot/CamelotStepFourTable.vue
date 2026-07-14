@@ -152,14 +152,14 @@ export default {
     canEdit: { type: Boolean, default: false }
   },
   methods: {
-    isRefLocked(refId) {
+    isRefLocked (refId) {
       return this.activeRefLocks.some(l => l.ref_id === refId)
     },
-    refLockedByName(refId) {
+    refLockedByName (refId) {
       const lock = this.activeRefLocks.find(l => l.ref_id === refId)
       return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
     },
-    isGroupComplete(stage, optionCount, item) {
+    isGroupComplete (stage, optionCount, item) {
       if (!item || !item.stages || !item.stages[stage]) return false
       const options = item.stages[stage].options
       if (!options) return false
@@ -168,7 +168,7 @@ export default {
       }
       return true
     },
-    openModal(stage, data, tab = 0, faLabel = null) {
+    openModal (stage, data, tab = 0, faLabel = null) {
       // Guard every edit path (the 4 edit buttons AND the FA circles funnel through
       // here): don't open a study that lacks a ref_id or is locked by another user.
       if (!Object.prototype.hasOwnProperty.call(data.item, 'ref_id') || this.isRefLocked(data.item.ref_id)) {

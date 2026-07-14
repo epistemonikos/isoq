@@ -44,7 +44,7 @@ export default {
       default: ''
     }
   },
-  data() {
+  data () {
     return {
       // Define any local state here if needed
       options: [

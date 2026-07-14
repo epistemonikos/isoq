@@ -277,7 +277,7 @@
             <p>{{ $t('project.toggle_camelot.from_camelot_body') }}</p>
             <p class="font-weight-bold mt-3">{{ $t('common.continue_question') }}</p>
           </div>
-          
+
           <div v-if="isMigrating" class="text-center mt-3">
             <b-spinner variant="danger" label="Spinning"></b-spinner>
             <p class="mt-2">{{ $t('project.toggle_camelot.migrating') }}</p>
@@ -366,20 +366,20 @@ export default {
     confirmCamelotToggle: async function () {
       this.isMigrating = true
       const data = this.pendingData
-      
+
       try {
         // 1. Create backup
         await Api.get(`/api/clone/project/${data.id}/org/${data.organization}`)
-        
+
         // 2. Call conversion endpoint
         const response = await Api.post(`/api/project/${data.id}/toggle_camelot`, {
           use_camelot: data.use_camelot
         })
-        
+
         if (response.data.status) {
           // 3. Methodology updated, now save other project properties
           await Project.update(data)
-          
+
           // 4. Success, redirect to Step 3
           this.$bvModal.hide('camelot-toggle-modal')
           this.isMigrating = false

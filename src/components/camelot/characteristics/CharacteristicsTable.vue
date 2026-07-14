@@ -18,9 +18,9 @@
             <thead>
                 <tr>
                     <th rowspan="2">{{ $t('camelot.step_three.authors_label') }}</th>
-                    <th 
-                        v-for="header in unifiedHeaders" 
-                        :key="header.key" 
+                    <th
+                        v-for="header in unifiedHeaders"
+                        :key="header.key"
                         :rowspan="header.type === 'custom' ? 2 : 1"
                         :colspan="header.colspan">
                         {{ header.label }}
@@ -63,115 +63,115 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import Commons from '@/utils/commons'
 
 export default {
-    name: 'CharacteristicsTable',
-    mixins: [camelotMixin],
-    props: {
-        charsOfStudies: {
-            type: Object,
-            required: true
-        }
-    },
-    data() {
-        return {
-            showComments: false,
-            expandedCells: {}
-        }
-    },
-    computed: {
-        unifiedHeaders() {
-            const headers = []
-            if (!this.charsOfStudies.fields) return headers
-
-            for (const field of this.charsOfStudies.fields) {
-                if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
-                if (field.key.endsWith('_comments')) continue
-
-                const isCamelot = field.key.endsWith('_extractedData')
-                
-                if (isCamelot) {
-                    let categoryLabel = field.label
-                    let options = []
-                    
-                    if (this.camelot && this.camelot.categories) {
-                        const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
-                        if (categoryMatch) {
-                            categoryLabel = categoryMatch.label
-                            options = categoryMatch.options
-                        }
-                    }
-
-                    if (options.length === 0) {
-                        options = [
-                            { key: field.key, label: field.label },
-                            { key: field.key.replace('_extractedData', '_comments'), label: this.$t('camelot.step_three.concerns_label') || 'Comments' }
-                        ]
-                    }
-
-                    headers.push({
-                        type: 'camelot',
-                        key: field.key,
-                        label: categoryLabel,
-                        options: options,
-                        colspan: this.showComments ? 2 : 1
-                    })
-                } else {
-                    headers.push({
-                        type: 'custom',
-                        key: field.key,
-                        label: field.label,
-                        colspan: 1
-                    })
-                }
-            }
-            return headers
-        },
-        subHeaders() {
-            const subH = []
-            for (const header of this.unifiedHeaders) {
-                if (header.type === 'camelot') {
-                    for (const option of header.options) {
-                        if (!this.showComments && option.key.endsWith('_comments')) continue
-                        subH.push(option)
-                    }
-                }
-            }
-            return subH
-        }
-    },
-    methods: {
-        formatAuthorsYear(item) {
-            const authors = item.authors || ''
-            const year = item.year || ''
-            return `${authors} ${year}`.trim()
-        },
-        dataCells(item) {
-            const cells = []
-            for (const header of this.unifiedHeaders) {
-                if (header.type === 'camelot') {
-                    for (const option of header.options) {
-                        if (!this.showComments && option.key.endsWith('_comments')) continue
-                        cells.push({ key: option.key, value: item[option.key] || '' })
-                    }
-                } else {
-                    cells.push({ key: header.key, value: item[header.key] || '' })
-                }
-            }
-            return cells
-        },
-        shouldTruncate(text) {
-            return Commons.shouldTruncate(text)
-        },
-        truncate(text) {
-            return Commons.truncate(text)
-        },
-        toggleExpand(refId, fieldKey) {
-            const key = `${refId}-${fieldKey}`
-            this.$set(this.expandedCells, key, !this.expandedCells[key])
-        },
-        isExpanded(refId, fieldKey) {
-            return !!this.expandedCells[`${refId}-${fieldKey}`]
-        }
+  name: 'CharacteristicsTable',
+  mixins: [camelotMixin],
+  props: {
+    charsOfStudies: {
+      type: Object,
+      required: true
     }
+  },
+  data () {
+    return {
+      showComments: false,
+      expandedCells: {}
+    }
+  },
+  computed: {
+    unifiedHeaders () {
+      const headers = []
+      if (!this.charsOfStudies.fields) return headers
+
+      for (const field of this.charsOfStudies.fields) {
+        if (['authors', 'ref_id', 'actions', 'edit'].includes(field.key)) continue
+        if (field.key.endsWith('_comments')) continue
+
+        const isCamelot = field.key.endsWith('_extractedData')
+
+        if (isCamelot) {
+          let categoryLabel = field.label
+          let options = []
+
+          if (this.camelot && this.camelot.categories) {
+            const categoryMatch = this.camelot.categories.find(c => c.options && c.options.some(o => o.key === field.key))
+            if (categoryMatch) {
+              categoryLabel = categoryMatch.label
+              options = categoryMatch.options
+            }
+          }
+
+          if (options.length === 0) {
+            options = [
+              { key: field.key, label: field.label },
+              { key: field.key.replace('_extractedData', '_comments'), label: this.$t('camelot.step_three.concerns_label') || 'Comments' }
+            ]
+          }
+
+          headers.push({
+            type: 'camelot',
+            key: field.key,
+            label: categoryLabel,
+            options: options,
+            colspan: this.showComments ? 2 : 1
+          })
+        } else {
+          headers.push({
+            type: 'custom',
+            key: field.key,
+            label: field.label,
+            colspan: 1
+          })
+        }
+      }
+      return headers
+    },
+    subHeaders () {
+      const subH = []
+      for (const header of this.unifiedHeaders) {
+        if (header.type === 'camelot') {
+          for (const option of header.options) {
+            if (!this.showComments && option.key.endsWith('_comments')) continue
+            subH.push(option)
+          }
+        }
+      }
+      return subH
+    }
+  },
+  methods: {
+    formatAuthorsYear (item) {
+      const authors = item.authors || ''
+      const year = item.year || ''
+      return `${authors} ${year}`.trim()
+    },
+    dataCells (item) {
+      const cells = []
+      for (const header of this.unifiedHeaders) {
+        if (header.type === 'camelot') {
+          for (const option of header.options) {
+            if (!this.showComments && option.key.endsWith('_comments')) continue
+            cells.push({ key: option.key, value: item[option.key] || '' })
+          }
+        } else {
+          cells.push({ key: header.key, value: item[header.key] || '' })
+        }
+      }
+      return cells
+    },
+    shouldTruncate (text) {
+      return Commons.shouldTruncate(text)
+    },
+    truncate (text) {
+      return Commons.truncate(text)
+    },
+    toggleExpand (refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
+    },
+    isExpanded (refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
+    }
+  }
 }
 </script>
 

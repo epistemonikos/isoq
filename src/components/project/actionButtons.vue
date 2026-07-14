@@ -92,7 +92,7 @@ export default {
     }
   },
   methods: {
-    async ExportToWord(filename = '') {
+    async ExportToWord (filename = '') {
       try {
         // Use listsPrintVersion as primary source for categories and order
         const findingsData = (this.listsPrintVersion && this.listsPrintVersion.length > 0)
@@ -116,7 +116,6 @@ export default {
           filename,
           locale: this.$i18n.locale
         })
-
       } catch (error) {
         alert('Error al exportar: ' + error.message)
       }

@@ -1,13 +1,13 @@
 /**
  * WordDocumentBuilder - Builder class for constructing Word documents
- * 
+ *
  * Responsibilities:
  * - Build document sections
  * - Apply consistent styling
  * - Generate complex tables
  * - Integrate text sanitization
  * - Optimize for large documents
- * 
+ *
  * @example
  * const builder = new WordDocumentBuilder()
  * builder.addHeader('Project Name', 1)
@@ -35,7 +35,7 @@ import {
 import { sanitizeText, sanitizeWithLimit, safeText, TEXT_LIMITS } from '@/utils/textSanitizer'
 
 export class WordDocumentBuilder {
-  constructor(options = {}) {
+  constructor (options = {}) {
     this.sections = []
     this.currentSection = null
     this.options = {
@@ -56,7 +56,7 @@ export class WordDocumentBuilder {
    * @param {Object} config - Section configuration
    * @returns {WordDocumentBuilder} For chaining
    */
-  startSection(config = {}) {
+  startSection (config = {}) {
     this.currentSection = {
       properties: {
         margins: config.margins || this.options.margins,
@@ -78,7 +78,7 @@ export class WordDocumentBuilder {
    * End current section and add to document
    * @returns {WordDocumentBuilder} For chaining
    */
-  endSection() {
+  endSection () {
     if (this.currentSection) {
       this.sections.push(this.currentSection)
       this.currentSection = null
@@ -93,7 +93,7 @@ export class WordDocumentBuilder {
    * @param {Object} options
    * @returns {WordDocumentBuilder} For chaining
    */
-  addHeader(text, level = 1, options = {}) {
+  addHeader (text, level = 1, options = {}) {
     const sanitized = sanitizeWithLimit(
       safeText(text),
       TEXT_LIMITS.projectName,
@@ -139,7 +139,7 @@ export class WordDocumentBuilder {
    * @param {Object} options
    * @returns {WordDocumentBuilder} For chaining
    */
-  addParagraph(text, options = {}) {
+  addParagraph (text, options = {}) {
     const sanitized = sanitizeWithLimit(
       safeText(text),
       options.maxLength || TEXT_LIMITS.projectDescription,
@@ -173,7 +173,7 @@ export class WordDocumentBuilder {
    * Add an empty paragraph (spacing)
    * @returns {WordDocumentBuilder} For chaining
    */
-  addSpacing() {
+  addSpacing () {
     this.addToCurrentSection(new Paragraph(''))
     return this
   }
@@ -185,7 +185,7 @@ export class WordDocumentBuilder {
    * @param {Object} options
    * @returns {WordDocumentBuilder} For chaining
    */
-  addInfoParagraph(label, content, options = {}) {
+  addInfoParagraph (label, content, options = {}) {
     const sanitizedContent = sanitizeWithLimit(
       safeText(content),
       options.maxLength || TEXT_LIMITS.projectDescription,
@@ -231,7 +231,7 @@ export class WordDocumentBuilder {
    * @param {Object} options - Table options
    * @returns {WordDocumentBuilder} For chaining
    */
-  addTable(rows, headers, options = {}) {
+  addTable (rows, headers, options = {}) {
     const {
       borders = this.getDefaultBorders(),
       width = { size: 5000, type: WidthType.PERCENTAGE },
@@ -263,7 +263,7 @@ export class WordDocumentBuilder {
    * @param {Object} height
    * @returns {TableRow}
    */
-  createTableHeaderRow(headers, shading, height) {
+  createTableHeaderRow (headers, shading, height) {
     return new TableRow({
       tableHeader: true,
       height,
@@ -295,7 +295,7 @@ export class WordDocumentBuilder {
    * @param {Object} options
    * @returns {Array<TableRow>}
    */
-  createTableDataRows(rows, options = {}) {
+  createTableDataRows (rows, options = {}) {
     return rows.map(rowData =>
       new TableRow({
         children: rowData.map(cellData => this.createTableCell(cellData, options))
@@ -309,7 +309,7 @@ export class WordDocumentBuilder {
    * @param {Object} options
    * @returns {TableCell}
    */
-  createTableCell(cellData, options = {}) {
+  createTableCell (cellData, options = {}) {
     // Handle simple string data
     if (typeof cellData === 'string') {
       cellData = { text: cellData }
@@ -337,7 +337,7 @@ export class WordDocumentBuilder {
           alignment: cellData.alignment || AlignmentType.LEFT,
           children: [
             new TextRun({
-              text: finalText,  // Always a string now
+              text: finalText, // Always a string now
               size: cellData.size || 22,
               bold: cellData.bold || false
             })
@@ -351,7 +351,7 @@ export class WordDocumentBuilder {
    * Get default table borders
    * @returns {Object}
    */
-  getDefaultBorders() {
+  getDefaultBorders () {
     return {
       top: { size: 1, color: '000000', style: BorderStyle.SINGLE },
       bottom: { size: 1, color: '000000', style: BorderStyle.SINGLE },
@@ -366,7 +366,7 @@ export class WordDocumentBuilder {
    * Get no borders configuration
    * @returns {Object}
    */
-  getNoBorders() {
+  getNoBorders () {
     return {
       top: { size: 1, color: '000000', style: BorderStyle.NONE },
       bottom: { size: 1, color: '000000', style: BorderStyle.NONE },
@@ -381,7 +381,7 @@ export class WordDocumentBuilder {
    * Add content to current section
    * @param {*} content
    */
-  addToCurrentSection(content) {
+  addToCurrentSection (content) {
     if (!this.currentSection) {
       this.startSection()
     }
@@ -392,7 +392,7 @@ export class WordDocumentBuilder {
    * Build and return the Document
    * @returns {Document}
    */
-  build() {
+  build () {
     // Finalize current section if any
     if (this.currentSection) {
       this.endSection()
@@ -412,7 +412,7 @@ export class WordDocumentBuilder {
    * Reset builder state
    * @returns {WordDocumentBuilder} For chaining
    */
-  reset() {
+  reset () {
     this.sections = []
     this.currentSection = null
     return this
@@ -424,7 +424,7 @@ export class WordDocumentBuilder {
  * @param {Function} builderFn - Function that receives builder instance
  * @returns {Document}
  */
-export function createDocument(builderFn) {
+export function createDocument (builderFn) {
   const builder = new WordDocumentBuilder()
   builderFn(builder)
   return builder.build()

@@ -95,7 +95,7 @@ export const strategies = [
       // 1. Single worksheet by ID in regex
       const singleMatch = url.match(/getLists\?id=([a-zA-Z0-9]+)/)
       if (singleMatch) {
-         return await hydrateWorksheet(singleMatch[1])
+        return await hydrateWorksheet(singleMatch[1])
       }
 
       // 2. Single worksheet by ID in params
@@ -112,8 +112,8 @@ export const strategies = [
 
       // 4. By Project ID in params
       if ((url === '/isoqf_lists' || url === '/isoqf_lists/') && params && params.project_id) {
-         const cached = await getWorksheetsByProject(params.project_id)
-         return cached.map(w => w.data)
+        const cached = await getWorksheetsByProject(params.project_id)
+        return cached.map(w => w.data)
       }
 
       return null
@@ -122,17 +122,17 @@ export const strategies = [
       if (data && data.id) {
         const existing = await getWorksheet(data.id)
         if (existing) {
-           // Merge existing data with new data
-           const newData = { ...existing.data, ...data }
-           // Ensure project_id is preserved if not in payload (though it should be)
-           const projectId = newData.project_id || existing.projectId
-           
-           await saveWorksheet({
-             id: data.id,
-             projectId: projectId,
-             data: newData
-           })
-           return newData
+          // Merge existing data with new data
+          const newData = { ...existing.data, ...data }
+          // Ensure project_id is preserved if not in payload (though it should be)
+          const projectId = newData.project_id || existing.projectId
+
+          await saveWorksheet({
+            id: data.id,
+            projectId: projectId,
+            data: newData
+          })
+          return newData
         }
       }
       return null
@@ -174,13 +174,13 @@ export const strategies = [
       if (data && data.id) {
         const existing = await getFinding(data.id)
         if (existing) {
-           const newData = { ...existing.data, ...data }
-           await saveFinding({
-             id: data.id,
-             worksheetId: existing.worksheetId,
-             data: newData
-           })
-           return newData
+          const newData = { ...existing.data, ...data }
+          await saveFinding({
+            id: data.id,
+            worksheetId: existing.worksheetId,
+            data: newData
+          })
+          return newData
         }
       }
       return null
@@ -261,7 +261,7 @@ export const strategies = [
     },
     serve: async (url, params) => {
       if (!params) return null
-      
+
       if (params.finding_id || params.findingId) {
         const findingId = params.finding_id || params.findingId
         const cached = await getExtractedDataByFinding(findingId)
@@ -270,12 +270,12 @@ export const strategies = [
         const findings = await getFindingsByWorksheet(params.list_id)
         let allExtracted = []
         if (findings && findings.length > 0) {
-            for (const finding of findings) {
-                const extracted = await getExtractedDataByFinding(finding.id)
-                if (extracted && extracted.length > 0) {
-                    allExtracted = allExtracted.concat(extracted)
-                }
+          for (const finding of findings) {
+            const extracted = await getExtractedDataByFinding(finding.id)
+            if (extracted && extracted.length > 0) {
+              allExtracted = allExtracted.concat(extracted)
             }
+          }
         }
         if (allExtracted.length > 0) return allExtracted
       }
@@ -284,28 +284,28 @@ export const strategies = [
     update: async (data, url) => {
       // Extracted data updates might be single item or array
       const items = Array.isArray(data) ? data : [data]
-      
+
       for (const item of items) {
         if (item && item.id) {
-           // We need to find the record first to get findingId if not provided
-           // However, getExtractedDataByFinding needs findingId.
-           // Since we index by id in db.extractedData, we can get it directly if getExtractedData existed by ID
-           // db.extractedData is defined as 'id, findingId, lastSync'
-           
-           // We need a way to get by ID. DB service doesn't expose it directly but we can add it or access db directly
-           // In db.js: export { db }
-           
-           const { db } = require('@/services/db')
-           const existing = await db.extractedData.get(item.id)
-           
-           if (existing) {
-             const newData = { ...existing.data, ...item }
-             await saveExtractedData({
-               id: item.id,
-               finding_id: existing.findingId,
-               ...newData // in case finding_id logic differs
-             })
-           }
+          // We need to find the record first to get findingId if not provided
+          // However, getExtractedDataByFinding needs findingId.
+          // Since we index by id in db.extractedData, we can get it directly if getExtractedData existed by ID
+          // db.extractedData is defined as 'id, findingId, lastSync'
+
+          // We need a way to get by ID. DB service doesn't expose it directly but we can add it or access db directly
+          // In db.js: export { db }
+
+          const { db } = require('@/services/db')
+          const existing = await db.extractedData.get(item.id)
+
+          if (existing) {
+            const newData = { ...existing.data, ...item }
+            await saveExtractedData({
+              id: item.id,
+              finding_id: existing.findingId,
+              ...newData // in case finding_id logic differs
+            })
+          }
         }
       }
       return data
@@ -332,65 +332,65 @@ export const strategies = [
 ]
 
 // Helpers
-function getProjectIdFromParams(params) {
+function getProjectIdFromParams (params) {
   if (!params) return null
   return params.project_id || params.projectId
 }
 
-async function hydrateWorksheet(worksheetId) {
-    const cached = await getWorksheet(worksheetId)
-    if (cached) {
-        let data = cached.data
-        const pId = data.project_id || cached.projectId
-        
-        // Hydrate project
-        if (!data.project && pId) {
-            const projectRec = await getProject(pId)
-            if (projectRec) data.project = projectRec.data
-        }
-        
-        // Hydrate fullreferences
-        if (!data.fullreferences && pId) {
-            const refs = await getReferencesByProject(pId)
-            data.fullreferences = (refs && refs.length > 0) ? refs.map(r => r.data) : []
-        } else if (!data.fullreferences) {
-            data.fullreferences = []
-        }
+async function hydrateWorksheet (worksheetId) {
+  const cached = await getWorksheet(worksheetId)
+  if (cached) {
+    let data = cached.data
+    const pId = data.project_id || cached.projectId
 
-        // Hydrate findings
-        if (!data.findings) {
-            const findingsRec = await getFindingsByWorksheet(data.id)
-            data.findings = (findingsRec && findingsRec.length > 0) ? findingsRec.map(r => r.data) : []
-        }
-
-        // Hydrate characteristics
-        if (!data.characteristics && pId) {
-            const chars = await getCharacteristicsByProject(pId)
-            data.characteristics = (chars && chars.length > 0) ? chars : []
-        } else if (!data.characteristics) {
-            data.characteristics = []
-        }
-
-        // Hydrate assessments
-        if (!data.assessments && pId) {
-            const assess = await getAssessmentsByProject(pId)
-            data.assessments = (assess && assess.length > 0) ? assess : []
-        } else if (!data.assessments) {
-            data.assessments = []
-        }
-
-        // Hydrate extracted_data
-        if (!data.extracted_data) {
-             if (data.findings && data.findings.length > 0) {
-                  const findingId = data.findings[0].id
-                  const extracted = await getExtractedDataByFinding(findingId)
-                  data.extracted_data = (extracted && extracted.length > 0) ? extracted : []
-             } else {
-                  data.extracted_data = [] 
-             }
-        }
-
-        return [data]
+    // Hydrate project
+    if (!data.project && pId) {
+      const projectRec = await getProject(pId)
+      if (projectRec) data.project = projectRec.data
     }
-    return null
+
+    // Hydrate fullreferences
+    if (!data.fullreferences && pId) {
+      const refs = await getReferencesByProject(pId)
+      data.fullreferences = (refs && refs.length > 0) ? refs.map(r => r.data) : []
+    } else if (!data.fullreferences) {
+      data.fullreferences = []
+    }
+
+    // Hydrate findings
+    if (!data.findings) {
+      const findingsRec = await getFindingsByWorksheet(data.id)
+      data.findings = (findingsRec && findingsRec.length > 0) ? findingsRec.map(r => r.data) : []
+    }
+
+    // Hydrate characteristics
+    if (!data.characteristics && pId) {
+      const chars = await getCharacteristicsByProject(pId)
+      data.characteristics = (chars && chars.length > 0) ? chars : []
+    } else if (!data.characteristics) {
+      data.characteristics = []
+    }
+
+    // Hydrate assessments
+    if (!data.assessments && pId) {
+      const assess = await getAssessmentsByProject(pId)
+      data.assessments = (assess && assess.length > 0) ? assess : []
+    } else if (!data.assessments) {
+      data.assessments = []
+    }
+
+    // Hydrate extracted_data
+    if (!data.extracted_data) {
+      if (data.findings && data.findings.length > 0) {
+        const findingId = data.findings[0].id
+        const extracted = await getExtractedDataByFinding(findingId)
+        data.extracted_data = (extracted && extracted.length > 0) ? extracted : []
+      } else {
+        data.extracted_data = []
+      }
+    }
+
+    return [data]
+  }
+  return null
 }

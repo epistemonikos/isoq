@@ -93,7 +93,7 @@ export default {
     'bc-filters': bCardFilters,
     'camelot-assessment-summary-table': CamelotAssessmentSummaryTable
   },
-  data() {
+  data () {
     return {
       methodological_assessments_table_settings: {
         filter: '',
@@ -113,17 +113,17 @@ export default {
         }
       }
     },
-    shouldTruncate(text) {
+    shouldTruncate (text) {
       return Commons.shouldTruncate(text)
     },
-    truncate(text) {
+    truncate (text) {
       return Commons.truncate(text)
     },
-    toggleExpand(refId, fieldKey) {
+    toggleExpand (refId, fieldKey) {
       const key = `${refId}-${fieldKey}`
       this.$set(this.expandedCells, key, !this.expandedCells[key])
     },
-    isExpanded(refId, fieldKey) {
+    isExpanded (refId, fieldKey) {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     }
   }

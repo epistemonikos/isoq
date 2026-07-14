@@ -165,7 +165,7 @@ export default {
     CloneProjectModal,
     LeaveProjectModal
   },
-  data() {
+  data () {
     return {
       ui: {
         projectTable: {
@@ -238,7 +238,7 @@ export default {
     }
   },
   computed: {
-    filteredProjects() {
+    filteredProjects () {
       if (!this.searchQuery) return this.projects
       const query = this.searchQuery.toLowerCase()
       return this.projects.filter(project => {
@@ -252,10 +252,10 @@ export default {
       })
     }
   },
-  created() {
+  created () {
     this.buffer_project = JSON.parse(JSON.stringify(this.tmp_buffer_project))
   },
-  mounted() {
+  mounted () {
     this.getProjects()
   },
   methods: {

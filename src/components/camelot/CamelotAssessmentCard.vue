@@ -115,27 +115,27 @@ export default {
     isSaving: { type: Boolean, default: false },
     isReadOnly: { type: Boolean, default: false }
   },
-  data() {
+  data () {
     return {
       editValue: '',
       autoSaveStatus: null
     }
   },
-  created() {
+  created () {
     this.autoSaveDebounced = _debounce(function () {
       this.$emit('auto-save-field', this.editValue)
     }.bind(this), 1500)
   },
   watch: {
     editingField: {
-      handler(newVal) {
+      handler (newVal) {
         if (newVal.metaIndex === this.metaIndex && newVal.itemIndex === this.itemIndex && newVal.type) {
           this.editValue = newVal.type === 'extractedData' ? this.extractedData : this.concerns
         }
       },
       deep: true
     },
-    isSaving(newVal, oldVal) {
+    isSaving (newVal, oldVal) {
       if (oldVal === true && newVal === false && this.autoSaveStatus === 'saving') {
         this.autoSaveStatus = 'saved'
         setTimeout(() => { this.autoSaveStatus = null }, 2000)
@@ -143,29 +143,29 @@ export default {
     }
   },
   methods: {
-    isEditing(type) {
+    isEditing (type) {
       return this.editingField.metaIndex === this.metaIndex &&
         this.editingField.itemIndex === this.itemIndex &&
         this.editingField.type === type
     },
-    startEditing(type) {
+    startEditing (type) {
       if (this.isReadOnly) {
         return
       }
       this.editValue = type === 'extractedData' ? this.extractedData : this.concerns
       this.$emit('start-editing', { metaIndex: this.metaIndex, itemIndex: this.itemIndex, type })
     },
-    cancelEditing() {
+    cancelEditing () {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       this.$emit('cancel-editing')
     },
-    saveField() {
+    saveField () {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       this.$emit('save-field', this.editValue)
     },
-    onInput() {
+    onInput () {
       this.autoSaveStatus = 'saving'
       this.autoSaveDebounced()
     }

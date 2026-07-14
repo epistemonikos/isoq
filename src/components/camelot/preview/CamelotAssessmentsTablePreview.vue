@@ -119,7 +119,7 @@ export default {
       default: () => []
     }
   },
-  data() {
+  data () {
     const headerClass = 'header-second-row'
     const overallHeaderClass = 'header-overall-row'
 
@@ -152,7 +152,7 @@ export default {
     }
   },
   computed: {
-    tableItems() {
+    tableItems () {
       // Base: assessment items, already scoped to the finding's references by the parent
       const items = (this.methodologicalTableRefs && this.methodologicalTableRefs.items)
         ? [...this.methodologicalTableRefs.items]

@@ -295,7 +295,7 @@ export default {
   components: {
     AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader, RefLockConflictModal
   },
-  data() {
+  data () {
     const headerClass = 'header-second-row'
     const overallHeaderClass = 'header-overall-row'
 
@@ -441,7 +441,7 @@ export default {
       isDarkMode: document.documentElement.getAttribute('data-theme') === 'dark'
     }
   },
-  mounted() {
+  mounted () {
     this._themeObserver = new MutationObserver(() => {
       this.isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark'
     })
@@ -453,7 +453,7 @@ export default {
     window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
-  beforeDestroy() {
+  beforeDestroy () {
     this._themeObserver.disconnect()
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
@@ -461,7 +461,7 @@ export default {
     LockService.releaseRef()
   },
   computed: {
-    helpContent() {
+    helpContent () {
       return {
         0: this.$t('camelot.step_four.help_modal.0'),
         1: this.$t('camelot.step_four.help_modal.1'),
@@ -469,7 +469,7 @@ export default {
         3: this.$t('camelot.step_four.help_modal.3')
       }
     },
-    exportFields() {
+    exportFields () {
       return [
         { key: 'authors', label: 'Author(s), Year' },
         { key: 'fa1', label: 'FA1' },
@@ -484,7 +484,7 @@ export default {
         { key: 'oa', label: 'OA' }
       ]
     },
-    exportItems() {
+    exportItems () {
       return this.tableItems.map(item => {
         const getVal = (stageIdx, optIdx) => {
           if (!item.stages || !item.stages[stageIdx] || !item.stages[stageIdx].options[optIdx]) return ''
@@ -516,7 +516,7 @@ export default {
         }
       })
     },
-    tableItems() {
+    tableItems () {
       if (!this.assessments.items) return []
       return this.assessments.items.map(item => {
         const ref = this.references.find(r => String(r.id) === String(item.ref_id))
@@ -531,7 +531,7 @@ export default {
         return item
       })
     },
-    modalSubtitle() {
+    modalSubtitle () {
       const stages = [
         'fit_meta_design',
         'fit_meta_conduct',
@@ -547,36 +547,36 @@ export default {
       this.selectedMeta = 0
     },
     references: {
-      handler(newVal) {
+      handler (newVal) {
         this.getAssessments()
       },
       immediate: true
     }
   },
   methods: {
-    isRefLocked(refId) {
+    isRefLocked (refId) {
       return this.activeRefLocks.some(l => l.ref_id === refId)
     },
-    refLockedByName(refId) {
+    refLockedByName (refId) {
       const lock = this.activeRefLocks.find(l => l.ref_id === refId)
       return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
     },
-    async fetchAndUpdateRefLocks() {
+    async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
     },
-    startRefLocksPolling() {
+    startRefLocksPolling () {
       this.fetchAndUpdateRefLocks()
       this.refLocksTimer = setInterval(() => this.fetchAndUpdateRefLocks(), 15000)
     },
-    stopRefLocksPolling() {
+    stopRefLocksPolling () {
       if (this.refLocksTimer) clearInterval(this.refLocksTimer)
       this.refLocksTimer = null
     },
     getReferenceData: function (reference) {
       return Commons.parseReference(reference, true, false)
     },
-    getMetaItemLabel(metaIndex, itemIndex) {
+    getMetaItemLabel (metaIndex, itemIndex) {
       if (metaIndex === 0) {
         const keys = ['research', 'stakeholders', 'researchers', 'context']
         return this.$t(`camelot.step_four.meta_items.${keys[itemIndex]}`)
@@ -675,17 +675,17 @@ export default {
                 return item
               })
               this.assessments.items.sort((a, b) => {
-                const authorsA = a.authors || '';
-                const authorsB = b.authors || '';
-                return authorsA.localeCompare(authorsB);
-              });
+                const authorsA = a.authors || ''
+                const authorsB = b.authors || ''
+                return authorsA.localeCompare(authorsB)
+              })
             }
           } else {
             const sortedReferences = [...this.references].sort((a, b) => {
-              const authorsA = this.getReferenceData(a) || '';
-              const authorsB = this.getReferenceData(b) || '';
-              return authorsA.localeCompare(authorsB);
-            });
+              const authorsA = this.getReferenceData(a) || ''
+              const authorsB = this.getReferenceData(b) || ''
+              return authorsA.localeCompare(authorsB)
+            })
 
             this.assessments = {
               items: sortedReferences.map(ref => ({
@@ -735,7 +735,7 @@ export default {
             }
           }
 
-          if (!response.data || !response.data.length) return;
+          if (!response.data || !response.data.length) return
 
           const data = response.data[0]
           const items = data.items
@@ -781,10 +781,10 @@ export default {
       this.acquireStudyLock(data.item.ref_id)
       this.$bvModal.show('modal-1')
     },
-    onOpenModal({ stage, data, tab, faLabel = null }) {
+    onOpenModal ({ stage, data, tab, faLabel = null }) {
       this.openModal(stage, data, tab, faLabel)
     },
-    async acquireStudyLock(refId) {
+    async acquireStudyLock (refId) {
       if (!refId) return
       if (!this.canEdit) {
         this.isRefReadOnly = true
@@ -812,13 +812,13 @@ export default {
         }
       }
     },
-    onAssessmentModalClosed() {
+    onAssessmentModalClosed () {
       LockService.releaseRef()
       this.isRefReadOnly = false
       this.refLockedBy = null
       this.fetchAndUpdateRefLocks()
     },
-    handleRefLockConflict(event) {
+    handleRefLockConflict (event) {
       const { refId, failedData, lockedBy } = event.detail
       if (refId !== this.refId) return
       this.conflictData = failedData
@@ -828,17 +828,17 @@ export default {
         if (this.$refs.conflictModal) this.$refs.conflictModal.show()
       })
     },
-    clearConflict() {
+    clearConflict () {
       this.conflictData = null
       this.conflictLockedBy = ''
       this.conflictRefId = ''
     },
-    goToStage(stage) {
+    goToStage (stage) {
       this.modal.stage = stage
       this.modal.tab = 0
       this.selectedMeta = 0
     },
-    getStageTitle(stage) {
+    getStageTitle (stage) {
       const stages = [
         'fit_meta_design',
         'fit_meta_conduct',
@@ -847,7 +847,7 @@ export default {
       ]
       return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
     },
-    displayExclamationAlert(metaIndex, itemIndex) {
+    displayExclamationAlert (metaIndex, itemIndex) {
       if (!this.meta[metaIndex] || !this.meta[metaIndex].values[itemIndex]) return false
 
       const itemPrefix = this.meta[metaIndex].items[itemIndex]
@@ -860,7 +860,7 @@ export default {
       this.selectedMeta = position
       this.$root.$emit('bv::toggle::collapse', assessmentId)
     },
-    startEditing(metaIndex, itemIndex, type) {
+    startEditing (metaIndex, itemIndex, type) {
       this.editingField = { metaIndex, itemIndex, type }
       const itemPrefix = this.meta[metaIndex].items[itemIndex]
       if (type === 'extractedData') {
@@ -869,10 +869,10 @@ export default {
         this.editValueComments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments'] || ''
       }
     },
-    onStartEditing({ metaIndex, itemIndex, type }) {
+    onStartEditing ({ metaIndex, itemIndex, type }) {
       this.startEditing(metaIndex, itemIndex, type)
     },
-    scrollToField(metaIndex, itemIndex) {
+    scrollToField (metaIndex, itemIndex) {
       this.$nextTick(() => {
         const elementId = `field-${metaIndex}-${itemIndex}`
         const element = document.getElementById(elementId)
@@ -881,7 +881,7 @@ export default {
         }
       })
     },
-    cancelEditing() {
+    cancelEditing () {
       const { metaIndex, itemIndex } = this.editingField
       this.editingField = { metaIndex: null, itemIndex: null, type: null }
       this.editValueExtracted = ''
@@ -890,10 +890,10 @@ export default {
         this.scrollToField(metaIndex, itemIndex)
       }
     },
-    onCancelEditing() {
+    onCancelEditing () {
       this.cancelEditing()
     },
-    saveField(newValue, keepEditing = false) {
+    saveField (newValue, keepEditing = false) {
       if (!this.characteristics || this.isRefReadOnly) return
 
       this.isSavingField = true
@@ -996,13 +996,13 @@ export default {
           this.getCharacteristics()
         })
     },
-    onSaveField(newValue) {
+    onSaveField (newValue) {
       this.saveField(newValue)
     },
-    onAutoSaveField(newValue) {
+    onAutoSaveField (newValue) {
       this.saveField(newValue, true)
     },
-    getTabColor(stage, dIndex) {
+    getTabColor (stage, dIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return null
       const currentItem = this.assessments.items[this.modal.index]
       if (!currentItem.stages || !currentItem.stages[stage]) return null
@@ -1012,7 +1012,7 @@ export default {
       const response = this.ui.responses.find(r => r.value === option)
       return response ? response.color : null
     },
-    isTabCompleted(stage, tabIndex) {
+    isTabCompleted (stage, tabIndex) {
       if (!this.assessments.items || !this.assessments.items[this.modal.index]) return false
 
       const currentItem = this.assessments.items[this.modal.index]

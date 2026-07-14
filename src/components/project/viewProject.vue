@@ -485,7 +485,7 @@ export default {
     CamelotStepThree: () => import(/* webpackChunkName: "camelotStepThree" */ '@/components/camelot/StepThree.vue'),
     CamelotStepFour: () => import(/* webpackChunkName: "camelotStepFour" */ '@/components/camelot/StepFour.vue')
   },
-  data() {
+  data () {
     return {
       stepStage: 0,
       camelotLogo: require('@/assets/camelot-logo.svg'),
@@ -699,7 +699,7 @@ export default {
       printableItems: []
     }
   },
-  async mounted() {
+  async mounted () {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
@@ -718,7 +718,7 @@ export default {
     this.getCharacteristicsData()
     this.getAssessmentsData()
   },
-  beforeDestroy() {
+  beforeDestroy () {
     LockService.release()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -934,7 +934,7 @@ export default {
         console.error('Error cargando evaluaciones:', error)
       }
     },
-    async attemptLock() {
+    async attemptLock () {
       const res = await LockService.acquire(this.project.id)
       if (res.success) {
         this.lockInfo.locked = true
@@ -951,19 +951,19 @@ export default {
         })
       }
     },
-    handleLockLost(e) {
+    handleLockLost (e) {
       if ((e.detail && e.detail.projectId === this.project.id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-lost')
       }
     },
-    handleIdle(e) {
+    handleIdle (e) {
       if (e.detail && e.detail.projectId === this.project.id) {
         this.mode = 'view'
         this.$bvModal.show('modal-lock-idle')
       }
     },
-    reloadPage() {
+    reloadPage () {
       window.location.reload()
     },
     processGetListCategories: function (data) {
@@ -1712,7 +1712,7 @@ export default {
           Commons.printErrors(error)
         })
     },
-    countDownChanged(dismissCountDown) {
+    countDownChanged (dismissCountDown) {
       if (this.ui.project.type === 'inclusion') {
         this.ui.project.inclusion.success.dismissCountDown = dismissCountDown
       }
@@ -1720,10 +1720,10 @@ export default {
         this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
       }
     },
-    nextTab() {
+    nextTab () {
       window.scrollTo({ 'top': 0, 'behavior': 'smooth' })
     },
-    toggleSearch(show) {
+    toggleSearch (show) {
       if (show) {
         this.ui.project.displaySearch = false
       } else {

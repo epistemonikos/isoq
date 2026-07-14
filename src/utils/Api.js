@@ -47,53 +47,53 @@ axios.interceptors.response.use(
   response => response,
   error => {
     if (error.response && (error.response.status === 409 || error.response.status === 403)) {
-        // Verificar si es un error de bloqueo
-        // Excluir la petición de adquisición de bloqueo explícita, ya que esa se maneja en el componente
-        const url = error.config && error.config.url ? error.config.url : ''
-        const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
-        
-        // Check for '/api/lock/' but ensure it's not heartbeat
-        const isLockAcquisition = (error.config && error.config.headers && error.config.headers['X-Suppress-Lock-Error']) || (url.includes('/api/lock/') && method === 'post' && !url.includes('/heartbeat'))
-        
-        console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
+      // Verificar si es un error de bloqueo
+      // Excluir la petición de adquisición de bloqueo explícita, ya que esa se maneja en el componente
+      const url = error.config && error.config.url ? error.config.url : ''
+      const method = error.config && error.config.method ? error.config.method.toLowerCase() : ''
 
-        // Detect a conflict on a partial item PATCH (granular ref lock taken by
-        // another user, e.g. after an offline queue replays). Surface it via a
-        // non-blocking event so the open editor can show copyable fields.
-        const isPartialItemPatch = url.includes('/item/') &&
+      // Check for '/api/lock/' but ensure it's not heartbeat
+      const isLockAcquisition = (error.config && error.config.headers && error.config.headers['X-Suppress-Lock-Error']) || (url.includes('/api/lock/') && method === 'post' && !url.includes('/heartbeat'))
+
+      console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
+
+      // Detect a conflict on a partial item PATCH (granular ref lock taken by
+      // another user, e.g. after an offline queue replays). Surface it via a
+      // non-blocking event so the open editor can show copyable fields.
+      const isPartialItemPatch = url.includes('/item/') &&
           (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments'))
-        if (isPartialItemPatch && typeof window !== 'undefined') {
-          const refId = url.split('/item/')[1] || ''
-          let failedData = {}
-          if (error.config && error.config.data) {
-            try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
-          }
-          const lockedBy = (error.response.data && error.response.data.locked_by) || ''
-          localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
-          window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
-            detail: { refId, failedData, lockedBy }
-          }))
+      if (isPartialItemPatch && typeof window !== 'undefined') {
+        const refId = url.split('/item/')[1] || ''
+        let failedData = {}
+        if (error.config && error.config.data) {
+          try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
         }
+        const lockedBy = (error.response.data && error.response.data.locked_by) || ''
+        localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
+        window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+          detail: { refId, failedData, lockedBy }
+        }))
+      }
 
-        if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
-             if (typeof window !== 'undefined') {
-                console.log('Dispatching axios-refresh-lock event')
-                // Disparar evento para que viewProject lo capture y actualice la UI
-                // Esto es util para cuando user A pierde el lock (e.g. heartbeat falla o guarda sin lock)
-                window.dispatchEvent(new CustomEvent('axios-refresh-lock'))
-             }
+      if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
+        if (typeof window !== 'undefined') {
+          console.log('Dispatching axios-refresh-lock event')
+          // Disparar evento para que viewProject lo capture y actualice la UI
+          // Esto es util para cuando user A pierde el lock (e.g. heartbeat falla o guarda sin lock)
+          window.dispatchEvent(new CustomEvent('axios-refresh-lock'))
         }
+      }
 
-        // A 403 on any write request means the user's can_write/can_read may have
-        // just changed server-side (e.g. the project owner revoked their access
-        // while they still had an editor open). Unlike the two checks above, this
-        // is intentionally broad — it doesn't try to guess *why* the 403 happened —
-        // so any listener (viewProject.vue, editList.vue) can re-check permissions
-        // and lock the UI down without waiting for the user to navigate.
-        const isWriteMethod = ['post', 'patch', 'put', 'delete'].includes(method)
-        if (error.response.status === 403 && isWriteMethod && typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url, method } }))
-        }
+      // A 403 on any write request means the user's can_write/can_read may have
+      // just changed server-side (e.g. the project owner revoked their access
+      // while they still had an editor open). Unlike the two checks above, this
+      // is intentionally broad — it doesn't try to guess *why* the 403 happened —
+      // so any listener (viewProject.vue, editList.vue) can re-check permissions
+      // and lock the UI down without waiting for the user to navigate.
+      const isWriteMethod = ['post', 'patch', 'put', 'delete'].includes(method)
+      if (error.response.status === 403 && isWriteMethod && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('permission-denied', { detail: { url, method } }))
+      }
     }
     return Promise.reject(error)
   }
@@ -140,14 +140,14 @@ export default class Api {
   static getUrl (path) {
     if (path.startsWith('http')) return path
     if (path.startsWith('/api')) return path
-    
+
     const rootEndpoints = ['/users', '/share', '/auth', '/organizations', '/project', '/create_user', '/admin']
     for (const endpoint of rootEndpoints) {
-        if (path === endpoint || path.startsWith(endpoint + '/')) {
-            return path
-        }
+      if (path === endpoint || path.startsWith(endpoint + '/')) {
+        return path
+      }
     }
-    
+
     return Api.host + path
   }
 
@@ -168,12 +168,12 @@ export default class Api {
     for (const pattern of NO_CACHE_PATTERNS) {
       if (pattern.test(path)) return false
     }
-    
+
     // No encolar si es FormData (no se puede clonar en IndexedDB)
     if (typeof FormData !== 'undefined' && data instanceof FormData) {
       return false
     }
-    
+
     return true
   }
 
@@ -290,18 +290,18 @@ export default class Api {
 
     // Helper para intentar actualización optimista local
     const tryOptimisticUpdate = async (path, data) => {
-        try {
-            for (const strategy of strategies) {
-                if (strategy.patterns.some(p => p.test(path))) {
-                    if (strategy.update) {
-                        await strategy.update(data, path)
-                        // console.log('Optimistic update applied for:', path)
-                    }
-                }
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
+              // console.log('Optimistic update applied for:', path)
             }
-        } catch (error) {
-            console.warn('Error applying optimistic update:', error)
+          }
         }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
     }
 
     if (!isOnline) {
@@ -313,7 +313,7 @@ export default class Api {
       const response = await axios.put(url, data, { ...config, headers: this.getHeaders(config, data) })
       // También actualizamos cache si estamos online para mantener consistencia
       if (this.shouldCache(path)) {
-         await tryOptimisticUpdate(path, data)
+        await tryOptimisticUpdate(path, data)
       }
       return response
     } catch (error) {
@@ -342,20 +342,20 @@ export default class Api {
       // console.log('Operation queued for sync:', 'PATCH', url)
       return { data: data, queued: true, status: 200 }
     }
-    
+
     // Helper para intentar actualización optimista local
     const tryOptimisticUpdate = async (path, data) => {
-        try {
-            for (const strategy of strategies) {
-                if (strategy.patterns.some(p => p.test(path))) {
-                    if (strategy.update) {
-                        await strategy.update(data, path)
-                    }
-                }
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
             }
-        } catch (error) {
-            console.warn('Error applying optimistic update:', error)
+          }
         }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
     }
 
     if (!isOnline) {
@@ -366,7 +366,7 @@ export default class Api {
     try {
       const response = await axios.patch(url, data, { ...config, headers: this.getHeaders(config, data) })
       if (this.shouldCache(path)) {
-         await tryOptimisticUpdate(path, data)
+        await tryOptimisticUpdate(path, data)
       }
       return response
     } catch (error) {
@@ -395,20 +395,20 @@ export default class Api {
       // console.log('Operation queued for sync:', 'POST', url)
       return { data: data, queued: true, status: 200 }
     }
-    
+
     // Helper para intentar actualización optimista local
     const tryOptimisticUpdate = async (path, data) => {
-        try {
-            for (const strategy of strategies) {
-                if (strategy.patterns.some(p => p.test(path))) {
-                    if (strategy.update) {
-                        await strategy.update(data, path)
-                    }
-                }
+      try {
+        for (const strategy of strategies) {
+          if (strategy.patterns.some(p => p.test(path))) {
+            if (strategy.update) {
+              await strategy.update(data, path)
             }
-        } catch (error) {
-            console.warn('Error applying optimistic update:', error)
+          }
         }
+      } catch (error) {
+        console.warn('Error applying optimistic update:', error)
+      }
     }
 
     if (!isOnline) {
@@ -419,11 +419,11 @@ export default class Api {
     try {
       const response = await axios.post(url, data, { ...config, headers: this.getHeaders(config, data) })
       if (this.shouldCache(path)) {
-         // Para POST es más complejo porque el ID puede venir del servidor
-         // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
-         if (data && data.id) {
-            await tryOptimisticUpdate(path, data)
-         }
+        // Para POST es más complejo porque el ID puede venir del servidor
+        // pero si el data ya trae ID (ej: uuid generado en cliente), podemos actualizar
+        if (data && data.id) {
+          await tryOptimisticUpdate(path, data)
+        }
       }
       return response
     } catch (error) {

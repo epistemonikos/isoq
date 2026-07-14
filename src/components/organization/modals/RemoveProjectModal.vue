@@ -46,7 +46,7 @@ export default {
       default: () => []
     }
   },
-  data() {
+  data () {
     return {
       password: '',
       newOwner: null,
@@ -54,32 +54,32 @@ export default {
     }
   },
   computed: {
-    isShared() {
+    isShared () {
       return this.eligibleUsers.length > 0
     },
-    eligibleUsers() {
+    eligibleUsers () {
       return this.usersAllowed
     },
-    eligibleUsersOptions() {
+    eligibleUsersOptions () {
       return this.eligibleUsers.map(user => ({
         value: user.id,
         text: user.username || `${user.first_name} ${user.last_name}`
       }))
     },
-    isOkDisabled() {
+    isOkDisabled () {
       if (!this.password) return true
       if (this.isShared && !this.newOwner) return true
       return false
     }
   },
   methods: {
-    show() {
+    show () {
       this.$refs['modal-remove-project'].show()
     },
-    hide() {
+    hide () {
       this.$refs['modal-remove-project'].hide()
     },
-    resetData() {
+    resetData () {
       this.password = ''
       this.newOwner = null
       this.serverError = null

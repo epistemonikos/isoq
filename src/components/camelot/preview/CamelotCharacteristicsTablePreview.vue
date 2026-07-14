@@ -95,7 +95,7 @@ export default {
       default: () => []
     }
   },
-  data() {
+  data () {
     return {
       camelotLogo: require('@/assets/camelot-logo.svg'),
       charsData: {
@@ -108,7 +108,7 @@ export default {
     }
   },
   computed: {
-    tableItems() {
+    tableItems () {
       // Base: characteristics items, already scoped to the finding's references by the parent
       const items = (this.charsData && this.charsData.items) ? [...this.charsData.items] : []
 
@@ -138,7 +138,7 @@ export default {
         return authorsA.localeCompare(authorsB)
       })
     },
-    availableTableFields() {
+    availableTableFields () {
       // Base fields (authors)
       const baseFields = [
         { key: 'authors', label: this.$t('camelot.step_three.authors_label') }
@@ -179,7 +179,7 @@ export default {
 
       return [...baseFields, ...orderedFields]
     },
-    tableFields() {
+    tableFields () {
       // Return columns that should be displayed
       return this.availableTableFields.filter(f => {
         if (f.key === 'authors') return true
@@ -191,7 +191,7 @@ export default {
   },
   watch: {
     charsOfStudies: {
-      handler(newVal) {
+      handler (newVal) {
         if (newVal && newVal.fields) {
           this.charsData = JSON.parse(JSON.stringify(newVal))
         }
@@ -201,23 +201,23 @@ export default {
     }
   },
   methods: {
-    formatAuthors(item) {
+    formatAuthors (item) {
       return Commons.parseReference(item, true, false)
     },
-    shouldTruncate(text) {
+    shouldTruncate (text) {
       return Commons.shouldTruncate(text)
     },
-    truncate(text) {
+    truncate (text) {
       return Commons.truncate(text)
     },
-    toggleExpand(refId, fieldKey) {
+    toggleExpand (refId, fieldKey) {
       const key = `${refId}-${fieldKey}`
       this.$set(this.expandedCells, key, !this.expandedCells[key])
     },
-    isExpanded(refId, fieldKey) {
+    isExpanded (refId, fieldKey) {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
-    isCustomField(fieldKey) {
+    isCustomField (fieldKey) {
       return isCustomField(fieldKey)
     }
   }

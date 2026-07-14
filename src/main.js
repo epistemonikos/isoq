@@ -42,7 +42,6 @@ import {
   TooltipPlugin
 } from 'bootstrap-vue'
 
-
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -122,13 +121,13 @@ if (process.env.SENTRY_DSN) {
     dsn: process.env.SENTRY_DSN,
     integrations: [
       new Sentry.BrowserTracing({
-        routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      }),
+        routingInstrumentation: Sentry.vueRouterInstrumentation(router)
+      })
     ],
     tracesSampleRate: 0.1,
     environment: process.env.NODE_ENV,
     release: process.env.SENTRY_RELEASE,
-    logErrors: true,
+    logErrors: true
   })
 }
 

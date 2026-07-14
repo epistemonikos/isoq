@@ -305,12 +305,12 @@ export default {
     draggable: () => import('vuedraggable'),
     videoHelp: () => import('@/components/videoHelp.vue')
   },
-  mounted() {
+  mounted () {
     this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
     this.updateMyDataTables()
     this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
   },
-  data() {
+  data () {
     return {
       dataTable: {
         fields: [],
@@ -357,12 +357,12 @@ export default {
     }
   },
   watch: {
-    references() {
+    references () {
       this.updateMyDataTables()
     }
   },
   computed: {
-    isDataTableFieldsModalInvalid() {
+    isDataTableFieldsModalInvalid () {
       const nro = parseInt(this.dataTableFieldsModal.nroColumns)
       if (!nro || nro === 0) return true
       for (let i = 0; i < nro; i++) {
@@ -372,23 +372,23 @@ export default {
       }
       return false
     },
-    isDataTableFieldsModalEditInvalid() {
+    isDataTableFieldsModalEditInvalid () {
       if (!this.dataTableFieldsModalEdit.fields || !this.dataTableFieldsModalEdit.fields.length) return false
       return this.dataTableFieldsModalEdit.fields.some(field => !field.label || (typeof field.label === 'string' && field.label.trim().length === 0))
     }
   },
   methods: {
-    shouldTruncate(text) {
+    shouldTruncate (text) {
       return Commmons.shouldTruncate(text)
     },
-    truncate(text) {
+    truncate (text) {
       return Commmons.truncate(text)
     },
-    toggleExpand(refId, fieldKey) {
+    toggleExpand (refId, fieldKey) {
       const key = `${refId}-${fieldKey}`
       this.$set(this.expandedCells, key, !this.expandedCells[key])
     },
-    isExpanded(refId, fieldKey) {
+    isExpanded (refId, fieldKey) {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
     getData: function (prefetchedData = null) {
@@ -465,7 +465,7 @@ export default {
       const d = (domain === 'edit') ? this.dataTableFieldsModalEdit : this.dataTableFieldsModal
       if (!d.touched[index]) return null
       const val = (domain === 'edit') ? (d.fields[index] ? d.fields[index].label : '') : d.fields[index]
-      return val && val.trim().length > 0 ? true : false
+      return !!(val && val.trim().length > 0)
     },
     openModalDataTable: function () {
       let fields = Commmons.deepClone(this.dataTable.fields)

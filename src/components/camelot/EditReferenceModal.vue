@@ -119,7 +119,7 @@ export default {
       default: () => []
     }
   },
-  data() {
+  data () {
     return {
       camelotLogo: require('@/assets/camelot-logo.svg'),
       localReference: null,
@@ -138,30 +138,30 @@ export default {
     }
   },
   computed: {
-    modalTitle() {
+    modalTitle () {
       if (this.localReference) {
         const authorInfo = Commons.parseReference(this.localReference, true, false)
         return `${this.$t('camelot.step_three.modal.title', { reference_id: authorInfo })}`
       }
       return this.$t('camelot.step_three.modal.title')
     },
-    hasInvalidCustomFields() {
+    hasInvalidCustomFields () {
       return this.customFields.some(f => !f.isCamelot && !f.locked && (!f.label || !f.label.trim()))
     }
   },
-  created() {
+  created () {
     this.autoSaveDebounced = _debounce(function () { this.performSave(false) }.bind(this), 1500)
   },
-  mounted() {
+  mounted () {
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
-  beforeDestroy() {
+  beforeDestroy () {
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
   },
   watch: {
     reference: {
       immediate: true,
-      handler(newVal) {
+      handler (newVal) {
         if (newVal) {
           this.localReference = { ...newVal }
           this.editForm = { ...newVal }
@@ -172,7 +172,7 @@ export default {
       }
     },
     customFields: {
-      handler() {
+      handler () {
         if (this.observer) {
           this.$nextTick(() => {
             this.initScrollSpy()
@@ -182,17 +182,17 @@ export default {
     }
   },
   methods: {
-    show() {
+    show () {
       this.$bvModal.show('modal-edit-reference')
     },
-    hide() {
+    hide () {
       this.$bvModal.hide('modal-edit-reference')
     },
-    onModalShownAll() {
+    onModalShownAll () {
       this.initScrollSpy()
       this.onModalShown()
     },
-    async onModalShown() {
+    async onModalShown () {
       if (!this.localReference) return
       const result = await LockService.acquireRef(
         this.$route.params.id,
@@ -217,7 +217,7 @@ export default {
         }
       }
     },
-    handleRefLockConflict(event) {
+    handleRefLockConflict (event) {
       const { refId, failedData, lockedBy } = event.detail
       if (refId !== (this.localReference && this.localReference.id)) return
       this.conflictData = failedData
@@ -227,12 +227,12 @@ export default {
         if (this.$refs.conflictModal) this.$refs.conflictModal.show()
       })
     },
-    clearConflict() {
+    clearConflict () {
       this.conflictData = null
       this.conflictLockedBy = ''
       this.conflictRefId = ''
     },
-    resetModal() {
+    resetModal () {
       LockService.releaseRef()
       this.destroyScrollSpy()
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
@@ -247,7 +247,7 @@ export default {
       this.isOffline = false
       this.$emit('close')
     },
-    initScrollSpy() {
+    initScrollSpy () {
       this.destroyScrollSpy()
 
       this.$nextTick(() => {
@@ -303,13 +303,13 @@ export default {
         observeElements()
       })
     },
-    destroyScrollSpy() {
+    destroyScrollSpy () {
       if (this.observer) {
         this.observer.disconnect()
         this.observer = null
       }
     },
-    initializeCustomFields(itemValues = null) {
+    initializeCustomFields (itemValues = null) {
       if (!this.charsData || !Array.isArray(this.charsData.fields)) {
         this.customFields = []
         return
@@ -387,7 +387,7 @@ export default {
 
       this.customFields = parsedFields
     },
-    scrollToSection(id) {
+    scrollToSection (id) {
       const element = document.getElementById(id)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -399,15 +399,15 @@ export default {
         }
       }
     },
-    onFieldChanged() {
+    onFieldChanged () {
       this.autoSaveDebounced()
     },
-    handleModalOk(bvModalEvent) {
+    handleModalOk (bvModalEvent) {
       if (bvModalEvent) bvModalEvent.preventDefault()
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.performSave(true)
     },
-    performSave(closeAfter) {
+    performSave (closeAfter) {
       if (this.isSaving || this.isReadOnly) return
       this.isSaving = true
       if (!closeAfter) this.autoSaveStatus = 'saving'

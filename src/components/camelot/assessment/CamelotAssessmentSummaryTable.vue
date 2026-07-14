@@ -251,7 +251,7 @@ export default {
       default: false
     }
   },
-  data() {
+  data () {
     return {
       responses: [
         { text: this.$t('camelot.responses.no_minimal'), value: 'A', color: '#1065AB' },
@@ -265,7 +265,7 @@ export default {
     }
   },
   computed: {
-    fields() {
+    fields () {
       const faPrefix = this.$t('camelot.step_four.table_headers.fa_prefix') || 'FA'
       const oaLabel = this.$t('camelot.step_four.table_headers.oa_label') || 'OA'
 
@@ -292,7 +292,7 @@ export default {
 
       return fields
     },
-    filterGroups() {
+    filterGroups () {
       return [
         {
           title: this.getStageTitle(0),
@@ -326,7 +326,7 @@ export default {
         }
       ]
     },
-    tableItems() {
+    tableItems () {
       if (!this.assessments || !this.assessments.items) return []
 
       let filteredItems = this.assessments.items
@@ -350,7 +350,7 @@ export default {
 
       return filteredItems
     },
-    activeStages() {
+    activeStages () {
       const active = []
       for (let stageIdx = 0; stageIdx < 4; stageIdx++) {
         const hasVisibleAssessment = this.visibleAssessments.some(v => v.startsWith(`${stageIdx}-`))
@@ -360,12 +360,12 @@ export default {
       }
       return active
     },
-    allAssessmentValues() {
+    allAssessmentValues () {
       return this.filterGroups.flatMap(g => g.options.map(o => o.value))
     }
   },
   watch: {
-    visibleAssessments(newVal) {
+    visibleAssessments (newVal) {
       this.allVisible = newVal.length === this.allAssessmentValues.length
       // Al cambiar los filtros, nos aseguramos de que todos los detalles estén abiertos si hay filtros activos
       if (newVal.length < this.allAssessmentValues.length && newVal.length > 0) {
@@ -374,13 +374,13 @@ export default {
     }
   },
   methods: {
-    handleHeaderClick(assessmentKey) {
+    handleHeaderClick (assessmentKey) {
       if (!this.clickableHeaders) return
 
       this.visibleAssessments = [assessmentKey]
       this.expandAllDetails(true)
     },
-    handleFilterDropdownShow() {
+    handleFilterDropdownShow () {
       // Al abrir el filtro, si hay algún estudio abierto, los cerramos todos.
       const anyShowing = this.tableItems.some(item => item._showDetails)
       if (anyShowing) {
@@ -390,7 +390,7 @@ export default {
         this.expandAllDetails(true)
       }
     },
-    handleToggleDetails(data) {
+    handleToggleDetails (data) {
       // Al presionar show o hide individual, se cierran todos los demás y se resetean los filtros
       const currentItemId = data.item.ref_id
       this.tableItems.forEach(item => {
@@ -402,36 +402,36 @@ export default {
       this.toggleAllAssessments(true)
       data.toggleDetails()
     },
-    expandAllDetails(show) {
+    expandAllDetails (show) {
       this.tableItems.forEach(item => {
         this.$set(item, '_showDetails', show)
       })
     },
-    toggleAllAssessments(checked) {
+    toggleAllAssessments (checked) {
       if (checked) {
         this.visibleAssessments = [...this.allAssessmentValues]
       } else {
         this.visibleAssessments = []
       }
     },
-    isAssessmentVisible(stageIdx, oIdx) {
+    isAssessmentVisible (stageIdx, oIdx) {
       return this.visibleAssessments.includes(`${stageIdx}-${oIdx}`)
     },
-    resetTableState() {
+    resetTableState () {
       // Restablecer filtros a "todos visibles"
       this.toggleAllAssessments(true)
       // Colapsar todos los detalles
       this.expandAllDetails(false)
     },
-    getOptionColor(optionValue) {
+    getOptionColor (optionValue) {
       const response = this.responses.find(r => r.value === optionValue)
       return response ? response.color : '#B3B3B3'
     },
-    getOptionText(optionValue) {
+    getOptionText (optionValue) {
       const response = this.responses.find(r => r.value === optionValue)
       return response ? response.text : optionValue
     },
-    getCircleTooltip(stage, optionIndex, item) {
+    getCircleTooltip (stage, optionIndex, item) {
       if (!item || !item.stages || !item.stages[stage] || !item.stages[stage].options[optionIndex]) {
         return this.$t('camelot.step_four.legend.not_completed')
       }
@@ -442,7 +442,7 @@ export default {
       const response = this.responses.find(r => r.value === optionValue)
       return response ? response.text : optionValue
     },
-    getStageTitle(stage) {
+    getStageTitle (stage) {
       const stages = [
         'fit_meta_design',
         'fit_meta_conduct',
@@ -451,7 +451,7 @@ export default {
       ]
       return this.$t(`camelot.step_four.tabs.${stages[stage]}`)
     },
-    getAssessmentLabel(stage, index) {
+    getAssessmentLabel (stage, index) {
       if (stage === 3) return this.$t('camelot.step_four.camelot_assessment_summary_table.overall')
       const keys = [
         [

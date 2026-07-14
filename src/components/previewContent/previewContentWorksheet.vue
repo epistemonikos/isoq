@@ -821,30 +821,30 @@ export default {
 
         const data = this.project.use_camelot
           ? {
-              evidenceProfile: this.evidence_profile,
-              characteristicStudies: this.characteristics_studies,
-              methodologicalAssessments: this.meth_assessments,
-              extractedData: this.extracted_data,
-              references: this.references,
-              list: this.list,
-              selectOptions: this.select_options,
-              levelConfidence: this.level_confidence,
-              license: this.theLicense(this.list.license_type || '')
-            }
+            evidenceProfile: this.evidence_profile,
+            characteristicStudies: this.characteristics_studies,
+            methodologicalAssessments: this.meth_assessments,
+            extractedData: this.extracted_data,
+            references: this.references,
+            list: this.list,
+            selectOptions: this.select_options,
+            levelConfidence: this.level_confidence,
+            license: this.theLicense(this.list.license_type || '')
+          }
           : {
-              evidenceProfile: this.evidence_profile[0] || {},
-              characteristicsStudies: this.characteristics_studies,
-              methodologicalAssessments: this.meth_assessments,
-              extractedData: this.extracted_data,
-              references: this.references,
-              list: this.list,
-              findings: [
-                {
-                  ...this.list,
-                  evidence_profile: this.evidence_profile.length ? this.evidence_profile[0] : null
-                }
-              ]
-            }
+            evidenceProfile: this.evidence_profile[0] || {},
+            characteristicsStudies: this.characteristics_studies,
+            methodologicalAssessments: this.meth_assessments,
+            extractedData: this.extracted_data,
+            references: this.references,
+            list: this.list,
+            findings: [
+              {
+                ...this.list,
+                evidence_profile: this.evidence_profile.length ? this.evidence_profile[0] : null
+              }
+            ]
+          }
 
         await exportToWord(this.project, data, { filename, strategy })
       } catch (error) {

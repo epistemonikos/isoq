@@ -96,7 +96,7 @@ import _debounce from 'lodash.debounce'
 
 export default {
   name: 'AssessmentForm',
-  data() {
+  data () {
     return {
       categories: [
         this.$t('camelot.assessment_form.categories.fit_meta_design'),
@@ -256,13 +256,13 @@ export default {
     }
   },
   computed: {
-    explanationState() {
+    explanationState () {
       if (this.selected === null) return null
-      return this.text1 && this.text1.trim().length > 0 ? true : false
+      return !!(this.text1 && this.text1.trim().length > 0)
     }
   },
   watch: {
-    modalStage(newValue) {
+    modalStage (newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items.length) {
@@ -271,7 +271,7 @@ export default {
         this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
       }
     },
-    selectedMeta(newValue) {
+    selectedMeta (newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items) {
@@ -280,7 +280,7 @@ export default {
         this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
       }
     },
-    modalIndex(newValue) {
+    modalIndex (newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items && this.assessments.items[newValue]) {
@@ -290,7 +290,7 @@ export default {
       }
     },
     assessments: {
-      handler(newValue) {
+      handler (newValue) {
         if (newValue.items.length) {
           this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
           this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
@@ -299,13 +299,13 @@ export default {
       },
       deep: true
     },
-    selected(newValue) {
+    selected (newValue) {
       this.checkChanges()
     },
-    text1(newValue) {
+    text1 (newValue) {
       this.checkChanges()
     },
-    notes(newValue) {
+    notes (newValue) {
       this.checkChanges()
     }
   },
@@ -317,11 +317,11 @@ export default {
     }
     this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
   },
-  beforeDestroy() {
+  beforeDestroy () {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
   },
   methods: {
-    checkChanges() {
+    checkChanges () {
       const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
       const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
       this.button.disabled = !hasChanges
@@ -331,7 +331,7 @@ export default {
         this.autoSaveDebounced.cancel()
       }
     },
-    getOptionColor(value) {
+    getOptionColor (value) {
       const colors = {
         'A': '#1065AB', // No or minimal
         'B': '#8EC4DE', // Minor
@@ -341,7 +341,7 @@ export default {
       }
       return colors[value] || '#B3B3B3'
     },
-    cancel() {
+    cancel () {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
       if (this.assessments.items && this.assessments.items[this.modalIndex]) {
@@ -352,30 +352,30 @@ export default {
       }
       this.$bvModal.hide('modal-1')
     },
-    doItNow() {
+    doItNow () {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.$nextTick(() => {
         const el = document.getElementById('textarea-formatter')
         if (el) el.focus()
       })
     },
-    doItLater() {
+    doItLater () {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.performSave()
     },
-    save() {
+    save () {
       if (this.selected && (!this.text1 || this.text1.trim() === '')) {
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return
       }
       this.performSave()
     },
-    clearSelection() {
+    clearSelection () {
       this.selected = null
       this.text1 = ''
       this.notes = ''
     },
-    performSave(silent = false) {
+    performSave (silent = false) {
       if (this.isReadOnly) return
       this.isSaving = true
       if (silent) this.autoSaveStatus = 'saving'

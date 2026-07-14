@@ -1,6 +1,6 @@
 /**
  * RIS (Research Information Systems) Format Utility
- * 
+ *
  * Converts reference objects to RIS format for export to reference managers.
  * RIS format specification: https://en.wikipedia.org/wiki/RIS_(file_format)
  */
@@ -11,7 +11,7 @@
  * @param {string|number} value - Field value
  * @returns {string} Formatted RIS field or empty string if value is empty
  */
-export function formatField(tag, value) {
+export function formatField (tag, value) {
   if (value === null || value === undefined || value === '') {
     return ''
   }
@@ -23,7 +23,7 @@ export function formatField(tag, value) {
  * @param {Object} reference - Reference object
  * @returns {string} RIS formatted string
  */
-export function formatReference(reference) {
+export function formatReference (reference) {
   if (!reference || typeof reference !== 'object') {
     return 'ER  - \r\n'
   }
@@ -105,7 +105,7 @@ export function formatReference(reference) {
  * @param {Array} references - Array of reference objects
  * @returns {string} RIS formatted string for all references
  */
-export function formatReferences(references) {
+export function formatReferences (references) {
   if (!references || !Array.isArray(references) || references.length === 0) {
     return ''
   }

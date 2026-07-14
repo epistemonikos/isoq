@@ -7,7 +7,7 @@
  * @param {string} fieldKey - La clave del campo a comprobar
  * @returns {boolean} - True si es un campo personalizado, false en caso contrario
  */
-export function isCustomField(fieldKey) {
+export function isCustomField (fieldKey) {
   return typeof fieldKey === 'string' && fieldKey.startsWith('column_')
 }
 
@@ -16,7 +16,7 @@ export function isCustomField(fieldKey) {
  * @param {Array} fields - Array de objetos con key y label
  * @returns {Array} - Array de objetos con los campos personalizados
  */
-export function extractCustomFields(fields) {
+export function extractCustomFields (fields) {
   if (!fields || !Array.isArray(fields) || fields.length === 0) {
     return []
   }
@@ -37,7 +37,7 @@ export function extractCustomFields(fields) {
  * @param {Array} fields - Array de objetos field vigentes (con key y label)
  * @returns {Array} - Array de items limpio, sin llaves huérfanas
  */
-export function cleanOrphanedCustomFieldKeys(items, fields) {
+export function cleanOrphanedCustomFieldKeys (items, fields) {
   if (!items || !Array.isArray(items) || items.length === 0) {
     return items || []
   }
