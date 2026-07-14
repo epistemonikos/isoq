@@ -388,7 +388,8 @@ export default {
       }
 
       const url = this.getSharedUrl('/isoqf_projects')
-      Api.get(url, { id: projectId })
+      const idParam = this.shouldUseSharedUrl() ? 'project_id' : 'id'
+      Api.get(url, { [idParam]: projectId })
         .then((response) => {
           const projects = Array.isArray(response.data) ? response.data : [response.data]
           if (projects.length > 0) {

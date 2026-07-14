@@ -46,7 +46,7 @@ describe('previewContentWorksheet.vue', () => {
         mocks: { ...mocks, $route: { params: { id: '1', projectId: 'p1', token: 'abc123realtoken' } } }
       })
 
-      expect(Api.get).toHaveBeenCalledWith('/api/shared/abc123realtoken/isoqf_projects', { id: 'p1' })
+      expect(Api.get).toHaveBeenCalledWith('/api/shared/abc123realtoken/isoqf_projects', { project_id: 'p1' })
     })
 
     it('redirects to MainPage when accessed via the public browse token but the project is private', async () => {
