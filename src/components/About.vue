@@ -69,7 +69,10 @@
       </ul>
 
       <h3>{{ $t('about.cite') }}</h3>
-      <p>{{ $t('about.cite_desc') }}</p>
+      <i18n path="about.cite_desc" tag="p">
+        <router-link :to="{ name: 'About' }" place="0">{{ $t('about.cite_team_link') }}</router-link>
+      </i18n>
+      <p><small>{{ $t('about.cite_team') }}</small></p>
     </b-container>
   </div>
 </template>

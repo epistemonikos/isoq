@@ -673,7 +673,7 @@
     "mac": "Is iSoQ compatible with Mac?",
     "mac_desc": "iSoQ can be used on a Mac but has not been extensively tested with Mac. We are aware of one common issue for Mac users and that is with the \"import table\" function in the My Data section. When our Excel template is downloaded and opened in Excel for Mac, columns A and B are merged instead of separate. This causes import failure and serious malfunctioning in the software. We therefore recommend Mac users work on the template in either Google docs, Open Office or LibreOffice. Be sure to save the file as a \"comma-separated values\" (CSV). We welcome feedback from Mac users so we can continue to improve your experience with iSoQ.",
     "funding": "How is the iSoQ tool funded?",
-    "funding_desc": "The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR). Additional funding for members of the development team is provided by the Western Norway University of Applied Sciences (HVL), the Norwegian University of Science and Technology (NTNU) and the Epistemonikos Foundation.",
+    "funding_desc": "The development of the iSoQ tool is supported by funding from the Norwegian Institute of Public Health's Centre for Epidemic Interventions Research (CEIR); the Norwegian University of Science and Technology (NTNU); the Western Norway University of Applied Sciences (HVL), and the Epistemonikos Foundation. Additional funding for members of the iSoQ Development Team is provided by HVL and NTNU.",
     "licence": "How is the iSoQ tool and its contents licenced?",
     "licence_li1": "The code underlying the iSoQ software, produced and run by the Epistemonikos Foundation, is licensed under a {0}",
     "licence_li2": "The methods content developed specifically for iSoQ (e.g. pop-up and modal texts, tooltips, prompts, examples, help videos) is licensed under a {0}",
@@ -681,7 +681,9 @@
     "licence_li3_link": "GRADE-CERQual papers in the journal Implementation Science",
     "licence_li4": "Users who publish some or all of their Interactive Summary of Qualitative Findings projects to the iSoQ database will be prompted to choose a {0} licence for their work. The default will be {1}.",
     "cite": "How do I cite iSoQ?",
-    "cite_desc": "Cite as: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org"
+    "cite_desc": "iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Version 1. Epistemonikos, Norwegian Institute of Public Health and the {0}. Available from isoq.epistemonikos.org",
+    "cite_team_link": "iSoQ Development Team*",
+    "cite_team": "*iSoQ Development Team: Megan Wainwright (Consultant), Simon Lewin (Norwegian University of Science and Technology (NTNU)), Claire Glenton (Western Norway University of Applied Sciences (HVL)), Heather Munthe-Kaas (Norwegian Institute of Public Health)."
   },
   "browse": {
     "title": "Browse public iSoQ tables",

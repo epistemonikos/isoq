@@ -673,7 +673,7 @@
     "mac": "O iSoQ é compatível com Mac?",
     "mac_desc": "O iSoQ pode ser usado em um Mac, mas não foi extensivamente testado com Mac. Estamos cientes de um problema comum para usuários de Mac e é com a função \"importar tabela\" na seção Meus Dados. Quando nosso modelo do Excel é baixado e aberto no Excel para Mac, as colunas A e B são mescladas em vez de separadas. Isso causa falha na importação e mau funcionamento grave no software. Portanto, recomendamos que os usuários de Mac trabalhem no modelo no Google Docs, Open Office ou LibreOffice. Certifique-se de salvar o arquivo como \"valores separados por vírgula\" (CSV). Agradecemos o feedback dos usuários de Mac para que possamos continuar a melhorar sua experiência com o iSoQ.",
     "funding": "Como a ferramenta iSoQ é financiada?",
-    "funding_desc": "O desenvolvimento da ferramenta iSoQ é apoiado por financiamento do Centro de Pesquisa de Intervenções Epidêmicas (CEIR) do Instituto Norueguês de Saúde Pública. Financiamento adicional para membros da equipe de desenvolvimento é fornecido pela Universidade de Ciências Aplicadas da Noruega Ocidental (HVL), pela Universidade Norueguesa de Ciência e Tecnologia (NTNU) e pela Fundação Epistemonikos.",
+    "funding_desc": "O desenvolvimento da ferramenta iSoQ é apoiado por financiamento do Centro de Pesquisa de Intervenções Epidêmicas (CEIR) do Instituto Norueguês de Saúde Pública; da Universidade Norueguesa de Ciência e Tecnologia (NTNU); da Universidade de Ciências Aplicadas da Noruega Ocidental (HVL), e da Fundação Epistemonikos. Financiamento adicional para membros da Equipe de Desenvolvimento do iSoQ é fornecido por HVL e NTNU.",
     "licence": "Como a ferramenta iSoQ e seus conteúdos são licenciados?",
     "licence_li1": "O código subjacente ao software iSoQ, produzido e executado pela Fundação Epistemonikos, é licenciado sob uma {0}",
     "licence_li2": "O conteúdo metodológico desenvolvido especificamente para o iSoQ (por exemplo, textos pop-up e modais, dicas de ferramentas, prompts, exemplos, vídeos de ajuda) é licenciado sob uma {0}",
@@ -681,7 +681,9 @@
     "licence_li3_link": "artigos GRADE-CERQual na revista Implementation Science",
     "licence_li4": "Os usuários que publicarem alguns ou todos os seus projetos de Resumo Interativo de Descobertas Qualitativas no banco de dados iSoQ serão solicitados a escolher uma licença {0} para seu trabalho. O padrão será {1}.",
     "cite": "Como eu cito o iSoQ?",
-    "cite_desc": "Citar como: GRADE-CERQual Interactive Summary of Qualitative Findings (iSoQ) [Computer program]. Version 1.0 accessed [insert date]. Oslo, Norway: Norwegian Institute of Public Health (developed by the Epistemonikos Foundation, Megan Wainwright Consulting and the Norwegian Institute of Public Health for the GRADE-CERQual Project Group). Available at isoq.epistemonikos.org"
+    "cite_desc": "iSoQ: GRADE-CERQual interactive Summary of Qualitative Findings tool [Software]. Versão 1. Epistemonikos, Instituto Norueguês de Saúde Pública e a {0}. Disponível em isoq.epistemonikos.org",
+    "cite_team_link": "Equipe de Desenvolvimento do iSoQ*",
+    "cite_team": "*Equipe de Desenvolvimento do iSoQ: Megan Wainwright (Consultora), Simon Lewin (Universidade Norueguesa de Ciência e Tecnologia (NTNU)), Claire Glenton (Universidade de Ciências Aplicadas da Noruega Ocidental (HVL)), Heather Munthe-Kaas (Instituto Norueguês de Saúde Pública)."
   },
   "browse": {
     "title": "Navegar pelas tabelas públicas do iSoQ",
