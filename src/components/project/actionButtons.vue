@@ -1,95 +1,49 @@
 <template>
   <div>
     <b-row>
-      <b-col
-        cols="12">
-        <b-row
-          class="d-print-none justify-content-end mb-2">
-          <b-col
-            v-if="mode==='view'"
-            cols="12"
-            md="3"
-            xl="3">
-            <b-dropdown
-              id="export-button"
-              class="mt-1"
-              block
-              variant="outline-secondary"
-              right
+      <b-col cols="12">
+        <b-row class="d-print-none justify-content-end mb-2">
+          <b-col v-if="mode === 'view'" cols="12" lg="4">
+            <b-dropdown id="export-button" class="mt-1" block variant="outline-secondary" right
               :text="$t('actionButtons.export')">
-              <b-dropdown-item @click="ExportToWord(project.name)">{{ $t('actionButtons.to_ms_word') }}</b-dropdown-item>
+              <b-dropdown-item @click="ExportToWord(project.name)">{{ $t('actionButtons.to_ms_word')
+              }}</b-dropdown-item>
               <b-dropdown-item @click="exportToRIS">{{ $t('actionButtons.the_references') }}</b-dropdown-item>
             </b-dropdown>
           </b-col>
-          
-          <b-col
-            v-if="mode==='view'"
-            cols="12"
-            md="3"
-            xl="3">
-              <b-button
-                class="mt-1"
-                variant="outline-info"
-                block
-                @click="printiSoQ">
-                {{ $t('actionButtons.print_save_pdf') }}
-              </b-button>
+
+          <b-col v-if="mode === 'view'" cols="12" lg="4">
+            <b-button class="mt-1" variant="outline-info" block @click="printiSoQ">
+              {{ $t('actionButtons.print_save_pdf') }}
+            </b-button>
           </b-col>
-          <b-col
-            v-if="mode==='view' && !preview && canWrite"
-            cols="12"
-            md="3"
-            xl="3">
-              <b-button
-                class="mt-1"
-                @click="changeMode"
-                variant="primary"
-                block>
-                <font-awesome-icon icon="edit"></font-awesome-icon>
-                {{ $t('actionButtons.edit') }}
-              </b-button>
+          <b-col v-if="mode === 'view' && !preview && canWrite" cols="12" lg="4">
+            <b-button class="mt-1" @click="changeMode" variant="primary" block>
+              <font-awesome-icon icon="edit"></font-awesome-icon>
+              {{ $t('actionButtons.edit') }}
+            </b-button>
           </b-col>
-          <b-col
-            v-if="mode==='edit'"
-            cols="12"
-            md="3"
-            xl="3">
-              <b-button
-                v-if="canWrite"
-                class="mt-1"
-                @click="modalChangePublicStatus"
-                :variant="(project.is_public) ? 'outline-primary' : 'primary'"
-                block
-                v-b-tooltip.hover :title="$t('actionButtons.publish_tooltip')">
-                <span v-if="project.is_public">{{ $t('actionButtons.published') }}</span><span v-else>{{ $t('actionButtons.publish') }}</span>
-              </b-button>
+          <b-col v-if="mode === 'edit'" cols="12" lg="4">
+            <b-button v-if="canWrite" class="mt-1" @click="modalChangePublicStatus"
+              :variant="(project.is_public) ? 'outline-primary' : 'primary'" block v-b-tooltip.hover
+              :title="$t('actionButtons.publish_tooltip')">
+              <span v-if="project.is_public">{{ $t('actionButtons.published') }}</span><span v-else>{{
+                $t('actionButtons.publish') }}</span>
+            </b-button>
           </b-col>
-          <b-col
-            v-if="mode==='edit'"
-            cols="12"
-            md="3"
-            xl="3">
-              <b-button
-                class="mt-1"
-                @click="changeMode"
-                variant="outline-success"
-                block
-                v-b-tooltip.hover :title="$t('actionButtons.view_mode_tooltip')">
-                {{ $t('actionButtons.print_or_export') }}
-              </b-button>
+          <b-col v-if="mode === 'edit'" cols="12" lg="4">
+            <b-button class="mt-1" @click="changeMode" variant="outline-success" block v-b-tooltip.hover
+              :title="$t('actionButtons.view_mode_tooltip')">
+              {{ $t('actionButtons.print_or_export') }}
+            </b-button>
           </b-col>
         </b-row>
       </b-col>
     </b-row>
-    
+
     <!-- Publish Modal Component -->
-    <PublishModal
-      ref="publishModal"
-      :project="project"
-      :ui="ui"
-      @getProject="$emit('getProject')"
-      @uiPublishShowLoader="$emit('uiPublishShowLoader', $event)"
-    />
+    <PublishModal ref="publishModal" :project="project" :ui="ui" @getProject="$emit('getProject')"
+      @uiPublishShowLoader="$emit('uiPublishShowLoader', $event)" />
   </div>
 </template>
 
@@ -158,9 +112,9 @@ export default {
         }
 
         // Use WordExportService with current locale
-        await this.exportService.exportToWord(this.project, data, { 
+        await this.exportService.exportToWord(this.project, data, {
           filename,
-          locale: this.$i18n.locale 
+          locale: this.$i18n.locale
         })
 
       } catch (error) {
@@ -268,6 +222,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

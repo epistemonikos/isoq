@@ -14,98 +14,53 @@
       </b-container>
     </b-container>
     <b-container>
-      <b-row
-        class="d-print-none justify-content-end mb-2 pt-2">
-        <b-col
-          cols="12"
-          sm="2">
-            <b-button
-              id="exportButton"
-              variant="outline-secondary"
-              block
-              @click="exportToWord()">
-              Export to MS-Word
-            </b-button>
+      <b-row class="d-print-none justify-content-end mb-2 pt-2">
+        <b-col cols="12" md="4">
+          <b-button id="exportButton" variant="outline-secondary" block @click="exportToWord()">
+            Export to MS-Word
+          </b-button>
         </b-col>
-        <b-col
-          cols="12"
-          sm="2">
-            <b-button
-              id="printButton"
-              @click="print"
-              variant="outline-info"
-              block>
-              Print or save as PDF
-            </b-button>
+        <b-col cols="12" md="4" class="mt-2 mt-md-0">
+          <b-button id="printButton" @click="print" variant="outline-info" block>
+            Print or save as PDF
+          </b-button>
         </b-col>
       </b-row>
       <b-row class="mt-4">
         <b-col cols="12">
-          <evidence-profile
-            :evidenceProfile="evidence_profile"
-            :ui="ui"
-            :evidenceProfileTableSettings="evidence_profile_table_settings"
-            :references="references"
-            mode="view"
-            :list="list"
-            :refsWithTitle="[]"
-            :project="{}"
-            :permission="true"
-            :selectOptions="select_options"
-            :levelConfidence="level_confidence"
-            :findings="{}"
-            :methAssessments="meth_assessments"
-            :extractedData="extracted_data"
-            :showEditExtractedDataInPlace="{}"
-            :modalData="modalData()"
+          <evidence-profile :evidenceProfile="evidence_profile" :ui="ui"
+            :evidenceProfileTableSettings="evidence_profile_table_settings" :references="references" mode="view"
+            :list="list" :refsWithTitle="[]" :project="{}" :permission="true" :selectOptions="select_options"
+            :levelConfidence="level_confidence" :findings="{}" :methAssessments="meth_assessments"
+            :extractedData="extracted_data" :showEditExtractedDataInPlace="{}" :modalData="modalData()"
             :charsOfStudies="characteristics_studies"></evidence-profile>
           <template v-if="canViewDetails">
             <div v-if="project.use_camelot">
               <h4>Characteristics of studies</h4>
-              <camelot-characteristics-table-preview
-                :charsOfStudies="characteristics_studies"
+              <camelot-characteristics-table-preview :charsOfStudies="characteristics_studies"
                 :references="camelot_references">
               </camelot-characteristics-table-preview>
             </div>
-            <div v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
-              <chars-of-studies
-                :ui="ui"
-                :show="show"
-                :mode="'view'"
-                :list="list"
-                :permission="true"
-                :charsOfStudies="characteristics_studies"
-                :refsWithTitle="[]"
-                ></chars-of-studies>
+            <div
+              v-else-if="!project.use_camelot && characteristics_studies.fields && characteristics_studies.fields.length">
+              <chars-of-studies :ui="ui" :show="show" :mode="'view'" :list="list" :permission="true"
+                :charsOfStudies="characteristics_studies" :refsWithTitle="[]"></chars-of-studies>
             </div>
 
             <div v-if="project.use_camelot">
               <h4>Methodological assessments</h4>
-              <camelot-assessments-table-preview
-                :methodologicalTableRefs="meth_assessments"
+              <camelot-assessments-table-preview :methodologicalTableRefs="meth_assessments"
                 :references="camelot_references">
               </camelot-assessments-table-preview>
             </div>
             <div v-else-if="!project.use_camelot && meth_assessments.items && meth_assessments.items.length">
-              <methodological-assessments
-                :ui="ui"
-                :show="show"
-                :mode="'view'"
-                :list="list"
-                :permission="true"
-                :methAssessments="meth_assessments"
-                :refsWithTitle="[]"></methodological-assessments>
+              <methodological-assessments :ui="ui" :show="show" :mode="'view'" :list="list" :permission="true"
+                :methAssessments="meth_assessments" :refsWithTitle="[]"></methodological-assessments>
             </div>
 
             <div>
-              <extracted-data
-                :ui="ui"
-                :show="show"
-                :mode="'view'"
-                :list="list"
-                :permission="true"
-                :extractedData="extracted_data"
-                :modePrintFieldObject="mode_print_fieldsObj"
+              <extracted-data :ui="ui" :show="show" :mode="'view'" :list="list" :permission="true"
+                :extractedData="extracted_data" :modePrintFieldObject="mode_print_fieldsObj"
                 :refsWithTitle="[]"></extracted-data>
             </div>
           </template>
@@ -586,7 +541,7 @@ export default {
 
             let haveContent = 0
             const camelotCharKeys = [
-              'research_extractedData', 'stakeholders_extractedData', 
+              'research_extractedData', 'stakeholders_extractedData',
               'researchers_extractedData', 'context_extractedData',
               'strategy_extractedData', 'theory_extractedData',
               'ethical_extractedData', 'equity_extractedData',
