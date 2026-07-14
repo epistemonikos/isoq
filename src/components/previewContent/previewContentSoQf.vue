@@ -360,7 +360,7 @@ export default {
       Api.get(`/isoqf_projects/${this.$route.params.isoqf_id}`, params)
         .then((response) => {
           this.project = response.data
-          if (this.project.sharedToken === this.$route.params.token || this.project.public_type !== 'private') {
+          if (this.project.public_type !== 'private') {
             if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
               this.project.inclusion = ''
             }

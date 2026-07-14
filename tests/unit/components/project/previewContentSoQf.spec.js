@@ -118,4 +118,24 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
       expect.any(Object)
     )
   })
+
+  it('redirects to MainPage for a private project loaded via the /browse route', async () => {
+    Api.get.mockResolvedValue({ data: { id: 'p1', public_type: 'private' } })
+
+    const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: publicMocks })
+    await flushPromises()
+
+    expect(wrapper.vm.$router.push).toHaveBeenCalledWith({ name: 'MainPage' })
+  })
+
+  it('does not treat a leftover project.sharedToken as authorization for a private project', async () => {
+    // The project payload can no longer carry sharedToken (backend stopped returning it),
+    // but even if a stale value were present it must not grant access on its own.
+    Api.get.mockResolvedValue({ data: { id: 'p1', public_type: 'private', sharedToken: 'public' } })
+
+    const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: publicMocks })
+    await flushPromises()
+
+    expect(wrapper.vm.$router.push).toHaveBeenCalledWith({ name: 'MainPage' })
+  })
 })
