@@ -815,6 +815,10 @@ import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 
+// Whitelisted evidence_profile sub-sections targetable by the granular
+// PATCH /isoqf_findings|isoqf_lists/<id>/section/<name> endpoint.
+const EVIDENCE_PROFILE_SECTIONS = ['methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual']
+
 export default {
   name: 'evidenceProfileForm',
   components: {
@@ -1102,37 +1106,35 @@ export default {
       }
     },
     continueSavingDataModal: function (status = false) {
-      const { type, title, isoqf_id, ...evidenceProfileData } = this.selectedOptions
       this.$emit('busyEvidenceProfileTable', true)
-      let params = {
-        organization: this.list.organization,
-        list_id: this.list.id,
-        evidence_profile: evidenceProfileData
-      }
+
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
-        Api.patch(`/isoqf_findings/${this.findings.id}`, params)
+        // Granular save: PATCH only the evidence_profile sections that actually changed
+        // vs the loaded values, via the /section/<name> sub-resource. Editing a section
+        // can also reset cerqual, so the diff naturally picks up both. Untouched sections
+        // and other findings are never overwritten (no full evidence_profile rewrite).
+        const changed = EVIDENCE_PROFILE_SECTIONS.filter(s =>
+          JSON.stringify(this.selectedOptions[s]) !== JSON.stringify(this.modalData[s]))
+
+        Promise.all(changed.map(s =>
+          Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])))
+          .then(() => status ? Api.post(`/unpublish/project/${this.list.project_id}`) : null)
           .then(() => {
-            if (status) {
-              Api.post(`/unpublish/project/${this.list.project_id}`)
-                .then(() => {
-                  this.$emit('callGetStageOneData', false)
-                  this.saveListName()
-                  this.$refs['modal-evidence-profile-form']?.hide()
-                })
-                .catch((error) => {
-                  this.printErrors(error)
-                })
-            } else {
-              this.$emit('callGetStageOneData', false)
-              this.saveListName()
-              this.$refs['modal-evidence-profile-form']?.hide()
-            }
+            this.$emit('callGetStageOneData', false)
+            this.saveListName(changed)
+            this.$refs['modal-evidence-profile-form']?.hide()
           })
           .catch((error) => {
             this.printErrors(error)
           })
       } else {
-        Api.post(`/isoqf_findings`, params)
+        // New finding: no id yet to target /section/, create it with the full profile.
+        const { type, title, isoqf_id, ...evidenceProfileData } = this.selectedOptions
+        Api.post(`/isoqf_findings`, {
+          organization: this.list.organization,
+          list_id: this.list.id,
+          evidence_profile: evidenceProfileData
+        })
           .then(() => {
             this.$emit('callGetStageOneData', false)
             this.$refs['modal-evidence-profile-form']?.hide()
@@ -1142,19 +1144,20 @@ export default {
           })
       }
     },
-    saveListName: function () {
-      let params = {
-        cerqual: this.selectedOptions.cerqual,
-        evidence_profile: {
-          methodological_limitations: this.selectedOptions.methodological_limitations,
-          coherence: this.selectedOptions.coherence,
-          adequacy: this.selectedOptions.adequacy,
-          relevance: this.selectedOptions.relevance,
-          cerqual: this.selectedOptions.cerqual
-        }
-      }
-      Api.patch(`/isoqf_lists/${this.list.id}`, params)
-        .then((response) => {
+    saveListName: function (changedSections) {
+      // Mirror the changed evidence_profile sections to the list (a passive copy read by
+      // the preview/export) and keep the list's top-level cerqual — which drives
+      // publishability — in sync via the generic PATCH.
+      const sections = (changedSections && changedSections.length)
+        ? changedSections
+        : EVIDENCE_PROFILE_SECTIONS
+
+      const requests = sections.map(s =>
+        Api.patch(`/isoqf_lists/${this.list.id}/section/${s}`, this.selectedOptions[s]))
+      requests.push(Api.patch(`/isoqf_lists/${this.list.id}`, { cerqual: this.selectedOptions.cerqual }))
+
+      Promise.all(requests)
+        .then(() => {
           this.$emit('update-list-data')
         })
         .catch((error) => {
@@ -1235,22 +1238,10 @@ export default {
       this.$emit('setShowEditExtractedDataInPlace', data)
     },
     updateContentExtractedDataItem: function (refId) {
-      let _items = JSON.parse(JSON.stringify(this.extractedData.items))
-
-      if (refId.length) {
-        for (let i = 0; i < _items.length; i++) {
-          if (_items[i].ref_id === refId) {
-            _items[i] = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
-          }
-        }
-      }
-
-      const params = {
-        organization: this.list.organization,
-        finding_id: this.findings.id,
-        items: _items
-      }
-      Api.patch(`/isoqf_extracted_data/${this.extractedData.id}`, params)
+      // Granular save: PATCH only this row via the /item/<ref_id> sub-resource so
+      // concurrent edits to other rows are not overwritten (no whole-array rewrite).
+      const row = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
+      Api.patch(`/isoqf_extracted_data/${this.extractedData.id}/item/${refId}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           const data = {

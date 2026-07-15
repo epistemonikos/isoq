@@ -613,9 +613,7 @@ export default {
       const params = {
         name: finding.name,
         notes: finding.notes,
-        is_public: isPublic,
-        'evidence_profile.name': finding.name,
-        'evidence_profile.notes': finding.notes
+        is_public: isPublic
       }
       Api.patch(`/isoqf_findings/${finding.finding_id}`, params)
         .then(() => {
@@ -764,8 +762,11 @@ export default {
       this.pendingSaveReferences = false
     },
     updateFindingReferences: function (references) {
+      // Persist to the top-level finding field (source of truth). The old
+      // 'evidence_profile.references' dot-notation write was silently flattened
+      // to a garbage field by the backend sanitizer.
       const params = {
-        'evidence_profile.references': references
+        references: references
       }
       Api.patch(`/isoqf_findings/${this.finding.id}`, params)
         .then(() => {

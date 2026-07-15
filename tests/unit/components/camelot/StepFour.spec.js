@@ -69,18 +69,13 @@ describe('StepFour.vue - TDD for inline editing', () => {
     await wrapper.vm.saveField('New extracted data')
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    // 3. Assertions
+    // 3. Assertions — granular PATCH: only the edited study row goes to /item/<ref_id>
     expect(Api.patch).toHaveBeenCalledWith(
-      expect.stringContaining('/isoqf_characteristics/char123'),
+      '/isoqf_characteristics/char123/item/ref1',
       expect.objectContaining({
-        id: 'char123',
-        items: expect.arrayContaining([
-          expect.objectContaining({
-            ref_id: 'ref1',
-            strategy_extractedData: 'New extracted data',
-            strategy_comments: 'Old comments'
-          })
-        ])
+        ref_id: 'ref1',
+        strategy_extractedData: 'New extracted data',
+        strategy_comments: 'Old comments'
       })
     )
   })
@@ -99,18 +94,13 @@ describe('StepFour.vue - TDD for inline editing', () => {
     await wrapper.vm.saveField('New comments')
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    // 3. Assertions
+    // 3. Assertions — granular PATCH: only the edited study row goes to /item/<ref_id>
     expect(Api.patch).toHaveBeenCalledWith(
-      expect.stringContaining('/isoqf_characteristics/char123'),
+      '/isoqf_characteristics/char123/item/ref1',
       expect.objectContaining({
-        id: 'char123',
-        items: expect.arrayContaining([
-          expect.objectContaining({
-            ref_id: 'ref1',
-            strategy_extractedData: 'Old data',
-            strategy_comments: 'New comments'
-          })
-        ])
+        ref_id: 'ref1',
+        strategy_extractedData: 'Old data',
+        strategy_comments: 'New comments'
       })
     )
   })

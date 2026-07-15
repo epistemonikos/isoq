@@ -247,8 +247,7 @@ describe('viewProject.vue — updateFindingSort()', () => {
     await wrapper.vm.updateFindingSort('list1', 5, false)
     expect(Api.get).toHaveBeenCalledWith('/isoqf_findings', expect.objectContaining({ list_id: 'list1' }))
     expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/finding1', {
-      'isoqf_id': 5,
-      'evidence_profile.isoqf_id': 5
+      'isoqf_id': 5
     })
     wrapper.destroy()
   })

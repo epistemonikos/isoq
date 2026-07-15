@@ -168,12 +168,12 @@ export default {
       this.$refs['modal-extracted-data-remove-data-item'].show()
     },
     extractedDataRemoveDataItem: function () {
-      let items = JSON.parse(JSON.stringify(this.localExtractedData.items))
-      const item = items[this.buffer_extracted_data.remove_index_item]
-      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
-      items[this.buffer_extracted_data.remove_index_item] = newItem
+      // Granular reset: blank this row's data columns (keep ref_id + authors) via the
+      // /item/<ref_id> sub-resource. No $pull, no whole-array rewrite (endpoint C).
+      const item = this.localExtractedData.items[this.buffer_extracted_data.remove_index_item]
+      const row = { ref_id: item.ref_id, authors: item.authors, column_0: '' }
 
-      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}`, {items: items})
+      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
@@ -183,25 +183,16 @@ export default {
         })
     },
     saveDataExtractedData: function () {
-      let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
-      let _originalItems = JSON.parse(JSON.stringify(this.localExtractedData.original_items))
-
-      for (let index in _originalItems) {
-        if (_item.ref_id === _originalItems[index].ref_id) {
-          _originalItems[index] = {
-            'authors': _item.authors,
-            'column_0': _item.column_0,
-            'ref_id': _item.ref_id
-          }
-        }
+      // Granular save: PATCH only the edited row via the /item/<ref_id> sub-resource,
+      // so concurrent edits to other rows are not overwritten (endpoint C).
+      const _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
+      const row = {
+        ref_id: _item.ref_id,
+        authors: _item.authors,
+        column_0: _item.column_0
       }
 
-      let params = {
-        organization: this.list.organization,
-        list_id: this.$route.params.id,
-        items: _originalItems
-      }
-      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}`, params)
+      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${_item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}

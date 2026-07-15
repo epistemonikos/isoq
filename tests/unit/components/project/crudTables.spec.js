@@ -370,6 +370,55 @@ describe('crudTables.vue', () => {
     })
   })
 
+  describe('granular content save (per-row /item/ sub-resource)', () => {
+    const editedRow = { ref_id: 'ref2', authors: 'Author B 2021', column_0: 'edited data' }
+    const otherRow = { ref_id: 'ref1', authors: 'Author A 2020', column_0: 'untouched' }
+
+    const setupModal = () => wrapper.setData({
+      dataTable: { id: 'table-1' },
+      dataTableFieldsModal: {
+        ...wrapper.vm.dataTableFieldsModal,
+        items: [otherRow, editedRow],
+        selected_item_index: 1
+      }
+    })
+
+    it('performAutoSave PATCHes only the edited row to /<type>/<id>/item/<ref_id>', async () => {
+      setupModal()
+      Api.patch.mockClear()
+
+      await wrapper.vm.performAutoSave()
+
+      expect(Api.patch).toHaveBeenCalledWith(
+        '/isoqf_characteristics/table-1/item/ref2',
+        expect.objectContaining({ ref_id: 'ref2', column_0: 'edited data' })
+      )
+    })
+
+    it('saveContentDataTable PATCHes only the edited row to /<type>/<id>/item/<ref_id>', async () => {
+      wrapper.vm.$refs = { 'edit-content-dataTable': { hide: jest.fn() } }
+      setupModal()
+      Api.patch.mockClear()
+
+      await wrapper.vm.saveContentDataTable()
+
+      expect(Api.patch).toHaveBeenCalledWith(
+        '/isoqf_characteristics/table-1/item/ref2',
+        expect.objectContaining({ ref_id: 'ref2', column_0: 'edited data' })
+      )
+    })
+
+    it('does not rewrite the whole items array (no Last-Write-Wins on other rows)', async () => {
+      setupModal()
+      Api.patch.mockClear()
+
+      await wrapper.vm.performAutoSave()
+
+      const payload = Api.patch.mock.calls[0][1]
+      expect(payload.items).toBeUndefined()
+    })
+  })
+
   describe('exportTableToXLSX method', () => {
     it('calls exportTableToXLSX with dataTable fields and items', async () => {
       await wrapper.vm.exportTableToXLSX()

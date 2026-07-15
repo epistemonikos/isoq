@@ -934,46 +934,20 @@ export default {
       // Actualizar la vista local meta para feedback inmediato
       this.meta[metaIndex].values[itemIndex][fieldName] = fieldValue
 
-      const getBase = () => {
-        if (!this.characteristics.id) return Promise.resolve(this.characteristics)
-        return Api.get('/isoqf_characteristics', {
-          organization: this.$route.params.org_id,
-          project_id: this.$route.params.id
+      // Granular save: PATCH only this study row to the /item/<ref_id> sub-resource,
+      // avoiding a Last-Write-Wins rewrite of the whole items array. The backend
+      // upserts the matched item; other rows are left untouched. No refetch needed.
+      const itemPayload = this.characteristics.items.find(it => String(it.ref_id) === String(this.refId))
+
+      const request = this.characteristics.id
+        ? Api.patch(`/isoqf_characteristics/${this.characteristics.id}/item/${this.refId}`, itemPayload)
+        : Api.post('/isoqf_characteristics/', {
+          organization: this.characteristics.organization,
+          project_id: this.characteristics.project_id,
+          items: [itemPayload]
         })
-          .then(res => {
-            if (res.data && res.data.length > 0) {
-              return res.data.find(d => String(d.id) === String(this.characteristics.id)) || res.data[0]
-            }
-            return this.characteristics
-          })
-          .catch(() => this.characteristics)
-      }
 
-      getBase()
-        .then(baseDoc => {
-          const freshChars = { ...baseDoc }
-          if (!freshChars.organization) {
-            freshChars.organization = this.$route.params.org_id
-            freshChars.project_id = this.$route.params.id
-          }
-          if (!freshChars.items) freshChars.items = []
-
-          const freshItemIdx = freshChars.items.findIndex(it => String(it.ref_id) === String(this.refId))
-          if (freshItemIdx !== -1) {
-            freshChars.items = [...freshChars.items]
-            freshChars.items[freshItemIdx] = { ...freshChars.items[freshItemIdx], [fieldName]: fieldValue }
-          } else {
-            freshChars.items = [...freshChars.items, {
-              ref_id: this.refId,
-              authors: this.ui.authors,
-              [fieldName]: fieldValue
-            }]
-          }
-
-          return freshChars.id
-            ? Api.patch(`/isoqf_characteristics/${freshChars.id}/`, freshChars)
-            : Api.post('/isoqf_characteristics/', freshChars)
-        })
+      request
         .then(response => {
           const responseData = response.data.$set || response.data
           this.characteristics = {

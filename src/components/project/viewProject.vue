@@ -1659,8 +1659,7 @@ export default {
         .then((reponse) => {
           const findingId = reponse.data[0].id
           const params = {
-            'isoqf_id': sort,
-            'evidence_profile.isoqf_id': sort
+            'isoqf_id': sort
           }
           return Api.patch(`/isoqf_findings/${findingId}`, params)
             .then(() => {

@@ -86,15 +86,22 @@ describe('evidenceProfileForm.vue — continueSavingDataModal()', () => {
     wrapper.destroy()
   })
 
-  it('calls Api.patch on isoqf_findings when findings has id', async () => {
+  it('PATCHes only the changed section to /isoqf_findings/<id>/section/<name>', async () => {
     const wrapper = makeWrapper({ findings: { id: 'finding1' } })
     setupRefs(wrapper)
     jest.spyOn(wrapper.vm, 'saveListName').mockImplementation(() => {})
+    await wrapper.setData({
+      selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: 2, explanation: 'x', notes: '' } }
+    })
     await wrapper.vm.continueSavingDataModal()
     await flushPromises()
     expect(Api.patch).toHaveBeenCalledWith(
-      '/isoqf_findings/finding1',
-      expect.objectContaining({ organization: 'org1', list_id: 'list1' })
+      '/isoqf_findings/finding1/section/coherence',
+      { option: 2, explanation: 'x', notes: '' }
+    )
+    // Untouched sections are NOT patched (no Last-Write-Wins)
+    expect(Api.patch).not.toHaveBeenCalledWith(
+      '/isoqf_findings/finding1/section/adequacy', expect.anything()
     )
     wrapper.destroy()
   })
@@ -141,6 +148,9 @@ describe('evidenceProfileForm.vue — continueSavingDataModal()', () => {
     const wrapper = makeWrapper({ findings: { id: 'finding1' } })
     setupRefs(wrapper)
     const printErrorsSpy = jest.spyOn(wrapper.vm, 'printErrors').mockImplementation(() => {})
+    await wrapper.setData({
+      selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: 2, explanation: 'x', notes: '' } }
+    })
     await wrapper.vm.continueSavingDataModal()
     await flushPromises()
     expect(printErrorsSpy).toHaveBeenCalled()
@@ -208,7 +218,24 @@ describe('evidenceProfileForm.vue — saveListName()', () => {
     wrapper.destroy()
   })
 
-  it('sends cerqual and full evidence_profile in params', async () => {
+  it('mirrors a changed section to /isoqf_lists/<id>/section/<name>', async () => {
+    const wrapper = makeWrapper()
+    await wrapper.setData({
+      selectedOptions: {
+        ...wrapper.vm.selectedOptions,
+        coherence: { option: '1', explanation: 'moderate', notes: '' }
+      }
+    })
+    await wrapper.vm.saveListName(['coherence'])
+    await flushPromises()
+    expect(Api.patch).toHaveBeenCalledWith(
+      '/isoqf_lists/list1/section/coherence',
+      { option: '1', explanation: 'moderate', notes: '' }
+    )
+    wrapper.destroy()
+  })
+
+  it('updates the list top-level cerqual via the generic PATCH (publishability)', async () => {
     const wrapper = makeWrapper()
     await wrapper.setData({
       selectedOptions: {
@@ -216,12 +243,12 @@ describe('evidenceProfileForm.vue — saveListName()', () => {
         cerqual: { option: '1', explanation: 'moderate', notes: '' }
       }
     })
-    await wrapper.vm.saveListName()
+    await wrapper.vm.saveListName(['cerqual'])
     await flushPromises()
-    const callParams = Api.patch.mock.calls[0][1]
-    expect(callParams.cerqual).toEqual({ option: '1', explanation: 'moderate', notes: '' })
-    expect(callParams.evidence_profile).toHaveProperty('methodological_limitations')
-    expect(callParams.evidence_profile).toHaveProperty('cerqual')
+    expect(Api.patch).toHaveBeenCalledWith(
+      '/isoqf_lists/list1',
+      expect.objectContaining({ cerqual: { option: '1', explanation: 'moderate', notes: '' } })
+    )
     wrapper.destroy()
   })
 
@@ -262,10 +289,11 @@ describe('evidenceProfileForm.vue — updateContentExtractedDataItem()', () => {
     })
     await wrapper.vm.updateContentExtractedDataItem('ref1')
     await flushPromises()
-    const callParams = Api.patch.mock.calls[0][1]
-    expect(Api.patch).toHaveBeenCalledWith('/isoqf_extracted_data/ed1', expect.any(Object))
-    expect(callParams.items[0].column_0).toBe('new text')
-    expect(callParams.items[1].column_0).toBe('other')
+    // Granular save: only the edited row goes to the /item/<ref_id> sub-resource
+    expect(Api.patch).toHaveBeenCalledWith(
+      '/isoqf_extracted_data/ed1/item/ref1',
+      expect.objectContaining({ ref_id: 'ref1', column_0: 'new text' })
+    )
     wrapper.destroy()
   })
 

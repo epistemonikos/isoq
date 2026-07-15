@@ -61,7 +61,7 @@ axios.interceptors.response.use(
       // another user, e.g. after an offline queue replays). Surface it via a
       // non-blocking event so the open editor can show copyable fields.
       const isPartialItemPatch = url.includes('/item/') &&
-          (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments'))
+          (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments') || url.includes('isoqf_extracted_data'))
       if (isPartialItemPatch && typeof window !== 'undefined') {
         const refId = url.split('/item/')[1] || ''
         let failedData = {}

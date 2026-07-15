@@ -104,7 +104,9 @@ describe('ViewTable.vue', () => {
       await wrapper.vm.updateFindingReferences(['ref1', 'ref2'])
       await wrapper.vm.$nextTick()
 
-      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1', expect.any(Object))
+      // References persist to the top-level finding field (source of truth), not the
+      // broken dot-notation evidence_profile.references key.
+      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1', { references: ['ref1', 'ref2'] })
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
     })
 

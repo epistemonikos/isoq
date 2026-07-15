@@ -746,8 +746,11 @@ export default {
         })
     },
     updateReferencesInFindings: function () {
+      // Persist to the top-level finding field (source of truth). The old
+      // 'evidence_profile.references' dot-notation write was silently flattened
+      // to a garbage field by the backend sanitizer.
       let params = {
-        'evidence_profile.references': this.localReferences
+        references: this.localReferences
       }
       Api.patch(`/isoqf_findings/${this.findings.id}`, params)
         .then((response) => {

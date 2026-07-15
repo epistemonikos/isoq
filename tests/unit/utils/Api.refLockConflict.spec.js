@@ -56,6 +56,15 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     expect(dispatched.some(e => e.type === 'ref-lock-conflict')).toBe(true)
   })
 
+  it('dispara ref-lock-conflict en un 409 de PATCH parcial de extracted_data', async () => {
+    const err = makeError('/isoqf_extracted_data/ed1/item/ref3', { ref_id: 'ref3', column_0: 'v' }, 'Carol')
+    await expect(errorHandler(err)).rejects.toBe(err)
+    const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+    expect(event).toBeTruthy()
+    expect(event.detail.refId).toBe('ref3')
+    expect(event.detail.lockedBy).toBe('Carol')
+  })
+
   it('NO dispara ref-lock-conflict en un 409 que no es PATCH parcial', async () => {
     const err = makeError('/isoqf_characteristics/char1/', { ref_id: 'ref1' }, 'Ana')
     await expect(errorHandler(err)).rejects.toBe(err)

@@ -653,28 +653,17 @@ export default {
     onFieldInput: function () {
       this.autoSaveDebounced()
     },
-    _getFreshItems: function () {
-      return Api.get(`/${this.type}`, {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      })
-        .then(res => {
-          if (res.data && res.data.length > 0) {
-            const doc = res.data.find(d => String(d.id) === String(this.dataTable.id)) || res.data[0]
-            return doc.items || []
-          }
-          return this.dataTableFieldsModal.items
-        })
-        .catch(() => this.dataTableFieldsModal.items)
-    },
-    _mergeEditedItem: function (freshItems, editedItem) {
-      const merged = freshItems.map(it =>
-        String(it.ref_id) === String(editedItem.ref_id) ? { ...it, ...editedItem } : it
-      )
-      if (!merged.find(it => String(it.ref_id) === String(editedItem.ref_id))) {
-        merged.push(editedItem)
-      }
-      return merged
+    _patchContentItem: function (id, editedItem) {
+      // TODO(human): granular save of a single content row.
+      // Return the Api.patch(...) promise that persists ONLY this row via the
+      // per-item sub-resource, instead of rewriting the whole `items` array.
+      // Pattern reference: EditReferenceModal.vue:466
+      //   Api.patch(`/isoqf_characteristics/${id}/item/${ref_id}`, item)
+      // Here `this.type` is the collection (isoqf_characteristics | isoqf_assessments)
+      // and `editedItem` is the full edited row (it already carries ref_id + columns).
+      // Because the backend replaces only the matched row, concurrent edits to other
+      // rows are no longer overwritten (no more client-side refetch + merge needed).
+      return Api.patch(`/${this.type}/${id}/item/${editedItem.ref_id}`, editedItem)
     },
     performAutoSave: function () {
       const id = this.dataTable.id
@@ -682,8 +671,7 @@ export default {
       const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
       if (!editedItem) return
       this.autoSaveStatus = 'saving'
-      this._getFreshItems()
-        .then(freshItems => Api.patch(`/${this.type}/${id}`, { items: this._mergeEditedItem(freshItems, editedItem) }))
+      return this._patchContentItem(id, editedItem)
         .then(() => {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
@@ -694,8 +682,7 @@ export default {
       const id = this.dataTable.id
       const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
 
-      this._getFreshItems()
-        .then(freshItems => Api.patch(`/${this.type}/${id}`, { items: this._mergeEditedItem(freshItems, editedItem) }))
+      return this._patchContentItem(id, editedItem)
         .then(() => {
           this.$emit('set-item-data', `${this.prefix}-${editedItem.ref_id}`)
           this.$emit('get-project')
