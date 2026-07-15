@@ -169,8 +169,12 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       const cerqualOption = this.getCerqualConfidenceText(cerqual.option)
       const cerqualExplanation = cerqual.explanation || ''
 
-      // Format references
-      const refIds = finding.evidence_profile?.references || finding.references || []
+      // Format references — prefer the nested evidence_profile.references only when
+      // it actually has entries; otherwise fall back to the top-level (source of
+      // truth). An empty [] is truthy, so a stale/empty nested mirror must not
+      // shadow the correct top-level references.
+      const nestedRefs = finding.evidence_profile?.references
+      const refIds = (nestedRefs && nestedRefs.length) ? nestedRefs : (finding.references || [])
       const refList = this.formatReferenceList(refIds)
 
       rows.push([
@@ -261,7 +265,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
       }
 
       const ep = finding.evidence_profile || {}
-      const refIds = ep.references || finding.references || []
+      // Prefer nested references only when non-empty; an empty [] must not shadow
+      // the top-level source of truth.
+      const refIds = (ep.references && ep.references.length) ? ep.references : (finding.references || [])
       const refList = this.formatReferenceList(refIds)
 
       rows.push([

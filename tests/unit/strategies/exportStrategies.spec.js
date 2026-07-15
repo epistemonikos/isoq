@@ -272,6 +272,25 @@ describe('ExportStrategies', () => {
         const rows = builderMock.addTable.mock.calls[0][0]
         expect(rows[0][4].text).toContain('A1')
       })
+
+      it('should fall back to top-level references when evidence_profile.references is an empty array (stale mirror)', async () => {
+        // The nested evidence_profile.references is a passive, now-unwritten mirror
+        // that stays []. An empty array is truthy, so the old `nested || top-level`
+        // precedence wrongly shadowed the correct top-level references.
+        const dataStaleNested = {
+          findings: [{
+            isoqf_id: 1,
+            name: 'Finding 1',
+            references: [1],
+            evidence_profile: { references: [], cerqual: { option: '1', explanation: 'Exp' } }
+          }],
+          references: [{ id: 1, authors: ['A1'], publication_year: '2020' }]
+        }
+        const strategy = new IsoQExportStrategy(mockProject, dataStaleNested)
+        await strategy.export()
+        const rows = builderMock.addTable.mock.calls[0][0]
+        expect(rows[0][4].text).toContain('A1')
+      })
     })
   })
 
