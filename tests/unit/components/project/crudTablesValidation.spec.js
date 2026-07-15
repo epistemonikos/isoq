@@ -180,6 +180,28 @@ describe('crudTables.vue Validation and Fixes', () => {
       })
       expect(wrapper.vm.fieldState('edit', 0)).toBe(true)
     })
+
+    it('should not throw when value is a non-string (regression: val.trim is not a function)', async () => {
+      // Create mode: a numeric column label (e.g. loaded from backend as a number)
+      await wrapper.setData({
+        dataTableFieldsModal: {
+          fields: [2024],
+          touched: [true]
+        }
+      })
+      expect(() => wrapper.vm.fieldState('create', 0)).not.toThrow()
+      expect(wrapper.vm.fieldState('create', 0)).toBe(false)
+
+      // Edit mode: a field whose label is a number
+      await wrapper.setData({
+        dataTableFieldsModalEdit: {
+          fields: [{ label: 2024 }],
+          touched: [true]
+        }
+      })
+      expect(() => wrapper.vm.fieldState('edit', 0)).not.toThrow()
+      expect(wrapper.vm.fieldState('edit', 0)).toBe(false)
+    })
   })
 
   describe('Missing Method Fix (deleteFieldFromCharsSudies)', () => {

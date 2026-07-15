@@ -465,7 +465,7 @@ export default {
       const d = (domain === 'edit') ? this.dataTableFieldsModalEdit : this.dataTableFieldsModal
       if (!d.touched[index]) return null
       const val = (domain === 'edit') ? (d.fields[index] ? d.fields[index].label : '') : d.fields[index]
-      return !!(val && val.trim().length > 0)
+      return (typeof val === 'string') && (val.trim().length > 0)
     },
     openModalDataTable: function () {
       let fields = Commmons.deepClone(this.dataTable.fields)
