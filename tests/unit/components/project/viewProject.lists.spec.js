@@ -314,6 +314,83 @@ describe('viewProject.vue — route watchers', () => {
   })
 })
 
+describe('viewProject.vue — getFindings() replaces instead of appends (duplication regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('replaces this.findings so calling it twice does not duplicate findings', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ findings: [] })
+
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }, { id: 'f2' }] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toHaveLength(2)
+
+    // A second load (e.g. duplicate getLists on open, or a category edit) must not
+    // stack a second copy of the same findings into memory.
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }, { id: 'f2' }] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toHaveLength(2)
+    expect(wrapper.vm.findings.map(f => f.id)).toEqual(['f1', 'f2'])
+    wrapper.destroy()
+  })
+
+  it('clears previously loaded findings when the response is empty', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ findings: [{ id: 'stale' }] })
+
+    Api.get.mockResolvedValueOnce({ data: [] })
+    wrapper.vm.getFindings('l1')
+    await flushPromises()
+    expect(wrapper.vm.findings).toEqual([])
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — list_categories.options watcher (no duplicate getLists on open)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('does NOT call getLists on the initial load (getProject already triggers it)', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: true })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [{ id: 'c1' }])
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('DOES call getLists when categories change after the initial load', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [{ id: 'c1' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('does NOT call getLists when categories become empty', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, [])
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('clears initialLoad after mount so later category changes reload lists', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    expect(wrapper.vm.initialLoad).toBe(false)
+    wrapper.destroy()
+  })
+})
+
 describe('viewProject.vue — processLists() cerqual resilience (infinite-spinner regression)', () => {
   beforeEach(() => jest.clearAllMocks())
 

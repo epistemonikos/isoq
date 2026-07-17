@@ -654,8 +654,7 @@ export default {
       this.autoSaveDebounced()
     },
     _patchContentItem: function (id, editedItem) {
-      // TODO(human): granular save of a single content row.
-      // Return the Api.patch(...) promise that persists ONLY this row via the
+      // Granular save of a single content row: persists ONLY this row via the
       // per-item sub-resource, instead of rewriting the whole `items` array.
       // Pattern reference: EditReferenceModal.vue:466
       //   Api.patch(`/isoqf_characteristics/${id}/item/${ref_id}`, item)

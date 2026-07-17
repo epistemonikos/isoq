@@ -638,6 +638,9 @@ export default {
       references: [],
       refs: [],
       loadReferences: true,
+      // True only during the initial mount load. getProject() already triggers getLists();
+      // the list_categories.options watcher must not fire a second getLists while this is on.
+      initialLoad: true,
       fileReferences: [],
       selected_list_index: null,
       lastId: 1,
@@ -714,6 +717,8 @@ export default {
     await this.getReferences()
     // Load project which will also trigger getLists()
     await this.getProject()
+    // Initial load done: from now on a category change should reload lists via the watcher.
+    this.initialLoad = false
     // Other parallel data loads
     this.getCharacteristicsData()
     this.getAssessmentsData()
@@ -1257,9 +1262,10 @@ export default {
       }
       Api.get('/findings', params)
         .then((response) => {
-          if (response.data.length) {
-            this.findings.push(...response.data)
-          }
+          // Replace (don't append): getFindings is always called with the full set of
+          // list_ids at once, so a fresh load must supersede the previous one. Appending
+          // left stale/duplicate findings in memory on any re-load (open, category edit).
+          this.findings = [...response.data]
         })
         .catch((error) => {
           Commons.printErrors(error)
@@ -1802,9 +1808,13 @@ export default {
   },
   watch: {
     'list_categories.options': function (newVal) {
-      if (newVal && newVal.length > 0) {
-        this.getLists()
-      }
+      // TODO(human): decide when this watcher should reload lists.
+      // getProject() already calls getLists() on the initial mount, so firing here too
+      // duplicates GET /isoqf_lists + GET /findings (and, before the reset fix, duplicated
+      // findings in memory). Guard against the initial load using this.initialLoad, while
+      // still reloading when categories genuinely change afterwards (and not on empty).
+      if (!newVal || newVal.length === 0 || this.initialLoad) return
+      this.getLists()
     },
     '$route.query.tab': function (val) {
       const tabs = ['Project-Property', 'My-Data', 'iSoQ', 'Guidance-on-applying-GRADE-CERQual']
