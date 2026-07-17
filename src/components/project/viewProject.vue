@@ -1126,6 +1126,10 @@ export default {
       if (data.length) {
         data = Commons.sortFindings(data, this.list_categories)
         this.lastId = data.length + 1
+        // Sort the references once, not once per list: this.references does not change
+        // during the loop, so hoisting the clone+sort turns an O(lists x refs log refs)
+        // per-list cost into a single O(refs log refs).
+        const sortedReferences = [...this.references].sort((a, b) => a.id - b.id)
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             list.status = 'unfinished'
@@ -1181,7 +1185,7 @@ export default {
           list.cerqual_explanation = list.cerqual.explanation
           list.ref_list = ''
           list.raw_ref = []
-          for (let r of [...this.references].sort((a, b) => a.id - b.id)) {
+          for (let r of sortedReferences) {
             for (let ref of list.references) {
               if (ref === r.id) {
                 list.ref_list = list.ref_list + await this.parseReference(r, true)

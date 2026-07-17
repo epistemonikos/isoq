@@ -438,8 +438,56 @@ describe('viewProject.vue — mounted() parallel load (perf: categories + refere
   })
 })
 
-describe('viewProject.vue — processLists() cerqual resilience (infinite-spinner regression)', () => {
+describe('viewProject.vue — processLists() reference matching (O(n^2) refactor guard)', () => {
   beforeEach(() => jest.clearAllMocks())
+
+  it('builds raw_ref per list in reference-id order, filtered to each list', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      // Deliberately unsorted so the id-order guarantee is meaningful.
+      references: [
+        { id: 3, authors: 'Cccc' },
+        { id: 1, authors: 'Aaaa' },
+        { id: 2, authors: 'Bbbb' }
+      ],
+      list_categories: { options: [], selected: null }
+    })
+    const lists = [
+      { id: 'lA', name: 'A', sort: 1, cerqual: { option: null, explanation: '' }, references: [3, 1] },
+      { id: 'lB', name: 'B', sort: 2, cerqual: { option: null, explanation: '' }, references: [2] }
+    ]
+
+    const result = await wrapper.vm.processLists({ data: lists })
+
+    const byId = Object.fromEntries(result.map(l => [l.id, l]))
+    expect(byId.lA.raw_ref.map(r => r.id)).toEqual([1, 3])
+    expect(byId.lB.raw_ref.map(r => r.id)).toEqual([2])
+    // ref_list is the concatenation of parsed authors in that same id order.
+    expect(byId.lA.ref_list).toBe('AaaaCccc')
+    expect(byId.lB.ref_list).toBe('Bbbb')
+    wrapper.destroy()
+  })
+
+  it('sorts the references array once, not once per list', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const references = [{ id: 2, authors: 'B' }, { id: 1, authors: 'A' }]
+    await wrapper.setData({ references, list_categories: { options: [], selected: null } })
+    const lists = Array.from({ length: 5 }, (_, i) => ({
+      id: `l${i}`, name: `L${i}`, sort: i, cerqual: { option: null, explanation: '' }, references: [1, 2]
+    }))
+    const sortSpy = jest.spyOn(Array.prototype, 'sort')
+
+    await wrapper.vm.processLists({ data: lists })
+
+    // The references-by-id sort must be hoisted out of the per-list loop: with 5 lists,
+    // the old code sorted references 5 times. Allow a small budget for unrelated sorts
+    // (e.g. Commons.sortFindings) but reject the per-list explosion.
+    expect(sortSpy.mock.calls.length).toBeLessThan(5)
+    sortSpy.mockRestore()
+    wrapper.destroy()
+  })
 
   // Real-world granular-update shape: the list mirror lost its evidence_profile.cerqual
   // key, but the authoritative top-level cerqual is present. The old reader crashed on
