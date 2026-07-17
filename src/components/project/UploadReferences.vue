@@ -340,12 +340,6 @@ export default {
     generateOperationId () {
       return Date.now() + '-' + Math.random().toString(36).substring(2)
     },
-    saveCheckpoint (data) {
-      localStorage.setItem('reference-upload-checkpoint', JSON.stringify({
-        timestamp: Date.now(),
-        ...data
-      }))
-    },
     getProject: function () {
       this.$emit('CallGetProject')
     },
@@ -409,9 +403,6 @@ export default {
         this.$emit('statusLoadReferences', false)
       }
     },
-    requestsImportReferences: function (ref) {
-      return Api.post(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`, ref)
-    },
     saveReferences: async function (from = '') {
       this.$emit('statusLoadReferences', true)
       try {
@@ -440,55 +431,32 @@ export default {
         }
 
         this.operationId = this.generateOperationId()
+        this.uploadProgress = `Procesando ${references.length} referencias...`
 
-        const batchSize = 10
-        const batches = []
-        for (let i = 0; i < references.length; i += batchSize) {
-          batches.push(references.slice(i, i + batchSize))
+        // Single bulk insert instead of one POST per reference: the backend already
+        // exposes /isoqf_references/batch-import (used by the PubMed path) and returns
+        // the created references (with ids) under data.references.
+        const response = await Api.post('/isoqf_references/batch-import', {
+          references,
+          operation_id: this.operationId,
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+
+        const importedRefs = (response.data && response.data.references) ? response.data.references : []
+        const failedCount = references.length - importedRefs.length
+        this.localReferences = importedRefs
+
+        if (importedRefs.length) {
+          await this.syncAllSteps([...this.references, ...importedRefs])
         }
 
-        let successCount = 0
-        let failedItems = []
-
-        for (let i = 0; i < batches.length; i++) {
-          this.uploadProgress = `Procesando lote ${i + 1}/${batches.length}...`
-
-          this.saveCheckpoint({
-            completedBatches: i,
-            totalBatches: batches.length,
-            failedItems
-          })
-
-          try {
-            const promises = batches[i].map(ref => {
-              const refWithProject = { ...ref }
-              refWithProject.organization = this.$route.params.org_id
-              refWithProject.project_id = this.$route.params.id
-              return this.requestsImportReferences(refWithProject)
-            })
-
-            const responses = await Promise.all(promises)
-
-            for (const response of responses) {
-              if (response && response.data) {
-                this.localReferences.push(response.data)
-                successCount++
-              }
-            }
-          } catch (error) {
-            failedItems = [...failedItems, ...batches[i].map(r => r.title || 'Referencia sin título')]
-          }
-        }
-
-        if (this.localReferences.length) {
-          const _references = JSON.parse(JSON.stringify(this.localReferences))
-          await this.syncAllSteps([...this.references, ..._references])
-        }
-
-        this.msgUploadReferences = `${successCount} referencias añadidas. ${failedItems.length ? `${failedItems.length} fallaron.` : ''}`
+        this.msgUploadReferences = `${importedRefs.length} referencias añadidas. ${failedCount > 0 ? `${failedCount} fallaron.` : ''}`
         this.pre_references = ''
         this.fileReferences = []
-        this.$refs['file-input'].reset()
+        if (this.$refs['file-input'] && typeof this.$refs['file-input'].reset === 'function') {
+          this.$refs['file-input'].reset()
+        }
 
         localStorage.removeItem('reference-upload-checkpoint')
         localStorage.removeItem('reference-upload-progress')

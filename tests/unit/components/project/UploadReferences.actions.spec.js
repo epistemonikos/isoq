@@ -313,6 +313,65 @@ describe('UploadReferences.vue — importReferences()', () => {
   })
 })
 
+// ─── saveReferences (client-parsed refs → batch-import) ────────────────────────
+
+describe('UploadReferences.vue — saveReferences() batch import', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    _lsStore = {}
+    wrapper = createWrapper({ references: [{ id: 'existing1', title: 'Existing' }] })
+    jest.spyOn(wrapper.vm, 'syncAllSteps').mockResolvedValue()
+  })
+
+  // A non-empty fileReferences enables the tooltip'd upload button, which trips a known
+  // bootstrap-vue tooltip teardown bug under jsdom; guard destroy so it can't mask assertions.
+  afterEach(() => { try { wrapper.destroy() } catch (e) { /* jsdom tooltip teardown */ } })
+
+  it('POSTs once to batch-import with all parsed references (no per-ref POST)', async () => {
+    await wrapper.setData({ fileReferences: [{ title: 'A' }, { title: 'B' }, { title: 'C' }] })
+    Api.post.mockResolvedValue({ data: { references: [] } })
+
+    await wrapper.vm.saveReferences()
+
+    const importCalls = Api.post.mock.calls.filter(c => c[0] === '/isoqf_references/batch-import')
+    const perRefCalls = Api.post.mock.calls.filter(c => c[0].startsWith('/isoqf_references?'))
+    expect(importCalls).toHaveLength(1)
+    expect(perRefCalls).toHaveLength(0)
+    expect(importCalls[0][1]).toEqual(expect.objectContaining({
+      references: expect.arrayContaining([
+        expect.objectContaining({ title: 'A' }),
+        expect.objectContaining({ title: 'C' })
+      ]),
+      organization: 'org1',
+      project_id: 'proj1',
+      operation_id: expect.any(String)
+    }))
+  })
+
+  it('syncs existing references together with the imported ones', async () => {
+    await wrapper.setData({ fileReferences: [{ title: 'A' }] })
+    Api.post.mockResolvedValue({ data: { references: [{ id: 'new1', title: 'A' }] } })
+
+    await wrapper.vm.saveReferences()
+
+    expect(wrapper.vm.syncAllSteps).toHaveBeenCalledTimes(1)
+    const syncArg = wrapper.vm.syncAllSteps.mock.calls[0][0]
+    expect(syncArg.map(r => r.id)).toEqual(['existing1', 'new1'])
+  })
+
+  it('clears fileReferences and emits CallGetReferences on success', async () => {
+    await wrapper.setData({ fileReferences: [{ title: 'A' }] })
+    Api.post.mockResolvedValue({ data: { references: [{ id: 'new1', title: 'A' }] } })
+
+    await wrapper.vm.saveReferences()
+
+    expect(wrapper.vm.fileReferences).toEqual([])
+    expect(wrapper.emitted('CallGetReferences')).toBeTruthy()
+  })
+})
+
 // ─── PubmedRequestClean ───────────────────────────────────────────────────────
 
 describe('UploadReferences.vue — PubmedRequestClean()', () => {
