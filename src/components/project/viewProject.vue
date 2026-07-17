@@ -711,10 +711,10 @@ export default {
     // right away instead of waiting for them to navigate to a different tab/step.
     window.addEventListener('permission-denied', this.refreshPermissions)
 
-    // Load categories first as they are needed for sorting findings
-    await this.getListCategories()
-    // Load references next
-    await this.getReferences()
+    // Categories and references are independent of each other, so load them
+    // concurrently. Both must finish before getProject() (its getLists() → processLists()
+    // sorts findings by category and cross-references refs), hence the Promise.all barrier.
+    await Promise.all([this.getListCategories(), this.getReferences()])
     // Load project which will also trigger getLists()
     await this.getProject()
     // Initial load done: from now on a category change should reload lists via the watcher.

@@ -391,6 +391,53 @@ describe('viewProject.vue — list_categories.options watcher (no duplicate getL
   })
 })
 
+describe('viewProject.vue — mounted() parallel load (perf: categories + references)', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('starts getReferences without waiting for getListCategories to resolve', async () => {
+    let catResolved = false
+    let refSawCatResolved = null
+    jest.spyOn(viewProject.methods, 'getListCategories').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { catResolved = true; resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getReferences').mockImplementation(async () => {
+      refSawCatResolved = catResolved
+    })
+    jest.spyOn(viewProject.methods, 'getProject').mockResolvedValue()
+    jest.spyOn(viewProject.methods, 'getCharacteristicsData').mockImplementation(() => {})
+    jest.spyOn(viewProject.methods, 'getAssessmentsData').mockImplementation(() => {})
+
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    // If the two loads run in parallel, getReferences executes before
+    // getListCategories has resolved → it observes catResolved still false.
+    expect(refSawCatResolved).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('loads the project only after both categories and references resolve', async () => {
+    const order = []
+    jest.spyOn(viewProject.methods, 'getListCategories').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { order.push('cat'); resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getReferences').mockImplementation(
+      () => new Promise(resolve => process.nextTick(() => { order.push('ref'); resolve() }))
+    )
+    jest.spyOn(viewProject.methods, 'getProject').mockImplementation(async () => { order.push('proj') })
+    jest.spyOn(viewProject.methods, 'getCharacteristicsData').mockImplementation(() => {})
+    jest.spyOn(viewProject.methods, 'getAssessmentsData').mockImplementation(() => {})
+
+    const { wrapper } = createWrapper()
+    // mounted chains several awaits; flush enough microtask/nextTick rounds to finish it.
+    for (let i = 0; i < 5; i++) await flushPromises()
+    // getProject (and therefore getLists, which needs categories AND refs) runs last.
+    expect(order[order.length - 1]).toBe('proj')
+    expect(order).toContain('cat')
+    expect(order).toContain('ref')
+    wrapper.destroy()
+  })
+})
+
 describe('viewProject.vue — processLists() cerqual resilience (infinite-spinner regression)', () => {
   beforeEach(() => jest.clearAllMocks())
 
