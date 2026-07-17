@@ -162,11 +162,9 @@
                 </b-td>
                 <b-td style="width: 10%">
                   <template v-if="Object.prototype.hasOwnProperty.call(item, 'evidence_profile') && item.evidence_profile !== undefined">
-                    <template v-if="Object.prototype.hasOwnProperty.call(item.evidence_profile, 'cerqual')">
-                      <p>{{displaySelectedOption(item.evidence_profile.cerqual.option, 'cerqual')}}</p>
-                      <template v-if="item.evidence_profile.cerqual.explanation!==''">
-                          <p><b>{{ $t('common.explanation') }}:</b> {{item.evidence_profile.cerqual.explanation}}</p>
-                      </template>
+                    <p>{{displaySelectedOption(cerqualOf(item).option, 'cerqual')}}</p>
+                    <template v-if="cerqualOf(item).explanation!==''">
+                        <p><b>{{ $t('common.explanation') }}:</b> {{cerqualOf(item).explanation}}</p>
                     </template>
                   </template>
                 </b-td>
@@ -245,6 +243,9 @@ export default {
     },
     displaySelectedOption: function (option, type) {
       return Commons.displaySelectedOption(option, type)
+    },
+    cerqualOf: function (item) {
+      return Commons.resolveCerqual(item)
     }
   }
 }

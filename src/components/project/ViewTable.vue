@@ -104,7 +104,7 @@
           :variant="(data.item.cerqual_option === '') ? 'info' : 'outline-info'"
           :to="{ name: 'editList', params: { id: data.item.id } }">
           <font-awesome-icon
-            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || cerqualOf(data.item).notes)"
             icon="comments"></font-awesome-icon>
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_option === ''">{{ $t('common.complete') }}</span>
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_option != ''">{{ $t('common.edit') }}</span>
@@ -119,7 +119,7 @@
           :variant="(data.item.cerqual_explanation === '') ? 'info' : 'outline-info'"
           :to="{ name: 'editList', params: { id: data.item.id } }">
           <font-awesome-icon
-            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || data.item.evidence_profile.cerqual.notes)"
+            v-if="mode === 'edit' && canEdit && Object.prototype.hasOwnProperty.call(data.item, 'evidence_profile') && (data.item.evidence_profile.methodological_limitations.notes || data.item.evidence_profile.coherence.notes || data.item.evidence_profile.adequacy.notes || data.item.evidence_profile.relevance.notes || cerqualOf(data.item).notes)"
             icon="comments"></font-awesome-icon>
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation === ''">{{ $t('common.complete') }}</span>
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation != ''">{{ $t('common.edit') }}</span>
@@ -453,6 +453,9 @@ export default {
     }
   },
   methods: {
+    cerqualOf: function (item) {
+      return Commons.resolveCerqual(item)
+    },
     onFiltered: function (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.table_settings.totalRows = filteredItems.length
@@ -517,13 +520,13 @@ export default {
 
           let cnt = 0
           for (const el of this.lists) {
-            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && el.evidence_profile.cerqual.option !== null) {
+            if (Object.prototype.hasOwnProperty.call(el, 'evidence_profile') && Commons.resolveCerqual(el).option !== null) {
               cnt++
             }
           }
 
           // Only show extended warning if the project is currently public and would become private
-          if (!this.project.private && cnt === 1 && this.editFindingName.evidence_profile.cerqual.option !== null) {
+          if (!this.project.private && cnt === 1 && Commons.resolveCerqual(this.editFindingName).option !== null) {
             this.ui.project.showExtendedExplanationTextForDeleting = true
           } else {
             this.ui.project.showExtendedExplanationTextForDeleting = false

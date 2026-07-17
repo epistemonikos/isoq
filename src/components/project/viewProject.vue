@@ -1021,6 +1021,9 @@ export default {
           this.table_settings.isBusy = false
         })
         .catch((error) => {
+          // Reset isBusy so a parse/processing error surfaces an empty/error table instead of
+          // an infinite spinner (isBusy starts true and is only cleared on the happy path).
+          this.table_settings.isBusy = false
           Commons.printErrors(error)
         })
     },
@@ -1125,10 +1128,16 @@ export default {
           } else {
             list.status = 'completed'
             list.explanation = 'with_explanation'
-            if (list.evidence_profile.cerqual.option === null) {
+            // Granular updates may persist only the changed sections, so backfill any missing
+            // evidence_profile section with a safe default before any reader touches it.
+            Commons.normalizeEvidenceProfile(list)
+            // Read the authoritative cerqual via resolveCerqual: the granular-update writer keeps
+            // the top-level list.cerqual in sync but may leave evidence_profile without a cerqual key.
+            const cerqual = Commons.resolveCerqual(list)
+            if (cerqual.option === null) {
               list.status = 'unfinished'
             }
-            if (list.evidence_profile.cerqual.explanation === '') {
+            if (cerqual.explanation === '') {
               list.explanation = 'without_explanation'
             }
           }
@@ -1440,7 +1449,7 @@ export default {
                 width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
               }),
               this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.cerqual.option), font_size: 22, align: AlignmentType.LEFT
+                width_size: '10%', text: this.displaySelectedOption(Commons.resolveCerqual(finding).option), font_size: 22, align: AlignmentType.LEFT
               }),
               this.generateTableCell({
                 width_size: '10%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT

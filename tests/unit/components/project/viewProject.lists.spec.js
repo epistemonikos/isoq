@@ -313,3 +313,69 @@ describe('viewProject.vue — route watchers', () => {
     expect(wrapper.vm.stepStage).toBe(2)
   })
 })
+
+describe('viewProject.vue — processLists() cerqual resilience (infinite-spinner regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  // Real-world granular-update shape: the list mirror lost its evidence_profile.cerqual
+  // key, but the authoritative top-level cerqual is present. The old reader crashed on
+  // list.evidence_profile.cerqual.option, leaving table_settings.isBusy stuck at true.
+  const malformedList = {
+    id: 'l1',
+    name: 'Finding A',
+    cerqual: { option: null, explanation: '' },
+    references: [],
+    evidence_profile: {
+      methodological_limitations: { option: '1', explanation: 'x' },
+      coherence: { option: '1', explanation: 'x' },
+      adequacy: { option: '1', explanation: 'x' },
+      relevance: { option: '0', explanation: '' }
+    }
+  }
+
+  it('does not throw and turns off isBusy when evidence_profile has no cerqual key', async () => {
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    let result
+    await expect(
+      (async () => { result = await wrapper.vm.processLists({ data: [malformedList] }) })()
+    ).resolves.toBeUndefined()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    expect(result[0].status).toBe('unfinished') // cerqual.option === null → unfinished
+    wrapper.destroy()
+  })
+
+  it('backfills missing evidence_profile sections so the notes v-if cannot throw', async () => {
+    // Reported crash: a new finding saved only some sections granularly →
+    // evidence_profile lacks adequacy/relevance → ViewTable reads adequacy.notes → TypeError.
+    const partialList = {
+      id: 'l2',
+      name: 'Finding B',
+      cerqual: { option: null, explanation: '' },
+      references: [],
+      evidence_profile: {
+        methodological_limitations: { option: '1', explanation: 'x', notes: '' },
+        coherence: { option: '0', explanation: '', notes: '' }
+      }
+    }
+    const { wrapper } = createWrapper()
+    const [processed] = await wrapper.vm.processLists({ data: [partialList] })
+    for (const s of ['methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual']) {
+      expect(processed.evidence_profile[s]).toBeDefined()
+      expect(() => processed.evidence_profile[s].notes).not.toThrow()
+    }
+    wrapper.destroy()
+  })
+
+  it('getLists resets isBusy even when processLists rejects', async () => {
+    Api.get.mockResolvedValueOnce({ data: [malformedList] })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ table_settings: { ...wrapper.vm.table_settings, isBusy: true } })
+    jest.spyOn(wrapper.vm, 'processLists').mockRejectedValueOnce(new Error('boom'))
+    jest.spyOn(wrapper.vm, 'getFindings').mockImplementation(() => {})
+    wrapper.vm.getLists()
+    await flushPromises()
+    expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+})

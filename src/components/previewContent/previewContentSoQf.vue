@@ -402,10 +402,12 @@ export default {
               } else {
                 list.status = 'completed'
                 list.explanation = 'with_explanation'
-                if (list.evidence_profile.cerqual.option === null) {
+                Commons.normalizeEvidenceProfile(list)
+                const cerqual = Commons.resolveCerqual(list)
+                if (cerqual.option === null) {
                   list.status = 'unfinished'
                 }
-                if (list.evidence_profile.cerqual.explanation === '') {
+                if (cerqual.explanation === '') {
                   list.explanation = 'without_explanation'
                 }
               }
@@ -733,10 +735,12 @@ export default {
               } else {
                 list.status = 'completed'
                 list.explanation = 'with_explanation'
-                if (list.evidence_profile.cerqual && list.evidence_profile.cerqual.option === null) {
+                Commons.normalizeEvidenceProfile(list)
+                const cerqual = Commons.resolveCerqual(list)
+                if (cerqual.option === null) {
                   list.status = 'unfinished'
                 }
-                if (list.evidence_profile.cerqual && list.evidence_profile.cerqual.explanation === '') {
+                if (cerqual.explanation === '') {
                   list.explanation = 'without_explanation'
                 }
               }

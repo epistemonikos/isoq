@@ -1,6 +1,10 @@
 import { i18n } from '@/plugins/i18n'
 
 export default class Commons {
+  // The five evidence_profile sections, in display order. cerqual last: it is derived from the
+  // other four and also mirrored to the list's top-level `cerqual`.
+  static EVIDENCE_PROFILE_SECTIONS = ['methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual']
+
   static referencesWithNames (data, references) {
     if (!data) return ''
     let authorsList = []
@@ -78,6 +82,47 @@ export default class Commons {
     } else {
       return ''
     }
+  }
+
+  // Resolve a finding/list's CERQual data tolerating both storage shapes:
+  //  - lists  → authoritative top-level `item.cerqual` (the granular-update writer keeps this in sync;
+  //             the `evidence_profile` mirror may be missing its cerqual section)
+  //  - findings → `item.evidence_profile.cerqual` (no top-level copy)
+  // Must always return an object safe to read `.option`/`.explanation`/`.notes` off, even for
+  // malformed/absent input, so readers never throw (root cause of the infinite-spinner bug).
+  static resolveCerqual (item) {
+    if (!item) return { option: null, explanation: '', notes: '' }
+
+    if (item.cerqual) {
+      return item.cerqual
+    }
+
+    if (item.evidence_profile && item.evidence_profile.cerqual) {
+      return item.evidence_profile.cerqual
+    }
+
+    return { option: null, explanation: '', notes: '' }
+  }
+
+  // Restore the "all five sections present" invariant that the granular-update writer breaks:
+  // it only PATCHes the evidence_profile sections that changed, so a partially-completed finding
+  // can arrive with any subset of them. Filling the gaps in-place at the single read entry point
+  // (processLists) keeps every downstream reader — templates that do
+  // evidence_profile.<section>.<field> — from throwing on an undefined section.
+  static normalizeEvidenceProfile (list) {
+    if (!list || !list.evidence_profile) return list
+    const ep = list.evidence_profile
+    for (const section of Commons.EVIDENCE_PROFILE_SECTIONS) {
+      if (!ep[section]) {
+        ep[section] = { option: null, explanation: '', notes: '' }
+      }
+    }
+    // cerqual's authoritative copy lives at the top level; mirror it so direct
+    // evidence_profile.cerqual readers stay consistent with resolveCerqual().
+    if (list.cerqual) {
+      ep.cerqual = { option: null, explanation: '', notes: '', ...list.cerqual }
+    }
+    return list
   }
 
   static printErrors (error) {
