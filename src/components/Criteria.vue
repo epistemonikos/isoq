@@ -154,7 +154,6 @@ export default {
               this.ui.project.type = 'exclusion'
               // this.getProject()
             }
-            this.$emit('update-modification')
             this.$emit('criteria-saved', { field: type, value: this.local_data })
           })
           .catch((error) => {

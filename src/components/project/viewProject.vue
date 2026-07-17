@@ -29,7 +29,7 @@
     </b-container>
     <b-container fluid class="mb-5">
       <div :class="{ 'block mt-3': (tabOpened === 0) ? true : false, 'd-none': (tabOpened === 0) ? !true : !false }">
-        <propertiesProject :project="project" @update-modification="updateModificationTime()" :canEdit="isEditing"
+        <propertiesProject :project="project" :canEdit="isEditing"
           :highlight="$route.query.highlight" @update-project="updateDataProject">
         </propertiesProject>
       </div>
@@ -63,7 +63,7 @@
               <b-tab :title="$t('steps.step_2_inclusion_exclusion')" :disabled="references.length ? false : true">
                 <div>
                   <InclusionExclusioCriteria :canEdit="isEditing" :project="project" :ui="ui"
-                    @update-modification="updateModificationTime()" @criteria-saved="onCriteriaSaved($event)">
+                    @criteria-saved="onCriteriaSaved($event)">
                   </InclusionExclusioCriteria>
                   <div class="mt-3">
                     <b-row>
@@ -311,7 +311,7 @@
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
                 :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :references="references"
-                :refs="refs" :filter="table_settings.filter" @update-modification-time="updateModificationTime"
+                :refs="refs" :filter="table_settings.filter"
                 @get-lists="getLists" @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
                 @set-load-references="statusLoadReferences" @get-references="getReferences"
                 @update-project-status="getProject" />
@@ -1308,7 +1308,6 @@ export default {
           this.createFinding(listId, listName)
           this.summarized_review = ''
           this.list_categories.selected = null
-          this.updateModificationTime()
         })
         .catch((error) => {
           Commons.printErrors(error)
@@ -1798,16 +1797,6 @@ export default {
     },
     onCriteriaSaved: function (payload) {
       this.$set(this.project, payload.field, payload.value)
-    },
-    updateModificationTime: function () {
-      const params = {
-        last_update: Date.now()
-      }
-      Api.patch(`/isoqf_projects/${this.$route.params.id}`, params)
-        .then()
-        .catch((error) => {
-          Commons.printErrors(error)
-        })
     }
   },
   watch: {

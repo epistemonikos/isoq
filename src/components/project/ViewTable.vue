@@ -584,7 +584,6 @@ export default {
       Api.patch(`/isoqf_lists/${this.editFindingName.id}`, list)
         .then(() => {
           this.updateFinding(this.editFindingName)
-          this.$emit('update-modification-time')
         })
         .catch((error) => {
           console.error(error)
