@@ -549,6 +549,32 @@ describe('viewProject.vue — processLists() reference matching (O(n^2) refactor
     wrapper.destroy()
   })
 
+  it('parses each unique reference at most once, regardless of how many lists cite it', async () => {
+    // parseReference(r, true) is pure for a fixed reference, so building the authors
+    // string once per (list, ref) match wastes work: with 2 refs cited by 3 lists the
+    // old code called it 6 times. Memoizing per reference id must cap it at 1 call/ref.
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    const references = [{ id: 1, authors: 'Aaaa' }, { id: 2, authors: 'Bbbb' }]
+    await wrapper.setData({ references, list_categories: { options: [], selected: null } })
+    const lists = Array.from({ length: 3 }, (_, i) => ({
+      id: `l${i}`, name: `L${i}`, sort: i, cerqual: { option: null, explanation: '' }, references: [1, 2]
+    }))
+    const parseSpy = jest.spyOn(wrapper.vm, 'parseReference')
+
+    const result = await wrapper.vm.processLists({ data: lists })
+
+    // One call per unique reference (2), not one per (list, ref) pair (6).
+    expect(parseSpy.mock.calls.length).toBeLessThanOrEqual(references.length)
+    // Correctness must be preserved: every list still lists both authors in id order.
+    for (const l of result) {
+      expect(l.ref_list).toBe('AaaaBbbb')
+      expect(l.raw_ref.map(r => r.id)).toEqual([1, 2])
+    }
+    parseSpy.mockRestore()
+    wrapper.destroy()
+  })
+
   it('getLists resets isBusy even when processLists rejects', async () => {
     Api.get.mockResolvedValueOnce({ data: [malformedList] })
     const { wrapper } = createWrapper()

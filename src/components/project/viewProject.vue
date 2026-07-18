@@ -1130,6 +1130,14 @@ export default {
         // during the loop, so hoisting the clone+sort turns an O(lists x refs log refs)
         // per-list cost into a single O(refs log refs).
         const sortedReferences = [...this.references].sort((a, b) => a.id - b.id)
+        // parseReference(r, true) is pure for a fixed reference, so the authors string is
+        // identical every time a list cites that reference. Build it once per reference here
+        // instead of once per (list, ref) match in the loop below (was O(Σ list.references)
+        // parses; now O(references)).
+        const parsedAuthorsById = new Map()
+        for (const r of sortedReferences) {
+          parsedAuthorsById.set(r.id, this.parseReference(r, true))
+        }
         for (let list of data) {
           if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
             list.status = 'unfinished'
@@ -1185,12 +1193,13 @@ export default {
           list.cerqual_explanation = list.cerqual.explanation
           list.ref_list = ''
           list.raw_ref = []
+          // Iterate sortedReferences (id order preserved) and keep only the ones this list
+          // cites; the Set turns the inner O(list.references) scan into an O(1) membership test.
+          const citedIds = new Set(list.references)
           for (let r of sortedReferences) {
-            for (let ref of list.references) {
-              if (ref === r.id) {
-                list.ref_list = list.ref_list + await this.parseReference(r, true)
-                list.raw_ref.push(r)
-              }
+            if (citedIds.has(r.id)) {
+              list.ref_list = list.ref_list + parsedAuthorsById.get(r.id)
+              list.raw_ref.push(r)
             }
           }
         }
