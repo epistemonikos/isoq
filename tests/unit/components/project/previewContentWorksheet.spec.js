@@ -210,6 +210,62 @@ describe('previewContentWorksheet.vue', () => {
     expect(wrapper.find('extracted-data-stub').exists()).toBe(true)
   })
 
+  describe('derived rows when the DB table is empty (camelot migrated project)', () => {
+    const camelotList = {
+      project_id: 'p1',
+      references: ['r1', 'r2', 'r3'],
+      fullreferences: [
+        { id: 'r1', authors: 'Smith', publication_year: '2020' },
+        { id: 'r2', authors: 'Garcia', publication_year: '2019' },
+        { id: 'r3', authors: 'Chen', publication_year: '2021' }
+      ]
+    }
+
+    it('builds one characteristics row per reference even when isoqf_characteristics has no document', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: true, public_type: 'fully', sharedToken: 'token' },
+            list: camelotList
+          }
+        }
+      })
+
+      wrapper.vm.getCharsOfStudies()
+      await new Promise(process.nextTick)
+
+      expect(wrapper.vm.characteristics_studies.items).toHaveLength(3)
+      expect(wrapper.vm.characteristics_studies.items.map(i => i.ref_id)).toEqual(['r1', 'r2', 'r3'])
+      expect(wrapper.vm.characteristics_studies.items.map(i => i.authors)).toEqual(['Smith', 'Garcia', 'Chen'])
+    })
+
+    it('builds one methodological-assessment row per reference even when isoqf_assessments has no document', async () => {
+      Api.get.mockResolvedValue({ data: [] })
+
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: true, public_type: 'fully', sharedToken: 'token' },
+            list: camelotList
+          }
+        }
+      })
+
+      wrapper.vm.getMethAssessments()
+      await new Promise(process.nextTick)
+
+      expect(wrapper.vm.meth_assessments.items).toHaveLength(3)
+      expect(wrapper.vm.meth_assessments.items.map(i => i.ref_id)).toEqual(['r1', 'r2', 'r3'])
+      expect(wrapper.vm.meth_assessments.items.map(i => i.authors)).toEqual(['Smith', 'Garcia', 'Chen'])
+    })
+  })
+
   describe('exportToWord', () => {
     const baseData = {
       evidence_profile: [{ concern: 'no_concern' }],

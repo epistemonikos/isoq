@@ -1810,8 +1810,7 @@ export default {
   },
   watch: {
     'list_categories.options': function (newVal) {
-      // TODO(human): decide when this watcher should reload lists.
-      // getProject() already calls getLists() on the initial mount, so firing here too
+      // NOTE: getProject() already calls getLists() on the initial mount, so firing here too
       // duplicates GET /isoqf_lists + GET /findings (and, before the reset fix, duplicated
       // findings in memory). Guard against the initial load using this.initialLoad, while
       // still reloading when categories genuinely change afterwards (and not on empty).

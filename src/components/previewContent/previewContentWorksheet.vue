@@ -535,140 +535,137 @@ export default {
       }
       Api.get(url, params)
         .then((response) => {
-          if (response.data.length) {
-            let data = response.data[0]
-            let items = []
+          // Reference list is the source of truth: build one row per reference and
+          // merge DB-persisted data when it exists. A CAMELOT project that was just
+          // migrated (or never edited) has no isoqf_characteristics document yet, but
+          // the worksheet must still show every included study.
+          let data = response.data.length ? response.data[0] : {}
+          if (!Array.isArray(data.items)) {
+            data.items = []
+          }
+          if (!Array.isArray(data.fields)) {
+            data.fields = []
+          }
+          let items = []
 
-            let haveContent = 0
-            const camelotCharKeys = [
-              'research_extractedData', 'stakeholders_extractedData',
-              'researchers_extractedData', 'context_extractedData',
-              'strategy_extractedData', 'theory_extractedData',
-              'ethical_extractedData', 'equity_extractedData',
-              'participant_extractedData', 'data_extractedData',
-              'analysis_extractedData', 'presentation_extractedData'
-            ]
+          let haveContent = 0
+          const camelotCharKeys = [
+            'research_extractedData', 'stakeholders_extractedData',
+            'researchers_extractedData', 'context_extractedData',
+            'strategy_extractedData', 'theory_extractedData',
+            'ethical_extractedData', 'equity_extractedData',
+            'participant_extractedData', 'data_extractedData',
+            'analysis_extractedData', 'presentation_extractedData'
+          ]
 
-            let bibliographicRefs = []
-            if (this.list.fullreferences) {
-              if (typeof this.list.fullreferences === 'string') {
-                try {
-                  bibliographicRefs = JSON.parse(this.list.fullreferences)
-                } catch (e) {
-                  console.error('Error parsing fullreferences', e)
-                }
-              } else {
-                bibliographicRefs = this.list.fullreferences
+          let bibliographicRefs = []
+          if (this.list.fullreferences) {
+            if (typeof this.list.fullreferences === 'string') {
+              try {
+                bibliographicRefs = JSON.parse(this.list.fullreferences)
+              } catch (e) {
+                console.error('Error parsing fullreferences', e)
               }
-            }
-            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
-            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
-            const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
-            if (this.project.use_camelot) {
-              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
-            }
-
-            for (let item of data.items) {
-              for (let reference of this.list.references) {
-                if (String(reference) === String(item.ref_id)) {
-                  const bibRef = bibliographicRefs.find(r => String(r.id) === String(item.ref_id))
-                  item.authors = this.parseReference(bibRef || item, true)
-
-                  // Clean item from orphans
-                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
-                  for (const key in item) {
-                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
-                      cleanedItem[key] = item[key]
-                    }
-                  }
-                  item = cleanedItem
-                  items.push(item)
-
-                  if (this.project.use_camelot) {
-                    let camelotDataCount = 0
-                    let hasAnyCamelotDataKey = false
-                    for (const key of camelotCharKeys) {
-                      if (item[key] !== undefined) {
-                        hasAnyCamelotDataKey = true
-                        if (item[key] !== '') {
-                          camelotDataCount++
-                        }
-                      }
-                    }
-                    if (hasAnyCamelotDataKey && camelotDataCount === 0) {
-                      haveContent++
-                    }
-                    // Still check for CUSTOM fields in Camelot projects
-                    for (const key in item) {
-                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
-                        haveContent++
-                      }
-                    }
-                  } else {
-                    // NON-CAMELOT
-                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
-                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
-                    for (let key of fieldKeys) {
-                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
-                        haveContent++
-                      }
-                    }
-                    // If fields definition is missing, we can't reliably check content
-                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
-                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
-                      if (!hasAnyContent) {
-                        haveContent++
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            if (Array.isArray(data.fields) && data.fields.length < 3 && !this.project.use_camelot) {
-              haveContent++
-            }
-
-            this.ui.adequacy.chars_of_studies.display_warning = true
-            this.ui.relevance.chars_of_studies.display_warning = true
-            if (!haveContent) {
-              this.ui.adequacy.chars_of_studies.display_warning = false
-              this.ui.relevance.chars_of_studies.display_warning = false
-            }
-            data.items = items
-            this.characteristics_studies = data
-            if (Array.isArray(data.fields) && data.fields.length) {
-              let fields = JSON.parse(JSON.stringify(data.fields))
-              let lastItem = fields.splice(fields.length - 1, 1)
-              this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
-              this.characteristics_studies.fieldsObj = []
-              let _fields = data.fields
-              for (let field of _fields) {
-                if (field.key !== 'ref_id') {
-                  this.characteristics_studies.fieldsObj.push(field)
-                }
-              }
-              if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
-                this.characteristics_studies.items = []
-              }
-            }
-            this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
-            this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
-
-            let tableTop = []
-
-            if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
-              const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
-              for (let tt of _tableTop) {
-                tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
-              }
-            }
-            this.characteristics_studies.tableTop = tableTop
-          } else {
-            this.characteristics_studies = {
-              items: [],
-              fields: []
+            } else {
+              bibliographicRefs = this.list.fullreferences
             }
           }
+          const fieldKeys = data.fields.map(f => f.key)
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
+          if (this.project.use_camelot) {
+            this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+          }
+
+          const itemsByRef = new Map(data.items.map(it => [String(it.ref_id), it]))
+          for (const reference of this.list.references) {
+            const originalItem = itemsByRef.get(String(reference)) || { ref_id: reference }
+            const bibRef = bibliographicRefs.find(r => String(r.id) === String(reference))
+
+            // Clean item from orphans
+            const item = { ref_id: reference, authors: this.parseReference(bibRef || originalItem, true) }
+            for (const key in originalItem) {
+              if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                item[key] = originalItem[key]
+              }
+            }
+            items.push(item)
+
+            if (this.project.use_camelot) {
+              let camelotDataCount = 0
+              let hasAnyCamelotDataKey = false
+              for (const key of camelotCharKeys) {
+                if (item[key] !== undefined) {
+                  hasAnyCamelotDataKey = true
+                  if (item[key] !== '') {
+                    camelotDataCount++
+                  }
+                }
+              }
+              if (hasAnyCamelotDataKey && camelotDataCount === 0) {
+                haveContent++
+              }
+              // Still check for CUSTOM fields in Camelot projects
+              for (const key in item) {
+                if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !camelotCharKeys.includes(key) && !key.endsWith('_concerns') && item[key] === '') {
+                  haveContent++
+                }
+              }
+            } else {
+              // NON-CAMELOT
+              for (let key of fieldKeys) {
+                if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                  haveContent++
+                }
+              }
+              // If fields definition is missing, we can't reliably check content
+              if (data.fields.length <= 2) {
+                const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                if (!hasAnyContent) {
+                  haveContent++
+                }
+              }
+            }
+          }
+          if (data.fields.length < 3 && !this.project.use_camelot) {
+            haveContent++
+          }
+
+          this.ui.adequacy.chars_of_studies.display_warning = true
+          this.ui.relevance.chars_of_studies.display_warning = true
+          if (!haveContent) {
+            this.ui.adequacy.chars_of_studies.display_warning = false
+            this.ui.relevance.chars_of_studies.display_warning = false
+          }
+          data.items = items
+          this.characteristics_studies = data
+          if (data.fields.length) {
+            let fields = JSON.parse(JSON.stringify(data.fields))
+            let lastItem = fields.splice(fields.length - 1, 1)
+            this.characteristics_studies.last_column = lastItem[0].key.split('_')[1]
+            this.characteristics_studies.fieldsObj = []
+            let _fields = data.fields
+            for (let field of _fields) {
+              if (field.key !== 'ref_id') {
+                this.characteristics_studies.fieldsObj.push(field)
+              }
+            }
+            if (!Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'items')) {
+              this.characteristics_studies.items = []
+            }
+          }
+          this.buffer_characteristics_studies = JSON.parse(JSON.stringify(this.characteristics_studies))
+          this.buffer_characteristics_studies.fields.splice(this.buffer_characteristics_studies.fields.length - 1, 1)
+
+          let tableTop = []
+
+          if (Object.prototype.hasOwnProperty.call(this.characteristics_studies, 'mainFields')) {
+            const _tableTop = JSON.parse(JSON.stringify(this.characteristics_studies.mainFields))
+            for (let tt of _tableTop) {
+              tableTop.push({ 'label': tt.label, 'colspan': tt.fields.length })
+            }
+          }
+          this.characteristics_studies.tableTop = tableTop
         })
         .catch((error) => {
           this.printErrors(error)
@@ -681,110 +678,109 @@ export default {
       }
       Api.get(url, params)
         .then((response) => {
-          if (response.data.length) {
-            const _references = JSON.parse(JSON.stringify(this.list.references))
-            let data = response.data[0]
-            let items = []
-
-            let haveContent = 0
-            let bibliographicRefs = []
-            if (this.list.fullreferences) {
-              if (typeof this.list.fullreferences === 'string') {
-                try {
-                  bibliographicRefs = JSON.parse(this.list.fullreferences)
-                } catch (e) {
-                  console.error('Error parsing fullreferences', e)
-                }
-              } else {
-                bibliographicRefs = this.list.fullreferences
-              }
-            }
-            const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
-            const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
-            const allowedKeys = new Set([...excluded, ...fieldKeys])
-            if (this.project.use_camelot) {
-              this.camelot.fields.forEach(f => allowedKeys.add(f.key))
-            }
-
-            for (let item of data.items) {
-              for (let reference of _references) {
-                if (String(reference) === String(item.ref_id)) {
-                  const bibRef = bibliographicRefs.find(r => String(r.id) === String(item.ref_id))
-                  item.authors = this.parseReference(bibRef || item, true)
-
-                  // Clean item from orphans
-                  const cleanedItem = { ref_id: item.ref_id, authors: item.authors }
-                  for (const key in item) {
-                    if (allowedKeys.has(key) || key.endsWith('_concerns')) {
-                      cleanedItem[key] = item[key]
-                    }
-                  }
-                  item = cleanedItem
-                  items.push(item)
-
-                  if (this.project.use_camelot) {
-                    // Check for Camelot Assessment Stages
-                    if (item.stages) {
-                      for (const stage of item.stages) {
-                        if (stage.options) {
-                          for (const option of stage.options) {
-                            if (option.option === null || option.option === '') {
-                              haveContent++
-                            }
-                          }
-                        }
-                      }
-                    }
-                    // Still check for CUSTOM fields in Camelot projects
-                    for (const key in item) {
-                      if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !key.endsWith('_concerns')) {
-                        if (item[key] === '') {
-                          haveContent++
-                        }
-                      }
-                    }
-                  } else {
-                    // NON-CAMELOT
-                    const fieldKeys = (Array.isArray(data.fields)) ? data.fields.map(f => f.key) : []
-                    const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
-                    for (let key of fieldKeys) {
-                      if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
-                        haveContent++
-                      }
-                    }
-                    // If fields definition is missing, we can't reliably check content
-                    if (!Array.isArray(data.fields) || data.fields.length <= 2) {
-                      const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
-                      if (!hasAnyContent) {
-                        haveContent++
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            if (Array.isArray(data.fields) && data.fields.length < 3 && !this.project.use_camelot) {
-              haveContent++
-            }
-            this.ui.methodological_assessments.display_warning = true
-            if (!haveContent) {
-              this.ui.methodological_assessments.display_warning = false
-            }
-
-            data.items = items
-
-            let _fields = Array.isArray(data.fields) ? data.fields : []
-            data.fieldsObj = []
-            for (let field of _fields) {
-              if (field.key !== 'ref_id') {
-                data.fieldsObj.push(field)
-              }
-            }
-
-            this.meth_assessments = data
-          } else {
-            this.meth_assessments = { nroOfColumns: 1, fields: [], items: [] }
+          // Same left-join-on-references principle as getCharsOfStudies: the study
+          // list drives the rows so the shared worksheet is never empty for a CAMELOT
+          // project whose isoqf_assessments document has not been created yet.
+          const _references = JSON.parse(JSON.stringify(this.list.references))
+          let data = response.data.length ? response.data[0] : {}
+          if (!Array.isArray(data.items)) {
+            data.items = []
           }
+          if (!Array.isArray(data.fields)) {
+            data.fields = []
+          }
+          let items = []
+
+          let haveContent = 0
+          let bibliographicRefs = []
+          if (this.list.fullreferences) {
+            if (typeof this.list.fullreferences === 'string') {
+              try {
+                bibliographicRefs = JSON.parse(this.list.fullreferences)
+              } catch (e) {
+                console.error('Error parsing fullreferences', e)
+              }
+            } else {
+              bibliographicRefs = this.list.fullreferences
+            }
+          }
+          const fieldKeys = data.fields.map(f => f.key)
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          const allowedKeys = new Set([...excluded, ...fieldKeys])
+          if (this.project.use_camelot) {
+            this.camelot.fields.forEach(f => allowedKeys.add(f.key))
+          }
+
+          const itemsByRef = new Map(data.items.map(it => [String(it.ref_id), it]))
+          for (const reference of _references) {
+            const originalItem = itemsByRef.get(String(reference)) || { ref_id: reference }
+            const bibRef = bibliographicRefs.find(r => String(r.id) === String(reference))
+
+            // Clean item from orphans
+            const item = { ref_id: reference, authors: this.parseReference(bibRef || originalItem, true) }
+            for (const key in originalItem) {
+              if (allowedKeys.has(key) || key.endsWith('_concerns')) {
+                item[key] = originalItem[key]
+              }
+            }
+            items.push(item)
+
+            if (this.project.use_camelot) {
+              // Check for Camelot Assessment Stages
+              if (item.stages) {
+                for (const stage of item.stages) {
+                  if (stage.options) {
+                    for (const option of stage.options) {
+                      if (option.option === null || option.option === '') {
+                        haveContent++
+                      }
+                    }
+                  }
+                }
+              }
+              // Still check for CUSTOM fields in Camelot projects
+              for (const key in item) {
+                if (key !== 'authors' && key !== 'ref_id' && key !== 'stages' && key !== 'mainFields' && !key.endsWith('_concerns')) {
+                  if (item[key] === '') {
+                    haveContent++
+                  }
+                }
+              }
+            } else {
+              // NON-CAMELOT
+              for (let key of fieldKeys) {
+                if (!excluded.includes(key) && (item[key] === undefined || item[key] === '')) {
+                  haveContent++
+                }
+              }
+              // If fields definition is missing, we can't reliably check content
+              if (data.fields.length <= 2) {
+                const hasAnyContent = Object.keys(item).some(k => !excluded.includes(k) && item[k] !== '')
+                if (!hasAnyContent) {
+                  haveContent++
+                }
+              }
+            }
+          }
+          if (data.fields.length < 3 && !this.project.use_camelot) {
+            haveContent++
+          }
+          this.ui.methodological_assessments.display_warning = true
+          if (!haveContent) {
+            this.ui.methodological_assessments.display_warning = false
+          }
+
+          data.items = items
+
+          let _fields = data.fields
+          data.fieldsObj = []
+          for (let field of _fields) {
+            if (field.key !== 'ref_id') {
+              data.fieldsObj.push(field)
+            }
+          }
+
+          this.meth_assessments = data
         })
         .catch((error) => {
           this.printErrors(error)
