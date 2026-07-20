@@ -1121,7 +1121,11 @@ export default {
           .then(() => status ? Api.post(`/unpublish/project/${this.list.project_id}`) : null)
           .then(() => {
             this.$emit('callGetStageOneData', false)
-            this.saveListName(changed)
+            // The backend now seals the list's evidence_profile mirror + top-level cerqual
+            // when the finding sections are written, so the frontend no longer PATCHes the
+            // list. We still refetch the list (update-list-data) to pull the sealed mirror
+            // into the preview/export.
+            this.$emit('update-list-data')
             this.$refs['modal-evidence-profile-form']?.hide()
           })
           .catch((error) => {
@@ -1143,26 +1147,6 @@ export default {
             this.printErrors(error)
           })
       }
-    },
-    saveListName: function (changedSections) {
-      // Mirror the changed evidence_profile sections to the list (a passive copy read by
-      // the preview/export) and keep the list's top-level cerqual — which drives
-      // publishability — in sync via the generic PATCH.
-      const sections = (changedSections && changedSections.length)
-        ? changedSections
-        : EVIDENCE_PROFILE_SECTIONS
-
-      const requests = sections.map(s =>
-        Api.patch(`/isoqf_lists/${this.list.id}/section/${s}`, this.selectedOptions[s]))
-      requests.push(Api.patch(`/isoqf_lists/${this.list.id}`, { cerqual: this.selectedOptions.cerqual }))
-
-      Promise.all(requests)
-        .then(() => {
-          this.$emit('update-list-data')
-        })
-        .catch((error) => {
-          this.printErrors(error)
-        })
     },
     openModalEvidenceProfie: function () {
       this.showPanel = true
