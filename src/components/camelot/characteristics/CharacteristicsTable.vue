@@ -140,9 +140,9 @@ export default {
   },
   methods: {
     formatAuthorsYear (item) {
-      const authors = item.authors || ''
-      const year = item.year || ''
-      return `${authors} ${year}`.trim()
+      // `authors` already embeds the publication year (Commons.parseReference appends it),
+      // so appending item.year here would duplicate it, e.g. "Chen 2021; 2021".
+      return (item.authors || '').trim()
     },
     dataCells (item) {
       const cells = []

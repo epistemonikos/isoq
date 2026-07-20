@@ -70,4 +70,18 @@ describe('CharacteristicsTable.vue - Toggle Concerns', () => {
     const headers = wrapper.findAll('th').wrappers.map(w => w.text())
     expect(headers).toContain('camelot.step_four.camelot_mixin.concerns')
   })
+
+  describe('formatAuthorsYear', () => {
+    it('does not duplicate the year — authors already embeds it via parseReference', () => {
+      const wrapper = mount(CharacteristicsTable, { localVue, propsData, mocks })
+      // Real-world items: authors comes from Commons.parseReference which already
+      // appends publication_year, and a redundant year field is also present.
+      expect(wrapper.vm.formatAuthorsYear({ authors: 'Chen 2021;', year: '2021' })).toBe('Chen 2021;')
+    })
+
+    it('shows authors alone when there is no year to duplicate', () => {
+      const wrapper = mount(CharacteristicsTable, { localVue, propsData, mocks })
+      expect(wrapper.vm.formatAuthorsYear({ authors: 'Chen 2021' })).toBe('Chen 2021')
+    })
+  })
 })
