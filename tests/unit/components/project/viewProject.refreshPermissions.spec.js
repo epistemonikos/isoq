@@ -196,6 +196,35 @@ describe('viewProject.vue — route watchers trigger refreshPermissions()', () =
   })
 })
 
+describe('viewProject.vue — tab change re-derives mode (iSoQ preview must not leak across tabs)', () => {
+  it('restores edit mode on tab change when the user has can_write (leftover iSoQ preview view mode)', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'refreshPermissions').mockResolvedValue()
+    // user id 1 has write; mode='view' simulates the iSoQ "Print or export" toggle
+    await wrapper.setData({ project: { id: 'proj1', can_write: [1], can_read: [1] }, mode: 'view' })
+
+    wrapper.vm.$options.watch['$route.query.tab'].call(wrapper.vm, 'Project-Property')
+    await flushPromises()
+
+    expect(wrapper.vm.mode).toBe('edit')
+    wrapper.destroy()
+  })
+
+  it('keeps view mode on tab change when the user only has can_read', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'refreshPermissions').mockResolvedValue()
+    await wrapper.setData({ project: { id: 'proj1', can_write: [], can_read: [1] }, mode: 'view' })
+
+    wrapper.vm.$options.watch['$route.query.tab'].call(wrapper.vm, 'Project-Property')
+    await flushPromises()
+
+    expect(wrapper.vm.mode).toBe('view')
+    wrapper.destroy()
+  })
+})
+
 describe('viewProject.vue — end-to-end: real actionButtons child reacts to refreshPermissions()', () => {
   // Mounts the REAL actionButtons.vue (instead of stubbing it) to prove the reactive
   // chain actually reaches the DOM: project.can_write -> canWrite computed -> the

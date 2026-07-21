@@ -1823,6 +1823,14 @@ export default {
       if (index !== -1) {
         this.tabOpened = index
       }
+      // The iSoQ "Print or export" button toggles mode='view' (preview), but mode is
+      // shared across all tabs — leaving it 'view' locks Properties/My-Data read-only.
+      // Re-derive mode from permissions on tab change so the preview stays local to iSoQ.
+      if (this.checkPermissions('can_write')) {
+        this.mode = 'edit'
+      } else if (this.checkPermissions('can_read')) {
+        this.mode = 'view'
+      }
       this.refreshPermissions()
     },
     '$route.query.step': function (val) {
