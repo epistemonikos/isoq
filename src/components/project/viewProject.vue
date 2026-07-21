@@ -429,14 +429,14 @@
             </b-modal>
             <back-to-top></back-to-top>
             <!-- Lock Modals -->
-            <b-modal id="modal-lock-lost" title="Connection Lost" ok-only ok-title="Reload" @ok="reloadPage"
+            <b-modal id="modal-lock-lost" :title="$t('lock.connection_lost')" ok-only :ok-title="$t('lock.reload')" @ok="reloadPage"
               no-close-on-backdrop no-close-on-esc hide-header-close>
               <div class="text-center">
                 <font-awesome-icon icon="exclamation-triangle" size="3x" class="text-warning mb-3" />
                 <p>{{ $t('lock.lock_lost_message') }}</p>
               </div>
             </b-modal>
-            <b-modal id="modal-lock-idle" title="Session Timeout" ok-only ok-title="Reload" @ok="reloadPage"
+            <b-modal id="modal-lock-idle" :title="$t('lock.session_timeout')" ok-only :ok-title="$t('lock.reload')" @ok="reloadPage"
               no-close-on-backdrop no-close-on-esc hide-header-close>
               <div class="text-center">
                 <font-awesome-icon icon="lock" size="3x" class="text-secondary mb-3" />

@@ -87,7 +87,7 @@ export default {
               dismissCountDown: 0
             },
             loading: false,
-            loading_txt: 'Save'
+            loading_txt: this.$t('common.save')
           },
           exclusion: {
             success: {
@@ -101,7 +101,7 @@ export default {
               dismissCountDown: 0
             },
             loading: false,
-            loading_txt: 'Save'
+            loading_txt: this.$t('common.save')
           }
         }
       },
@@ -124,14 +124,14 @@ export default {
       let params = {}
       if (type === 'inclusion') {
         this.ui.project.inclusion.loading = true
-        this.ui.project.inclusion.loading_txt = 'Saving'
+        this.ui.project.inclusion.loading_txt = this.$t('common.saving')
         params.inclusion = this.local_data || ''
         if (action === 'clean') {
           params.inclusion = ''
         }
       } else {
         this.ui.project.exclusion.loading = true
-        this.ui.project.exclusion.loading_txt = 'Saving'
+        this.ui.project.exclusion.loading_txt = this.$t('common.saving')
         params.exclusion = this.local_data || ''
         if (action === 'clean') {
           params.exclusion = ''
@@ -142,14 +142,14 @@ export default {
           .then((response) => {
             if (type === 'inclusion') {
               this.ui.project.inclusion.loading = false
-              this.ui.project.inclusion.loading_txt = 'Save'
+              this.ui.project.inclusion.loading_txt = this.$t('common.save')
               this.ui.project.inclusion.success.dismissCountDown = this.ui.project.inclusion.success.dismissSecs
               this.ui.project.type = 'inclusion'
               // this.getProject()
             }
             if (type === 'exclusion') {
               this.ui.project.exclusion.loading = false
-              this.ui.project.exclusion.loading_txt = 'Save'
+              this.ui.project.exclusion.loading_txt = this.$t('common.save')
               this.ui.project.exclusion.success.dismissCountDown = this.ui.project.exclusion.success.dismissSecs
               this.ui.project.type = 'exclusion'
               // this.getProject()

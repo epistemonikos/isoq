@@ -133,7 +133,7 @@ export default {
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
       ],
       fields: [
-        { key: 'authors', label: 'Fit assessments', thClass: headerClass, tdClass: 'border-right' },
+        { key: 'authors', label: this.$t('camelot.step_four.fit_assessments'), thClass: headerClass, tdClass: 'border-right' },
         // Group 1
         { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
         { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
