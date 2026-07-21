@@ -836,11 +836,11 @@ export default {
     },
     editStageTwo: function (data, type) {
       const titles = {
-        'methodological-limitations': 'Methodological limitations',
-        'coherence': 'Coherence',
-        'adequacy': 'Adequacy',
-        'relevance': 'Relevance',
-        'cerqual': 'GRADE-CERQual assessment of confidence'
+        'methodological-limitations': this.$t('worksheet.methodological_limitations'),
+        'coherence': this.$t('worksheet.coherence'),
+        'adequacy': this.$t('worksheet.adequacy'),
+        'relevance': this.$t('worksheet.relevance'),
+        'cerqual': this.$t('soqf_table.print_confidence')
       }
       data.type = type
       data.title = titles[type]

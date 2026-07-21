@@ -124,7 +124,7 @@
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation === ''">{{ $t('common.complete') }}</span>
           <span v-if="mode === 'edit' && canEdit && data.item.cerqual_explanation != ''">{{ $t('common.edit') }}</span>
           <span v-if="!(mode === 'edit' && canEdit)">{{ $t('common.view') }}</span>
-          GRADE-CERQual Assessment
+          {{ $t('soqf_table.gc_assessment') }}
         </b-button>
         <b class="cerqual-explanation" v-if="data.item.cerqual_option !== ''">{{ data.item.cerqual_explanation }}</b>
       </template>

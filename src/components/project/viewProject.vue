@@ -621,20 +621,6 @@ export default {
         filterOn: ['filter_cerqual', 'category_name', 'explanation', 'status']
       },
       summarized_review: '',
-      select_options: [
-        { value: 0, text: 'No/Very minor concerns' },
-        { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' },
-        { value: null, text: 'Undefined' }
-      ],
-      cerqual_confidence: [
-        { value: 'hc', text: 'High confidence' },
-        { value: 'mc', text: 'Moderate confidence' },
-        { value: 'lc', text: 'Low confidence' },
-        { value: 'vc', text: 'Very low confidence' },
-        { value: null, text: 'Undefined' }
-      ],
       references: [],
       refs: [],
       loadReferences: true,
@@ -1906,6 +1892,24 @@ export default {
       return [
         { key: 'text', label: this.$t('modals.group_name_label') },
         { key: 'actions', label: '' }
+      ]
+    },
+    select_options: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.no_very_minor_concerns') },
+        { value: 1, text: this.$t('cerqual_options.minor_concerns') },
+        { value: 2, text: this.$t('cerqual_options.moderate_concerns') },
+        { value: 3, text: this.$t('cerqual_options.serious_concerns') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
+    cerqual_confidence: function () {
+      return [
+        { value: 'hc', text: this.$t('cerqual_options.high_confidence') },
+        { value: 'mc', text: this.$t('cerqual_options.moderate_confidence') },
+        { value: 'lc', text: this.$t('cerqual_options.low_confidence') },
+        { value: 'vc', text: this.$t('cerqual_options.very_low_confidence') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
       ]
     },
     effectiveMode: function () {
