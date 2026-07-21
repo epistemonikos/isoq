@@ -625,7 +625,8 @@
       "cerqual_guidance_link": "para orientación práctica sobre cómo realizar una evaluación general de confianza para un hallazgo de revisión."
     },
     "extracted_data_intro": "Es aquí donde ingresa los datos extraídos de los estudios incluidos que apoyan este hallazgo de revisión. Estos datos son necesarios para realizar una evaluación GRADE-CERQual.",
-    "add_extracted_data_label": "Agregue los datos extraídos de este estudio que apoyan el hallazgo de revisión"
+    "add_extracted_data_label": "Agregue los datos extraídos de este estudio que apoyan el hallazgo de revisión",
+    "export_ms_word": "Exportar a MS-Word"
   },
   "shared": {
     "link_invalid": "El enlace compartido es inválido o ha expirado",
@@ -1421,8 +1422,8 @@
         "1": "Aquí es donde evalúa si tiene inquietudes con respecto a la adecuación del ajuste entre los cuatro dominios de Realización de la investigación y los cuatro dominios Meta. En la primera columna verá los datos que extrajo para cada dominio de Realización de la investigación y cualquier comentario que haya hecho. En la segunda columna verá los datos que extrajo para cada dominio Meta y cualquier comentario que haya hecho. Puede navegar entre los dominios meta usando las pestañas. En la columna final selecciona un nivel de inquietud sobre la adecuación del ajuste y agrega una explicación para su juicio. <br><br>El término adecuación del ajuste en CAMELOT se refiere al grado en que el diseño y la realización del estudio: (1) es adecuado para abordar el objetivo y/o las preguntas de la investigación, (2) se alinea con los investigadores y/o las partes interesadas involucradas en el estudio, y/o; (3) es adecuado dado el contexto del estudio.",
         "2": "Aquí es donde evalúa si tiene inquietudes con respecto a la adecuación del ajuste entre los cuatro dominios de Diseño de la investigación y los cuatro dominios de Realización de la investigación (FA9). En las dos primeras columnas verá los datos que extrajo para cada dominio y cualquier comentario que haya hecho. En la columna final selecciona un nivel de inquietud sobre la adecuación del ajuste y agrega una explicación para su juicio.<br><br>El término adecuación del ajuste en CAMELOT se refiere al grado en que el diseño y la realización del estudio: (1) es adecuado para abordar el objetivo y/o las preguntas de la investigación, (2) se alinea con los investigadores y/o las partes interesadas involucradas en el estudio, y/o; (3) es adecuado dado el contexto del estudio.",
         "3": "Aquí es donde realiza una evaluación general (OA) de las inquietudes, teniendo en cuenta las inquietudes identificadas en las nueve evaluaciones de ajuste (FA1-FA9). En las tres primeras columnas están sus nueve evaluaciones de ajuste. En la columna final es donde realiza una evaluación general de las inquietudes con respecto al ajuste entre los dominios de CAMELOT.<br><br>El término adecuación del ajuste en CAMELOT se refiere al grado en que el diseño y la realización del estudio: (1) es adecuado para abordar el objetivo y/o las preguntas de la investigación, (2) se alinea con los investigadores y/o las partes interesadas involucradas en el estudio, y/o; (3) es adecuado dado el contexto del estudio."
-        }
-      },
+      }
+    },
     "responses": {
       "explanation": "Explicación",
       "no_minimal": "Sin preocupaciones o mínimas",

@@ -6,23 +6,23 @@
           <b-col cols="12" class="text-right d-print-none">
             <b-link class="return" :to="returnLinkTarget">
               <font-awesome-icon icon="long-arrow-alt-left" :title="$t('common.back')" />
-              return to ISoQ table
+              {{ $t('worksheet_nav.return_isoq') }}
             </b-link>
           </b-col>
         </b-row>
-        <h2 class="toDoc font-weight-bold pb-2">GRADE-CERQual Assessment Worksheet</h2>
+        <h2 class="toDoc font-weight-bold pb-2">{{ $t('worksheet.grade_cerqual_worksheet') }}</h2>
       </b-container>
     </b-container>
     <b-container>
       <b-row class="d-print-none justify-content-end mb-2 pt-2">
         <b-col cols="12" md="4">
           <b-button id="exportButton" variant="outline-secondary" block @click="exportToWord()">
-            Export to MS-Word
+            {{ $t('worksheet.export_ms_word') }}
           </b-button>
         </b-col>
         <b-col cols="12" md="4" class="mt-2 mt-md-0">
           <b-button id="printButton" @click="print" variant="outline-info" block>
-            Print or save as PDF
+            {{ $t('actionButtons.print_save_pdf') }}
           </b-button>
         </b-col>
       </b-row>
@@ -36,7 +36,7 @@
             :charsOfStudies="characteristics_studies"></evidence-profile>
           <template v-if="canViewDetails">
             <div v-if="project.use_camelot">
-              <h4>Characteristics of studies</h4>
+              <h4>{{ $t('worksheet.characteristics_of_studies') }}</h4>
               <camelot-characteristics-table-preview :charsOfStudies="characteristics_studies"
                 :references="camelot_references">
               </camelot-characteristics-table-preview>
@@ -48,7 +48,7 @@
             </div>
 
             <div v-if="project.use_camelot">
-              <h4>Methodological assessments</h4>
+              <h4>{{ $t('worksheet.methodological_assessments') }}</h4>
               <camelot-assessments-table-preview :methodologicalTableRefs="meth_assessments"
                 :references="camelot_references">
               </camelot-assessments-table-preview>
@@ -66,7 +66,7 @@
           </template>
           <div v-if="list.is_public">
             <div class="mt-5 alert alert-info" role="alert">
-              <h5>License type</h5>
+              <h5>{{ $t('project.license_type') }}</h5>
               <p>{{ theLicense(list.license_type) }}</p>
             </div>
           </div>
@@ -159,30 +159,6 @@ export default {
           adequacy: { explanation: '', option: 0 }
         }
       ],
-      evidence_profile_fields_print_version: [
-        { key: 'isoqf_id', label: '#' },
-        { key: 'name', label: 'Summarised review finding' },
-        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
-        { key: 'coherence', label: this.$t('worksheet.coherence') },
-        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
-        { key: 'relevance', label: this.$t('worksheet.relevance') },
-        { key: 'cerqual', label: 'GRADE-CERQual assessment of confidence' },
-        {
-          key: 'references',
-          label: 'References',
-          formatter: value => {
-            let references = ''
-            for (let item of value) {
-              for (let reference of this.references) {
-                if (item === reference.id) {
-                  references = references.concat(reference.content)
-                }
-              }
-            }
-            return references
-          }
-        }
-      ],
       evidence_profile_table_settings: {
         filter: '',
         totalRows: 1,
@@ -228,43 +204,71 @@ export default {
         perPage: 10,
         pageOptions: [10, 50, 100]
       },
-      show: {
-        selected: ['cs', 'ma', 'ed'],
-        options: [
-          { text: 'Characteristics Studies', value: 'cs' },
-          { text: 'Methodological Assessments', value: 'ma' },
-          { text: 'Extracted Data', value: 'ed' }
-        ]
-      },
       references: [],
-      camelot_references: [],
-      mode_print_fieldsObj: [
-        {
-          key: 'authors',
-          label: 'Author(s), Year'
-        },
-        {
-          key: 'column_0',
-          label: 'Extracted data supporting the review finding'
-        }
-      ],
-      select_options: [
-        { value: 0, text: 'No/Very minor concerns' },
-        { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' },
-        { value: null, text: 'Undefined' }
-      ],
-      level_confidence: [
-        { value: 0, text: 'High confidence' },
-        { value: 1, text: 'Moderate confidence' },
-        { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' },
-        { value: null, text: 'Undefined' }
-      ]
+      camelot_references: []
     }
   },
   computed: {
+    evidence_profile_fields_print_version: function () {
+      return [
+        { key: 'isoqf_id', label: '#' },
+        { key: 'name', label: this.$t('table_head.summarised_finding') },
+        { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
+        { key: 'coherence', label: this.$t('worksheet.coherence') },
+        { key: 'adequacy', label: this.$t('worksheet.adequacy') },
+        { key: 'relevance', label: this.$t('worksheet.relevance') },
+        { key: 'cerqual', label: this.$t('soqf_table.print_confidence') },
+        {
+          key: 'references',
+          label: this.$t('table_head.references'),
+          formatter: value => {
+            let references = ''
+            for (let item of value) {
+              for (let reference of this.references) {
+                if (item === reference.id) {
+                  references = references.concat(reference.content)
+                }
+              }
+            }
+            return references
+          }
+        }
+      ]
+    },
+    show: function () {
+      return {
+        selected: ['cs', 'ma', 'ed'],
+        options: [
+          { text: this.$t('worksheet.characteristics_of_studies'), value: 'cs' },
+          { text: this.$t('worksheet.methodological_assessments'), value: 'ma' },
+          { text: this.$t('worksheet.extracted_data'), value: 'ed' }
+        ]
+      }
+    },
+    mode_print_fieldsObj: function () {
+      return [
+        { key: 'authors', label: this.$t('references.author_year') },
+        { key: 'column_0', label: this.$t('table_headers.extracted_data') }
+      ]
+    },
+    select_options: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.no_very_minor_concerns') },
+        { value: 1, text: this.$t('cerqual_options.minor_concerns') },
+        { value: 2, text: this.$t('cerqual_options.moderate_concerns') },
+        { value: 3, text: this.$t('cerqual_options.serious_concerns') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
+    level_confidence: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.high_confidence') },
+        { value: 1, text: this.$t('cerqual_options.moderate_confidence') },
+        { value: 2, text: this.$t('cerqual_options.low_confidence') },
+        { value: 3, text: this.$t('cerqual_options.very_low_confidence') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
     returnLinkTarget: function () {
       return PublicPreviewAccess.resolveReturnRoute({
         token: this.$route.params.token,

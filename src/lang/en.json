@@ -625,7 +625,8 @@
       "cerqual_guidance_link": "for practical guidance on making an overall assessment of confidence for a review finding."
     },
     "extracted_data_intro": "It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.",
-    "add_extracted_data_label": "Add the extracted data from this study that supports the review finding"
+    "add_extracted_data_label": "Add the extracted data from this study that supports the review finding",
+    "export_ms_word": "Export to MS-Word"
   },
   "shared": {
     "link_invalid": "The shared link is invalid or has expired",
