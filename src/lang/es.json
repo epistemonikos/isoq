@@ -911,7 +911,8 @@
     "authors_review": "Autores de la revisión",
     "corresponding_author": "Autor correspondiente",
     "review_published": "¿Se ha publicado la revisión?",
-    "additional_info": "Información Adicional"
+    "additional_info": "Información Adicional",
+    "licensed_under": "Con licencia de"
   },
   "video_help": {
     "title": "Video de ayuda",

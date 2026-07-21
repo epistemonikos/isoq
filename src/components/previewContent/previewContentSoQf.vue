@@ -21,7 +21,7 @@
         <b-nav id="tabsTitle" tabs fill class="pt-lg-3 pt-5 d-print-none">
           <b-nav-item
             :active="(tabOpened === 0) ? true : false"
-            @click="tabOpened=0">Project properties</b-nav-item>
+            @click="tabOpened=0">{{ $t('project.properties') }}</b-nav-item>
           <!-- <b-nav-item
             disabled
             :active="(tabOpened === 1) ? true : false"
@@ -31,7 +31,7 @@
             @click="tabOpened=2">iSoQ</b-nav-item>
           <b-nav-item
             :active="(tabOpened === 3) ? true : false"
-            @click="tabOpened=3">Guidance on applying GRADE-CERQual</b-nav-item>
+            @click="tabOpened=3">{{ $t('project.guidance_applying') }}</b-nav-item>
         </b-nav>
       </b-container>
     </b-container>
@@ -46,7 +46,7 @@
             <b-col
               cols="12"
               class="mb-2">
-              <h2>Project properties</h2>
+              <h2>{{ $t('project.properties') }}</h2>
             </b-col>
           </b-row>
           <b-row>
@@ -62,7 +62,7 @@
         </b-tab>
         <b-tab>
           <h4 class="mt-5">
-            Study inclusion and exclusion criteria used in the review
+            {{ $t('project.inclusion_exclusion') }}
           </h4>
           <b-container>
             <b-row>
@@ -72,8 +72,8 @@
                 class="pl-0">
                 <criteria
                   v-if="ui.project.show_criteria"
-                  label="Inclusion criteria"
-                  description="Please enter the study inclusion criteria used in the review"
+                  :label="$t('inclusion.inclusion_criteria')"
+                  :description="$t('inclusion.inclusion_placeholder')"
                   :isDisabled="true"
                   criteria="inclusion"
                   :dataTxt="project.inclusion">
@@ -85,8 +85,8 @@
                 class="pr-0">
                 <criteria
                   v-if="ui.project.show_criteria"
-                  label="Exclusion criteria"
-                  description="Please enter the study exclusion criteria used in the review"
+                  :label="$t('inclusion.exclusion_criteria')"
+                  :description="$t('inclusion.exclusion_placeholder')"
                   :isDisabled="true"
                   criteria="exclusion"
                   :dataTxt="project.exclusion">
@@ -138,7 +138,7 @@
               :cerqualConfidence="cerqual_confidence"
               :printableItems="printableItems"></action-buttons>
           </b-container>
-          <h2>Summary of Qualitative Findings Table</h2>
+          <h2>{{ $t('publish.soqf_table_title') }}</h2>
           <b-card header-tag="header">
             <template v-slot:header>
               <b-container fluid>
@@ -155,30 +155,30 @@
             <div id="info-project">
               <b-row>
                 <b-col cols="12" md="8" class="toDoc">
-                  <h5>Review question</h5>
+                  <h5>{{ $t('project.review_question') }}</h5>
                   <p>{{project.review_question}}</p>
 
-                  <h5>Has the review been published?</h5>
-                  <p>{{(project.published_status) ? 'Yes': 'No'}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
+                  <h5>{{ $t('publish.review_published') }}</h5>
+                  <p>{{(project.published_status) ? $t('yes_no.yes') : $t('yes_no.no')}} <span v-if="project.published_status">| DOI: <b-link :href="project.url_doi" target="_blank">{{ project.url_doi }}</b-link></span></p>
 
-                  <h5 v-if="project.description">Additional Information</h5>
+                  <h5 v-if="project.description">{{ $t('project.additional_info') }}</h5>
                   <p v-if="project.description">{{project.description}}</p>
                 </b-col>
                 <b-col cols="12" md="4" class="toDoc">
-                  <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">Authors of the review</h5>
+                  <h5 v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">{{ $t('publish.authors_review') }}</h5>
                   <ul v-if="Object.prototype.hasOwnProperty.call(project, 'authors')">
                     <li v-for="(author, index) in project.authors.split(',')" :key="index">{{ author.trim() }}</li>
                   </ul>
 
-                  <h5>Corresponding author</h5>
+                  <h5>{{ $t('project.corresponding_author') }}</h5>
                   <p v-if="project.author">{{ project.author }} <span v-if="project.author_email"><br />{{ project.author_email }}</span></p>
 
-                  <h5 v-if="!project.complete_by_author">Is the iSoQ being completed by the review authors?</h5>
-                  <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? 'Yes' : 'No'}}</p>
+                  <h5 v-if="!project.complete_by_author">{{ $t('project.completed_by_authors') }}</h5>
+                  <p v-if="!project.complete_by_author">{{(project.complete_by_author) ? $t('yes_no.yes') : $t('yes_no.no')}}</p>
                 </b-col>
                 <b-col
                   cols="12">
-                  <h5 v-if="project.license_type">Licensed under</h5>
+                  <h5 v-if="project.license_type">{{ $t('publish.licensed_under') }}</h5>
                   <p v-if="project.license_type">{{getLicense(project.license_type)}}</p>
                 </b-col>
               </b-row>
@@ -244,15 +244,7 @@ export default {
       tabOpened: 2,
       ui: {
         project: {
-          show_criteria: false,
-          global_licenses: [
-            { value: 'CC-BY-NC-ND', text: 'CC BY-NC-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-            { value: 'CC-BY-ND', text: 'CC BY-ND: This license allows reusers to copy and distribute the material in any medium or format in unadapted form only, and only so long as attribution is given to the creator. The license allows for commercial use.' },
-            { value: 'CC-BY-NC-SA', text: 'CC BY-NC-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-            { value: 'CC-BY-NC', text: 'CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator.' },
-            { value: 'CC-BY-SA', text: 'CC BY-SA: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.' },
-            { value: 'CC-BY', text: 'CC BY: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use.' }
-          ]
+          show_criteria: false
         }
       },
       project: {
@@ -265,19 +257,6 @@ export default {
         selected: null
       },
       references: [],
-      select_options: [
-        { value: 0, text: 'No/Very minor concerns' },
-        { value: 1, text: 'Minor concerns' },
-        { value: 2, text: 'Moderate concerns' },
-        { value: 3, text: 'Serious concerns' },
-        { value: null, text: 'Undefined' }
-      ],
-      cerqual_confidence: [
-        { value: 0, text: 'High confidence' },
-        { value: 1, text: 'Moderate confidence' },
-        { value: 2, text: 'Low confidence' },
-        { value: 3, text: 'Very low confidence' }
-      ],
       table_settings: {
         isBusy: true,
         currentPage: 1,
@@ -291,7 +270,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('references.author_year') }
         ]
       },
       charsOfStudiesTableSettings: {
@@ -310,7 +289,7 @@ export default {
         items: [],
         authors: '',
         fieldsObj: [
-          { key: 'authors', label: 'Author(s), Year' }
+          { key: 'authors', label: this.$t('references.author_year') }
         ]
       },
       methodologicalTableRefsTableSettings: {
@@ -340,18 +319,34 @@ export default {
       }
     }
   },
+  computed: {
+    select_options: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.no_very_minor_concerns') },
+        { value: 1, text: this.$t('cerqual_options.minor_concerns') },
+        { value: 2, text: this.$t('cerqual_options.moderate_concerns') },
+        { value: 3, text: this.$t('cerqual_options.serious_concerns') },
+        { value: null, text: this.$t('cerqual_options.undefined') }
+      ]
+    },
+    cerqual_confidence: function () {
+      return [
+        { value: 0, text: this.$t('cerqual_options.high_confidence') },
+        { value: 1, text: this.$t('cerqual_options.moderate_confidence') },
+        { value: 2, text: this.$t('cerqual_options.low_confidence') },
+        { value: 3, text: this.$t('cerqual_options.very_low_confidence') }
+      ]
+    }
+  },
   methods: {
     printDoc: function () {
       window.print()
     },
     getLicense: function (license) {
-      const licenses = this.ui.project.global_licenses
-      for (let lic of licenses) {
-        if (lic.value === license) {
-          return lic.text
-        }
-      }
-      return ''
+      if (!license) return ''
+      const key = `commons.licenses.${license}`
+      const text = this.$t(key)
+      return text === key ? '' : text
     },
     getProject: function () {
       const params = {
@@ -435,24 +430,9 @@ export default {
               if (list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
-              list.filter_cerqual = ''
-              switch (list.cerqual_option) {
-                case 'High confidence':
-                  list.filter_cerqual = 'hc'
-                  break
-                case 'Moderate confidence':
-                  list.filter_cerqual = 'mc'
-                  break
-                case 'Low confidence':
-                  list.filter_cerqual = 'lc'
-                  break
-                case 'Very low confidence':
-                  list.filter_cerqual = 'vc'
-                  break
-                default:
-                  list.filter_cerqual = ''
-                  break
-              }
+              // Derive the filter code from the numeric option (0-3), not the
+              // translated label, so filtering keeps working in any language.
+              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual.option] || ''
               list.cerqual_explanation = list.cerqual.explanation
               list.ref_list = ''
               list.raw_ref = []
@@ -613,7 +593,7 @@ export default {
           if (response.data.length) {
             this.charsOfStudies = JSON.parse(JSON.stringify(response.data[0]))
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
-              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.charsOfStudies.fieldsObj = [{ 'key': 'authors', 'label': this.$t('references.author_year') }]
 
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
@@ -643,7 +623,7 @@ export default {
             }
             this.charsOfStudiesTableSettings.isBusy = false
           } else {
-            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
+            this.charsOfStudies = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: this.$t('references.author_year') } ] }
           }
         })
     },
@@ -664,7 +644,7 @@ export default {
               })
               this.methodologicalTableRefs.items = _items
 
-              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': this.$t('references.author_year') }]
               // this.methodologicalFieldsModal.fields = []
 
               for (let f of fields) {
@@ -684,7 +664,7 @@ export default {
               this.methodologicalTableRefsTableSettings.isBusy = false
             }
           } else {
-            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: 'Author(s), Year' } ] }
+            this.methodologicalTableRefs = { fields: [], items: [], authors: '', fieldsObj: [ { key: 'authors', label: this.$t('references.author_year') } ] }
           }
         })
     },
@@ -768,14 +748,9 @@ export default {
               if (list.cerqual && list.cerqual.option != null) {
                 list.cerqual_option = this.cerqual_confidence[list.cerqual.option].text
               }
-              list.filter_cerqual = ''
-              switch (list.cerqual_option) {
-                case 'High confidence': list.filter_cerqual = 'hc'; break
-                case 'Moderate confidence': list.filter_cerqual = 'mc'; break
-                case 'Low confidence': list.filter_cerqual = 'lc'; break
-                case 'Very low confidence': list.filter_cerqual = 'vc'; break
-                default: list.filter_cerqual = ''
-              }
+              // Derive the filter code from the numeric option (0-3), not the
+              // translated label, so filtering keeps working in any language.
+              list.filter_cerqual = { 0: 'hc', 1: 'mc', 2: 'lc', 3: 'vc' }[list.cerqual && list.cerqual.option] || ''
               list.cerqual_explanation = list.cerqual ? list.cerqual.explanation : ''
               list.ref_list = ''
               list.raw_ref = []
@@ -865,7 +840,7 @@ export default {
           const chars = bundle.characteristics || []
           if (chars.length) {
             this.charsOfStudies = JSON.parse(JSON.stringify(chars[0]))
-            this.charsOfStudies.fieldsObj = this.charsOfStudies.fieldsObj || [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+            this.charsOfStudies.fieldsObj = this.charsOfStudies.fieldsObj || [{ 'key': 'authors', 'label': this.$t('references.author_year') }]
             if (Object.prototype.hasOwnProperty.call(this.charsOfStudies, 'fields')) {
               const fields = JSON.parse(JSON.stringify(this.charsOfStudies.fields))
               const items = JSON.parse(JSON.stringify(this.charsOfStudies.items))
@@ -893,7 +868,7 @@ export default {
           const assessments = bundle.assessments || []
           if (assessments.length) {
             this.methodologicalTableRefs = JSON.parse(JSON.stringify(assessments[0]))
-            this.methodologicalTableRefs.fieldsObj = this.methodologicalTableRefs.fieldsObj || [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+            this.methodologicalTableRefs.fieldsObj = this.methodologicalTableRefs.fieldsObj || [{ 'key': 'authors', 'label': this.$t('references.author_year') }]
             if (Object.prototype.hasOwnProperty.call(this.methodologicalTableRefs, 'fields')) {
               const fields = JSON.parse(JSON.stringify(this.methodologicalTableRefs.fields))
               const items = JSON.parse(JSON.stringify(this.methodologicalTableRefs.items))
@@ -903,7 +878,7 @@ export default {
                 return authorsA.localeCompare(authorsB)
               })
               this.methodologicalTableRefs.items = _items
-              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
+              this.methodologicalTableRefs.fieldsObj = [{ 'key': 'authors', 'label': this.$t('references.author_year') }]
               for (let f of fields) {
                 if (f.key !== 'ref_id' && f.key !== 'authors' && f.key !== 'actions') {
                   this.methodologicalTableRefs.fieldsObj.push({ key: f.key, label: f.label })

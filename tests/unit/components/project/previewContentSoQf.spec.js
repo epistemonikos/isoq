@@ -93,7 +93,9 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
     await flushPromises()
 
     expect(wrapper.vm.lists.length).toBe(1)
-    expect(wrapper.vm.lists[0].cerqual_option).toBe('High confidence')
+    // cerqual_option now comes from cerqual_confidence via $t (mocked as key => key),
+    // so it resolves to the i18n key instead of a hardcoded English string.
+    expect(wrapper.vm.lists[0].cerqual_option).toBe('cerqual_options.high_confidence')
     expect(wrapper.vm.lists[0].filter_cerqual).toBe('hc')
   })
 

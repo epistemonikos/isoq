@@ -911,7 +911,8 @@
     "authors_review": "Authors of the review",
     "corresponding_author": "Corresponding author",
     "review_published": "Has the review been published?",
-    "additional_info": "Additional Information"
+    "additional_info": "Additional Information",
+    "licensed_under": "Licensed under"
   },
   "video_help": {
     "title": "Help video",
