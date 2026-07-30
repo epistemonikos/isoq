@@ -93,6 +93,11 @@
 <script>
 import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
+import {
+  canonicalIndex,
+  canonicalStageKey,
+  emptyAssessmentItem
+} from '@/utils/camelotAssessmentKeys'
 
 export default {
   name: 'AssessmentForm',
@@ -377,152 +382,93 @@ export default {
     },
     performSave (silent = false) {
       if (this.isReadOnly) return
+      if (!this.refId) {
+        this.isSaving = false
+        return
+      }
       this.isSaving = true
       if (silent) this.autoSaveStatus = 'saving'
-      const stages = [
-        {
-          key: 0,
-          options: [
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            }
-          ]
-        },
-        {
-          key: 1,
-          options: [
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            },
-            {
-              option: null,
-              text: '',
-              notes: ''
-            }
-          ]
-        },
-        {
-          key: 2,
-          options: [
-            {
-              option: null,
-              text: '',
-              notes: ''
-            }
-          ]
-        },
-        {
-          key: 3,
-          options: [
-            {
-              option: null,
-              text: '',
-              notes: ''
-            }
-          ]
-        }
-      ]
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        items: this.assessments.items || []
-      }
-      if (this.refId) {
-        const data = {
-          ref_id: this.refId,
-          authors: this.assessments.items[this.modalIndex].authors,
-          stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
-        }
-        if (params.items.find((el) => el.ref_id === this.refId)) {
-          params.items.forEach((item) => {
-            if (item.ref_id === this.refId) {
-              item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-              item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
-              item.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
-            }
-          })
-        } else {
-          params.items.push(data)
-        }
-        const onSuccess = () => {
-          this.$emit('getAssessments')
-          this.isSaving = false
-          if (silent) {
-            this.autoSaveStatus = 'saved'
-            setTimeout(() => { this.autoSaveStatus = null }, 2000)
-          } else {
-            this.$notify.success(this.$t('notifications.saved'))
-          }
-        }
-        const onError = (error) => {
-          console.error('Error saving assessment data:', error)
-          this.isSaving = false
-          if (silent) {
-            this.autoSaveStatus = 'error'
-          } else {
-            this.$notify.error(this.$t('notifications.save_error'))
-          }
-        }
 
-        // Ensure the current edit is reflected in the item we PATCH.
-        const currentItem = this.assessments.items[this.modalIndex]
-        if (currentItem && currentItem.stages && currentItem.stages[this.modalStage] &&
-            currentItem.stages[this.modalStage].options &&
-            currentItem.stages[this.modalStage].options[this.selectedMeta]) {
-          currentItem.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-          currentItem.stages[this.modalStage].options[this.selectedMeta].text = this.text1
-          currentItem.stages[this.modalStage].options[this.selectedMeta].notes = this.notes
-        }
-        const itemPayload = currentItem
-          ? { ref_id: currentItem.ref_id, authors: currentItem.authors, stages: currentItem.stages }
-          : data
+      // The leaf, with all three keys: the backend resets any key we omit to
+      // its canonical empty value instead of merging it with what is stored.
+      const leaf = { option: this.selected, text: this.text1, notes: this.notes }
 
-        if (this.assessments.id) {
-          // Partial PATCH of a single study — avoids Last-Write-Wins on the items array.
-          Api.patch(`/isoqf_assessments/${this.assessments.id}/item/${this.refId}`, itemPayload)
-            .then(onSuccess)
-            .catch(onError)
-        } else {
-          Api.post('/isoqf_assessments', {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            items: [itemPayload]
-          })
-            .then(onSuccess)
-            .catch(onError)
-        }
-      } else {
+      const onSuccess = () => {
+        // Refetch rather than trusting the reloaded document this endpoint
+        // returns: StepFour merges items across SEVERAL isoqf_assessments
+        // documents, and a single doc would not reproduce that merge.
+        this.$emit('getAssessments')
         this.isSaving = false
+        if (silent) {
+          this.autoSaveStatus = 'saved'
+          setTimeout(() => { this.autoSaveStatus = null }, 2000)
+        } else {
+          this.$notify.success(this.$t('notifications.saved'))
+        }
       }
+      const onError = (error) => {
+        console.error('Error saving assessment data:', error)
+        this.isSaving = false
+        if (silent) {
+          this.autoSaveStatus = 'error'
+        } else {
+          this.$notify.error(this.$t('notifications.save_error'))
+        }
+      }
+
+      const currentItem = this.assessments.items
+        ? this.assessments.items[this.modalIndex]
+        : null
+
+      // Keep the local copy in step so the grid updates before the refetch lands.
+      const localLeaf = currentItem && currentItem.stages &&
+        currentItem.stages[this.modalStage] &&
+        currentItem.stages[this.modalStage].options
+        ? currentItem.stages[this.modalStage].options[this.selectedMeta]
+        : null
+      if (localLeaf) Object.assign(localLeaf, leaf)
+
+      if (!this.assessments.id) {
+        // No document yet: create it through B with the canonical skeleton, then
+        // every later edit goes through D.
+        const seeded = emptyAssessmentItem(
+          this.refId,
+          currentItem ? currentItem.authors : ''
+        )
+        if (seeded.stages[this.modalStage] &&
+            seeded.stages[this.modalStage].options[this.selectedMeta]) {
+          Object.assign(seeded.stages[this.modalStage].options[this.selectedMeta], leaf)
+        }
+        Api.post('/isoqf_assessments', {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id,
+          items: [seeded]
+        })
+          .then(onSuccess)
+          .catch(onError)
+        return
+      }
+
+      // The backend keys stages by stages[].key, not by array position, and
+      // legacy documents store that key as a string.
+      const stageKey = canonicalStageKey(
+        currentItem && currentItem.stages ? currentItem.stages[this.modalStage] : null,
+        this.modalStage
+      )
+      const optionIndex = canonicalIndex(this.selectedMeta)
+      if (stageKey === null || optionIndex === null) {
+        onError(new Error(`Unaddressable cell: stage ${this.modalStage}, option ${this.selectedMeta}`))
+        return
+      }
+
+      // Endpoint D: writes ONE leaf. Saving the study through B would replace
+      // all ten and wipe whatever anyone else just wrote.
+      Api.patch(
+        `/isoqf_assessments/${this.assessments.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
+        leaf
+      )
+        .then(onSuccess)
+        .catch(onError)
     }
   }
 }

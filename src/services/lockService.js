@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { store } from '../store'
 import Api from '@/utils/Api'
+import { baseRefOf } from '@/utils/camelotAssessmentKeys'
 
 const HEARBEAT_INTERVAL = 30000 // 30 seconds
 const IDLE_TIMEOUT = 15 * 60 * 1000 // 15 minutes
@@ -13,9 +14,16 @@ class LockService {
     this.isLocked = false
     this.lockedBy = null
 
-    // Granular per-ref lock state (Step 3 / Step 4 studies)
-    this.currentRef = null // { projectId, refId }
-    this.refLocked = false
+    // Granular per-ref locks (Step 3 / Step 4). A Map rather than a single ref
+    // because Step 4 must hold the bare study lock (`R1`, for isoqf_characteristics
+    // via endpoint B) and the leaf lock of the cell being edited
+    // (`R1::s0::o0`, endpoint D) at the same time — the backend grants both to
+    // the same user, and a leaf lock does not authorize a write through B.
+    this.refLocks = new Map() // refId -> projectId
+    // Acquires in flight, so two callers asking for the same ref in the same
+    // tick share one request instead of racing (the Step 4 modal does exactly
+    // that on open: an explicit call plus the activeLeafRef watcher).
+    this.pendingRefAcquires = new Map() // refId -> Promise
     this.refLockedBy = null
     this.refHeartbeatTimer = null
 
@@ -42,6 +50,14 @@ class LockService {
         if (this.refLocked) this.releaseRef()
       })
     }
+  }
+
+  get refLocked () {
+    return this.refLocks.size > 0
+  }
+
+  heldRefs () {
+    return [...this.refLocks.keys()]
   }
 
   get isEnabled () {
@@ -180,29 +196,42 @@ class LockService {
   // ── Granular per-ref locks (Step 3 / Step 4) ──────────────────────────
   async acquireRef (projectId, refId) {
     if (!this.isEnabled) return { success: true }
+    if (this.refLocks.has(refId)) return { success: true }
+    if (this.pendingRefAcquires.has(refId)) return this.pendingRefAcquires.get(refId)
 
-    this.currentRef = { projectId, refId }
+    const pending = this.requestRefLock(projectId, refId)
+    this.pendingRefAcquires.set(refId, pending)
+    try {
+      return await pending
+    } finally {
+      this.pendingRefAcquires.delete(refId)
+    }
+  }
+
+  async requestRefLock (projectId, refId) {
     try {
       const response = await axios.post(
         `/api/lock/${projectId}/ref/${refId}`, {},
         { headers: { ...Api.getHeaders(), 'X-Suppress-Lock-Error': 'true' } }
       )
       if (response.data.status) {
-        this.refLocked = true
+        this.refLocks.set(refId, projectId)
         this.startRefHeartbeat()
         this.emitRefLocksChanged()
         return { success: true }
       }
     } catch (error) {
+      // A 409 here can mean the exact ref is taken, or that someone holds the
+      // same study at the other granularity (a leaf when we ask for the bare
+      // study, or vice versa). The body is identical either way, so `locked_by`
+      // is all the caller needs.
       if (error.response && error.response.status === 409) {
-        this.refLocked = false
         this.refLockedBy = error.response.data.locked_by
         return { success: false, lockedBy: this.refLockedBy }
       }
       if (error.response && error.response.status === 403) {
         // Different from a 409: nobody else holds the lock, this user simply no
         // longer has can_write. Callers must not treat this as "locked by X".
-        this.refLocked = false
         this.refLockedBy = null
         return { success: false, permissionDenied: true }
       }
@@ -210,25 +239,27 @@ class LockService {
     return { success: false, error: 'Unknown error' }
   }
 
-  async releaseRef () {
-    if (!this.isEnabled || !this.currentRef) return
+  /** Releases one ref, or every held ref when called with no argument. */
+  async releaseRef (refId = null) {
+    if (!this.isEnabled) return
 
-    this.stopRefHeartbeat()
-    this.refLocked = false
+    const toRelease = refId === null
+      ? [...this.refLocks.entries()]
+      : (this.refLocks.has(refId) ? [[refId, this.refLocks.get(refId)]] : [])
 
-    const { projectId, refId } = this.currentRef
-    this.currentRef = null
+    if (!toRelease.length) return
+
+    toRelease.forEach(([ref]) => this.refLocks.delete(ref))
+    if (!this.refLocks.size) this.stopRefHeartbeat()
 
     if (store.getters.isLoggedIn && localStorage.getItem('l_s')) {
-      try {
-        await fetch(`/api/lock/${projectId}/ref/${refId}`, {
+      await Promise.all(toRelease.map(([ref, project]) => (
+        fetch(`/api/lock/${project}/ref/${ref}`, {
           method: 'DELETE',
           headers: Api.getHeaders(),
           keepalive: true
-        })
-      } catch (e) {
-        console.error('Error releasing ref lock', e)
-      }
+        }).catch(e => console.error('Error releasing ref lock', e))
+      )))
     }
 
     // Notify same-tab listeners (StepThree/StepFour) so they refresh their lock
@@ -243,20 +274,25 @@ class LockService {
   }
 
   async refHeartbeat () {
-    if (!this.currentRef || !this.refLocked) return
+    if (!this.refLocks.size) return
     if (!store.state.isOnline) return
 
-    const { projectId, refId } = this.currentRef
-    try {
-      await axios.post(`/api/lock/${projectId}/ref/${refId}/heartbeat`, {}, {
-        headers: Api.getHeaders()
-      })
-    } catch (error) {
-      if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
-        this.refLocked = false
-        window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId } }))
+    // Each ref is beaten independently: losing the leaf lock must not drop the
+    // bare study lock the same modal is holding.
+    await Promise.all([...this.refLocks.entries()].map(async ([refId, projectId]) => {
+      try {
+        await axios.post(`/api/lock/${projectId}/ref/${refId}/heartbeat`, {}, {
+          headers: Api.getHeaders()
+        })
+      } catch (error) {
+        if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
+          this.refLocks.delete(refId)
+          window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId } }))
+        }
       }
-    }
+    }))
+
+    if (!this.refLocks.size) this.stopRefHeartbeat()
   }
 
   startRefHeartbeat () {
@@ -279,6 +315,33 @@ class LockService {
     } catch (e) {
       return []
     }
+  }
+}
+
+/**
+ * Reads `GET /api/lock/<project>/refs` from the point of view of one study.
+ *
+ * A lock clashes with another when both point at the same study through
+ * different granularities and belong to different users. Two different leaves
+ * of the same study do not clash — that is exactly what endpoint D enables.
+ *
+ * Compares by `user_name` because the endpoint does not expose `user_id`; two
+ * collaborators sharing a name would read as one. The backend offered to add
+ * `user_id` to the listing if that ever bites.
+ */
+export function studyLockState (locks, refId, myUserName) {
+  const others = (locks || []).filter(lock => lock.user_name !== myUserName)
+  const whole = others.find(lock => lock.ref_id === refId)
+  const leaves = others.filter(lock => baseRefOf(lock.ref_id) === refId)
+
+  return {
+    // Someone holds the whole study: every one of its 10 cells is off limits.
+    wholeStudyBlockedBy: whole ? whole.user_name : null,
+    // Leaf key -> holder. Only those cells are off limits.
+    lockedLeaves: new Map(leaves.map(lock => [lock.ref_id, lock.user_name])),
+    // Endpoint B rewrites the whole item, so any lock on the study — at either
+    // granularity — has to block it.
+    saveWholeStudyBlocked: Boolean(whole) || leaves.length > 0
   }
 }
 

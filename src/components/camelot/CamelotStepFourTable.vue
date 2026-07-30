@@ -140,10 +140,11 @@
 
 <script>
 import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 
 export default {
   name: 'CamelotStepFourTable',
-  mixins: [camelotCircleMixin],
+  mixins: [camelotCircleMixin, refLockStateMixin],
   props: {
     fields: { type: Array, required: true },
     items: { type: Array, required: true },
@@ -152,13 +153,9 @@ export default {
     canEdit: { type: Boolean, default: false }
   },
   methods: {
-    isRefLocked (refId) {
-      return this.activeRefLocks.some(l => l.ref_id === refId)
-    },
-    refLockedByName (refId) {
-      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
-      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
-    },
+    // isRefLocked / refLockedByName come from refLockStateMixin: a study can be
+    // blocked by a lock on the study itself OR on any of its cells, and only
+    // the mixin knows how to tell those apart from our own locks.
     isGroupComplete (stage, optionCount, item) {
       if (!item || !item.stages || !item.stages[stage]) return false
       const options = item.stages[stage].options

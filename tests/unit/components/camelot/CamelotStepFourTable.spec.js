@@ -86,6 +86,32 @@ describe('CamelotStepFourTable.vue', () => {
       wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1' } })
       expect(wrapper.emitted('open-modal')).toBeTruthy()
     })
+
+    // This grid is what actually disables the Edit buttons, so it has to see a
+    // study blocked through one of its cells — not just through the bare ref.
+    it('NO emite open-modal cuando otro tiene bloqueada una celda del estudio', async () => {
+      await wrapper.setProps({
+        activeRefLocks: [{ ref_id: 'ref1::s1::o3', user_name: 'Ana' }]
+      })
+      wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1' } })
+      expect(wrapper.emitted('open-modal')).toBeFalsy()
+    })
+
+    it('sí emite cuando el lock de celda es de otro estudio de nombre parecido', async () => {
+      await wrapper.setProps({
+        activeRefLocks: [{ ref_id: 'ref1X::s0::o0', user_name: 'Ana' }]
+      })
+      wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1' } })
+      expect(wrapper.emitted('open-modal')).toBeTruthy()
+    })
+
+    it('nombra a quien tiene la celda en el tooltip del botón', async () => {
+      await wrapper.setProps({
+        activeRefLocks: [{ ref_id: 'ref1::s2::o0', user_name: 'Ana López' }]
+      })
+      expect(wrapper.vm.refLockedByName('ref1')).toBe('lock.ref_locked_by')
+      expect(wrapper.vm.refLockedByName('ref9')).toBe('')
+    })
   })
 
   describe('isGroupComplete', () => {

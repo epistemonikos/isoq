@@ -30,71 +30,12 @@
           <span class="font-weight-bold" style="white-space: nowrap">{{ data.item.authors }}</span>
         </template>
 
-        <!-- FA 1-4 -->
-        <template v-slot:cell(fa1)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(0, 0, data.item)]"
-              :style="getCircleStyle(0, 0, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa2)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(0, 1, data.item)]"
-              :style="getCircleStyle(0, 1, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa3)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(0, 2, data.item)]"
-              :style="getCircleStyle(0, 2, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa4)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(0, 3, data.item)]"
-              :style="getCircleStyle(0, 3, data.item)"></div>
-          </div>
-        </template>
-
-        <!-- FA 5-8 -->
-        <template v-slot:cell(fa5)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(1, 0, data.item)]"
-              :style="getCircleStyle(1, 0, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa6)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(1, 1, data.item)]"
-              :style="getCircleStyle(1, 1, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa7)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(1, 2, data.item)]"
-              :style="getCircleStyle(1, 2, data.item)"></div>
-          </div>
-        </template>
-        <template v-slot:cell(fa8)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(1, 3, data.item)]"
-              :style="getCircleStyle(1, 3, data.item)"></div>
-          </div>
-        </template>
-
-        <!-- FA 9 -->
-        <template v-slot:cell(fa9)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(2, 0, data.item)]"
-              :style="getCircleStyle(2, 0, data.item)"></div>
-          </div>
-        </template>
-
-        <!-- OA -->
-        <template v-slot:cell(oa)="data">
-          <div class="d-flex justify-content-center">
-            <div :class="['assessment-circle', getCircleClass(3, 0, data.item)]"
-              :style="getCircleStyle(3, 0, data.item)"></div>
+        <!-- FA 1-9 + OA. The stage/option pair of each column comes from
+             ASSESSMENT_CELLS, the same source endpoint D addresses. -->
+        <template v-for="cell in assessmentCells" v-slot:[`cell(${cell.key})`]="data">
+          <div class="d-flex justify-content-center" :key="cell.key">
+            <div :class="['assessment-circle', getCircleClass(cell.stage, cell.option, data.item)]"
+              :style="getCircleStyle(cell.stage, cell.option, data.item)"></div>
           </div>
         </template>
       </b-table>
@@ -105,6 +46,7 @@
 <script>
 import camelotCircleMixin from '@/mixins/camelotCircleMixin'
 import Commons from '@/utils/commons'
+import { ASSESSMENT_CELLS } from '@/utils/camelotAssessmentKeys'
 
 export default {
   name: 'CamelotAssessmentsTablePreview',
@@ -134,24 +76,27 @@ export default {
       ],
       fields: [
         { key: 'authors', label: this.$t('camelot.step_four.fit_assessments'), thClass: headerClass, tdClass: 'border-right' },
-        // Group 1
-        { key: 'fa1', label: 'FA 1', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa2', label: 'FA 2', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa3', label: 'FA 3', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa4', label: 'FA 4', thClass: `${headerClass} border-right`, tdClass: 'border-right assessment-col' },
-        // Group 2
-        { key: 'fa5', label: 'FA 5', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa6', label: 'FA 6', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa7', label: 'FA 7', thClass: headerClass, tdClass: 'assessment-col' },
-        { key: 'fa8', label: 'FA 8', thClass: `${headerClass} border-right`, tdClass: 'border-right assessment-col' },
-        // Group 3
-        { key: 'fa9', label: 'FA 9', thClass: `${headerClass} border-right`, tdClass: 'border-right assessment-col' },
-        // Group 4 (OA)
-        { key: 'oa', label: 'OA', thClass: overallHeaderClass, tdClass: 'assessment-col' }
+        ...ASSESSMENT_CELLS.map((cell, index) => {
+          const isOverall = cell.key === 'oa'
+          // fa4, fa8 and fa9 close a visual group. OA carries no right border here,
+          // unlike the editable summary table.
+          const endsGroup = ['fa4', 'fa8', 'fa9'].includes(cell.key)
+          return {
+            key: cell.key,
+            label: isOverall ? 'OA' : `FA ${index + 1}`,
+            thClass: isOverall
+              ? overallHeaderClass
+              : (endsGroup ? `${headerClass} border-right` : headerClass),
+            tdClass: endsGroup ? 'border-right assessment-col' : 'assessment-col'
+          }
+        })
       ]
     }
   },
   computed: {
+    assessmentCells () {
+      return ASSESSMENT_CELLS
+    },
     tableItems () {
       // Base: assessment items, already scoped to the finding's references by the parent
       const items = (this.methodologicalTableRefs && this.methodologicalTableRefs.items)

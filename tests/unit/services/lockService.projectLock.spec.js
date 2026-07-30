@@ -20,8 +20,7 @@ beforeEach(() => {
   LockService.isLocked = false
   LockService.heartbeatTimer = null
   LockService.idleTimer = null
-  LockService.currentRef = null
-  LockService.refLocked = false
+  LockService.refLocks.clear()
   global.fetch = jest.fn(() => Promise.resolve({ ok: true }))
 })
 
@@ -54,9 +53,9 @@ describe('LockService pagehide handling', () => {
     expect(releaseSpy).toHaveBeenCalled()
   })
 
-  it('releases the ref lock when the page is being unloaded', () => {
-    LockService.currentRef = { projectId: 'proj1', refId: 'ref1' }
-    LockService.refLocked = true
+  it('releases every held ref lock when the page is being unloaded', () => {
+    LockService.refLocks.set('R1', 'proj1')
+    LockService.refLocks.set('R1::s0::o0', 'proj1')
     const releaseRefSpy = jest.spyOn(LockService, 'releaseRef').mockImplementation(() => Promise.resolve())
 
     window.dispatchEvent(new Event('pagehide'))

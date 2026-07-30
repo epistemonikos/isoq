@@ -70,4 +70,49 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     await expect(errorHandler(err)).rejects.toBe(err)
     expect(dispatched.some(e => e.type === 'ref-lock-conflict')).toBe(false)
   })
+
+  // Endpoint D nests the position under /item/: splitting on '/item/' yields
+  // 'ref4/stage/0/option/2', which matches no lock the client ever acquired.
+  describe('endpoint D — composite lock key', () => {
+    it('compone la clave de hoja en vez de partir la URL cruda', async () => {
+      const err = makeError(
+        '/isoqf_assessments/assess1/item/ref4/stage/0/option/2',
+        { option: 'A', text: 'x', notes: '' },
+        'Dana'
+      )
+      await expect(errorHandler(err)).rejects.toBe(err)
+
+      const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+      expect(event.detail.refId).toBe('ref4::s0::o2')
+      expect(setItemSpy).toHaveBeenCalledWith(
+        'conflict_ref_ref4::s0::o2',
+        expect.stringContaining('Dana')
+      )
+    })
+
+    it('conserva el payload de la hoja que falló', async () => {
+      const err = makeError(
+        '/isoqf_assessments/assess1/item/ref4/stage/3/option/0',
+        { option: 'C', text: 'explicación', notes: 'nota' },
+        'Dana'
+      )
+      await expect(errorHandler(err)).rejects.toBe(err)
+
+      const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+      expect(event.detail.refId).toBe('ref4::s3::o0')
+      expect(event.detail.failedData).toEqual({
+        option: 'C', text: 'explicación', notes: 'nota'
+      })
+    })
+
+    it('cae al ref pelado cuando la URL no trae una posición válida', async () => {
+      const err = makeError(
+        '/isoqf_assessments/assess1/item/ref4/stage/9/option/0', {}, 'Dana'
+      )
+      await expect(errorHandler(err)).rejects.toBe(err)
+
+      const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+      expect(event.detail.refId).toBe('ref4')
+    })
+  })
 })

@@ -96,7 +96,9 @@
                         <!-- Columna 2.2: Assessment Evaluation -->
                         <b-col cols="6">
                           <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
-                            :refId="refId" :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                            :refId="refId" :modalIndex="modal.index"
+                            :is-read-only="isCellReadOnly(modal.stage, dIndex)"
+                            :locked-by-user="refLockedBy"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
@@ -145,7 +147,8 @@
                 <!-- Columna 3: Assessment Evaluation -->
                 <b-col cols="4">
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
-                    :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
+                    :locked-by-user="refLockedBy"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -224,7 +227,8 @@
                 <!-- Columna 4: Evaluación de ajuste final -->
                 <b-col cols="3" class="">
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
-                    :modalIndex="modal.index" :is-read-only="isRefReadOnly" :locked-by-user="refLockedBy"
+                    :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
+                    :locked-by-user="refLockedBy"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -268,6 +272,12 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import {
+  ASSESSMENT_CELLS,
+  emptyAssessmentItem,
+  leafLockKey,
+  leafPositionOf
+} from '@/utils/camelotAssessmentKeys'
 import Commons from '../../utils/commons.js'
 import AssessmentForm from './assessment/AssessmentForm.vue'
 import Responses from './Responses.vue'
@@ -275,9 +285,11 @@ import CamelotAssessmentCard from './CamelotAssessmentCard.vue'
 import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 
 export default {
   name: 'StepFour',
+  mixins: [refLockStateMixin],
   props: {
     type: {
       type: String,
@@ -348,6 +360,12 @@ export default {
       refLocksTimer: null,
       isRefReadOnly: false, // lock state for the study currently open in the modal
       refLockedBy: null,
+      isModalOpen: false,
+      // Cells whose lock we asked for and did not get, as 'stage-option' keys.
+      // Kept apart from the ones the /refs poll reports so a poll never erases
+      // a refusal we just received.
+      deniedCells: [],
+      leafLockedBy: null,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -472,16 +490,7 @@ export default {
     exportFields () {
       return [
         { key: 'authors', label: 'Author(s), Year' },
-        { key: 'fa1', label: 'FA1' },
-        { key: 'fa2', label: 'FA2' },
-        { key: 'fa3', label: 'FA3' },
-        { key: 'fa4', label: 'FA4' },
-        { key: 'fa5', label: 'FA5' },
-        { key: 'fa6', label: 'FA6' },
-        { key: 'fa7', label: 'FA7' },
-        { key: 'fa8', label: 'FA8' },
-        { key: 'fa9', label: 'FA9' },
-        { key: 'oa', label: 'OA' }
+        ...ASSESSMENT_CELLS.map(cell => ({ key: cell.key, label: cell.key.toUpperCase() }))
       ]
     },
     exportItems () {
@@ -501,19 +510,10 @@ export default {
           return result
         }
 
-        return {
-          authors: item.authors,
-          fa1: getVal(0, 0),
-          fa2: getVal(0, 1),
-          fa3: getVal(0, 2),
-          fa4: getVal(0, 3),
-          fa5: getVal(1, 0),
-          fa6: getVal(1, 1),
-          fa7: getVal(1, 2),
-          fa8: getVal(1, 3),
-          fa9: getVal(2, 0),
-          oa: getVal(3, 0)
-        }
+        return ASSESSMENT_CELLS.reduce(
+          (row, cell) => ({ ...row, [cell.key]: getVal(cell.stage, cell.option) }),
+          { authors: item.authors }
+        )
       })
     },
     tableItems () {
@@ -540,11 +540,26 @@ export default {
       ]
       const title = this.$t(`camelot.step_four.tabs.${stages[this.modal.stage]}`)
       return this.modal.faLabel ? `${this.modal.faLabel} ${title}` : title
+    },
+    // The cell the modal currently has open, as its composite lock key.
+    activeLeafRef () {
+      return leafLockKey(this.refId, this.modal.stage, this.selectedMeta)
+    },
+    // Cells of the open study that the /refs poll shows held by someone else.
+    // Disabling them up front is the whole point of the listing: the user finds
+    // out before typing, not when the save is rejected.
+    pollBlockedCells () {
+      if (!this.isModalOpen || !this.refId) return []
+      const { lockedLeaves } = this.studyLockStateOf(this.refId)
+      return [...lockedLeaves.keys()].map(leafPositionOf).filter(Boolean)
     }
   },
   watch: {
     'modal.stage': function (newVal) {
       this.selectedMeta = 0
+    },
+    activeLeafRef (newKey, oldKey) {
+      this.syncLeafLock(newKey, oldKey)
     },
     references: {
       handler (newVal) {
@@ -554,12 +569,61 @@ export default {
     }
   },
   methods: {
-    isRefLocked (refId) {
-      return this.activeRefLocks.some(l => l.ref_id === refId)
+    // True when THIS cell is off limits: either the whole study is read-only, or
+    // another user holds this particular leaf.
+    isCellReadOnly (stage, option) {
+      if (this.isRefReadOnly) return true
+      const position = `${stage}-${option}`
+      return this.pollBlockedCells.includes(position) ||
+        this.deniedCells.includes(position)
     },
-    refLockedByName (refId) {
-      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
-      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
+    /**
+     * Moves the leaf lock as the modal walks from cell to cell. The bare study
+     * lock stays put: it is what authorizes the Step 3 fields in the same modal.
+     */
+    async syncLeafLock (newKey, oldKey) {
+      if (oldKey) await LockService.releaseRef(oldKey)
+      this.leafLockedBy = null
+      if (!newKey || !this.isModalOpen || !this.canEdit) return
+
+      const result = await LockService.acquireRef(this.$route.params.id, newKey)
+      if (result.success) {
+        this.markCellDenied(this.modal.stage, this.selectedMeta, false)
+        return
+      }
+      this.onLeafLockDenied(result)
+    },
+    /** Adds or clears the read-only mark on one cell. */
+    markCellDenied (stage, option, denied = true) {
+      const position = `${stage}-${option}`
+      const without = this.deniedCells.filter(c => c !== position)
+      this.deniedCells = denied ? [...without, position] : without
+    },
+    /**
+     * The cell the user just moved to could not be locked. Note that a 409 here
+     * can also mean somebody holds the WHOLE study (the backend rejects the two
+     * granularities against each other), so `result.lockedBy` is the only
+     * reliable detail — the reason does not distinguish the two cases.
+     *
+     * @param {{ lockedBy?: string, permissionDenied?: boolean }} result
+     */
+    onLeafLockDenied (result) {
+      if (result.permissionDenied) {
+        // Not a conflict: this user's can_write was revoked, so nothing in the
+        // study is editable — the same conclusion acquireStudyLock reaches.
+        this.isRefReadOnly = true
+        this.leafLockedBy = null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.permissions_revoked'))
+        }
+        return
+      }
+
+      this.markCellDenied(this.modal.stage, this.selectedMeta)
+      this.leafLockedBy = result.lockedBy || null
+      if (this.$notify) {
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.leafLockedBy }))
+      }
     },
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
@@ -641,28 +705,9 @@ export default {
             this.references.forEach(ref => {
               const exists = this.assessments.items.find(item => String(item.ref_id) === String(ref.id))
               if (!exists) {
-                this.assessments.items.push({
-                  ref_id: ref.id,
-                  authors: this.getReferenceData(ref),
-                  stages: [
-                    {
-                      key: 0,
-                      options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
-                    },
-                    {
-                      key: 1,
-                      options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
-                    },
-                    {
-                      key: 2,
-                      options: [{ option: null, text: '' }]
-                    },
-                    {
-                      key: 3,
-                      options: [{ option: null, text: '' }]
-                    }
-                  ]
-                })
+                this.assessments.items.push(
+                  emptyAssessmentItem(ref.id, this.getReferenceData(ref))
+                )
               }
             })
 
@@ -688,28 +733,9 @@ export default {
             })
 
             this.assessments = {
-              items: sortedReferences.map(ref => ({
-                ref_id: ref.id,
-                authors: this.getReferenceData(ref),
-                stages: [
-                  {
-                    key: 0,
-                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
-                  },
-                  {
-                    key: 1,
-                    options: Array.from({ length: 4 }, () => ({ option: null, text: '' }))
-                  },
-                  {
-                    key: 2,
-                    options: [{ option: null, text: '' }]
-                  },
-                  {
-                    key: 3,
-                    options: [{ option: null, text: '' }]
-                  }
-                ]
-              }))
+              items: sortedReferences.map(
+                ref => emptyAssessmentItem(ref.id, this.getReferenceData(ref))
+              )
             }
           }
         })
@@ -778,7 +804,12 @@ export default {
       this.selectedMeta = tab
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
+      this.isModalOpen = true
+      this.deniedCells = []
       this.acquireStudyLock(data.item.ref_id)
+      // The refId/stage/tab assignments above may leave activeLeafRef unchanged
+      // (reopening the same cell), so the watcher cannot be relied on here.
+      this.syncLeafLock(this.activeLeafRef, null)
       this.$bvModal.show('modal-1')
     },
     onOpenModal ({ stage, data, tab, faLabel = null }) {
@@ -813,9 +844,13 @@ export default {
       }
     },
     onAssessmentModalClosed () {
+      this.isModalOpen = false
+      // No argument: releases the bare study lock AND every leaf lock still held.
       LockService.releaseRef()
       this.isRefReadOnly = false
       this.refLockedBy = null
+      this.leafLockedBy = null
+      this.deniedCells = []
       this.fetchAndUpdateRefLocks()
     },
     handleRefLockConflict (event) {

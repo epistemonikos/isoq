@@ -227,8 +227,16 @@
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faChevronUp, faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons'
 import camelotCircleMixin from '@/mixins/camelotCircleMixin'
+import {
+  ASSESSMENT_CELLS,
+  ASSESSMENT_POSITION_KEYS,
+  positionKeyOf
+} from '@/utils/camelotAssessmentKeys'
 
 library.add(faChevronUp, faChevronDown, faFilter)
+
+// Columns that close a visual group and therefore carry the right border.
+const GROUP_END_CELLS = ['fa4', 'fa8', 'fa9', 'oa']
 
 export default {
   name: 'CamelotAssessmentSummaryTable',
@@ -260,7 +268,7 @@ export default {
         { text: this.$t('camelot.responses.serious'), value: 'D', color: '#B31529' },
         { text: this.$t('camelot.responses.unclear'), value: 'E', color: '#B3B3B3' }
       ],
-      visibleAssessments: ['0-0', '0-1', '0-2', '0-3', '1-0', '1-1', '1-2', '1-3', '2-0', '3-0'],
+      visibleAssessments: [...ASSESSMENT_POSITION_KEYS],
       allVisible: true
     }
   },
@@ -274,16 +282,18 @@ export default {
 
       const fields = [
         { key: 'authors', label: this.$t('camelot.step_four.breadcrumb_sub'), thClass: 'header-second-row text-left', tdClass: 'border-right' },
-        { key: 'fa1', assessmentKey: '0-0', label: `${faPrefix} 1`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa2', assessmentKey: '0-1', label: `${faPrefix} 2`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa3', assessmentKey: '0-2', label: `${faPrefix} 3`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa4', assessmentKey: '0-3', label: `${faPrefix} 4`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
-        { key: 'fa5', assessmentKey: '1-0', label: `${faPrefix} 5`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa6', assessmentKey: '1-1', label: `${faPrefix} 6`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa7', assessmentKey: '1-2', label: `${faPrefix} 7`, thClass, tdClass: 'assessment-col' },
-        { key: 'fa8', assessmentKey: '1-3', label: `${faPrefix} 8`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
-        { key: 'fa9', assessmentKey: '2-0', label: `${faPrefix} 9`, thClass: `${thClass} border-right`, tdClass: 'border-right assessment-col' },
-        { key: 'oa', assessmentKey: '3-0', label: oaLabel, thClass: `${oaThClass} border-right`, tdClass: 'border-right assessment-col' }
+        ...ASSESSMENT_CELLS.map((cell, index) => {
+          const isOverall = cell.key === 'oa'
+          const endsGroup = GROUP_END_CELLS.includes(cell.key)
+          const baseThClass = isOverall ? oaThClass : thClass
+          return {
+            key: cell.key,
+            assessmentKey: positionKeyOf(cell.key),
+            label: isOverall ? oaLabel : `${faPrefix} ${index + 1}`,
+            thClass: endsGroup ? `${baseThClass} border-right` : baseThClass,
+            tdClass: endsGroup ? 'border-right assessment-col' : 'assessment-col'
+          }
+        })
       ]
 
       if (!this.hideActions) {

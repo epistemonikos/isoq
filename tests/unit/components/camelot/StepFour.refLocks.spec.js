@@ -9,11 +9,19 @@ jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [] }),
   patch: jest.fn().mockResolvedValue({ data: {} })
 }))
-jest.mock('@/services/lockService', () => ({
-  fetchRefLocks: jest.fn().mockResolvedValue([]),
-  acquireRef: jest.fn().mockResolvedValue({ success: true }),
-  releaseRef: jest.fn()
-}))
+jest.mock('@/services/lockService', () => {
+  const actual = jest.requireActual('@/services/lockService')
+  return {
+    __esModule: true,
+    studyLockState: actual.studyLockState,
+    default: {
+      fetchRefLocks: jest.fn().mockResolvedValue([]),
+      acquireRef: jest.fn().mockResolvedValue({ success: true }),
+      releaseRef: jest.fn(),
+      refLocks: new Map()
+    }
+  }
+})
 
 const localVue = createLocalVue()
 localVue.use(BootstrapVue)
@@ -26,19 +34,73 @@ function createWrapper (overrideProps = {}) {
       $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key,
       $route: { params: { id: 'proj1', org_id: 'org1' } },
       $bvModal: { show: jest.fn(), hide: jest.fn() },
-      $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+      $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() },
+      $store: { state: { user: { first_name: 'Yo', last_name: 'Mismo' } } }
     }
   })
 }
 
 describe('StepFour.vue — isRefLocked()', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+  })
 
   it('retorna true cuando ref_id está en activeRefLocks', async () => {
     const wrapper = createWrapper()
     await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1', user_name: 'Ana' }] })
     expect(wrapper.vm.isRefLocked('ref1')).toBe(true)
     expect(wrapper.vm.isRefLocked('ref2')).toBe(false)
+    wrapper.destroy()
+  })
+
+  // Endpoint D means a study can be blocked by a lock on one of its cells, a
+  // key the old exact-equality check could never match.
+  it('retorna true cuando otro tiene bloqueada una hoja del estudio', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({
+      activeRefLocks: [{ ref_id: 'ref1::s0::o2', user_name: 'Ana' }]
+    })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('no confunde un estudio cuyo id empieza igual que otro', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({
+      activeRefLocks: [{ ref_id: 'ref1X::s0::o0', user_name: 'Ana' }]
+    })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('ignora mis propios locks, tanto por nombre como por registro local', async () => {
+    const wrapper = createWrapper()
+    LockService.refLocks.set('ref2::s1::o0', 'proj1')
+    await wrapper.setData({
+      activeRefLocks: [
+        { ref_id: 'ref1::s0::o0', user_name: 'Yo Mismo' },
+        // Same person in another tab: the name no longer matches, but the local
+        // registry still knows this lock is ours.
+        { ref_id: 'ref2::s1::o0', user_name: 'Yo Mismo (otra pestaña)' }
+      ]
+    })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(false)
+    expect(wrapper.vm.isRefLocked('ref2')).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('nombra a quien tiene el estudio, sea por el estudio entero o por una hoja', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({
+      activeRefLocks: [
+        { ref_id: 'ref1', user_name: 'Ana' },
+        { ref_id: 'ref2::s0::o0', user_name: 'Beto' }
+      ]
+    })
+    expect(wrapper.vm.refLockedByName('ref1')).toContain('Ana')
+    expect(wrapper.vm.refLockedByName('ref2')).toContain('Beto')
+    expect(wrapper.vm.refLockedByName('ref3')).toBe('')
     wrapper.destroy()
   })
 
@@ -68,13 +130,16 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     LockService.acquireRef.mockResolvedValue({ success: true })
   })
 
-  it('openModal adquiere el lock del estudio una sola vez con projectId y ref_id', async () => {
+  // Two locks, not one: the bare study authorizes the Step 3 fields (endpoint B
+  // on isoqf_characteristics) and the leaf authorizes the cell (endpoint D).
+  // A bare study lock does NOT authorize D.
+  it('openModal adquiere el lock del estudio y el de la celda abierta', async () => {
     const wrapper = createWrapper()
     await flushPromises()
     wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
     await flushPromises()
-    expect(LockService.acquireRef).toHaveBeenCalledTimes(1)
     expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1::s0::o0')
     expect(wrapper.vm.isRefReadOnly).toBe(false)
     wrapper.destroy()
   })
@@ -99,6 +164,174 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     expect(wrapper.vm.refLockedBy).toBeNull()
     expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
     wrapper.destroy()
+  })
+
+  it('al cambiar de pestaña libera la hoja anterior y toma la nueva, sin soltar el estudio', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    LockService.acquireRef.mockClear()
+    LockService.releaseRef.mockClear()
+
+    wrapper.vm.selectedMeta = 2
+    await flushPromises()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('ref1::s0::o0')
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1::s0::o2')
+    // The bare study lock is untouched — Step 3 fields stay editable.
+    expect(LockService.releaseRef).not.toHaveBeenCalledWith('ref1')
+    wrapper.destroy()
+  })
+
+  it('al cambiar de etapa toma la hoja de la etapa nueva', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    LockService.acquireRef.mockClear()
+
+    wrapper.vm.goToStage(3)
+    await flushPromises()
+
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1::s3::o0')
+    wrapper.destroy()
+  })
+
+  it('no toma locks de celda cuando canEdit es false', async () => {
+    const wrapper = createWrapper({ canEdit: false })
+    await flushPromises()
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('no toma locks de celda con el modal cerrado', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    LockService.acquireRef.mockClear()
+
+    wrapper.vm.selectedMeta = 1
+    await flushPromises()
+
+    expect(LockService.acquireRef).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // The /refs listing lets the UI disable cells before anyone clicks, instead of
+  // letting the user type and then rejecting the save.
+  it('deshabilita solo las celdas que otro tiene tomadas, no el estudio entero', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    await wrapper.setData({
+      activeRefLocks: [{ ref_id: 'ref1::s0::o2', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isCellReadOnly(0, 2)).toBe(true)
+    expect(wrapper.vm.isCellReadOnly(0, 1)).toBe(false)
+    expect(wrapper.vm.isCellReadOnly(3, 0)).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('deshabilita las 10 celdas cuando el estudio entero está en solo lectura', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ isRefReadOnly: true })
+
+    expect(wrapper.vm.isCellReadOnly(0, 0)).toBe(true)
+    expect(wrapper.vm.isCellReadOnly(3, 0)).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('no deshabilita celdas con el modal cerrado', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      activeRefLocks: [{ ref_id: 'ref1::s0::o2', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.pollBlockedCells).toEqual([])
+    wrapper.destroy()
+  })
+
+  describe('cuando no se puede tomar el lock de una celda', () => {
+    async function openModalOn (wrapper, stage, tab) {
+      wrapper.vm.openModal(stage, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, tab)
+      await flushPromises()
+    }
+
+    it('marca en solo lectura la celda rechazada y deja el resto editable', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref === 'ref1::s0::o1' ? { success: false, lockedBy: 'Ana' } : { success: true }
+      ))
+
+      await openModalOn(wrapper, 0, 1)
+
+      expect(wrapper.vm.isCellReadOnly(0, 1)).toBe(true)
+      expect(wrapper.vm.isCellReadOnly(0, 2)).toBe(false)
+      // Only the cell — the study fields of Step 3 keep their own lock.
+      expect(wrapper.vm.isRefReadOnly).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('guarda quién tiene la celda y avisa al usuario', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref === 'ref1::s0::o0' ? { success: false, lockedBy: 'Ana López' } : { success: true }
+      ))
+
+      await openModalOn(wrapper, 0, 0)
+
+      expect(wrapper.vm.leafLockedBy).toBe('Ana López')
+      expect(wrapper.vm.$notify.warning)
+        .toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
+      wrapper.destroy()
+    })
+
+    // A 403 is not "someone else has it": this user's can_write was revoked, so
+    // nothing in the study is editable — same call acquireStudyLock makes.
+    it('un 403 deja el estudio entero en solo lectura, no una celda', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref.includes('::') ? { success: false, permissionDenied: true } : { success: true }
+      ))
+
+      await openModalOn(wrapper, 0, 0)
+
+      expect(wrapper.vm.isRefReadOnly).toBe(true)
+      expect(wrapper.vm.leafLockedBy).toBeNull()
+      expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      wrapper.destroy()
+    })
+
+    it('libera la marca al volver a una celda que ahora sí se puede tomar', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      // Only the leaf is refused; the bare study lock still succeeds, so the
+      // modal as a whole stays editable.
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref === 'ref1::s0::o0' ? { success: false, lockedBy: 'Ana' } : { success: true }
+      ))
+      await openModalOn(wrapper, 0, 0)
+      expect(wrapper.vm.isCellReadOnly(0, 0)).toBe(true)
+
+      LockService.acquireRef.mockResolvedValue({ success: true })
+      wrapper.vm.selectedMeta = 1
+      await flushPromises()
+      wrapper.vm.selectedMeta = 0
+      await flushPromises()
+
+      expect(wrapper.vm.isCellReadOnly(0, 0)).toBe(false)
+      expect(wrapper.vm.leafLockedBy).toBeNull()
+      wrapper.destroy()
+    })
   })
 
   it('onAssessmentModalClosed libera el lock, resetea estado y re-pollea', async () => {

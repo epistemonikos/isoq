@@ -7,6 +7,7 @@ import {
 } from '@/services/db'
 import { i18n } from '@/plugins/i18n'
 import { strategies } from '@/utils/OfflineStrategies'
+import { leafLockKey } from '@/utils/camelotAssessmentKeys'
 
 // Estado de conexión
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -25,6 +26,20 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => {
     isOnline = false
   })
+}
+
+// Endpoint D nests the cell position under /item/, so the raw split would yield
+// '<ref_id>/stage/0/option/2' — a string that matches no lock the client holds.
+// The lock the backend checks is the composite key '<ref_id>::s0::o2'.
+const ITEM_LEAF_URL_RE = /\/item\/([^/]+)\/stage\/([^/]+)\/option\/([^/?]+)/
+
+function refLockKeyFromItemUrl (url) {
+  const leaf = ITEM_LEAF_URL_RE.exec(url)
+  if (leaf) {
+    const [, refId, stage, option] = leaf
+    return leafLockKey(refId, stage, option) || refId
+  }
+  return url.split('/item/')[1] || ''
 }
 
 // Crear error compatible con estructura de Axios
@@ -63,7 +78,7 @@ axios.interceptors.response.use(
       const isPartialItemPatch = url.includes('/item/') &&
           (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments') || url.includes('isoqf_extracted_data'))
       if (isPartialItemPatch && typeof window !== 'undefined') {
-        const refId = url.split('/item/')[1] || ''
+        const refId = refLockKeyFromItemUrl(url)
         let failedData = {}
         if (error.config && error.config.data) {
           try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }

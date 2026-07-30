@@ -468,15 +468,136 @@ describe('AssessmentForm.vue', () => {
       roWrapper.destroy()
     })
 
-    it('usa PATCH parcial /isoqf_assessments/assess1/item/ref1 al guardar', async () => {
+    it('no llama a Api.patch cuando no hay refId', async () => {
+      Api.patch.mockClear()
+      const noRefWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, refId: '' },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await noRefWrapper.setData({ selected: 'A', text1: 'x' })
+      await noRefWrapper.vm.performSave(false)
+      await flushPromises()
+      expect(Api.patch).not.toHaveBeenCalled()
+      noRefWrapper.destroy()
+    })
+  })
+
+  // Endpoint D writes ONE leaf. Saving the whole study through B would wipe the
+  // other nine cells, which is the data loss D exists to prevent.
+  describe('AssessmentForm.vue — endpoint D (one leaf per save)', () => {
+    const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+    it('PATCHea la hoja concreta, no el estudio completo', async () => {
       Api.patch.mockResolvedValue({ data: {} })
       await wrapper.setData({ selected: 'A', text1: 'explicación' })
+
       await wrapper.vm.performSave(false)
       await flushPromises()
+
       expect(Api.patch).toHaveBeenCalledWith(
-        '/isoqf_assessments/assess1/item/ref1',
+        '/isoqf_assessments/assess1/item/ref1/stage/0/option/0',
         expect.any(Object)
       )
+      expect(Api.patch).not.toHaveBeenCalledWith(
+        '/isoqf_assessments/assess1/item/ref1',
+        expect.anything()
+      )
+    })
+
+    it('direcciona la celda que el modal tiene abierta', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setProps({ modalStage: 1, selectedMeta: 3 })
+      await wrapper.setData({ selected: 'C', text1: 'x' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      // stages[1] is absent from the fixture: the stage key falls back to the
+      // array index, and the backend seeds the missing stage.
+      expect(Api.patch.mock.calls[0][0])
+        .toBe('/isoqf_assessments/assess1/item/ref1/stage/1/option/3')
+    })
+
+    // §1.2: missing keys are reset to their canonical empty value, not merged.
+    it('envía las tres claves de la hoja aunque estén vacías', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setData({ selected: 'B', text1: 'texto', notes: '' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(Api.patch.mock.calls[0][1]).toEqual({
+        option: 'B', text: 'texto', notes: ''
+      })
+    })
+
+    it('no envía claves fuera de la whitelist {option, text, notes}', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      await wrapper.setData({ selected: 'A', text1: 'x' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(Object.keys(Api.patch.mock.calls[0][1]).sort())
+        .toEqual(['notes', 'option', 'text'])
+    })
+
+    // The backend keys stages by stages[].key, not by array position.
+    it('usa stages[].key y no el índice del array cuando difieren', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const legacyWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: {
+          ...propsData,
+          assessments: {
+            id: 'assess1',
+            items: [{
+              ref_id: 'ref1',
+              authors: 'Author 2024',
+              // Legacy document: the key is a string and does not match index 0.
+              stages: [{ key: '2', options: [{ option: null, text: '', notes: '' }] }]
+            }]
+          }
+        },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await legacyWrapper.setData({ selected: 'A', text1: 'x' })
+
+      await legacyWrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(Api.patch.mock.calls[0][0])
+        .toBe('/isoqf_assessments/assess1/item/ref1/stage/2/option/0')
+      legacyWrapper.destroy()
+    })
+
+    // StepFour seeds items in memory for every reference, so the "no document
+    // yet" case has items but no document id.
+    it('sigue creando el documento por POST cuando todavía no existe', async () => {
+      Api.post.mockResolvedValue({ data: {} })
+      const newWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: {
+          ...propsData,
+          assessments: { items: propsData.assessments.items }
+        },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await newWrapper.setData({ selected: 'A', text1: 'x' })
+
+      await newWrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect(Api.post).toHaveBeenCalledWith('/isoqf_assessments', expect.objectContaining({
+        organization: 'org1',
+        project_id: 'proj1'
+      }))
+      // The seeded study carries the full 4/4/1/1 skeleton.
+      const posted = Api.post.mock.calls[0][1].items[0]
+      expect(posted.stages.map(s => s.options.length)).toEqual([4, 4, 1, 1])
+      expect(posted.stages[0].options[0]).toEqual({ option: 'A', text: 'x', notes: '' })
+      newWrapper.destroy()
     })
   })
 })
