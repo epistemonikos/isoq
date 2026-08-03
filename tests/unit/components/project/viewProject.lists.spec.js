@@ -82,6 +82,20 @@ describe('viewProject.vue — createList()', () => {
     wrapper.destroy()
   })
 
+  // `editing` was the legacy per-finding lock flag (see editList.returnTo.spec.js).
+  // Nothing reads it since 2022, so new documents must not be born carrying it.
+  it('no incluye el flag legado "editing" en el payload', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
+    const { wrapper } = createWrapper()
+    await wrapper.setData({ lists: [], summarized_review: 'F' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    const payload = Api.post.mock.calls.find(c => c[0] === '/isoqf_lists')[1]
+    expect(payload).not.toHaveProperty('editing')
+    wrapper.destroy()
+  })
+
   it('calls createFinding with listId and listName on success', async () => {
     Api.post.mockResolvedValueOnce({ data: { id: 'list99', name: 'My List' } })
     const { wrapper } = createWrapper()

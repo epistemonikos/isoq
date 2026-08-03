@@ -159,10 +159,6 @@
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary"
       :ok-disabled="!canEdit || !editFindingName.name || !editFindingName.name.trim().length" @ok="updateListName"
       @hidden="findingNameDirty = false">
-      <b-alert :show="editingUser.show" variant="danger">
-        <span
-          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
-      </b-alert>
       <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="finding-name">
         <template slot="description">
           {{ $t('common.click') || 'Click' }}
@@ -193,10 +189,6 @@
     <b-modal size="xl" id="remove-finding" ref="remove-finding" :title="$t('soqf_table.remove_finding')"
       :ok-title="$t('common.confirm')" ok-variant="outline-danger" cancel-variant="outline-secondary"
       :ok-disabled="!canEdit" @ok="confirmRemoveList">
-      <b-alert :show="editingUser.show" variant="danger">
-        <span
-          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
-      </b-alert>
       <p v-if="ui.project.showExtendedExplanationTextForDeleting" class="text-danger">
         {{ $t('soqf_table.delete_warning_revert') }}
       </p>
@@ -214,10 +206,6 @@
       :no-close-on-backdrop="pendingSaveReferences" :no-close-on-esc="pendingSaveReferences"
       :ok-title="$t('common.save')" ok-variant="outline-success" cancel-variant="outline-secondary" size="xl"
       scrollable>
-      <b-alert :show="editingUser.show" variant="danger">
-        <span
-          v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
-      </b-alert>
       <template v-if="references.length">
         <div class="mt-2">
           <b-alert v-if="showBanner" show variant="danger">
@@ -320,18 +308,12 @@ export default {
         totalRows: 1,
         filterOn: ['name', 'filter_cerqual', 'category_name', 'explanation']
       },
-      editingUser: {
-        show: false,
-        first_name: '',
-        last_name: ''
-      },
       editFindingName: {
         index: null,
         id: null,
         finding_id: null,
         name: null,
         notes: null,
-        editing: false,
         organization: null,
         list_id: null,
         isoqf_id: null,

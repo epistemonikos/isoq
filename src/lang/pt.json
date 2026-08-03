@@ -802,7 +802,6 @@
     "no_findings": "Não há descobertas para mostrar,",
     "add_review_finding": "adicionar descoberta de revisão",
     "edit_finding": "Editar descoberta de revisão resumida",
-    "user_editing": "O usuário <b>{first_name} {last_name}</b> está editando esta descoberta. O modo de edição está desabilitado.",
     "summarised_finding": "Descoberta de revisão resumida",
     "tips_writing": "para dicas sobre como escrever uma descoberta de revisão resumida",
     "select_group": "Selecionar grupo de descoberta de revisão",

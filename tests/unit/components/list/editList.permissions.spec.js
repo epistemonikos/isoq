@@ -101,39 +101,58 @@ describe('editList.vue — checkPermissions()', () => {
   })
 })
 
-// ─── attemptLock ─────────────────────────────────────────────────────────────
+// ─── el lock de proyecto ya no se adquiere acá ───────────────────────────────
+//
+// Step 2 writes through the granular endpoints A and C, which are guarded by
+// @verify_ref_lock — a decorator that never looks at `project_locks`. Holding the
+// project lock did not authorise a single one of those writes, and meanwhile it
+// blocked every other collaborator on every generic PATCH of the project ("worst of
+// both worlds", docs/respuesta-backend-lock-granular.md). The residual top-level
+// fields (name/references/isoqf_id, the list's top-level cerqual) accept LWW.
 
-describe('editList.vue — attemptLock()', () => {
+describe('editList.vue — no adquiere el lock de proyecto', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('sets lockInfo.locked=true when acquire succeeds', async () => {
-    LockService.acquire.mockResolvedValue({ success: true })
-    const { wrapper } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' } })
-    await wrapper.vm.attemptLock()
-    expect(wrapper.vm.lockInfo.locked).toBe(true)
-    expect(wrapper.vm.lockInfo.lockedBy).toBeNull()
-    wrapper.destroy()
-  })
+  it('no llama LockService.acquire al cargar la hoja teniendo permisos de escritura', async () => {
+    // getList() ends with a scroll into an element that does not exist in jsdom.
+    const originalGetElementsByName = document.getElementsByName
+    document.getElementsByName = () => [{ offsetParent: { offsetTop: 0 } }]
+    window.scrollTo = jest.fn()
+    Api.get.mockResolvedValue({
+      data: [{
+        id: 'list1', organization: 'org1', project_id: 'proj1',
+        // The template reads list.cerqual.option while rendering the progress bar.
+        cerqual: { option: null, explanation: '' }
+      }]
+    })
 
-  it('sets locked=false, lockedBy and mode=view when project is locked by another user', async () => {
-    LockService.acquire.mockResolvedValue({ success: false, lockedBy: 'otro@example.com' })
-    const { wrapper, bvToastToast } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: 'proj1' } })
-    await wrapper.vm.attemptLock()
-    expect(wrapper.vm.lockInfo.locked).toBe(false)
-    expect(wrapper.vm.lockInfo.lockedBy).toBe('otro@example.com')
-    expect(wrapper.vm.mode).toBe('view')
-    expect(bvToastToast).toHaveBeenCalled()
-    wrapper.destroy()
-  })
+    const wrapper = shallowMount(editList, {
+      localVue,
+      mocks: {
+        $t: (key) => key,
+        $route: { params: { id: 'list1' } },
+        $store: { state: { user: { personal_organization: 'org1', id: 42 } } }
+      },
+      stubs,
+      // Downstream loaders are out of scope here; the assertion is about the lock.
+      methods: {
+        getProject: jest.fn(), syncOrderWithProject: jest.fn(), getAllReferences: jest.fn(),
+        getFinding: jest.fn(), getCharsOfStudies: jest.fn(), getMethAssessments: jest.fn(),
+        getExtractedData: jest.fn()
+      }
+    })
+    await flushPromises()
 
-  it('does nothing when list.project_id is falsy', async () => {
-    LockService.acquire.mockResolvedValue({ success: true })
-    const { wrapper } = createWrapper()
-    await wrapper.setData({ list: { ...wrapper.vm.list, project_id: null } })
-    await wrapper.vm.attemptLock()
+    expect(wrapper.vm.checkPermissions('org1')).toBe(true)
     expect(LockService.acquire).not.toHaveBeenCalled()
+    wrapper.destroy()
+    document.getElementsByName = originalGetElementsByName
+  })
+
+  it('no expone attemptLock ni lockInfo', () => {
+    const { wrapper } = createWrapper()
+    expect(wrapper.vm.attemptLock).toBeUndefined()
+    expect(wrapper.vm.lockInfo).toBeUndefined()
     wrapper.destroy()
   })
 })

@@ -156,7 +156,7 @@
         </b-row>
         <b-row>
           <b-col>
-            <action-buttons :mode="effectiveMode" :canWrite="canWrite" :isLocked="isLockedByOther" :project="project"
+            <action-buttons :mode="effectiveMode" :canWrite="canWrite" :project="project"
               :ui="ui" :lists="lists" :findings="findings" :references="references" :charsOfStudies="charsOfStudies"
               :methodologicalTableRefs="methodologicalTableRefs" :listsPrintVersion="lists_print_version"
               :selectOptions="translatedSelectOptions" :cerqualConfidence="translatedCerqualConfidence"
@@ -665,18 +665,12 @@ export default {
         id: null,
         finding_id: null,
         name: null,
-        notes: null,
-        editing: false
+        notes: null
       },
       episte_request: '',
       episte_selected: [],
       episte_loading: false,
       episte_error: false,
-      lockInfo: {
-        locked: false,
-        lockedBy: null
-      },
-      lockDataRecovery: null,
       finding: {},
       sorted_lists: [],
       changeTxtProjectProperties: '+',
@@ -817,9 +811,9 @@ export default {
             this.mode = ''
           }
 
-          // Granular ref-level locking (Step 3/4) replaces the project-wide lock.
-          // The project lock is no longer acquired automatically on open; attemptLock()
-          // remains available for project-scoped operations (metadata, publish, etc.).
+          // Granular per-ref locking replaces the project-wide lock here: this view
+          // never acquires one. The project lock survives only in viewOrganization.vue,
+          // around the Properties modal — the one write that is still project-scoped.
 
           this.ui.project.show_criteria = true
           this.getLists()
@@ -929,23 +923,6 @@ export default {
         console.error('Error cargando evaluaciones:', error)
       }
     },
-    async attemptLock () {
-      const res = await LockService.acquire(this.project.id)
-      if (res.success) {
-        this.lockInfo.locked = true
-        this.lockInfo.lockedBy = null
-      } else if (res.lockedBy) {
-        this.lockInfo.locked = false
-        this.lockInfo.lockedBy = res.lockedBy
-        this.mode = 'view'
-        this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }) || `Project is currently being edited by ${res.lockedBy}. Read-only mode.`, {
-          title: this.$t('lock.locked_title') || 'Project Locked',
-          variant: 'warning',
-          solid: true,
-          noAutoHide: true
-        })
-      }
-    },
     handleLockLost (e) {
       if ((e.detail && e.detail.projectId === this.project.id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'
@@ -1053,8 +1030,7 @@ export default {
         index: null,
         id: null,
         name: null,
-        notes: null,
-        editing: false
+        notes: null
       }
     },
     updateDataTable: function (data, type) {
@@ -1295,7 +1271,6 @@ export default {
         cerqual: { option: null, explanation: '' },
         references: [],
         category: this.list_categories.selected,
-        editing: false,
         is_public: isPublic,
         sort: sort
       }
@@ -1831,10 +1806,6 @@ export default {
     },
     '$route.params.id': {
       handler: function (id) {
-        this.lockInfo = {
-          locked: false,
-          lockedBy: null
-        }
         this.getProject()
         this.getListCategories()
         this.getReferences()
@@ -1933,9 +1904,6 @@ export default {
     },
     isEditing: function () {
       return this.effectiveMode === 'edit' && this.canWrite
-    },
-    isLockedByOther: function () {
-      return !!(this.lockInfo && this.lockInfo.lockedBy)
     }
   }
 }

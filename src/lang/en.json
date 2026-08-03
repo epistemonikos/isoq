@@ -802,7 +802,6 @@
     "no_findings": "There are no findings to show,",
     "add_review_finding": "add review finding",
     "edit_finding": "Edit Summarised review finding",
-    "user_editing": "The user <b>{first_name} {last_name}</b> is editing this finding. The edit mode is disabled.",
     "summarised_finding": "Summarised review finding",
     "tips_writing": "for tips for writing a summarised review finding",
     "select_group": "Select review finding group",

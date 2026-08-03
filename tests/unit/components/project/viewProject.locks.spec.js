@@ -51,28 +51,25 @@ function createWrapper () {
   return { wrapper, $notify, bvModalShow, bvToastToast }
 }
 
-describe('viewProject.vue — attemptLock()', () => {
+// Granular ref-level locking (Step 3/4) replaced the project-wide lock here: this
+// view never acquires one, so attemptLock() and everything downstream of it
+// (lockInfo -> isLockedByOther -> the :isLocked prop actionButtons never declared)
+// was wiring that could not fire. The project lock is still acquired/released by
+// editList.vue — that half is alive and stays until the product decision on it.
+describe('viewProject.vue — el cableado muerto del lock de proyecto no vuelve', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('sets lockInfo.locked=true and lockedBy=null on success', async () => {
-    LockService.acquire.mockResolvedValue({ success: true })
+  it('no expone attemptLock(): esta vista no adquiere el lock de proyecto', () => {
     const { wrapper } = createWrapper()
-    await wrapper.setData({ project: { id: 'proj1' } })
-    await wrapper.vm.attemptLock()
-    expect(wrapper.vm.lockInfo.locked).toBe(true)
-    expect(wrapper.vm.lockInfo.lockedBy).toBeNull()
+    expect(wrapper.vm.attemptLock).toBeUndefined()
     wrapper.destroy()
   })
 
-  it('sets locked=false, lockedBy, mode=view and shows toast when project is locked by another user', async () => {
-    LockService.acquire.mockResolvedValue({ success: false, lockedBy: 'otro@example.com' })
-    const { wrapper, bvToastToast } = createWrapper()
-    await wrapper.setData({ project: { id: 'proj1' } })
-    await wrapper.vm.attemptLock()
-    expect(wrapper.vm.lockInfo.locked).toBe(false)
-    expect(wrapper.vm.lockInfo.lockedBy).toBe('otro@example.com')
-    expect(wrapper.vm.mode).toBe('view')
-    expect(bvToastToast).toHaveBeenCalled()
+  it('no expone lockInfo ni isLockedByOther (nadie podía escribirlos)', () => {
+    const { wrapper } = createWrapper()
+    expect(wrapper.vm.lockInfo).toBeUndefined()
+    expect(wrapper.vm.isLockedByOther).toBeUndefined()
+    expect(wrapper.vm.lockDataRecovery).toBeUndefined()
     wrapper.destroy()
   })
 })

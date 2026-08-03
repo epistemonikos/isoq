@@ -802,7 +802,6 @@
     "no_findings": "No hay hallazgos para mostrar,",
     "add_review_finding": "agregar hallazgo de revisión",
     "edit_finding": "Editar hallazgo de revisión resumido",
-    "user_editing": "El usuario <b>{first_name} {last_name}</b> está editando este hallazgo. El modo de edición está deshabilitado.",
     "summarised_finding": "Hallazgo de revisión resumido",
     "tips_writing": "aquí para consejos sobre cómo escribir un hallazgo de revisión resumido",
     "select_group": "Seleccionar grupo de hallazgo de revisión",

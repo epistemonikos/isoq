@@ -19,12 +19,6 @@
         </p>
       </div>
     </b-modal>
-    <b-alert :show="editingUser.show" class="position-fixed fixed-bottom m-0 rounded-0" style="z-index: 2000;"
-      variant="danger" dismissible>
-      <span
-        v-html="$t('soqf_table.user_editing', { first_name: editingUser.first_name, last_name: editingUser.last_name })"></span>
-    </b-alert>
-
     <edit-header-list :organizationId="project.organization" :projectId="project.id" :name="list.name" :mode="mode"
       :list="list"></edit-header-list>
     <b-container fluid>
@@ -248,11 +242,6 @@ export default {
         type: '',
         title: ''
       },
-      editingUser: {
-        first_name: '',
-        last_name: '',
-        show: false
-      },
       list: {
         id: '',
         title: '',
@@ -331,10 +320,6 @@ export default {
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
-      },
-      lockInfo: {
-        locked: false,
-        lockedBy: null
       }
     }
   },
@@ -547,11 +532,11 @@ export default {
           if (response.data && response.data.length > 0) {
             this.list = JSON.parse(JSON.stringify(response.data[0]))
 
-            // Attempt lock if we have write permissions
-            // Note: We need 'project' loaded to check permissions properly, or check list.organization
-            if (this.checkPermissions(this.list.organization)) {
-              this.attemptLock()
-            }
+            // No project lock is taken here: Step 2 writes through the granular
+            // endpoints A and C, which require a per-ref lock (acquired by the
+            // evidence-profile modal and by each extracted_data row editor). The
+            // project lock authorised none of those writes and blocked every other
+            // collaborator meanwhile. Top-level fields accept Last-Write-Wins.
           } else {
             console.log('Empty list response')
           }
@@ -924,43 +909,9 @@ export default {
       return Commons.theLicense(license)
     },
     returnTo: function () {
-      if (this.list.userEditing === this.$store.state.user.id) {
-        const params = { editing: false, userEditing: '' }
-        Api.patch(`/isoqf_lists/${this.$route.params.id}`, params)
-          .then((response) => {
-            this.list.editing = false
-            this.list.userEditing = ''
-            this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
-          })
-          .catch((error) => {
-            this.printErrors(error)
-            this.$notify.error(this.$t('notifications.save_error'))
-          })
-      } else {
-        this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
-      }
+      this.$router.push({ name: 'viewProject', params: { org_id: this.list.organization, id: this.list.project_id } })
     },
 
-    async attemptLock () {
-      // Use list.project_id if available, otherwise wait for getProject?
-      // list object has project_id
-      if (this.list.project_id) {
-        const res = await LockService.acquire(this.list.project_id)
-        if (res.success) {
-          this.lockInfo.locked = true
-        } else if (res.lockedBy) {
-          this.lockInfo.locked = false
-          this.lockInfo.lockedBy = res.lockedBy
-          this.mode = 'view'
-          this.$bvToast.toast(this.$t('lock.project_locked_by', { user: res.lockedBy }), {
-            title: this.$t('lock.locked_title'),
-            variant: 'warning',
-            solid: true,
-            noAutoHide: true
-          })
-        }
-      }
-    },
     handleLockLost (e) {
       if ((e.detail && e.detail.projectId === this.list.project_id) || e.type === 'axios-refresh-lock') {
         this.mode = 'view'

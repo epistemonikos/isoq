@@ -62,6 +62,22 @@ describe('ViewTable.vue', () => {
     jest.clearAllMocks()
   })
 
+  // Residue of the legacy per-finding lock (see editList.returnTo.spec.js): three
+  // <b-alert> blocks bound to editingUser.show, which no code could ever set.
+  describe('flag legado de edición', () => {
+    it('no expone editingUser', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.editingUser).toBeUndefined()
+      wrapper.destroy()
+    })
+
+    it('el buffer editFindingName no arrastra el campo editing', () => {
+      const { wrapper } = createWrapper()
+      expect(wrapper.vm.editFindingName).not.toHaveProperty('editing')
+      wrapper.destroy()
+    })
+  })
+
   describe('updateFinding', () => {
     it('shows success toast after a successful patch', async () => {
       Api.patch.mockResolvedValue({ data: {} })

@@ -173,13 +173,6 @@ describe('viewProject.vue — isEditing, canWrite, isLockedByOther (computed)', 
     expect(wrapper.vm.canWrite).toBe(true) // owner
   })
 
-  it('isLockedByOther is false when lockInfo.lockedBy is null', async () => {
-    await wrapper.setData({ lockInfo: { locked: false, lockedBy: null } })
-    expect(wrapper.vm.isLockedByOther).toBe(false)
-  })
-
-  it('isLockedByOther is true when lockInfo.lockedBy has a value', async () => {
-    await wrapper.setData({ lockInfo: { locked: false, lockedBy: 'otro.usuario@example.com' } })
-    expect(wrapper.vm.isLockedByOther).toBe(true)
-  })
+  // isLockedByOther / lockInfo were removed: this view never acquired the project
+  // lock, so nothing could ever set them. Guarded in viewProject.locks.spec.js.
 })
