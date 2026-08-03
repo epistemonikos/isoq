@@ -15,7 +15,8 @@ jest.mock('@/utils/Api', () => ({
 
 jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn()
+  release: jest.fn(),
+  releaseRef: jest.fn()
 }))
 
 jest.mock('vuedraggable', () => ({ render: h => h('div') }))
@@ -146,6 +147,16 @@ describe('viewProject.vue — handleIdle()', () => {
 
 describe('viewProject.vue — beforeDestroy', () => {
   beforeEach(() => jest.clearAllMocks())
+
+  // Verified live: a lock taken in the Step 3/4 table survived navigating out of the
+  // project and stayed held under the user's name until the server TTV expired it.
+  // editList.vue already had this net; this view (which hosts crudTables) did not.
+  it('libera los ref-locks que queden abiertos al salir del proyecto', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    wrapper.destroy()
+    expect(LockService.releaseRef).toHaveBeenCalledWith()
+  })
 
   it('releases the lock and removes all four window event listeners', async () => {
     const { wrapper } = createWrapper()

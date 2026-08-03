@@ -711,6 +711,10 @@ export default {
   },
   beforeDestroy () {
     LockService.release()
+    // Same net as editList.vue: SPA navigation fires no pagehide, so a ref lock held by
+    // a child (a crudTables row, a camelot study) would survive leaving the project and
+    // stay held until the server TTL. Verified live before this was added.
+    LockService.releaseRef()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)

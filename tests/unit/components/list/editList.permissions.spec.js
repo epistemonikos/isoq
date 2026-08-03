@@ -15,7 +15,8 @@ jest.mock('@/utils/Api', () => ({
 
 jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
-  release: jest.fn()
+  release: jest.fn(),
+  releaseRef: jest.fn()
 }))
 
 jest.mock('@/utils/commons', () => ({
@@ -198,6 +199,15 @@ describe('editList.vue — handleIdle()', () => {
 
 describe('editList.vue — beforeDestroy', () => {
   beforeEach(() => jest.clearAllMocks())
+
+  it('libera los ref-locks que quedaran abiertos al navegar fuera de la hoja', () => {
+    // SPA navigation destroys the view without a pagehide event, so a modal left
+    // open (evidence profile, extracted_data row) would leak its ref lock until the
+    // server TTL expires it.
+    const { wrapper } = createWrapper()
+    wrapper.destroy()
+    expect(LockService.releaseRef).toHaveBeenCalledWith()
+  })
 
   it('calls LockService.release and removes all window event listeners', () => {
     const { wrapper } = createWrapper()

@@ -163,7 +163,10 @@
 
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
         @ok="saveContentDataTable" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
-        cancel-variant="outline-secondary">
+        cancel-variant="outline-secondary" :ok-disabled="isRowReadOnly">
+        <b-alert v-if="isRowReadOnly" show variant="warning" class="mb-2">
+          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
         <div v-if="autoSaveStatus" class="mb-2 small">
           <span v-if="autoSaveStatus === 'saving'" class="text-muted">
             <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
@@ -183,7 +186,7 @@
                 <b-form-textarea v-if="!['ref_id', 'authors'].includes(field.key)"
                   v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
                   :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''" rows="2"
-                  max-rows="100" @input="onFieldInput"></b-form-textarea>
+                  max-rows="100" :disabled="isRowReadOnly" @input="onFieldInput"></b-form-textarea>
               </template>
             </b-form-group>
           </template>
@@ -257,6 +260,7 @@
 /* eslint-disable no-unused-vars */
 import Api from '@/utils/Api'
 import Commmons from '@/utils/commons.js'
+import LockService from '@/services/lockService'
 import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
 
@@ -309,6 +313,13 @@ export default {
     this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
     this.updateMyDataTables()
     this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
+    window.addEventListener('ref-lock-lost', this.onRefLockLost)
+  },
+  beforeDestroy () {
+    window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    // SPA navigation destroys this view with the editor still open: without this the
+    // row stays locked for everybody else until the server TTL expires it.
+    this.releaseRowLock()
   },
   data () {
     return {
@@ -320,6 +331,16 @@ export default {
           { key: 'authors', label: this.$t('table_headers.author_year') }
         ]
       },
+      // Ref-lock state of the row open in the content modal. Endpoint B demands
+      // the caller holds the lock, so a row we could not lock must stay read-only.
+      isRowReadOnly: false,
+      rowLockedBy: null,
+      // The lock we actually hold, tracked apart from editingRefId: the modal's
+      // events cannot be trusted to tell us when it is safe to let it go.
+      lockedRowRef: null,
+      rowEditorOpen: false,
+      // True when a `hidden` from a previous editor session is still on its way.
+      staleHiddenPending: false,
       dataTableFieldsModal: {
         nroColumns: 1,
         fields: [],
@@ -635,10 +656,32 @@ export default {
         }
       }
     },
+    // The lock can vanish mid-edit: a failed heartbeat, or an offline grant that lost
+    // the race when the network came back. Keeping the row editable would only lead
+    // to a 409 on save.
+    onRefLockLost: function (event) {
+      const detail = event.detail || {}
+      if (detail.refId !== this.dataTableFieldsModal.editingRefId) return
+      this.isRowReadOnly = true
+      this.rowLockedBy = detail.lockedBy || null
+    },
     onEditModalHidden: function () {
+      // BootstrapVue emits `hidden` asynchronously (~300ms of animation). If the editor
+      // was reopened in the meantime, this event belongs to the previous session and
+      // releasing now would leave the open editor without a lock — every save would 409.
+      if (this.staleHiddenPending) {
+        this.staleHiddenPending = false
+        return
+      }
+      this.rowEditorOpen = false
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
+      // Release only this row: the tab may legitimately hold other ref locks
+      // (a finding's evidence profile, another table's row).
+      this.releaseRowLock()
       this.dataTableFieldsModal.editingRefId = null
+      this.isRowReadOnly = false
+      this.rowLockedBy = null
     },
     addContentDataTable: function (index = 0) {
       const items = Commmons.deepClone(this.dataTable.items)
@@ -647,8 +690,51 @@ export default {
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
       this.dataTableFieldsModal.selected_item_index = index
-      this.dataTableFieldsModal.editingRefId = items[index] ? items[index].ref_id : null
+      const nextRef = items[index] ? items[index].ref_id : null
+
+      // A lock the modal never released (its `hidden` never arrived, or it never
+      // finished opening) would stay held while we move to another row.
+      if (this.lockedRowRef && this.lockedRowRef !== nextRef) this.releaseRowLock()
+      // Opening while another session is still closing means its `hidden` is still
+      // in flight and must not be mistaken for the closing of this one.
+      this.staleHiddenPending = this.rowEditorOpen
+      this.rowEditorOpen = true
+
+      this.dataTableFieldsModal.editingRefId = nextRef
+      this.acquireRowLock(nextRef)
       this.$refs['edit-content-dataTable'].show()
+    },
+    releaseRowLock: function () {
+      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
+      this.lockedRowRef = null
+    },
+    // Mirrors StepFour.vue's acquireStudyLock: the lock is asked for when the
+    // editor opens, so the rejection reaches the user before they type, not on save.
+    async acquireRowLock (refId) {
+      if (!refId) return
+      if (!this.canEdit) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        return
+      }
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.lockedRowRef = refId
+        this.isRowReadOnly = false
+        this.rowLockedBy = null
+      } else if (result.permissionDenied) {
+        // Nobody else holds it — this user's own can_write was revoked. There is
+        // no "locked by X" to report.
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+      } else {
+        this.isRowReadOnly = true
+        this.rowLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
+        }
+      }
     },
     onFieldInput: function () {
       this.autoSaveDebounced()
@@ -666,7 +752,7 @@ export default {
     },
     performAutoSave: function () {
       const id = this.dataTable.id
-      if (!id) return
+      if (!id || this.isRowReadOnly) return
       const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
       if (!editedItem) return
       this.autoSaveStatus = 'saving'
@@ -680,6 +766,8 @@ export default {
     saveContentDataTable: function () {
       const id = this.dataTable.id
       const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
+      // Writing without the row's lock is a guaranteed 409 (endpoint B).
+      if (!id || this.isRowReadOnly) return Promise.resolve()
 
       return this._patchContentItem(id, editedItem)
         .then(() => {

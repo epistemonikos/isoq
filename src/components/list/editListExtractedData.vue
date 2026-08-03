@@ -62,8 +62,13 @@
         ref="modal-extracted-data-remove-data-item"
         :title="$t('characteristics.remove_content')"
         @ok="extractedDataRemoveDataItem"
+        @hidden="onRowEditorHidden"
+        :ok-disabled="isRowReadOnly"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
+        <b-alert v-if="isRowReadOnly" show variant="warning">
+          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
         <p>{{ $t('characteristics.confirm_delete_row') }}</p>
       </b-modal>
       <b-modal
@@ -72,9 +77,14 @@
         id="modal-extracted-data-data"
         ref="modal-extracted-data-data"
         @ok="saveDataExtractedData"
+        @hidden="onRowEditorHidden"
+        :ok-disabled="isRowReadOnly"
         cancel-variant="outline-secondary"
         ok-variant="outline-success"
         :ok-title="$t('common.save')">
+        <b-alert v-if="isRowReadOnly" show variant="warning">
+          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
         <b-form-group
           v-for="(field, index) in buffer_extracted_data.fields"
           :key="index"
@@ -86,7 +96,8 @@
             v-if="field.key !== 'ref_id' && field.key !== 'authors'"
             v-model="buffer_extracted_data_items[field.key]"
             rows="6"
-            max-rows="100"></b-form-textarea>
+            max-rows="100"
+            :disabled="isRowReadOnly"></b-form-textarea>
         </b-form-group>
       </b-modal>
 
@@ -97,6 +108,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -129,6 +141,14 @@ export default {
   },
   data () {
     return {
+      // Ref-lock state of the row being edited/removed. Endpoint C demands the
+      // caller holds the lock of that row's ref_id.
+      isRowReadOnly: false,
+      rowLockedBy: null,
+      lockedRowRef: null,
+      rowEditorOpen: false,
+      // True when a `hidden` from a previous editor session is still on its way.
+      staleHiddenPending: false,
       buffer_extracted_data_items: {},
       buffer_extracted_data: {
         fields: [],
@@ -161,19 +181,88 @@ export default {
       this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.localExtractedData.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.localExtractedData.items[data.index]))
+      this.beginRowEditor(this.rowRefAt(data.index))
       this.$refs['modal-extracted-data-data'].show()
     },
     openModalExtractedDataRemoveDataItem: function (data) {
       this.buffer_extracted_data.remove_index_item = data.index
+      // Clearing a row is a write through endpoint C too, so it needs the same lock.
+      this.beginRowEditor(this.rowRefAt(data.index))
       this.$refs['modal-extracted-data-remove-data-item'].show()
+    },
+    beginRowEditor: function (refId) {
+      // A lock the modal never released (its `hidden` never arrived, or it never
+      // finished opening) would stay held while we move to another row.
+      if (this.lockedRowRef && this.lockedRowRef !== refId) this.releaseRowLock()
+      // Opening while another session is still closing means its `hidden` is still in
+      // flight and must not be mistaken for the closing of this one.
+      this.staleHiddenPending = this.rowEditorOpen
+      this.rowEditorOpen = true
+      this.acquireRowLock(refId)
+    },
+    releaseRowLock: function () {
+      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
+      this.lockedRowRef = null
+    },
+    rowRefAt: function (index) {
+      const item = this.localExtractedData.items[index]
+      return item ? item.ref_id : null
+    },
+    // Mirrors StepFour.vue's acquireStudyLock: ask on open so the rejection lands
+    // before the user types. The project id comes from the list prop — the route
+    // param of this view is the list id.
+    async acquireRowLock (refId) {
+      if (!refId) return
+      if (!this.permission) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        return
+      }
+      const result = await LockService.acquireRef(this.list.project_id, refId)
+      if (result.success) {
+        this.lockedRowRef = refId
+        this.isRowReadOnly = false
+        this.rowLockedBy = null
+      } else if (result.permissionDenied) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+      } else {
+        this.isRowReadOnly = true
+        this.rowLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
+        }
+      }
+    },
+    // See crudTables.onRefLockLost: the lock can be lost while the editor is open.
+    onRefLockLost: function (event) {
+      const detail = event.detail || {}
+      if (detail.refId !== this.lockedRowRef) return
+      this.isRowReadOnly = true
+      this.rowLockedBy = detail.lockedBy || null
+    },
+    onRowEditorHidden: function () {
+      // BootstrapVue emits `hidden` asynchronously: a late one belongs to the previous
+      // session, and releasing now would leave the open editor without its lock.
+      if (this.staleHiddenPending) {
+        this.staleHiddenPending = false
+        return
+      }
+      this.rowEditorOpen = false
+      this.releaseRowLock()
+      this.isRowReadOnly = false
+      this.rowLockedBy = null
     },
     extractedDataRemoveDataItem: function () {
       // Granular reset: blank this row's data columns (keep ref_id + authors) via the
       // /item/<ref_id> sub-resource. No $pull, no whole-array rewrite (endpoint C).
       const item = this.localExtractedData.items[this.buffer_extracted_data.remove_index_item]
+      // Writing without this row's lock is a guaranteed 409.
+      if (this.isRowReadOnly) return Promise.resolve()
       const row = { ref_id: item.ref_id, authors: item.authors, column_0: '' }
 
-      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${item.ref_id}`, row)
+      return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
@@ -186,13 +275,15 @@ export default {
       // Granular save: PATCH only the edited row via the /item/<ref_id> sub-resource,
       // so concurrent edits to other rows are not overwritten (endpoint C).
       const _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
+      // Writing without this row's lock is a guaranteed 409.
+      if (this.isRowReadOnly) return Promise.resolve()
       const row = {
         ref_id: _item.ref_id,
         authors: _item.authors,
         column_0: _item.column_0
       }
 
-      Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${_item.ref_id}`, row)
+      return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${_item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}
@@ -205,6 +296,12 @@ export default {
   },
   mounted () {
     this.localExtractedData = this.extractedData
+    window.addEventListener('ref-lock-lost', this.onRefLockLost)
+  },
+  beforeDestroy () {
+    window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    // The modal events cannot be trusted to have released it (see onRowEditorHidden).
+    this.releaseRowLock()
   },
   watch: {
     extractedData: {

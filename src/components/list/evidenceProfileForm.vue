@@ -1,8 +1,9 @@
 <template>
   <div>
-    <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable :ok-disabled="!permission"
+    <b-modal id="modal-evidence-profile-form" ref="modal-evidence-profile-form" scrollable
+      :ok-disabled="!canEditFinding"
       @ok="saveEvidenceProfile(selectedOptions.type, $event)" :ok-title="$t('common.save')" ok-variant="outline-success"
-      cancel-variant="outline-secondary" @show="onModalShow">
+      cancel-variant="outline-secondary" @show="onModalShow" @hidden="onModalHidden">
       <template v-slot:modal-title>
         <videoHelp v-if="selectedOptions.type === 'methodological-limitations'"
           :txt="$t('worksheet_nav.evidence_profile') + ' - ' + selectedOptions.title" tag="none" urlId="450835272">
@@ -44,7 +45,7 @@
                 }">{{ $t('common.here') }}</b-link>)
               </p>
               <b-form-radio-group v-model="selectedOptions.methodological_limitations.option"
-                name="methodological-limitations" stacked :disabled="!permission">
+                name="methodological-limitations" stacked :disabled="!canEditFinding">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
                   <small v-b-tooltip.hover
@@ -98,7 +99,7 @@
                 </template>
                 <b-form-textarea id="input-ml-explanation"
                   v-model="selectedOptions.methodological_limitations.explanation" rows="6" max-rows="100"
-                  :disabled="!permission" :state="explanationStateFor('methodological_limitations')"></b-form-textarea>
+                  :disabled="!canEditFinding" :state="explanationStateFor('methodological_limitations')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
@@ -106,7 +107,7 @@
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.methodological_limitations.notes" rows="6"
-                  max-rows="100" :disabled="!permission"></b-form-textarea>
+                  max-rows="100" :disabled="!canEditFinding"></b-form-textarea>
               </b-form-group>
             </div>
 
@@ -130,7 +131,7 @@
                 {{ $t('worksheet.reminders.coherence') }}
               </p>
               <b-form-radio-group v-model="selectedOptions.coherence.option" name="coherence" stacked
-                :disabled="!permission">
+                :disabled="!canEditFinding">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
                   <small v-b-tooltip.hover :title="$t('worksheet.tooltips.coherence.no_concerns')">*</small>
@@ -176,7 +177,7 @@
                 </template>
                 <b-form-textarea id="input-coherence-explanation" v-model="selectedOptions.coherence.explanation"
                   :placeholder="selectedOptions.coherence.option === '0' ? '' : ''" rows="6" max-rows="100"
-                  :disabled="!permission" :state="explanationStateFor('coherence')"></b-form-textarea>
+                  :disabled="!canEditFinding" :state="explanationStateFor('coherence')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
@@ -184,7 +185,7 @@
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.coherence.notes" rows="6" max-rows="100"
-                  :disabled="!permission"></b-form-textarea>
+                  :disabled="!canEditFinding"></b-form-textarea>
               </b-form-group>
               <!-- adequacy -->
             </div>
@@ -203,7 +204,7 @@
                 }">{{ $t('common.here') }}</b-link>)
               </p>
               <b-form-radio-group v-model="selectedOptions.adequacy.option" name="adequacy" stacked
-                :disabled="!permission">
+                :disabled="!canEditFinding">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
                   <small v-b-tooltip.hover :title="$t('worksheet.tooltips.adequacy.no_concerns')">*</small>
@@ -245,7 +246,7 @@
                 </template>
                 <b-form-textarea id="input-adequacy-explanation" v-model="selectedOptions.adequacy.explanation"
                   :placeholder="selectedOptions.adequacy.option === '0' ? '' : ''" rows="6" max-rows="100"
-                  :disabled="!permission" :state="explanationStateFor('adequacy')"></b-form-textarea>
+                  :disabled="!canEditFinding" :state="explanationStateFor('adequacy')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
                 :description="$t('worksheet.labels.notes_description')">
@@ -253,7 +254,7 @@
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.adequacy.notes" rows="6" max-rows="100"
-                  :disabled="!permission"></b-form-textarea>
+                  :disabled="!canEditFinding"></b-form-textarea>
               </b-form-group>
               <!-- relevance -->
             </div>
@@ -274,7 +275,7 @@
                 }">{{ $t('common.here') }}</b-link>)
               </p>
               <b-form-radio-group v-model="selectedOptions.relevance.option" name="relevance" stacked
-                :disabled="!permission">
+                :disabled="!canEditFinding">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.no_concerns') }}
                   <small v-b-tooltip.hover :title="$t('worksheet.tooltips.relevance.no_concerns')">*</small>
@@ -312,7 +313,7 @@
                 </template>
                 <b-form-textarea id="input-relevance-explanation" v-model="selectedOptions.relevance.explanation"
                   :placeholder="selectedOptions.relevance.option === '0' ? '' : ''" rows="6" max-rows="100"
-                  :disabled="!permission" :state="explanationStateFor('relevance')"></b-form-textarea>
+                  :disabled="!canEditFinding" :state="explanationStateFor('relevance')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes">
                 <template slot="label">
@@ -327,7 +328,7 @@
                   {{ $t('worksheet.labels.click_here_example') }}.
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.relevance.notes" rows="6" max-rows="100"
-                  :disabled="!permission"></b-form-textarea>
+                  :disabled="!canEditFinding"></b-form-textarea>
               </b-form-group>
               <!-- CERQual assessment -->
             </div>
@@ -343,7 +344,7 @@
                 {{ $t('worksheet.labels.cerqual_guidance_link') }}
               </p>
               <b-form-radio-group v-model="selectedOptions.cerqual.option" @change="commonGenerateCerqualExplanation()"
-                name="cerqual" stacked :disabled="!permission">
+                name="cerqual" stacked :disabled="!canEditFinding">
                 <b-form-radio value="0">
                   {{ $t('worksheet.options.high_confidence') }}
                   <small v-b-tooltip.hover :title="$t('worksheet.tooltips.cerqual.high')">*</small>
@@ -401,7 +402,7 @@
                   </span>
                 </template>
                 <b-form-textarea id="input-cerqual" v-model="selectedOptions.cerqual.explanation"
-                  :placeholder="$t('common.enter_explanation')" rows="6" max-rows="100" :disabled="!permission"
+                  :placeholder="$t('common.enter_explanation')" rows="6" max-rows="100" :disabled="!canEditFinding"
                   :state="explanationStateFor('cerqual')"></b-form-textarea>
               </b-form-group>
               <b-form-group class="mt-2 font-weight-light" label-for="input-ml-notes"
@@ -410,7 +411,7 @@
                   <videoHelp :txt="$t('common.notes')" tag="none" urlId="462180668"></videoHelp>
                 </template>
                 <b-form-textarea id="input-ml-notes" v-model="selectedOptions.cerqual.notes" rows="6" max-rows="100"
-                  :disabled="!permission"></b-form-textarea>
+                  :disabled="!canEditFinding"></b-form-textarea>
               </b-form-group>
             </div>
           </b-col>
@@ -813,6 +814,7 @@
 <script>
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
+import LockService from '@/services/lockService'
 import { displayExplanation, generateCerqualExplanation } from '../utils/commons'
 
 // Whitelisted evidence_profile sub-sections targetable by the granular
@@ -848,6 +850,17 @@ export default {
   },
   data () {
     return {
+      // Endpoint A locks the DOCUMENT, so the lock's ref_id is the finding_id.
+      // A row edited inline writes through endpoint C and needs its own lock, held
+      // at the same time as this one (multi-slot LockService).
+      isFindingReadOnly: false,
+      findingLockedBy: null,
+      lockedFindingRef: null,
+      modalOpen: false,
+      // True when a `hidden` from a previous modal session is still on its way.
+      staleHiddenPending: false,
+      lockedRowRef: null,
+      isRowReadOnly: false,
       selectedOptions: {
         methodological_limitations: {
           option: null,
@@ -942,8 +955,21 @@ export default {
   mounted () {
     this.selectedOptions = JSON.parse(JSON.stringify(this.modalData))
     this.localExtractedData = JSON.parse(JSON.stringify(this.extractedData))
+    window.addEventListener('ref-lock-lost', this.onRefLockLost)
+  },
+  beforeDestroy () {
+    window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    // Verified live: the lock was acquired, the modal never finished opening, and the
+    // later hide() emitted no `hidden` — the lock stayed orphaned until the TTL.
+    this.releaseFindingLock()
+    this.releaseRowLock()
   },
   computed: {
+    // Single flag for every input in the form: writing needs both the permission
+    // and the finding's lock.
+    canEditFinding: function () {
+      return this.permission && !this.isFindingReadOnly
+    },
     clearCerqualWarningMessage: function () {
       if (this.checkIfIsTheOnlyPublished()) {
         return this.$t('worksheet.warnings.clear_cerqual_revert')
@@ -972,11 +998,92 @@ export default {
       this.focusExplanation('input-cerqual')
     },
     onModalShow: function () {
+      // Reopening while the previous session is still closing means its `hidden` is
+      // still in flight and must not be taken for the closing of this one.
+      this.staleHiddenPending = this.modalOpen
+      this.modalOpen = true
+      this.acquireFindingLock()
       this.$nextTick(() => {
         if (this.$refs.camelotTable && typeof this.$refs.camelotTable.resetTableState === 'function') {
           this.$refs.camelotTable.resetTableState()
         }
       })
+    },
+    // Mirrors StepFour.vue's acquireStudyLock: asked for on open, so the rejection
+    // reaches the user before they fill the form instead of on save.
+    async acquireFindingLock () {
+      const findingId = this.findings && this.findings.id
+      // A finding with no id yet is created by POST on save — nothing to lock.
+      if (!findingId || !this.permission) return
+      const result = await LockService.acquireRef(this.list.project_id, findingId)
+      if (result.success) {
+        this.lockedFindingRef = findingId
+        this.isFindingReadOnly = false
+        this.findingLockedBy = null
+      } else if (result.permissionDenied) {
+        this.isFindingReadOnly = true
+        this.findingLockedBy = null
+        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+      } else {
+        this.isFindingReadOnly = true
+        this.findingLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.findingLockedBy }))
+        }
+      }
+    },
+    // Two locks live in this modal, so the event has to be routed: the finding's
+    // lock greys out the whole form, a row's lock only that row.
+    onRefLockLost: function (event) {
+      const detail = event.detail || {}
+      const findingId = this.findings && this.findings.id
+      if (detail.refId && detail.refId === findingId) {
+        this.isFindingReadOnly = true
+        this.findingLockedBy = detail.lockedBy || null
+        return
+      }
+      if (detail.refId && detail.refId === this.lockedRowRef) {
+        this.isRowReadOnly = true
+      }
+    },
+    onModalHidden: function () {
+      // BootstrapVue emits `hidden` asynchronously: a late one belongs to the previous
+      // session, and releasing now would leave the open form without its lock.
+      if (this.staleHiddenPending) {
+        this.staleHiddenPending = false
+        return
+      }
+      this.modalOpen = false
+      this.releaseFindingLock()
+      // An inline row editor left open when the modal closes must not leak its lock.
+      this.releaseRowLock()
+      this.isFindingReadOnly = false
+      this.findingLockedBy = null
+    },
+    releaseFindingLock: function () {
+      if (this.lockedFindingRef) LockService.releaseRef(this.lockedFindingRef)
+      this.lockedFindingRef = null
+    },
+    async acquireRowLock (refId) {
+      if (!refId || !this.permission) return
+      const result = await LockService.acquireRef(this.list.project_id, refId)
+      if (result.success) {
+        this.lockedRowRef = refId
+        this.isRowReadOnly = false
+        return
+      }
+      this.lockedRowRef = null
+      this.isRowReadOnly = true
+      if (this.$notify) {
+        this.$notify.warning(result.permissionDenied
+          ? this.$t('lock.permissions_revoked')
+          : this.$t('lock.ref_locked_by', { user: result.lockedBy || '' }))
+      }
+    },
+    releaseRowLock: function () {
+      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
+      this.lockedRowRef = null
+      this.isRowReadOnly = false
     },
     getExplanation: function (type, option, explanation) {
       return displayExplanation(type, option, explanation)
@@ -1107,6 +1214,12 @@ export default {
     },
     continueSavingDataModal: function (status = false) {
       this.$emit('busyEvidenceProfileTable', true)
+      // Writing a section without the finding's lock is a guaranteed 409, and the
+      // failure is invisible (console only) with the spinner left spinning.
+      if (this.isFindingReadOnly) {
+        this.$emit('busyEvidenceProfileTable', false)
+        return
+      }
 
       if (Object.prototype.hasOwnProperty.call(this.findings, 'id')) {
         // Granular save: PATCH only the evidence_profile sections that actually changed
@@ -1208,6 +1321,7 @@ export default {
     },
     editExtractedDataInPlace: function (index) {
       const item = JSON.parse(JSON.stringify(this.extractedData.items[index]))
+      this.acquireRowLock(item.ref_id)
       const data = {
         display: true,
         item: item
@@ -1215,6 +1329,7 @@ export default {
       this.$emit('setShowEditExtractedDataInPlace', data)
     },
     cancelExtractedDataInPlace: function () {
+      this.releaseRowLock()
       const data = {
         display: false,
         item: {}
@@ -1225,8 +1340,11 @@ export default {
       // Granular save: PATCH only this row via the /item/<ref_id> sub-resource so
       // concurrent edits to other rows are not overwritten (no whole-array rewrite).
       const row = JSON.parse(JSON.stringify(this.showEditExtractedDataInPlace.item))
-      Api.patch(`/isoqf_extracted_data/${this.extractedData.id}/item/${refId}`, row)
+      // Without this row's lock the PATCH is a guaranteed 409.
+      if (this.isRowReadOnly) return Promise.resolve()
+      return Api.patch(`/isoqf_extracted_data/${this.extractedData.id}/item/${refId}`, row)
         .then(() => {
+          this.releaseRowLock()
           this.$emit('getExtractedData', true)
           const data = {
             display: false,

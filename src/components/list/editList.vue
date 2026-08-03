@@ -348,6 +348,10 @@ export default {
   },
   beforeDestroy () {
     LockService.release()
+    // SPA navigation fires no pagehide, so a modal left open (evidence profile, an
+    // extracted_data row) would leak its ref lock until the server TTL. No argument
+    // releases every ref this tab still holds — all of them belong to this view.
+    LockService.releaseRef()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)
