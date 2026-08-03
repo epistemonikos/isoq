@@ -35,7 +35,6 @@
 
 <script>
 import Api from '@/utils/Api'
-import { isCustomField, extractCustomFields, cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 
 export default {
   name: 'ManageColumnsButton',
@@ -161,11 +160,15 @@ export default {
       }
 
       const updatedFields = [...systemFields, ...newFields]
-      const cleanedItems = cleanOrphanedCustomFieldKeys(this.charsData.items || [], updatedFields)
 
+      // The rows are deliberately NOT sent. Sending them meant filtering every row
+      // against this local copy of `fields`, so a column created by somebody else
+      // while this modal was open was missing from the copy and its content was
+      // wiped from every row. The generic PATCH is a partial $set of top-level keys,
+      // so omitting `items` leaves the stored rows untouched — and what does not
+      // travel cannot be lost.
       const dataToSave = {
         fields: updatedFields,
-        items: cleanedItems,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id
       }

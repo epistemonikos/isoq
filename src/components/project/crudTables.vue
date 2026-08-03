@@ -556,6 +556,12 @@ export default {
       params.items = this.getCleanedItems(params.items, params.fields)
 
       if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
+        // The document already exists, so this is a column operation and the rows are
+        // not ours to send: the seeded `items` above are all-empty cells, which would
+        // blank the table. They only make sense on the POST below, which creates the
+        // document and needs at least one row per reference to have somewhere to type
+        // (unlike CAMELOT, this table renders `dataTable.items` straight from the DB).
+        delete params.items
         Api.patch(`/${this.type}/${this.dataTable.id}`, params)
           .then(() => {
             this.$emit('get-project')
@@ -588,8 +594,12 @@ export default {
       fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
       fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
 
+      // Only the columns travel. Sending the rows meant filtering each one against
+      // this local copy of `fields`, which wipes the content of a column somebody
+      // else created while this modal was open. The generic PATCH is a partial $set,
+      // so the stored rows survive untouched, and updateMyDataTables() remains the
+      // one place that owns the rows (it re-reads from the server before writing).
       params.fields = fields
-      params.items = this.getCleanedItems(this.dataTable.items, fields)
 
       if (this.project.is_public) {
         params.is_public = true
@@ -1023,13 +1033,11 @@ export default {
     deleteFieldFromCharsSudies: function (index) {
       this.dataTableSettings.isBusy = true
       let fields = Commmons.deepClone(this.dataTableFieldsModal.fields)
-      let references = Commmons.deepClone(this.references)
       let params = {
         fields: [
           { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') },
           { 'key': 'authors', 'label': this.$t('table_headers.author_year') }
         ],
-        items: [],
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         is_public: !!this.project.is_public
@@ -1040,26 +1048,28 @@ export default {
       this.dataTableFieldsModal.touched.splice(index, 1)
       this.dataTableFieldsModal.nroColumns = fields.length
 
-      for (const idx in fields) {
-        let objField = {
-          key: `column_${idx}`,
-          label: fields[idx]
-        }
-        params.fields.push(objField)
-      }
+      // The rows are no longer sent (they used to be rebuilt with every cell empty,
+      // which blanked the table outright). What is left to decide is where the column
+      // KEYS come from, because `dataTableFieldsModal.fields` holds only labels:
+      //
+      // TODO(human): build params.fields for the remaining columns.
+      //
+      // Regenerating `column_${idx}` from the position — what this did before — is only
+      // safe while no row has content: the stored rows key their content by the ORIGINAL
+      // key, so renumbering after deleting a middle column makes each remaining column
+      // display its neighbour's text. The persisted keys live in `this.dataTable.fields`
+      // (objects with `key` and `label`), which `deleteFieldFromCharsSudiesEdit` above
+      // already works with directly.
 
-      for (const ref of references) {
-        let objItem = {
-          ref_id: ref.id,
-          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
-        }
-        for (const cnt in fields) {
-          objItem[`column_${cnt}`] = ''
-        }
-        params.items.push(objItem)
-      }
-
-      params.items = this.getCleanedItems(params.items, params.fields)
+      // `fields` holds the labels as plain strings (getData fills it with `f.label`,
+      // and the modal's input writes strings through v-model). Objects are tolerated
+      // the same way isDataTableFieldsModalInvalid does, since both shapes reach here.
+      fields.forEach((label, position) => {
+        params.fields.push({
+          key: `column_${position}`,
+          label: typeof label === 'object' ? label.label : label
+        })
+      })
 
       Api.patch(`/${this.type}/${this.dataTable.id}`, params)
         .then(() => {
@@ -1077,7 +1087,6 @@ export default {
         is_public: !!this.project.is_public
       }
       const _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
-      const _items = Commmons.deepClone(this.dataTable.items)
       const dataTableId = this.dataTable.id
 
       _fields.splice(index, 1)
@@ -1090,8 +1099,10 @@ export default {
         ..._fields
       ]
 
+      // The rows are not sent: see updateDataTableFields. Dropping a column leaves its
+      // key orphaned in each stored row, which is invisible (every render filters by
+      // `fields`) and is what the granular DELETE endpoint cleans up server-side.
       params.fields = fullFields
-      params.items = this.getCleanedItems(_items, fullFields)
 
       Api.patch(`/${this.type}/${dataTableId}`, params)
         .then(() => {

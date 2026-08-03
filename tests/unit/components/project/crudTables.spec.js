@@ -80,8 +80,12 @@ describe('crudTables.vue', () => {
     })
   })
 
-  it('should ensure items only have attributes present in fields after updateDataTableFields', async () => {
-    // Setup initial state
+  // Estos dos tests defendían lo contrario: que el payload de columnas llevara `items`
+  // limpiados contra la copia local de `fields`. Eso era justamente el mecanismo de la
+  // pérdida de datos — una copia obsoleta borraba la columna de otra persona en todas
+  // las filas. Ahora `items` no viaja; la limpieza de claves huérfanas la hace el
+  // backend en el DELETE granular. Ver crudTables.columnsPayload.spec.js.
+  it('updateDataTableFields manda los fields vigentes y ninguna fila', async () => {
     const initialFields = [
       { key: 'ref_id', label: 'ID' },
       { key: 'authors', label: 'Authors' },
@@ -91,7 +95,7 @@ describe('crudTables.vue', () => {
     const initialItems = [
       { ref_id: '1', authors: 'Author 1', column_0: 'data 0', column_1: 'data 1', orphan_col: 'I should be gone' }
     ]
-    
+
     wrapper.setData({
       dataTable: {
         id: 'table-1',
@@ -108,25 +112,19 @@ describe('crudTables.vue', () => {
     await wrapper.vm.updateDataTableFields()
 
     expect(Api.patch).toHaveBeenCalled()
-    const patchCall = Api.patch.mock.calls[0]
-    const sentParams = patchCall[1]
+    const sentParams = Api.patch.mock.calls[0][1]
 
-    // Fields should have ref_id, authors, and column_0
     expect(sentParams.fields.map(f => f.key)).toEqual(['ref_id', 'authors', 'column_0'])
-    
-    // Items should ONLY have ref_id, authors, and column_0. column_1 and orphan_col should be gone.
-    const sentItem = sentParams.items[0]
-    expect(Object.keys(sentItem).sort()).toEqual(['ref_id', 'authors', 'column_0'].sort())
+    expect(sentParams).not.toHaveProperty('items')
   })
 
-  it('should ensure items only have attributes present in fields after saveDataTableFields', async () => {
-    // Setup initial state
+  it('saveDataTableFields no toca las filas cuando el documento ya existe', async () => {
     await wrapper.setProps({
       references: [
         { id: 'ref1', authors: ['Auth1, Name'], publication_year: '2020' }
       ]
     })
-    
+
     wrapper.setData({
       dataTable: { id: 'table-1' }, // Existing table for PATCH
       dataTableFieldsModal: {
@@ -138,14 +136,10 @@ describe('crudTables.vue', () => {
     await wrapper.vm.saveDataTableFields()
 
     expect(Api.patch).toHaveBeenCalled()
-    const patchCall = Api.patch.mock.calls[0]
-    const sentParams = patchCall[1]
+    const sentParams = Api.patch.mock.calls[0][1]
 
     expect(sentParams.fields.map(f => f.key)).toEqual(['ref_id', 'authors', 'column_0'])
-    
-    const sentItem = sentParams.items[0]
-    expect(sentItem).toBeDefined()
-    expect(Object.keys(sentItem).sort()).toEqual(['ref_id', 'authors', 'column_0'].sort())
+    expect(sentParams).not.toHaveProperty('items')
   })
   
   it('should filter out items without ref_id or empty authors in getData', async () => {

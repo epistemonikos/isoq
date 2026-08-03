@@ -98,6 +98,32 @@ describe('ManageColumnsButton.vue', () => {
     expect(wrapper.emitted('saved')).toBeTruthy()
   })
 
+  // Guardar columnas mandaba también `items[]`, filtrado contra la copia local de
+  // `fields`: si otra persona creó una columna mientras el modal estaba abierto, esa
+  // clave no estaba en la copia y el PATCH le borraba el contenido en TODAS las filas.
+  // El PATCH genérico es un `$set` parcial (docs/respuesta-backend-columnas-paso3.md §1),
+  // así que omitir `items` deja las filas intactas en la base.
+  it('no manda items[] al guardar columnas', async () => {
+    await wrapper.setProps({
+      charsData: {
+        ...mockCharsData,
+        items: [
+          { ref_id: 'R1', authors: 'Smith 2020', column_1: 'texto de otra persona' }
+        ]
+      }
+    })
+    wrapper.setData({
+      columnDefinitions: [{ key: 'column_1', label: 'Custom Field 1' }]
+    })
+
+    await wrapper.vm.handleSaveColumns()
+
+    expect(Api.patch).toHaveBeenCalled()
+    const params = Api.patch.mock.calls[0][1]
+    expect(params).not.toHaveProperty('items')
+    expect(params.fields).toBeDefined()
+  })
+
   describe('canEdit gating (read-only user protection)', () => {
     it('defaults canEdit to false when not provided', () => {
       const readOnlyWrapper = shallowMount(ManageColumnsButton, {
