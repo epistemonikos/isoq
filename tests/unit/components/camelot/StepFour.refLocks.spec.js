@@ -489,3 +489,56 @@ describe('StepFour.vue — lock del estudio bajo demanda (campos de characterist
     wrapper.destroy()
   })
 })
+
+// The 15s tick that already polls locks now also asks whether anything changed in the
+// project, so a user sees the other's saved work without reloading the page.
+describe('StepFour.vue — refresco por last_update', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.fetchRefLocks.mockResolvedValue([])
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  it('el tick de polling también consulta la frescura del proyecto', async () => {
+    const wrapper = createWrapper()
+    const spy = jest.spyOn(wrapper.vm, 'checkProjectFreshness').mockResolvedValue()
+
+    await wrapper.vm.fetchAndUpdateRefLocks()
+
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+    wrapper.destroy()
+  })
+
+  it('recargar significa releer evaluaciones y características', async () => {
+    const wrapper = createWrapper()
+    const assessments = jest.spyOn(wrapper.vm, 'getAssessments').mockImplementation(() => {})
+    const chars = jest.spyOn(wrapper.vm, 'getCharacteristics').mockImplementation(() => {})
+
+    wrapper.vm.applyProjectRefresh()
+
+    expect(assessments).toHaveBeenCalled()
+    expect(chars).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('el modal abierto cuenta como editor abierto', async () => {
+    const wrapper = createWrapper()
+    expect(wrapper.vm.hasOpenEditor()).toBe(false)
+    await wrapper.setData({ isModalOpen: true })
+    expect(wrapper.vm.hasOpenEditor()).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('cerrar el modal aplica el refresco que quedó pendiente', async () => {
+    const wrapper = createWrapper()
+    const apply = jest.spyOn(wrapper.vm, 'applyProjectRefresh').mockImplementation(() => {})
+    await wrapper.setData({ pendingRefresh: true })
+
+    wrapper.vm.onAssessmentModalClosed()
+    await flushPromises()
+
+    expect(apply).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})

@@ -286,10 +286,11 @@ import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 
 export default {
   name: 'StepFour',
-  mixins: [refLockStateMixin],
+  mixins: [refLockStateMixin, projectFreshnessMixin],
   props: {
     type: {
       type: String,
@@ -635,6 +636,17 @@ export default {
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
+      // Same 15s tick, one more question: did anybody else change this project?
+      this.checkProjectFreshness()
+    },
+    /** What a refresh means here: the grid plus the study fields it shows. */
+    applyProjectRefresh: function () {
+      this.getAssessments()
+      this.getCharacteristics()
+    },
+    /** A reload while the modal is open would discard what the user is writing. */
+    hasOpenEditor: function () {
+      return this.isModalOpen
     },
     startRefLocksPolling () {
       this.fetchAndUpdateRefLocks()
@@ -921,6 +933,9 @@ export default {
       this.studyFieldsLockedBy = null
       this.deniedCells = []
       this.fetchAndUpdateRefLocks()
+      // Nothing is being typed any more, so a reload held back while the modal was
+      // open can be applied now.
+      this.flushPendingRefresh()
     },
     handleRefLockConflict (event) {
       const { refId, failedData, lockedBy } = event.detail

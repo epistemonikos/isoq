@@ -127,13 +127,14 @@
 
       <!-- Modal para editar referencias -->
       <EditReferenceModal ref="editReferenceModal" :reference="currentItem" :chars-data="charsData" :camelot="camelot"
-        :visible-column-keys.sync="visibleColumnKeys" @saved="handleReferenceSaved" @close="currentItem = null" />
+        :visible-column-keys.sync="visibleColumnKeys" @saved="handleReferenceSaved" @close="onReferenceModalClosed" />
     </div>
   </div>
 </template>
 
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import LockService from '@/services/lockService'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
@@ -148,7 +149,7 @@ export default {
     EditReferenceModal: () => import('./EditReferenceModal.vue'),
     TableColumnFilter: () => import('@/components/common/TableColumnFilter.vue')
   },
-  mixins: [camelotMixin],
+  mixins: [camelotMixin, projectFreshnessMixin],
   props: {
     references: {
       type: Array,
@@ -430,6 +431,21 @@ export default {
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
+      // Same 15s tick, one more question: did anybody else change this project?
+      this.checkProjectFreshness()
+    },
+    /** What a refresh means here: the studies table itself. */
+    applyProjectRefresh: function () {
+      this.loadCharacteristicsData()
+    },
+    /** A reload while a study is open would discard what the user is writing. */
+    hasOpenEditor: function () {
+      return this.currentItem !== null
+    },
+    onReferenceModalClosed: function () {
+      this.currentItem = null
+      // Nothing is being typed any more: apply a reload held back while it was open.
+      this.flushPendingRefresh()
     },
     startRefLocksPolling () {
       this.fetchAndUpdateRefLocks()
