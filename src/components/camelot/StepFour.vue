@@ -359,6 +359,13 @@ export default {
       activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
       refLocksTimer: null,
       isRefReadOnly: false, // lock state for the study currently open in the modal
+      // Study fields (isoqf_characteristics, endpoint B) are governed apart from the
+      // cells: their lock is the bare study, which clashes with ANY cell of it. So a
+      // single cell held by someone else closes the fields without closing the other
+      // nine cells.
+      studyFieldsReadOnly: false,
+      studyFieldsLockedBy: null,
+      holdsStudyLock: false,
       refLockedBy: null,
       isModalOpen: false,
       // Cells whose lock we asked for and did not get, as 'stage-option' keys.
@@ -806,7 +813,10 @@ export default {
       this.ui.authors = data.item.authors
       this.isModalOpen = true
       this.deniedCells = []
-      this.acquireStudyLock(data.item.ref_id)
+      // The bare study lock is NOT taken here: it would block the ten cells of this
+      // study for everybody else for as long as the modal stays open. It is acquired
+      // on demand, when a study field is actually edited (see onStartEditing).
+      this.refreshStudyFieldsLockState(data.item.ref_id)
       // The refId/stage/tab assignments above may leave activeLeafRef unchanged
       // (reopening the same cell), so the watcher cannot be relied on here.
       this.syncLeafLock(this.activeLeafRef, null)
@@ -814,6 +824,62 @@ export default {
     },
     onOpenModal ({ stage, data, tab, faLabel = null }) {
       this.openModal(stage, data, tab, faLabel)
+    },
+    /**
+     * Reads from the lock listing whether the study fields can be written at all.
+     * `saveWholeStudyBlocked` is the right question: endpoint B rewrites the whole
+     * item, so anybody holding the study OR one of its cells blocks it.
+     */
+    refreshStudyFieldsLockState: function (refId) {
+      // A user without write permission sees the whole assessment read-only, cells
+      // included — the check acquireStudyLock used to make when the modal opened.
+      if (!this.canEdit) {
+        this.isRefReadOnly = true
+        this.studyFieldsReadOnly = true
+        this.studyFieldsLockedBy = null
+        return
+      }
+      if (!refId) {
+        this.studyFieldsReadOnly = false
+        this.studyFieldsLockedBy = null
+        return
+      }
+      const state = this.studyLockStateOf(refId)
+      this.studyFieldsReadOnly = state.saveWholeStudyBlocked
+      this.studyFieldsLockedBy = state.wholeStudyBlockedBy ||
+        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      // Somebody holding the WHOLE study blocks every cell too (the backend rejects
+      // both granularities against each other), so say it once on open instead of
+      // letting the user discover it cell by cell. A single held cell does not.
+      if (state.wholeStudyBlockedBy) {
+        this.isRefReadOnly = true
+        this.refLockedBy = state.wholeStudyBlockedBy
+      }
+    },
+    /** Takes the study lock the field editor needs, or leaves the fields read-only. */
+    async ensureStudyLock () {
+      if (this.holdsStudyLock) return true
+      if (!this.refId || !this.canEdit) return false
+      const result = await LockService.acquireRef(this.$route.params.id, this.refId)
+      if (result.success) {
+        this.holdsStudyLock = true
+        this.studyFieldsReadOnly = false
+        this.studyFieldsLockedBy = null
+        return true
+      }
+      this.studyFieldsReadOnly = true
+      this.studyFieldsLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
+      if (this.$notify) {
+        this.$notify.warning(result.permissionDenied
+          ? this.$t('lock.permissions_revoked')
+          : this.$t('lock.ref_locked_by', { user: this.studyFieldsLockedBy }))
+      }
+      return false
+    },
+    releaseStudyLock: function () {
+      if (!this.holdsStudyLock) return
+      LockService.releaseRef(this.refId)
+      this.holdsStudyLock = false
     },
     async acquireStudyLock (refId) {
       if (!refId) return
@@ -847,9 +913,12 @@ export default {
       this.isModalOpen = false
       // No argument: releases the bare study lock AND every leaf lock still held.
       LockService.releaseRef()
+      this.holdsStudyLock = false
       this.isRefReadOnly = false
       this.refLockedBy = null
       this.leafLockedBy = null
+      this.studyFieldsReadOnly = false
+      this.studyFieldsLockedBy = null
       this.deniedCells = []
       this.fetchAndUpdateRefLocks()
     },
@@ -904,7 +973,11 @@ export default {
         this.editValueComments = this.meta[metaIndex].values[itemIndex][itemPrefix + 'comments'] || ''
       }
     },
-    onStartEditing ({ metaIndex, itemIndex, type }) {
+    async onStartEditing ({ metaIndex, itemIndex, type }) {
+      // "One study, one user" for the study fields: whoever gets here second stays
+      // read-only instead of overwriting. The lock also makes Step 3 show the study
+      // as taken, which is exactly the mutual exclusion we want.
+      if (!(await this.ensureStudyLock())) return
       this.startEditing(metaIndex, itemIndex, type)
     },
     scrollToField (metaIndex, itemIndex) {
@@ -919,6 +992,11 @@ export default {
     cancelEditing () {
       const { metaIndex, itemIndex } = this.editingField
       this.editingField = { metaIndex: null, itemIndex: null, type: null }
+      // Leaving the field editor is the end of "one study, one user": both the Cancel
+      // button and saveField() (once the PATCH resolves) come through here, so the
+      // study stops being locked as soon as nobody is writing its fields.
+      this.releaseStudyLock()
+      this.refreshStudyFieldsLockState(this.refId)
       this.editValueExtracted = ''
       this.editValueComments = ''
       if (metaIndex !== null && itemIndex !== null) {

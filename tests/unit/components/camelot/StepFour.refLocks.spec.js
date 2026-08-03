@@ -40,6 +40,14 @@ function createWrapper (overrideProps = {}) {
   })
 }
 
+// jest.clearAllMocks() borra las llamadas pero NO las implementaciones: un test que
+// hace fetchRefLocks.mockResolvedValue([...]) deja ese listado de locks para todos los
+// que siguen. Se resetea acá porque el estado del estudio ahora se deriva de él.
+beforeEach(() => {
+  LockService.fetchRefLocks.mockResolvedValue([])
+  LockService.acquireRef.mockResolvedValue({ success: true })
+})
+
 describe('StepFour.vue — isRefLocked()', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -130,16 +138,17 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
     LockService.acquireRef.mockResolvedValue({ success: true })
   })
 
-  // Two locks, not one: the bare study authorizes the Step 3 fields (endpoint B
-  // on isoqf_characteristics) and the leaf authorizes the cell (endpoint D).
-  // A bare study lock does NOT authorize D.
-  it('openModal adquiere el lock del estudio y el de la celda abierta', async () => {
+  // The bare study lock (endpoint B on isoqf_characteristics) is NOT taken on open
+  // any more: it clashes with every cell of the same study, so holding it from the
+  // moment the modal opened made the first reader block the other nine cells for
+  // everybody. Now it is acquired on demand, when a study field is actually edited.
+  it('openModal toma sólo el lock de la celda, no el del estudio', async () => {
     const wrapper = createWrapper()
     await flushPromises()
     wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
     await flushPromises()
-    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
     expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1::s0::o0')
+    expect(LockService.acquireRef).not.toHaveBeenCalledWith('proj1', 'ref1')
     expect(wrapper.vm.isRefReadOnly).toBe(false)
     wrapper.destroy()
   })
@@ -382,6 +391,100 @@ describe('StepFour.vue — canEdit gating (read-only user protection)', () => {
     await flushPromises()
     await wrapper.vm.acquireStudyLock('ref1')
     expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    expect(wrapper.vm.isRefReadOnly).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+// "characteristics = un estudio, un usuario": the study fields are locked only while
+// somebody edits them, and whoever arrives second is left read-only. Cells stay
+// independent — a leaf held by another user must not close the other nine.
+describe('StepFour.vue — lock del estudio bajo demanda (campos de characteristics)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  const openStudy = async (wrapper) => {
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+    LockService.acquireRef.mockClear()
+    LockService.releaseRef.mockClear()
+  }
+
+  it('editar un campo del estudio adquiere el lock del estudio en ese momento', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await openStudy(wrapper)
+
+    await wrapper.vm.onStartEditing({ metaIndex: 0, itemIndex: 0, type: 'extractedData' })
+
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'ref1')
+    expect(wrapper.vm.editingField.type).toBe('extractedData')
+    wrapper.destroy()
+  })
+
+  it('si el estudio ya lo tiene otro, no entra en edición y avisa quién', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await openStudy(wrapper)
+    LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana López' })
+
+    await wrapper.vm.onStartEditing({ metaIndex: 0, itemIndex: 0, type: 'extractedData' })
+
+    expect(wrapper.vm.editingField.type).toBeNull()
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+    expect(wrapper.vm.studyFieldsLockedBy).toBe('Ana López')
+    expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
+    wrapper.destroy()
+  })
+
+  it('cancelar la edición libera el lock del estudio pero no el de la celda', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await openStudy(wrapper)
+    await wrapper.vm.onStartEditing({ metaIndex: 0, itemIndex: 0, type: 'extractedData' })
+    LockService.releaseRef.mockClear()
+
+    wrapper.vm.onCancelEditing()
+    await flushPromises()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+    expect(LockService.releaseRef).not.toHaveBeenCalledWith('ref1::s0::o0')
+    wrapper.destroy()
+  })
+
+  // Both ways out of field editing funnel through cancelEditing(): the Cancel button
+  // and saveField() itself once the PATCH resolves (with keepEditing false). Releasing
+  // there covers the two, so a saved field does not keep the study locked until the
+  // modal closes.
+  it('salir del modo edición libera el lock del estudio, por cancelar o por guardar', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await openStudy(wrapper)
+    await wrapper.vm.onStartEditing({ metaIndex: 0, itemIndex: 0, type: 'extractedData' })
+    LockService.releaseRef.mockClear()
+
+    wrapper.vm.cancelEditing()
+    await flushPromises()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('ref1')
+    expect(wrapper.vm.holdsStudyLock).toBe(false)
+    wrapper.destroy()
+  })
+
+  // The whole point of the change: another user holding ONE cell must not turn the
+  // other nine read-only. It does block the study fields, which endpoint B rewrites.
+  it('una hoja ajena deja los campos del estudio en solo lectura, sin cerrar las otras celdas', async () => {
+    const wrapper = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1::s1::o2', user_name: 'Ana López' }] })
+
+    wrapper.vm.openModal(0, { index: 0, item: { ref_id: 'ref1', authors: 'A' } }, 0)
+    await flushPromises()
+
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
     expect(wrapper.vm.isRefReadOnly).toBe(false)
     wrapper.destroy()
   })
