@@ -32,6 +32,9 @@ if (typeof window !== 'undefined') {
 // '<ref_id>/stage/0/option/2' — a string that matches no lock the client holds.
 // The lock the backend checks is the composite key '<ref_id>::s0::o2'.
 const ITEM_LEAF_URL_RE = /\/item\/([^/]+)\/stage\/([^/]+)\/option\/([^/?]+)/
+// Endpoint A locks the document, so its lock key is the id in the path, not a ref.
+const SECTION_URL_RE = /\/(?:isoqf_findings|isoqf_lists)\/([^/]+)\/section\/[^/?]+/
+const ITEM_URL_RE = /\/(?:isoqf_characteristics|isoqf_assessments|isoqf_extracted_data)\/[^/]+\/item\//
 
 function refLockKeyFromItemUrl (url) {
   const leaf = ITEM_LEAF_URL_RE.exec(url)
@@ -40,6 +43,50 @@ function refLockKeyFromItemUrl (url) {
     return leafLockKey(refId, stage, option) || refId
   }
   return url.split('/item/')[1] || ''
+}
+
+/**
+ * Lock key a granular write needs, or null when the URL is not a granular endpoint.
+ * Endpoints B/C/D lock a row/cell (`ref_id`, `ref::sK::oI`); endpoint A locks the
+ * document itself (`finding_id` / `list_id`).
+ */
+export function refLockKeyFromUrl (url = '') {
+  const section = SECTION_URL_RE.exec(url)
+  if (section) return section[1]
+  if (ITEM_URL_RE.test(url)) return refLockKeyFromItemUrl(url) || null
+  return null
+}
+
+/**
+ * LockService imported lazily: it imports Api itself, and a static cycle would leave
+ * one of the two holding an uninitialised binding.
+ */
+async function getLockService () {
+  const mod = await import('@/services/lockService')
+  return mod.default || mod
+}
+
+/**
+ * Lock context to persist with a queued granular write, so the replay can acquire the
+ * lock it will need. The project id is not derivable from these URLs, but LockService
+ * already maps it per ref (the editor holds the lock — or the offline grant — while
+ * the write is being queued).
+ */
+async function queuedLockContext (url) {
+  const refId = refLockKeyFromUrl(url)
+  if (!refId) return null
+  const LockService = await getLockService()
+  const projectId = LockService.offlineRefs.get(refId) ||
+    LockService.refLocks.get(refId) || null
+  return { lockRef: refId, lockProjectId: projectId }
+}
+
+function reportRefLockConflict (refId, failedData, lockedBy) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
+  window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+    detail: { refId, failedData, lockedBy }
+  }))
 }
 
 // Crear error compatible con estructura de Axios
@@ -72,22 +119,19 @@ axios.interceptors.response.use(
 
       console.log('Api.js Interceptor 409:', { url, method, isLockAcquisition })
 
-      // Detect a conflict on a partial item PATCH (granular ref lock taken by
-      // another user, e.g. after an offline queue replays). Surface it via a
-      // non-blocking event so the open editor can show copyable fields.
-      const isPartialItemPatch = url.includes('/item/') &&
-          (url.includes('isoqf_characteristics') || url.includes('isoqf_assessments') || url.includes('isoqf_extracted_data'))
-      if (isPartialItemPatch && typeof window !== 'undefined') {
-        const refId = refLockKeyFromItemUrl(url)
+      // Detect a conflict on any granular write (a ref lock held by another user, or
+      // no lock at all after the offline queue replays). Surface it via a
+      // non-blocking event so the open editor can show copyable fields. Covers
+      // endpoint A (/section/) as well as B/C/D (/item/), which is why the key comes
+      // from refLockKeyFromUrl and not from the raw path split.
+      const refId = refLockKeyFromUrl(url)
+      if (refId && typeof window !== 'undefined') {
         let failedData = {}
         if (error.config && error.config.data) {
           try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
         }
         const lockedBy = (error.response.data && error.response.data.locked_by) || ''
-        localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
-        window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
-          detail: { refId, failedData, lockedBy }
-        }))
+        reportRefLockConflict(refId, failedData, lockedBy)
       }
 
       if (!isLockAcquisition && error.response.data && error.response.data.message && error.response.data.message.includes('Project is locked')) {
@@ -348,11 +392,13 @@ export default class Api {
       if (!this.shouldQueue(path, data)) {
         throw createOfflineError(i18n.t('offline.noInternetAndNoCache') + ' ' + path)
       }
+      const lockContext = await queuedLockContext(url)
       await addPendingOperation({
         type: 'PATCH',
         endpoint: url,
         method: 'PATCH',
-        payload: data
+        payload: data,
+        ...(lockContext || {})
       })
       // console.log('Operation queued for sync:', 'PATCH', url)
       return { data: data, queued: true, status: 200 }
@@ -492,6 +538,24 @@ export default class Api {
       // console.log(`Syncing ${operations.length} pending operations...`)
 
       for (const op of operations) {
+        // A granular write needs the ref lock the editor no longer holds (it was
+        // closed, or the grant was only local because we were offline). Without it
+        // the backend answers 409 `lock_not_held` and the change is lost.
+        let heldLock = null
+        if (op.lockRef && op.lockProjectId) {
+          const LockService = await getLockService()
+          const result = await LockService.acquireRef(op.lockProjectId, op.lockRef)
+          if (!result.success) {
+            // Somebody took the entity while we were away. Replaying would fail, and
+            // retrying forever would stall the queue behind it: drop it and hand the
+            // payload to the user through the conflict channel.
+            reportRefLockConflict(op.lockRef, op.payload, result.lockedBy || '')
+            await removePendingOperation(op.id)
+            continue
+          }
+          heldLock = op.lockRef
+        }
+
         try {
           switch (op.method) {
             case 'POST':
@@ -513,6 +577,11 @@ export default class Api {
         } catch (error) {
           console.error('Failed to sync operation:', op.method, op.endpoint, error)
           // Mantener en la cola para reintentar después
+        } finally {
+          if (heldLock) {
+            const LockService = await getLockService()
+            await LockService.releaseRef(heldLock)
+          }
         }
       }
     } catch (error) {

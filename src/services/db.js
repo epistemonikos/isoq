@@ -437,6 +437,11 @@ export async function addPendingOperation (operation) {
       endpoint: operation.endpoint,
       method: operation.method,
       payload: operation.payload,
+      // Ref lock the replay will need for a granular write (endpoints A/B/C/D).
+      // Absent on generic writes and on anything queued before this existed —
+      // syncPendingOperations replays those without asking for a lock.
+      lockRef: operation.lockRef,
+      lockProjectId: operation.lockProjectId,
       timestamp: new Date().toISOString()
     }
     return await db.pendingOperations.add(record)

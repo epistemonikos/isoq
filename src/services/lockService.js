@@ -24,6 +24,9 @@ class LockService {
     // tick share one request instead of racing (the Step 4 modal does exactly
     // that on open: an explicit call plus the activeLeafRef watcher).
     this.pendingRefAcquires = new Map() // refId -> Promise
+    // Refs whose editor was opened while offline: granted locally, with no server
+    // lock behind them. On reconnect each one is retried (see retryOfflineRefs).
+    this.offlineRefs = new Map() // refId -> projectId
     this.refLockedBy = null
     this.refHeartbeatTimer = null
 
@@ -49,6 +52,10 @@ class LockService {
         if (this.isLocked) this.release()
         if (this.refLocked) this.releaseRef()
       })
+
+      // Offline grants are promises, not locks: turn them into real ones as soon as
+      // there is a network again, while the editor is still open.
+      window.addEventListener('online', () => { this.retryOfflineRefs() })
     }
   }
 
@@ -196,6 +203,18 @@ class LockService {
   // ── Granular per-ref locks (Step 3 / Step 4) ──────────────────────────
   async acquireRef (projectId, refId) {
     if (!this.isEnabled) return { success: true }
+
+    // Offline-first wins over the lock. Without this branch the POST below would fail
+    // on the network and fall through to `{ success: false }`, which every caller
+    // reads as "read-only" — so turning the flag on would freeze editing offline,
+    // while `Api` is happily queueing the mutations for replay. The grant is marked
+    // `offline` (and remembered in offlineRefs) because it is a promise, not a lock:
+    // retryOfflineRefs turns it into a real one as soon as there is a network.
+    if (!store.state.isOnline) {
+      this.offlineRefs.set(refId, projectId)
+      return { success: true, offline: true }
+    }
+
     if (this.refLocks.has(refId)) return { success: true }
     if (this.pendingRefAcquires.has(refId)) return this.pendingRefAcquires.get(refId)
 
@@ -239,9 +258,37 @@ class LockService {
     return { success: false, error: 'Unknown error' }
   }
 
+  /**
+   * Turns every offline grant into a real server lock. A ref taken by someone else
+   * meanwhile is reported through `ref-lock-lost` so the open editor can go
+   * read-only instead of letting the user type into a save that would 409.
+   */
+  async retryOfflineRefs () {
+    if (!this.isEnabled || !this.offlineRefs.size) return
+
+    const pending = [...this.offlineRefs.entries()]
+    this.offlineRefs.clear()
+
+    await Promise.all(pending.map(async ([refId, projectId]) => {
+      const result = await this.requestRefLock(projectId, refId)
+      if (result.success) return
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId, lockedBy: result.lockedBy || null }
+      }))
+    }))
+  }
+
   /** Releases one ref, or every held ref when called with no argument. */
   async releaseRef (refId = null) {
     if (!this.isEnabled) return
+
+    // An editor closed while offline has nothing to release, but its pending retry
+    // must go: reconnecting should not lock an entity nobody is editing any more.
+    if (refId === null) {
+      this.offlineRefs.clear()
+    } else {
+      this.offlineRefs.delete(refId)
+    }
 
     const toRelease = refId === null
       ? [...this.refLocks.entries()]

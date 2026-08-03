@@ -1,5 +1,6 @@
 import axios from 'axios'
 import LockService, { studyLockState } from '@/services/lockService'
+import { store } from '@/store'
 
 jest.mock('axios')
 jest.mock('@/utils/Api', () => ({ getHeaders: () => ({ Authorization: 'Bearer test' }) }))
@@ -66,6 +67,116 @@ describe('LockService.acquireRef()', () => {
     const result = await LockService.acquireRef('proj1', 'ref1')
     expect(axios.post).not.toHaveBeenCalled()
     expect(result).toEqual({ success: true })
+  })
+})
+
+// Offline-first wins over the lock: Api queues mutations in IndexedDB and replays
+// them on reconnect, so treating a network failure as "locked" would freeze editing
+// with no lock holder to blame. The grant is marked `offline` so callers can tell it
+// apart from a real server-side lock.
+describe('LockService.acquireRef() estando offline', () => {
+  beforeEach(() => {
+    store.state.isOnline = false
+    // The server would GRANT the lock if asked. Without this, dropping the offline
+    // branch would land in the catch (axios.post resolving undefined) and leave the
+    // same empty state the offline path produces — the assertions below would then
+    // pass for the wrong reason.
+    axios.post.mockResolvedValue({ data: { status: true } })
+  })
+  afterEach(() => { store.state.isOnline = true })
+
+  it('concede la edición sin pedir el lock al servidor', async () => {
+    const result = await LockService.acquireRef('proj1', 'ref1')
+
+    expect(axios.post).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: true, offline: true })
+  })
+
+  it('no registra el ref como bloqueado ni arranca el heartbeat', async () => {
+    const startSpy = jest.spyOn(LockService, 'startRefHeartbeat').mockImplementation(() => {})
+
+    await LockService.acquireRef('proj1', 'ref1')
+
+    // No server lock exists, so there is nothing to beat and nothing to release:
+    // a phantom entry here would make releaseRef fire a DELETE for a lock that
+    // was never created.
+    expect(LockService.heldRefs()).toEqual([])
+    expect(LockService.refLocked).toBe(false)
+    expect(startSpy).not.toHaveBeenCalled()
+  })
+
+  it('libera sin llamar al servidor porque no hay lock que liberar', async () => {
+    await LockService.acquireRef('proj1', 'ref1')
+
+    await LockService.releaseRef('ref1')
+
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+})
+
+// An offline grant is a promise, not a lock: on reconnect it has to be turned into a
+// real server lock, and if someone took the entity meanwhile the open editor must be
+// told — otherwise the user keeps typing into a save that will 409.
+describe('LockService — reintento de los permisos offline al volver la red', () => {
+  beforeEach(async () => {
+    store.state.isOnline = false
+    LockService.offlineRefs.clear()
+    await LockService.acquireRef('proj1', 'ref1')
+    store.state.isOnline = true
+  })
+  afterEach(() => {
+    store.state.isOnline = true
+    LockService.offlineRefs.clear()
+  })
+
+  it('registra el ref concedido offline para reintentarlo después', () => {
+    expect([...LockService.offlineRefs.keys()]).toEqual(['ref1'])
+  })
+
+  it('convierte el permiso offline en lock real cuando el reintento tiene éxito', async () => {
+    axios.post.mockResolvedValue({ data: { status: true } })
+    jest.spyOn(LockService, 'startRefHeartbeat').mockImplementation(() => {})
+
+    await LockService.retryOfflineRefs()
+
+    expect(axios.post).toHaveBeenCalledWith(
+      '/api/lock/proj1/ref/ref1', {}, expect.any(Object)
+    )
+    expect(LockService.heldRefs()).toEqual(['ref1'])
+    expect(LockService.offlineRefs.size).toBe(0)
+  })
+
+  it('avisa con ref-lock-lost cuando otro usuario tomó la entidad mientras no había red', async () => {
+    axios.post.mockRejectedValue({ response: { status: 409, data: { locked_by: 'Ana Pérez' } } })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.retryOfflineRefs()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost).toBeDefined()
+    expect(lost.detail).toEqual({ refId: 'ref1', lockedBy: 'Ana Pérez' })
+    expect(LockService.heldRefs()).toEqual([])
+    expect(LockService.offlineRefs.size).toBe(0)
+    spy.mockRestore()
+  })
+
+  it('reintenta al dispararse el evento online del navegador', async () => {
+    const retrySpy = jest.spyOn(LockService, 'retryOfflineRefs').mockResolvedValue()
+
+    window.dispatchEvent(new Event('online'))
+
+    expect(retrySpy).toHaveBeenCalled()
+    retrySpy.mockRestore()
+  })
+
+  it('no reintenta un ref cuyo editor ya se cerró', async () => {
+    await LockService.releaseRef('ref1')
+    axios.post.mockResolvedValue({ data: { status: true } })
+
+    await LockService.retryOfflineRefs()
+
+    expect(axios.post).not.toHaveBeenCalled()
+    expect(LockService.offlineRefs.size).toBe(0)
   })
 })
 

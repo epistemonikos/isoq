@@ -65,6 +65,32 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     expect(event.detail.lockedBy).toBe('Carol')
   })
 
+  // Endpoint A writes through /section/<name>, which the URL filter did not cover:
+  // a 409 there reached no listener at all, so the failure was console-only.
+  it('dispara ref-lock-conflict en un 409 de PATCH por sección de un finding', async () => {
+    const err = makeError(
+      '/isoqf_findings/finding1/section/coherence',
+      { option: 2, explanation: 'texto' },
+      'Ana'
+    )
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+    expect(event).toBeTruthy()
+    // The lock unit of endpoint A is the document id, not a study ref.
+    expect(event.detail.refId).toBe('finding1')
+    expect(event.detail.failedData).toEqual({ option: 2, explanation: 'texto' })
+    expect(event.detail.lockedBy).toBe('Ana')
+  })
+
+  it('dispara ref-lock-conflict en un 409 de PATCH por sección de una lista', async () => {
+    const err = makeError('/isoqf_lists/list1/section/cerqual', { option: 1 }, 'Bob')
+    await expect(errorHandler(err)).rejects.toBe(err)
+    const event = dispatched.find(e => e.type === 'ref-lock-conflict')
+    expect(event).toBeTruthy()
+    expect(event.detail.refId).toBe('list1')
+  })
+
   it('NO dispara ref-lock-conflict en un 409 que no es PATCH parcial', async () => {
     const err = makeError('/isoqf_characteristics/char1/', { ref_id: 'ref1' }, 'Ana')
     await expect(errorHandler(err)).rejects.toBe(err)

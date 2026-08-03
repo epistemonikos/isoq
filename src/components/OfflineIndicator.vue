@@ -74,6 +74,10 @@ export default {
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('offlineSync', this.handleSyncComplete)
+    // A replay conflict surfaces with nothing open — the editor that made the change
+    // was closed before the network came back — so the warning has to live in a
+    // component that is always mounted.
+    window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
 
     // Verificar estado y operaciones pendientes periódicamente
     this.checkInterval = setInterval(() => {
@@ -85,11 +89,27 @@ export default {
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('offlineSync', this.handleSyncComplete)
+    window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
     }
   },
   methods: {
+    handleRefLockConflict (event) {
+      const detail = event.detail || {}
+      const lockedBy = detail.lockedBy
+      // `lock_not_held` carries no holder: the write simply had no lock, so there is
+      // no name to blame and the message must not say "edited by undefined".
+      const message = lockedBy
+        ? this.$t('offline.syncConflict', { user: lockedBy })
+        : this.$t('offline.syncConflictNoUser')
+      this.$bvToast.toast(message, {
+        title: this.$t('offline.syncConflictTitle'),
+        variant: 'warning',
+        solid: true,
+        noAutoHide: true
+      })
+    },
     checkOnlineStatus () {
       // Verificar tanto navigator.onLine como el estado interno del API
       const status = navigator.onLine && getOnlineStatus()
