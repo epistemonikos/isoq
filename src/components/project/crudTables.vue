@@ -1049,24 +1049,24 @@ export default {
       this.dataTableFieldsModal.nroColumns = fields.length
 
       // The rows are no longer sent (they used to be rebuilt with every cell empty,
-      // which blanked the table outright). What is left to decide is where the column
-      // KEYS come from, because `dataTableFieldsModal.fields` holds only labels:
+      // which blanked the table outright), and the column KEYS come from the stored
+      // document, never from the position. Regenerating `column_${idx}` only matched
+      // while the last column was the one being deleted: the stored rows key their
+      // content by the ORIGINAL key, so renumbering after deleting the first or a
+      // middle column left every remaining column displaying its neighbour's text.
       //
-      // TODO(human): build params.fields for the remaining columns.
-      //
-      // Regenerating `column_${idx}` from the position — what this did before — is only
-      // safe while no row has content: the stored rows key their content by the ORIGINAL
-      // key, so renumbering after deleting a middle column makes each remaining column
-      // display its neighbour's text. The persisted keys live in `this.dataTable.fields`
-      // (objects with `key` and `label`), which `deleteFieldFromCharsSudiesEdit` above
-      // already works with directly.
+      // `dataTableFieldsModal.fields` holds only the labels (getData fills it with
+      // `f.label`), so the modal index maps onto the document's display columns.
+      const storedKeys = filterDisplayFields(this.dataTable.fields || []).map(f => f.key)
+      storedKeys.splice(index, 1)
 
-      // `fields` holds the labels as plain strings (getData fills it with `f.label`,
-      // and the modal's input writes strings through v-model). Objects are tolerated
-      // the same way isDataTableFieldsModalInvalid does, since both shapes reach here.
+      // The labels arrive as plain strings, but objects are tolerated the same way
+      // isDataTableFieldsModalInvalid does, since both shapes reach here.
       fields.forEach((label, position) => {
+        const key = storedKeys[position]
+        if (!key) return
         params.fields.push({
-          key: `column_${position}`,
+          key,
           label: typeof label === 'object' ? label.label : label
         })
       })

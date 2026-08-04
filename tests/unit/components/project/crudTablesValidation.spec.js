@@ -19,7 +19,10 @@ jest.mock('@/utils/csvImporter', () => ({
 jest.mock('@/utils/tableDataUtils', () => ({
   loadFileAsText: jest.fn(),
   sortByAuthors: jest.fn(items => items),
-  filterDisplayFields: jest.fn(fields => fields)
+  // El real excluye ref_id/authors/actions (tableDataUtils.js:1). Un mock identidad
+  // hace pasar tests que dependen de esas claves quedando fuera.
+  filterDisplayFields: jest.fn(fields =>
+    fields.filter(f => !['ref_id', 'authors', 'actions'].includes(f.key)))
 }))
 
 jest.mock('@/utils/Api', () => {
