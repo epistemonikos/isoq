@@ -48,6 +48,17 @@ Vue.prototype.$notify = {
   warning: jest.fn()
 }
 
+// crypto.getRandomValues for JSDOM: every browser we target has it (since IE11), but
+// this JSDOM build does not expose it. Backed by Node's real CSPRNG so tests that check
+// the entropy of generated keys measure actual randomness.
+if (typeof window.crypto === 'undefined' || !window.crypto.getRandomValues) {
+  const nodeCrypto = require('crypto')
+  Object.defineProperty(window, 'crypto', {
+    value: { getRandomValues: buffer => nodeCrypto.randomFillSync(buffer) },
+    configurable: true
+  })
+}
+
 // Suppress Bootstrap Vue warnings
 Vue.config.silent = true
 

@@ -12,6 +12,25 @@ export function isCustomField (fieldKey) {
 }
 
 /**
+ * Genera la clave de una columna nueva: `column_` + 24 hex aleatorios.
+ *
+ * La clave la elige el cliente para que el alta pueda ser un `PATCH` idempotente —así se
+ * puede encolar sin conexión, se conoce antes de la respuesta y reproducirla dos veces no
+ * crea dos columnas—. El backend lo soporta con una condición: aleatoria de ≥ 12 bytes,
+ * nada derivado del contenido ni de un contador. El `column_${max(N)+1}` que se usaba
+ * antes colisionaba justamente por eso: dos personas agregando a la vez leían el mismo
+ * máximo y una pisaba a la otra.
+ *
+ * @returns {string} - Clave nueva, dentro de la whitelist `^column_[A-Za-z0-9_-]{1,64}$`
+ */
+export function newCustomFieldKey () {
+  const bytes = new Uint8Array(12)
+  const source = (typeof window !== 'undefined' && window.crypto) || global.crypto
+  source.getRandomValues(bytes)
+  return 'column_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
  * Extrae los campos personalizados de un conjunto de campos
  * @param {Array} fields - Array de objetos con key y label
  * @returns {Array} - Array de objetos con los campos personalizados
@@ -69,6 +88,7 @@ export function cleanOrphanedCustomFieldKeys (items, fields) {
 
 export default {
   isCustomField,
+  newCustomFieldKey,
   extractCustomFields,
   cleanOrphanedCustomFieldKeys
 }

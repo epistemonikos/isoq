@@ -35,6 +35,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { newCustomFieldKey } from '@/utils/customFieldsHelper'
 
 export default {
   name: 'ManageColumnsButton',
@@ -153,7 +154,7 @@ export default {
           if (commentsField) newFields.push(commentsField)
         } else {
           newFields.push({
-            key: col.key || `column_${Date.now()}_${Math.random().toString().replace('.', '')}`,
+            key: col.key || newCustomFieldKey(),
             label: col.label.trim()
           })
         }

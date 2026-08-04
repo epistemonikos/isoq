@@ -92,7 +92,7 @@
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import Commons from '@/utils/commons'
-import { isCustomField } from '@/utils/customFieldsHelper'
+import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import _debounce from 'lodash.debounce'
 
 export default {
@@ -428,7 +428,7 @@ export default {
         if (field.label && field.label.trim() !== '') {
           let fieldKey = field.key
           if (!field.locked && (!fieldKey || !fieldKey.startsWith('column_'))) {
-            fieldKey = `column_${Date.now()}_${index}`
+            fieldKey = newCustomFieldKey()
             generatedKeys[index] = fieldKey
           }
 
