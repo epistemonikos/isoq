@@ -11,7 +11,8 @@
       <!-- Action buttons toolbar -->
       <div class="mb-3 d-flex justify-content-end">
         <ManageColumnsButton :chars-data="charsData" :camelot="camelot" :visible-column-keys.sync="visibleColumnKeys"
-          :can-edit="canEdit" @saved="charsData = $event" />
+          :can-edit="canEdit" @saved="charsData = $event"
+          @opened="columnsModalOpen = true" @closed="onColumnsModalClosed" />
         <ToggleConcernsButton class="ml-2" v-model="showComments" :has-visible-camelot-fields="hasVisibleCamelotFields"
           :visible-column-keys.sync="visibleColumnKeys" :camelot="camelot" />
         <TableColumnFilter class="ml-2" :all-columns="filterableColumns" v-model="visibleColumnKeys" />
@@ -284,6 +285,10 @@ export default {
       isFirstLoad: true,
       showComments: false,
       visibleColumnKeys: [], // Keys of currently visible columns
+      // Con el modal de columnas abierto no se puede recargar `charsData`: el modal se
+      // cae. Y cada operación de columna sella `last_update`, así que sin esto quien
+      // edita columnas se autoexpulsa.
+      columnsModalOpen: false,
       expandedCells: {},
       activeRefLocks: [], // [{ ref_id, user_name }] — refs locked by other users
       refLocksTimer: null
@@ -440,7 +445,12 @@ export default {
     },
     /** A reload while a study is open would discard what the user is writing. */
     hasOpenEditor: function () {
-      return this.currentItem !== null
+      return this.currentItem !== null || this.columnsModalOpen
+    },
+    onColumnsModalClosed: function () {
+      this.columnsModalOpen = false
+      // Nada más está abierto: aplicar el refresco que quedó en espera.
+      this.flushPendingRefresh()
     },
     onReferenceModalClosed: function () {
       this.currentItem = null

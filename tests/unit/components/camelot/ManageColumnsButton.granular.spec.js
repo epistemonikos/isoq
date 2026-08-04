@@ -58,7 +58,7 @@ function createWrapper (charsData = CHARS) {
   return shallowMount(ManageColumnsButton, {
     propsData: { charsData, visibleColumnKeys: ['authors', 'column_a'], canEdit: true },
     mocks: {
-      $t: key => key,
+      $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key,
       $route: { params: { org_id: 'org1', id: 'proj1' } },
       $bvModal: {
         show: jest.fn(),
@@ -186,21 +186,24 @@ describe('ManageColumnsButton — el reorden se manda al cerrar', () => {
   afterEach(() => { if (wrapper) wrapper.destroy() })
 
   it('arrastrar no dispara ningún request', () => {
-    wrapper.vm.onOrderChanged(['column_a', 'context_extractedData'])
+    wrapper.vm.onOrderChanged()
 
     expect(columnService.reorderColumns).not.toHaveBeenCalled()
   })
 
-  it('al cerrar manda el último orden arrastrado', async () => {
+  it('al cerrar manda un solo request con el orden final', async () => {
     wrapper.vm.openColumnsModal()
-    wrapper.vm.onOrderChanged(['column_a', 'context_extractedData'])
-    wrapper.vm.onOrderChanged(['context_extractedData', 'column_a'])
+    // Arrastrar reordena las definiciones del modal; el evento sólo avisa que hubo cambio.
+    wrapper.vm.columnDefinitions.reverse()
+    wrapper.vm.onOrderChanged()
+    wrapper.vm.onOrderChanged()
 
     await wrapper.vm.flushPendingOrder()
 
     expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
     expect(columnService.reorderColumns)
-      .toHaveBeenCalledWith('isoqf_characteristics', 'char1', ['context_extractedData', 'column_a'])
+      .toHaveBeenCalledWith('isoqf_characteristics', 'char1',
+        ['context_extractedData', 'context_comments', 'column_a'])
   })
 
   it('no manda nada al cerrar si no se arrastró', async () => {
@@ -212,9 +215,14 @@ describe('ManageColumnsButton — el reorden se manda al cerrar', () => {
   // Si otra persona borró una columna mientras el modal estaba abierto, mencionarla en
   // `order` es 400 por clave desconocida. Las claves que ya no están en el documento se
   // filtran contra lo que el usuario tiene a la vista.
-  it('descarta del orden las columnas que ya no existen localmente', async () => {
-    await wrapper.setData({ columnDefinitions: [{ id: 'f1', key: 'column_a', label: 'Contexto' }] })
-    wrapper.vm.onOrderChanged(['column_a', 'column_borrada_por_otro'])
+  it('descarta del orden las columnas que ya no existen en el documento', async () => {
+    await wrapper.setData({
+      columnDefinitions: [
+        { id: 'f1', key: 'column_a', label: 'Contexto' },
+        { id: 'f2', key: 'column_borrada_por_otro', label: 'Ajena' }
+      ]
+    })
+    wrapper.vm.onOrderChanged()
 
     await wrapper.vm.flushPendingOrder()
 
@@ -234,7 +242,7 @@ describe('ManageColumnsButton — un usuario de solo lectura no escribe', () => 
     wrapper = shallowMount(ManageColumnsButton, {
       propsData: { charsData: CHARS, visibleColumnKeys: [], canEdit: false },
       mocks: {
-        $t: key => key,
+        $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key,
         $route: { params: { org_id: 'org1', id: 'proj1' } },
         $bvModal: { show: jest.fn(), hide: jest.fn(), msgBoxConfirm: jest.fn(() => Promise.resolve(true)) },
         $bvToast: { toast: jest.fn() }
@@ -297,6 +305,27 @@ describe('ManageColumnsButton — lock del documento', () => {
 
     await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
 
+    expect(columnService.renameColumn).not.toHaveBeenCalled()
+  })
+
+  // "Error al actualizar" no le dice al usuario qué pasó ni qué hacer. Con el nombre de
+  // quien tiene el bloqueo, sabe que tiene que esperar y a quién preguntarle.
+  it('avisa quién tiene el bloqueo, no un error genérico', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false, lockedBy: 'Ana Pérez' })
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
+
+    const [mensaje] = wrapper.vm.$bvToast.toast.mock.calls[0]
+    expect(mensaje).toContain('Ana Pérez')
+  })
+
+  // Sin nombre —el lock expiró justo, o falló la red— hace falta un mensaje igual.
+  it('cae a un mensaje genérico si no viene el nombre', async () => {
+    LockService.acquireRef.mockResolvedValueOnce({ success: false })
+
+    await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
+
+    expect(wrapper.vm.$bvToast.toast).toHaveBeenCalled()
     expect(columnService.renameColumn).not.toHaveBeenCalled()
   })
 
@@ -370,5 +399,61 @@ describe('ManageColumnsButton — cuando el documento de la tabla no existe', ()
     await wrapper.vm.onFieldCommitted({ id: 'f1', key: 'column_a', label: 'Otro' })
 
     expect(columnService.ensureTableDocument).not.toHaveBeenCalled()
+  })
+})
+
+// Los tres hallazgos de la prueba en navegador.
+describe('ManageColumnsButton — posición de la columna nueva y pares CAMELOT', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    wrapper = createWrapper()
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  // El usuario agrega una columna y la ve ARRIBA (el modal hace unshift), pero el `$push`
+  // del servidor la pone al final: sin un `order` posterior, la tabla la muestra en un
+  // lugar distinto del que el usuario acaba de ver. El alta tiene que dejar el orden
+  // pendiente para que salga al cerrar.
+  it('tras un alta queda pendiente el orden que el usuario ve', async () => {
+    wrapper.vm.openColumnsModal()
+    // Una columna nueva entra arriba, como hace CustomFieldsManager.addField.
+    wrapper.vm.columnDefinitions.unshift({ id: 'f-nueva', label: 'Nueva' })
+
+    await wrapper.vm.onFieldCommitted(wrapper.vm.columnDefinitions[0])
+    await flushPromises()
+    await wrapper.vm.flushPendingOrder()
+
+    expect(columnService.reorderColumns).toHaveBeenCalledTimes(1)
+    const order = columnService.reorderColumns.mock.calls[0][2]
+    expect(order[0]).toBe('column_nueva')
+  })
+
+  // `order` acepta un subconjunto y deja quieto lo que no se menciona. El modal lista sólo
+  // la mitad `_extractedData` de cada dominio CAMELOT, así que mandar sólo esas claves
+  // dejaría su par `_comments` clavado en el índice viejo y separaría el par.
+  it('el orden incluye el par _comments de cada columna CAMELOT', async () => {
+    wrapper.vm.openColumnsModal()
+    wrapper.vm.onOrderChanged()
+
+    await wrapper.vm.flushPendingOrder()
+
+    const order = columnService.reorderColumns.mock.calls[0][2]
+    expect(order).toContain('context_comments')
+    // El par tiene que quedar junto y en ese orden.
+    expect(order.indexOf('context_comments')).toBe(order.indexOf('context_extractedData') + 1)
+  })
+
+  it('el orden respeta la secuencia que el usuario dejó en el modal', async () => {
+    wrapper.vm.openColumnsModal()
+    wrapper.vm.columnDefinitions.reverse()
+    wrapper.vm.onOrderChanged()
+
+    await wrapper.vm.flushPendingOrder()
+
+    const order = columnService.reorderColumns.mock.calls[0][2]
+    expect(order).toEqual(['context_extractedData', 'context_comments', 'column_a'])
   })
 })

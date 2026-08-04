@@ -79,7 +79,11 @@ export default {
       pendingOrder: null,
       columnsLockHeld: false,
       // Id del documento creado en esta sesión del modal, cuando el proyecto no tenía uno.
-      resolvedDocumentId: null
+      resolvedDocumentId: null,
+      // Claves creadas en esta sesión: ya existen en el servidor, pero el documento
+      // recargado puede no haber llegado todavía al padre, así que `charsData.fields`
+      // no alcanza para saber qué es mencionable en `order`.
+      createdKeys: []
     }
   },
   computed: {
@@ -115,7 +119,13 @@ export default {
 
       const result = await LockService.acquireRef(this.$route.params.id, `${docId}::fields`)
       if (!result || !result.success) {
-        this.notifyError('camelot.step_three.columns_modal.error_update')
+        // Con el nombre de quien lo tiene, el usuario sabe que hay que esperar y a quién
+        // preguntarle. "Error al actualizar" no dice ni qué pasó ni qué hacer.
+        this.notifyError(
+          result && result.lockedBy
+            ? this.$t('camelot.step_three.columns_modal.locked_by', { name: result.lockedBy })
+            : this.$t('camelot.step_three.columns_modal.error_update')
+        )
         return false
       }
 
@@ -142,12 +152,17 @@ export default {
           // mencionar la columna y un segundo blur la crearía de nuevo.
           const local = this.columnDefinitions.find(col => col.id === field.id)
           if (local) this.$set(local, 'key', key)
+          this.createdKeys.push(key)
           this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, key])
           this.emitSaved(response)
+          // El servidor la agrega al final, pero el modal la muestra donde el usuario la
+          // puso (arriba). Sin esto, la tabla la ubicaría en un lugar distinto del que
+          // acaba de ver.
+          this.pendingOrder = true
         }
       } catch (error) {
         console.error('Error saving column:', error)
-        this.notifyError('camelot.step_three.columns_modal.error_update')
+        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
       } finally {
         this.isSavingColumns = false
       }
@@ -181,24 +196,48 @@ export default {
         this.emitSaved(response)
       } catch (error) {
         console.error('Error deleting column:', error)
-        this.notifyError('camelot.step_three.columns_modal.error_update')
+        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
       } finally {
         this.isSavingColumns = false
       }
     },
-    onOrderChanged (keys) {
-      this.pendingOrder = keys
+    onOrderChanged () {
+      this.pendingOrder = true
     },
     /**
-     * Manda el orden acumulado. Las claves que ya no están en el estado local se
-     * descartan: si otra persona borró una columna mientras el modal estaba abierto,
+     * Orden que el usuario tiene a la vista, derivado de las definiciones del modal en vez
+     * de las claves que emite el hijo. Dos razones: el modal lista sólo la mitad
+     * `_extractedData` de cada dominio CAMELOT, y `order` deja quieto lo que no se
+     * menciona — mandar la mitad dejaría el par `_comments` clavado en su índice viejo y
+     * separaría el par.
+     */
+    orderFromDefinitions () {
+      const stored = new Set([
+        ...(this.charsData.fields || []).map(field => field.key),
+        ...this.createdKeys
+      ])
+      const order = []
+
+      for (const col of this.columnDefinitions) {
+        if (!col.key || !stored.has(col.key)) continue
+        order.push(col.key)
+
+        if (col.isCamelot) {
+          const commentsKey = col.key.replace('_extractedData', '_comments')
+          if (stored.has(commentsKey)) order.push(commentsKey)
+        }
+      }
+      return order
+    },
+    /**
+     * Manda el orden acumulado. Se deriva recién acá contra `charsData.fields`, así que una
+     * columna que otra persona borró mientras el modal estaba abierto queda descartada:
      * mencionarla sería un 400 por clave desconocida.
      */
     async flushPendingOrder () {
       if (!this.pendingOrder || !this.documentId) return
 
-      const known = new Set(this.columnDefinitions.filter(col => col.key).map(col => col.key))
-      const order = this.pendingOrder.filter(key => known.has(key))
+      const order = this.orderFromDefinitions()
       this.pendingOrder = null
       if (!order.length) return
       if (!(await this.ensureColumnsLock())) return
@@ -207,7 +246,7 @@ export default {
         this.emitSaved(await columnService.reorderColumns(COLLECTION, this.documentId, order))
       } catch (error) {
         console.error('Error reordering columns:', error)
-        this.notifyError('camelot.step_three.columns_modal.error_update')
+        this.notifyError(this.$t('camelot.step_three.columns_modal.error_update'))
       }
     },
     async onModalHidden () {
@@ -218,6 +257,7 @@ export default {
         this.columnsLockHeld = false
       }
       this.resetColumnsModal()
+      this.$emit('closed')
     },
     dropLocalColumn (field) {
       this.columnDefinitions = this.columnDefinitions.filter(col => col.id !== field.id)
@@ -234,8 +274,9 @@ export default {
         _id: data._id || this.charsData._id
       })
     },
-    notifyError (key) {
-      this.$bvToast.toast(this.$t(key), {
+    /** Recibe el mensaje ya armado: algunos llevan interpolación. */
+    notifyError (message) {
+      this.$bvToast.toast(message, {
         title: this.$t('camelot.step_three.columns_modal.toast_error_title'),
         variant: 'danger',
         solid: true
@@ -287,6 +328,7 @@ export default {
           })
         }
       }
+      this.$emit('opened')
       this.$bvModal.show('modal-manage-columns')
     },
     closeColumnsModal () {

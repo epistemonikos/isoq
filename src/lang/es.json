@@ -1284,7 +1284,8 @@
         "toast_error_title": "Error",
         "autosave_hint": "Los cambios se guardan a medida que los hacés.",
         "confirm_delete": "¿Eliminar la columna \"{name}\"? Su contenido se borrará de todos los estudios.",
-        "confirm_delete_title": "Eliminar columna"
+        "confirm_delete_title": "Eliminar columna",
+        "locked_by": "{name} está editando las columnas en este momento. Probá de nuevo en un rato."
       },
       "modal": {
         "title": "Características del estudio incluido - {reference_id}",

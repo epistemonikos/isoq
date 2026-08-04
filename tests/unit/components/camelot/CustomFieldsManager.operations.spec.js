@@ -101,6 +101,27 @@ describe('CustomFieldsManager — field-committed', () => {
     expect(wrapper.emitted('field-committed')).toHaveLength(1)
   })
 
+  // Encontrado probando en el navegador, y no lo veía ningún test: el `@input` de cada
+  // tecla emite al padre, el padre lo refleja en el v-model, y el watcher `deep` re-copia
+  // `localFields`. Si el título original se guarda dentro del campo copiado, esa re-copia
+  // lo sobrescribe con el valor en curso — al llegar el blur, "no cambió nada" y el
+  // guardado nunca sale. Tiene que sobrevivir a las re-copias.
+  it('emite aunque el padre haya reflejado cada tecla en el v-model', async () => {
+    const wrapper = createWrapper([{ key: 'column_a', label: 'Contexto' }])
+    await wrapper.vm.$nextTick()
+
+    // Lo que pasa al teclear: v-model del input, emitChange, y el padre devuelve la lista.
+    wrapper.vm.localFields[0].label = 'Contexto renombrado'
+    wrapper.vm.emitChange()
+    await wrapper.setProps({ fields: wrapper.vm.localFields.map(f => ({ ...f })) })
+    await wrapper.vm.$nextTick()
+
+    wrapper.vm.onLabelBlur(wrapper.vm.localFields[0])
+
+    expect(wrapper.emitted('field-committed')).toHaveLength(1)
+    expect(wrapper.emitted('field-committed')[0][0].label).toBe('Contexto renombrado')
+  })
+
   it('sigue marcando el campo como tocado, para la validación visual', async () => {
     const wrapper = createWrapper([{ key: 'column_a', label: 'Contexto' }])
     await wrapper.vm.$nextTick()

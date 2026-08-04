@@ -251,7 +251,10 @@ export default {
       drag: false,
       isSidebarOpen: false,
       selectedGuidanceField: null,
-      touchedLabelIds: []
+      touchedLabelIds: [],
+      // id del campo → último título guardado. No se usa en el template, así que no
+      // necesita ser reactivo; sí necesita sobrevivir a las re-copias de localFields.
+      committedLabels: {}
     }
   },
   computed: {
@@ -275,9 +278,14 @@ export default {
           if (!field.id) {
             field.id = `field_${Date.now()}_${index}`
           }
-          // Título con el que llegó, para no emitir un guardado cuando el usuario sólo
-          // pasó por el campo sin escribir nada.
-          field._committedLabel = field.label
+          // Título ya guardado, para no reenviarlo cuando el usuario sólo pasa por el
+          // campo. Vive FUERA del campo a propósito: `@input` emite en cada tecla, el
+          // padre lo refleja en el v-model y este watcher vuelve a copiar la lista, así
+          // que cualquier cosa guardada dentro del objeto se sobrescribiría con el valor
+          // en curso y el blur no vería nunca un cambio.
+          if (!(field.id in this.committedLabels)) {
+            this.committedLabels[field.id] = field.label
+          }
           return field
         })
       },
@@ -337,9 +345,9 @@ export default {
       this.markLabelTouched(field.id)
 
       const label = (field.label || '').trim()
-      if (!label || label === field._committedLabel) return
+      if (!label || label === this.committedLabels[field.id]) return
 
-      field._committedLabel = label
+      this.committedLabels[field.id] = label
       this.$emit('field-committed', field)
     },
     markLabelTouched (id) {

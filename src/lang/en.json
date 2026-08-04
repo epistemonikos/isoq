@@ -1284,7 +1284,8 @@
         "toast_error_title": "Error",
         "autosave_hint": "Changes are saved as you make them.",
         "confirm_delete": "Delete the column \"{name}\"? Its content will be removed from every study.",
-        "confirm_delete_title": "Delete column"
+        "confirm_delete_title": "Delete column",
+        "locked_by": "Somebody else is editing the columns right now: {name}. Try again in a moment."
       },
       "modal": {
         "title": "Characteristics of the included study - {reference_id}",
