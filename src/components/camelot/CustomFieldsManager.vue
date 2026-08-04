@@ -88,7 +88,7 @@
                   :disabled="field.locked"
                   :state="getLabelState(field)"
                   @input="emitChange"
-                  @blur="markLabelTouched(field.id)">
+                  @blur="onLabelBlur(field)">
                 </b-form-input>
                 <b-form-invalid-feedback>{{ $t('common.field_required') }}</b-form-invalid-feedback>
               </b-form-group>
@@ -234,6 +234,15 @@ export default {
     idPrefix: {
       type: String,
       default: 'field-'
+    },
+    // Cuando el padre aplica cada operación por separado, quitar la fila de la lista no
+    // puede adelantarse a la confirmación: el DELETE borra el contenido de esa columna en
+    // todas las filas, y si el usuario dice que no hay que dejarla donde estaba. Sin esta
+    // prop el borrado se comporta como siempre, que es lo que espera el guardado en
+    // bloque de EditReferenceModal.
+    confirmRemove: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -266,6 +275,9 @@ export default {
           if (!field.id) {
             field.id = `field_${Date.now()}_${index}`
           }
+          // Título con el que llegó, para no emitir un guardado cuando el usuario sólo
+          // pasó por el campo sin escribir nada.
+          field._committedLabel = field.label
           return field
         })
       },
@@ -303,12 +315,32 @@ export default {
     },
     removeField (index) {
       const removed = this.localFields[index]
+
+      // El padre aplica el borrado y avisa: hasta entonces la fila sigue acá.
+      if (this.confirmRemove) {
+        if (removed) this.$emit('remove-requested', removed)
+        return
+      }
+
       if (removed && removed.id) {
         const i = this.touchedLabelIds.indexOf(removed.id)
         if (i !== -1) this.touchedLabelIds.splice(i, 1)
       }
       this.localFields.splice(index, 1)
       this.emitChange()
+    },
+    /**
+     * El alta y el renombrado se aplican al salir del campo: es el momento en que el
+     * título ya está escrito. Hacerlo al crear la fila haría nacer una columna sin título.
+     */
+    onLabelBlur (field) {
+      this.markLabelTouched(field.id)
+
+      const label = (field.label || '').trim()
+      if (!label || label === field._committedLabel) return
+
+      field._committedLabel = label
+      this.$emit('field-committed', field)
     },
     markLabelTouched (id) {
       if (id && !this.touchedLabelIds.includes(id)) {
@@ -327,6 +359,10 @@ export default {
       this.drag = false
       document.body.classList.remove('dragging-active')
       this.emitChange()
+
+      // Sólo las claves que el servidor conoce: una columna recién agregada todavía no
+      // tiene, y mandarla en `order` sería un 400 por clave desconocida.
+      this.$emit('order-changed', this.localFields.filter(f => f.key).map(f => f.key))
     },
     showGuidance (field) {
       if (!field || !field.key) return

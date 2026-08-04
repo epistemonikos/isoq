@@ -11,11 +11,14 @@ import {
   renameColumn,
   deleteColumn,
   reorderColumns,
-  movableKeys
+  movableKeys,
+  ensureTableDocument
 } from '@/services/columnService'
 import Api from '@/utils/Api'
 
 jest.mock('@/utils/Api', () => ({
+  get: jest.fn(() => Promise.resolve({ data: [] })),
+  post: jest.fn(() => Promise.resolve({ data: {} })),
   patch: jest.fn(() => Promise.resolve({ data: {} })),
   delete: jest.fn(() => Promise.resolve({ data: {} })),
   put: jest.fn(() => Promise.resolve({ data: {} }))
@@ -133,5 +136,69 @@ describe('columnService — movableKeys', () => {
     expect(movableKeys(null)).toEqual([])
     expect(movableKeys([{ label: 'sin clave' }, { key: 'column_a', label: 'A' }]))
       .toEqual(['column_a'])
+  })
+})
+
+describe('columnService — ensureTableDocument', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('devuelve el id del documento que ya existe, sin crear otro', async () => {
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'existente' }] })
+
+    const id = await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(id).toBe('existente')
+    expect(Api.post).not.toHaveBeenCalled()
+  })
+
+  it('crea el documento cuando no hay ninguno', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    const id = await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(id).toBe('nuevo')
+    expect(Api.post).toHaveBeenCalledTimes(1)
+    const [url, body] = Api.post.mock.calls[0]
+    expect(url).toBe('/isoqf_characteristics/')
+    expect(body.project_id).toBe('proj1')
+    expect(body.organization).toBe('org1')
+  })
+
+  // La creación es la única ruta donde el cliente sigue mandando `fields` completo: el
+  // documento no existe, así que no hay copia obsoleta posible. Sólo los de sistema — las
+  // columnas se agregan después, de a una, por los granulares.
+  it('nace con los campos de sistema y sin columnas de usuario', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(Api.post.mock.calls[0][1].fields.map(f => f.key)).toEqual(['ref_id', 'authors'])
+  })
+
+  // En CAMELOT las filas son un left-join virtual contra las referencias, así que el
+  // documento no necesita nacer con `items`.
+  it('no siembra filas', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(Api.post.mock.calls[0][1]).not.toHaveProperty('items')
+  })
+
+  // La relectura previa es la mitigación acordada con el backend para la carrera de doble
+  // creación, que hoy no tiene índice único que la cierre: encoge la ventana sin tomar el
+  // lock de proyecto, que frenaría a todos los demás en el proyecto.
+  it('consulta antes de crear, filtrando por proyecto', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_characteristics', 'org1', 'proj1')
+
+    expect(Api.get).toHaveBeenCalledWith(
+      '/isoqf_characteristics?organization=org1&project_id=proj1'
+    )
   })
 })

@@ -7,10 +7,21 @@
 
     <!-- Modal para gestionar columnas personalizadas -->
     <b-modal id="modal-manage-columns" ref="modal-manage-columns" :title="$t('camelot.step_three.columns_modal.title')"
-      size="lg" @ok="handleSaveColumns" @hide="resetColumnsModal">
-      <p class="text-muted mb-3">{{ $t('camelot.step_three.columns_modal.description') }}</p>
+      size="lg" @hidden="onModalHidden">
+      <p class="text-muted mb-2">{{ $t('camelot.step_three.columns_modal.description') }}</p>
+      <!-- Cada cambio se guarda solo, así que conviene decirlo: sin botón de guardar, el
+           usuario no tiene forma de saber cuándo se aplicó lo que hizo. -->
+      <p class="text-muted small mb-3">
+        <font-awesome-icon icon="info-circle" class="mr-1" />
+        {{ $t('camelot.step_three.columns_modal.autosave_hint') }}
+        <b-spinner small v-if="isSavingColumns" class="ml-1"></b-spinner>
+      </p>
 
       <CustomFieldsManager v-model="columnDefinitions" :with-values="false" :show-header="false"
+        confirm-remove
+        @field-committed="onFieldCommitted"
+        @remove-requested="onRemoveRequested"
+        @order-changed="onOrderChanged"
         :add-button-text="$t('camelot.step_three.columns_modal.add_column')"
         :empty-text="$t('camelot.step_three.columns_modal.no_columns')"
         :move-instruction-text="$t('camelot.step_three.modal.move_instruction')"
@@ -20,13 +31,9 @@
         :placeholder-label="$t('camelot.step_three.columns_modal.column_name_placeholder')" id-prefix="column-def-" />
 
       <template #modal-footer>
+        <!-- "Cancelar" sería una promesa falsa: lo que se aplicó no se puede deshacer. -->
         <b-button variant="secondary" @click="closeColumnsModal" :disabled="isSavingColumns">
-          {{ $t('common.cancel') }}
-        </b-button>
-        <b-button variant="primary" @click="handleSaveColumns" :disabled="isSavingColumns">
-          <b-spinner small v-if="isSavingColumns"></b-spinner>
-          <font-awesome-icon v-else icon="save"></font-awesome-icon>
-          {{ $t('camelot.step_three.columns_modal.save_changes') }}
+          {{ $t('common.close') }}
         </b-button>
       </template>
     </b-modal>
@@ -34,8 +41,10 @@
 </template>
 
 <script>
-import Api from '@/utils/Api'
-import { newCustomFieldKey } from '@/utils/customFieldsHelper'
+import columnService from '@/services/columnService'
+import LockService from '@/services/lockService'
+
+const COLLECTION = 'isoqf_characteristics'
 
 export default {
   name: 'ManageColumnsButton',
@@ -63,10 +72,175 @@ export default {
   data () {
     return {
       columnDefinitions: [],
-      isSavingColumns: false
+      isSavingColumns: false,
+      // El reorden es lo único que se acumula: es conmutativo (el backend acepta `order`
+      // como subconjunto), así que mandarlo una vez al cerrar equivale a mandarlo en cada
+      // arrastre y le ahorra un request a cada alta.
+      pendingOrder: null,
+      columnsLockHeld: false,
+      // Id del documento creado en esta sesión del modal, cuando el proyecto no tenía uno.
+      resolvedDocumentId: null
+    }
+  },
+  computed: {
+    documentId () {
+      return this.charsData.id || this.charsData._id || this.resolvedDocumentId || null
     }
   },
   methods: {
+    /**
+     * En CAMELOT las filas son virtuales, así que un proyecto puede llegar al Paso 3 sin
+     * documento de tabla: nada lo crea hasta que alguien escribe. Los endpoints granulares
+     * necesitan un `<doc_id>`, así que la primera operación lo resuelve.
+     */
+    async resolveDocumentId () {
+      if (this.documentId) return this.documentId
+
+      const id = await columnService.ensureTableDocument(
+        COLLECTION, this.$route.params.org_id, this.$route.params.id
+      )
+      if (id) this.resolvedDocumentId = id
+      return id
+    },
+    /**
+     * Los cuatro endpoints exigen el lock del documento cuando la concurrencia está
+     * encendida. Se toma al primer cambio real y no al abrir el modal: quien sólo fue a
+     * mirar las columnas no debe bloquear a nadie — el mismo criterio del Paso 4.
+     */
+    async ensureColumnsLock () {
+      if (this.columnsLockHeld) return true
+
+      const docId = await this.resolveDocumentId()
+      if (!docId) return false
+
+      const result = await LockService.acquireRef(this.$route.params.id, `${docId}::fields`)
+      if (!result || !result.success) {
+        this.notifyError('camelot.step_three.columns_modal.error_update')
+        return false
+      }
+
+      this.columnsLockHeld = true
+      return true
+    },
+    async onFieldCommitted (field) {
+      if (!this.canEdit || !(await this.ensureColumnsLock())) return
+
+      const label = (field.label || '').trim()
+      this.isSavingColumns = true
+
+      try {
+        if (field.key) {
+          const response = await columnService.renameColumn(
+            COLLECTION, this.documentId, field.key, label
+          )
+          this.emitSaved(response)
+        } else {
+          const { key, response } = await columnService.addColumn(
+            COLLECTION, this.documentId, label
+          )
+          // La clave tiene que quedar en el estado local: sin ella el reorden no puede
+          // mencionar la columna y un segundo blur la crearía de nuevo.
+          const local = this.columnDefinitions.find(col => col.id === field.id)
+          if (local) this.$set(local, 'key', key)
+          this.$emit('update:visibleColumnKeys', [...this.visibleColumnKeys, key])
+          this.emitSaved(response)
+        }
+      } catch (error) {
+        console.error('Error saving column:', error)
+        this.notifyError('camelot.step_three.columns_modal.error_update')
+      } finally {
+        this.isSavingColumns = false
+      }
+    },
+    async onRemoveRequested (field) {
+      if (!this.canEdit) return
+
+      // Una columna que nunca llegó al servidor no tiene nada que borrar allá.
+      if (!field.key) {
+        this.dropLocalColumn(field)
+        return
+      }
+
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('camelot.step_three.columns_modal.confirm_delete', { name: field.label }),
+        {
+          title: this.$t('camelot.step_three.columns_modal.confirm_delete_title'),
+          okVariant: 'danger',
+          okTitle: this.$t('camelot.step_three.delete_button'),
+          cancelTitle: this.$t('common.cancel'),
+          centered: true
+        }
+      )
+      if (!confirmed) return
+      if (!(await this.ensureColumnsLock())) return
+
+      this.isSavingColumns = true
+      try {
+        const response = await columnService.deleteColumn(COLLECTION, this.documentId, field.key)
+        this.dropLocalColumn(field)
+        this.emitSaved(response)
+      } catch (error) {
+        console.error('Error deleting column:', error)
+        this.notifyError('camelot.step_three.columns_modal.error_update')
+      } finally {
+        this.isSavingColumns = false
+      }
+    },
+    onOrderChanged (keys) {
+      this.pendingOrder = keys
+    },
+    /**
+     * Manda el orden acumulado. Las claves que ya no están en el estado local se
+     * descartan: si otra persona borró una columna mientras el modal estaba abierto,
+     * mencionarla sería un 400 por clave desconocida.
+     */
+    async flushPendingOrder () {
+      if (!this.pendingOrder || !this.documentId) return
+
+      const known = new Set(this.columnDefinitions.filter(col => col.key).map(col => col.key))
+      const order = this.pendingOrder.filter(key => known.has(key))
+      this.pendingOrder = null
+      if (!order.length) return
+      if (!(await this.ensureColumnsLock())) return
+
+      try {
+        this.emitSaved(await columnService.reorderColumns(COLLECTION, this.documentId, order))
+      } catch (error) {
+        console.error('Error reordering columns:', error)
+        this.notifyError('camelot.step_three.columns_modal.error_update')
+      }
+    },
+    async onModalHidden () {
+      await this.flushPendingOrder()
+
+      if (this.columnsLockHeld) {
+        await LockService.releaseRef(`${this.documentId}::fields`)
+        this.columnsLockHeld = false
+      }
+      this.resetColumnsModal()
+    },
+    dropLocalColumn (field) {
+      this.columnDefinitions = this.columnDefinitions.filter(col => col.id !== field.id)
+    },
+    /** Cada respuesta trae el documento completo recargado, que es lo que el padre pinta. */
+    emitSaved (response) {
+      const data = response && response.data
+      if (!data) return
+
+      const payload = data.$set || data
+      this.$emit('saved', {
+        ...payload,
+        id: data.id || this.charsData.id,
+        _id: data._id || this.charsData._id
+      })
+    },
+    notifyError (key) {
+      this.$bvToast.toast(this.$t(key), {
+        title: this.$t('camelot.step_three.columns_modal.toast_error_title'),
+        variant: 'danger',
+        solid: true
+      })
+    },
     openColumnsModal () {
       if (!this.canEdit) {
         return
@@ -121,120 +295,6 @@ export default {
     resetColumnsModal () {
       this.columnDefinitions = []
       this.isSavingColumns = false
-    },
-    handleSaveColumns (bvModalEvt) {
-      if (!this.canEdit) {
-        if (bvModalEvt) bvModalEvt.preventDefault()
-        return
-      }
-      if (bvModalEvt) {
-        bvModalEvt.preventDefault()
-      }
-
-      if (this.isSavingColumns) {
-        return
-      }
-
-      this.isSavingColumns = true
-
-      const systemFields = (this.charsData.fields || []).filter(field =>
-        ['authors', 'ref_id', 'actions', 'edit'].includes(field.key)
-      )
-
-      const newFields = []
-      for (const col of this.columnDefinitions) {
-        if (!col.label || col.label.trim() === '') continue
-
-        if (col.isCamelot) {
-          const extDataField = this.charsData.fields.find(f => f.key === col.key)
-          if (extDataField) newFields.push(extDataField)
-
-          const commentsKey = col.key.replace('_extractedData', '_comments')
-          const commentsField = this.charsData.fields.find(f => f.key === commentsKey)
-          if (commentsField) newFields.push(commentsField)
-        } else {
-          newFields.push({
-            key: col.key || newCustomFieldKey(),
-            label: col.label.trim()
-          })
-        }
-      }
-
-      const updatedFields = [...systemFields, ...newFields]
-
-      // The rows are deliberately NOT sent. Sending them meant filtering every row
-      // against this local copy of `fields`, so a column created by somebody else
-      // while this modal was open was missing from the copy and its content was
-      // wiped from every row. The generic PATCH is a partial $set of top-level keys,
-      // so omitting `items` leaves the stored rows untouched — and what does not
-      // travel cannot be lost.
-      const dataToSave = {
-        fields: updatedFields,
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-
-      const savePromise = (this.charsData.id || this.charsData._id)
-        ? Api.patch(`/isoqf_characteristics/${this.charsData.id || this.charsData._id}`, dataToSave)
-        : Api.post('/isoqf_characteristics/', dataToSave)
-
-      savePromise
-        .then(response => {
-          const responseData = response.data.$set || response.data
-          const updatedData = {
-            ...responseData,
-            id: response.data.id || this.charsData.id,
-            _id: response.data._id || this.charsData._id
-          }
-
-          this.$emit('saved', updatedData)
-
-          // Logic for updating visible columns: only add truly NEW columns
-          const newVisibleKeys = [...this.visibleColumnKeys]
-          const oldFieldKeys = this.charsData.fields ? this.charsData.fields.map(f => f.key) : []
-
-          if (updatedData.fields) {
-            const newIds = updatedData.fields
-              .filter(f =>
-                f.key !== 'authors' &&
-                f.key !== 'ref_id' &&
-                f.key !== 'actions' &&
-                !oldFieldKeys.includes(f.key) // Only if it wasn't there before
-              )
-              .map(f => f.key)
-
-            if (newIds.length > 0) {
-              this.$emit('update:visibleColumnKeys', [...newVisibleKeys, ...newIds])
-            }
-          }
-
-          this.isSavingColumns = false
-          this.$bvModal.hide('modal-manage-columns')
-
-          this.$nextTick(() => {
-            setTimeout(() => {
-              const successMsg = (this.charsData.id || this.charsData._id)
-                ? 'camelot.step_three.columns_modal.success_update'
-                : 'camelot.step_three.columns_modal.success_create'
-
-              this.$bvToast.toast(this.$t(successMsg), {
-                title: this.$t('camelot.step_three.columns_modal.toast_success_title'),
-                variant: 'success',
-                solid: true,
-                autoHideDelay: 3000
-              })
-            }, 100)
-          })
-        })
-        .catch(error => {
-          console.error('Error saving columns:', error)
-          this.isSavingColumns = false
-          this.$bvToast.toast(this.$t('camelot.step_three.columns_modal.error_update'), {
-            title: this.$t('camelot.step_three.columns_modal.toast_error_title'),
-            variant: 'danger',
-            solid: true
-          })
-        })
     }
   }
 }

@@ -74,55 +74,11 @@ describe('ManageColumnsButton.vue', () => {
     expect(wrapper.vm.$bvModal.show).toHaveBeenCalledWith('modal-manage-columns')
   })
 
-  it('calls Api.patch when saving existing characteristics and maintains pairs', async () => {
-    wrapper.setData({
-      columnDefinitions: [
-        { key: 'design_extractedData', label: 'Study Design', isCamelot: true },
-        { key: 'column_1', label: 'Updated Label' }
-      ]
-    })
-    
-    await wrapper.vm.handleSaveColumns()
-    
-    expect(Api.patch).toHaveBeenCalledWith(
-      '/isoqf_characteristics/char1',
-      expect.objectContaining({
-        fields: [
-          { key: 'authors', label: 'Authors' }, // System field
-          { key: 'design_extractedData', label: 'Study Design' }, // Camelot parent
-          { key: 'design_comments', label: 'Concerns' }, // Camelot pair automatically included
-          { key: 'column_1', label: 'Updated Label' } // Custom field
-        ]
-      })
-    )
-    expect(wrapper.emitted('saved')).toBeTruthy()
-  })
-
-  // Guardar columnas mandaba también `items[]`, filtrado contra la copia local de
-  // `fields`: si otra persona creó una columna mientras el modal estaba abierto, esa
-  // clave no estaba en la copia y el PATCH le borraba el contenido en TODAS las filas.
-  // El PATCH genérico es un `$set` parcial (docs/respuesta-backend-columnas-paso3.md §1),
-  // así que omitir `items` deja las filas intactas en la base.
-  it('no manda items[] al guardar columnas', async () => {
-    await wrapper.setProps({
-      charsData: {
-        ...mockCharsData,
-        items: [
-          { ref_id: 'R1', authors: 'Smith 2020', column_1: 'texto de otra persona' }
-        ]
-      }
-    })
-    wrapper.setData({
-      columnDefinitions: [{ key: 'column_1', label: 'Custom Field 1' }]
-    })
-
-    await wrapper.vm.handleSaveColumns()
-
-    expect(Api.patch).toHaveBeenCalled()
-    const params = Api.patch.mock.calls[0][1]
-    expect(params).not.toHaveProperty('items')
-    expect(params.fields).toBeDefined()
-  })
+  // Los dos tests que había acá —que el PATCH mandaba `fields` completo conservando el par
+  // CAMELOT, y que no mandaba `items[]`— desaparecieron con `handleSaveColumns`. Ya no hay
+  // un guardado en bloque: cada operación va por su endpoint granular, así que `fields`
+  // nunca se reescribe y el par `_comments` no se puede perder por construcción. La
+  // cobertura de las rutas nuevas está en ManageColumnsButton.granular.spec.js.
 
   describe('canEdit gating (read-only user protection)', () => {
     it('defaults canEdit to false when not provided', () => {
@@ -149,13 +105,6 @@ describe('ManageColumnsButton.vue', () => {
       wrapper.vm.openColumnsModal()
       expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalled()
       expect(wrapper.vm.columnDefinitions).toEqual([])
-    })
-
-    it('handleSaveColumns does not call Api.patch/Api.post when canEdit is false', async () => {
-      await wrapper.setProps({ canEdit: false })
-      await wrapper.vm.handleSaveColumns()
-      expect(Api.patch).not.toHaveBeenCalled()
-      expect(Api.post).not.toHaveBeenCalled()
     })
   })
 })

@@ -12,6 +12,7 @@
  * primer cambio real y lo suelta al cerrar.
  */
 import Api from '@/utils/Api'
+import { i18n } from '@/plugins/i18n'
 import { newCustomFieldKey } from '@/utils/customFieldsHelper'
 
 // Claves que el backend conserva en su posición y que rechaza si viajan en `order`.
@@ -61,6 +62,40 @@ export function reorderColumns (collection, docId, order) {
 }
 
 /**
+ * Id del documento de la tabla, creándolo si todavía no existe. Los cuatro endpoints
+ * granulares necesitan un `<doc_id>`, y en un proyecto nuevo la primera columna se pide
+ * antes de que exista el documento.
+ *
+ * Consulta antes de crear a propósito: es la mitigación acordada con el backend para la
+ * carrera de doble creación, que hoy no tiene índice único que la cierre. Encoge la
+ * ventana sin tomar el lock de proyecto, que frenaría a todos los demás en el proyecto.
+ *
+ * @returns {Promise<string|null>}
+ */
+export async function ensureTableDocument (collection, organization, projectId) {
+  const existing = await Api.get(
+    `/${collection}?organization=${organization}&project_id=${projectId}`
+  )
+  const found = existing && existing.data && existing.data[0]
+  if (found) return found.id || found._id || null
+
+  // La creación es la única ruta donde el cliente manda `fields` completo: el documento no
+  // existe, así que no hay copia obsoleta posible ni columnas de otra persona que perder.
+  // Sólo los de sistema; las columnas llegan después, de a una. Y sin `items`: en CAMELOT
+  // las filas son un left-join virtual contra las referencias.
+  const created = await Api.post(`/${collection}/`, {
+    organization,
+    project_id: projectId,
+    fields: [
+      { key: 'ref_id', label: i18n.t('table_headers.reference_id') },
+      { key: 'authors', label: i18n.t('table_headers.author_year') }
+    ]
+  })
+  const data = created && created.data
+  return data ? (data.id || data._id || null) : null
+}
+
+/**
  * Claves reordenables de un `fields`, en su orden actual: todo menos los campos de
  * sistema. Es lo que puede viajar en `order`.
  */
@@ -72,6 +107,7 @@ export function movableKeys (fields) {
 
 export default {
   addColumn,
+  ensureTableDocument,
   renameColumn,
   deleteColumn,
   reorderColumns,

@@ -1281,7 +1281,10 @@
         "error_update": "Erro ao atualizar as colunas. Por favor, tente novamente.",
         "error_create": "Erro ao criar as colunas. Por favor, tente novamente.",
         "toast_success_title": "Sucesso",
-        "toast_error_title": "Erro"
+        "toast_error_title": "Erro",
+        "autosave_hint": "As alterações são salvas conforme você as faz.",
+        "confirm_delete": "Excluir a coluna \"{name}\"? O conteúdo dela será removido de todos os estudos.",
+        "confirm_delete_title": "Excluir coluna"
       },
       "modal": {
         "title": "Características do estudo incluído - {reference_id}",

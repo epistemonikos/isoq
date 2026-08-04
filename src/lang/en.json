@@ -1281,7 +1281,10 @@
         "error_update": "Error updating columns. Please try again.",
         "error_create": "Error creating columns. Please try again.",
         "toast_success_title": "Success",
-        "toast_error_title": "Error"
+        "toast_error_title": "Error",
+        "autosave_hint": "Changes are saved as you make them.",
+        "confirm_delete": "Delete the column \"{name}\"? Its content will be removed from every study.",
+        "confirm_delete_title": "Delete column"
       },
       "modal": {
         "title": "Characteristics of the included study - {reference_id}",

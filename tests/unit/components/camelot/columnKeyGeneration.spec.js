@@ -30,61 +30,11 @@ const MOCKS = {
   $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
 }
 
-describe('ManageColumnsButton — clave de una columna nueva', () => {
-  let wrapper
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-    wrapper = shallowMount(ManageColumnsButton, {
-      propsData: {
-        charsData: { id: 'char1', fields: [{ key: 'authors', label: 'Authors' }], items: [] },
-        visibleColumnKeys: ['authors'],
-        canEdit: true
-      },
-      mocks: MOCKS,
-      stubs: { 'b-button': true, 'b-modal': true, 'font-awesome-icon': true, 'CustomFieldsManager': true }
-    })
-  })
-
-  afterEach(() => {
-    if (wrapper) wrapper.destroy()
-  })
-
-  it('genera una clave aleatoria de 24 hex, no derivada del reloj', async () => {
-    // Una columna sin `key` es una columna nueva: la agregó el usuario en el modal.
-    await wrapper.setData({ columnDefinitions: [{ label: 'Contexto' }] })
-
-    wrapper.vm.handleSaveColumns()
-
-    const enviados = Api.patch.mock.calls[0][1].fields
-    const nueva = enviados.find(f => f.label === 'Contexto')
-    expect(nueva.key).toMatch(CLAVE_ALEATORIA)
-  })
-
-  it('dos columnas nuevas guardadas juntas no comparten clave', async () => {
-    await wrapper.setData({
-      columnDefinitions: [{ label: 'Contexto' }, { label: 'Método' }]
-    })
-
-    wrapper.vm.handleSaveColumns()
-
-    const enviados = Api.patch.mock.calls[0][1].fields
-    const a = enviados.find(f => f.label === 'Contexto').key
-    const b = enviados.find(f => f.label === 'Método').key
-    expect(a).not.toBe(b)
-  })
-
-  it('no le toca la clave a una columna que ya existe', async () => {
-    await wrapper.setData({
-      columnDefinitions: [{ key: 'column_1', label: 'Renombrada' }]
-    })
-
-    wrapper.vm.handleSaveColumns()
-
-    const enviados = Api.patch.mock.calls[0][1].fields
-    expect(enviados.find(f => f.label === 'Renombrada').key).toBe('column_1')
-  })
-})
+// La mitad de ManageColumnsButton que había acá desapareció con `handleSaveColumns`: ese
+// componente ya no genera claves, las pide a `columnService.addColumn`. El formato de la
+// clave se verifica en tests/unit/utils/customFieldsHelper.newKey.spec.js y en
+// tests/unit/services/columnService.spec.js; que el alta pase por ahí, en
+// ManageColumnsButton.granular.spec.js.
 
 describe('EditReferenceModal — clave de una columna nueva', () => {
   let wrapper
