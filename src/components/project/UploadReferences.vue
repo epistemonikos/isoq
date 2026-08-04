@@ -610,9 +610,6 @@ export default {
 
       this.pubmed_requested.push(reference)
     },
-    requestImportReferences: async function (index) {
-      return Api.post(`/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`, this.pubmed_requested[index])
-    },
     importReferences: async function () {
       if (!this.pubmed_selected.length) return
 
