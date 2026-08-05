@@ -354,3 +354,34 @@ describe('crudTables — lock del documento de la tabla', () => {
     expect(LockService.releaseRef).not.toHaveBeenCalled()
   })
 })
+
+// Medido en el navegador: al salir del proyecto con el modal abierto, el lock de columnas
+// quedaba tomado hasta que el TTL del servidor lo expiraba (60 s), bloqueando a todos los
+// demás mientras tanto. El componente ya hacía esto con el lock de fila; el de columnas
+// necesita la misma red, porque la navegación SPA destruye la vista sin pasar por el cierre
+// del modal.
+describe('crudTables — el lock de columnas no queda colgado al destruirse la vista', () => {
+  let wrapper
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    wrapper = createWrapper()
+    await conTablaYColumnas(wrapper)
+  })
+
+  it('lo suelta al destruirse con el modal abierto', async () => {
+    wrapper.vm.dataTableFieldsModalEdit.fields[0].label = 'Otro'
+    await wrapper.vm.onEditFieldBlur(0)
+    expect(wrapper.vm.columnsLockHeld).toBe(true)
+
+    wrapper.destroy()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('tabla-1::fields')
+  })
+
+  it('no suelta nada si nunca lo tomó', () => {
+    wrapper.destroy()
+
+    expect(LockService.releaseRef).not.toHaveBeenCalled()
+  })
+})

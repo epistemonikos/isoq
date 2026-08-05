@@ -328,6 +328,13 @@ export default {
     // SPA navigation destroys this view with the editor still open: without this the
     // row stays locked for everybody else until the server TTL expires it.
     this.releaseRowLock()
+    // Same for the columns lock: leaving the project with the modal open used to leave it
+    // held until the TTL, measured in the browser.
+    if (this.columnsLockHeld && this.columnsLockRef) {
+      LockService.releaseRef(this.columnsLockRef)
+      this.columnsLockHeld = false
+      this.columnsLockRef = null
+    }
   },
   data () {
     return {

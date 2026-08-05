@@ -86,6 +86,14 @@ export default {
       createdKeys: []
     }
   },
+  beforeDestroy () {
+    // La navegación SPA puede destruir el componente sin que el modal emita `hidden`, y el
+    // lock quedaría tomado hasta que el TTL del servidor lo expire.
+    if (this.columnsLockHeld && this.documentId) {
+      LockService.releaseRef(`${this.documentId}::fields`)
+      this.columnsLockHeld = false
+    }
+  },
   computed: {
     documentId () {
       return this.charsData.id || this.charsData._id || this.resolvedDocumentId || null
