@@ -448,7 +448,11 @@
     "confirm_delete_row": "Are you sure you want to delete all the content for this row?",
     "no_findings_affected": "No findings will be affected",
     "findings_affected": "Findings that will be affected",
-    "finding_n": "finding # {n}"
+    "finding_n": "finding # {n}",
+    "columns_locked_by": "Somebody else is editing the columns right now: {name}. Try again in a moment.",
+    "confirm_delete_column": "Delete the column \"{name}\"? Its content will be removed from every study.",
+    "confirm_delete_column_title": "Delete column",
+    "columns_autosave_hint": "Changes are saved as you make them."
   },
   "import_modal": {
     "beware": "Beware:",

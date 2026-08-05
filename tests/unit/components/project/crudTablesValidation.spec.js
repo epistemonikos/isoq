@@ -207,49 +207,8 @@ describe('crudTables.vue Validation and Fixes', () => {
     })
   })
 
-  describe('Missing Method Fix (deleteFieldFromCharsSudies)', () => {
-    it('should exist in the component', () => {
-      expect(typeof wrapper.vm.deleteFieldFromCharsSudies).toBe('function')
-    })
+  // Los tests del borrado en bloque (`deleteFieldFromCharsSudies`) se retiraron con el método:
+  // el modal de creación ahora borra por clave con `confirmDeleteColumnCreate`, y su cobertura
+  // está en crudTables.createColumns.spec.js.
 
-    it('should correctly update modal state when a field is deleted', async () => {
-      // Setup initial state for modal
-      await wrapper.setData({
-        dataTableFieldsModal: {
-          fields: ['Col 1', 'Col 2', 'Col 3'],
-          touched: [true, true, true],
-          nroColumns: 3
-        },
-        dataTable: { id: 'table-123' }
-      })
-
-      // Mock Api.patch to avoid actual network call
-      const Api = require('@/utils/Api').default
-      jest.spyOn(Api, 'patch').mockResolvedValue({ data: {} })
-
-      // Delete "Col 2" (index 1)
-      await wrapper.vm.deleteFieldFromCharsSudies(1)
-
-      expect(wrapper.vm.dataTableFieldsModal.fields).toEqual(['Col 1', 'Col 3'])
-      expect(wrapper.vm.dataTableFieldsModal.touched).toEqual([true, true])
-      expect(wrapper.vm.dataTableFieldsModal.nroColumns).toBe(2)
-    })
-  })
-
-  describe('dataTableNewColumn', () => {
-    it('should initialize touched flag for the new column', async () => {
-      await wrapper.setData({
-        dataTableFieldsModalEdit: {
-          fields: [{ key: 'column_0', label: 'First' }],
-          touched: [true]
-        }
-      })
-
-      wrapper.vm.dataTableNewColumn()
-
-      expect(wrapper.vm.dataTableFieldsModalEdit.fields).toHaveLength(2)
-      expect(wrapper.vm.dataTableFieldsModalEdit.touched).toHaveLength(2)
-      expect(wrapper.vm.dataTableFieldsModalEdit.touched[1]).toBe(false)
-    })
-  })
 })

@@ -72,25 +72,32 @@ export function reorderColumns (collection, docId, order) {
  *
  * @returns {Promise<string|null>}
  */
-export async function ensureTableDocument (collection, organization, projectId) {
+export async function ensureTableDocument (collection, organization, projectId, options = {}) {
   const existing = await Api.get(
     `/${collection}?organization=${organization}&project_id=${projectId}`
   )
   const found = existing && existing.data && existing.data[0]
+  // Sembrar sobre un documento que ya existe sobrescribiría sus filas: es sólo para el
+  // nacimiento.
   if (found) return found.id || found._id || null
 
   // La creación es la única ruta donde el cliente manda `fields` completo: el documento no
   // existe, así que no hay copia obsoleta posible ni columnas de otra persona que perder.
-  // Sólo los de sistema; las columnas llegan después, de a una. Y sin `items`: en CAMELOT
-  // las filas son un left-join virtual contra las referencias.
-  const created = await Api.post(`/${collection}/`, {
+  // Sólo los de sistema; las columnas llegan después, de a una.
+  const body = {
     organization,
     project_id: projectId,
     fields: [
       { key: 'ref_id', label: i18n.t('table_headers.reference_id') },
       { key: 'authors', label: i18n.t('table_headers.author_year') }
     ]
-  })
+  }
+  // En no-CAMELOT `<b-table>` lee `items` de la base, así que la tabla tiene que nacer con
+  // una fila por referencia o no hay dónde escribir. En CAMELOT las filas son un left-join
+  // virtual y no se siembra nada.
+  if (options.items && options.items.length) body.items = options.items
+
+  const created = await Api.post(`/${collection}/`, body)
   const data = created && created.data
   return data ? (data.id || data._id || null) : null
 }

@@ -88,62 +88,17 @@ describe('crudTables.vue', () => {
   // pérdida de datos — una copia obsoleta borraba la columna de otra persona en todas
   // las filas. Ahora `items` no viaja; la limpieza de claves huérfanas la hace el
   // backend en el DELETE granular. Ver crudTables.columnsPayload.spec.js.
-  it('updateDataTableFields manda los fields vigentes y ninguna fila', async () => {
-    const initialFields = [
-      { key: 'ref_id', label: 'ID' },
-      { key: 'authors', label: 'Authors' },
-      { key: 'column_0', label: 'Col 0' },
-      { key: 'column_1', label: 'Col 1' }
-    ]
-    const initialItems = [
-      { ref_id: '1', authors: 'Author 1', column_0: 'data 0', column_1: 'data 1', orphan_col: 'I should be gone' }
-    ]
+  // Los tests de `updateDataTableFields` que había acá desaparecieron con el método: el modal
+  // de edición ya no guarda en bloque, cada columna va por su endpoint granular. Que no se
+  // manden `fields` completo ni `items` se cumple por construcción; la cobertura de las rutas
+  // nuevas está en crudTables.granularColumns.spec.js.
 
-    wrapper.setData({
-      dataTable: {
-        id: 'table-1',
-        fields: initialFields,
-        items: initialItems
-      },
-      dataTableFieldsModalEdit: {
-        fields: [
-          { key: 'column_0', label: 'Col 0' } // We removed column_1
-        ]
-      }
-    })
 
-    await wrapper.vm.updateDataTableFields()
+  // Los tests de `saveDataTableFields` que había acá desaparecieron con el guardado en bloque.
+  // El nacimiento del documento —con `fields` de sistema y una fila por referencia— ahora vive
+  // en `columnService.ensureTableDocument` y se verifica en su propio spec; las columnas se
+  // crean después, de a una, en crudTables.createColumns.spec.js.
 
-    expect(Api.patch).toHaveBeenCalled()
-    const sentParams = Api.patch.mock.calls[0][1]
-
-    expect(sentParams.fields.map(f => f.key)).toEqual(['ref_id', 'authors', 'column_0'])
-    expect(sentParams).not.toHaveProperty('items')
-  })
-
-  it('saveDataTableFields no toca las filas cuando el documento ya existe', async () => {
-    await wrapper.setProps({
-      references: [
-        { id: 'ref1', authors: ['Auth1, Name'], publication_year: '2020' }
-      ]
-    })
-
-    wrapper.setData({
-      dataTable: { id: 'table-1' }, // Existing table for PATCH
-      dataTableFieldsModal: {
-        fields: ['New Col 0'], // This will become column_0
-        nroColumns: 1
-      }
-    })
-
-    await wrapper.vm.saveDataTableFields()
-
-    expect(Api.patch).toHaveBeenCalled()
-    const sentParams = Api.patch.mock.calls[0][1]
-
-    expect(sentParams.fields.map(f => f.key)).toEqual(['ref_id', 'authors', 'column_0'])
-    expect(sentParams).not.toHaveProperty('items')
-  })
   
   it('should filter out items without ref_id or empty authors in getData', async () => {
     const mockData = [{

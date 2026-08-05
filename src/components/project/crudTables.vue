@@ -97,8 +97,8 @@
       </b-col>
 
       <b-modal size="xl" id="open-dataTable-modal" ref="open-dataTable-modal" scrollable
-        :ok-disabled="isDataTableFieldsModalInvalid" @ok="saveDataTableFields" :ok-title="$t('common.save')"
-        ok-variant="outline-success" cancel-variant="outline-secondary">
+        :ok-disabled="isDataTableFieldsModalInvalid" @ok.prevent="saveDataTableFields" :ok-title="$t('common.save')"
+        ok-variant="outline-success" cancel-variant="outline-secondary" @hidden="onColumnsCreateModalHidden">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.column_headers')" tag="none" urlId="449742512"></videoHelp>
         </template>
@@ -120,7 +120,7 @@
               :state="fieldState('create', cnt - 1)"
               @blur="$set(dataTableFieldsModal.touched, cnt - 1, true)"></b-form-input>
             <b-input-group-append v-if="dataTable.id">
-              <b-button variant="outline-danger" @click="deleteFieldFromCharsSudies(cnt - 1)">
+              <b-button variant="outline-danger" @click="confirmDeleteColumnCreate(cnt - 1)">
                 <font-awesome-icon icon="trash"></font-awesome-icon>
               </b-button>
             </b-input-group-append>
@@ -129,27 +129,34 @@
       </b-modal>
 
       <b-modal size="xl" id="open-dataTable-modal-edit" ref="open-dataTable-modal-edit" scrollable
-        :ok-disabled="isDataTableFieldsModalEditInvalid" @ok="updateDataTableFields" ok-variant="outline-success"
-        :ok-title="$t('common.save')" cancel-variant="outline-secondary">
+        ok-only :ok-title="$t('common.close')" ok-variant="secondary" @hidden="onColumnsEditModalHidden">
         <template v-slot:modal-title>
           <videoHelp :txt="$t('characteristics.edit_columns')" tag="none" urlId="449742512"></videoHelp>
         </template>
         <p class="font-weight-light">
           {{ $t('characteristics.column_help') }}
         </p>
-        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true" @end="drag = false">
+        <!-- Sin botón de guardar: cada cambio se aplica solo, así que hay que decirlo o el
+             usuario no sabe cuándo quedó guardado lo que hizo. -->
+        <p class="text-muted small">
+          <font-awesome-icon icon="info-circle" class="mr-1"></font-awesome-icon>
+          {{ $t('characteristics.columns_autosave_hint') }}
+          <b-spinner small v-if="dataTableSettings.isBusy" class="ml-1"></b-spinner>
+        </p>
+        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true"
+          @end="onColumnsOrderChanged">
           <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="index"
             :label="$t('characteristics.column_n', { n: index })" :state="fieldState('edit', index)"
             :invalid-feedback="$t('common.field_required')">
             <b-input-group>
               <b-form-input :id="`column_${index}`" v-model="field.label" type="text" :state="fieldState('edit', index)"
-                @blur="$set(dataTableFieldsModalEdit.touched, index, true)"></b-form-input>
+                @blur="onEditFieldBlur(index)"></b-form-input>
               <b-input-group-append>
                 <b-button v-if="dataTableFieldsModalEdit.fields.length > 1" :id="`drag-button-chars-${index}`"
                   variant="outline-secondary" v-b-tooltip :title="$t('characteristics.drag_sort')">
                   <font-awesome-icon icon="arrows-alt"></font-awesome-icon>
                 </b-button>
-                <b-button variant="outline-danger" @click="deleteFieldFromCharsSudiesEdit(index)">
+                <b-button variant="outline-danger" @click="confirmDeleteColumnEdit(index)">
                   <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </b-input-group-append>
@@ -261,6 +268,7 @@
 import Api from '@/utils/Api'
 import Commmons from '@/utils/commons.js'
 import LockService from '@/services/lockService'
+import columnService from '@/services/columnService'
 import { parseCSVData } from '@/utils/csvImporter'
 import _debounce from 'lodash.debounce'
 
@@ -349,6 +357,20 @@ export default {
         editingRefId: null,
         touched: []
       },
+      // Lock del documento de la tabla mientras se editan columnas, y orden acumulado
+      // hasta el cierre. `committedColumnLabels` evita reenviar un título que no cambió
+      // cuando el usuario sólo pasa por el campo.
+      columnsLockHeld: false,
+      // Ref exacto que se bloqueó. No se recalcula al liberar: `getData()` reasigna
+      // `dataTable`, así que al cerrar el id puede no estar y el lock quedaría colgado
+      // hasta expirar.
+      columnsLockRef: null,
+      // Id del documento resuelto al abrir el modal de creación. Se guarda aparte porque
+      // `getData()` reasigna `dataTable`, y un reintento del guardado necesita el id para
+      // renombrar lo ya creado en vez de duplicarlo.
+      resolvedTableId: null,
+      pendingColumnsOrder: false,
+      committedColumnLabels: {},
       dataTableFieldsModalEdit: {
         nroColumns: 1,
         fields: [],
@@ -488,8 +510,17 @@ export default {
       const val = (domain === 'edit') ? (d.fields[index] ? d.fields[index].label : '') : d.fields[index]
       return (typeof val === 'string') && (val.trim().length > 0)
     },
-    openModalDataTable: function () {
-      let fields = Commmons.deepClone(this.dataTable.fields)
+    /**
+     * A este modal se entra a CREAR, no a mirar, así que toma el lock al abrirse: si otra
+     * persona está creando las columnas, acá no se entra. (El modal de edición es al revés
+     * — ahí el lock espera al primer cambio para no bloquear a quien sólo mira.)
+     *
+     * Y como el lock necesita algo que bloquear, primero se resuelve el documento de la
+     * tabla, creándolo si no existe. Así el segundo que abra encuentra la tabla y queda
+     * bloqueado, en vez de que los dos creen documentos en paralelo.
+     */
+    openModalDataTable: async function () {
+      let fields = Commmons.deepClone(this.dataTable.fields || [])
       let editFields = []
       const excluded = ['ref_id', 'authors', 'actions']
       for (const field of fields) {
@@ -497,9 +528,51 @@ export default {
           editFields.push(field.label)
         }
       }
+
+      const docId = await this.resolveTableDocument()
+      if (!docId) return
+      if (!(await this.ensureColumnsLock())) return
+
       this.dataTableFieldsModal.fields = editFields
       this.dataTableFieldsModal.touched = new Array(editFields.length).fill(false)
+      // Claves de las columnas ya creadas, por índice: hace que un segundo guardado renombre
+      // en vez de duplicar si el primero falló a mitad de camino.
+      this.dataTableFieldsModal.keys = new Array(editFields.length).fill(null)
       this.$refs['open-dataTable-modal'].show()
+    },
+    /**
+     * Id del documento de la tabla, creándolo si hace falta. En no-CAMELOT las filas viven
+     * en la base, así que nace con una fila por referencia o no hay dónde escribir.
+     */
+    resolveTableDocument: async function () {
+      if (this.dataTable.id) return this.dataTable.id
+      if (this.resolvedTableId) return this.resolvedTableId
+
+      try {
+        const items = this.references.map(ref => ({
+          ref_id: ref.id,
+          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
+        }))
+        const id = await columnService.ensureTableDocument(
+          this.type, this.$route.params.org_id, this.$route.params.id, { items }
+        )
+        if (id) {
+          this.$set(this.dataTable, 'id', id)
+          this.resolvedTableId = id
+        }
+        return id
+      } catch (error) {
+        this.$emit('print-errors', error)
+        return null
+      }
+    },
+    onColumnsCreateModalHidden: async function () {
+      if (this.columnsLockHeld) {
+        await LockService.releaseRef(this.columnsLockRef)
+        this.columnsLockHeld = false
+        this.columnsLockRef = null
+      }
+      this.getData()
     },
     openModalDataTableEdit: function () {
       let _fields = Commmons.deepClone(this.dataTable.fields)
@@ -514,105 +587,192 @@ export default {
       this.dataTableFieldsModalEdit.fields = fields
       this.dataTableFieldsModalEdit.nroColumns = fields.length
       this.dataTableFieldsModalEdit.touched = new Array(fields.length).fill(false)
+
+      // Títulos con los que se abrió, para no reenviar uno que el usuario no cambió: salir
+      // de un campo sin escribir es lo más común.
+      this.committedColumnLabels = {}
+      for (const field of fields) {
+        if (field.key) this.committedColumnLabels[field.key] = field.label
+      }
       this.$refs['open-dataTable-modal-edit'].show()
     },
-    saveDataTableFields: function () {
+    /**
+     * Guarda los títulos escritos en el modal de creación, uno por endpoint.
+     *
+     * Es reintentable: los índices que ya tienen clave se renombran en vez de crearse otra
+     * vez, así que si el guardado falla a mitad de camino, volver a apretar Guardar no
+     * duplica lo que ya existe. El documento y el lock ya están resueltos desde que se abrió
+     * el modal.
+     */
+    saveDataTableFields: async function () {
+      const docId = this.dataTable.id || this.resolvedTableId
+      if (!this.canEdit || !docId) return
+      if (!(await this.ensureColumnsLock())) return
+
       this.dataTableSettings.isBusy = true
-      let fields = Commmons.deepClone(this.dataTableFieldsModal.fields)
-      let references = Commmons.deepClone(this.references)
-      let params = {
-        fields: [
-          { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') },
-          { 'key': 'authors', 'label': this.$t('table_headers.author_year') }
-        ],
-        items: [],
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        nro_of_fields: fields.length,
-        is_public: !!this.project.is_public
-      }
+      const keys = this.dataTableFieldsModal.keys || []
 
-      for (const index in fields) {
-        let objField = {
-          key: `column_${index}`,
-          label: fields[index]
+      try {
+        for (let index = 0; index < this.dataTableFieldsModal.fields.length; index++) {
+          const raw = this.dataTableFieldsModal.fields[index]
+          const label = (typeof raw === 'object' ? raw.label : raw || '').trim()
+          if (!label) continue
+
+          if (keys[index]) {
+            await columnService.renameColumn(this.type, docId, keys[index], label)
+          } else {
+            const { key } = await columnService.addColumn(this.type, docId, label)
+            this.$set(keys, index, key)
+          }
         }
-        params.fields.push(objField)
-      }
-
-      for (const ref of references) {
-        let objItem = {
-          ref_id: ref.id,
-          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
-        }
-
-        for (const cnt in fields) {
-          objItem[`column_${cnt}`] = ''
-        }
-
-        params.items.push(objItem)
-      }
-
-      params.items = this.getCleanedItems(params.items, params.fields)
-
-      if (Object.prototype.hasOwnProperty.call(this.dataTable, 'id')) {
-        // The document already exists, so this is a column operation and the rows are
-        // not ours to send: the seeded `items` above are all-empty cells, which would
-        // blank the table. They only make sense on the POST below, which creates the
-        // document and needs at least one row per reference to have somewhere to type
-        // (unlike CAMELOT, this table renders `dataTable.items` straight from the DB).
-        delete params.items
-        Api.patch(`/${this.type}/${this.dataTable.id}`, params)
-          .then(() => {
-            this.$emit('get-project')
-            this.getData()
-            this.dataTableSettings.isBusy = false
-            this.$refs['open-dataTable-modal'].hide()
-          }).catch((error) => {
-            this.dataTableSettings.isBusy = false
-            this.$emit('print-errors', error)
-          })
-      } else {
-        Api.post(`/${this.type}`, params)
-          .then(() => {
-            this.getData()
-            this.$refs['open-dataTable-modal'].hide()
-          })
-          .catch((error) => {
-            this.dataTableSettings.isBusy = false
-            this.$emit('print-errors', error)
-          })
+        this.$set(this.dataTableFieldsModal, 'keys', keys)
+        this.$emit('get-project')
+        this.getData()
+        this.$refs['open-dataTable-modal'].hide()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
       }
     },
-    updateDataTableFields: function () {
+    /**
+     * The four column endpoints require the table document's lock when concurrency is on.
+     * Taken on the first real change rather than on open: whoever came to look at the
+     * columns should not block anybody. (The CREATE modal is the other way round — you go
+     * in there to create, so it locks on open.)
+     */
+    ensureColumnsLock: async function () {
+      if (this.columnsLockHeld) return true
+
+      const docId = this.dataTable.id || this.resolvedTableId
+      if (!docId) return false
+
+      const lockRef = `${docId}::fields`
+      const result = await LockService.acquireRef(this.$route.params.id, lockRef)
+      if (!result || !result.success) {
+        this.notifyColumnsError(
+          result && result.lockedBy
+            ? this.$t('characteristics.columns_locked_by', { name: result.lockedBy })
+            : this.$t('notifications.error')
+        )
+        return false
+      }
+
+      this.columnsLockHeld = true
+      this.columnsLockRef = lockRef
+      return true
+    },
+    /**
+     * A column is saved when its input loses focus: that is when the title is written.
+     * Doing it as the row appears would bring a column into existence untitled.
+     */
+    onEditFieldBlur: async function (index) {
+      this.$set(this.dataTableFieldsModalEdit.touched, index, true)
+
+      const field = this.dataTableFieldsModalEdit.fields[index]
+      if (!field || !this.canEdit) return
+
+      const label = (field.label || '').trim()
+      if (!label || label === this.committedColumnLabels[field.key || `idx_${index}`]) return
+      if (!(await this.ensureColumnsLock())) return
+
       this.dataTableSettings.isBusy = true
-      let params = {
-        is_public: false
+      try {
+        if (field.key) {
+          await columnService.renameColumn(this.type, this.dataTable.id, field.key, label)
+          this.committedColumnLabels[field.key] = label
+        } else {
+          const { key } = await columnService.addColumn(this.type, this.dataTable.id, label)
+          // The key has to land in local state: without it the reorder cannot name the
+          // column and a second blur would create it all over again.
+          this.$set(field, 'key', key)
+          this.committedColumnLabels[key] = label
+        }
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
       }
-      let fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
+    },
+    /**
+     * The DELETE clears that column's content in every stored row, and there is no save
+     * button in between any more: the click is destructive on the spot.
+     */
+    confirmDeleteColumnEdit: async function (index) {
+      const field = this.dataTableFieldsModalEdit.fields[index]
+      if (!field || !this.canEdit) return
 
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') })
-      fields.splice(1, 0, { 'key': 'authors', 'label': this.$t('table_headers.author_year') })
-
-      // Only the columns travel. Sending the rows meant filtering each one against
-      // this local copy of `fields`, which wipes the content of a column somebody
-      // else created while this modal was open. The generic PATCH is a partial $set,
-      // so the stored rows survive untouched, and updateMyDataTables() remains the
-      // one place that owns the rows (it re-reads from the server before writing).
-      params.fields = fields
-
-      if (this.project.is_public) {
-        params.is_public = true
+      // A column that never reached the server has nothing to delete there.
+      if (!field.key) {
+        this.dataTableFieldsModalEdit.fields.splice(index, 1)
+        this.dataTableFieldsModalEdit.touched.splice(index, 1)
+        return
       }
 
-      Api.patch(`/${this.type}/${this.dataTable.id}`, params)
-        .then(() => {
-          this.getData()
-          this.dataTableSettings.isBusy = false
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('characteristics.confirm_delete_column', { name: field.label }),
+        {
+          title: this.$t('characteristics.confirm_delete_column_title'),
+          okVariant: 'danger',
+          okTitle: this.$t('common.delete'),
+          cancelTitle: this.$t('common.cancel'),
+          centered: true
+        }
+      )
+      if (!confirmed) return
+      if (!(await this.ensureColumnsLock())) return
+
+      this.dataTableSettings.isBusy = true
+      try {
+        await columnService.deleteColumn(this.type, this.dataTable.id, field.key)
+        this.dataTableFieldsModalEdit.fields.splice(index, 1)
+        this.dataTableFieldsModalEdit.touched.splice(index, 1)
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
+      }
+    },
+    onColumnsOrderChanged: function () {
+      this.drag = false
+      // Only flagged: the reorder is the one commutative operation of the set now that
+      // `order` accepts a subset, so sending it once on close matches sending it on every
+      // drag and costs one request instead of one per drag.
+      this.pendingColumnsOrder = true
+    },
+    onColumnsEditModalHidden: async function () {
+      if (this.pendingColumnsOrder && this.dataTable.id) {
+        this.pendingColumnsOrder = false
+        const order = this.dataTableFieldsModalEdit.fields
+          .filter(field => field.key)
+          .map(field => field.key)
+
+        if (order.length && await this.ensureColumnsLock()) {
+          try {
+            await columnService.reorderColumns(this.type, this.dataTable.id, order)
+            this.getData()
+          } catch (error) {
+            this.$emit('print-errors', error)
+          }
+        }
+      }
+      this.pendingColumnsOrder = false
+
+      if (this.columnsLockHeld) {
+        await LockService.releaseRef(this.columnsLockRef)
+        this.columnsLockHeld = false
+        this.columnsLockRef = null
+      }
+      this.committedColumnLabels = {}
+    },
+    notifyColumnsError: function (message) {
+      this.$bvToast.toast(message, {
+        title: this.$t('notifications.error'),
+        variant: 'danger',
+        solid: true
+      })
     },
     getCleanedItems: function (items, fields) {
       if (!items) return []
@@ -629,34 +789,14 @@ export default {
           return cleanedItem
         })
     },
+    /**
+     * Una columna nueva entra sin clave: la genera el alta cuando el usuario escribe el
+     * título. Derivarla de la posición (`column_${N+1}`) era lo que hacía colisionar a dos
+     * personas agregando a la vez, porque las dos leían el mismo máximo.
+     */
     dataTableNewColumn: function () {
-      let _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      if (_fields.length) {
-        for (const field of _fields) {
-          if (!excluded.includes(field.key)) {
-            fields.push(field)
-          }
-        }
-        // sort fields by key
-        fields.sort((a, b) => {
-          if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
-            return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
-          }
-          return 0
-        })
-        this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(fields[fields.length - 1].key.split('_')[1]) + 1
-      }
-
-      this.dataTableFieldsModalEdit.fields.push(
-        {
-          'key': `column_${column.toString()}`,
-          'label': ''
-        }
-      )
+      this.dataTableFieldsModalEdit.fields.push({ label: '' })
+      this.dataTableFieldsModalEdit.nroColumns = this.dataTableFieldsModalEdit.fields.length
       this.dataTableFieldsModalEdit.touched.push(false)
     },
     getReferenceInfo: function (refId) {
@@ -1030,90 +1170,57 @@ export default {
     parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
       return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
     },
-    deleteFieldFromCharsSudies: function (index) {
-      this.dataTableSettings.isBusy = true
-      let fields = Commmons.deepClone(this.dataTableFieldsModal.fields)
-      let params = {
-        fields: [
-          { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') },
-          { 'key': 'authors', 'label': this.$t('table_headers.author_year') }
-        ],
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        is_public: !!this.project.is_public
+    /**
+     * Borra una columna desde el modal de creación. Los títulos de ese modal son strings,
+     * así que la clave sale del array paralelo `keys` que llena el guardado; sin clave, la
+     * columna nunca llegó al servidor y sólo se descarta local.
+     */
+    confirmDeleteColumnCreate: async function (index) {
+      if (!this.canEdit) return
+
+      const keys = this.dataTableFieldsModal.keys || []
+      const key = keys[index]
+      const raw = this.dataTableFieldsModal.fields[index]
+      const label = typeof raw === 'object' ? raw.label : raw
+
+      const quitarLocal = () => {
+        this.dataTableFieldsModal.fields.splice(index, 1)
+        keys.splice(index, 1)
+        this.dataTableFieldsModal.touched.splice(index, 1)
+        this.dataTableFieldsModal.nroColumns = this.dataTableFieldsModal.fields.length
       }
 
-      fields.splice(index, 1)
-      this.dataTableFieldsModal.fields = fields
-      this.dataTableFieldsModal.touched.splice(index, 1)
-      this.dataTableFieldsModal.nroColumns = fields.length
-
-      // The rows are no longer sent (they used to be rebuilt with every cell empty,
-      // which blanked the table outright), and the column KEYS come from the stored
-      // document, never from the position. Regenerating `column_${idx}` only matched
-      // while the last column was the one being deleted: the stored rows key their
-      // content by the ORIGINAL key, so renumbering after deleting the first or a
-      // middle column left every remaining column displaying its neighbour's text.
-      //
-      // `dataTableFieldsModal.fields` holds only the labels (getData fills it with
-      // `f.label`), so the modal index maps onto the document's display columns.
-      const storedKeys = filterDisplayFields(this.dataTable.fields || []).map(f => f.key)
-      storedKeys.splice(index, 1)
-
-      // The labels arrive as plain strings, but objects are tolerated the same way
-      // isDataTableFieldsModalInvalid does, since both shapes reach here.
-      fields.forEach((label, position) => {
-        const key = storedKeys[position]
-        if (!key) return
-        params.fields.push({
-          key,
-          label: typeof label === 'object' ? label.label : label
-        })
-      })
-
-      Api.patch(`/${this.type}/${this.dataTable.id}`, params)
-        .then(() => {
-          this.$emit('get-project')
-          this.getData()
-          this.dataTableSettings.isBusy = false
-        }).catch((error) => {
-          this.dataTableSettings.isBusy = false
-          this.$emit('print-errors', error)
-        })
-    },
-    deleteFieldFromCharsSudiesEdit: function (index) {
-      this.dataTableSettings.isBusy = true
-      let params = {
-        is_public: !!this.project.is_public
+      if (!key) {
+        quitarLocal()
+        return
       }
-      const _fields = Commmons.deepClone(this.dataTableFieldsModalEdit.fields)
-      const dataTableId = this.dataTable.id
 
-      _fields.splice(index, 1)
-      this.dataTableFieldsModalEdit.touched.splice(index, 1)
-      this.dataTableFieldsModalEdit.fields = _fields // Update local modal state immediately
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('characteristics.confirm_delete_column', { name: label }),
+        {
+          title: this.$t('characteristics.confirm_delete_column_title'),
+          okVariant: 'danger',
+          okTitle: this.$t('common.delete'),
+          cancelTitle: this.$t('common.cancel'),
+          centered: true
+        }
+      )
+      if (!confirmed) return
+      if (!(await this.ensureColumnsLock())) return
 
-      const fullFields = [
-        { 'key': 'ref_id', 'label': this.$t('table_headers.reference_id') },
-        { 'key': 'authors', 'label': this.$t('table_headers.author_year') },
-        ..._fields
-      ]
-
-      // The rows are not sent: see updateDataTableFields. Dropping a column leaves its
-      // key orphaned in each stored row, which is invisible (every render filters by
-      // `fields`) and is what the granular DELETE endpoint cleans up server-side.
-      params.fields = fullFields
-
-      Api.patch(`/${this.type}/${dataTableId}`, params)
-        .then(() => {
-          this.$emit('get-project')
-          this.getData()
-          this.dataTableSettings.isBusy = false
-        })
-        .catch((error) => {
-          this.dataTableSettings.isBusy = false
-          this.$emit('print-errors', error)
-        })
+      this.dataTableSettings.isBusy = true
+      try {
+        await columnService.deleteColumn(
+          this.type, this.dataTable.id || this.resolvedTableId, key
+        )
+        quitarLocal()
+        this.$emit('get-project')
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
+      }
     },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       return Commmons.getAuthorsFormat(authors, pubYear)

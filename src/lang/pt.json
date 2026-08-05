@@ -448,7 +448,11 @@
     "confirm_delete_row": "Tem certeza de que deseja excluir todo o conteúdo desta linha?",
     "no_findings_affected": "Nenhuma descoberta será afetada",
     "findings_affected": "Descobertas que serão afetadas",
-    "finding_n": "descoberta # {n}"
+    "finding_n": "descoberta # {n}",
+    "columns_locked_by": "{name} está editando as colunas neste momento. Tente novamente em instantes.",
+    "confirm_delete_column": "Excluir a coluna \"{name}\"? O conteúdo dela será removido de todos os estudos.",
+    "confirm_delete_column_title": "Excluir coluna",
+    "columns_autosave_hint": "As alterações são salvas conforme você as faz."
   },
   "import_modal": {
     "beware": "Atenção:",

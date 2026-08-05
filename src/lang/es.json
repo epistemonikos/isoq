@@ -448,7 +448,11 @@
     "confirm_delete_row": "¿Está seguro de que desea eliminar todo el contenido de esta fila?",
     "no_findings_affected": "Ningún hallazgo será afectado",
     "findings_affected": "Hallazgos que serán afectados",
-    "finding_n": "hallazgo # {n}"
+    "finding_n": "hallazgo # {n}",
+    "columns_locked_by": "{name} está editando las columnas en este momento. Probá de nuevo en un rato.",
+    "confirm_delete_column": "¿Eliminar la columna \"{name}\"? Su contenido se borrará de todos los estudios.",
+    "confirm_delete_column_title": "Eliminar columna",
+    "columns_autosave_hint": "Los cambios se guardan a medida que los hacés."
   },
   "import_modal": {
     "beware": "Atención:",

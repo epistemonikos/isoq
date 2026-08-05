@@ -202,3 +202,44 @@ describe('columnService — ensureTableDocument', () => {
     )
   })
 })
+
+// En no-CAMELOT `<b-table>` lee `dataTable.items` de la base, así que el documento tiene
+// que nacer con una fila por referencia o no hay dónde escribir. En CAMELOT las filas son
+// un left-join virtual y no hace falta sembrar nada — de ahí que el sembrado sea opcional.
+describe('columnService — ensureTableDocument con filas sembradas', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  const FILAS = [
+    { ref_id: 'R1', authors: 'Smith 2020' },
+    { ref_id: 'R2', authors: 'Doe 2021' }
+  ]
+
+  it('siembra las filas que le pasan', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_assessments', 'org1', 'proj1', { items: FILAS })
+
+    expect(Api.post.mock.calls[0][1].items).toEqual(FILAS)
+  })
+
+  it('sin filas no manda la clave items', async () => {
+    Api.get.mockResolvedValueOnce({ data: [] })
+    Api.post.mockResolvedValueOnce({ data: { id: 'nuevo' } })
+
+    await ensureTableDocument('isoqf_assessments', 'org1', 'proj1')
+
+    expect(Api.post.mock.calls[0][1]).not.toHaveProperty('items')
+  })
+
+  // Si el documento ya existe, sembrar sobrescribiría las filas que tiene: el sembrado es
+  // sólo para el nacimiento.
+  it('no siembra nada si el documento ya existe', async () => {
+    Api.get.mockResolvedValueOnce({ data: [{ id: 'existente' }] })
+
+    const id = await ensureTableDocument('isoqf_assessments', 'org1', 'proj1', { items: FILAS })
+
+    expect(id).toBe('existente')
+    expect(Api.post).not.toHaveBeenCalled()
+  })
+})
