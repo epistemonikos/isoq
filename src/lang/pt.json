@@ -449,10 +449,10 @@
     "no_findings_affected": "Nenhuma descoberta será afetada",
     "findings_affected": "Descobertas que serão afetadas",
     "finding_n": "descoberta # {n}",
-    "columns_locked_by": "{name} está editando as colunas neste momento. Tente novamente em instantes.",
+    "columns_locked_by": "{name} está editando as colunas neste momento. As alterações não poderão ser salvas até que termine.",
     "confirm_delete_column": "Excluir a coluna \"{name}\"? O conteúdo dela será removido de todos os estudos.",
     "confirm_delete_column_title": "Excluir coluna",
-    "columns_autosave_hint": "As alterações são salvas conforme você as faz."
+    "columns_autosave_hint": "As alterações são salvas automaticamente."
   },
   "import_modal": {
     "beware": "Atenção:",
@@ -1286,10 +1286,10 @@
         "error_create": "Erro ao criar as colunas. Por favor, tente novamente.",
         "toast_success_title": "Sucesso",
         "toast_error_title": "Erro",
-        "autosave_hint": "As alterações são salvas conforme você as faz.",
+        "autosave_hint": "As alterações são salvas automaticamente.",
         "confirm_delete": "Excluir a coluna \"{name}\"? O conteúdo dela será removido de todos os estudos.",
         "confirm_delete_title": "Excluir coluna",
-        "locked_by": "{name} está editando as colunas neste momento. Tente novamente em instantes."
+        "locked_by": "{name} está editando as colunas neste momento. As alterações não poderão ser salvas até que termine."
       },
       "modal": {
         "title": "Características do estudo incluído - {reference_id}",

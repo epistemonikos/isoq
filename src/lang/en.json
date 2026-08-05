@@ -449,10 +449,10 @@
     "no_findings_affected": "No findings will be affected",
     "findings_affected": "Findings that will be affected",
     "finding_n": "finding # {n}",
-    "columns_locked_by": "Somebody else is editing the columns right now: {name}. Try again in a moment.",
+    "columns_locked_by": "{name} is editing the columns right now. Changes cannot be saved until they finish.",
     "confirm_delete_column": "Delete the column \"{name}\"? Its content will be removed from every study.",
     "confirm_delete_column_title": "Delete column",
-    "columns_autosave_hint": "Changes are saved as you make them."
+    "columns_autosave_hint": "Changes are saved automatically."
   },
   "import_modal": {
     "beware": "Beware:",
@@ -1286,10 +1286,10 @@
         "error_create": "Error creating columns. Please try again.",
         "toast_success_title": "Success",
         "toast_error_title": "Error",
-        "autosave_hint": "Changes are saved as you make them.",
+        "autosave_hint": "Changes are saved automatically.",
         "confirm_delete": "Delete the column \"{name}\"? Its content will be removed from every study.",
         "confirm_delete_title": "Delete column",
-        "locked_by": "Somebody else is editing the columns right now: {name}. Try again in a moment."
+        "locked_by": "{name} is editing the columns right now. Changes cannot be saved until they finish."
       },
       "modal": {
         "title": "Characteristics of the included study - {reference_id}",

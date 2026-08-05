@@ -275,6 +275,7 @@ import _debounce from 'lodash.debounce'
 import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 
 export default {
   name: 'crudTables',
@@ -312,6 +313,7 @@ export default {
       default: () => []
     }
   },
+  mixins: [projectFreshnessMixin],
   components: {
     BackToTop: () => import('@/components/backToTop.vue'),
     draggable: () => import('vuedraggable'),
@@ -322,12 +324,14 @@ export default {
     this.updateMyDataTables()
     this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
     window.addEventListener('ref-lock-lost', this.onRefLockLost)
+    this.startFreshnessPolling()
   },
   beforeDestroy () {
     window.removeEventListener('ref-lock-lost', this.onRefLockLost)
     // SPA navigation destroys this view with the editor still open: without this the
     // row stays locked for everybody else until the server TTL expires it.
     this.releaseRowLock()
+    this.stopFreshnessPolling()
     // Same for the columns lock: leaving the project with the modal open used to leave it
     // held until the TTL, measured in the browser.
     if (this.columnsLockHeld && this.columnsLockRef) {
@@ -367,6 +371,11 @@ export default {
       // Lock del documento de la tabla mientras se editan columnas, y orden acumulado
       // hasta el cierre. `committedColumnLabels` evita reenviar un título que no cambió
       // cuando el usuario sólo pasa por el campo.
+      // Un refresco con el modal abierto descartaría lo que se está escribiendo. Se
+      // registra aparte de `columnsLockHeld` porque el modal puede estar abierto antes
+      // de haber tomado el lock, y esa ventana también hay que protegerla.
+      columnsModalOpen: false,
+      freshnessTimer: null,
       columnsLockHeld: false,
       // Ref exacto que se bloqueó. No se recalcula al liberar: `getData()` reasigna
       // `dataTable`, así que al cerrar el id puede no estar y el lock quedaría colgado
@@ -441,6 +450,7 @@ export default {
     isExpanded (refId, fieldKey) {
       return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
+    /** Devuelve la promesa a propósito: abrir un modal espera la recarga antes de copiar. */
     getData: function (prefetchedData = null) {
       this.dataTableSettings.isBusy = true
 
@@ -451,7 +461,7 @@ export default {
           organization: this.$route.params.org_id,
           project_id: this.$route.params.id
         }
-        Api.get(`/${this.type}`, params)
+        return Api.get(`/${this.type}`, params)
           .then((response) => {
             this.handleResponseData(response.data)
           })
@@ -536,6 +546,8 @@ export default {
         }
       }
 
+      await this.getData()
+
       const docId = await this.resolveTableDocument()
       if (!docId) return
       if (!(await this.ensureColumnsLock())) return
@@ -545,6 +557,7 @@ export default {
       // Claves de las columnas ya creadas, por índice: hace que un segundo guardado renombre
       // en vez de duplicar si el primero falló a mitad de camino.
       this.dataTableFieldsModal.keys = new Array(editFields.length).fill(null)
+      this.columnsModalOpen = true
       this.$refs['open-dataTable-modal'].show()
     },
     /**
@@ -579,9 +592,15 @@ export default {
         this.columnsLockHeld = false
         this.columnsLockRef = null
       }
+      this.columnsModalOpen = false
       this.getData()
+      this.flushPendingRefresh()
     },
-    openModalDataTableEdit: function () {
+    openModalDataTableEdit: async function () {
+      // Primero el estado fresco: si otra persona agregó una columna, el modal tiene que
+      // armarse con ella y no con la copia vieja.
+      await this.getData()
+
       let _fields = Commmons.deepClone(this.dataTable.fields)
       let fields = []
       const excluded = ['ref_id', 'authors', 'actions']
@@ -601,6 +620,7 @@ export default {
       for (const field of fields) {
         if (field.key) this.committedColumnLabels[field.key] = field.label
       }
+      this.columnsModalOpen = true
       this.$refs['open-dataTable-modal-edit'].show()
     },
     /**
@@ -641,6 +661,22 @@ export default {
       } finally {
         this.dataTableSettings.isBusy = false
       }
+    },
+    /** Lo que significa recargar acá: releer la tabla. */
+    applyProjectRefresh: function () {
+      this.getData()
+    },
+    /** Repintar la tabla debajo de alguien que escribe le descarta el borrador. */
+    hasOpenEditor: function () {
+      return this.rowEditorOpen || this.columnsModalOpen
+    },
+    startFreshnessPolling: function () {
+      this.checkProjectFreshness()
+      this.freshnessTimer = setInterval(() => this.checkProjectFreshness(), 15000)
+    },
+    stopFreshnessPolling: function () {
+      if (this.freshnessTimer) clearInterval(this.freshnessTimer)
+      this.freshnessTimer = null
     },
     /**
      * The four column endpoints require the table document's lock when concurrency is on.
@@ -773,6 +809,9 @@ export default {
         this.columnsLockRef = null
       }
       this.committedColumnLabels = {}
+      this.columnsModalOpen = false
+      // Nada más abierto: aplicar la recarga que se postergó mientras se editaba.
+      this.flushPendingRefresh()
     },
     notifyColumnsError: function (message) {
       this.$bvToast.toast(message, {
@@ -839,6 +878,8 @@ export default {
       this.dataTableFieldsModal.editingRefId = null
       this.isRowReadOnly = false
       this.rowLockedBy = null
+      // Ya no hay nada abierto: aplicar la recarga postergada mientras se escribía.
+      this.flushPendingRefresh()
     },
     addContentDataTable: function (index = 0) {
       const items = Commmons.deepClone(this.dataTable.items)
