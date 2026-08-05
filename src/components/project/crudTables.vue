@@ -334,11 +334,7 @@ export default {
     this.stopFreshnessPolling()
     // Same for the columns lock: leaving the project with the modal open used to leave it
     // held until the TTL, measured in the browser.
-    if (this.columnsLockHeld && this.columnsLockRef) {
-      LockService.releaseRef(this.columnsLockRef)
-      this.columnsLockHeld = false
-      this.columnsLockRef = null
-    }
+    this.releaseColumnsLock()
   },
   data () {
     return {
@@ -371,10 +367,15 @@ export default {
       // Lock del documento de la tabla mientras se editan columnas, y orden acumulado
       // hasta el cierre. `committedColumnLabels` evita reenviar un título que no cambió
       // cuando el usuario sólo pasa por el campo.
-      // Un refresco con el modal abierto descartaría lo que se está escribiendo. Se
-      // registra aparte de `columnsLockHeld` porque el modal puede estar abierto antes
-      // de haber tomado el lock, y esa ventana también hay que protegerla.
-      columnsModalOpen: false,
+      // Un flag por modal. Se probó atarlos por `v-model` al `b-modal` para que Vue los
+      // bajara solo, y se descartó: compartir uno abría los dos modales superpuestos, y con
+      // uno por modal el `b-modal` dejaba de abrirse (el `v-model` y el `show()` del ref se
+      // pisan). Lo que sí resuelve el estado pegado es el orden dentro de los handlers de
+      // `hidden`, que bajan el flag antes de cualquier `await`.
+      // Van aparte de `columnsLockHeld` porque un modal puede estar abierto antes de tomar
+      // el lock, y un refresco en esa ventana descartaría igual lo que se escribió.
+      columnsCreateModalOpen: false,
+      columnsEditModalOpen: false,
       freshnessTimer: null,
       columnsLockHeld: false,
       // Ref exacto que se bloqueó. No se recalcula al liberar: `getData()` reasigna
@@ -557,7 +558,7 @@ export default {
       // Claves de las columnas ya creadas, por índice: hace que un segundo guardado renombre
       // en vez de duplicar si el primero falló a mitad de camino.
       this.dataTableFieldsModal.keys = new Array(editFields.length).fill(null)
-      this.columnsModalOpen = true
+      this.columnsCreateModalOpen = true
       this.$refs['open-dataTable-modal'].show()
     },
     /**
@@ -587,12 +588,8 @@ export default {
       }
     },
     onColumnsCreateModalHidden: async function () {
-      if (this.columnsLockHeld) {
-        await LockService.releaseRef(this.columnsLockRef)
-        this.columnsLockHeld = false
-        this.columnsLockRef = null
-      }
-      this.columnsModalOpen = false
+      this.columnsCreateModalOpen = false
+      await this.releaseColumnsLock()
       this.getData()
       this.flushPendingRefresh()
     },
@@ -620,7 +617,7 @@ export default {
       for (const field of fields) {
         if (field.key) this.committedColumnLabels[field.key] = field.label
       }
-      this.columnsModalOpen = true
+      this.columnsEditModalOpen = true
       this.$refs['open-dataTable-modal-edit'].show()
     },
     /**
@@ -668,7 +665,7 @@ export default {
     },
     /** Repintar la tabla debajo de alguien que escribe le descarta el borrador. */
     hasOpenEditor: function () {
-      return this.rowEditorOpen || this.columnsModalOpen
+      return this.rowEditorOpen || this.columnsCreateModalOpen || this.columnsEditModalOpen
     },
     startFreshnessPolling: function () {
       this.checkProjectFreshness()
@@ -786,32 +783,51 @@ export default {
       this.pendingColumnsOrder = true
     },
     onColumnsEditModalHidden: async function () {
-      if (this.pendingColumnsOrder && this.dataTable.id) {
-        this.pendingColumnsOrder = false
-        const order = this.dataTableFieldsModalEdit.fields
-          .filter(field => field.key)
-          .map(field => field.key)
+      // El estado local se baja PRIMERO, antes de cualquier await: si uno falla, dejar el
+      // flag en true hace que `hasOpenEditor()` mienta para siempre y el refresco periódico
+      // no vuelva a aplicarse nunca. Es lo que pasaba cuando `releaseRef` rechazaba porque la
+      // app había quedado sin conexión — medido en el navegador.
+      this.columnsEditModalOpen = false
+      this.committedColumnLabels = {}
 
-        if (order.length && await this.ensureColumnsLock()) {
-          try {
-            await columnService.reorderColumns(this.type, this.dataTable.id, order)
-            this.getData()
-          } catch (error) {
-            this.$emit('print-errors', error)
-          }
-        }
-      }
+      const pendiente = this.pendingColumnsOrder
       this.pendingColumnsOrder = false
 
-      if (this.columnsLockHeld) {
-        await LockService.releaseRef(this.columnsLockRef)
-        this.columnsLockHeld = false
-        this.columnsLockRef = null
+      try {
+        if (pendiente && this.dataTable.id) {
+          const order = this.dataTableFieldsModalEdit.fields
+            .filter(field => field.key)
+            .map(field => field.key)
+
+          if (order.length && await this.ensureColumnsLock()) {
+            await columnService.reorderColumns(this.type, this.dataTable.id, order)
+            this.getData()
+          }
+        }
+      } catch (error) {
+        this.$emit('print-errors', error)
       }
-      this.committedColumnLabels = {}
-      this.columnsModalOpen = false
+
+      await this.releaseColumnsLock()
       // Nada más abierto: aplicar la recarga que se postergó mientras se editaba.
       this.flushPendingRefresh()
+    },
+    /**
+     * Suelta el lock de columnas. Un fallo al soltarlo no puede dejarlo marcado como
+     * tomado: el servidor lo expira por TTL, y creerlo vigente sólo bloquearía las
+     * operaciones siguientes de este mismo usuario.
+     */
+    releaseColumnsLock: async function () {
+      if (!this.columnsLockHeld) return
+
+      const ref = this.columnsLockRef
+      this.columnsLockHeld = false
+      this.columnsLockRef = null
+      try {
+        await LockService.releaseRef(ref)
+      } catch (error) {
+        console.warn('No se pudo liberar el lock de columnas:', error)
+      }
     },
     notifyColumnsError: function (message) {
       this.$bvToast.toast(message, {
