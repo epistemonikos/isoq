@@ -664,11 +664,11 @@ export default {
       const finding = this.list.findings
       if (finding.length) {
         this.findings = JSON.parse(JSON.stringify(finding[0]))
-        this.findings.displayNumber = this.list.displayNumber
+        this.$set(this.findings, 'displayNumber', this.list.displayNumber)
         this.evidence_profile = []
         if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
           this.evidence_profile.push(this.findings.evidence_profile)
-          this.evidence_profile[0].displayNumber = this.list.displayNumber
+          this.$set(this.evidence_profile[0], 'displayNumber', this.list.displayNumber)
         } else {
           // Create a default evidence_profile structure if it doesn't exist
           this.evidence_profile.push({
