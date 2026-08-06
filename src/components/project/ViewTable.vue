@@ -1,10 +1,10 @@
 <template>
   <div>
-    <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="sort"
+    <b-table selected-variant="warning" bordered head-variant="light" id="findings" ref="findings" sort-by="displayNumber"
       :fields="(list_categories.options.length) ? fields.with_categories : fields.without_categories" :items="lists"
       show-empty :busy="isBusy" :current-page="table_settings.currentPage" :filter="table_settings.filter"
       @filtered="onFiltered" :filter-included-fields="table_settings.filterOn">
-      <template v-slot:head(sort)="data">
+      <template v-slot:head(displayNumber)="data">
         <span v-b-tooltip.hover :title="$t('soqf_table.auto_numbering')">{{ data.label }}</span>
       </template>
       <template v-slot:head(name)="data">
@@ -52,8 +52,8 @@
         <span v-b-tooltip.hover :title="$t('soqf_table.studies_contribute')">{{ data.label }}</span>
       </template>
       <!-- data -->
-      <template v-slot:cell(sort)="data">
-        {{ (Object.prototype.hasOwnProperty.call(data.item, 'sort')) ? data.item.sort : data.index + 1 }}
+      <template v-slot:cell(displayNumber)="data">
+        {{ (Object.prototype.hasOwnProperty.call(data.item, 'displayNumber')) ? data.item.displayNumber : data.index + 1 }}
       </template>
       <template v-slot:cell(name)="data">
         <a :id="`a-${data.item.id}`"></a>
