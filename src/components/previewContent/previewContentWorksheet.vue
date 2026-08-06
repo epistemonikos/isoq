@@ -147,7 +147,7 @@ export default {
       },
       evidence_profile: [
         {
-          isoqf_id: 0,
+          displayNumber: null,
           cerqual: { explanation: '', option: 0 },
           name: '',
           title: '',
@@ -211,7 +211,7 @@ export default {
   computed: {
     evidence_profile_fields_print_version: function () {
       return [
-        { key: 'isoqf_id', label: '#' },
+        { key: 'displayNumber', label: '#' },
         { key: 'name', label: this.$t('table_head.summarised_finding') },
         { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
         { key: 'coherence', label: this.$t('worksheet.coherence') },
@@ -392,11 +392,21 @@ export default {
       const listId = this.$route.params.id
       const url = this.getSharedUrl('/isoqf_lists')
       const params = { project_id: projectId }
+      // sortFindings agrupa por categoría: sin ellas el número derivado no coincide
+      // con el que muestra el resto de la app.
+      const catUrl = this.getSharedUrl('/isoqf_list_categories')
 
-      Api.get(url, params)
-        .then((response) => {
+      Promise.all([
+        Api.get(url, params),
+        Api.get(catUrl, params).catch(() => ({ data: [] }))
+      ])
+        .then(([response, catResponse]) => {
           let lists = Array.isArray(response.data) ? response.data : [response.data]
-          const foundList = lists.find(l => l.id === listId)
+          const categories = Array.isArray(catResponse.data)
+            ? (catResponse.data[0] || { options: [] })
+            : (catResponse.data || { options: [] })
+          const sorted = Commons.sortFindings(lists, categories)
+          const foundList = sorted.find(l => l.id === listId)
           this.list = foundList ? JSON.parse(JSON.stringify(foundList)) : {}
           this.list.sources = []
           this.evidence_profile = []
@@ -448,7 +458,10 @@ export default {
             this.findings = JSON.parse(JSON.stringify(response.data[0]))
             this.evidence_profile = []
             if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
-              this.evidence_profile.push(this.findings.evidence_profile)
+              this.evidence_profile.push({
+                ...this.findings.evidence_profile,
+                displayNumber: this.list.displayNumber
+              })
             }
             if (fromModal) {
               const title = this.buffer_modal_stage_two.title
