@@ -212,7 +212,10 @@ export default class Commons {
     }).map((item, index) => {
       return {
         ...item,
-        sort: index + 1
+        // `sort` se sigue escribiendo sólo hasta que ningún consumidor lo lea
+        // como número visible (ver Task 8). El número es `displayNumber`.
+        sort: index + 1,
+        displayNumber: index + 1
       }
     })
   }
