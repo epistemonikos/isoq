@@ -212,6 +212,20 @@ describe('ExportStrategies', () => {
         expect(rows[0][0].text).not.toBe('1')
         expect(rows[0][0].text).not.toContain('66b1ff')
       })
+
+      it('createEvidenceProfileSection (segunda tabla) también imprime displayNumber, no sort ni isoqf_id', async () => {
+        const data = {
+          ...mockData,
+          findings: [{ ...mockData.findings[0], displayNumber: 7, sort: 20, isoqf_id: 55 }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        // createFindingsTable() llama addTable primero (mock.calls[0]); esta tabla es
+        // la de createEvidenceProfileSection(), la segunda llamada (mock.calls[1]).
+        const rows = builderMock.addTable.mock.calls[1][0]
+        expect(rows[0][0].text).toBe('7')
+      })
     })
 
     describe('License Logic', () => {
@@ -362,6 +376,36 @@ describe('ExportStrategies', () => {
       expect(methSpy).toHaveBeenCalled()
       expect(extractedSpy).toHaveBeenCalled()
       expect(licenseSpy).toHaveBeenCalled()
+    })
+
+    describe('el número del finding', () => {
+      // `:488` (this.evidenceProfile[0].displayNumber) no tenía cobertura directa:
+      // docx no está mockeado en este archivo, así que se afirma sobre el Table real
+      // serializado, siguiendo el patrón "opaque pero defined" ya usado arriba para
+      // Table/Paragraph.
+      it('createEvidenceProfileSection imprime displayNumber, no sort ni isoqf_id', () => {
+        const data = {
+          evidenceProfile: [{
+            displayNumber: 42,
+            sort: 91,
+            isoqf_id: 13,
+            name: 'F',
+            methodological_limitations: { option: 0, explanation: '' },
+            coherence: { option: 0, explanation: '' },
+            adequacy: { option: 0, explanation: '' },
+            relevance: { option: 0, explanation: '' },
+            cerqual: { option: 0, explanation: '' }
+          }]
+        }
+        const strategy = new CamelotExportStrategy(mockProject, data)
+
+        const [table] = strategy.createEvidenceProfileSection()
+        const serialized = JSON.stringify(table)
+
+        expect(serialized).toContain('"42"')
+        expect(serialized).not.toContain('"91"')
+        expect(serialized).not.toContain('"13"')
+      })
     })
 
     describe('createCharacteristicsTable', () => {

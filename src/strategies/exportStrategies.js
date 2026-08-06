@@ -1270,8 +1270,6 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
     ]
 
     if (evidenceProfile && (evidenceProfile.name || evidenceProfile.methodological_limitations || evidenceProfile.coherence)) {
-      console.log('Creating data row with evidenceProfile')
-
       const formatCell = (type, option, explanation) => {
         const displayOpt = this.displayOption(option)
         const formattedExp = getFormattedExplanation(type, option, explanation)
@@ -1293,8 +1291,6 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
         { text: this.formatReferences(evidenceProfile.references), verticalAlign: VerticalAlign.TOP }
       ]
       rows.push(dataRow)
-    } else {
-      console.log('No data to create row - evidenceProfile missing required fields')
     }
 
     this.builder.addTable(rows, headers)
