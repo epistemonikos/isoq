@@ -65,4 +65,16 @@ describe('Commons.sortFindings — displayNumber', () => {
     expect(findings[0].displayNumber).toBeUndefined()
     expect(findings[0].sort).toBe(9)
   })
+
+  it('NO muta el sort persistido: es la preferencia de orden, no el número', () => {
+    const findings = [
+      { id: '66b1ff0000000000000000a1', category: null, sort: 40 },
+      { id: '66b1ff0000000000000000a2', category: null, sort: 90 }
+    ]
+
+    const result = Commons.sortFindings(findings, [])
+
+    expect(result.map(f => f.sort)).toEqual([40, 90])
+    expect(result.map(f => f.displayNumber)).toEqual([1, 2])
+  })
 })

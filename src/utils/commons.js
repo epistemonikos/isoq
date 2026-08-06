@@ -212,9 +212,8 @@ export default class Commons {
     }).map((item, index) => {
       return {
         ...item,
-        // `sort` se sigue escribiendo sólo hasta que ningún consumidor lo lea
-        // como número visible (ver Task 8). El número es `displayNumber`.
-        sort: index + 1,
+        // El número visible es una posición derivada. `sort` es la preferencia de
+        // orden que guardó el usuario y no se toca: son cosas distintas.
         displayNumber: index + 1
       }
     })
