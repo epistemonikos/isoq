@@ -403,8 +403,8 @@ export default {
         .then(([response, catResponse]) => {
           let lists = Array.isArray(response.data) ? response.data : [response.data]
           const categories = Array.isArray(catResponse.data)
-            ? (catResponse.data[0] || { options: [] })
-            : (catResponse.data || { options: [] })
+            ? catResponse.data
+            : (catResponse.data.options || [])
           const sorted = Commons.sortFindings(lists, categories)
           const foundList = sorted.find(l => l.id === listId)
           this.list = foundList ? JSON.parse(JSON.stringify(foundList)) : {}

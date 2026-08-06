@@ -17,16 +17,28 @@ describe('previewContentWorksheet — el # se deriva, no se lee del isoqf_id per
   const PROJECT = '66b1ff000000000000000001'
   const LIST_A = '66b1ff0000000000000000a1'
   const LIST_B = '66b1ff0000000000000000a2'
-  const CAT = '66b1ff0000000000000000c1'
+  const CAT_ALPHA = '66b1ff0000000000000000c1'
+  const CAT_ZETA = '66b1ff0000000000000000c2'
 
-  // LIST_B es el segundo por (categoría, sort), así que su # es 2. Su isoqf_id
-  // persistido es 88: quedó viejo tras un borrado. Tres valores distintos a
-  // propósito — sort=8, isoqf_id=88, posición=2.
+  // LIST_B tiene el sort más alto (8) pero la categoría alfabéticamente
+  // anterior ('Alpha'); LIST_A tiene sort más bajo (3) pero categoría
+  // posterior ('Zeta'). sortFindings agrupa por (categoría, sort): si
+  // resuelve bien las categorías, LIST_B queda #1 pese a su sort más alto.
+  // Si la resolución de categorías está rota (p.ej. indexando data[0] de un
+  // array plano), ambas caen en el mismo bucket y el orden degrada a
+  // sort puro, dando LIST_B #2 — la fixture puede distinguir ambos casos.
+  // Su isoqf_id persistido es 88, viejo tras un borrado. Tres valores
+  // distintos a propósito — sort=8, isoqf_id=88, posición correcta=1.
   const LISTS = [
-    { id: LIST_A, category: CAT, sort: 3, isoqf_id: 87, findings: [] },
-    { id: LIST_B, category: CAT, sort: 8, isoqf_id: 88, findings: [] }
+    { id: LIST_A, category: CAT_ZETA, sort: 3, isoqf_id: 87, findings: [] },
+    { id: LIST_B, category: CAT_ALPHA, sort: 8, isoqf_id: 88, findings: [] }
   ]
-  const CATEGORIES = [{ id: PROJECT, options: [{ id: CAT, text: 'Cat' }] }]
+  // Forma real que envía el backend: array plano de categorías, sin envolver
+  // en { options: [...] } (ver editList.vue:561-567 y viewProject.vue:730-742).
+  const CATEGORIES = [
+    { id: CAT_ALPHA, text: 'Alpha' },
+    { id: CAT_ZETA, text: 'Zeta' }
+  ]
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -51,8 +63,10 @@ describe('previewContentWorksheet — el # se deriva, no se lee del isoqf_id per
     wrapper.vm.getList()
     await flushPromises()
 
-    expect(wrapper.vm.list.displayNumber).toBe(2)
+    expect(wrapper.vm.list.displayNumber).toBe(1)
     expect(wrapper.vm.list.displayNumber).not.toBe(88)
+    expect(wrapper.vm.list.displayNumber).not.toBe(8)
+    expect(wrapper.vm.list.displayNumber).not.toBe(2)
     wrapper.destroy()
   })
 })
