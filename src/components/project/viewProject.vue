@@ -629,7 +629,6 @@ export default {
       initialLoad: true,
       fileReferences: [],
       selected_list_index: null,
-      lastId: 1,
       mode: '',
       msgUploadReferences: '',
       charsOfStudies: {
@@ -1091,7 +1090,6 @@ export default {
       let data = JSON.parse(JSON.stringify(response.data))
       if (data.length) {
         data = Commons.sortFindings(data, this.list_categories)
-        this.lastId = data.length + 1
         // Sort the references once, not once per list: this.references does not change
         // during the loop, so hoisting the clone+sort turns an O(lists x refs log refs)
         // per-list cost into a single O(refs log refs).
@@ -1294,10 +1292,8 @@ export default {
         organization: this.$route.params.org_id,
         list_id: listId,
         name: listName,
-        isoqf_id: this.lastId,
         evidence_profile: {
           name: listName,
-          isoqf_id: this.lastId,
           relevance: {
             explanation: '',
             option: null
@@ -1621,10 +1617,9 @@ export default {
       this.table_settings.isBusy = true
       for (const list of this.sorted_lists) {
         const sortValue = cnt++
-        requests.push(
-          Api.patch(`/isoqf_lists/${list.id}`, { 'sort': sortValue })
-            .then(() => this.updateFindingSort(list.id, sortValue, false))
-        )
+        // El número visible se deriva de este orden, así que no hay espejo que
+        // actualizar en isoqf_findings. Antes esto costaba 2N escrituras.
+        requests.push(Api.patch(`/isoqf_lists/${list.id}`, { 'sort': sortValue }))
       }
 
       Promise.all(requests)
@@ -1637,29 +1632,6 @@ export default {
           this.table_settings.isBusy = false
           Commons.printErrors(error)
           this.$notify.error(this.$t('notifications.save_error'))
-        })
-    },
-    updateFindingSort: function (listId, sort, getList = true) {
-      const params = {
-        organization: this.$route.params.org_id,
-        list_id: listId
-      }
-      return Api.get('/isoqf_findings', params)
-        .then((reponse) => {
-          const findingId = reponse.data[0].id
-          const params = {
-            'isoqf_id': sort
-          }
-          return Api.patch(`/isoqf_findings/${findingId}`, params)
-            .then(() => {
-              if (getList) {
-                this.getLists()
-              }
-            })
-        })
-        .catch((error) => {
-          this.table_settings.isBusy = false
-          Commons.printErrors(error)
         })
     },
     getCategoryName: function (id) {

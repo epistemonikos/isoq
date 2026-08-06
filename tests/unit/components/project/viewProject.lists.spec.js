@@ -171,6 +171,18 @@ describe('viewProject.vue — createFinding()', () => {
     wrapper.destroy()
   })
 
+  it('does not write the isoqf_id mirror, at the top level or inside evidence_profile', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'finding1' } })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'My Finding')
+    await flushPromises()
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('isoqf_id')
+    expect(payload.evidence_profile).not.toHaveProperty('isoqf_id')
+    wrapper.destroy()
+  })
+
   it('calls createExtractedData with the new finding id', async () => {
     Api.post.mockResolvedValueOnce({ data: { id: 'finding99' } })
     const { wrapper } = createWrapper()
@@ -207,7 +219,6 @@ describe('viewProject.vue — saveSortedLists()', () => {
   it('patches each list with incremental sort values starting at 1', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper } = createWrapper()
-    jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
@@ -219,24 +230,23 @@ describe('viewProject.vue — saveSortedLists()', () => {
     wrapper.destroy()
   })
 
-  it('calls updateFindingSort for each list with getList=false', async () => {
+  it('does N writes, not 2N: no PATCH/GET touches isoqf_findings during reorder', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper } = createWrapper()
-    const updateSpy = jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     wrapper.vm.saveSortedLists()
     await flushPromises()
-    expect(updateSpy).toHaveBeenCalledWith('l1', 1, false)
-    expect(updateSpy).toHaveBeenCalledWith('l2', 2, false)
+    expect(Api.patch).toHaveBeenCalledTimes(2)
+    expect(Api.patch.mock.calls.some(c => c[0].includes('isoqf_findings'))).toBe(false)
+    expect(Api.get.mock.calls.some(c => c[0].includes('isoqf_findings'))).toBe(false)
     wrapper.destroy()
   })
 
   it('shows success notification and hides modal on Promise.all success', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper, $notify } = createWrapper()
-    jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     const hideMock = jest.fn()
     wrapper.vm.$refs['modal-sort-findings'] = { hide: hideMock }
@@ -256,46 +266,6 @@ describe('viewProject.vue — saveSortedLists()', () => {
     wrapper.vm.saveSortedLists()
     await flushPromises()
     expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
-    wrapper.destroy()
-  })
-})
-
-describe('viewProject.vue — updateFindingSort()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('GETs findings for the list and PATCHes the first one with sort values', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'finding1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 5, false)
-    expect(Api.get).toHaveBeenCalledWith('/isoqf_findings', expect.objectContaining({ list_id: 'list1' }))
-    expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/finding1', {
-      'isoqf_id': 5
-    })
-    wrapper.destroy()
-  })
-
-  it('calls getLists() when getList=true', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 3, true)
-    expect(getListsSpy).toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('does NOT call getLists() when getList=false', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 3, false)
-    expect(getListsSpy).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 })
