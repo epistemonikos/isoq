@@ -376,7 +376,7 @@ export default {
       required: true,
       default: () => ({
         with_categories: [
-          { key: 'sort', label: 'No.' },
+          { key: 'displayNumber', label: 'No.' },
           { key: 'name', label: this.$t('table_headers.summarised_finding') },
           { key: 'category_name', label: this.$t('table_headers.review_finding_groups') },
           { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
@@ -384,7 +384,7 @@ export default {
           { key: 'ref_list', label: this.$t('table_headers.references') }
         ],
         without_categories: [
-          { key: 'sort', label: 'No.' },
+          { key: 'displayNumber', label: 'No.' },
           { key: 'name', label: this.$t('table_headers.summarised_finding') },
           { key: 'cerqual_option', label: this.$t('table_headers.cerqual_assessment') },
           { key: 'cerqual_explanation', label: this.$t('table_headers.cerqual_explanation') },
