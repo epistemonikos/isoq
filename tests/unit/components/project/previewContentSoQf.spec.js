@@ -140,4 +140,39 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
 
     expect(wrapper.vm.$router.push).toHaveBeenCalledWith({ name: 'MainPage' })
   })
+
+  describe('el número del finding viene de displayNumber, no de cnt', () => {
+    const L1 = '66b1ff0000000000000000a1'
+    const L2 = '66b1ff0000000000000000a2'
+    const CAT_A = '66b1ff0000000000000000c1'
+    const CAT_Z = '66b1ff0000000000000000c2'
+
+    it('numera agrupando por categoría y no deja rastros de cnt', async () => {
+      // L2 está en Alpha, así que va primero y es el #1 aunque su sort sea mayor.
+      // Los isoqf_id (41, 42) están al revés a propósito.
+      const bundle = {
+        ...BUNDLE,
+        lists: [
+          { ...BUNDLE.lists[0], id: L1, category: CAT_Z, sort: 5, isoqf_id: 41 },
+          { ...BUNDLE.lists[0], id: L2, category: CAT_A, sort: 9, isoqf_id: 42 }
+        ],
+        list_categories: [
+          { id: CAT_A, text: 'Alpha', extra_info: '' },
+          { id: CAT_Z, text: 'Zeta', extra_info: '' }
+        ]
+      }
+
+      Api.get.mockResolvedValue({ data: bundle })
+      const wrapper = shallowMount(previewContentSoQf, { localVue, mocks: sharedMocks })
+      await flushPromises()
+
+      const items = wrapper.vm.lists_print_version.filter(i => i.id === L1 || i.id === L2)
+      expect(items.map(i => [i.id, i.displayNumber])).toEqual([[L2, 1], [L1, 2]])
+      // Los encabezados de categoría no llevan número
+      const headers = wrapper.vm.lists_print_version.filter(i => i.id !== L1 && i.id !== L2)
+      expect(headers.every(h => h.displayNumber === undefined)).toBe(true)
+
+      wrapper.destroy()
+    })
+  })
 })
