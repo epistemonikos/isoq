@@ -1,8 +1,9 @@
 
-import { 
-  ExportStrategyFactory, 
-  IsoQExportStrategy, 
-  CamelotExportStrategy 
+import {
+  ExportStrategyFactory,
+  IsoQExportStrategy,
+  CamelotExportStrategy,
+  WorksheetExportStrategy
 } from '@/strategies/exportStrategies'
 import { WordDocumentBuilder } from '@/utils/wordDocumentBuilder'
 
@@ -142,6 +143,7 @@ describe('ExportStrategies', () => {
         const rows = callArgs[0]
         
         // Both rows should have empty data for name and cerqual because strings don't have those properties
+        expect(rows[0][0].text).toBe('') // Number should be empty: a bare string is not a finding
         expect(rows[0][1].text).toBe('') // Name should be empty
         expect(rows[0][2].text).toBe('') // CERQual text should be empty
         expect(rows[1][1].text).toBe('') // Name should be empty
@@ -178,6 +180,37 @@ describe('ExportStrategies', () => {
         // Second row should be the finding
         const findingRow = rows[1]
         expect(findingRow[1].text).toBe('Finding 1')
+      })
+    })
+
+    describe('número del finding', () => {
+      // El contrato: displayNumber y NADA más. Ni sort, ni isoqf_id, ni id, ni el
+      // literal '1'. Un número plausible pero falso, en un documento que alguien va
+      // a citar, es peor que un vacío.
+      it('imprime displayNumber aunque sort e isoqf_id digan otra cosa', async () => {
+        const data = {
+          ...mockData,
+          findings: [{ ...mockData.findings[0], displayNumber: 3, sort: 11, isoqf_id: 42 }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        const rows = builderMock.addTable.mock.calls[0][0]
+        expect(rows[0][0].text).toBe('3')
+      })
+
+      it('deja el número vacío cuando falta: nunca cae al id ni al literal 1', async () => {
+        const data = {
+          ...mockData,
+          findings: [{ ...mockData.findings[0], id: '66b1ff0000000000000000a1', displayNumber: undefined, sort: undefined, isoqf_id: undefined, cnt: undefined }]
+        }
+
+        await new IsoQExportStrategy(mockProject, data).export()
+
+        const rows = builderMock.addTable.mock.calls[0][0]
+        expect(rows[0][0].text).toBe('')
+        expect(rows[0][0].text).not.toBe('1')
+        expect(rows[0][0].text).not.toContain('66b1ff')
       })
     })
 
@@ -396,6 +429,31 @@ describe('ExportStrategies', () => {
         expect(strategy.getOptionColor('E')).toBe('B3B3B3')
         expect(strategy.getOptionColor('X')).toBeNull()
       })
+    })
+  })
+
+  describe('WorksheetExportStrategy — el número del finding', () => {
+    // `:1289` era el peor fallback del archivo: `isoqf_id || id || '' || '1'`. Podía
+    // imprimir un ObjectId hex de 24 caracteres, o el literal '1', en el documento
+    // que el usuario descarga y cita.
+    it('imprime displayNumber y nunca el id ni el literal 1', () => {
+      const strategy = new WorksheetExportStrategy(mockProject, { findings: [], references: [] })
+
+      strategy.createEvidenceProfileTable({
+        displayNumber: 2, isoqf_id: 88, id: '66b1ff0000000000000000a1', name: 'F'
+      })
+      const withNumberRows = builderMock.addTable.mock.calls[0][0]
+      expect(withNumberRows[0][0].text).toBe('2')
+
+      builderMock.addTable.mockClear()
+
+      strategy.createEvidenceProfileTable({
+        id: '66b1ff0000000000000000a1', name: 'F'
+      })
+      const withoutNumberRows = builderMock.addTable.mock.calls[0][0]
+      expect(withoutNumberRows[0][0].text).toBe('')
+      expect(withoutNumberRows[0][0].text).not.toContain('66b1ff')
+      expect(withoutNumberRows[0][0].text).not.toBe('1')
     })
   })
 })

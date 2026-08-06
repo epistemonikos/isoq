@@ -179,7 +179,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 
       rows.push([
         {
-          text: finding.sort?.toString() || finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
+          // Sólo displayNumber. `index` NO sirve: este array tiene los encabezados de
+          // categoría intercalados, así que está corrido. Ver el plan, Task 6.
+          text: finding.displayNumber?.toString() || '',
           alignment: AlignmentType.CENTER
         },
         {
@@ -272,7 +274,9 @@ export class IsoQExportStrategy extends BaseExportStrategy {
 
       rows.push([
         {
-          text: finding.sort?.toString() || finding.isoqf_id?.toString() || finding.cnt?.toString() || (index + 1).toString(),
+          // Sólo displayNumber. `index` NO sirve: este array tiene los encabezados de
+          // categoría intercalados, así que está corrido. Ver el plan, Task 6.
+          text: finding.displayNumber?.toString() || '',
           alignment: AlignmentType.CENTER
         },
         {
@@ -481,7 +485,7 @@ export class CamelotExportStrategy extends BaseExportStrategy {
         }),
         new TableRow({
           children: [
-            this.createCell([new TextRun({ text: (this.evidenceProfile[0].sort || this.evidenceProfile[0].isoqf_id || '').toString(), size: 22 })]),
+            this.createCell([new TextRun({ text: (this.evidenceProfile[0].displayNumber || '').toString(), size: 22 })]),
             this.createCell([new TextRun({ text: this.evidenceProfile[0].name, size: 22 })]),
             this.createExplanationCell('methodological-limitations', this.evidenceProfile[0].methodological_limitations),
             this.createExplanationCell('coherence', this.evidenceProfile[0].coherence),
@@ -1211,7 +1215,6 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
   async export () {
     console.log('WorksheetExportStrategy.export() - data:', { data: this.data, project: this.project })
     const ep = this.data.evidenceProfile || {}
-    console.log('evidenceProfile:', ep, 'isoqf_id:', ep?.isoqf_id, 'name:', ep?.name)
     const isPublic = this.project?.public_type === 'fully'
 
     const landscapePage = {
@@ -1254,12 +1257,6 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
   }
 
   createEvidenceProfileTable (evidenceProfile) {
-    console.log('createEvidenceProfileTable received:', evidenceProfile)
-    console.log('isoqf_id check:', {
-      evidenceProfile_truthy: !!evidenceProfile,
-      isoqf_id: evidenceProfile?.isoqf_id,
-      isoqf_id_isDefined: evidenceProfile?.isoqf_id !== undefined
-    })
     const rows = []
     const headers = [
       { text: '#' },
@@ -1286,7 +1283,7 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
       }
 
       const dataRow = [
-        { text: (evidenceProfile.isoqf_id || evidenceProfile.id || '')?.toString() || '1', verticalAlign: VerticalAlign.TOP },
+        { text: (evidenceProfile.displayNumber || '').toString(), verticalAlign: VerticalAlign.TOP },
         { text: evidenceProfile.name || '', verticalAlign: VerticalAlign.TOP },
         { text: formatCell('methodological-limitations', evidenceProfile.methodological_limitations?.option, evidenceProfile.methodological_limitations?.explanation), verticalAlign: VerticalAlign.TOP },
         { text: formatCell('coherence', evidenceProfile.coherence?.option, evidenceProfile.coherence?.explanation), verticalAlign: VerticalAlign.TOP },
