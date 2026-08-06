@@ -230,17 +230,28 @@ describe('viewProject.vue — saveSortedLists()', () => {
     wrapper.destroy()
   })
 
-  it('does N writes, not 2N: no PATCH/GET touches isoqf_findings during reorder', async () => {
+  it('does N writes, not 2N: patches exactly the two lists and nothing on isoqf_findings', async () => {
     Api.patch.mockResolvedValue({ data: {} })
+    // Un mock plano {data: []} para Api.get deja pasar al código viejo sin
+    // fallar (ver viewProject.findingNumber.spec.js): reponse.data[0].id
+    // revienta antes del PATCH a isoqf_findings y el propio catch se lo
+    // traga. Con un finding real por lista, el viejo updateFindingSort()
+    // sí llega a emitir ese PATCH, y esta aserción lo detecta.
+    Api.get.mockImplementation((url, params) => {
+      if (String(url).includes('isoqf_findings')) {
+        const listId = params && params.list_id
+        return Promise.resolve({ data: [{ id: `finding-${listId}`, list_id: listId }] })
+      }
+      return Promise.resolve({ data: [] })
+    })
     const { wrapper } = createWrapper()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     wrapper.vm.saveSortedLists()
     await flushPromises()
-    expect(Api.patch).toHaveBeenCalledTimes(2)
-    expect(Api.patch.mock.calls.some(c => c[0].includes('isoqf_findings'))).toBe(false)
-    expect(Api.get.mock.calls.some(c => c[0].includes('isoqf_findings'))).toBe(false)
+    const patchedUrls = Api.patch.mock.calls.map(c => c[0])
+    expect(patchedUrls).toEqual(['/isoqf_lists/l1', '/isoqf_lists/l2'])
     wrapper.destroy()
   })
 
