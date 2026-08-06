@@ -26,7 +26,7 @@
             <b-td
               style="vertical-align: top;">
               <template v-if="categories.options.length">
-                <p>{{item.cnt}}</p>
+                <p>{{item.displayNumber}}</p>
               </template>
               <template v-else>
                 {{index+1}}
@@ -104,7 +104,7 @@
               <template v-else>
                 <b-td style="width: 5%">
                   <template v-if="categories.options.length">
-                  <p>{{item.cnt}}</p>
+                  <p>{{item.displayNumber}}</p>
                   </template>
                   <template v-else>
                   {{ index + 1 }}

@@ -1202,23 +1202,20 @@ export default {
                       'notes': list.notes,
                       'evidence_profile': list.evidence_profile,
                       'references': list.references,
-                      'cnt': 0
+                      'displayNumber': list.displayNumber
                     }
                   )
                 }
               }
             }
           }
+          // El número ya viene en displayNumber desde sortFindings: acá sólo se
+          // intercalan los encabezados de categoría, que no llevan número.
           let _items = []
-          let cnt = 1
           for (const cat of categories) {
             if (cat.items.length) {
               _items.push(cat)
-              for (const _item of cat.items) {
-                _item.cnt = cnt
-                _items.push(_item)
-                cnt++
-              }
+              _items.push(...cat.items)
             }
           }
 

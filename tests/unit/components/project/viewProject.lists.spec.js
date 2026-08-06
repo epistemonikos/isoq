@@ -602,3 +602,48 @@ describe('viewProject.vue — processLists() reference matching (O(n^2) refactor
     wrapper.destroy()
   })
 })
+
+describe('viewProject.vue — processLists() lists_print_version numbering (print view regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('propagates displayNumber (not cnt) onto lists_print_version items; category headers stay unnumbered', async () => {
+    // Category (Alpha) wins over raw sort, and sort/isoqf_id/expected-position are three
+    // distinct values per item so the assertion cannot pass by accident on the wrong field.
+    const L1 = '66b1ff0000000000000000b1'
+    const L2 = '66b1ff0000000000000000b2'
+    const CAT_A = '66b1ff0000000000000000c1'
+    const CAT_Z = '66b1ff0000000000000000c2'
+
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      references: [],
+      list_categories: {
+        options: [
+          { id: CAT_A, text: 'Alpha', extra_info: '' },
+          { id: CAT_Z, text: 'Zeta', extra_info: '' }
+        ],
+        selected: null
+      }
+    })
+    const lists = [
+      { id: L1, name: 'Finding uno', category: CAT_Z, sort: 5, isoqf_id: 41, cerqual: { option: null, explanation: '' }, references: [] },
+      { id: L2, name: 'Finding dos', category: CAT_A, sort: 9, isoqf_id: 42, cerqual: { option: null, explanation: '' }, references: [] }
+    ]
+
+    await wrapper.vm.processLists({ data: lists })
+
+    const items = wrapper.vm.lists_print_version.filter(i => i.id === L1 || i.id === L2)
+    // L2 is in category Alpha, so it prints first even though its raw sort (9) is higher.
+    expect(items.map(i => [i.id, i.displayNumber])).toEqual([[L2, 1], [L1, 2]])
+    // No leftover cnt anywhere on the finding rows.
+    expect(items.every(i => !Object.prototype.hasOwnProperty.call(i, 'cnt'))).toBe(true)
+
+    // Category header rows never carry a display number.
+    const headers = wrapper.vm.lists_print_version.filter(i => i.is_category)
+    expect(headers.length).toBeGreaterThan(0)
+    expect(headers.every(h => h.displayNumber === undefined)).toBe(true)
+
+    wrapper.destroy()
+  })
+})
