@@ -60,9 +60,11 @@ describe('UploadReferences.vue — findRelatedFindings()', () => {
     wrapper.destroy()
   })
 
-  it('returns findings_affected message when ref is referenced by a list', () => {
+  it('returns findings_affected message using displayNumber, not sort or isoqf_id', () => {
+    // sort, isoqf_id and displayNumber are three different values on purpose: reading
+    // the wrong one must fail this assertion (per the plan's fixture constraint).
     wrapper = createWrapper({
-      lists: [{ cnt: 3, raw_ref: [{ id: 'r1' }, { id: 'r2' }] }]
+      lists: [{ sort: 7, isoqf_id: 41, displayNumber: 3, raw_ref: [{ id: 'r1' }, { id: 'r2' }] }]
     })
 
     const result = wrapper.vm.findRelatedFindings('r1')
@@ -72,19 +74,9 @@ describe('UploadReferences.vue — findRelatedFindings()', () => {
     wrapper.destroy()
   })
 
-  it('uses list.sort when list.cnt is absent', () => {
-    wrapper = createWrapper({
-      lists: [{ sort: 7, raw_ref: [{ id: 'r1' }] }]
-    })
-
-    const result = wrapper.vm.findRelatedFindings('r1')
-    expect(result).toContain('#7')
-    wrapper.destroy()
-  })
-
   it('returns no_findings_affected message when ref is not in any list', () => {
     wrapper = createWrapper({
-      lists: [{ cnt: 1, raw_ref: [{ id: 'other' }] }]
+      lists: [{ sort: 9, isoqf_id: 12, displayNumber: 1, raw_ref: [{ id: 'other' }] }]
     })
 
     const result = wrapper.vm.findRelatedFindings('r99')
@@ -92,11 +84,11 @@ describe('UploadReferences.vue — findRelatedFindings()', () => {
     wrapper.destroy()
   })
 
-  it('collects findings from multiple lists', () => {
+  it('collects findings from multiple lists, each keyed by its own displayNumber', () => {
     wrapper = createWrapper({
       lists: [
-        { cnt: 1, raw_ref: [{ id: 'r1' }] },
-        { cnt: 2, raw_ref: [{ id: 'r1' }] }
+        { sort: 5, isoqf_id: 50, displayNumber: 1, raw_ref: [{ id: 'r1' }] },
+        { sort: 6, isoqf_id: 60, displayNumber: 2, raw_ref: [{ id: 'r1' }] }
       ]
     })
 
@@ -505,6 +497,21 @@ describe('UploadReferences.vue — translatedReferencesTableFields (computed)', 
     expect(keys).toContain('id')
     expect(keys).toContain('action')
     expect(fields).toHaveLength(5)
+    wrapper.destroy()
+  })
+
+  it('numbers the "related to findings" column using displayNumber, not sort/isoqf_id/cnt', () => {
+    // sort, isoqf_id and displayNumber are three different values on purpose.
+    const wrapper = createWrapper({
+      lists: [
+        { sort: 8, isoqf_id: 44, displayNumber: 2, raw_ref: [{ id: 'refA' }] }
+      ]
+    })
+    const idField = wrapper.vm.translatedReferencesTableFields.find(f => f.key === 'id')
+
+    const result = idField.formatter('refA')
+
+    expect(result).toBe('#2')
     wrapper.destroy()
   })
 })
