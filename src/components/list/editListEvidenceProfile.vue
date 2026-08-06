@@ -21,7 +21,7 @@
       :items="evidenceProfile"
       :filter="evidenceProfileTableSettings.filter"
       :busy="evidenceProfileTableSettings.isBusy">
-      <template v-slot:head(isoqf_id)="data">
+      <template v-slot:head(displayNumber)="data">
         <span v-b-tooltip.hover :title="$t('table_headers.auto_numbering')">{{data.label}}</span>
       </template>
       <template v-slot:head(methodological-limit)="data">
@@ -67,8 +67,8 @@
         <span v-b-tooltip.hover :title="$t('worksheet.tooltips.definitions.references')">{{data.label}}</span>
       </template>
       <!-- content -->
-      <template v-slot:cell(isoqf_id)="data">
-        {{data.item.isoqf_id}}
+      <template v-slot:cell(displayNumber)="data">
+        {{data.item.displayNumber}}
       </template>
       <template v-slot:cell(methodological-limit)="data">
         <div v-if="data.item.methodological_limitations.option !== null">
@@ -362,7 +362,7 @@
       :fields="evidenceProfileFieldsPrintVersion"
       :items="evidenceProfile"
       :filter="evidenceProfileTableSettings.filter">
-      <template v-slot:head(isoqf_id)="data">
+      <template v-slot:head(displayNumber)="data">
         {{data.label}}
       </template>
       <template v-slot:head(name)="data">
@@ -386,8 +386,8 @@
       <template v-slot:head(references)="data">
         {{data.label}}
       </template>
-      <template v-slot:cell(isoqf_id)="data">
-        {{data.item.isoqf_id}}
+      <template v-slot:cell(displayNumber)="data">
+        {{data.item.displayNumber}}
       </template>
       <template v-slot:cell(finding)="data">
         {{data.item.name}}
@@ -592,7 +592,7 @@ export default {
   computed: {
     evidenceProfileFields () {
       return [
-        { key: 'isoqf_id', label: '#' },
+        { key: 'displayNumber', label: '#' },
         { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
         { key: 'coherence', label: this.$t('worksheet.coherence') },
         { key: 'adequacy', label: this.$t('worksheet.adequacy') },
@@ -603,7 +603,7 @@ export default {
     },
     evidenceProfileFieldsPrintVersion () {
       return [
-        { key: 'isoqf_id', label: '#' },
+        { key: 'displayNumber', label: '#' },
         { key: 'name', label: this.$t('soqf_table.summarised_finding') },
         { key: 'methodological-limit', label: this.$t('worksheet.methodological_limitations') },
         { key: 'coherence', label: this.$t('worksheet.coherence') },
