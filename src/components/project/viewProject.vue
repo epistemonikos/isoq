@@ -1251,9 +1251,13 @@ export default {
     },
     createList: function () {
       this.table_settings.isBusy = true
+      // this.lists is sortFindings' output, ordered by (category, sort) for display — NOT by
+      // sort. The last element in that display order does not carry the maximum persisted
+      // sort, so the new list's sort must be computed from the real max, not from position.
       let sort = 1
-      if (this.lists.length) {
-        sort = this.lists.slice(-1)[0].sort + 1
+      const sorts = this.lists.map(l => Number(l.sort)).filter(Number.isFinite)
+      if (sorts.length) {
+        sort = Math.max(...sorts) + 1
       }
       let isPublic = false
       if (this.project.is_public) {
@@ -1598,17 +1602,13 @@ export default {
         })
     },
     modalSortFindings: function () {
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      _lists.sort(function (a, b) {
-        if (a.sort < b.sort) {
-          return -1
-        }
-        if (a.sort > b.sort) {
-          return 1
-        }
-        return 0
-      })
-      this.sorted_lists = _lists
+      // this.lists is already in the derived display order (category, then sort) — the same
+      // order the user sees in the iSoQ table. Re-sorting by the raw persisted `sort` used to
+      // be a no-op back when sortFindings renumbered sort to 1..N on every read, but now that
+      // it doesn't, re-sorting here would show the drag modal in a different order than the
+      // table it is meant to reorder, and that reordered view is what saveSortedLists writes
+      // back as the new 1..N sort.
+      this.sorted_lists = JSON.parse(JSON.stringify(this.lists))
       this.$refs['modal-sort-findings'].show()
     },
     saveSortedLists: function () {

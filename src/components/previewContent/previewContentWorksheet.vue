@@ -398,7 +398,13 @@ export default {
 
       Promise.all([
         Api.get(url, params),
-        Api.get(catUrl, params).catch(() => ({ data: [] }))
+        Api.get(catUrl, params).catch((error) => {
+          // Swallow so the chain survives without categories rather than breaking the
+          // worksheet entirely, but log it: silently falling back to sort-only numbering
+          // here is the exact bug this branch fixed, and it must not go unreported.
+          this.printErrors(error)
+          return { data: [] }
+        })
       ])
         .then(([response, catResponse]) => {
           let lists = Array.isArray(response.data) ? response.data : [response.data]

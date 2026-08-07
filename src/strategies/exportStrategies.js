@@ -1213,7 +1213,6 @@ export class WorksheetExportStrategy extends BaseExportStrategy {
   }
 
   async export () {
-    console.log('WorksheetExportStrategy.export() - data:', { data: this.data, project: this.project })
     const ep = this.data.evidenceProfile || {}
     const isPublic = this.project?.public_type === 'fully'
 

@@ -71,6 +71,23 @@ describe('viewProject.vue — createList()', () => {
     wrapper.destroy()
   })
 
+  // Regresión CRITICAL 2: this.lists es la salida de sortFindings, ordenada por
+  // (categoría, sort) — NO por sort. Ahora que sortFindings ya no renumera sort (commit
+  // 9ec4b08), el último elemento por orden de categoría puede llevar cualquier sort
+  // persistido, no necesariamente el máximo. slice(-1)[0].sort + 1 debe dejar de asumir que
+  // el último elemento en pantalla es el de mayor sort.
+  it('sets sort=max(sort)+1 even when the last list by display order is not the max', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list3', name: 'Finding 3' } })
+    const { wrapper } = createWrapper()
+    // Orden de categoría puso primero al sort:5 y último al sort:2 — el máximo real es 5.
+    await wrapper.setData({ lists: [{ sort: 5 }, { sort: 2 }], summarized_review: 'New finding' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ sort: 6 }))
+    wrapper.destroy()
+  })
+
   it('copies is_public=true from project', async () => {
     Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
     const { wrapper } = createWrapper()

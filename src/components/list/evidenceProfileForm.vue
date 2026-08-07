@@ -1246,7 +1246,7 @@ export default {
           })
       } else {
         // New finding: no id yet to target /section/, create it with the full profile.
-        const { type, title, isoqf_id, ...evidenceProfileData } = this.selectedOptions
+        const { type, title, isoqf_id, displayNumber, ...evidenceProfileData } = this.selectedOptions
         Api.post(`/isoqf_findings`, {
           organization: this.list.organization,
           list_id: this.list.id,
