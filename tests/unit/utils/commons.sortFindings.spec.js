@@ -131,9 +131,64 @@ describe('Commons.sortFindings — displayNumber', () => {
 
     const result = Commons.sortFindings(findings, options)
 
-    // localeCompare: 'área' antes que 'zona' (á tratada como cercana a 'a', no como > 'z').
-    expect('área'.localeCompare('zona')).toBeLessThan(0)
+    // localeCompare('en'): 'área' antes que 'zona' (á tratada como cercana a 'a', no como > 'z').
+    expect('área'.localeCompare('zona', 'en')).toBeLessThan(0)
     expect(result.map(f => f.id)).toEqual([L_AREA, L_ZONA])
     expect(result.map(f => f.displayNumber)).toEqual([1, 2])
+  })
+
+  // Non-blocking del re-review: catA.localeCompare(catB) sin locale explícito usa la
+  // colación por defecto del runtime — dos usuarios en máquinas configuradas con locales
+  // distintos podrían ver el "#" en orden distinto para el mismo finding, exactamente el bug
+  // que esta rama cierra, ahora filtrándose por el locale del sistema en vez del idioma de la
+  // UI. Hay que fijar el locale, y el test tiene que poder fallar bajo un locale alternativo
+  // plausible o no está probando nada.
+  //
+  // 'ö' es el ejemplo que sí discrimina: en 'en' (y en 'es') colacionan cerca de 'o', pero en
+  // sueco ('sv') la 'ö' es una letra propia que colaciona DESPUÉS de la 'z'. Confirmado
+  // empíricamente en este runtime (Node con ICU completo):
+  //   'örebro'.localeCompare('zurich', 'en') === -1   (Örebro antes que Zürich)
+  //   'örebro'.localeCompare('zurich', 'sv') === 1    (Örebro después que Zürich)
+  // Si sortFindings alguna vez dejara de pasar el locale explícito, o pasara el locale de la
+  // UI en vez de uno fijo, este finding cambiaría de posición según el idioma/configuración
+  // de quien mira, no según los datos.
+  it('fija la colación a un locale explícito (no el de la app): "ö" no cambia de posición según el sistema', () => {
+    // Primero, la prueba de que el locale SÍ discrimina — si esto dejara de ser cierto en
+    // algún runtime, la aserción de abajo no probaría nada.
+    expect('örebro'.localeCompare('zurich', 'en')).toBeLessThan(0)
+    expect('örebro'.localeCompare('zurich', 'sv')).toBeGreaterThan(0)
+
+    const CAT_OREBRO = '66b1ff0000000000000000c6'
+    const CAT_ZURICH = '66b1ff0000000000000000c7'
+    const L_OREBRO = '66b1ff0000000000000000a8'
+    const L_ZURICH = '66b1ff0000000000000000a9'
+
+    const options = [
+      { id: CAT_OREBRO, text: 'Örebro' },
+      { id: CAT_ZURICH, text: 'Zurich' }
+    ]
+
+    const findings = [
+      { id: L_ZURICH, category: CAT_ZURICH, sort: 8, isoqf_id: 21 },
+      { id: L_OREBRO, category: CAT_OREBRO, sort: 33, isoqf_id: 22 }
+    ]
+
+    const result = Commons.sortFindings(findings, options)
+
+    // Colación 'en' pinneada: Örebro antes que Zurich. Si el código dejara caer el segundo
+    // argumento de localeCompare (colación por defecto) esto seguiría pasando en la mayoría
+    // de runtimes — la prueba real de que el locale está fijo es que coincide con 'en' aunque
+    // el entorno de quien corre el test tenga otro locale configurado.
+    expect(result.map(f => f.id)).toEqual([L_OREBRO, L_ZURICH])
+    expect(result.map(f => f.displayNumber)).toEqual([1, 2])
+
+    // Verificación directa de que se pasa 'en' explícitamente: se espía localeCompare y se
+    // confirma que al menos una llamada usó ('en') como segundo argumento. Esto SÍ discrimina
+    // una regresión donde alguien borra el segundo argumento o lo cambia por this.$i18n.locale.
+    const spy = jest.spyOn(String.prototype, 'localeCompare')
+    Commons.sortFindings(findings, options)
+    const localesUsed = spy.mock.calls.map(call => call[1])
+    expect(localesUsed).toContain('en')
+    spy.mockRestore()
   })
 })

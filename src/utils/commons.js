@@ -209,7 +209,14 @@ export default class Commons {
       const catA = (getCategoryName(a.category) || 'zzzzzzzz').toLowerCase()
       const catB = (getCategoryName(b.category) || 'zzzzzzzz').toLowerCase()
 
-      if (catA !== catB) return catA.localeCompare(catB)
+      // Locale pinned to 'en', deliberately NOT this.$i18n's active UI language: the whole
+      // point of this branch is that the finding number is the same for everyone. Collation
+      // rules differ by locale (e.g. accented letters sort differently under 'sv' than under
+      // 'en'/'es'), so leaving this to the runtime/browser default would let two users on
+      // differently-configured machines see different numbers for the same finding — the
+      // exact bug this branch exists to close, just surfacing through machine locale instead
+      // of UI language. Do not swap this for a dynamic locale.
+      if (catA !== catB) return catA.localeCompare(catB, 'en')
 
       if (a.sort < b.sort) return -1
       if (a.sort > b.sort) return 1
