@@ -259,18 +259,18 @@ describe('editList.vue — getFinding()', () => {
     expect(wrapper.vm.findings.id).toBe('f1')
   })
 
-  it('sets findings.isoqf_id to list.sort', async () => {
+  it('sets findings.displayNumber to list.displayNumber', async () => {
     const finding = { id: 'f1', evidence_profile: { methodological_limitations: { option: null, explanation: '' }, coherence: { option: null, explanation: '' }, adequacy: { option: null, explanation: '' }, relevance: { option: null, explanation: '' }, cerqual: { option: null, explanation: '' }, references: [] } }
-    await wrapper.setData({ list: { ...wrapper.vm.list, findings: [finding], sort: 7, references: [] } })
+    await wrapper.setData({ list: { ...wrapper.vm.list, findings: [finding], sort: 99, displayNumber: 7, references: [] } })
     wrapper.vm.getFinding()
-    expect(wrapper.vm.findings.isoqf_id).toBe(7)
+    expect(wrapper.vm.findings.displayNumber).toBe(7)
   })
 
-  it('sets evidence_profile[0].isoqf_id to list.sort', async () => {
+  it('sets evidence_profile[0].displayNumber to list.displayNumber', async () => {
     const finding = { id: 'f1', evidence_profile: { methodological_limitations: { option: null, explanation: '' }, coherence: { option: null, explanation: '' }, adequacy: { option: null, explanation: '' }, relevance: { option: null, explanation: '' }, cerqual: { option: null, explanation: '' }, references: [] } }
-    await wrapper.setData({ list: { ...wrapper.vm.list, findings: [finding], sort: 4, references: [] } })
+    await wrapper.setData({ list: { ...wrapper.vm.list, findings: [finding], sort: 99, displayNumber: 4, references: [] } })
     wrapper.vm.getFinding()
-    expect(wrapper.vm.evidence_profile[0].isoqf_id).toBe(4)
+    expect(wrapper.vm.evidence_profile[0].displayNumber).toBe(4)
   })
 
   it('syncs evidence_profile[0].references from list.references', async () => {

@@ -71,6 +71,23 @@ describe('viewProject.vue — createList()', () => {
     wrapper.destroy()
   })
 
+  // Regresión CRITICAL 2: this.lists es la salida de sortFindings, ordenada por
+  // (categoría, sort) — NO por sort. Ahora que sortFindings ya no renumera sort (commit
+  // 9ec4b08), el último elemento por orden de categoría puede llevar cualquier sort
+  // persistido, no necesariamente el máximo. slice(-1)[0].sort + 1 debe dejar de asumir que
+  // el último elemento en pantalla es el de mayor sort.
+  it('sets sort=max(sort)+1 even when the last list by display order is not the max', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'list3', name: 'Finding 3' } })
+    const { wrapper } = createWrapper()
+    // Orden de categoría puso primero al sort:5 y último al sort:2 — el máximo real es 5.
+    await wrapper.setData({ lists: [{ sort: 5 }, { sort: 2 }], summarized_review: 'New finding' })
+    jest.spyOn(wrapper.vm, 'createFinding').mockResolvedValue()
+    wrapper.vm.createList()
+    await flushPromises()
+    expect(Api.post).toHaveBeenCalledWith('/isoqf_lists', expect.objectContaining({ sort: 6 }))
+    wrapper.destroy()
+  })
+
   it('copies is_public=true from project', async () => {
     Api.post.mockResolvedValueOnce({ data: { id: 'list1', name: 'F' } })
     const { wrapper } = createWrapper()
@@ -171,6 +188,18 @@ describe('viewProject.vue — createFinding()', () => {
     wrapper.destroy()
   })
 
+  it('does not write the isoqf_id mirror, at the top level or inside evidence_profile', async () => {
+    Api.post.mockResolvedValueOnce({ data: { id: 'finding1' } })
+    const { wrapper } = createWrapper()
+    jest.spyOn(wrapper.vm, 'createExtractedData').mockResolvedValue()
+    wrapper.vm.createFinding('list1', 'My Finding')
+    await flushPromises()
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('isoqf_id')
+    expect(payload.evidence_profile).not.toHaveProperty('isoqf_id')
+    wrapper.destroy()
+  })
+
   it('calls createExtractedData with the new finding id', async () => {
     Api.post.mockResolvedValueOnce({ data: { id: 'finding99' } })
     const { wrapper } = createWrapper()
@@ -207,7 +236,6 @@ describe('viewProject.vue — saveSortedLists()', () => {
   it('patches each list with incremental sort values starting at 1', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper } = createWrapper()
-    jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
@@ -219,24 +247,34 @@ describe('viewProject.vue — saveSortedLists()', () => {
     wrapper.destroy()
   })
 
-  it('calls updateFindingSort for each list with getList=false', async () => {
+  it('does N writes, not 2N: patches exactly the two lists and nothing on isoqf_findings', async () => {
     Api.patch.mockResolvedValue({ data: {} })
+    // Un mock plano {data: []} para Api.get deja pasar al código viejo sin
+    // fallar (ver viewProject.findingNumber.spec.js): reponse.data[0].id
+    // revienta antes del PATCH a isoqf_findings y el propio catch se lo
+    // traga. Con un finding real por lista, el viejo updateFindingSort()
+    // sí llega a emitir ese PATCH, y esta aserción lo detecta.
+    Api.get.mockImplementation((url, params) => {
+      if (String(url).includes('isoqf_findings')) {
+        const listId = params && params.list_id
+        return Promise.resolve({ data: [{ id: `finding-${listId}`, list_id: listId }] })
+      }
+      return Promise.resolve({ data: [] })
+    })
     const { wrapper } = createWrapper()
-    const updateSpy = jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     wrapper.vm.sorted_lists = [{ id: 'l1' }, { id: 'l2' }]
     wrapper.vm.$refs['modal-sort-findings'] = { hide: jest.fn() }
     wrapper.vm.saveSortedLists()
     await flushPromises()
-    expect(updateSpy).toHaveBeenCalledWith('l1', 1, false)
-    expect(updateSpy).toHaveBeenCalledWith('l2', 2, false)
+    const patchedUrls = Api.patch.mock.calls.map(c => c[0])
+    expect(patchedUrls).toEqual(['/isoqf_lists/l1', '/isoqf_lists/l2'])
     wrapper.destroy()
   })
 
   it('shows success notification and hides modal on Promise.all success', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper, $notify } = createWrapper()
-    jest.spyOn(wrapper.vm, 'updateFindingSort').mockResolvedValue()
     jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
     const hideMock = jest.fn()
     wrapper.vm.$refs['modal-sort-findings'] = { hide: hideMock }
@@ -256,46 +294,6 @@ describe('viewProject.vue — saveSortedLists()', () => {
     wrapper.vm.saveSortedLists()
     await flushPromises()
     expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
-    wrapper.destroy()
-  })
-})
-
-describe('viewProject.vue — updateFindingSort()', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('GETs findings for the list and PATCHes the first one with sort values', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'finding1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 5, false)
-    expect(Api.get).toHaveBeenCalledWith('/isoqf_findings', expect.objectContaining({ list_id: 'list1' }))
-    expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/finding1', {
-      'isoqf_id': 5
-    })
-    wrapper.destroy()
-  })
-
-  it('calls getLists() when getList=true', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 3, true)
-    expect(getListsSpy).toHaveBeenCalled()
-    wrapper.destroy()
-  })
-
-  it('does NOT call getLists() when getList=false', async () => {
-    const { wrapper } = createWrapper()
-    await flushPromises()
-    Api.get.mockResolvedValueOnce({ data: [{ id: 'f1' }] })
-    Api.patch.mockResolvedValueOnce({ data: {} })
-    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
-    await wrapper.vm.updateFindingSort('list1', 3, false)
-    expect(getListsSpy).not.toHaveBeenCalled()
     wrapper.destroy()
   })
 })
@@ -599,6 +597,51 @@ describe('viewProject.vue — processLists() reference matching (O(n^2) refactor
     wrapper.vm.getLists()
     await flushPromises()
     expect(wrapper.vm.table_settings.isBusy).toBe(false)
+    wrapper.destroy()
+  })
+})
+
+describe('viewProject.vue — processLists() lists_print_version numbering (print view regression)', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('propagates displayNumber (not cnt) onto lists_print_version items; category headers stay unnumbered', async () => {
+    // Category (Alpha) wins over raw sort, and sort/isoqf_id/expected-position are three
+    // distinct values per item so the assertion cannot pass by accident on the wrong field.
+    const L1 = '66b1ff0000000000000000b1'
+    const L2 = '66b1ff0000000000000000b2'
+    const CAT_A = '66b1ff0000000000000000c1'
+    const CAT_Z = '66b1ff0000000000000000c2'
+
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({
+      references: [],
+      list_categories: {
+        options: [
+          { id: CAT_A, text: 'Alpha', extra_info: '' },
+          { id: CAT_Z, text: 'Zeta', extra_info: '' }
+        ],
+        selected: null
+      }
+    })
+    const lists = [
+      { id: L1, name: 'Finding uno', category: CAT_Z, sort: 5, isoqf_id: 41, cerqual: { option: null, explanation: '' }, references: [] },
+      { id: L2, name: 'Finding dos', category: CAT_A, sort: 9, isoqf_id: 42, cerqual: { option: null, explanation: '' }, references: [] }
+    ]
+
+    await wrapper.vm.processLists({ data: lists })
+
+    const items = wrapper.vm.lists_print_version.filter(i => i.id === L1 || i.id === L2)
+    // L2 is in category Alpha, so it prints first even though its raw sort (9) is higher.
+    expect(items.map(i => [i.id, i.displayNumber])).toEqual([[L2, 1], [L1, 2]])
+    // No leftover cnt anywhere on the finding rows.
+    expect(items.every(i => !Object.prototype.hasOwnProperty.call(i, 'cnt'))).toBe(true)
+
+    // Category header rows never carry a display number.
+    const headers = wrapper.vm.lists_print_version.filter(i => i.is_category)
+    expect(headers.length).toBeGreaterThan(0)
+    expect(headers.every(h => h.displayNumber === undefined)).toBe(true)
+
     wrapper.destroy()
   })
 })

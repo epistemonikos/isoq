@@ -383,13 +383,8 @@ export default {
         .then((response) => {
           this.findings = []
           let data = JSON.parse(JSON.stringify(response.data))
-          data.sort(function (a, b) {
-            if (a.sort < b.sort) { return -1 }
-            if (a.sort > b.sort) { return 1 }
-            return 0
-          })
+          data = Commons.sortFindings(data, this.list_categories)
           if (data.length) {
-            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
             for (let list of data) {
               if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
                 list.status = 'unfinished'
@@ -481,7 +476,7 @@ export default {
                       category.items.push(
                         {
                           'id': list.id,
-                          'isoqf_id': list.isoqf_id,
+                          'displayNumber': list.displayNumber,
                           'name': list.name,
                           'cerqual_option': list.cerqual_option,
                           'filter_cerqual': list.filter_cerqual,
@@ -490,24 +485,20 @@ export default {
                           'sort': list.sort,
                           'notes': list.notes,
                           'evidence_profile': list.evidence_profile,
-                          'references': list.references,
-                          'cnt': 0
+                          'references': list.references
                         }
                       )
                     }
                   }
                 }
               }
+              // El número ya viene en displayNumber desde sortFindings: acá sólo se
+              // intercalan los encabezados de categoría, que no llevan número.
               let _items = []
-              let cnt = 1
               for (const cat of categories) {
                 if (cat.items.length) {
                   _items.push(cat)
-                  for (const _item of cat.items) {
-                    _item.cnt = cnt
-                    _items.push(_item)
-                    cnt++
-                  }
+                  _items.push(...cat.items)
                 }
               }
 
@@ -701,13 +692,8 @@ export default {
 
           const rawLists = bundle.lists || []
           let data = JSON.parse(JSON.stringify(rawLists))
-          data.sort(function (a, b) {
-            if (a.sort < b.sort) { return -1 }
-            if (a.sort > b.sort) { return 1 }
-            return 0
-          })
+          data = Commons.sortFindings(data, this.list_categories)
           if (data.length) {
-            this.lastId = parseInt(data.slice(-1)[0].isoqf_id) + 1
             for (let list of data) {
               if (!Object.prototype.hasOwnProperty.call(list, 'evidence_profile')) {
                 list.status = 'unfinished'
@@ -792,7 +778,7 @@ export default {
                   if (categoryValue === listCatId) {
                     category.items.push({
                       'id': list.id,
-                      'isoqf_id': list.isoqf_id,
+                      'displayNumber': list.displayNumber,
                       'name': list.name,
                       'cerqual_option': list.cerqual_option,
                       'filter_cerqual': list.filter_cerqual,
@@ -801,22 +787,18 @@ export default {
                       'sort': list.sort,
                       'notes': list.notes,
                       'evidence_profile': list.evidence_profile,
-                      'references': list.references,
-                      'cnt': 0
+                      'references': list.references
                     })
                   }
                 }
               }
+              // El número ya viene en displayNumber desde sortFindings: acá sólo se
+              // intercalan los encabezados de categoría, que no llevan número.
               let _items = []
-              let cnt = 1
               for (const cat of categories) {
                 if (cat.items.length) {
                   _items.push(cat)
-                  for (const _item of cat.items) {
-                    _item.cnt = cnt
-                    _items.push(_item)
-                    cnt++
-                  }
+                  _items.push(...cat.items)
                 }
               }
               this.lists_print_version = _items

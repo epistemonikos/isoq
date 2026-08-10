@@ -194,6 +194,13 @@ export default class Commons {
     const options = Array.isArray(categories) ? categories : (categories.options || [])
 
     const getCategoryName = (id) => {
+      // Uncategorised: always resolve to '' regardless of what each caller's options array
+      // contains. Some callers (viewProject.vue, previewContentSoQf.vue) splice in a synthetic
+      // { id: null, text: <translated label> } entry for their "no group" dropdown option;
+      // others (editList.vue, previewContentWorksheet.vue) pass the raw API array without it.
+      // Matching against that synthetic entry would sort uncategorised findings by a
+      // locale-dependent translated label instead of always-last, diverging between views.
+      if (id === null || id === undefined) return ''
       const cat = options.find(c => c.id === id)
       return cat ? (cat.text || cat.name || '') : ''
     }
@@ -202,8 +209,14 @@ export default class Commons {
       const catA = (getCategoryName(a.category) || 'zzzzzzzz').toLowerCase()
       const catB = (getCategoryName(b.category) || 'zzzzzzzz').toLowerCase()
 
-      if (catA < catB) return -1
-      if (catA > catB) return 1
+      // Locale pinned to 'en', deliberately NOT this.$i18n's active UI language: the whole
+      // point of this branch is that the finding number is the same for everyone. Collation
+      // rules differ by locale (e.g. accented letters sort differently under 'sv' than under
+      // 'en'/'es'), so leaving this to the runtime/browser default would let two users on
+      // differently-configured machines see different numbers for the same finding — the
+      // exact bug this branch exists to close, just surfacing through machine locale instead
+      // of UI language. Do not swap this for a dynamic locale.
+      if (catA !== catB) return catA.localeCompare(catB, 'en')
 
       if (a.sort < b.sort) return -1
       if (a.sort > b.sort) return 1
@@ -212,7 +225,9 @@ export default class Commons {
     }).map((item, index) => {
       return {
         ...item,
-        sort: index + 1
+        // El número visible es una posición derivada. `sort` es la preferencia de
+        // orden que guardó el usuario y no se toca: son cosas distintas.
+        displayNumber: index + 1
       }
     })
   }

@@ -38,6 +38,43 @@ evidence_profile options 0-3: no/minor/moderate/serious · cerqual 0-3: high/mod
 
 ---
 
+## NÚMERO DEL FINDING (el "#" / "No.")
+
+**Es POSICIÓN, no identidad, y se DERIVA al vuelo. Nunca se lee de la DB para mostrar.**
+
+Regla única: posición = índice + 1 sobre la colección ordenada (`Commons.sortFindings`, que ordena por
+categoría y luego por `sort`). Vale igual para la visualización y para los exportables.
+
+Un solo campo persistido, con un rol único: **`isoqf_lists.sort` = el orden que el usuario eligió** con
+el modal de arrastrar. No es el número; es de dónde se deriva el número. No se puede sacar: es el único
+lugar donde vive ese orden.
+
+Cero campos persistidos para el número. `isoqf_findings.isoqf_id` y
+`isoqf_findings.evidence_profile.isoqf_id` son espejos legados: **no escribir en proyectos nuevos, no
+leer nunca**. Los proyectos viejos los conservan como dato muerto; no hace falta migrarlos justamente
+porque nadie los lee. `list.cnt` no existe más.
+
+Consecuencias al tocar esto:
+- Toda vista que muestre el # necesita **listas + categorías** para derivarlo. Sin categorías la
+  agrupación cambia y el número sale distinto que en el resto de la app.
+- Los exportables usan **una sola** precedencia: la posición derivada. Prohibido caer a `id`
+  (es un ObjectId) o a literales tipo `'1'` — un número plausible pero falso en un documento que
+  alguien va a citar es peor que un vacío.
+- No reimplementar la regla: si necesitás el número en un componente nuevo, usá la función compartida.
+  Ya estuvo duplicada (`sortFindings` + un bucle `cnt` propio) y produjo numeraciones distintas.
+
+Por qué importa: los usuarios coordinan con este número ("yo trabajo en el finding 3, tú en el 4").
+Si dos vistas muestran números distintos para el mismo finding, trabajan sobre el equivocado.
+
+Pendiente con backend: confirmar que no tengan consumidores server-side de `isoqf_id` (exports, vista
+compartida). Si los tienen, seguimos escribiéndolo hasta que migren — el frontend igual no lo lee.
+Después, limpiarlo de la base.
+
+Antecedente de por qué la regla es tan tajante: hubo **cuatro** atributos compitiendo por este número, y
+tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) mostrando vacío o `NaN`.
+
+---
+
 ## KEY FILES
 ```
 src/utils/Api.js               HTTP client + offline queue + 409 lock interceptor

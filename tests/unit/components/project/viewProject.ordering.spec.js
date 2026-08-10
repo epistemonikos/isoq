@@ -94,19 +94,21 @@ describe('viewProject.vue ordering logic', () => {
     // 4. Uncategorised (f4)
     
     // Check internal data sorting (this is what is returned or stored in this.lists)
-    // The current implementation of processLists only sorts by sort. 
+    // The current implementation of processLists only sorts by sort.
     // This test SHOULD FAIL initially because it doesn't sort by category.
-    
+
     // We want to change the logic so that 'processedData' (which becomes this.lists)
     // reflects the category-first order.
-    
+
+    // The visible number is the derived `displayNumber`, not the persisted `sort`
+    // (the user's saved drag-reorder preference, which sortFindings must not touch).
     expect(processedData[0].id).toBe('f2') // From A Category
-    expect(processedData[0].sort).toBe(1)
+    expect(processedData[0].displayNumber).toBe(1)
     expect(processedData[1].id).toBe('f1') // From B Category (sort 1)
-    expect(processedData[1].sort).toBe(2)
+    expect(processedData[1].displayNumber).toBe(2)
     expect(processedData[2].id).toBe('f3') // From B Category (sort 3)
-    expect(processedData[2].sort).toBe(3)
+    expect(processedData[2].displayNumber).toBe(3)
     expect(processedData[3].id).toBe('f4') // Uncategorised
-    expect(processedData[3].sort).toBe(4)
+    expect(processedData[3].displayNumber).toBe(4)
   })
 })

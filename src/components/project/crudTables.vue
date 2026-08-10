@@ -1006,7 +1006,7 @@ export default {
       for (const list of lists) {
         for (const ref of list.references) {
           if (id === ref) {
-            this.removeReferenceDataTable.findings.push(list.isoqf_id)
+            this.removeReferenceDataTable.findings.push(list.displayNumber)
           }
         }
       }

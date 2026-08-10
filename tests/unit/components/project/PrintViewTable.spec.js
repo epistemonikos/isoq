@@ -1,5 +1,5 @@
 
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, mount, createLocalVue } from '@vue/test-utils'
 import PrintViewTable from '@/components/project/PrintViewTable.vue'
 import BootstrapVue from 'bootstrap-vue'
 
@@ -106,9 +106,56 @@ describe('PrintViewTable.vue', () => {
   it('hides items not in printableItems', () => {
     propsData.printableItems = ['cat1'] // find1 is NOT printable
     const wrapper = shallowMount(PrintViewTable, { localVue, propsData, mocks })
-    
+
     const rows = wrapper.findAll('b-tr-stub')
     // Row 0 is header, Row 1 is cat1, Row 2 is find1
     expect(rows.at(2).classes()).toContain('d-print-none')
+  })
+
+  it('renders the finding number as item.displayNumber (not sort or isoqf_id) in the "#" cell', () => {
+    // A full mount is required here: the "#" cell is a plain template interpolation
+    // ({{item.displayNumber}}), not a b-table slot, so a shallowMount that stubs
+    // b-table-simple/b-td would never render it and the assertion would pass vacuously.
+    // sort, isoqf_id and displayNumber are deliberately three different values so a
+    // template reverted to either old key fails this assertion.
+    const numberedItem = {
+      id: 'find2',
+      name: 'Finding 2',
+      displayNumber: 5,
+      sort: 9,
+      isoqf_id: '3',
+      ref_list: 'Author 2020',
+      cerqual_option: 'High',
+      cerqual_explanation: 'Exp',
+      references: ['ref1'],
+      evidence_profile: {
+        cerqual: { option: 0, explanation: 'Exp' },
+        methodological_limitations: { option: 0, explanation: '' },
+        coherence: { option: 0, explanation: '' },
+        adequacy: { option: 0, explanation: '' },
+        relevance: { option: 0, explanation: '' }
+      }
+    }
+    propsData.dataPrintVersion = [
+      { is_category: true, name: 'Category 1', id: 'cat1' },
+      numberedItem
+    ]
+    propsData.printableItems = ['cat1', 'find2']
+
+    const wrapper = mount(PrintViewTable, { localVue, propsData, mocks })
+
+    // The row appears in both tables: the summary table (:29) and the evidence-profile
+    // table (:107). Both are reachable with these props (onlySummary/isPublic default
+    // to falsy, so neither table is hidden).
+    const rows = wrapper.findAll('tr').filter(r => r.text().includes('Finding 2'))
+    expect(rows.length).toBe(2)
+
+    for (let i = 0; i < rows.length; i++) {
+      const numberCell = rows.at(i).find('td p')
+      expect(numberCell.exists()).toBe(true)
+      expect(numberCell.text()).toBe('5')
+    }
+
+    wrapper.destroy()
   })
 })

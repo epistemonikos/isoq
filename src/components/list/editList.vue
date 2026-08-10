@@ -567,12 +567,13 @@ export default {
               const sorted = Commons.sortFindings(listsResponse.data, this.list_categories)
               const current = sorted.find(l => l.id === this.list.id)
               if (current) {
-                this.list.sort = current.sort
+                // El número visible es una posición derivada; `sort` persistido no se toca.
+                this.$set(this.list, 'displayNumber', current.displayNumber)
                 if (this.findings) {
-                  this.findings.isoqf_id = current.sort
+                  this.$set(this.findings, 'displayNumber', current.displayNumber)
                 }
                 if (this.evidence_profile && this.evidence_profile.length) {
-                  this.evidence_profile[0].isoqf_id = current.sort
+                  this.$set(this.evidence_profile[0], 'displayNumber', current.displayNumber)
                 }
               }
             })
@@ -663,15 +664,15 @@ export default {
       const finding = this.list.findings
       if (finding.length) {
         this.findings = JSON.parse(JSON.stringify(finding[0]))
-        this.findings.isoqf_id = this.list.sort
+        this.$set(this.findings, 'displayNumber', this.list.displayNumber)
         this.evidence_profile = []
         if (Object.prototype.hasOwnProperty.call(this.findings, 'evidence_profile')) {
           this.evidence_profile.push(this.findings.evidence_profile)
-          this.evidence_profile[0].isoqf_id = this.list.sort
+          this.$set(this.evidence_profile[0], 'displayNumber', this.list.displayNumber)
         } else {
           // Create a default evidence_profile structure if it doesn't exist
           this.evidence_profile.push({
-            isoqf_id: this.list.sort,
+            displayNumber: this.list.displayNumber,
             cerqual: { explanation: '', option: null },
             name: '',
             title: '',
