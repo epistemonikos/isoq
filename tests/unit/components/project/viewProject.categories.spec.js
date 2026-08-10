@@ -349,6 +349,39 @@ describe('viewProject.vue — updateLists()', () => {
     wrapper.destroy()
   })
 
+  // `displayNumber` es una posición derivada y NO debe persistirse nunca: es el quinto
+  // atributo que la migración del número existe para no tener. Mandar el documento
+  // entero lo escribía de vuelta, junto con cualquier `isoqf_id` legado que la lista
+  // trajera del servidor. El PATCH tiene que llevar sólo el campo que cambia.
+  it('patches ONLY the category, never the whole list document', async () => {
+    Api.patch.mockResolvedValue({ data: {} })
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    await wrapper.setData({
+      lists: [
+        {
+          id: '66b1ff0000000000000000a1',
+          category: 'cat1',
+          sort: 40,
+          displayNumber: 2,
+          isoqf_id: 97,
+          name: 'un finding'
+        }
+      ]
+    })
+
+    wrapper.vm.updateLists([{ id: 'cat1', text: 'Category 1' }])
+    await flushPromises()
+
+    expect(Api.patch).toHaveBeenCalledWith('/isoqf_lists/66b1ff0000000000000000a1', { category: null })
+    const payload = Api.patch.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('displayNumber')
+    expect(payload).not.toHaveProperty('isoqf_id')
+    expect(payload).not.toHaveProperty('sort')
+    wrapper.destroy()
+  })
+
   it('calls getLists after Promise.all resolves', async () => {
     Api.patch.mockResolvedValue({ data: {} })
     const { wrapper } = createWrapper()

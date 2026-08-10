@@ -1588,12 +1588,14 @@ export default {
       this.modal_edit_list_categories.id = null
     },
     updateLists: function (deletedCategoryValue) {
-      let _lists = JSON.parse(JSON.stringify(this.lists))
-      let _request = []
-      for (let list of _lists) {
+      // Sólo el campo que cambia. Mandar el documento entero reescribía `displayNumber`
+      // —una posición derivada que no debe persistirse en ninguna parte— y de paso
+      // devolvía a la base cualquier `isoqf_id` legado que la lista trajera del servidor.
+      // El refetch de getLists() deja el estado local consistente.
+      const _request = []
+      for (const list of this.lists) {
         if (list.category === deletedCategoryValue[0].id) {
-          list.category = null
-          _request.push(Api.patch(`/isoqf_lists/${list.id}`, list))
+          _request.push(Api.patch(`/isoqf_lists/${list.id}`, { category: null }))
         }
       }
       Promise.all(_request)
