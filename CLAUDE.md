@@ -66,9 +66,13 @@ Consecuencias al tocar esto:
 Por qué importa: los usuarios coordinan con este número ("yo trabajo en el finding 3, tú en el 4").
 Si dos vistas muestran números distintos para el mismo finding, trabajan sobre el equivocado.
 
-Pendiente con backend: confirmar que no tengan consumidores server-side de `isoqf_id` (exports, vista
-compartida). Si los tienen, seguimos escribiéndolo hasta que migren — el frontend igual no lo lee.
-Después, limpiarlo de la base.
+Backend confirmó (2026-08-06) que **no hay consumidores server-side de `isoqf_id`**: no está en ningún
+esquema ni whitelist, y la relación finding→proyecto se resuelve siempre por `list_id`. Falta sólo
+limpiarlo de la base. Hay un motivo para hacerlo: la clonación de proyectos copia el finding entero y
+sólo remapea `list_id`, así que un `isoqf_id` residual queda apuntando al proyecto original.
+
+`POST /finding/remove` renumera `isoqf_lists.sort` denso 1..N tras borrar. `isoqf_findings` no tiene
+campo `sort`.
 
 Antecedente de por qué la regla es tan tajante: hubo **cuatro** atributos compitiendo por este número, y
 tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) mostrando vacío o `NaN`.
