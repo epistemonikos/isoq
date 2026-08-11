@@ -55,3 +55,37 @@ describe('needsTermsAcceptance — fail-closed', () => {
     expect(needsTermsAcceptance({ terms_accepted: false, terms_version: 0 })).toBe(true)
   })
 })
+
+// Fixture capturado de POST /auth/user contra isoq_server_py310 el 2026-08-11.
+// No es un mock inventado: es la respuesta literal del backend, recortada a los
+// campos que esta regla mira. Si el backend cambia la forma o los tipos de
+// terms_accepted / terms_version, este bloque es el que debería avisarlo.
+const RESPUESTA_REAL_AUTH_USER = {
+  status: 'logged',
+  terms_accepted: false,
+  terms_version: 0,
+  newsletter: false,
+  improvement: false,
+  email_verified: true
+}
+
+describe('contrato con la respuesta real de /auth/user', () => {
+  it('pide aceptación a un usuario que nunca aceptó', () => {
+    expect(needsTermsAcceptance(RESPUESTA_REAL_AUTH_USER)).toBe(true)
+  })
+
+  it('deja pasar al mismo usuario tras aceptar la versión vigente', () => {
+    expect(needsTermsAcceptance({
+      ...RESPUESTA_REAL_AUTH_USER,
+      terms_accepted: true,
+      terms_version: TERMS_VERSION
+    })).toBe(false)
+  })
+
+  it('el backend manda booleano e integer, no strings', () => {
+    // Documenta por qué TRUTHY existe igual: isoq_server (el viejo) sí
+    // devolvía strings, y la regla tiene que servir para los dos.
+    expect(typeof RESPUESTA_REAL_AUTH_USER.terms_accepted).toBe('boolean')
+    expect(typeof RESPUESTA_REAL_AUTH_USER.terms_version).toBe('number')
+  })
+})
