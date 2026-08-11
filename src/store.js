@@ -70,6 +70,9 @@ export const store = new Vuex.Store({
     save_promise (state, promise) {
       state.promise = promise
     },
+    update_user (state, fields) {
+      state.user = { ...state.user, ...fields }
+    },
     SET_THEME (state, theme) {
       state.theme = theme
       localStorage.setItem('user_theme', theme)
@@ -141,6 +144,9 @@ export const store = new Vuex.Store({
     },
     changeStatus ({commit}) {
       commit('change_status')
+    },
+    updateUser ({commit}, fields) {
+      commit('update_user', fields)
     },
     forcedLogin ({ commit }, userId) {
       return new Promise((resolve, reject) => {
