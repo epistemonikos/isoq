@@ -1,13 +1,6 @@
-import {
-  needsTermsAcceptance,
-  markTermsAcceptedInSession,
-  TERMS_VERSION,
-  TERMS_SESSION_KEY
-} from '@/constants/terms'
+import { needsTermsAcceptance, TERMS_VERSION } from '@/constants/terms'
 
 describe('needsTermsAcceptance — fail-closed', () => {
-  beforeEach(() => sessionStorage.clear())
-
   it('pide aceptación si el usuario es undefined', () => {
     expect(needsTermsAcceptance(undefined)).toBe(true)
   })
@@ -55,28 +48,10 @@ describe('needsTermsAcceptance — fail-closed', () => {
   it('no pide aceptación si es posterior a la vigente', () => {
     expect(needsTermsAcceptance({ terms_accepted: true, terms_version: TERMS_VERSION + 1 })).toBe(false)
   })
-})
 
-describe('guarda de sesión anti-bucle', () => {
-  beforeEach(() => sessionStorage.clear())
-
-  it('deja pasar tras aceptar aunque el backend no devuelva nada', () => {
-    // Escenario del bucle: el usuario aceptó, recargó, y /auth/user
-    // sigue sin traer terms_version. Sin la guarda quedaría deslogueado
-    // en cada recarga.
-    expect(needsTermsAcceptance({})).toBe(true)
-    markTermsAcceptedInSession()
-    expect(needsTermsAcceptance({})).toBe(false)
-  })
-
-  it('vuelve a pedir si sube la versión de los términos', () => {
-    sessionStorage.setItem(TERMS_SESSION_KEY, String(TERMS_VERSION - 1))
-    expect(needsTermsAcceptance({ terms_accepted: true, terms_version: TERMS_VERSION })).toBe(false)
-    expect(needsTermsAcceptance({ terms_accepted: true, terms_version: TERMS_VERSION - 1 })).toBe(true)
-  })
-
-  it('la marca guarda la versión, no un booleano', () => {
-    markTermsAcceptedInSession()
-    expect(sessionStorage.getItem(TERMS_SESSION_KEY)).toBe(String(TERMS_VERSION))
+  it('pide aceptación al usuario nuevo que el backend devuelve con los defaults', () => {
+    // Forma exacta con que isoq_server_py310 devuelve un usuario que nunca
+    // aceptó: models.py setea ambos campos siempre, con False y 0.
+    expect(needsTermsAcceptance({ terms_accepted: false, terms_version: 0 })).toBe(true)
   })
 })
