@@ -1644,5 +1644,43 @@
     "action_update_user": "Edición de datos",
     "action_update_flags": "Cambio de permisos",
     "action_force_logout": "Cierre de sesión forzado"
+  },
+  "gdpr": {
+    "privacyAndTerms": {
+      "title": "Privacidad y Términos",
+      "tabOverview": "Resumen",
+      "tabTerms": "Términos y Condiciones",
+      "tabPrivacy": "Política de Privacidad",
+      "tabProperty": "Propiedad Intelectual",
+      "faqTitle": "Preguntas frecuentes",
+      "faq": {
+        "q1": "¿Qué es iSoQ y a quién está dirigido?",
+        "a1": "iSoQ (Interactive Summary of Qualitative Findings) es una herramienta desarrollada por la Fundación Epistemonikos para ayudar a investigadores a crear y compartir resúmenes estructurados de evidencia cualitativa usando el enfoque GRADE-CERQual. Está pensada para autores de revisiones sistemáticas, desarrolladores de guías y equipos de síntesis de evidencia.",
+        "q2": "¿Cómo se usan mis datos personales?",
+        "a2": "Tus datos personales se usan únicamente para prestar y mejorar el servicio de iSoQ. Recogemos sólo la información necesaria para crear y administrar tu cuenta, colaborar en proyectos y comunicar novedades del servicio. No vendemos ni compartimos tus datos con terceros con fines de marketing.",
+        "q3": "¿Quién puede ver mis proyectos y datos?",
+        "a3": "Los proyectos son privados por defecto y sólo los ven los miembros del espacio de trabajo que invites. Puedes publicar un proyecto, y en ese momento una vista previa de sólo lectura queda accesible para cualquiera. Controlas la visibilidad de tu trabajo en todo momento.",
+        "q4": "¿Puedo eliminar mi cuenta y mis datos?",
+        "a4": "Sí. Puedes solicitar la eliminación de tu cuenta y de los datos personales asociados en cualquier momento contactándonos. Una vez verificada la solicitud, eliminaremos tu información personal de nuestros sistemas activos en un plazo razonable, sujeto a las obligaciones legales de conservación.",
+        "q5": "¿Qué cookies usa iSoQ?",
+        "a5": "iSoQ usa cookies de sesión necesarias para la autenticación y para mantener tu sesión activa durante la visita. No usamos cookies de publicidad ni de seguimiento de terceros. Puedes administrar tus preferencias de cookies desde el navegador, aunque desactivar las cookies de sesión te impedirá iniciar sesión.",
+        "q6": "¿Cómo reporto un problema o solicito soporte?",
+        "a6": "Para consultas de privacidad, solicitudes de datos o soporte técnico, contacta al equipo de Epistemonikos por los canales oficiales listados en el sitio de la Fundación Epistemonikos. Respondemos todas las consultas dentro de 5 días hábiles."
+      },
+      "terms": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
+        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
+      },
+      "privacy": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
+        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
+      },
+      "property": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam."
+      }
+    }
   }
 }

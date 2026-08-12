@@ -17,6 +17,7 @@ const previewContentSoQf = () => import(/* webpackChunkName: "previewcontentsoqf
 const previewWorksheet = () => import(/* webpackChunkName: "previewworksheet" */ '@/components/previewContent/previewContentWorksheet')
 const Help = () => import(/* webpackChunkName: "help" */ '@/components/Help')
 const WhatsNew = () => import(/* webpackChunkName: "whatsnew" */ '@/components/WhatsNew')
+const PrivacyAndTerms = () => import(/* webpackChunkName: "privacyandterms" */ '@/components/PrivacyAndTerms')
 
 // import { Trans } from '@/plugins/Translation'
 
@@ -44,6 +45,28 @@ var routes = [
     meta: {
       title: 'Help - Interactive Summary of Qualitative Findings'
     }
+  },
+  {
+    path: '/privacy-and-terms',
+    name: 'PrivacyAndTerms',
+    component: PrivacyAndTerms,
+    meta: {
+      title: 'Privacy and Terms - Interactive Summary of Qualitative Findings'
+    }
+  },
+  // Las tres URLs de abajo las publica master vía new-gdpr. Si alguien las
+  // comparte, tienen que seguir funcionando cuando develop llegue a producción.
+  {
+    path: '/terms-and-conditions',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'terms' } }
+  },
+  {
+    path: '/privacy-policy',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'privacy' } }
+  },
+  {
+    path: '/intellectual-property',
+    redirect: { name: 'PrivacyAndTerms', query: { tab: 'property' } }
   },
   {
     path: '/login',

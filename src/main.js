@@ -44,13 +44,13 @@ import {
 } from 'bootstrap-vue'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 import NotifyPlugin from './plugins/notify'
 
-library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle)
+library.add(faChevronUp, faChevronDown, faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
