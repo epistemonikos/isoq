@@ -1,6 +1,14 @@
 import Vue from 'vue'
 import { shallowMount } from '@vue/test-utils'
 import Login from '@/components/Login'
+import { TERMS_VERSION } from '@/constants/terms'
+
+// Usuario al día con los términos, como queda en el store después de
+// auth_success. Los tests de navegación lo necesitan porque desde el port de
+// GDPR un login exitoso sólo navega si no hay términos pendientes; sin esto
+// el componente abre el modal de aceptación en vez de redirigir.
+// La aceptación de términos se prueba aparte, en Login.terms.spec.js.
+const ACCEPTED_TERMS = { terms_accepted: true, terms_version: TERMS_VERSION }
 
 jest.mock('@/utils/Api', () => ({
   post: jest.fn()
@@ -45,7 +53,7 @@ describe('Login.vue', () => {
   })
 
   it('redirects to workspace on successful login', async () => {
-    const wrapper = mountLogin()
+    const wrapper = mountLogin({ user: ACCEPTED_TERMS })
     wrapper.vm.$store.dispatch.mockResolvedValue({ data: { personal_organization: 'org-1' } })
     wrapper.vm.login()
     await flushPromises()
@@ -53,7 +61,7 @@ describe('Login.vue', () => {
   })
 
   it('redirects to query redirect path if present', async () => {
-    const wrapper = mountLogin({}, { redirect: '/some/path' })
+    const wrapper = mountLogin({ user: ACCEPTED_TERMS }, { redirect: '/some/path' })
     wrapper.vm.$store.dispatch.mockResolvedValue({ data: { personal_organization: 'org-1' } })
     wrapper.vm.login()
     await flushPromises()

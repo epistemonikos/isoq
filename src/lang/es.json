@@ -1681,6 +1681,16 @@
         "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
         "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam."
       }
+    },
+    "terms": {
+      "modalTitle": "Términos y Condiciones actualizados",
+      "intro": "Hemos actualizado nuestros Términos y Condiciones, Política de Privacidad y Propiedad Intelectual. Debes aceptarlos para seguir usando iSoQ.",
+      "reviewHere": "Puedes revisarlos aquí.",
+      "acceptLabel": "He leído y acepto los Términos y Condiciones, la Política de Privacidad y la Propiedad Intelectual.",
+      "newsletterLabel": "Quiero recibir correos con novedades y actualizaciones. (opcional)",
+      "accept": "Aceptar",
+      "cancel": "Cancelar",
+      "error": "No pudimos guardar tu aceptación. Inténtalo de nuevo."
     }
   }
 }
