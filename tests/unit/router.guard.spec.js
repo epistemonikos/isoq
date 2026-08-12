@@ -9,6 +9,7 @@ jest.mock('@/utils/Api', () => ({
 // Minimal router guard extracted from main.js for isolated testing.
 // The guard pattern: dispatch getLogginInfo → await state.promise → call next().
 import { store } from '@/store'
+import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -21,6 +22,50 @@ function runGuard (to, storeInstance = store) {
     }).then(() => {
       if (to.matched.some(record => record.meta.requiresAuth)) {
         if (storeInstance.getters.isLoggedIn) {
+          next()
+          return
+        }
+        next({ name: 'Login', query: { redirect: to.fullPath } })
+      } else {
+        next()
+      }
+    }).catch(() => {
+      if (to.matched.some(record => record.meta.requiresAuth)) {
+        next({ name: 'Login', query: { redirect: to.fullPath } })
+      } else {
+        next()
+      }
+    })
+  })
+}
+
+// Espejo del guard de main.js con la comprobación de términos (GDPR).
+// Mantener sincronizado al tocar main.js.
+//
+// Ojo: la REGLA no se copia, se importa desde @/constants/terms. Lo único
+// que se replica acá es el cableado del guard: el orden de los chequeos,
+// el logout y la forma del next.
+function runGuardWithTerms (to, storeInstance = store) {
+  return new Promise((resolve) => {
+    const next = jest.fn(arg => resolve(arg))
+    storeInstance.dispatch('getLogginInfo').then(() => {
+      return storeInstance.state.promise || Promise.resolve()
+    }).then(() => {
+      if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (storeInstance.getters.isLoggedIn) {
+          if (needsTermsAcceptance(storeInstance.state.user)) {
+            storeInstance.dispatch('logout')
+              .catch(() => {})
+              .finally(() => next({ name: 'Login', query: { redirect: to.fullPath } }))
+            return
+          }
+          if (to.matched.some(record => record.meta.requiresAdmin)) {
+            const u = storeInstance.state.user
+            if (!u.support && !u.superadmin) {
+              next({ name: 'Organizations' })
+              return
+            }
+          }
           next()
           return
         }
@@ -142,5 +187,79 @@ describe('router guard (beforeEach)', () => {
       const result = await runGuard(publicRoute)
       expect(result).toBeUndefined()
     })
+  })
+})
+
+// ─── Guard de términos y condiciones (GDPR) ────────────────────────────────────
+
+describe('guard de términos y condiciones', () => {
+  const toLogin = { name: 'Login', query: { redirect: '/workspace/1' } }
+  const adminRoute = {
+    fullPath: '/workspace/1',
+    matched: [{ meta: { requiresAuth: true, requiresAdmin: true } }]
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    localStorage.clear()
+    store.replaceState({ status: '', token: null, user: {}, isOnline: true, promise: null })
+  })
+
+  it('deja pasar al usuario que aceptó la versión vigente', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION })
+    expect(await runGuardWithTerms(privateRoute)).toBeUndefined()
+  })
+
+  it('desvía a Login al usuario que nunca aceptó', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    expect(await runGuardWithTerms(privateRoute)).toEqual(toLogin)
+  })
+
+  it('desvía a Login al usuario con una versión anterior aceptada', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION - 1 })
+    expect(await runGuardWithTerms(privateRoute)).toEqual(toLogin)
+  })
+
+  it('desvía a Login cuando el backend no manda terms_version (fail-closed)', async () => {
+    // Éste es el caso que en producción decide si la obligación legal
+    // se cumple o no. Sin fail-closed, undefined < 1 deja pasar a todos.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true })
+    expect(await runGuardWithTerms(privateRoute)).toEqual(toLogin)
+  })
+
+  it('desvía a Login cuando el backend no manda ningún campo de términos', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok' })
+    expect(await runGuardWithTerms(privateRoute)).toEqual(toLogin)
+  })
+
+  it('desvía a Login al usuario nuevo tal como lo devuelve el backend', async () => {
+    // Forma exacta de un usuario que nunca aceptó, según models.py:38-39.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false, terms_version: 0 })
+    expect(await runGuardWithTerms(privateRoute)).toEqual(toLogin)
+  })
+
+  it('cierra la sesión al desviar, no sólo redirige', async () => {
+    // Sin el logout el usuario vuelve a Login con el token vivo y puede
+    // saltarse el modal navegando a cualquier otra ruta privada.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    await runGuardWithTerms(privateRoute)
+    expect(store.getters.isLoggedIn).toBe(false)
+  })
+
+  it('no toca las rutas públicas', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    expect(await runGuardWithTerms(publicRoute)).toBeUndefined()
+  })
+
+  it('los términos mandan sobre el chequeo de admin', async () => {
+    // Un superadmin sin términos aceptados va a Login, no a Organizations:
+    // la obligación legal no depende del rol.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', superadmin: true, terms_accepted: false })
+    expect(await runGuardWithTerms(adminRoute)).toEqual(toLogin)
+  })
+
+  it('sigue mandando al no-admin a Organizations cuando sí aceptó', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION })
+    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'Organizations' })
   })
 })

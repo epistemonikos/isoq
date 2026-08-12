@@ -8,6 +8,7 @@ import * as Sentry from '@sentry/vue'
 
 import { store } from './store'
 import routes from './router/index'
+import { needsTermsAcceptance } from './constants/terms'
 import {
   AlertPlugin,
   BadgePlugin,
@@ -148,6 +149,30 @@ router.beforeEach((to, from, next) => {
 
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
+        // Términos sin aceptar (GDPR): se cierra la sesión y se manda a Login.
+        // Va antes del chequeo de requiresAdmin a propósito — la obligación
+        // legal no depende del rol.
+        //
+        // La regla vive entera en ./constants/terms; acá sólo se decide qué
+        // hacer con la respuesta. El espejo de este guard está en
+        // tests/unit/router.guard.spec.js (runGuardWithTerms): mantenerlos
+        // sincronizados al tocar esto.
+        //
+        // El .finally() no es cosmético: si el logout falla (offline, 401) y
+        // next() colgara del .then(), la app se quedaría en la ruta anterior
+        // sin navegar ni avisar.
+        if (needsTermsAcceptance(store.state.user)) {
+          store.dispatch('logout')
+            .catch(() => {})
+            .finally(() => {
+              next({
+                name: 'Login',
+                query: { redirect: to.fullPath }
+              })
+            })
+          return
+        }
+
         if (to.matched.some(record => record.meta.requiresAdmin)) {
           const u = store.state.user
           if (!u.support && !u.superadmin) {
