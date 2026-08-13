@@ -5,8 +5,11 @@
         <h2>{{ $t("profile.title") }}</h2>
       </b-container>
     </b-container>
-    <b-container class="pt-3 pb-5">
+    <b-container class="pt-5 pb-5">
+      <p>{{ $t('gdpr.profile.intro') }}</p>
       <b-alert :variant="msgVariant" :show="showAlert()" dismissible>{{msg}}</b-alert>
+
+      <b-card no-body class="p-3">
       <b-table-simple>
         <b-tbody>
           <b-tr>
@@ -75,88 +78,147 @@
           </b-tr>
         </b-tbody>
       </b-table-simple>
-      <b-button @click="update" :disabled="isDisabled">{{ $t('common.save') }}</b-button>
+      <ul class="list-unstyled">
+        <li>
+          <b-form-checkbox v-model="newsletter">
+            {{ $t('gdpr.preferences.newsletter') }}
+          </b-form-checkbox>
+        </li>
+        <li>
+          <b-form-checkbox v-model="improvement">
+            {{ $t('gdpr.preferences.improvement') }}
+          </b-form-checkbox>
+        </li>
+      </ul>
 
-      <hr class="my-5">
-
-      <section>
-        <h4>{{ $t('gdpr.preferences.sectionTitle') }}</h4>
-        <b-form-checkbox v-model="newsletter" class="mb-2">
-          {{ $t('gdpr.preferences.newsletter') }}
-        </b-form-checkbox>
-        <b-form-checkbox v-model="improvement" class="mb-3">
-          {{ $t('gdpr.preferences.improvement') }}
-        </b-form-checkbox>
-        <b-button
-          variant="outline-primary"
-          :disabled="isSavingPreferences"
-          @click="savePreferences">
-          <b-spinner small v-if="isSavingPreferences" class="mr-1"></b-spinner>
-          {{ $t('gdpr.preferences.save') }}
+      <div class="mt-3">
+        <b-button variant="primary" @click="update" :disabled="isDisabled">
+          <b-spinner small v-if="isSavingProfile" class="mr-1"></b-spinner>
+          {{ $t('common.save') }}
         </b-button>
-      </section>
+      </div>
+      </b-card>
 
-      <hr class="my-5">
+      <b-card no-body class="mt-3 p-3">
+        <h3>{{ $t('gdpr.manageData.title') }}</h3>
 
-      <section>
-        <h4>{{ $t('gdpr.export.sectionTitle') }}</h4>
-        <p>{{ $t('gdpr.export.description') }}</p>
-        <b-button variant="outline-primary" @click="exportData">
-          {{ $t('gdpr.export.button') }}
-        </b-button>
-      </section>
+        <div class="d-flex flex-row justify-content-between align-items-center">
+          <div>
+            <p class="m-0">
+              <b>{{ $t('gdpr.export.label') }}</b> {{ $t('gdpr.export.description') }}
+            </p>
+          </div>
+          <div>
+            <b-button variant="outline-primary" @click="exportData" :disabled="isExporting">
+              <b-spinner v-if="isExporting" small class="mr-2"></b-spinner>
+              {{ $t('gdpr.export.button') }}
+            </b-button>
+          </div>
+        </div>
 
-      <hr class="my-5">
-
-      <section>
-        <h4>{{ $t('gdpr.contact.sectionTitle') }}</h4>
-        <p>{{ $t('gdpr.contact.description') }}</p>
-
-        <b-alert :variant="contactMsgVariant" :show="!!contactMsg" dismissible>
-          {{ contactMsg }}
+        <b-alert show class="mt-3">
+          <p>{{ $t('gdpr.export.noteIntro') }}</p>
+          <ul>
+            <li>{{ $t('gdpr.export.note1') }}</li>
+            <li>{{ $t('gdpr.export.note2') }}</li>
+            <li>{{ $t('gdpr.export.note3') }}</li>
+            <li>{{ $t('gdpr.export.note4') }}</li>
+          </ul>
+          <p class="mb-0">
+            {{ $t('gdpr.export.noteFooter') }}
+            <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }">
+              {{ $t('gdpr.export.privacyPolicy') }}
+            </router-link>
+          </p>
         </b-alert>
 
-        <b-form-group
-          :label="$t('gdpr.contact.subjectLabel')"
-          label-for="input_privacy_subject"
-          :state="subjectState"
-          :invalid-feedback="$t('gdpr.contact.subjectFeedback')">
-          <b-form-input
-            id="input_privacy_subject"
-            v-model="subject"
-            :state="subjectState"></b-form-input>
-        </b-form-group>
+        <div class="d-flex flex-row justify-content-between align-items-center">
+          <div>
+            <p class="m-0">
+              <b>{{ $t('gdpr.deleteAccount.label') }}</b> {{ $t('gdpr.deleteAccount.description') }}
+            </p>
+          </div>
+          <div>
+            <b-button variant="outline-danger" @click="deleteAccount" :disabled="isDeletingAccount">
+              <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
+              {{ $t('gdpr.deleteAccount.button') }}
+            </b-button>
+          </div>
+        </div>
 
-        <b-form-group
-          :label="$t('gdpr.contact.messageLabel')"
-          label-for="input_privacy_message"
-          :state="messageState"
-          :invalid-feedback="$t('gdpr.contact.messageFeedback')">
-          <b-form-textarea
-            id="input_privacy_message"
-            v-model="message"
-            rows="4"
-            :state="messageState"></b-form-textarea>
-        </b-form-group>
+        <b-alert show variant="warning" class="mt-3">
+          <p>{{ $t('gdpr.deleteAccount.noteIntro') }}</p>
+          <ul>
+            <li>{{ $t('gdpr.deleteAccount.note1') }}</li>
+            <li>{{ $t('gdpr.deleteAccount.note2') }}</li>
+            <li>{{ $t('gdpr.deleteAccount.note3') }}</li>
+            <li>{{ $t('gdpr.deleteAccount.note4') }}</li>
+            <li>{{ $t('gdpr.deleteAccount.note5') }}</li>
+            <li>{{ $t('gdpr.deleteAccount.note6') }}</li>
+          </ul>
+          <p class="mb-0">
+            {{ $t('gdpr.deleteAccount.noteFooter') }}
+            <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }">
+              {{ $t('gdpr.export.privacyPolicy') }}
+            </router-link>
+            {{ $t('gdpr.deleteAccount.and') }}
+            <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }">
+              {{ $t('gdpr.deleteAccount.termsAndConditions') }}
+            </router-link>
+          </p>
+        </b-alert>
+      </b-card>
 
-        <b-button
-          variant="outline-primary"
-          :disabled="!isContactFormValid || isSendingContact"
-          @click="sendContact">
-          <b-spinner small v-if="isSendingContact" class="mr-1"></b-spinner>
-          {{ $t('gdpr.contact.send') }}
-        </b-button>
-      </section>
+      <b-card no-body class="mt-3 p-3">
+        <h3>{{ $t('gdpr.contact.sectionTitle') }}</h3>
+        <p class="m-0">{{ $t('gdpr.contact.dataNote') }}</p>
 
-      <hr class="my-5">
+        <b-card class="p-3 mt-3">
+          <b-alert
+            :show="!!contactMsg"
+            :variant="contactMsgVariant"
+            dismissible
+            @dismissed="contactMsg = ''">{{ contactMsg }}</b-alert>
 
-      <section>
-        <h4 class="text-danger">{{ $t('gdpr.deleteAccount.sectionTitle') }}</h4>
-        <p>{{ $t('gdpr.deleteAccount.warning') }}</p>
-        <b-button variant="outline-danger" @click="deleteAccount">
-          {{ $t('gdpr.deleteAccount.button') }}
-        </b-button>
-      </section>
+          <b-form-group
+            :label="$t('gdpr.contact.subjectLabel')"
+            :description="$t('gdpr.contact.subjectLabel')"
+            label-for="input_privacy_subject"
+            :state="subjectState"
+            :invalid-feedback="$t('gdpr.contact.subjectFeedback')">
+            <b-form-input
+              id="input_privacy_subject"
+              v-model="subject"
+              :state="subjectState"
+              trim></b-form-input>
+          </b-form-group>
+
+          <b-form-group
+            :label="$t('gdpr.contact.messageLabel')"
+            :description="$t('gdpr.contact.messageLabel')"
+            label-for="input_privacy_message"
+            :state="messageState"
+            :invalid-feedback="$t('gdpr.contact.messageFeedback')">
+            <b-form-textarea
+              id="input_privacy_message"
+              v-model="message"
+              :placeholder="$t('gdpr.contact.messagePlaceholder')"
+              rows="3"
+              max-rows="6"
+              :state="messageState"></b-form-textarea>
+          </b-form-group>
+
+          <div class="mt-3">
+            <b-button
+              variant="primary"
+              :disabled="!isContactFormValid || isSendingContact"
+              @click="sendContact">
+              <b-spinner v-if="isSendingContact" small class="mr-2"></b-spinner>
+              {{ $t('gdpr.contact.send') }}
+            </b-button>
+          </div>
+        </b-card>
+      </b-card>
     </b-container>
 
     <b-modal
@@ -273,7 +335,7 @@ export default {
       // usuario abre el perfil y se va sin tocar nada.
       initialNewsletter: false,
       initialImprovement: false,
-      isSavingPreferences: false
+      isSavingProfile: false
     }
   },
   mounted () {
@@ -334,6 +396,12 @@ export default {
     new_password_repeat () {
       this.checkDisabled()
     },
+    newsletter () {
+      this.checkDisabled()
+    },
+    improvement () {
+      this.checkDisabled()
+    },
     msg () {
       if (this.msg.length) {
         this.showAlert()
@@ -349,25 +417,48 @@ export default {
     onThemeChange: function (theme) {
       this.$store.dispatch('setTheme', theme)
     },
-    update: function () {
+    // Un solo botón guarda la contraseña y las preferencias, porque en la
+    // pantalla comparten tarjeta. Cada cosa se manda sólo si cambió: escribir
+    // una contraseña no debe reescribir las preferencias, ni al revés.
+    update: async function () {
+      const validPassword = !!this.new_password &&
+        this.new_password === this.new_password_repeat &&
+        this.new_password.length >= 8
+      const preferencesChanged = this.newsletter !== this.initialNewsletter ||
+        this.improvement !== this.initialImprovement
+
+      if (!validPassword && !preferencesChanged) return
+      if (this.isSavingProfile) return
+
       this.msg = ''
-      const params = {
-        user_id: this.$store.state.user.id,
-        new_password: this.new_password
-      }
-      Api.post(`/users/change_password`, params)
-        .then((r) => {
-          const data = r.data
-          if (data.status === 'password_compromised') {
+      this.isSavingProfile = true
+      try {
+        if (validPassword) {
+          const response = await Api.post('/users/change_password', {
+            user_id: this.$store.state.user.id,
+            new_password: this.new_password
+          })
+          if (response.data && response.data.status === 'password_compromised') {
             this.msgVariant = 'danger'
             this.msg = this.$t('account.password_compromised')
-          } else {
-            this.new_password = null
-            this.new_password_repeat = null
-            this.msgVariant = 'success'
-            this.msg = this.$t('profile.password_changed')
+            return
           }
-        })
+          this.new_password = null
+          this.new_password_repeat = null
+          this.msgVariant = 'success'
+          this.msg = this.$t('profile.password_changed')
+        }
+
+        if (preferencesChanged) {
+          await this.savePreferences()
+        }
+      } catch (error) {
+        this.msgVariant = 'danger'
+        this.msg = this.$t('gdpr.preferences.error')
+      } finally {
+        this.isSavingProfile = false
+        this.checkDisabled()
+      }
     },
     showAlert: function () {
       if (this.msg.length) {
@@ -406,13 +497,9 @@ export default {
       this.initialNewsletter = this.newsletter
       this.initialImprovement = this.improvement
     },
+    // La llama update(); no tiene botón propio. Deja que el error suba para
+    // que update() lo reporte en una sola alerta.
     savePreferences: async function () {
-      const changed = this.newsletter !== this.initialNewsletter ||
-        this.improvement !== this.initialImprovement
-      if (!changed || this.isSavingPreferences) return
-
-      this.isSavingPreferences = true
-      this.msg = ''
       try {
         // Se mandan las dos siempre: el backend reescribe ambos campos en
         // cada llamada (core.py:470-471), así que omitir una la pondría en
@@ -436,8 +523,7 @@ export default {
       } catch (error) {
         this.msg = this.$t('gdpr.preferences.error')
         this.msgVariant = 'danger'
-      } finally {
-        this.isSavingPreferences = false
+        throw error
       }
     },
     exportData: function () {
@@ -674,20 +760,24 @@ export default {
       this.projectsNewOwners = {}
       this.isLoadingSharedProjects = false
     },
+    // El botón Save cubre la contraseña y las preferencias, así que se
+    // habilita si cualquiera de las dos tiene algo que guardar. Antes sólo
+    // miraba la contraseña, y cambiar una casilla dejaba el botón muerto.
     checkDisabled: function () {
-      if (this.new_password !== this.new_password_repeat) {
+      const preferencesChanged = this.newsletter !== this.initialNewsletter ||
+        this.improvement !== this.initialImprovement
+      if (preferencesChanged) {
+        this.isDisabled = false
+        return
+      }
+
+      // Sin contraseña escrita no hay nada más que guardar.
+      if (!this.new_password) {
         this.isDisabled = true
         return
       }
-      if (this.new_password === null) {
-        this.isDisabled = true
-        return
-      }
-      if (this.new_password.length < 8) {
-        this.isDisabled = true
-        return
-      }
-      this.isDisabled = false
+      this.isDisabled = this.new_password !== this.new_password_repeat ||
+        this.new_password.length < 8
     }
   }
 }

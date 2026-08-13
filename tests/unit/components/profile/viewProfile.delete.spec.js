@@ -293,9 +293,10 @@ describe('viewProfile.vue — eliminar cuenta', () => {
 
   it('tiene traducidas las claves del borrado', () => {
     const { wrapper } = build()
-    const keys = ['sectionTitle', 'warning', 'button', 'modalTitle', 'transferIntro',
+    const keys = ['label', 'description', 'warning', 'button', 'modalTitle', 'transferIntro',
       'readOnlyNote', 'selectPlaceholder', 'passwordPrompt', 'passwordRequired',
-      'ownersRequired', 'genericError', 'confirm', 'cancel']
+      'ownersRequired', 'genericError', 'confirm', 'cancel',
+      'noteIntro', 'note1', 'note6', 'noteFooter', 'and', 'termsAndConditions']
 
     keys.forEach(key => {
       const full = `gdpr.deleteAccount.${key}`

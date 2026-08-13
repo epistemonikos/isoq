@@ -185,8 +185,8 @@ describe('viewProfile.vue — contacto de privacidad', () => {
 
   it('tiene traducidas las claves del formulario', () => {
     const wrapper = build()
-    const keys = ['sectionTitle', 'description', 'subjectLabel', 'subjectFeedback',
-      'messageLabel', 'messageFeedback', 'send', 'success', 'error']
+    const keys = ['sectionTitle', 'dataNote', 'subjectLabel', 'subjectFeedback',
+      'messageLabel', 'messageFeedback', 'messagePlaceholder', 'send', 'success', 'error']
 
     keys.forEach(key => {
       const full = `gdpr.contact.${key}`

@@ -1693,32 +1693,39 @@
       "error": "We could not save your acceptance. Please try again."
     },
     "export": {
-      "sectionTitle": "Download my data",
-      "description": "You can download a copy of all the personal data we hold about you.",
-      "button": "Download my data",
+      "description": "Export all of the personal data and profile information in a JSON file",
+      "button": "Export profile data",
       "modalTitle": "Download my data",
       "passwordPrompt": "Enter your password to confirm:",
       "passwordPlaceholder": "Password",
       "passwordRequired": "Password is required",
       "genericError": "An error occurred while exporting your data.",
       "confirm": "Download",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "label": "Download profile data:",
+      "noteIntro": "Note: You can download a copy of the profile data associated with your account.",
+      "note1": "The export will include the personal information you provided (e.g., name, email) and records of your activity in the platform. Export all of the personal data and your profile information in a JSON file",
+      "note2": "Data will be provided in a structured, commonly used, machine-readable format (JSON,CSV,XML).",
+      "note3": "Exporting your profile does not delete it from our systems. You can request deletion separately.",
+      "note4": "We may take up to 30 days to provide the full export, in line with our Privacy Policy.",
+      "noteFooter": "For full details, see our",
+      "privacyPolicy": "Privacy Policy"
     },
     "contact": {
-      "sectionTitle": "Privacy enquiries",
-      "description": "Send us a question or request about how we handle your personal data.",
+      "sectionTitle": "Privacy contact request",
       "subjectLabel": "Subject",
       "subjectFeedback": "The subject must be at least 10 characters long.",
       "messageLabel": "Message",
       "messageFeedback": "The message must be at least 5 words long.",
       "send": "Send",
       "success": "Your message has been sent successfully.",
-      "error": "Failed to send message. Please try again."
+      "error": "Failed to send message. Please try again.",
+      "dataNote": "Your data is processed according to our Privacy Policy. This is required to provide the service",
+      "messagePlaceholder": "Enter your message..."
     },
     "deleteAccount": {
-      "sectionTitle": "Delete my account",
       "warning": "This action is permanent. All your personal data will be erased and cannot be recovered.",
-      "button": "Delete my account",
+      "button": "Delete account",
       "modalTitle": "Delete my account",
       "transferIntro": "You own shared projects. Choose a new owner for each one before deleting your account.",
       "readOnlyNote": "Collaborators marked with * currently have read-only access.",
@@ -1729,15 +1736,31 @@
       "ownersRequired": "All shared projects must have a new owner assigned.",
       "genericError": "An error occurred while deleting your account.",
       "confirm": "Delete permanently",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "label": "Delete account:",
+      "description": "Permanently delete your account, all personal data and all the iSoQ projects you have created, including all the data you have created and entered into those projects.",
+      "noteIntro": "Important: Deleting your account is permanent and cannot be undone.",
+      "note1": "Your personal data will be deleted from our active systems.",
+      "note2": "All the projects you created in iSoQ and all the data created and entered into those projects will be deleted permanently.",
+      "note3": "If a project was created by you and shared with others, you will be asked to assign a new owner to the project(s) before deleting your account.",
+      "note4": "Some records may be retained as required by law (e.g. legal compliance, or security logs).",
+      "note5": "Data that has been anonymised or aggregated (not linked to you) may be kept for research or statistical purposes.",
+      "note6": "If you change your mind, you must create a new account. Deleted accounts cannot be restored.",
+      "noteFooter": "For full details, see our",
+      "and": "and",
+      "termsAndConditions": "Terms and conditions"
     },
     "preferences": {
-      "sectionTitle": "Privacy preferences",
-      "newsletter": "I would like to receive emails with news and updates.",
-      "improvement": "I agree to share anonymised usage data to help improve the platform.",
-      "save": "Save preferences",
+      "newsletter": "I agree to receive email communications about important service updates and news (optional)",
+      "improvement": "I agree to the use of my data in aggregated and anonymised form to help improve the service (optional)",
       "success": "Your privacy settings have been updated.",
       "error": "An error occurred while updating your preferences."
+    },
+    "profile": {
+      "intro": "Manage your information, download your data, configure your privacy settings, contact us, or delete your account."
+    },
+    "manageData": {
+      "title": "Manage profile data"
     }
   }
 }

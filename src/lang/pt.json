@@ -1693,32 +1693,39 @@
       "error": "Não foi possível guardar a sua aceitação. Tente novamente."
     },
     "export": {
-      "sectionTitle": "Descarregar os meus dados",
-      "description": "Pode descarregar uma cópia de todos os dados pessoais que temos sobre si.",
-      "button": "Descarregar os meus dados",
+      "description": "Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro JSON",
+      "button": "Exportar dados do perfil",
       "modalTitle": "Descarregar os meus dados",
       "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
       "passwordPlaceholder": "Palavra-passe",
       "passwordRequired": "A palavra-passe é obrigatória",
       "genericError": "Ocorreu um erro ao exportar os seus dados.",
       "confirm": "Descarregar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "label": "Descarregar os dados do perfil:",
+      "noteIntro": "Nota: Pode descarregar uma cópia dos dados de perfil associados à sua conta.",
+      "note1": "A exportação incluirá a informação pessoal que forneceu (por exemplo, nome e email) e o registo da sua atividade na plataforma. Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro JSON",
+      "note2": "Os dados serão fornecidos num formato estruturado, de uso corrente e legível por máquina (JSON, CSV, XML).",
+      "note3": "Exportar o seu perfil não o elimina dos nossos sistemas. Pode solicitar a eliminação em separado.",
+      "note4": "Podemos demorar até 30 dias a fornecer a exportação completa, de acordo com a nossa Política de Privacidade.",
+      "noteFooter": "Para mais detalhes, consulte a nossa",
+      "privacyPolicy": "Política de Privacidade"
     },
     "contact": {
-      "sectionTitle": "Questões de privacidade",
-      "description": "Envie-nos uma pergunta ou pedido sobre como tratamos os seus dados pessoais.",
+      "sectionTitle": "Pedido de contacto de privacidade",
       "subjectLabel": "Assunto",
       "subjectFeedback": "O assunto deve ter pelo menos 10 caracteres.",
       "messageLabel": "Mensagem",
       "messageFeedback": "A mensagem deve ter pelo menos 5 palavras.",
       "send": "Enviar",
       "success": "A sua mensagem foi enviada com sucesso.",
-      "error": "Não foi possível enviar a mensagem. Tente novamente."
+      "error": "Não foi possível enviar a mensagem. Tente novamente.",
+      "dataNote": "Os seus dados são tratados de acordo com a nossa Política de Privacidade. Isto é necessário para prestar o serviço",
+      "messagePlaceholder": "Escreva a sua mensagem..."
     },
     "deleteAccount": {
-      "sectionTitle": "Eliminar a minha conta",
       "warning": "Esta ação é permanente. Todos os seus dados pessoais serão apagados e não poderão ser recuperados.",
-      "button": "Eliminar a minha conta",
+      "button": "Eliminar conta",
       "modalTitle": "Eliminar a minha conta",
       "transferIntro": "É proprietário de projetos partilhados. Escolha um novo proprietário para cada um antes de eliminar a sua conta.",
       "readOnlyNote": "Os colaboradores marcados com * têm atualmente acesso apenas de leitura.",
@@ -1729,15 +1736,31 @@
       "ownersRequired": "Todos os projetos partilhados devem ter um novo proprietário atribuído.",
       "genericError": "Ocorreu um erro ao eliminar a sua conta.",
       "confirm": "Eliminar definitivamente",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "label": "Eliminar conta:",
+      "description": "Elimine definitivamente a sua conta, todos os dados pessoais e todos os projetos iSoQ que criou, incluindo toda a informação que criou e introduziu nesses projetos.",
+      "noteIntro": "Importante: A eliminação da sua conta é permanente e não pode ser anulada.",
+      "note1": "Os seus dados pessoais serão eliminados dos nossos sistemas ativos.",
+      "note2": "Todos os projetos que criou no iSoQ e toda a informação criada e introduzida neles serão eliminados definitivamente.",
+      "note3": "Se criou um projeto e o partilhou com outras pessoas, ser-lhe-á pedido que atribua um novo proprietário antes de eliminar a sua conta.",
+      "note4": "Alguns registos podem ser conservados por obrigação legal (por exemplo, cumprimento normativo ou registos de segurança).",
+      "note5": "Os dados anonimizados ou agregados (que não permitem identificá-lo) podem ser conservados para fins de investigação ou estatísticos.",
+      "note6": "Se mudar de ideias, terá de criar uma conta nova. As contas eliminadas não podem ser restauradas.",
+      "noteFooter": "Para mais detalhes, consulte a nossa",
+      "and": "e os",
+      "termsAndConditions": "Termos e Condições"
     },
     "preferences": {
-      "sectionTitle": "Preferências de privacidade",
-      "newsletter": "Quero receber emails com novidades e atualizações.",
-      "improvement": "Aceito partilhar dados de utilização anonimizados para ajudar a melhorar a plataforma.",
-      "save": "Guardar preferências",
+      "newsletter": "Aceito receber comunicações por email sobre atualizações importantes do serviço e novidades (opcional)",
+      "improvement": "Aceito a utilização dos meus dados de forma agregada e anonimizada para ajudar a melhorar o serviço (opcional)",
       "success": "As suas opções de privacidade foram atualizadas.",
       "error": "Ocorreu um erro ao atualizar as suas preferências."
+    },
+    "profile": {
+      "intro": "Faça a gestão da sua informação, descarregue os seus dados, configure as suas opções de privacidade, contacte-nos ou elimine a sua conta."
+    },
+    "manageData": {
+      "title": "Gerir os dados do perfil"
     }
   }
 }
