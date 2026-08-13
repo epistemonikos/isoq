@@ -240,6 +240,7 @@
 <script>
 import Api from '@/utils/Api'
 import { Trans } from '@/plugins/Translation'
+import { isBackendTrue } from '@/constants/backendBoolean'
 
 export default {
   name: 'viewProfile',
@@ -391,17 +392,14 @@ export default {
     // ese módulo. Decidí si la duplicás acá o la compartís.
     // Lleva las preferencias del store a las casillas, normalizadas.
     //
-    // El backend devuelve estos campos con tipos mezclados y considera
-    // verdaderos exactamente estos cinco valores; su propia normalización usa
-    // la misma lista (isoq_server_py310, auth_server/controllers/core.py:470).
-    // Boolean(valor) no sirve: el string 'false' es truthy y marcaría la
-    // casilla al revés.
+    // El backend devuelve estos campos con tipos mezclados; qué cuenta como
+    // verdadero lo decide isBackendTrue, que es la misma regla que usa el
+    // servidor y la que aplica needsTermsAcceptance a terms_accepted.
     initCheckboxes: function () {
-      const truthy = [true, 'true', 'True', 1, '1']
       const user = this.$store.state.user || {}
 
-      this.newsletter = truthy.includes(user.newsletter)
-      this.improvement = truthy.includes(user.improvement)
+      this.newsletter = isBackendTrue(user.newsletter)
+      this.improvement = isBackendTrue(user.improvement)
 
       // Sin esta copia, savePreferences vería un cambio pendiente apenas se
       // abre el perfil y mandaría un POST que nadie pidió.
