@@ -1703,6 +1703,17 @@
       "genericError": "Ocurrió un error al exportar tus datos.",
       "confirm": "Descargar",
       "cancel": "Cancelar"
+    },
+    "contact": {
+      "sectionTitle": "Consultas de privacidad",
+      "description": "Envíanos una pregunta o solicitud sobre cómo tratamos tus datos personales.",
+      "subjectLabel": "Asunto",
+      "subjectFeedback": "El asunto debe tener al menos 10 caracteres.",
+      "messageLabel": "Mensaje",
+      "messageFeedback": "El mensaje debe tener al menos 5 palabras.",
+      "send": "Enviar",
+      "success": "Tu mensaje se envió correctamente.",
+      "error": "No se pudo enviar el mensaje. Inténtalo de nuevo."
     }
   }
 }

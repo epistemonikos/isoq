@@ -86,6 +86,48 @@
           {{ $t('gdpr.export.button') }}
         </b-button>
       </section>
+
+      <hr class="my-5">
+
+      <section>
+        <h4>{{ $t('gdpr.contact.sectionTitle') }}</h4>
+        <p>{{ $t('gdpr.contact.description') }}</p>
+
+        <b-alert :variant="contactMsgVariant" :show="!!contactMsg" dismissible>
+          {{ contactMsg }}
+        </b-alert>
+
+        <b-form-group
+          :label="$t('gdpr.contact.subjectLabel')"
+          label-for="input_privacy_subject"
+          :state="subjectState"
+          :invalid-feedback="$t('gdpr.contact.subjectFeedback')">
+          <b-form-input
+            id="input_privacy_subject"
+            v-model="subject"
+            :state="subjectState"></b-form-input>
+        </b-form-group>
+
+        <b-form-group
+          :label="$t('gdpr.contact.messageLabel')"
+          label-for="input_privacy_message"
+          :state="messageState"
+          :invalid-feedback="$t('gdpr.contact.messageFeedback')">
+          <b-form-textarea
+            id="input_privacy_message"
+            v-model="message"
+            rows="4"
+            :state="messageState"></b-form-textarea>
+        </b-form-group>
+
+        <b-button
+          variant="outline-primary"
+          :disabled="!isContactFormValid || isSendingContact"
+          @click="sendContact">
+          <b-spinner small v-if="isSendingContact" class="mr-1"></b-spinner>
+          {{ $t('gdpr.contact.send') }}
+        </b-button>
+      </section>
     </b-container>
 
     <b-modal
@@ -133,7 +175,12 @@ export default {
       selectedTheme: this.$store.state.theme,
       isExporting: false,
       exportPassword: '',
-      exportError: ''
+      exportError: '',
+      subject: '',
+      message: '',
+      isSendingContact: false,
+      contactMsg: '',
+      contactMsgVariant: 'success'
     }
   },
   computed: {
@@ -154,6 +201,27 @@ export default {
         value: t,
         text: this.$t(`profile.themes.${t}`)
       }))
+    },
+    // Los tres valores de :state en Bootstrap-Vue: true, false y null.
+    // null es el estado neutro y se reserva para el campo vacío — el que
+    // nadie tocó todavía no se pinta de rojo. Devolver null en vez de false
+    // para un valor insuficiente esconde el :invalid-feedback y deja el
+    // botón deshabilitado sin decir por qué.
+    subjectState: function () {
+      if (this.subject.length === 0) return null
+      // Sobre el texto recortado: doce espacios no son un asunto.
+      return this.subject.trim().length >= 10
+    },
+    messageState: function () {
+      if (this.message.length === 0) return null
+      // filter(Boolean) descarta el elemento vacío que deja split cuando el
+      // texto empieza con espacio, que si no contaría como una palabra. \s+
+      // cubre también los saltos de línea del textarea.
+      const words = this.message.trim().split(/\s+/).filter(Boolean)
+      return words.length >= 5
+    },
+    isContactFormValid: function () {
+      return this.subjectState === true && this.messageState === true
     }
   },
   watch: {
@@ -292,6 +360,31 @@ export default {
     resetExportModal: function () {
       this.exportPassword = ''
       this.exportError = ''
+    },
+    // El backend saca el usuario del token (core.py:737), así que el payload
+    // lleva sólo asunto y mensaje. Despacha un correo real al buzón de
+    // privacidad: la guarda de isSendingContact evita mandarlo dos veces.
+    sendContact: async function () {
+      if (!this.isContactFormValid || this.isSendingContact) return
+
+      this.isSendingContact = true
+      this.contactMsg = ''
+      try {
+        await Api.post('/users/privacy_contact', {
+          subject: this.subject,
+          message: this.message
+        })
+        this.contactMsg = this.$t('gdpr.contact.success')
+        this.contactMsgVariant = 'success'
+        this.subject = ''
+        this.message = ''
+      } catch (error) {
+        // No se limpia el formulario: obligaría a reescribir todo el mensaje.
+        this.contactMsg = this.$t('gdpr.contact.error')
+        this.contactMsgVariant = 'danger'
+      } finally {
+        this.isSendingContact = false
+      }
     },
     checkDisabled: function () {
       if (this.new_password !== this.new_password_repeat) {

@@ -1703,6 +1703,17 @@
       "genericError": "An error occurred while exporting your data.",
       "confirm": "Download",
       "cancel": "Cancel"
+    },
+    "contact": {
+      "sectionTitle": "Privacy enquiries",
+      "description": "Send us a question or request about how we handle your personal data.",
+      "subjectLabel": "Subject",
+      "subjectFeedback": "The subject must be at least 10 characters long.",
+      "messageLabel": "Message",
+      "messageFeedback": "The message must be at least 5 words long.",
+      "send": "Send",
+      "success": "Your message has been sent successfully.",
+      "error": "Failed to send message. Please try again."
     }
   }
 }
