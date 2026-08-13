@@ -80,6 +80,25 @@
       <hr class="my-5">
 
       <section>
+        <h4>{{ $t('gdpr.preferences.sectionTitle') }}</h4>
+        <b-form-checkbox v-model="newsletter" class="mb-2">
+          {{ $t('gdpr.preferences.newsletter') }}
+        </b-form-checkbox>
+        <b-form-checkbox v-model="improvement" class="mb-3">
+          {{ $t('gdpr.preferences.improvement') }}
+        </b-form-checkbox>
+        <b-button
+          variant="outline-primary"
+          :disabled="isSavingPreferences"
+          @click="savePreferences">
+          <b-spinner small v-if="isSavingPreferences" class="mr-1"></b-spinner>
+          {{ $t('gdpr.preferences.save') }}
+        </b-button>
+      </section>
+
+      <hr class="my-5">
+
+      <section>
         <h4>{{ $t('gdpr.export.sectionTitle') }}</h4>
         <p>{{ $t('gdpr.export.description') }}</p>
         <b-button variant="outline-primary" @click="exportData">
@@ -246,8 +265,18 @@ export default {
       deleteError: '',
       sharedProjects: [],
       projectsNewOwners: {},
-      isLoadingSharedProjects: false
+      isLoadingSharedProjects: false,
+      newsletter: false,
+      improvement: false,
+      // Copia de lo que había al cargar, para no mandar un POST cuando el
+      // usuario abre el perfil y se va sin tocar nada.
+      initialNewsletter: false,
+      initialImprovement: false,
+      isSavingPreferences: false
     }
+  },
+  mounted () {
+    this.initCheckboxes()
   },
   computed: {
     username: function () {
@@ -344,6 +373,74 @@ export default {
         return true
       }
       return false
+    },
+    // TODO(human): llevar las preferencias del store a las casillas.
+    //
+    // Setea this.newsletter y this.improvement como booleanos a partir de
+    // this.$store.state.user, y guarda esos mismos valores en
+    // initialNewsletter / initialImprovement para poder detectar cambios.
+    //
+    // El backend devuelve estos campos con tipos mezclados: true, 'true',
+    // 'True', 1 y '1' son verdaderos; el resto es falso. Su propia
+    // normalización usa exactamente esa lista
+    // (isoq_server_py310, auth_server/controllers/core.py:470).
+    //
+    // Boolean(valor) no sirve: el string 'false' es truthy y pasaría como
+    // verdadero. Esa misma trampa ya está resuelta en src/constants/terms.js
+    // para terms_accepted, con la constante TRUTHY — que hoy es privada de
+    // ese módulo. Decidí si la duplicás acá o la compartís.
+    // Lleva las preferencias del store a las casillas, normalizadas.
+    //
+    // El backend devuelve estos campos con tipos mezclados y considera
+    // verdaderos exactamente estos cinco valores; su propia normalización usa
+    // la misma lista (isoq_server_py310, auth_server/controllers/core.py:470).
+    // Boolean(valor) no sirve: el string 'false' es truthy y marcaría la
+    // casilla al revés.
+    initCheckboxes: function () {
+      const truthy = [true, 'true', 'True', 1, '1']
+      const user = this.$store.state.user || {}
+
+      this.newsletter = truthy.includes(user.newsletter)
+      this.improvement = truthy.includes(user.improvement)
+
+      // Sin esta copia, savePreferences vería un cambio pendiente apenas se
+      // abre el perfil y mandaría un POST que nadie pidió.
+      this.initialNewsletter = this.newsletter
+      this.initialImprovement = this.improvement
+    },
+    savePreferences: async function () {
+      const changed = this.newsletter !== this.initialNewsletter ||
+        this.improvement !== this.initialImprovement
+      if (!changed || this.isSavingPreferences) return
+
+      this.isSavingPreferences = true
+      this.msg = ''
+      try {
+        // Se mandan las dos siempre: el backend reescribe ambos campos en
+        // cada llamada (core.py:470-471), así que omitir una la pondría en
+        // false sin que el usuario lo haya pedido.
+        await Api.post('/users/update_info', {
+          user_id: this.$store.state.user.id,
+          newsletter: this.newsletter,
+          improvement: this.improvement
+        })
+
+        // Sólo tras confirmar: si falla, el cambio sigue pendiente y el
+        // usuario puede reintentar.
+        this.initialNewsletter = this.newsletter
+        this.initialImprovement = this.improvement
+        this.$store.dispatch('updateUser', {
+          newsletter: this.newsletter,
+          improvement: this.improvement
+        })
+        this.msg = this.$t('gdpr.preferences.success')
+        this.msgVariant = 'success'
+      } catch (error) {
+        this.msg = this.$t('gdpr.preferences.error')
+        this.msgVariant = 'danger'
+      } finally {
+        this.isSavingPreferences = false
+      }
     },
     exportData: function () {
       this.$bvModal.show('modal-export-data')

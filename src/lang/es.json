@@ -1730,6 +1730,14 @@
       "genericError": "Ocurrió un error al eliminar tu cuenta.",
       "confirm": "Eliminar definitivamente",
       "cancel": "Cancelar"
+    },
+    "preferences": {
+      "sectionTitle": "Preferencias de privacidad",
+      "newsletter": "Quiero recibir correos con novedades y actualizaciones.",
+      "improvement": "Acepto compartir datos de uso anonimizados para ayudar a mejorar la plataforma.",
+      "save": "Guardar preferencias",
+      "success": "Tus opciones de privacidad se actualizaron.",
+      "error": "Ocurrió un error al actualizar tus preferencias."
     }
   }
 }

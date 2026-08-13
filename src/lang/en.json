@@ -1730,6 +1730,14 @@
       "genericError": "An error occurred while deleting your account.",
       "confirm": "Delete permanently",
       "cancel": "Cancel"
+    },
+    "preferences": {
+      "sectionTitle": "Privacy preferences",
+      "newsletter": "I would like to receive emails with news and updates.",
+      "improvement": "I agree to share anonymised usage data to help improve the platform.",
+      "save": "Save preferences",
+      "success": "Your privacy settings have been updated.",
+      "error": "An error occurred while updating your preferences."
     }
   }
 }
