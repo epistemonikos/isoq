@@ -102,18 +102,18 @@
       <b-card no-body class="mt-3 p-3">
         <h3>{{ $t('gdpr.manageData.title') }}</h3>
 
-        <div class="d-flex flex-row justify-content-between align-items-center">
-          <div>
-            <p class="m-0">
-              <b>{{ $t('gdpr.export.label') }}</b> {{ $t('gdpr.export.description') }}
-            </p>
-          </div>
-          <div>
-            <b-button variant="outline-primary" @click="exportData" :disabled="isExporting">
-              <b-spinner v-if="isExporting" small class="mr-2"></b-spinner>
-              {{ $t('gdpr.export.button') }}
-            </b-button>
-          </div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+          <p class="m-0 mr-md-4">
+            <b>{{ $t('gdpr.export.label') }}</b> {{ $t('gdpr.export.description') }}
+          </p>
+          <b-button
+            variant="outline-primary"
+            class="mt-3 mt-md-0 flex-shrink-0 text-nowrap"
+            :disabled="isExporting"
+            @click="exportData">
+            <b-spinner v-if="isExporting" small class="mr-2"></b-spinner>
+            {{ $t('gdpr.export.button') }}
+          </b-button>
         </div>
 
         <b-alert show class="mt-3">
@@ -132,18 +132,18 @@
           </p>
         </b-alert>
 
-        <div class="d-flex flex-row justify-content-between align-items-center">
-          <div>
-            <p class="m-0">
-              <b>{{ $t('gdpr.deleteAccount.label') }}</b> {{ $t('gdpr.deleteAccount.description') }}
-            </p>
-          </div>
-          <div>
-            <b-button variant="outline-danger" @click="deleteAccount" :disabled="isDeletingAccount">
-              <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
-              {{ $t('gdpr.deleteAccount.button') }}
-            </b-button>
-          </div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+          <p class="m-0 mr-md-4">
+            <b>{{ $t('gdpr.deleteAccount.label') }}</b> {{ $t('gdpr.deleteAccount.description') }}
+          </p>
+          <b-button
+            variant="outline-danger"
+            class="mt-3 mt-md-0 flex-shrink-0 text-nowrap"
+            :disabled="isDeletingAccount"
+            @click="deleteAccount">
+            <b-spinner v-if="isDeletingAccount" small class="mr-2"></b-spinner>
+            {{ $t('gdpr.deleteAccount.button') }}
+          </b-button>
         </div>
 
         <b-alert show variant="warning" class="mt-3">
