@@ -1714,6 +1714,22 @@
       "send": "Send",
       "success": "Your message has been sent successfully.",
       "error": "Failed to send message. Please try again."
+    },
+    "deleteAccount": {
+      "sectionTitle": "Delete my account",
+      "warning": "This action is permanent. All your personal data will be erased and cannot be recovered.",
+      "button": "Delete my account",
+      "modalTitle": "Delete my account",
+      "transferIntro": "You own shared projects. Choose a new owner for each one before deleting your account.",
+      "readOnlyNote": "Collaborators marked with * currently have read-only access.",
+      "selectPlaceholder": "Choose a new owner",
+      "passwordPrompt": "Enter your password to confirm:",
+      "passwordPlaceholder": "Password",
+      "passwordRequired": "Password is required",
+      "ownersRequired": "All shared projects must have a new owner assigned.",
+      "genericError": "An error occurred while deleting your account.",
+      "confirm": "Delete permanently",
+      "cancel": "Cancel"
     }
   }
 }

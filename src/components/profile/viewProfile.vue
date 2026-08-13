@@ -128,6 +128,16 @@
           {{ $t('gdpr.contact.send') }}
         </b-button>
       </section>
+
+      <hr class="my-5">
+
+      <section>
+        <h4 class="text-danger">{{ $t('gdpr.deleteAccount.sectionTitle') }}</h4>
+        <p>{{ $t('gdpr.deleteAccount.warning') }}</p>
+        <b-button variant="outline-danger" @click="deleteAccount">
+          {{ $t('gdpr.deleteAccount.button') }}
+        </b-button>
+      </section>
     </b-container>
 
     <b-modal
@@ -152,6 +162,56 @@
         <b-button variant="primary" :disabled="isExporting" @click="confirmExportData">
           <b-spinner small v-if="isExporting" class="mr-1"></b-spinner>
           {{ $t('gdpr.export.confirm') }}
+        </b-button>
+      </div>
+    </b-modal>
+
+    <b-modal
+      id="modal-delete-account"
+      :title="$t('gdpr.deleteAccount.modalTitle')"
+      @hidden="resetDeleteModal">
+      <b-alert show variant="danger">{{ $t('gdpr.deleteAccount.warning') }}</b-alert>
+
+      <div v-if="isLoadingSharedProjects" class="text-center my-3">
+        <b-spinner small></b-spinner>
+      </div>
+
+      <div v-else-if="sharedProjects.length">
+        <p>{{ $t('gdpr.deleteAccount.transferIntro') }}</p>
+        <b-form-group
+          v-for="project in sharedProjects"
+          :key="project.id"
+          :label="project.name"
+          :label-for="`new_owner_${project.id}`">
+          <b-form-select
+            :id="`new_owner_${project.id}`"
+            v-model="projectsNewOwners[project.id]"
+            :options="project.candidates">
+            <template slot="first">
+              <option :value="null" disabled>{{ $t('gdpr.deleteAccount.selectPlaceholder') }}</option>
+            </template>
+          </b-form-select>
+        </b-form-group>
+        <p class="text-muted small">{{ $t('gdpr.deleteAccount.readOnlyNote') }}</p>
+      </div>
+
+      <p>{{ $t('gdpr.deleteAccount.passwordPrompt') }}</p>
+      <b-form-input
+        type="password"
+        v-model="deletePassword"
+        :placeholder="$t('gdpr.deleteAccount.passwordPlaceholder')"></b-form-input>
+
+      <b-alert :show="!!deleteError" variant="danger" class="mt-3">
+        {{ deleteError }}
+      </b-alert>
+
+      <div slot="modal-footer">
+        <b-button variant="outline-secondary" @click="$bvModal.hide('modal-delete-account')">
+          {{ $t('gdpr.deleteAccount.cancel') }}
+        </b-button>
+        <b-button variant="danger" :disabled="isDeletingAccount" @click="confirmDeleteAccount">
+          <b-spinner small v-if="isDeletingAccount" class="mr-1"></b-spinner>
+          {{ $t('gdpr.deleteAccount.confirm') }}
         </b-button>
       </div>
     </b-modal>
@@ -180,7 +240,13 @@ export default {
       message: '',
       isSendingContact: false,
       contactMsg: '',
-      contactMsgVariant: 'success'
+      contactMsgVariant: 'success',
+      isDeletingAccount: false,
+      deletePassword: '',
+      deleteError: '',
+      sharedProjects: [],
+      projectsNewOwners: {},
+      isLoadingSharedProjects: false
     }
   },
   computed: {
@@ -222,6 +288,13 @@ export default {
     },
     isContactFormValid: function () {
       return this.subjectState === true && this.messageState === true
+    },
+    allProjectsHaveNewOwner: function () {
+      if (this.sharedProjects.length === 0) return true
+      return this.sharedProjects.every(p => {
+        const owner = this.projectsNewOwners[p.id]
+        return owner !== null && owner !== undefined
+      })
     }
   },
   watch: {
@@ -385,6 +458,126 @@ export default {
       } finally {
         this.isSendingContact = false
       }
+    },
+    deleteAccount: function () {
+      this.$bvModal.show('modal-delete-account')
+      this.loadSharedProjects()
+    },
+    loadSharedProjects: async function () {
+      this.isLoadingSharedProjects = true
+      try {
+        const response = await Api.get('/api/getProjects')
+        const allProjects = response.data || []
+        const myOrg = this.$store.state.user.personal_organization
+
+        // Sólo los propios y compartidos. El backend usa este mismo criterio
+        // (core.py:614-621): los propios SIN colaboradores no se transfieren,
+        // se borran en cascada con todo lo que cuelga de ellos.
+        const owned = allProjects.filter(p => {
+          if (p.organization !== myOrg) return false
+          return (p.can_write || []).length > 0 || (p.can_read || []).length > 0
+        })
+
+        // Un solo GET por usuario y todos en paralelo. El original los pedía
+        // dentro de un bucle anidado y en serie: 10 proyectos × 5
+        // colaboradores eran 50 peticiones encadenadas.
+        const uniqueIds = [...new Set(owned.flatMap(p => [
+          ...(p.can_write || []),
+          ...(p.can_read || [])
+        ]))]
+
+        const fetched = await Promise.all(uniqueIds.map(uid =>
+          Api.get(`/users/${uid}`).then(r => [uid, r.data]).catch(() => [uid, null])
+        ))
+        const usersById = Object.fromEntries(fetched)
+
+        this.sharedProjects = owned
+          .map(project => ({
+            id: project.id,
+            name: project.name,
+            candidates: this.buildOwnerCandidates(project, usersById)
+          }))
+          .filter(p => p.candidates.length > 0)
+
+        this.sharedProjects.forEach(p => this.$set(this.projectsNewOwners, p.id, null))
+      } catch (error) {
+        this.deleteError = this.$t('gdpr.deleteAccount.genericError')
+      } finally {
+        this.isLoadingSharedProjects = false
+      }
+    },
+    // Candidatos a nuevo dueño del proyecto, en el formato { value, text }
+    // que consume el <b-form-select>.
+    //
+    // El identificador es la CLAVE de usersById, no un campo del objeto: el
+    // GET /users/<id> no devuelve el id dentro del payload.
+    buildOwnerCandidates: function (project, usersById) {
+      const writers = [...new Set(project.can_write || [])]
+      const readers = [...new Set(project.can_read || [])]
+
+      // Escritura primero. Quien está en las dos listas aparece una sola vez
+      // y cuenta como escritura, que es el permiso que manda.
+      const orderedIds = [...writers, ...readers.filter(uid => !writers.includes(uid))]
+
+      return orderedIds
+        .map(uid => {
+          // Sin datos (el GET falló) o de baja: no puede heredar el proyecto.
+          const user = usersById[uid]
+          if (!user || !user.status) return null
+
+          const label = `${user.first_name || ''} ${user.last_name || ''} (${user.username})`
+          // El asterisco marca a quien hoy sólo tiene lectura.
+          return { value: uid, text: writers.includes(uid) ? label : `${label} *` }
+        })
+        .filter(Boolean)
+    },
+    confirmDeleteAccount: async function () {
+      this.deleteError = ''
+      if (!this.deletePassword) {
+        this.deleteError = this.$t('gdpr.deleteAccount.passwordRequired')
+        return
+      }
+      if (!this.allProjectsHaveNewOwner) {
+        this.deleteError = this.$t('gdpr.deleteAccount.ownersRequired')
+        return
+      }
+      if (this.isDeletingAccount) return
+
+      this.isDeletingAccount = true
+      try {
+        // Api.delete(path, data, config): el cuerpo va como segundo
+        // argumento y Api lo arma como { ...config, data } (Api.js:529).
+        // Envolverlo en { data: ... } mandaría {"data": {...}} anidado y el
+        // backend leería password como undefined.
+        const response = await Api.delete('/users/delete_account', {
+          password: this.deletePassword,
+          ownership_transfers: this.projectsNewOwners
+        })
+
+        if (response.data && response.data.result === 'success') {
+          this.$bvModal.hide('modal-delete-account')
+          // El backend ya cerró la sesión de su lado (logout_user); acá hay
+          // que limpiar token y localStorage, o la próxima navegación
+          // intentaría usar credenciales de una cuenta que ya no existe.
+          await this.$store.dispatch('logout')
+          this.$router.push({ name: 'Login' })
+        } else {
+          this.deleteError = (response.data && response.data.message) ||
+            this.$t('gdpr.deleteAccount.genericError')
+        }
+      } catch (error) {
+        this.deleteError = (error.response && error.response.data && error.response.data.message) ||
+          this.$t('gdpr.deleteAccount.genericError')
+      } finally {
+        this.isDeletingAccount = false
+      }
+    },
+    resetDeleteModal: function () {
+      this.deletePassword = ''
+      this.deleteError = ''
+      this.sharedProjects = []
+      this.projectsNewOwners = {}
+      this.isLoadingSharedProjects = false
     },
     checkDisabled: function () {
       if (this.new_password !== this.new_password_repeat) {

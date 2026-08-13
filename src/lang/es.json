@@ -1714,6 +1714,22 @@
       "send": "Enviar",
       "success": "Tu mensaje se envió correctamente.",
       "error": "No se pudo enviar el mensaje. Inténtalo de nuevo."
+    },
+    "deleteAccount": {
+      "sectionTitle": "Eliminar mi cuenta",
+      "warning": "Esta acción es permanente. Todos tus datos personales se borrarán y no podrán recuperarse.",
+      "button": "Eliminar mi cuenta",
+      "modalTitle": "Eliminar mi cuenta",
+      "transferIntro": "Eres dueño de proyectos compartidos. Elige un nuevo dueño para cada uno antes de eliminar tu cuenta.",
+      "readOnlyNote": "Los colaboradores marcados con * hoy tienen acceso de sólo lectura.",
+      "selectPlaceholder": "Elige un nuevo dueño",
+      "passwordPrompt": "Ingresa tu contraseña para confirmar:",
+      "passwordPlaceholder": "Contraseña",
+      "passwordRequired": "La contraseña es obligatoria",
+      "ownersRequired": "Todos los proyectos compartidos deben tener un nuevo dueño asignado.",
+      "genericError": "Ocurrió un error al eliminar tu cuenta.",
+      "confirm": "Eliminar definitivamente",
+      "cancel": "Cancelar"
     }
   }
 }

@@ -1714,6 +1714,22 @@
       "send": "Enviar",
       "success": "A sua mensagem foi enviada com sucesso.",
       "error": "Não foi possível enviar a mensagem. Tente novamente."
+    },
+    "deleteAccount": {
+      "sectionTitle": "Eliminar a minha conta",
+      "warning": "Esta ação é permanente. Todos os seus dados pessoais serão apagados e não poderão ser recuperados.",
+      "button": "Eliminar a minha conta",
+      "modalTitle": "Eliminar a minha conta",
+      "transferIntro": "É proprietário de projetos partilhados. Escolha um novo proprietário para cada um antes de eliminar a sua conta.",
+      "readOnlyNote": "Os colaboradores marcados com * têm atualmente acesso apenas de leitura.",
+      "selectPlaceholder": "Escolha um novo proprietário",
+      "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
+      "passwordPlaceholder": "Palavra-passe",
+      "passwordRequired": "A palavra-passe é obrigatória",
+      "ownersRequired": "Todos os projetos partilhados devem ter um novo proprietário atribuído.",
+      "genericError": "Ocorreu um erro ao eliminar a sua conta.",
+      "confirm": "Eliminar definitivamente",
+      "cancel": "Cancelar"
     }
   }
 }
