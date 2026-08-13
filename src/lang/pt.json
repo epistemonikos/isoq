@@ -1691,6 +1691,18 @@
       "accept": "Aceitar",
       "cancel": "Cancelar",
       "error": "Não foi possível guardar a sua aceitação. Tente novamente."
+    },
+    "export": {
+      "sectionTitle": "Descarregar os meus dados",
+      "description": "Pode descarregar uma cópia de todos os dados pessoais que temos sobre si.",
+      "button": "Descarregar os meus dados",
+      "modalTitle": "Descarregar os meus dados",
+      "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
+      "passwordPlaceholder": "Palavra-passe",
+      "passwordRequired": "A palavra-passe é obrigatória",
+      "genericError": "Ocorreu um erro ao exportar os seus dados.",
+      "confirm": "Descarregar",
+      "cancel": "Cancelar"
     }
   }
 }

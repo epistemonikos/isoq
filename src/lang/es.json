@@ -1691,6 +1691,18 @@
       "accept": "Aceptar",
       "cancel": "Cancelar",
       "error": "No pudimos guardar tu aceptación. Inténtalo de nuevo."
+    },
+    "export": {
+      "sectionTitle": "Descargar mis datos",
+      "description": "Puedes descargar una copia de todos los datos personales que tenemos sobre ti.",
+      "button": "Descargar mis datos",
+      "modalTitle": "Descargar mis datos",
+      "passwordPrompt": "Ingresa tu contraseña para confirmar:",
+      "passwordPlaceholder": "Contraseña",
+      "passwordRequired": "La contraseña es obligatoria",
+      "genericError": "Ocurrió un error al exportar tus datos.",
+      "confirm": "Descargar",
+      "cancel": "Cancelar"
     }
   }
 }

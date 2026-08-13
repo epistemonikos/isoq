@@ -1691,6 +1691,18 @@
       "accept": "Accept",
       "cancel": "Cancel",
       "error": "We could not save your acceptance. Please try again."
+    },
+    "export": {
+      "sectionTitle": "Download my data",
+      "description": "You can download a copy of all the personal data we hold about you.",
+      "button": "Download my data",
+      "modalTitle": "Download my data",
+      "passwordPrompt": "Enter your password to confirm:",
+      "passwordPlaceholder": "Password",
+      "passwordRequired": "Password is required",
+      "genericError": "An error occurred while exporting your data.",
+      "confirm": "Download",
+      "cancel": "Cancel"
     }
   }
 }
