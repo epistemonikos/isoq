@@ -226,6 +226,36 @@ describe('viewProfile.vue — perfil y preferencias', () => {
     expect(llamadasA('/users/update_info').length).toBeGreaterThan(0)
   })
 
+  it('atribuye el fallo a la contraseña, no a las preferencias', async () => {
+    // El botón guarda las dos cosas. Si falla el cambio de contraseña, el
+    // mensaje no puede hablar de preferencias: el usuario no sabría qué
+    // reintentar.
+    Api.post.mockRejectedValueOnce(new Error('boom'))
+    const { wrapper } = build()
+    wrapper.setData({ new_password: CLAVE_VALIDA, new_password_repeat: CLAVE_VALIDA })
+    await wrapper.vm.update()
+    await flushPromises()
+
+    expect(wrapper.vm.msgVariant).toBe('danger')
+    expect(wrapper.vm.msg).toBe(en.profile.password_error)
+  })
+
+  it('no guarda las preferencias si la contraseña falló', async () => {
+    // Un guardado a medias con un mensaje de error deja al usuario sin saber
+    // qué quedó aplicado.
+    Api.post.mockRejectedValueOnce(new Error('boom'))
+    const { wrapper } = build({ newsletter: false })
+    wrapper.setData({
+      new_password: CLAVE_VALIDA,
+      new_password_repeat: CLAVE_VALIDA,
+      newsletter: true
+    })
+    await wrapper.vm.update()
+    await flushPromises()
+
+    expect(llamadasA('/users/update_info')).toHaveLength(0)
+  })
+
   it('avisa del error sin tocar el store', async () => {
     Api.post.mockRejectedValueOnce(new Error('boom'))
     const { wrapper, actions } = build({ newsletter: false, improvement: false })

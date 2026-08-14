@@ -982,7 +982,8 @@
       "light": "Light",
       "dark": "Black",
       "system": "System"
-    }
+    },
+    "password_error": "We could not change your password. Please try again."
   },
   "updates": {
     "feb_2025": "February 2025",
@@ -1733,7 +1734,7 @@
       "button": "Delete account",
       "modalTitle": "Delete my account",
       "transferIntro": "You own shared projects. Choose a new owner for each one before deleting your account.",
-      "readOnlyNote": "Collaborators marked with * currently have read-only access.",
+      "readOnlyNote": "Collaborators marked with * currently have read-only access. If you choose one of them as the new owner, their access will be updated to view and edit the project.",
       "selectPlaceholder": "Choose a new owner",
       "passwordPrompt": "Enter your password to confirm:",
       "passwordPlaceholder": "Password",

@@ -127,6 +127,15 @@ describe('viewProfile.vue — eliminar cuenta', () => {
     expect(wrapper.vm.sharedProjects[0].candidates[0].value).toBe('u2')
   })
 
+  it('advierte que el nuevo dueño de sólo lectura pasará a escritura', () => {
+    // El asterisco marca a quien hoy sólo puede ver. Designarlo dueño le da
+    // escritura: sin decirlo, se decide a ciegas sobre un cambio de permisos.
+    const { wrapper } = build()
+    const nota = wrapper.vm.$t('gdpr.deleteAccount.readOnlyNote')
+
+    expect(nota).toMatch(/edit|escritura|editar/i)
+  })
+
   it('marca con asterisco a los candidatos de sólo lectura', async () => {
     mockProjectsAndUsers([
       { id: 'p1', name: 'Compartido', organization: 'org1', can_write: [], can_read: ['u3'] }

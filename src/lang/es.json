@@ -982,7 +982,8 @@
       "light": "Claro",
       "dark": "Oscuro",
       "system": "Sistema"
-    }
+    },
+    "password_error": "No pudimos cambiar tu contraseña. Inténtalo de nuevo."
   },
   "updates": {
     "feb_2025": "Febrero 2025",
@@ -1733,7 +1734,7 @@
       "button": "Eliminar cuenta",
       "modalTitle": "Eliminar mi cuenta",
       "transferIntro": "Eres dueño de proyectos compartidos. Elige un nuevo dueño para cada uno antes de eliminar tu cuenta.",
-      "readOnlyNote": "Los colaboradores marcados con * hoy tienen acceso de sólo lectura.",
+      "readOnlyNote": "Los colaboradores marcados con * hoy tienen acceso de sólo lectura. Si eliges a uno de ellos como nuevo dueño, su acceso pasará a ver y editar el proyecto.",
       "selectPlaceholder": "Elige un nuevo dueño",
       "passwordPrompt": "Ingresa tu contraseña para confirmar:",
       "passwordPlaceholder": "Contraseña",

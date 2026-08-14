@@ -982,7 +982,8 @@
       "light": "Claro",
       "dark": "Escuro",
       "system": "Sistema"
-    }
+    },
+    "password_error": "Não foi possível alterar a sua palavra-passe. Tente novamente."
   },
   "updates": {
     "feb_2025": "Fevereiro 2025",
@@ -1733,7 +1734,7 @@
       "button": "Eliminar conta",
       "modalTitle": "Eliminar a minha conta",
       "transferIntro": "É proprietário de projetos partilhados. Escolha um novo proprietário para cada um antes de eliminar a sua conta.",
-      "readOnlyNote": "Os colaboradores marcados com * têm atualmente acesso apenas de leitura.",
+      "readOnlyNote": "Os colaboradores marcados com * têm atualmente acesso apenas de leitura. Se escolher um deles como novo proprietário, o seu acesso passará a ver e editar o projeto.",
       "selectPlaceholder": "Escolha um novo proprietário",
       "passwordPrompt": "Introduza a sua palavra-passe para confirmar:",
       "passwordPlaceholder": "Palavra-passe",

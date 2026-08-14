@@ -435,10 +435,22 @@ export default {
       this.isSavingProfile = true
       try {
         if (validPassword) {
-          const response = await Api.post('/users/change_password', {
-            user_id: this.$store.state.user.id,
-            new_password: this.new_password
-          })
+          // El try es propio: este botón guarda dos cosas y el usuario tiene
+          // que saber cuál falló para saber qué reintentar. Con un catch
+          // compartido, un fallo de la contraseña se anunciaba como error de
+          // preferencias, la otra sección de la pantalla.
+          let response
+          try {
+            response = await Api.post('/users/change_password', {
+              user_id: this.$store.state.user.id,
+              new_password: this.new_password
+            })
+          } catch (error) {
+            this.msgVariant = 'danger'
+            this.msg = this.$t('profile.password_error')
+            return
+          }
+
           if (response.data && response.data.status === 'password_compromised') {
             this.msgVariant = 'danger'
             this.msg = this.$t('account.password_compromised')
@@ -451,6 +463,7 @@ export default {
         }
 
         if (preferencesChanged) {
+          // savePreferences deja puesto su propio mensaje antes de re-lanzar.
           await this.savePreferences()
         }
       } catch (error) {
