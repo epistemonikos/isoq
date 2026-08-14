@@ -116,6 +116,62 @@ describe('Login.vue — aceptación de términos', () => {
     })
   })
 
+  // ─── La casilla de newsletter refleja lo que el usuario ya eligió ────────────
+  //
+  // Observado con datos reales: una cuenta creada con newsletter true quedó en
+  // false tras aceptar unos términos actualizados sin tocar la casilla. El
+  // modal la mostraba siempre desmarcada y el PATCH mandaba ese false,
+  // revocando una suscripción que nadie pidió cancelar.
+
+  describe('preferencia de newsletter al abrir el modal', () => {
+    it('marca la casilla si el usuario ya estaba suscrito', async () => {
+      const { wrapper } = build({ user: { ...NOT_ACCEPTED, newsletter: true } })
+      wrapper.vm.login()
+      await flushPromises()
+
+      expect(wrapper.vm.newsletterAccepted).toBe(true)
+    })
+
+    it('la deja desmarcada si no lo estaba', async () => {
+      const { wrapper } = build({ user: { ...NOT_ACCEPTED, newsletter: false } })
+      wrapper.vm.login()
+      await flushPromises()
+
+      expect(wrapper.vm.newsletterAccepted).toBe(false)
+    })
+
+    it('normaliza los booleanos del backend', async () => {
+      // El mismo campo llega como true, 'true', 'True', 1 o '1'.
+      const { wrapper } = build({ user: { ...NOT_ACCEPTED, newsletter: 'True' } })
+      wrapper.vm.login()
+      await flushPromises()
+
+      expect(wrapper.vm.newsletterAccepted).toBe(true)
+    })
+
+    it('la deja desmarcada si el campo no viene', async () => {
+      const { wrapper } = build({ user: { ...NOT_ACCEPTED } })
+      wrapper.vm.login()
+      await flushPromises()
+
+      expect(wrapper.vm.newsletterAccepted).toBe(false)
+    })
+
+    it('no revoca la suscripción de quien acepta sin tocar la casilla', async () => {
+      // El caso que se vio en la base: aceptar los términos no debe cancelar
+      // un consentimiento dado antes.
+      const { wrapper } = build({ user: { ...NOT_ACCEPTED, newsletter: true } })
+      wrapper.vm.login()
+      await flushPromises()
+
+      wrapper.setData({ termsAccepted: true })
+      await wrapper.vm.acceptTerms()
+      await flushPromises()
+
+      expect(Api.patch.mock.calls[0][1].newsletter).toBe(true)
+    })
+  })
+
   // ─── Aceptar ─────────────────────────────────────────────────────────────────
 
   describe('acceptTerms', () => {

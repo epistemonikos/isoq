@@ -146,6 +146,7 @@
 import Api from '@/utils/Api'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
 import { downloadPersonalData } from '@/services/personalDataExport'
+import { isBackendTrue } from '@/constants/backendBoolean'
 
 export default {
   data () {
@@ -220,6 +221,11 @@ export default {
           // desloguea en el acto, sin haber visto nunca el modal.
           if (needsTermsAcceptance(this.$store.state.user)) {
             this.pendingRedirect = redirectPath
+            // La casilla arranca con lo que el usuario ya había elegido: el
+            // PATCH manda este valor, así que dejarla siempre desmarcada
+            // revocaba la suscripción de quien sólo venía a aceptar unos
+            // términos actualizados.
+            this.newsletterAccepted = isBackendTrue(this.$store.state.user.newsletter)
             this.$bvModal.show('modal-terms-acceptance')
             return
           }
