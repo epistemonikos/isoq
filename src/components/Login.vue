@@ -231,9 +231,15 @@ export default {
 
         // El store se actualiza con lo que se acaba de persistir, así el guard
         // no vuelve a desviar en la navegación que sigue.
+        //
+        // El newsletter va incluido: se acaba de mandar en el PATCH, y si el
+        // store no se entera, el perfil lo muestra desmarcado durante toda la
+        // sesión y al guardar cualquier otra preferencia manda newsletter
+        // false, revocando el consentimiento que el usuario acaba de dar.
         this.$store.dispatch('updateUser', {
           terms_accepted: true,
-          terms_version: TERMS_VERSION
+          terms_version: TERMS_VERSION,
+          newsletter: this.newsletterAccepted
         })
         this.$bvModal.hide('modal-terms-acceptance')
         this.$router.push({ 'path': this.pendingRedirect }).catch(err => {

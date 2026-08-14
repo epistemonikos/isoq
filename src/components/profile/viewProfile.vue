@@ -466,21 +466,6 @@ export default {
       }
       return false
     },
-    // TODO(human): llevar las preferencias del store a las casillas.
-    //
-    // Setea this.newsletter y this.improvement como booleanos a partir de
-    // this.$store.state.user, y guarda esos mismos valores en
-    // initialNewsletter / initialImprovement para poder detectar cambios.
-    //
-    // El backend devuelve estos campos con tipos mezclados: true, 'true',
-    // 'True', 1 y '1' son verdaderos; el resto es falso. Su propia
-    // normalización usa exactamente esa lista
-    // (isoq_server_py310, auth_server/controllers/core.py:470).
-    //
-    // Boolean(valor) no sirve: el string 'false' es truthy y pasaría como
-    // verdadero. Esa misma trampa ya está resuelta en src/constants/terms.js
-    // para terms_accepted, con la constante TRUTHY — que hoy es privada de
-    // ese módulo. Decidí si la duplicás acá o la compartís.
     // Lleva las preferencias del store a las casillas, normalizadas.
     //
     // El backend devuelve estos campos con tipos mezclados; qué cuenta como

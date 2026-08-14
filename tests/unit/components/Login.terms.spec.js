@@ -151,14 +151,27 @@ describe('Login.vue — aceptación de términos', () => {
 
     it('actualiza el store tras aceptar', async () => {
       const { wrapper, actions } = build()
-      wrapper.setData({ termsAccepted: true })
+      wrapper.setData({ termsAccepted: true, newsletterAccepted: false })
       await wrapper.vm.acceptTerms()
       await flushPromises()
 
       expect(actions.updateUser.mock.calls[0][1]).toEqual({
         terms_accepted: true,
-        terms_version: TERMS_VERSION
+        terms_version: TERMS_VERSION,
+        newsletter: false
       })
+    })
+
+    it('propaga al store el newsletter aceptado en el modal', async () => {
+      // Si el store no se entera, el perfil muestra la casilla desmarcada en
+      // la misma sesión y, al guardar cualquier otra preferencia, manda
+      // newsletter: false y revoca el consentimiento recién dado.
+      const { wrapper, actions } = build()
+      wrapper.setData({ termsAccepted: true, newsletterAccepted: true })
+      await wrapper.vm.acceptTerms()
+      await flushPromises()
+
+      expect(actions.updateUser.mock.calls[0][1].newsletter).toBe(true)
     })
 
     it('navega al destino recordado después de aceptar', async () => {
