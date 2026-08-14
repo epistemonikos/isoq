@@ -400,3 +400,40 @@ describe('Vuex store', () => {
     })
   })
 })
+
+describe('update_user (GDPR: aceptación de términos)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    localStorage.clear()
+    store.replaceState(emptyState())
+  })
+
+  it('mezcla los campos nuevos sin borrar los existentes', () => {
+    store.commit('auth_success', { id: 'u1', first_name: 'Ana', access_token: 'tok' })
+    store.commit('update_user', { terms_accepted: true, terms_version: 1 })
+
+    expect(store.state.user.first_name).toBe('Ana')
+    expect(store.state.user.terms_accepted).toBe(true)
+    expect(store.state.user.terms_version).toBe(1)
+  })
+
+  it('la acción updateUser delega en la mutación', async () => {
+    store.commit('auth_success', { id: 'u1', access_token: 'tok' })
+    await store.dispatch('updateUser', { newsletter: true })
+
+    expect(store.state.user.newsletter).toBe(true)
+    expect(store.state.user.id).toBe('u1')
+  })
+
+  it('no rompe cuando state.user está vacío', () => {
+    store.commit('update_user', { terms_accepted: true })
+    expect(store.state.user.terms_accepted).toBe(true)
+  })
+
+  it('no pisa el access_token que auth_success dejó puesto', () => {
+    store.commit('auth_success', { id: 'u1', access_token: 'tok' })
+    store.commit('update_user', { terms_accepted: true })
+
+    expect(store.state.user.access_token).toBe('tok')
+  })
+})

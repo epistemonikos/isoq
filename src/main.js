@@ -8,6 +8,7 @@ import * as Sentry from '@sentry/vue'
 
 import { store } from './store'
 import routes from './router/index'
+import { needsTermsAcceptance } from './constants/terms'
 import {
   AlertPlugin,
   BadgePlugin,
@@ -43,13 +44,13 @@ import {
 } from 'bootstrap-vue'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { i18n } from './plugins/i18n'
 import { Trans } from './plugins/Translation'
 import NotifyPlugin from './plugins/notify'
 
-library.add(faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle)
+library.add(faChevronUp, faChevronDown, faEdit, faCopy, faTrash, faPlusSquare, faGlobe, faLock, faLongArrowAltLeft, faTable, faFileUpload, faPlus, faHighlighter, faPrint, faEye, faEyeSlash, faFilter, faFileExport, faComment, faCommentSlash, faComments, faArrowsAlt, faCaretDown, faUsers, faUser, faExclamationCircle, faQuestionCircle, faLink, faSignOutAlt, faSyncAlt, faWifi, faExclamationTriangle, faSave, faGripVertical, faInfoCircle, faCheck, faSun, faMoon, faKey, faCheckCircle)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
@@ -148,6 +149,30 @@ router.beforeEach((to, from, next) => {
 
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
+        // Términos sin aceptar (GDPR): se cierra la sesión y se manda a Login.
+        // Va antes del chequeo de requiresAdmin a propósito — la obligación
+        // legal no depende del rol.
+        //
+        // La regla vive entera en ./constants/terms; acá sólo se decide qué
+        // hacer con la respuesta. El espejo de este guard está en
+        // tests/unit/router.guard.spec.js (runGuardWithTerms): mantenerlos
+        // sincronizados al tocar esto.
+        //
+        // El .finally() no es cosmético: si el logout falla (offline, 401) y
+        // next() colgara del .then(), la app se quedaría en la ruta anterior
+        // sin navegar ni avisar.
+        if (needsTermsAcceptance(store.state.user)) {
+          store.dispatch('logout')
+            .catch(() => {})
+            .finally(() => {
+              next({
+                name: 'Login',
+                query: { redirect: to.fullPath }
+              })
+            })
+          return
+        }
+
         if (to.matched.some(record => record.meta.requiresAdmin)) {
           const u = store.state.user
           if (!u.support && !u.superadmin) {

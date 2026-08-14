@@ -158,8 +158,7 @@
     "help": "Help",
     "whats_new": "What's new",
     "my_workspace": "My Workspace",
-    "change_password": "Change password",
-    "profile": "My Profile",
+    "profile": "Profile and preferences",
     "logout": "Logout",
     "isoq_title": "interactive Summary of Qualitative Findings",
     "isoq_short": "iSoF",
@@ -983,7 +982,8 @@
       "light": "Light",
       "dark": "Black",
       "system": "System"
-    }
+    },
+    "password_error": "We could not change your password. Please try again."
   },
   "updates": {
     "feb_2025": "February 2025",
@@ -1644,5 +1644,133 @@
     "action_update_user": "Data edit",
     "action_update_flags": "Permission change",
     "action_force_logout": "Forced logout"
+  },
+  "gdpr": {
+    "privacyAndTerms": {
+      "title": "Privacy and Terms",
+      "tabOverview": "Overview",
+      "tabTerms": "Terms and Conditions",
+      "tabPrivacy": "Privacy Policy",
+      "tabProperty": "Intellectual Property",
+      "faqTitle": "Frequently Asked Questions",
+      "faq": {
+        "q1": "What is iSoQ and who is it for?",
+        "a1": "iSoQ (Interactive Summary of Qualitative Findings) is a tool developed by the Epistemonikos Foundation to help researchers create and share structured summaries of qualitative research evidence using the GRADE-CERQual approach. It is designed for systematic review authors, guideline developers, and evidence synthesis teams.",
+        "q2": "How is my personal data used?",
+        "a2": "Your personal data is used solely to provide and improve the iSoQ service. We collect only the information necessary to create and manage your account, collaborate on projects, and communicate service-related updates. We do not sell or share your data with third parties for marketing purposes.",
+        "q3": "Who can see my projects and data?",
+        "a3": "Projects are private by default and visible only to workspace members you invite. You can choose to publish a project publicly, at which point a read-only preview becomes accessible to anyone. You have full control over the visibility of your work at all times.",
+        "q4": "Can I delete my account and data?",
+        "a4": "Yes. You may request deletion of your account and associated personal data at any time by contacting us. Upon verified request, we will remove your personal information from our active systems within a reasonable timeframe, subject to any legal retention obligations.",
+        "q5": "What cookies does iSoQ use?",
+        "a5": "iSoQ uses session cookies required for authentication and to keep you logged in during your visit. We do not use third-party advertising or tracking cookies. You can manage cookie preferences through your browser settings, though disabling session cookies will prevent you from logging in.",
+        "q6": "How do I report a concern or request support?",
+        "a6": "For privacy concerns, data requests, or technical support, please contact the Epistemonikos team through the official contact channels listed on the Epistemonikos Foundation website. We aim to respond to all inquiries within 5 business days."
+      },
+      "terms": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
+        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
+      },
+      "privacy": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam.",
+        "p3": "Sed molestie augue sit amet leo consequat posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis."
+      },
+      "property": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        "p2": "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, iaculis quis, ante. Phasellus semper porta diam."
+      }
+    },
+    "terms": {
+      "modalTitle": "Updated Terms and Conditions",
+      "intro": "We have updated our Terms and Conditions, Privacy Policy and Intellectual Property. You must accept them to continue using iSoQ.",
+      "reviewHere": "You can review them here.",
+      "acceptLabel": "I have read and accept the Terms and Conditions, Privacy Policy and Intellectual Property.",
+      "newsletterLabel": "I would like to receive emails with news and updates. (optional)",
+      "accept": "Accept",
+      "cancel": "Cancel",
+      "error": "We could not save your acceptance. Please try again.",
+      "downloadToggle": "Download my information",
+      "downloadPrompt": "Enter your password to download your data:",
+      "downloadButton": "Download my data",
+      "passwordPlaceholder": "Password",
+      "downloadError": "We could not download your data. Please try again.",
+      "declineNote": "If you prefer not to accept, you can download your data before leaving. Cancelling will sign you out."
+    },
+    "export": {
+      "description": "Export all of the personal data and profile information in a JSON file",
+      "button": "Export profile data",
+      "modalTitle": "Download my data",
+      "passwordPrompt": "Enter your password to confirm:",
+      "passwordPlaceholder": "Password",
+      "passwordRequired": "Password is required",
+      "genericError": "An error occurred while exporting your data.",
+      "confirm": "Download",
+      "cancel": "Cancel",
+      "label": "Download profile data:",
+      "noteIntro": "Note: You can download a copy of the profile data associated with your account.",
+      "note1": "The export will include the personal information you provided (e.g., name, email) and records of your activity in the platform. Export all of the personal data and your profile information in a JSON file",
+      "note2": "Data will be provided in a structured, commonly used, machine-readable format (JSON,CSV,XML).",
+      "note3": "Exporting your profile does not delete it from our systems. You can request deletion separately.",
+      "note4": "We may take up to 30 days to provide the full export, in line with our Privacy Policy.",
+      "noteFooter": "For full details, see our",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "contact": {
+      "sectionTitle": "Privacy contact request",
+      "subjectLabel": "Subject",
+      "subjectFeedback": "The subject must be at least 10 characters long.",
+      "messageLabel": "Message",
+      "messageFeedback": "The message must be at least 5 words long.",
+      "send": "Send",
+      "success": "Your message has been sent successfully.",
+      "error": "Failed to send message. Please try again.",
+      "dataNote": "Your data is processed according to our Privacy Policy. This is required to provide the service",
+      "messagePlaceholder": "Enter your message..."
+    },
+    "deleteAccount": {
+      "warning": "This action is permanent. All your personal data will be erased and cannot be recovered.",
+      "button": "Delete account",
+      "modalTitle": "Delete my account",
+      "transferIntro": "You own shared projects. Choose a new owner for each one before deleting your account.",
+      "readOnlyNote": "Collaborators marked with * currently have read-only access. If you choose one of them as the new owner, their access will be updated to view and edit the project.",
+      "selectPlaceholder": "Choose a new owner",
+      "passwordPrompt": "Enter your password to confirm:",
+      "passwordPlaceholder": "Password",
+      "passwordRequired": "Password is required",
+      "ownersRequired": "All shared projects must have a new owner assigned.",
+      "genericError": "An error occurred while deleting your account.",
+      "confirm": "Delete permanently",
+      "cancel": "Cancel",
+      "label": "Delete account:",
+      "description": "Permanently delete your account, all personal data and all the iSoQ projects you have created, including all the data you have created and entered into those projects.",
+      "noteIntro": "Important: Deleting your account is permanent and cannot be undone.",
+      "note1": "Your personal data will be deleted from our active systems.",
+      "note2": "All the projects you created in iSoQ and all the data created and entered into those projects will be deleted permanently.",
+      "note3": "If a project was created by you and shared with others, you will be asked to assign a new owner to the project(s) before deleting your account.",
+      "note4": "Some records may be retained as required by law (e.g. legal compliance, or security logs).",
+      "note5": "Data that has been anonymised or aggregated (not linked to you) may be kept for research or statistical purposes.",
+      "note6": "If you change your mind, you must create a new account. Deleted accounts cannot be restored.",
+      "noteFooter": "For full details, see our",
+      "and": "and",
+      "termsAndConditions": "Terms and conditions"
+    },
+    "preferences": {
+      "newsletter": "I agree to receive email communications about important service updates and news (optional)",
+      "improvement": "I agree to the use of my data in aggregated and anonymised form to help improve the service (optional)",
+      "success": "Your privacy settings have been updated.",
+      "error": "An error occurred while updating your preferences."
+    },
+    "profile": {
+      "intro": "Manage your information, download your data, configure your privacy settings, contact us, or delete your account."
+    },
+    "manageData": {
+      "title": "Manage profile data"
+    },
+    "signup": {
+      "privacyNote": "Your personal data is processed for the provision of the service according to our",
+      "termsNote": "By creating an account, you accept our"
+    }
   }
 }

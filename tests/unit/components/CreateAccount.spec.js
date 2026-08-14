@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils'
 import CreateAccount from '@/components/CreateAccount'
+import { TERMS_VERSION } from '@/constants/terms'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn(),
@@ -22,6 +23,55 @@ describe('CreateAccount.vue', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     process.env.ENABLE_REGISTRATION = 'true'
+  })
+
+  // ─── Consentimiento de términos (GDPR) ───────────────────────────────────────
+  //
+  // El backend los exige y son estrictos: terms_accepted debe ser boolean y
+  // terms_version un int entre 1 y CURRENT_TERMS_VERSION
+  // (isoq_server_py310, auth_server/controllers/router.py:202-215). Sin ellos
+  // el alta devuelve 400 y nadie puede registrarse.
+
+  it('envía la aceptación de términos al crear la cuenta', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user.terms_accepted).toBe(true)
+    expect(payload.user.terms_version).toBe(TERMS_VERSION)
+  })
+
+  it('manda terms_accepted como booleano, no como string', async () => {
+    // El backend usa isinstance(x, bool): 'true' devolvería 400.
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(typeof payload.user.terms_accepted).toBe('boolean')
+    expect(typeof payload.user.terms_version).toBe('number')
+  })
+
+  it('envía las dos preferencias de privacidad, desmarcadas por defecto', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user.newsletter).toBe(false)
+    expect(payload.user.improvement).toBe(false)
+  })
+
+  it('propaga las preferencias que el usuario marcó', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    wrapper.setData({ newsletter: true, improvement: true })
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user.newsletter).toBe(true)
+    expect(payload.user.improvement).toBe(true)
   })
 
   it('shows disabled message when registration is disabled', () => {
