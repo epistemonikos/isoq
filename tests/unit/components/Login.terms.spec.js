@@ -228,6 +228,77 @@ describe('Login.vue — aceptación de términos', () => {
     })
   })
 
+  // ─── Descargar los datos antes de decidir ────────────────────────────────────
+  //
+  // Quien rechaza los términos pierde la sesión, y el perfil —la otra puerta a
+  // la exportación— exige estar logueado y con los términos al día. Sin esto,
+  // "me voy pero me llevo mis datos" no tiene salida.
+
+  describe('descarga de datos desde el modal', () => {
+    it('arranca con la sección cerrada', () => {
+      const { wrapper } = build()
+      expect(wrapper.vm.showDownloadSection).toBe(false)
+    })
+
+    it('exige la contraseña antes de pedir nada', async () => {
+      const { wrapper } = build()
+      wrapper.setData({ downloadPassword: '' })
+      await wrapper.vm.downloadData()
+
+      expect(Api.post).not.toHaveBeenCalled()
+      expect(wrapper.vm.downloadError).toBeTruthy()
+    })
+
+    it('pide el zip con el usuario del store y la contraseña', async () => {
+      const { wrapper } = build()
+      wrapper.setData({ downloadPassword: 'secreta' })
+      await wrapper.vm.downloadData()
+      await flushPromises()
+
+      expect(Api.post).toHaveBeenCalledWith(
+        '/users/get_full_data',
+        { user_id: 'u1', password: 'secreta' },
+        { responseType: 'blob' }
+      )
+    })
+
+    it('muestra el mensaje del backend cuando la contraseña es incorrecta', async () => {
+      Api.post.mockRejectedValueOnce({
+        response: {
+          status: 403,
+          data: new Blob([JSON.stringify({ message: 'Incorrect password' })], { type: 'application/json' })
+        }
+      })
+      const { wrapper } = build()
+      wrapper.setData({ downloadPassword: 'mala' })
+      await wrapper.vm.downloadData()
+      await flushPromises()
+
+      expect(wrapper.vm.downloadError).toBe('Incorrect password')
+      expect(wrapper.vm.isDownloading).toBe(false)
+    })
+
+    it('no cierra el modal de términos al descargar', async () => {
+      // El usuario todavía tiene que aceptar o rechazar.
+      const { wrapper } = build()
+      wrapper.setData({ downloadPassword: 'secreta' })
+      await wrapper.vm.downloadData()
+      await flushPromises()
+
+      expect(wrapper.vm.$bvModal.hide).not.toHaveBeenCalled()
+    })
+
+    it('no descarga dos veces con doble clic', async () => {
+      const { wrapper } = build()
+      wrapper.setData({ downloadPassword: 'secreta' })
+
+      await Promise.all([wrapper.vm.downloadData(), wrapper.vm.downloadData()])
+      await flushPromises()
+
+      expect(Api.post).toHaveBeenCalledTimes(1)
+    })
+  })
+
   // ─── Rechazar ────────────────────────────────────────────────────────────────
 
   describe('declineTerms', () => {

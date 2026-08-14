@@ -1689,7 +1689,12 @@
       "newsletterLabel": "Quiero recibir correos con novedades y actualizaciones. (opcional)",
       "accept": "Aceptar",
       "cancel": "Cancelar",
-      "error": "No pudimos guardar tu aceptación. Inténtalo de nuevo."
+      "error": "No pudimos guardar tu aceptación. Inténtalo de nuevo.",
+      "downloadToggle": "Descargar mi información",
+      "downloadPrompt": "Ingresa tu contraseña para descargar tus datos:",
+      "downloadButton": "Descargar mis datos",
+      "passwordPlaceholder": "Contraseña",
+      "downloadError": "No pudimos descargar tus datos. Inténtalo de nuevo."
     },
     "export": {
       "description": "Exporta todos tus datos personales y la información de tu perfil en un archivo JSON",
@@ -1760,6 +1765,10 @@
     },
     "manageData": {
       "title": "Administrar los datos del perfil"
+    },
+    "signup": {
+      "privacyNote": "Tus datos personales se tratan para la prestación del servicio de acuerdo con nuestra",
+      "termsNote": "Al crear una cuenta, aceptas nuestros"
     }
   }
 }

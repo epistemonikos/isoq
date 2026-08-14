@@ -91,7 +91,35 @@
         {{ termsError }}
       </b-alert>
 
-      <div slot="modal-footer">
+      <!-- Quien rechaza los términos pierde la sesión, y el perfil exige
+           tenerlos aceptados: ésta es su única vía para llevarse sus datos. -->
+      <div v-if="showDownloadSection" class="mt-3 p-3 border rounded">
+        <p class="mb-2"><strong>{{ $t('gdpr.terms.downloadPrompt') }}</strong></p>
+        <b-form-group
+          :invalid-feedback="downloadError"
+          :state="downloadError ? false : null">
+          <b-form-input
+            type="password"
+            v-model="downloadPassword"
+            :placeholder="$t('gdpr.terms.passwordPlaceholder')"
+            :state="downloadError ? false : null"
+            @keyup.enter="downloadData"></b-form-input>
+        </b-form-group>
+        <b-button
+          variant="outline-secondary"
+          size="sm"
+          :disabled="isDownloading"
+          @click="downloadData">
+          <b-spinner v-if="isDownloading" small class="mr-1"></b-spinner>
+          {{ $t('gdpr.terms.downloadButton') }}
+        </b-button>
+      </div>
+
+      <div slot="modal-footer" class="d-flex justify-content-between align-items-center w-100">
+        <b-button variant="link" size="sm" @click="showDownloadSection = !showDownloadSection">
+          {{ $t('gdpr.terms.downloadToggle') }}
+        </b-button>
+        <div>
         <b-button variant="outline-secondary" @click="declineTerms">
           {{ $t('gdpr.terms.cancel') }}
         </b-button>
@@ -102,6 +130,7 @@
           <b-spinner small v-if="isAcceptingTerms" class="mr-1"></b-spinner>
           {{ $t('gdpr.terms.accept') }}
         </b-button>
+        </div>
       </div>
     </b-modal>
   </div>
@@ -110,6 +139,7 @@
 <script>
 import Api from '@/utils/Api'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
+import { downloadPersonalData } from '@/services/personalDataExport'
 
 export default {
   data () {
@@ -124,6 +154,10 @@ export default {
       newsletterAccepted: false,
       termsError: '',
       isAcceptingTerms: false,
+      showDownloadSection: false,
+      downloadPassword: '',
+      downloadError: '',
+      isDownloading: false,
       // Adónde iba el usuario antes de que el modal lo interrumpiera. Se
       // resuelve una sola vez en login(), donde ya se conoce su organización
       // personal, y se consume en acceptTerms().
@@ -249,6 +283,26 @@ export default {
         this.termsError = this.$t('gdpr.terms.error')
       } finally {
         this.isAcceptingTerms = false
+      }
+    },
+    // Misma exportación que ofrece el perfil, vía el servicio compartido: acá
+    // se llega con sesión pero con los términos pendientes, así que el perfil
+    // no es alcanzable (el guard desviaría).
+    async downloadData () {
+      this.downloadError = ''
+      if (!this.downloadPassword) {
+        this.downloadError = this.$t('gdpr.export.passwordRequired')
+        return
+      }
+      if (this.isDownloading) return
+
+      this.isDownloading = true
+      try {
+        await downloadPersonalData(this.$store.state.user.id, this.downloadPassword)
+      } catch (error) {
+        this.downloadError = error.backendMessage || this.$t('gdpr.terms.downloadError')
+      } finally {
+        this.isDownloading = false
       }
     },
     declineTerms () {

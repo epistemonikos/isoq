@@ -1689,7 +1689,12 @@
       "newsletterLabel": "I would like to receive emails with news and updates. (optional)",
       "accept": "Accept",
       "cancel": "Cancel",
-      "error": "We could not save your acceptance. Please try again."
+      "error": "We could not save your acceptance. Please try again.",
+      "downloadToggle": "Download my information",
+      "downloadPrompt": "Enter your password to download your data:",
+      "downloadButton": "Download my data",
+      "passwordPlaceholder": "Password",
+      "downloadError": "We could not download your data. Please try again."
     },
     "export": {
       "description": "Export all of the personal data and profile information in a JSON file",
@@ -1760,6 +1765,10 @@
     },
     "manageData": {
       "title": "Manage profile data"
+    },
+    "signup": {
+      "privacyNote": "Your personal data is processed for the provision of the service according to our",
+      "termsNote": "By creating an account, you accept our"
     }
   }
 }

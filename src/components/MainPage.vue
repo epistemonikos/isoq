@@ -41,6 +41,14 @@
           <p class="text-center credit">{{ $t('home.image_credit') }}</p>
         </b-col>
       </div>
+      <!-- Única vía de navegación al aviso legal: la ruta es pública, pero sin
+           esto sólo se llega escribiendo la URL o desde el modal de términos y
+           el perfil, ambos detrás del login. -->
+      <div class="text-center pb-4">
+        <router-link :to="{ name: 'PrivacyAndTerms' }" class="text-reset legal-link">
+          {{ $t('gdpr.privacyAndTerms.title') }}
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -83,5 +91,9 @@ export default {
     }
   .credit {
     font-size: 0.75rem;
+  }
+  .legal-link {
+    font-size: 0.85rem;
+    text-decoration: underline;
   }
 </style>

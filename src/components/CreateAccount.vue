@@ -85,6 +85,27 @@
               <b-card-text class="text-center text-forgot-create">
                 <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link> | <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link>
               </b-card-text>
+
+              <p class="small">
+                {{ $t('gdpr.signup.privacyNote') }}
+                <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }" target="_blank">
+                  {{ $t('gdpr.export.privacyPolicy') }}
+                </router-link>
+              </p>
+
+              <b-form-checkbox v-model="newsletter" class="mb-2">
+                {{ $t('gdpr.preferences.newsletter') }}
+              </b-form-checkbox>
+              <b-form-checkbox v-model="improvement" class="mb-3">
+                {{ $t('gdpr.preferences.improvement') }}
+              </b-form-checkbox>
+
+              <p class="small mb-0">
+                {{ $t('gdpr.signup.termsNote') }}
+                <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }" target="_blank">
+                  {{ $t('gdpr.deleteAccount.termsAndConditions') }}
+                </router-link>
+              </p>
               <div
                 slot="footer"
                 class="text-right">
@@ -107,6 +128,7 @@
 <script>
 import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
+import { TERMS_VERSION } from '@/constants/terms'
 
 export default {
   data () {
@@ -123,7 +145,9 @@ export default {
         username: '',
         password: '',
         password_2: ''
-      }
+      },
+      newsletter: false,
+      improvement: false
     }
   },
   computed: {
@@ -153,7 +177,19 @@ export default {
     createAccount () {
       this.ui.isProcessing = true
       this.errorMessage = ''
-      let params = { user: this.user }
+      // Crear la cuenta implica aceptar los términos, y el backend lo exige:
+      // terms_accepted tiene que ser un boolean estricto y terms_version un
+      // int entre 1 y CURRENT_TERMS_VERSION, o el alta devuelve 400
+      // (isoq_server_py310, auth_server/controllers/router.py:202-215).
+      let params = {
+        user: {
+          ...this.user,
+          terms_accepted: true,
+          terms_version: TERMS_VERSION,
+          newsletter: this.newsletter,
+          improvement: this.improvement
+        }
+      }
       if (Object.prototype.hasOwnProperty.call(this.$route.query, 'token')) {
         params.shared = {
           token: this.$route.query['token']
