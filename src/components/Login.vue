@@ -91,6 +91,12 @@
         {{ termsError }}
       </b-alert>
 
+      <!-- Sin este aviso la opción de descarga es invisible justo para quien
+           la necesita: el que va a cancelar no tiene motivo para explorar un
+           botón antes de irse, ni sabe que cancelar cierra la sesión y que
+           después ya no hay otra vía. El original tampoco lo explica. -->
+      <p class="small text-muted mt-3 mb-0">{{ $t('gdpr.terms.declineNote') }}</p>
+
       <!-- Quien rechaza los términos pierde la sesión, y el perfil exige
            tenerlos aceptados: ésta es su única vía para llevarse sus datos. -->
       <div v-if="showDownloadSection" class="mt-3 p-3 border rounded">

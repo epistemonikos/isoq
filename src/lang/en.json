@@ -1694,7 +1694,8 @@
       "downloadPrompt": "Enter your password to download your data:",
       "downloadButton": "Download my data",
       "passwordPlaceholder": "Password",
-      "downloadError": "We could not download your data. Please try again."
+      "downloadError": "We could not download your data. Please try again.",
+      "declineNote": "If you prefer not to accept, you can download your data before leaving. Cancelling will sign you out."
     },
     "export": {
       "description": "Export all of the personal data and profile information in a JSON file",

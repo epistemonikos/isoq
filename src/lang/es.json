@@ -1694,7 +1694,8 @@
       "downloadPrompt": "Ingresa tu contraseña para descargar tus datos:",
       "downloadButton": "Descargar mis datos",
       "passwordPlaceholder": "Contraseña",
-      "downloadError": "No pudimos descargar tus datos. Inténtalo de nuevo."
+      "downloadError": "No pudimos descargar tus datos. Inténtalo de nuevo.",
+      "declineNote": "Si prefieres no aceptar, puedes descargar tus datos antes de salir. Al cancelar se cerrará tu sesión."
     },
     "export": {
       "description": "Exporta todos tus datos personales y la información de tu perfil en un archivo JSON",

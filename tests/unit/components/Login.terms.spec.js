@@ -240,6 +240,14 @@ describe('Login.vue — aceptación de términos', () => {
       expect(wrapper.vm.showDownloadSection).toBe(false)
     })
 
+    it('avisa que se puede descargar antes de salir y que cancelar cierra la sesión', () => {
+      // La opción de descarga está siempre visible, pero quien va a cancelar
+      // no tiene motivo para explorarla si nadie le dice que existe ni que
+      // cancelar es irreversible.
+      const { wrapper } = build()
+      expect(wrapper.text()).toContain(en.gdpr.terms.declineNote)
+    })
+
     it('exige la contraseña antes de pedir nada', async () => {
       const { wrapper } = build()
       wrapper.setData({ downloadPassword: '' })

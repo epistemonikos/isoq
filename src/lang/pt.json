@@ -1694,7 +1694,8 @@
       "downloadPrompt": "Introduza a sua palavra-passe para descarregar os seus dados:",
       "downloadButton": "Descarregar os meus dados",
       "passwordPlaceholder": "Palavra-passe",
-      "downloadError": "Não foi possível descarregar os seus dados. Tente novamente."
+      "downloadError": "Não foi possível descarregar os seus dados. Tente novamente.",
+      "declineNote": "Se preferir não aceitar, pode descarregar os seus dados antes de sair. Ao cancelar, a sua sessão será terminada."
     },
     "export": {
       "description": "Exporte todos os seus dados pessoais e a informação do seu perfil num ficheiro JSON",
