@@ -239,6 +239,7 @@
     "plan_1000": "1000 USD por ano",
     "plan_contact": "Entre em contato",
     "create_error": "Ocorreu um erro ao criar sua conta. Por favor, tente novamente.",
+    "create_error_gdpr_mismatch": "A criação de contas está indisponível devido a um problema de configuração do servidor. Por favor, entre em contato com a equipe do iSoQ.",
     "login_error": "Ocorreu um erro ao fazer login. Por favor, tente novamente.",
     "registration_disabled": "O registro está atualmente desativado. Por favor, entre em contato com a equipe do iSoQ para mais informações.",
     "check_email_title": "Verifique seu e-mail",

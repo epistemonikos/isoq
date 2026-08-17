@@ -59,6 +59,15 @@ if (typeof window.crypto === 'undefined' || !window.crypto.getRandomValues) {
   })
 }
 
+// GDPR encendido por defecto en toda la suite.
+//
+// El default de PRODUCCIÓN es el opuesto (isGdprEnabled es fail-open: sin flag,
+// apagado). Acá se invierte a propósito: los specs que existían antes del flag
+// describen el comportamiento con GDPR activo, y sin esta línea todos verían la
+// funcionalidad apagada y fallarían por una razón que no tiene que ver con lo
+// que prueban. Los specs del caso apagado lo sobreescriben y lo restauran.
+process.env.ENABLE_GDPR = 'on'
+
 // Suppress Bootstrap Vue warnings
 Vue.config.silent = true
 
