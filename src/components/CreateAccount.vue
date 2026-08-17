@@ -184,20 +184,23 @@ export default {
       this.ui.isProcessing = true
       this.errorMessage = ''
       // Con GDPR encendido, crear la cuenta implica aceptar los términos, y el
-      // backend lo exige: terms_accepted tiene que ser un boolean estricto y
+      // backend lo exige: terms_accepted tiene que ser boolean Y true, y
       // terms_version un int entre 1 y CURRENT_TERMS_VERSION, o el alta
       // devuelve 400 (isoq_server_py310, auth_server/controllers/router.py).
       //
-      // Con el flag apagado se omiten los cuatro campos de consentimiento. Es
-      // deliberado: el template no mostró ninguna nota legal ni casilla, así
-      // que afirmar terms_accepted:true sería declarar una aceptación que nunca
-      // ocurrió, y mandar newsletter:false sería inventar una preferencia que
-      // el usuario no eligió. El backend reescribe esos dos campos con lo que
-      // llegue (core.py:470-471), así que mandar false NO equivale a omitirlos.
+      // Con el flag apagado se omiten los cuatro campos. Para terms_accepted y
+      // terms_version el efecto es real: el backend no los inventa, y la cuenta
+      // queda sin registro de aceptación — que es lo correcto, porque el
+      // template no mostró ninguna nota legal ni casilla.
       //
-      // Precio conocido: hasta que el backend lea su propio ENABLE_GDPR, esto
-      // devuelve 400. El .catch() de abajo lo traduce a un mensaje que dice qué
-      // pasa, para que no se persiga como un bug del frontend.
+      // Para newsletter e improvement el efecto NO es el mismo, y conviene no
+      // engañarse: create_user los coerce a False cuando faltan
+      // (router.py:181-185), así que omitirlos equivale a mandar false. El alta
+      // no puede evitar fijar esas dos preferencias. Se omiten igual por
+      // coherencia del payload, no porque cambie lo que se guarda.
+      // (El caso donde omitir SÍ preserva el valor previo es
+      // POST /users/update_info, otro endpoint, corregido por backend en
+      // 2026-08-17 — ver docs/backend-enable-gdpr-response.md §5.5.)
       let params = {
         user: {
           ...this.user
@@ -225,20 +228,23 @@ export default {
           const data = (error.response && error.response.data) || {}
 
           // El 400 por términos ausentes es el único fallo que este componente
-          // puede predecir: pasa siempre que ENABLE_GDPR esté apagado acá y
-          // encendido (o ausente) en el backend. Sin este caso el usuario ve
-          // 'invalid_terms_version' sin message, cae en el error genérico y
-          // nadie relaciona el síntoma con el flag.
+          // puede predecir: pasa cuando ENABLE_GDPR está apagado acá y encendido
+          // en el backend. Sin este caso el usuario ve 'invalid_terms_version'
+          // sin message, cae en el error genérico y nadie relaciona el síntoma
+          // con el flag.
           //
-          // Se chequea la respuesta del backend, no sólo el flag local: si el
-          // backend ya acompañó, el alta funciona y esta rama no se toca.
+          // El backend ya lee su propio ENABLE_GDPR (desde 2026-08-17), así que
+          // esta rama dejó de ser el camino esperado y pasó a ser lo que siempre
+          // debió: el diagnóstico de dos capas desalineadas en un despliegue.
+          // Por eso se conserva — se chequea la respuesta del servidor, no sólo
+          // el flag local, y si ambos coinciden nunca se entra acá.
           if (!this.gdprEnabled &&
               (data.result === 'invalid_terms_version' || data.result === 'invalid_payload')) {
             console.error(
               '[CreateAccount] El backend rechazó el alta por los campos de términos. ' +
-              'ENABLE_GDPR está apagado en el frontend pero el backend sigue exigiéndolos ' +
-              '(auth_server/controllers/router.py). Encender ENABLE_GDPR en el backend, ' +
-              'o apagar ENABLE_REGISTRATION para ocultar el registro.',
+              'ENABLE_GDPR está apagado en el frontend y encendido en el backend: ' +
+              'los dos tienen que coincidir. Revisar ENABLE_GDPR en el .env del servidor ' +
+              '(auth_server/config.py) y en config/*.env de este proyecto.',
               data
             )
             this.errorMessage = this.$t('account.create_error_gdpr_mismatch')
