@@ -10,6 +10,7 @@ jest.mock('@/utils/Api', () => ({
 // The guard pattern: dispatch getLogginInfo → await state.promise → call next().
 import { store } from '@/store'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
+import { isGdprEnabled } from '@/constants/gdpr'
 
 const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
 
@@ -42,9 +43,9 @@ function runGuard (to, storeInstance = store) {
 // Espejo del guard de main.js con la comprobación de términos (GDPR).
 // Mantener sincronizado al tocar main.js.
 //
-// Ojo: la REGLA no se copia, se importa desde @/constants/terms. Lo único
-// que se replica acá es el cableado del guard: el orden de los chequeos,
-// el logout y la forma del next.
+// Ojo: ni la REGLA ni el FLAG se copian — se importan de @/constants/terms y
+// @/constants/gdpr. Lo único que se replica acá es el cableado del guard: el
+// orden de los chequeos, el logout y la forma del next.
 function runGuardWithTerms (to, storeInstance = store) {
   return new Promise((resolve) => {
     const next = jest.fn(arg => resolve(arg))
@@ -53,7 +54,7 @@ function runGuardWithTerms (to, storeInstance = store) {
     }).then(() => {
       if (to.matched.some(record => record.meta.requiresAuth)) {
         if (storeInstance.getters.isLoggedIn) {
-          if (needsTermsAcceptance(storeInstance.state.user)) {
+          if (isGdprEnabled() && needsTermsAcceptance(storeInstance.state.user)) {
             storeInstance.dispatch('logout')
               .catch(() => {})
               .finally(() => next({ name: 'Login', query: { redirect: to.fullPath } }))
@@ -261,5 +262,69 @@ describe('guard de términos y condiciones', () => {
   it('sigue mandando al no-admin a Organizations cuando sí aceptó', async () => {
     store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION })
     expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'Organizations' })
+  })
+})
+
+describe('guard de términos con ENABLE_GDPR apagado', () => {
+  const adminRoute = {
+    fullPath: '/workspace/1',
+    matched: [{ meta: { requiresAuth: true, requiresAdmin: true } }]
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    localStorage.clear()
+    store.replaceState({ status: '', token: null, user: {}, isOnline: true, promise: null })
+    process.env.ENABLE_GDPR = 'off'
+  })
+
+  afterEach(() => {
+    // setup.js lo deja en 'on' para el resto de la suite.
+    process.env.ENABLE_GDPR = 'on'
+  })
+
+  it('deja pasar al usuario que nunca aceptó', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    expect(await runGuardWithTerms(privateRoute)).toBeUndefined()
+  })
+
+  it('deja pasar al usuario con una versión anterior aceptada', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION - 1 })
+    expect(await runGuardWithTerms(privateRoute)).toBeUndefined()
+  })
+
+  it('deja pasar al usuario sin ningún campo de términos', async () => {
+    // El caso fail-closed más fuerte de needsTermsAcceptance. Con el flag
+    // apagado ni se llega a evaluar: el && corta antes.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok' })
+    expect(await runGuardWithTerms(privateRoute)).toBeUndefined()
+  })
+
+  it('NO cierra la sesión', async () => {
+    // El logout es la parte destructiva del gate. Si el flag apagado no lo
+    // desactivara, el usuario quedaría deslogueado sin ver nunca un modal
+    // que explique por qué: la peor combinación posible.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    await runGuardWithTerms(privateRoute)
+    expect(store.getters.isLoggedIn).toBe(true)
+  })
+
+  it('el chequeo de admin sigue funcionando', async () => {
+    // Apagar GDPR no debe abrir rutas de administración: son controles
+    // independientes y el flag sólo saltea el primero.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
+    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'Organizations' })
+  })
+
+  it('sigue desviando a Login al usuario sin sesión', async () => {
+    expect(await runGuardWithTerms(privateRoute)).toEqual({ name: 'Login', query: { redirect: '/workspace/1' } })
+  })
+
+  it('needsTermsAcceptance sigue siendo fail-closed por su cuenta', async () => {
+    // La regla no se contamina con el flag: la función sigue diciendo "sí,
+    // hay que pedir" aunque el guard decida no actuar. Esto es lo que
+    // permite que terms.spec.js no haya cambiado ni una línea.
+    expect(isGdprEnabled()).toBe(false)
+    expect(needsTermsAcceptance({ terms_accepted: false })).toBe(true)
   })
 })

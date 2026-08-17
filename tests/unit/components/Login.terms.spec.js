@@ -389,3 +389,46 @@ describe('Login.vue — aceptación de términos', () => {
     })
   })
 })
+
+describe('Login.vue — con ENABLE_GDPR apagado', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_GDPR = 'off'
+  })
+
+  afterEach(() => {
+    process.env.ENABLE_GDPR = 'on'
+  })
+
+  it('navega sin abrir el modal aunque el usuario no haya aceptado', async () => {
+    const { wrapper } = build({ user: NOT_ACCEPTED })
+    wrapper.vm.login()
+    await flushPromises()
+
+    expect(wrapper.vm.$bvModal.show).not.toHaveBeenCalled()
+    expect(wrapper.vm.$router.push).toHaveBeenCalledWith({ path: '/workspace/org1' })
+  })
+
+  it('respeta el redirect del query igual que en el camino normal', async () => {
+    const { wrapper } = build({ user: NOT_ACCEPTED, query: { redirect: '/workspace/org1/isoqf/42' } })
+    wrapper.vm.login()
+    await flushPromises()
+
+    expect(wrapper.vm.$router.push).toHaveBeenCalledWith({ path: '/workspace/org1/isoqf/42' })
+  })
+
+  it('no renderiza el modal de términos', () => {
+    // El modal contiene un link a PrivacyAndTerms, que con el flag apagado
+    // redirige a la home: no dejarlo en el DOM evita un camino muerto.
+    const { wrapper } = build({ user: NOT_ACCEPTED })
+    expect(wrapper.find('#modal-terms-acceptance').exists()).toBe(false)
+  })
+
+  it('sí renderiza el modal con el flag encendido', () => {
+    // Contraparte del caso anterior: sin esto, el test de arriba pasaría
+    // igual si el selector estuviera mal escrito.
+    process.env.ENABLE_GDPR = 'on'
+    const { wrapper } = build({ user: NOT_ACCEPTED })
+    expect(wrapper.find('#modal-terms-acceptance').exists()).toBe(true)
+  })
+})

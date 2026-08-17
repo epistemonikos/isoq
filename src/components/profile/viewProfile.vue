@@ -6,7 +6,7 @@
       </b-container>
     </b-container>
     <b-container class="pt-5 pb-5">
-      <p>{{ $t('gdpr.profile.intro') }}</p>
+      <p v-if="gdprEnabled">{{ $t('gdpr.profile.intro') }}</p>
       <b-alert :variant="msgVariant" :show="showAlert()" dismissible>{{msg}}</b-alert>
 
       <b-card no-body class="p-3">
@@ -78,7 +78,12 @@
           </b-tr>
         </b-tbody>
       </b-table-simple>
-      <ul class="list-unstyled">
+      <!-- Casillas de consentimiento. Al ocultarlas no hace falta neutralizar
+           savePreferences(): initCheckboxes() copia los valores del store a
+           initialNewsletter/initialImprovement, así que preferencesChanged
+           queda en false y update() no manda el POST. Fijado por un test en
+           viewProfile.preferences.spec.js, porque la cadena es indirecta. -->
+      <ul v-if="gdprEnabled" class="list-unstyled">
         <li>
           <b-form-checkbox v-model="newsletter">
             {{ $t('gdpr.preferences.newsletter') }}
@@ -99,7 +104,7 @@
       </div>
       </b-card>
 
-      <b-card no-body class="mt-3 p-3">
+      <b-card v-if="gdprEnabled" no-body class="mt-3 p-3">
         <h3>{{ $t('gdpr.manageData.title') }}</h3>
 
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -169,7 +174,7 @@
         </b-alert>
       </b-card>
 
-      <b-card no-body class="mt-3 p-3">
+      <b-card v-if="gdprEnabled" no-body class="mt-3 p-3">
         <h3>{{ $t('gdpr.contact.sectionTitle') }}</h3>
         <p class="m-0">{{ $t('gdpr.contact.dataNote') }}</p>
 
@@ -303,6 +308,7 @@
 import Api from '@/utils/Api'
 import { Trans } from '@/plugins/Translation'
 import { isBackendTrue } from '@/constants/backendBoolean'
+import { isGdprEnabled } from '@/constants/gdpr'
 import { downloadPersonalData } from '@/services/personalDataExport'
 
 export default {
@@ -343,6 +349,9 @@ export default {
     this.initCheckboxes()
   },
   computed: {
+    gdprEnabled () {
+      return isGdprEnabled()
+    },
     username: function () {
       return this.$store.state.user.name
     },

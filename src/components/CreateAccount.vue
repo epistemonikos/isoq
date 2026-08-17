@@ -86,26 +86,28 @@
                 <router-link :to="{name: 'Login'}">{{ $t('common.login') }}</router-link> | <router-link :to="{name: 'ForgotPassword'}">{{ $t('auth.forgot_password') }}</router-link>
               </b-card-text>
 
-              <p class="small">
-                {{ $t('gdpr.signup.privacyNote') }}
-                <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }" target="_blank">
-                  {{ $t('gdpr.export.privacyPolicy') }}
-                </router-link>
-              </p>
+              <template v-if="gdprEnabled">
+                <p class="small">
+                  {{ $t('gdpr.signup.privacyNote') }}
+                  <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'privacy' } }" target="_blank">
+                    {{ $t('gdpr.export.privacyPolicy') }}
+                  </router-link>
+                </p>
 
-              <b-form-checkbox v-model="newsletter" class="mb-2">
-                {{ $t('gdpr.preferences.newsletter') }}
-              </b-form-checkbox>
-              <b-form-checkbox v-model="improvement" class="mb-3">
-                {{ $t('gdpr.preferences.improvement') }}
-              </b-form-checkbox>
+                <b-form-checkbox v-model="newsletter" class="mb-2">
+                  {{ $t('gdpr.preferences.newsletter') }}
+                </b-form-checkbox>
+                <b-form-checkbox v-model="improvement" class="mb-3">
+                  {{ $t('gdpr.preferences.improvement') }}
+                </b-form-checkbox>
 
-              <p class="small mb-0">
-                {{ $t('gdpr.signup.termsNote') }}
-                <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }" target="_blank">
-                  {{ $t('gdpr.deleteAccount.termsAndConditions') }}
-                </router-link>
-              </p>
+                <p class="small mb-0">
+                  {{ $t('gdpr.signup.termsNote') }}
+                  <router-link :to="{ name: 'PrivacyAndTerms', query: { tab: 'terms' } }" target="_blank">
+                    {{ $t('gdpr.deleteAccount.termsAndConditions') }}
+                  </router-link>
+                </p>
+              </template>
               <div
                 slot="footer"
                 class="text-right">
@@ -129,6 +131,7 @@
 import Api from '@/utils/Api'
 import _debounce from 'lodash.debounce'
 import { TERMS_VERSION } from '@/constants/terms'
+import { isGdprEnabled } from '@/constants/gdpr'
 
 export default {
   data () {
@@ -153,6 +156,9 @@ export default {
   computed: {
     registrationEnabled () {
       return process.env.ENABLE_REGISTRATION === 'true'
+    },
+    gdprEnabled () {
+      return isGdprEnabled()
     }
   },
   watch: {
@@ -177,18 +183,33 @@ export default {
     createAccount () {
       this.ui.isProcessing = true
       this.errorMessage = ''
-      // Crear la cuenta implica aceptar los términos, y el backend lo exige:
-      // terms_accepted tiene que ser un boolean estricto y terms_version un
-      // int entre 1 y CURRENT_TERMS_VERSION, o el alta devuelve 400
-      // (isoq_server_py310, auth_server/controllers/router.py:202-215).
+      // Con GDPR encendido, crear la cuenta implica aceptar los términos, y el
+      // backend lo exige: terms_accepted tiene que ser un boolean estricto y
+      // terms_version un int entre 1 y CURRENT_TERMS_VERSION, o el alta
+      // devuelve 400 (isoq_server_py310, auth_server/controllers/router.py).
+      //
+      // Con el flag apagado se omiten los cuatro campos de consentimiento. Es
+      // deliberado: el template no mostró ninguna nota legal ni casilla, así
+      // que afirmar terms_accepted:true sería declarar una aceptación que nunca
+      // ocurrió, y mandar newsletter:false sería inventar una preferencia que
+      // el usuario no eligió. El backend reescribe esos dos campos con lo que
+      // llegue (core.py:470-471), así que mandar false NO equivale a omitirlos.
+      //
+      // Precio conocido: hasta que el backend lea su propio ENABLE_GDPR, esto
+      // devuelve 400. El .catch() de abajo lo traduce a un mensaje que dice qué
+      // pasa, para que no se persiga como un bug del frontend.
       let params = {
         user: {
-          ...this.user,
+          ...this.user
+        }
+      }
+      if (this.gdprEnabled) {
+        Object.assign(params.user, {
           terms_accepted: true,
           terms_version: TERMS_VERSION,
           newsletter: this.newsletter,
           improvement: this.improvement
-        }
+        })
       }
       if (Object.prototype.hasOwnProperty.call(this.$route.query, 'token')) {
         params.shared = {
@@ -201,8 +222,31 @@ export default {
         })
         .catch((error) => {
           this.ui.isProcessing = false
-          if (error.response && error.response.data && error.response.data.message) {
-            this.errorMessage = error.response.data.message
+          const data = (error.response && error.response.data) || {}
+
+          // El 400 por términos ausentes es el único fallo que este componente
+          // puede predecir: pasa siempre que ENABLE_GDPR esté apagado acá y
+          // encendido (o ausente) en el backend. Sin este caso el usuario ve
+          // 'invalid_terms_version' sin message, cae en el error genérico y
+          // nadie relaciona el síntoma con el flag.
+          //
+          // Se chequea la respuesta del backend, no sólo el flag local: si el
+          // backend ya acompañó, el alta funciona y esta rama no se toca.
+          if (!this.gdprEnabled &&
+              (data.result === 'invalid_terms_version' || data.result === 'invalid_payload')) {
+            console.error(
+              '[CreateAccount] El backend rechazó el alta por los campos de términos. ' +
+              'ENABLE_GDPR está apagado en el frontend pero el backend sigue exigiéndolos ' +
+              '(auth_server/controllers/router.py). Encender ENABLE_GDPR en el backend, ' +
+              'o apagar ENABLE_REGISTRATION para ocultar el registro.',
+              data
+            )
+            this.errorMessage = this.$t('account.create_error_gdpr_mismatch')
+            return
+          }
+
+          if (data.message) {
+            this.errorMessage = data.message
           } else {
             this.errorMessage = this.$t('account.create_error')
           }

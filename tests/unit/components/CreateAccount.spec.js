@@ -155,3 +155,138 @@ describe('CreateAccount.vue', () => {
     expect(wrapper.vm.ui.password_validation).toBe(true)
   })
 })
+
+describe('CreateAccount.vue — con ENABLE_GDPR apagado', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+    process.env.ENABLE_GDPR = 'off'
+  })
+
+  afterEach(() => {
+    process.env.ENABLE_GDPR = 'on'
+  })
+
+  // ─── Qué NO se afirma ────────────────────────────────────────────────────────
+  //
+  // Con el flag apagado el template no muestra notas legales ni casillas, así
+  // que el payload no puede declarar una aceptación que nunca se pidió.
+  // Omitir es distinto de mandar false: el backend reescribe newsletter e
+  // improvement con lo que llegue (core.py:470-471).
+
+  it('no manda los campos de términos', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user).not.toHaveProperty('terms_accepted')
+    expect(payload.user).not.toHaveProperty('terms_version')
+  })
+
+  it('no manda los consentimientos, ni siquiera en false', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user).not.toHaveProperty('newsletter')
+    expect(payload.user).not.toHaveProperty('improvement')
+  })
+
+  it('sigue mandando los datos del usuario', async () => {
+    // El flag saca el consentimiento, no el alta: sin esto el test de arriba
+    // pasaría igual con un payload vacío.
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.user.username = 'ana@example.com'
+    await wrapper.vm.createAccount()
+
+    const payload = Api.post.mock.calls[0][1]
+    expect(payload.user.username).toBe('ana@example.com')
+  })
+
+  it('sigue incluyendo el token compartido del query', async () => {
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount({ token: 'TOKEN-ID-123' })
+    await wrapper.vm.createAccount()
+
+    expect(Api.post.mock.calls[0][1].shared).toEqual({ token: 'TOKEN-ID-123' })
+  })
+
+  it('no muestra las notas legales ni las casillas de consentimiento', () => {
+    const wrapper = mountCreateAccount()
+    const texto = wrapper.text()
+
+    expect(texto).not.toContain('gdpr.signup.privacyNote')
+    expect(texto).not.toContain('gdpr.signup.termsNote')
+    expect(texto).not.toContain('gdpr.preferences.newsletter')
+  })
+
+  // ─── El 400 predecible ───────────────────────────────────────────────────────
+  //
+  // Pasa siempre que el flag esté apagado acá y el backend siga exigiendo los
+  // campos. Sin un mensaje propio, invalid_terms_version (que viene SIN message)
+  // caía en el error genérico y el síntoma no se relacionaba con el flag.
+
+  it('explica el desajuste de configuración ante invalid_terms_version', async () => {
+    Api.post.mockRejectedValue({ response: { data: { result: 'invalid_terms_version' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(wrapper.vm.errorMessage).toBe('account.create_error_gdpr_mismatch')
+  })
+
+  it('explica el desajuste también ante invalid_payload', async () => {
+    Api.post.mockRejectedValue({
+      response: { data: { result: 'invalid_payload', message: 'terms_accepted must be a boolean' } }
+    })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+
+    // El message del backend es técnico y en inglés: no se le muestra al
+    // usuario final aunque venga en la respuesta.
+    expect(wrapper.vm.errorMessage).toBe('account.create_error_gdpr_mismatch')
+  })
+
+  it('no se apropia de otros errores del backend', async () => {
+    Api.post.mockRejectedValue({ response: { data: { message: 'Email already in use' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(wrapper.vm.errorMessage).toBe('Email already in use')
+  })
+
+  it('libera el botón tras el 400 de configuración', async () => {
+    Api.post.mockRejectedValue({ response: { data: { result: 'invalid_terms_version' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(wrapper.vm.ui.isProcessing).toBe(false)
+  })
+})
+
+describe('CreateAccount.vue — invalid_terms_version con GDPR encendido', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env.ENABLE_REGISTRATION = 'true'
+    process.env.ENABLE_GDPR = 'on'
+  })
+
+  it('no atribuye el fallo a la configuración', async () => {
+    // Con el flag encendido sí mandamos los campos, así que un
+    // invalid_terms_version significa otra cosa (por ejemplo TERMS_VERSION
+    // desalineada con CURRENT_TERMS_VERSION del backend). Culpar al flag
+    // mandaría a quien diagnostique en la dirección equivocada.
+    Api.post.mockRejectedValue({ response: { data: { result: 'invalid_terms_version' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(wrapper.vm.errorMessage).toBe('account.create_error')
+  })
+})

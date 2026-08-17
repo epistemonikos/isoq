@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/vue'
 import { store } from './store'
 import routes from './router/index'
 import { needsTermsAcceptance } from './constants/terms'
+import { isGdprEnabled } from './constants/gdpr'
 import {
   AlertPlugin,
   BadgePlugin,
@@ -139,14 +140,26 @@ router.onError((error) => {
   }
 })
 
+// El título va en afterEach, no en beforeEach.
+//
+// afterEach sólo corre cuando una navegación se CONFIRMA. En beforeEach el
+// título se ponía antes de que corrieran los beforeEnter de ruta, así que un
+// guard que redirigiera dejaba el título de la ruta abortada: navegar a
+// /privacy-and-terms con ENABLE_GDPR apagado mostraba la home con la pestaña
+// diciendo "Privacy and Terms". Medido en el navegador, no supuesto.
+//
+// Vale para cualquier redirect desde un guard, no sólo el de GDPR: los desvíos
+// a Login por sesión o por términos también dejaban el título equivocado.
+router.afterEach((to) => {
+  const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
+  if (nearestWithTitle) document.title = nearestWithTitle.meta.title
+})
+
 // Asegurarse que el router esté listo antes de crear la instancia de Vue
 router.beforeEach((to, from, next) => {
   store.dispatch('getLogginInfo').then(() => {
     return store.state.promise || Promise.resolve()
   }).then(() => {
-    const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title)
-    if (nearestWithTitle) document.title = nearestWithTitle.meta.title
-
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (store.getters.isLoggedIn) {
         // Términos sin aceptar (GDPR): se cierra la sesión y se manda a Login.
@@ -158,10 +171,15 @@ router.beforeEach((to, from, next) => {
         // tests/unit/router.guard.spec.js (runGuardWithTerms): mantenerlos
         // sincronizados al tocar esto.
         //
+        // Las dos condiciones responden preguntas distintas y por eso van
+        // separadas: isGdprEnabled() es configuración de despliegue (¿aplica
+        // GDPR en esta instalación?) y needsTermsAcceptance() es la regla de
+        // negocio sobre este usuario. Con el flag apagado nadie es desviado.
+        //
         // El .finally() no es cosmético: si el logout falla (offline, 401) y
         // next() colgara del .then(), la app se quedaría en la ruta anterior
         // sin navegar ni avisar.
-        if (needsTermsAcceptance(store.state.user)) {
+        if (isGdprEnabled() && needsTermsAcceptance(store.state.user)) {
           store.dispatch('logout')
             .catch(() => {})
             .finally(() => {

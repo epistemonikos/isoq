@@ -67,7 +67,11 @@
       </b-row>
     </b-container>
 
+    <!-- El v-if no es redundante con el chequeo de login(): el modal contiene un
+         link a PrivacyAndTerms, que con el flag apagado redirige a la home. No
+         renderizarlo evita que quede colgando un camino a una ruta desactivada. -->
     <b-modal
+      v-if="gdprEnabled"
       id="modal-terms-acceptance"
       :title="$t('gdpr.terms.modalTitle')"
       no-close-on-backdrop
@@ -145,6 +149,7 @@
 <script>
 import Api from '@/utils/Api'
 import { TERMS_VERSION, needsTermsAcceptance } from '@/constants/terms'
+import { isGdprEnabled } from '@/constants/gdpr'
 import { downloadPersonalData } from '@/services/personalDataExport'
 import { isBackendTrue } from '@/constants/backendBoolean'
 
@@ -185,6 +190,9 @@ export default {
   computed: {
     registrationEnabled () {
       return process.env.ENABLE_REGISTRATION === 'true'
+    },
+    gdprEnabled () {
+      return isGdprEnabled()
     }
   },
   methods: {
@@ -219,7 +227,10 @@ export default {
           // Además tiene que coincidir con el guard de main.js, que lee
           // store.state.user: si discrepan, el usuario navega y el guard lo
           // desloguea en el acto, sin haber visto nunca el modal.
-          if (needsTermsAcceptance(this.$store.state.user)) {
+          // El gate combina las dos condiciones en el mismo orden que el guard
+          // de main.js. Si acá se chequeara sólo needsTermsAcceptance, con el
+          // flag apagado se abriría un modal que además no está renderizado.
+          if (this.gdprEnabled && needsTermsAcceptance(this.$store.state.user)) {
             this.pendingRedirect = redirectPath
             // La casilla arranca con lo que el usuario ya había elegido: el
             // PATCH manda este valor, así que dejarla siempre desmarcada
