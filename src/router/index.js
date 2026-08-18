@@ -7,7 +7,6 @@ const Login = () => import(/* webpackChunkName: "login" */ '@/components/Login')
 const ForgotPassword = () => import(/* webpackChunkName: "forgotpassword" */ '@/components/ForgotPassword')
 const CreateAccount = () => import(/* webpackChunkName: "createaccount" */ '@/components/CreateAccount')
 const Profile = () => import(/* webpackChunkName: "profile" */ '@/components/profile/viewProfile')
-const Organizations = () => import(/* webpackChunkName: "organizations" */ '@/components/Organizations')
 const ViewOrganization = () => import(/* webpackChunkName: "vieworganization" */ '@/components/organization/viewOrganization')
 const EditList = () => import(/* webpackChunkName: "editlist" */ '@/components/list/editList')
 const ViewProject = () => import(/* webpackChunkName: "viewproject" */ '@/components/project/viewProject')
@@ -126,15 +125,6 @@ var routes = [
     component: ViewOrganization,
     meta: {
       title: 'Workspace - Interactive Summary of Qualitative Findings',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/workspaces',
-    name: 'Organizations',
-    component: Organizations,
-    meta: {
-      title: 'Workspaces - Interactive Summary of Qualitative Findings',
       requiresAuth: true
     }
   },

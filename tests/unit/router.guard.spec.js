@@ -63,7 +63,9 @@ function runGuardWithTerms (to, storeInstance = store) {
           if (to.matched.some(record => record.meta.requiresAdmin)) {
             const u = storeInstance.state.user
             if (!u.support && !u.superadmin) {
-              next({ name: 'Organizations' })
+              next(u.personal_organization
+                ? { name: 'viewOrganization', params: { id: u.personal_organization } }
+                : { name: 'MainPage' })
               return
             }
           }
@@ -253,15 +255,15 @@ describe('guard de términos y condiciones', () => {
   })
 
   it('los términos mandan sobre el chequeo de admin', async () => {
-    // Un superadmin sin términos aceptados va a Login, no a Organizations:
+    // Un superadmin sin términos aceptados va a Login, no a su espacio:
     // la obligación legal no depende del rol.
     store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', superadmin: true, terms_accepted: false })
     expect(await runGuardWithTerms(adminRoute)).toEqual(toLogin)
   })
 
-  it('sigue mandando al no-admin a Organizations cuando sí aceptó', async () => {
-    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: true, terms_version: TERMS_VERSION })
-    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'Organizations' })
+  it('rebota al no-admin a su espacio de trabajo cuando sí aceptó', async () => {
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', personal_organization: 'org-1', terms_accepted: true, terms_version: TERMS_VERSION })
+    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'viewOrganization', params: { id: 'org-1' } })
   })
 })
 
@@ -312,8 +314,16 @@ describe('guard de términos con ENABLE_GDPR apagado', () => {
   it('el chequeo de admin sigue funcionando', async () => {
     // Apagar GDPR no debe abrir rutas de administración: son controles
     // independientes y el flag sólo saltea el primero.
+    store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', personal_organization: 'org-1', terms_accepted: false })
+    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'viewOrganization', params: { id: 'org-1' } })
+  })
+
+  // Sin espacio personal no hay destino de rebote posible: mandarlo a
+  // /workspace/undefined pediría los proyectos de una organización inexistente
+  // y mostraría una lista vacía sin explicación.
+  it('manda a la home al no-admin que no tiene espacio personal', async () => {
     store.commit('auth_success', { id: 'u1', status: 'active', access_token: 'tok', terms_accepted: false })
-    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'Organizations' })
+    expect(await runGuardWithTerms(adminRoute)).toEqual({ name: 'MainPage' })
   })
 
   it('sigue desviando a Login al usuario sin sesión', async () => {

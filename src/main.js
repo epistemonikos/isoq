@@ -194,7 +194,16 @@ router.beforeEach((to, from, next) => {
         if (to.matched.some(record => record.meta.requiresAdmin)) {
           const u = store.state.user
           if (!u.support && !u.superadmin) {
-            next({ name: 'Organizations' })
+            // Rebote del no-admin a su propio espacio de trabajo. Antes iba a
+            // la ruta 'Organizations' (/workspaces), que era un listado de
+            // ORGANIZACIONES sin uso y se eliminó: mantener ese next dejaría
+            // un nombre de ruta inexistente y la navegación abortaría sin aviso.
+            //
+            // Sin espacio personal no hay destino posible — /workspace/undefined
+            // pediría los proyectos de una organización que no existe.
+            next(u.personal_organization
+              ? { name: 'viewOrganization', params: { id: u.personal_organization } }
+              : { name: 'MainPage' })
             return
           }
         }
