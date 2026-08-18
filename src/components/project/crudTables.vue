@@ -276,6 +276,7 @@ import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'crudTables',
@@ -313,7 +314,7 @@ export default {
       default: () => []
     }
   },
-  mixins: [projectFreshnessMixin],
+  mixins: [projectFreshnessMixin, preserveScrollMixin],
   components: {
     BackToTop: () => import('@/components/backToTop.vue'),
     draggable: () => import('vuedraggable'),
@@ -453,6 +454,11 @@ export default {
     },
     /** Devuelve la promesa a propósito: abrir un modal espera la recarga antes de copiar. */
     getData: function (prefetchedData = null) {
+      // El slot `table-busy` reemplaza el `tbody` entero: el documento se acorta y
+      // el navegador clampea la posición del usuario. Congelarla acá cubre las tres
+      // rutas que recargan la tabla — guardar una fila, guardar columnas y el
+      // refresco de 15s. Desde `mounted` es no-op, `scrollY` vale 0.
+      this.holdScrollPosition()
       this.dataTableSettings.isBusy = true
 
       if (prefetchedData) {
@@ -985,7 +991,10 @@ export default {
 
       return this._patchContentItem(id, editedItem)
         .then(() => {
-          this.$emit('set-item-data', `${this.prefix}-${editedItem.ref_id}`)
+          // Antes se emitía `set-item-data` para que viewProject navegara a un
+          // ancla y scrolleara hasta la fila. Esa navegación era justamente lo que
+          // tiraba la página al tope: el `scrollBehavior` global la manda a y=0.
+          // La posición ahora se sostiene desde `getData`, sin tocar la URL.
           this.$emit('get-project')
           this.getData()
           this.$refs['edit-content-dataTable'].hide()

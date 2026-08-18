@@ -681,6 +681,11 @@ export default {
       printableItems: []
     }
   },
+  created () {
+    // Un solo uso: el deep-link a un finding debe centrarlo al entrar, no en cada
+    // recarga posterior. En `$_` porque nada lo renderiza. Ver routeAnchorHash().
+    this.$_pendingAnchorScroll = true
+  },
   async mounted () {
     window.addEventListener('lock-lost', this.handleLockLost)
     window.addEventListener('lock-idle', this.handleIdle)
@@ -998,28 +1003,41 @@ export default {
           Commons.printErrors(error)
         })
     },
+    /**
+     * Centra el finding al que apunta la URL, y sólo al entrar.
+     *
+     * Antes esto hacía un `$router.push` con un hash y después scrolleaba al ancla.
+     * Ese push era el bug reportado: no navega a ninguna parte —mismo `name`, mismos
+     * `params`, sólo cambia el hash— pero vue-router no distingue y ejecuta el
+     * `scrollBehavior` global de main.js igual, que devuelve `{x: 0, y: 0}`. Es decir
+     * que cada guardado de una fila mandaba al usuario al tope. De paso reconstruía
+     * `query` con sólo `tab` y se comía `step`.
+     *
+     * Sacarlo no pierde nada: nadie lee ese hash. El único lector de `$route.hash` en
+     * toda la app es Login.vue, para el redirect de OAuth.
+     *
+     * Queda sólo el scroll del deep-link entrante desde la worksheet
+     * (editListHeader.vue arma `query: {tab: 'iSoQ', hash: 'a-<list.id>'}`), y queda
+     * detrás de un flag de un solo uso. El flag no es prolijidad: antes el propio push
+     * reescribía el query y borraba `hash`, así que esto corría una vez sola. Sin push,
+     * `hash` sobrevive en la URL y cada getLists() posterior —cada guardado, cada
+     * renombre— volvería a arrastrar al usuario hasta ese finding. Limpiar el query con
+     * `$router.replace` tampoco sirve: en vue-router 3 `replace` también dispara
+     * `scrollBehavior`.
+     */
     routeAnchorHash: function () {
-      if (this.editFindingName.id !== null || this.ui.itemData !== null || Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) {
-        const hash = (this.editFindingName.id !== null) ? `#a-${this.editFindingName.id}` : (this.ui.itemData !== null) ? `#${this.ui.itemData}` : `#${this.$route.query.hash}`
-        this.$router.push({
-          name: 'viewProject',
-          query: {
-            tab: this.$route.query.tab
-          },
-          params: {
-            org_id: this.$route.params.org_id,
-            id: this.$route.params.id
-          },
-          hash: `${hash}`
-        }).catch(() => { }) // Silenciar error de navegación duplicada
-        const elementId = hash.replace('#', '')
-        setTimeout(() => {
-          const el = document.getElementById(elementId)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 0)
-        this.resetFindingName()
-        this.resetItemData()
-      }
+      if (!this.$_pendingAnchorScroll) return
+      if (!Object.prototype.hasOwnProperty.call(this.$route.query, 'hash')) return
+      this.$_pendingAnchorScroll = false
+
+      const elementId = `${this.$route.query.hash}`
+      // `$nextTick` y no `setTimeout(0)`: el ancla vive en una fila de la tabla que
+      // se está repintando en este mismo tick, así que buscarla antes del re-render
+      // encuentra el DOM viejo o nada.
+      this.$nextTick(() => {
+        const el = document.getElementById(elementId)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
     },
     resetItemData: function () {
       this.ui.itemData = null
