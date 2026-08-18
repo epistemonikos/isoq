@@ -1,4 +1,5 @@
 import { isGdprEnabled } from '@/constants/gdpr'
+import { store } from '@/store'
 
 const MainPage = () => import(/* webpackChunkName: "home" */ '@/components/MainPage')
 const AdminPanel = () => import(/* webpackChunkName: "admin" */ '@/components/admin/AdminPanel.vue')
@@ -209,6 +210,29 @@ var routes = [
       title: 'Admin - iSoQ',
       requiresAuth: true,
       requiresAdmin: true
+    }
+  },
+  {
+    // Catch-all de URLs que no existen. Va ÚLTIMA a propósito: vue-router
+    // resuelve por la primera coincidencia y '*' matchea todo, así que puesta
+    // antes dejaría la aplicación entera fuera de servicio.
+    //
+    // Cubre también /workspaces, que era el listado de organizaciones y se
+    // eliminó por no usarse.
+    //
+    // Sin esto el router-view queda vacío: el usuario ve el encabezado y nada
+    // más, que se lee como un error de red y no como "esa dirección no existe".
+    //
+    // Va en beforeEnter y no en `redirect`, que sería más corto: la función de
+    // redirect se evalúa antes que el beforeEach global de main.js, o sea antes
+    // de que getLogginInfo haya poblado el store, y entonces todo el mundo
+    // parecería un visitante sin sesión. El beforeEnter corre después.
+    path: '*',
+    beforeEnter (to, from, next) {
+      const user = store.state.user
+      next(store.getters.isLoggedIn && user.personal_organization
+        ? { name: 'viewOrganization', params: { id: user.personal_organization } }
+        : { name: 'MainPage' })
     }
   }
 ]
