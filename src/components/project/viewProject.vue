@@ -94,7 +94,7 @@
                 <template v-else>
                   <crudTables type="isoqf_characteristics" prefix="ch" :canEdit="isEditing" :project="project" :ui="ui"
                     :references="references" :refs="refs" :lists="lists" @get-project="getProject"
-                    @print-errors="printErrors" @updateDataTable="updateDataTable" @set-item-data="setItemData">
+                    @print-errors="printErrors" @updateDataTable="updateDataTable">
                   </crudTables>
                 </template>
                 <div class="mt-3">
@@ -125,7 +125,7 @@
                 <template v-else>
                   <crudTables type="isoqf_assessments" prefix="as" :canEdit="isEditing" :project="project" :ui="ui"
                     :references="references" :refs="refs" :lists="lists" @get-project="getProject"
-                    @print-errors="printErrors" @updateDataTable="updateDataTable" @set-item-data="setItemData">
+                    @print-errors="printErrors" @updateDataTable="updateDataTable">
                   </crudTables>
                 </template>
                 <div class="mt-3">
@@ -532,7 +532,6 @@ export default {
           showFilterThree: false,
           show_criteria: false
         },
-        itemData: null,
         publish: {
           showLoader: false
         }
@@ -659,13 +658,6 @@ export default {
       dismissAlertPrint: false,
       appearMsgRemoveReferences: false,
       disableBtnRemoveAllRefs: false,
-      editFindingName: {
-        index: null,
-        id: null,
-        finding_id: null,
-        name: null,
-        notes: null
-      },
       episte_request: '',
       episte_selected: [],
       episte_loading: false,
@@ -728,9 +720,6 @@ export default {
     isActiveStepTwo: function () {
       if (this.references.length === 0) { return false }
       if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }
-    },
-    setItemData: function (data) {
-      this.ui.itemData = data
     },
     getListCategories: async function () {
       const params = {
@@ -1038,17 +1027,6 @@ export default {
         const el = document.getElementById(elementId)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
-    },
-    resetItemData: function () {
-      this.ui.itemData = null
-    },
-    resetFindingName: function () {
-      this.editFindingName = {
-        index: null,
-        id: null,
-        name: null,
-        notes: null
-      }
     },
     updateDataTable: function (data, type) {
       if (type === 'isoqf_assessments') {
