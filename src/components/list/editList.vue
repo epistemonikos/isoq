@@ -126,6 +126,7 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -142,7 +143,7 @@ export default {
     'table-meth-assessments': editListMethAssessments,
     'table-extracted-data': editListExtractedData
   },
-  mixins: [camelotMixin],
+  mixins: [camelotMixin, preserveScrollMixin],
   data () {
     return {
       licenseUrl: require('../../assets/by-88x31.png'),
@@ -322,6 +323,11 @@ export default {
         item: { authors: '', column_0: '', ref_id: null }
       }
     }
+  },
+  created () {
+    // Aterrizar en el evidence profile tiene sentido al abrir la worksheet, no cada
+    // vez que se recarga. Ver el final de getList().
+    this.$_pendingInitialScroll = true
   },
   mounted () {
     this.updateTranslations()
@@ -549,9 +555,29 @@ export default {
           this.getExtractedData()
 
           this.evidence_profile_table_settings.isBusy = false
-          const elementScroll = document.getElementsByName('evidence-profile')[0]
 
-          window.scrollTo({ top: elementScroll.offsetParent.offsetTop, behavior: 'smooth' })
+          // El scroll a la sección era intencional para la carga inicial (commit
+          // 2f0c039), pero getList() también corre en cada `update-list-data` —
+          // guardar el evidence profile, actualizar las referencias— y ahí arrastrar
+          // al usuario hasta la sección es exactamente el bug reportado. La primera
+          // vez scrollea; de ahí en más sostiene la posición.
+          if (this.$_pendingInitialScroll) {
+            this.$_pendingInitialScroll = false
+            this.$nextTick(() => {
+              // El ancla vive dentro de un `v-if="evidenceProfile.length"`
+              // (editListEvidenceProfile.vue), así que en un finding sin evidence
+              // profile no existe. Sin esta guarda es un TypeError dentro de un
+              // `.then` sin `.catch`: la promesa queda rechazada en silencio y el
+              // resto del `.then` no corre.
+              const anchor = document.getElementsByName('evidence-profile')[0]
+              const parent = anchor && anchor.offsetParent
+              if (parent) {
+                window.scrollTo({ top: parent.offsetTop, behavior: 'smooth' })
+              }
+            })
+          } else {
+            this.holdScrollPosition()
+          }
         })
     },
     syncOrderWithProject: function () {

@@ -8,7 +8,7 @@
 ---
 
 ## STACK
-Vue 2.6.12 · Vuex 3.6.2 · Vue Router 3.6.5 hash · Bootstrap-Vue 2.23.1 · Webpack 4 · Axios 1.7.9 · Dexie 3.2.7 · vue-i18n 8.28.2 · Sentry @sentry/vue ^7 · Node>=14 · v1.2.8
+Vue 2.7.16 (package.json pide ^2.6.12) · Vuex 3.6.2 · Vue Router 3.6.5 hash · Bootstrap-Vue 2.23.1 · Webpack 4 · Axios 1.7.9 · Dexie 3.2.7 · vue-i18n 8.28.2 · Sentry @sentry/vue ^7 · Node>=14 · v1.2.8
 
 ---
 
@@ -84,7 +84,7 @@ tres sitios ya lo leían del objeto equivocado (una lista en vez de un finding) 
 src/utils/Api.js               HTTP client + offline queue + 409 lock interceptor
 src/utils/project.js           Project.validations() for publish
 src/store/store.js             Vuex · getLogginInfo action · isOnline state
-src/services/lockService.js    concurrency — acquire/release/heartbeat(5min)/idle(15min)
+src/services/lockService.js    concurrency — acquire/release/heartbeat(30s)/idle(15min)
 src/services/db.js             Dexie schema for offline cache
 src/strategies/exportStrategies.js  CSV/Word export (45KB)
 src/services/wordExportService.js / risExportService.js
@@ -107,13 +107,34 @@ actionButtons.vue
 
 ## CONCURRENCY
 409 from any endpoint → Api.js interceptor → "locked by user X" modal
-lockService: acquire on viewProject enter, release on leave, heartbeat POST /api/lock/:id/heartbeat every 5min, idle timeout 15min
+lockService: acquire on viewProject enter, release on leave, heartbeat POST /api/lock/:id/heartbeat every 30s (`HEARBEAT_INTERVAL`, lockService.js:6), idle timeout 15min
 
 ---
 
 ## OFFLINE/PWA
 isOnline: `state.isOnline` via window events → `this.isOnline` (global mixin)
 Offline: Api queues POST/PATCH/DELETE → replays on reconnect · Service Worker via workbox
+
+---
+
+## SCROLL AL GUARDAR
+
+`main.js:117` tiene `scrollBehavior: () => ({x: 0, y: 0})` **incondicional**: ignora el `savedPosition`
+que vue-router le pasa. Consecuencia que no es obvia: **cualquier** `$router.push`, incluso uno que
+sólo cambia el `query` o el `hash` de la vista actual, manda la página al tope. No agregues
+navegaciones "inocuas" para reflejar estado en la URL — son un salto al tope garantizado.
+
+Al recargar una tabla, el salto tiene una segunda causa independiente: el slot `table-busy` de
+Bootstrap-Vue reemplaza el `tbody` completo, el documento se acorta y el navegador **clampea** la
+posición del usuario. Un `scrollTo` inmediato se pierde en silencio.
+
+Para eso está `src/mixins/preserveScrollMixin.js` (`holdScrollPosition()`): insiste con la posición
+durante ~600ms de frames hasta que el contenido vuelve, y cede si el usuario scrollea (`wheel`,
+`touchmove`). Llamalo antes de disparar la recarga; desde `mounted` es no-op. Ya está en `getData()`
+de `crudTables.vue` y en `getList()` de `editList.vue`.
+
+No se puede testear en jsdom que la posición aterrice (no hay layout, `scrollTo` no mueve
+`pageYOffset`): los specs fijan el protocolo de reintento. **Verificá en navegador.**
 
 ---
 
