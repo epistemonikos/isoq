@@ -254,6 +254,23 @@ describe('viewOrganization.vue', () => {
       const result = wrapper.vm.processProject(project)
       expect(result).toEqual({})
     })
+
+    // /getProjects ya filtra por permisos (project_service.py:288-293): todo lo
+    // que llega es visible. Recalcular el filtro en el cliente sólo puede QUITAR
+    // proyectos — si el backend amplía la regla de acceso, esta copia los
+    // esconde y el síntoma es "me compartieron un proyecto y no lo veo".
+    it('no oculta un proyecto que el backend autorizó por una regla que el cliente no conoce', () => {
+      const project = {
+        id: 'p-7',
+        organization: 'other-org',
+        can_read: [],
+        can_write: [],
+        is_owner: false,
+        allow_to_write: false,
+        allow_to_read: true
+      }
+      expect(wrapper.vm.processProject(project).id).toBe('p-7')
+    })
   })
 
   describe('usersCanList - Fase 2 (eliminar N+1)', () => {

@@ -303,13 +303,31 @@ export default {
       }
 
       const currentUserId = this.$store.state.user.id
-      const userHasAccess =
-        project.organization === this.$store.state.user.personal_organization ||
-        project.can_read.includes(currentUserId) ||
-        project.can_write.includes(currentUserId) ||
-        // Fallback: verificar en can_read_users y can_write_users (Fase 2: backend devuelve objetos)
-        (project.can_read_users && Array.isArray(project.can_read_users) && project.can_read_users.some(u => u.id === currentUserId)) ||
-        (project.can_write_users && Array.isArray(project.can_write_users) && project.can_write_users.some(u => u.id === currentUserId))
+
+      // Misma política que los booleanos de permisos de más abajo: si el backend
+      // los mandó, mandan ellos. /getProjects ya filtra por permisos
+      // (isoq_server_py310, services/project_service.py:288-293), así que todo lo
+      // que llega acá es visible para este usuario y recalcular la regla sólo
+      // puede QUITAR proyectos que el servidor sí autorizó. Cuando las dos copias
+      // divergen, el síntoma es "me compartieron un proyecto y no lo veo".
+      //
+      // El cálculo local queda para la caché offline, que puede tener proyectos
+      // guardados antes de que el backend empezara a mandar estos campos.
+      const hasBackendPermissions =
+        typeof project.is_owner === 'boolean' &&
+        typeof project.allow_to_write === 'boolean' &&
+        typeof project.allow_to_read === 'boolean'
+
+      const userHasAccess = hasBackendPermissions
+        ? (project.is_owner || project.allow_to_write || project.allow_to_read)
+        : (
+          project.organization === this.$store.state.user.personal_organization ||
+          project.can_read.includes(currentUserId) ||
+          project.can_write.includes(currentUserId) ||
+          // Fallback: verificar en can_read_users y can_write_users (Fase 2: backend devuelve objetos)
+          (project.can_read_users && Array.isArray(project.can_read_users) && project.can_read_users.some(u => u.id === currentUserId)) ||
+          (project.can_write_users && Array.isArray(project.can_write_users) && project.can_write_users.some(u => u.id === currentUserId))
+        )
 
       if (userHasAccess) {
         if (!Object.prototype.hasOwnProperty.call(project, 'sharedToken')) {
@@ -337,12 +355,8 @@ export default {
           project.tmp_invite_emails = []
         }
 
-        // Trust backend permission booleans if present; fall back to local computation if absent (for offline cache compatibility)
-        const hasBackendPermissions =
-          typeof project.is_owner === 'boolean' &&
-          typeof project.allow_to_write === 'boolean' &&
-          typeof project.allow_to_read === 'boolean'
-
+        // Se reutiliza hasBackendPermissions, calculado arriba para el gate de
+        // acceso: los dos responden la misma pregunta y deben responderla igual.
         if (!hasBackendPermissions) {
           project.is_owner = false
           project.allow_to_write = false
