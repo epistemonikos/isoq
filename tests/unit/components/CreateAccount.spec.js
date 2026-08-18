@@ -107,6 +107,143 @@ describe('CreateAccount.vue', () => {
     expect(wrapper.vm.errorMessage).toBe('account.create_error')
   })
 
+  // ─── La clave `msg` de create_user ───────────────────────────────────────────
+  //
+  // El backend usa 'message' en ~200 respuestas, pero create_user usa 'msg' en 7
+  // (router.py: email duplicado, email inválido, dominio rechazado, campos
+  // faltantes...). Leyendo sólo 'message' esos siete caían en el error genérico:
+  // quien escribía un email ya registrado veía "ocurrió un error, intente
+  // nuevamente" y no tenía forma de saber qué corregir.
+
+  it('muestra el texto del servidor cuando viene en msg', async () => {
+    Api.post.mockRejectedValue({ response: { data: { msg: 'email already registered' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe('email already registered')
+  })
+
+  it.each([
+    'invalid email',
+    'must be filled',
+    'invalid user data',
+    'first_name exceeds maximum length'
+  ])('muestra %p, que create_user manda en msg', async (texto) => {
+    Api.post.mockRejectedValue({ response: { data: { msg: texto } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe(texto)
+  })
+
+  it('prioriza message sobre msg si vinieran los dos', async () => {
+    // 'message' es la convención del backend (~200 usos contra 8), así que ante
+    // la duda gana esa. No se conocen respuestas con ambas claves; el test fija
+    // el orden para que no quede al azar del cortocircuito.
+    Api.post.mockRejectedValue({ response: { data: { message: 'el bueno', msg: 'el legado' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe('el bueno')
+  })
+
+  it('cae al genérico si el cuerpo no trae ni message ni msg', async () => {
+    Api.post.mockRejectedValue({ response: { data: { result: 'algo_inesperado' } } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.createAccount()
+    await flushPromises()
+    expect(wrapper.vm.errorMessage).toBe('account.create_error')
+  })
+
+  // ─── Rechazos que llegan con HTTP 200 ────────────────────────────────────────
+  //
+  // create_user devuelve 200 en SEIS respuestas que no son un alta exitosa
+  // (router.py): cinco con {"msg": ...} y una con {"status":
+  // "password_compromised"}. Sólo {"status": "verification_email_sent"} es éxito.
+  //
+  // Axios no las trata como error, así que caen en el .then(). Si ese .then()
+  // navega sin mirar la respuesta, el usuario ve "revisá tu correo" por una
+  // cuenta que no existe, y espera un email que no va a llegar nunca.
+  //
+  // Dos de esos casos son alcanzables desde la UI: la contraseña comprometida
+  // (el front valida largo, no filtraciones) y los campos de más de 200
+  // caracteres (el front no valida largo de nombre ni apellido).
+
+  it('no navega a checkEmail cuando el 200 trae un msg de rechazo', async () => {
+    Api.post.mockResolvedValue({ data: { msg: 'invalid email' } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.user.username = 'esto-no-es-un-email'
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(wrapper.vm.errorMessage).toBe('invalid email')
+  })
+
+  it('avisa de la contraseña comprometida en vez de prometer un email', async () => {
+    Api.post.mockResolvedValue({ data: { status: 'password_compromised' } })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(wrapper.vm.errorMessage).toBe('account.password_compromised')
+  })
+
+  it.each([
+    'invalid user data',
+    'must be filled',
+    'first_name exceeds maximum length',
+    'invalid format for last_name, must be a string'
+  ])('no navega con el 200 que trae %p', async (texto) => {
+    Api.post.mockResolvedValue({ data: { msg: texto } })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(wrapper.vm.errorMessage).toBe(texto)
+  })
+
+  it('libera el botón tras un rechazo con 200', async () => {
+    // Sin esto el botón queda en spinner para siempre: isProcessing sólo se
+    // bajaba en el .catch(), y estos rechazos no pasan por ahí.
+    Api.post.mockResolvedValue({ data: { msg: 'invalid email' } })
+    const wrapper = mountCreateAccount()
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(wrapper.vm.ui.isProcessing).toBe(false)
+  })
+
+  it('sigue navegando cuando el alta realmente funciona', async () => {
+    // El contrapeso de todo lo anterior: verification_email_sent es el único
+    // éxito, y no debe quedar bloqueado por los chequeos nuevos.
+    Api.post.mockResolvedValue({ data: { status: 'verification_email_sent' } })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.user.username = 'nueva@example.com'
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(mockPush).toHaveBeenCalledWith({
+      name: 'checkEmail',
+      query: { email: 'nueva@example.com' }
+    })
+    expect(wrapper.vm.errorMessage).toBe('')
+  })
+
+  it('sigue navegando si el backend responde un 200 sin cuerpo reconocible', async () => {
+    // Compatibilidad: varios tests y llamadas reales devuelven {} y eso
+    // históricamente se trató como éxito. No convertir eso en un error.
+    Api.post.mockResolvedValue({ data: {} })
+    const wrapper = mountCreateAccount()
+    wrapper.vm.user.username = 'otra@example.com'
+    await wrapper.vm.createAccount()
+    await flushPromises()
+
+    expect(mockPush).toHaveBeenCalled()
+  })
+
   it('sets isProcessing false after error', async () => {
     Api.post.mockRejectedValue(new Error('fail'))
     const wrapper = mountCreateAccount()

@@ -176,6 +176,25 @@ export default {
     this.checkEmail = _debounce(this.checkEmailExist, 500)
   },
   methods: {
+    // El texto que mandó el servidor, o null si no mandó ninguno.
+    //
+    // Se leen las dos claves porque create_user usa las dos: 'message' en las
+    // respuestas de términos y 'msg' en siete más —email duplicado, email
+    // inválido, dominio rechazado, campos faltantes o demasiado largos
+    // (router.py)—. Leyendo sólo 'message', esas siete caían en el mensaje
+    // genérico y el usuario no tenía forma de saber qué corregir.
+    //
+    // El orden no es arbitrario: 'message' es la convención del backend (~200
+    // respuestas contra 8 con 'msg'), así que gana. 'msg' queda como lo que es,
+    // un legado de este endpoint.
+    //
+    // Vive acá y no inline porque lo usan los dos caminos —el .then(), para los
+    // rechazos que llegan con 200, y el .catch()—. Duplicarlo era garantizar que
+    // con el tiempo leyeran claves distintas.
+    serverText (data) {
+      const d = data || {}
+      return d.message || d.msg || null
+    },
     validEmail (email) {
       var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       this.ui.username_validation = re.test(email)
@@ -220,7 +239,32 @@ export default {
         }
       }
       Api.post('/create_user', params)
-        .then(() => {
+        .then((response) => {
+          const data = (response && response.data) || {}
+
+          // create_user devuelve HTTP 200 en seis respuestas que NO son un alta
+          // exitosa: cinco con {"msg": ...} y una con password_compromised
+          // (router.py). Sólo verification_email_sent es éxito. Axios no las
+          // trata como error, así que llegan acá y no al .catch().
+          //
+          // Navegar sin mirar la respuesta mandaba al usuario a "revisá tu
+          // correo" por una cuenta inexistente, a esperar un email que no iba a
+          // llegar. Dos de esos casos son alcanzables desde la UI: la contraseña
+          // comprometida y los campos de más de 200 caracteres, ninguno de los
+          // cuales valida el formulario.
+          if (data.status === 'password_compromised') {
+            this.ui.isProcessing = false
+            this.errorMessage = this.$t('account.password_compromised')
+            return
+          }
+
+          const rechazo = this.serverText(data)
+          if (rechazo) {
+            this.ui.isProcessing = false
+            this.errorMessage = rechazo
+            return
+          }
+
           this.$router.push({ name: 'checkEmail', query: { email: this.user.username } })
         })
         .catch((error) => {
@@ -251,11 +295,7 @@ export default {
             return
           }
 
-          if (data.message) {
-            this.errorMessage = data.message
-          } else {
-            this.errorMessage = this.$t('account.create_error')
-          }
+          this.errorMessage = this.serverText(data) || this.$t('account.create_error')
         })
     },
     checkEmailExist () {
