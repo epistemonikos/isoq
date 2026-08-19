@@ -355,7 +355,12 @@ class LockService {
       } catch (error) {
         if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
           this.refLocks.delete(refId)
-          window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId } }))
+          // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`
+          // (reason 'locked_by_other_user'). Passing it through is what lets the
+          // read-only banner name the person instead of falling back to its
+          // anonymous wording. A 401/403 has nobody to blame, hence the null.
+          const lockedBy = (error.response.data && error.response.data.locked_by) || null
+          window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId, lockedBy } }))
         }
       }
     }))

@@ -109,6 +109,40 @@ actionButtons.vue
 409 from any endpoint → Api.js interceptor → "locked by user X" modal
 lockService: acquire on viewProject enter, release on leave, heartbeat POST /api/lock/:id/heartbeat every 30s (`HEARBEAT_INTERVAL`, lockService.js:6), idle timeout 15min
 
+### El TTL del servidor y el latido del cliente son UN SOLO contrato
+
+`LOCK_TIMEOUT` = **180 s** en el backend (`auth_server/controllers/lock.py`, mismo valor para
+`project_locks` y `ref_locks`) contra `HEARBEAT_INTERVAL` = 30 s acá. No son dos números
+independientes: el TTL está dimensionado para **tolerar tres latidos perdidos**.
+
+Por qué hizo falta ese margen: Chrome ralentiza `setInterval` en pestañas ocultas y, tras ~5
+minutos, lo lleva a **un disparo por minuto**. Con el TTL viejo de 60 s el lock caducaba con el
+editor abierto y la persona dentro de la sesión, y otro usuario lo tomaba legítimamente.
+
+**Si alguna vez cambiás `HEARBEAT_INTERVAL`, avisale a backend**: sus tests miden el margen contra
+este intervalo, no contra el literal 180.
+
+No hay liberación por inactividad para los ref-locks. El `IDLE_TIMEOUT` de 15 min sólo cuelga de
+`acquire()` (lock de proyecto, hoy únicamente en Propiedades / viewOrganization).
+
+`revalidateLocks()` late apenas la pestaña vuelve al frente (`visibilitychange`): es el momento en
+que la persona va a escribir, y sin eso el aviso de pérdida podía tardar hasta un ciclo entero.
+
+Un heartbeat sobre un lock **vencido** lo revive a propósito — es lo que salva a quien estuvo
+throttleado — salvo que otro tenga el mismo estudio en otra granularidad, y ahí devuelve 409 con
+`reason: 'locked_by_other_user'` y `locked_by`. Ese nombre viaja en el `detail` de `ref-lock-lost`
+para que el cartel de solo lectura diga quién está editando en vez de su texto anónimo.
+
+### Perder el lock tiene que ser visible
+
+Un editor en solo lectura y mudo es peor que uno bloqueado: la gente sigue escribiendo. Todo editor
+que sostenga un ref-lock escucha `ref-lock-lost` y muestra un cartel — evidence profile (incluida su
+fila inline), assessment del Paso 4, editor de estudios del Paso 3, filas de `crudTables`.
+
+El 409/403 de una escritura granular **ya se le avisa al usuario** por el canal de conflicto. No le
+agregues encima el error genérico de guardado: usá `isLockRejection()` (`src/utils/lockErrors.js`)
+antes de notificar. "Intente nuevamente" es un consejo falso mientras el lock sea de otra persona.
+
 ---
 
 ## OFFLINE/PWA

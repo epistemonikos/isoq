@@ -331,7 +331,24 @@ describe('LockService.refHeartbeat() — several locks', () => {
 
     expect(LockService.heldRefs()).toEqual(['R1'])
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
-    expect(lost.detail).toEqual({ refId: 'R1::s0::o0' })
+    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: null })
+    spy.mockRestore()
+  })
+
+  // Since 2026-08-19 the backend answers a heartbeat on an expired-and-taken lock with
+  // `locked_by`. Dropping it left the read-only banner with its anonymous wording when
+  // there was a name to show.
+  it('lleva el nombre de quien tomó el lock cuando el 409 lo trae', async () => {
+    LockService.refLocks.set('R1::s0::o0', 'proj1')
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: { reason: 'locked_by_other_user', locked_by: 'Ana Pérez' } }
+    })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.refHeartbeat()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: 'Ana Pérez' })
     spy.mockRestore()
   })
 
