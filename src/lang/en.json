@@ -265,17 +265,24 @@
     "lock_lost_message": "The connection to the server was lost or another user has taken the edit lock. To prevent data loss, please reload the page.",
     "idle_message": "You have been inactive for a while. To allow others to edit, your write access has been released. Please reload to resume editing.",
     "ref_locked_by": "Being edited by {user}",
+    "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
     "ref_lock_offline": "No connection — editing unavailable",
     "ref_lock_reconnected": "Reconnected — start editing?",
     "ref_conflict_title": "Unsaved changes",
     "ref_conflict_message": "While you were offline, {user} edited this study. Your changes were not saved. You can copy them and apply them manually.",
+    "ref_conflict_message_live": "{user} took over this study while you had it open. Your changes were not saved. You can copy them and apply them manually.",
     "ref_conflict_copy_field": "Copy",
     "ref_conflict_close": "Close",
     "permissions_revoked": "Your access to this project changed to read-only.",
     "permissions_granted": "You now have edit access to this project.",
     "connection_lost": "Connection Lost",
     "session_timeout": "Session Timeout",
-    "reload": "Reload"
+    "reload": "Reload",
+    "live_conflict_title": "Change not saved",
+    "live_conflict": "{user} is editing this entry now, so your change was not saved. Your text was kept locally so you can copy it.",
+    "live_conflict_no_user": "Your change was not saved because you no longer hold the edit lock on this entry. Your text was kept locally so you can copy it.",
+    "lost_while_editing": "This finding switched to read-only: {user} is editing it now. Anything you typed since then was not saved — copy it before closing.",
+    "lost_while_editing_no_user": "This finding switched to read-only: your edit lock expired. Anything you typed since then was not saved — copy it before closing."
   },
   "project": {
     "notifications": {

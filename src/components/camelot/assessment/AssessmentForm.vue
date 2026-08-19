@@ -10,9 +10,15 @@
       </div>
 
       <fieldset :disabled="isReadOnly" class="border-0 p-0 m-0">
-        <b-alert v-if="isReadOnly && lockedByUser" show variant="warning" class="mb-3">
+        <!-- Shown for every read-only reason, named holder or not: the loss reported by
+             the heartbeat carries no name, and that silence is what left users typing
+             into a form that could no longer save. -->
+        <b-alert v-if="isReadOnly" show variant="warning" class="mb-3"
+          data-testid="assessment-readonly-notice">
           <font-awesome-icon icon="lock" class="mr-1" />
-          {{ $t('lock.ref_locked_by', { user: lockedByUser }) }}
+          {{ lockedByUser
+            ? $t('lock.ref_locked_by', { user: lockedByUser })
+            : $t('lock.ref_locked_by_no_user') }}
         </b-alert>
 
         <b-form-group label="" class="mb-4">

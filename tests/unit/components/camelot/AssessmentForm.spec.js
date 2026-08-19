@@ -454,6 +454,29 @@ describe('AssessmentForm.vue', () => {
       expect(LockService.releaseRef).not.toHaveBeenCalled()
     })
 
+    // The banner used to require a holder name, but the loss that matters arrives from
+    // the heartbeat's 409, and that response carries no holder at all — so the one case
+    // the user most needs explained was the one that rendered nothing.
+    it('avisa que está en solo lectura aunque no se sepa quién tomó el lock', async () => {
+      const roWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: true, lockedByUser: null },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(roWrapper.find('[data-testid="assessment-readonly-notice"]').exists()).toBe(true)
+      roWrapper.destroy()
+    })
+
+    it('no avisa nada mientras la celda se puede editar', async () => {
+      const rwWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: false, lockedByUser: null },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(rwWrapper.find('[data-testid="assessment-readonly-notice"]').exists()).toBe(false)
+      rwWrapper.destroy()
+    })
+
     it('no guarda (no llama Api.patch) cuando el prop isReadOnly es true', async () => {
       Api.patch.mockClear()
       const roWrapper = mount(AssessmentForm, {

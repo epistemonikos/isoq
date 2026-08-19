@@ -264,6 +264,7 @@
       :locked-by="conflictLockedBy"
       :failed-data="conflictData || {}"
       :ref-id="conflictRefId"
+      :source="conflictSource"
       @closed="clearConflict"
     />
   </div>
@@ -274,6 +275,7 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import {
   ASSESSMENT_CELLS,
+  baseRefOf,
   emptyAssessmentItem,
   leafLockKey,
   leafPositionOf
@@ -377,6 +379,8 @@ export default {
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
+      // Decides the modal's wording: a live 409 must not be explained as an offline sync.
+      conflictSource: 'live',
       selected: null,
       text1: '',
       modal: {
@@ -478,12 +482,16 @@ export default {
     // Refresco inmediato cuando este mismo usuario adquiere/libera un lock
     window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    // Without this the open modal only learned the lock was gone when a save came
+    // back 409 — the user kept filling in an assessment that could no longer be saved.
+    window.addEventListener('ref-lock-lost', this.handleRefLockLost)
   },
   beforeDestroy () {
     this._themeObserver.disconnect()
     this.stopRefLocksPolling()
     window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    window.removeEventListener('ref-lock-lost', this.handleRefLockLost)
     LockService.releaseRef()
   },
   computed: {
@@ -937,12 +945,42 @@ export default {
       // open can be applied now.
       this.flushPendingRefresh()
     },
+    /**
+     * The heartbeat came back 409: this tab no longer holds a lock it thought it had.
+     * Granularity decides the blast radius — the bare study takes every cell with it,
+     * a leaf takes only its own cell (that is what endpoint D exists for).
+     */
+    handleRefLockLost (event) {
+      const detail = (event && event.detail) || {}
+      const lostRef = detail.refId
+      if (!lostRef || !this.refId) return
+
+      if (lostRef === this.refId) {
+        this.isRefReadOnly = true
+        this.refLockedBy = detail.lockedBy || null
+        // Not just cosmetic: holdsStudyLock is what ensureStudyLock checks before
+        // skipping the acquire, so leaving it true would silently authorize a write
+        // we can no longer make.
+        this.holdsStudyLock = false
+        this.studyFieldsReadOnly = true
+        this.studyFieldsLockedBy = detail.lockedBy || null
+        return
+      }
+
+      if (baseRefOf(lostRef) !== this.refId) return
+      const position = leafPositionOf(lostRef)
+      if (!position) return
+      const [stage, option] = position.split('-').map(Number)
+      this.markCellDenied(stage, option)
+      this.leafLockedBy = detail.lockedBy || null
+    },
     handleRefLockConflict (event) {
-      const { refId, failedData, lockedBy } = event.detail
+      const { refId, failedData, lockedBy, source } = event.detail
       if (refId !== this.refId) return
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy
       this.conflictRefId = refId
+      this.conflictSource = source || 'live'
       this.$nextTick(() => {
         if (this.$refs.conflictModal) this.$refs.conflictModal.show()
       })
@@ -951,6 +989,7 @@ export default {
       this.conflictData = null
       this.conflictLockedBy = ''
       this.conflictRefId = ''
+      this.conflictSource = 'live'
     },
     goToStage (stage) {
       this.modal.stage = stage

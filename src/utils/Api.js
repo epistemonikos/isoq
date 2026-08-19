@@ -88,11 +88,17 @@ async function queuedLockContext (url) {
   return { lockRef: refId, lockProjectId: projectId }
 }
 
-function reportRefLockConflict (refId, failedData, lockedBy) {
+/**
+ * @param source 'live' for a request that failed right now, 'replay' for one the
+ * offline queue tried later. Same failure, opposite explanations: telling the user a
+ * live 409 happened "while you were offline" is simply wrong, and it was the wording
+ * that made a lock conflict look like a sync bug.
+ */
+function reportRefLockConflict (refId, failedData, lockedBy, source = 'live') {
   if (typeof window === 'undefined') return
-  localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy }))
+  localStorage.setItem(`conflict_ref_${refId}`, JSON.stringify({ failedData, lockedBy, source }))
   window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
-    detail: { refId, failedData, lockedBy }
+    detail: { refId, failedData, lockedBy, source }
   }))
 }
 
@@ -556,7 +562,7 @@ export default class Api {
             // Somebody took the entity while we were away. Replaying would fail, and
             // retrying forever would stall the queue behind it: drop it and hand the
             // payload to the user through the conflict channel.
-            reportRefLockConflict(op.lockRef, op.payload, result.lockedBy || '')
+            reportRefLockConflict(op.lockRef, op.payload, result.lockedBy || '', 'replay')
             await removePendingOperation(op.id)
             continue
           }

@@ -542,3 +542,106 @@ describe('StepFour.vue — refresco por last_update', () => {
     wrapper.destroy()
   })
 })
+
+// The conflict modal words itself from the source; StepFour is what carries it from
+// the event to the prop, so a dropped `source` silently restores the offline wording.
+describe('StepFour.vue — origen del conflicto de lock', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+  })
+
+  it('propaga el origen "live" del evento al modal de conflicto', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ refId: 'ref1' })
+
+    wrapper.vm.handleRefLockConflict({
+      detail: { refId: 'ref1', failedData: { c: 'v' }, lockedBy: 'Ana', source: 'live' }
+    })
+
+    expect(wrapper.vm.conflictSource).toBe('live')
+    wrapper.destroy()
+  })
+
+  it('propaga el origen "replay" del evento al modal de conflicto', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ refId: 'ref1' })
+
+    wrapper.vm.handleRefLockConflict({
+      detail: { refId: 'ref1', failedData: { c: 'v' }, lockedBy: 'Ana', source: 'replay' }
+    })
+
+    expect(wrapper.vm.conflictSource).toBe('replay')
+    wrapper.destroy()
+  })
+})
+
+// The reported symptom: "user 2 could edit the finding, but user 1 was still looking
+// at the assessment modal". StepFour listened for `ref-locks-changed` and for the
+// conflict on save, but never for `ref-lock-lost` — so a lock taken away mid-edit left
+// the open modal fully writable until the save was rejected.
+describe('StepFour.vue — pérdida del lock con el modal abierto', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+  })
+
+  it('pasa el estudio a solo lectura cuando pierde el lock del estudio abierto', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1', holdsStudyLock: true })
+
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+      detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+    }))
+    await flushPromises()
+
+    expect(wrapper.vm.isRefReadOnly).toBe(true)
+    expect(wrapper.vm.refLockedBy).toBe('Ana Pérez')
+    // The study lock is gone: believing we still hold it would skip re-acquiring it.
+    expect(wrapper.vm.holdsStudyLock).toBe(false)
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('marca solo la celda cuando lo perdido es la hoja abierta, no el estudio', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({
+      isModalOpen: true,
+      refId: 'ref1',
+      modal: { stage: 1, index: 0, faLabel: null },
+      selectedMeta: 2
+    })
+
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+      detail: { refId: 'ref1::s1::o2', lockedBy: 'Ana Pérez' }
+    }))
+    await flushPromises()
+
+    expect(wrapper.vm.isCellReadOnly(1, 2)).toBe(true)
+    // A single lost cell must not freeze the whole study.
+    expect(wrapper.vm.isRefReadOnly).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('ignora la pérdida de un lock de otro estudio', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1', holdsStudyLock: true })
+
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+      detail: { refId: 'ref9', lockedBy: 'Ana Pérez' }
+    }))
+    await flushPromises()
+
+    expect(wrapper.vm.isRefReadOnly).toBe(false)
+    expect(wrapper.vm.holdsStudyLock).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('deja de escuchar el aviso al destruirse', () => {
+    const removeSpy = jest.spyOn(window, 'removeEventListener')
+    const wrapper = createWrapper()
+    wrapper.destroy()
+    expect(removeSpy).toHaveBeenCalledWith('ref-lock-lost', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+})

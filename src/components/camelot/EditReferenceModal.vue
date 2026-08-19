@@ -3,9 +3,12 @@
     @hidden="resetModal" @shown="onModalShownAll" header-bg-variant="custom-blue" no-close-on-esc
     no-close-on-backdrop>
     <template v-if="localReference">
-      <b-alert v-if="isReadOnly && lockedByUser" show variant="warning" class="mb-3">
+      <b-alert v-if="isReadOnly && !isOffline" show variant="warning" class="mb-3"
+        data-testid="reference-readonly-notice">
         <font-awesome-icon icon="lock" class="mr-1" />
-        {{ $t('lock.ref_locked_by', { user: lockedByUser }) }}
+        {{ lockedByUser
+          ? $t('lock.ref_locked_by', { user: lockedByUser })
+          : $t('lock.ref_locked_by_no_user') }}
       </b-alert>
       <b-alert v-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
         {{ $t('lock.ref_lock_offline') }}
@@ -83,6 +86,7 @@
       :locked-by="conflictLockedBy"
       :failed-data="conflictData || {}"
       :ref-id="conflictRefId"
+      :source="conflictSource"
       @closed="clearConflict"
     />
   </b-modal>
@@ -134,7 +138,8 @@ export default {
       isOffline: false,
       conflictData: null,
       conflictLockedBy: '',
-      conflictRefId: ''
+      conflictRefId: '',
+      conflictSource: 'live'
     }
   },
   computed: {
@@ -154,9 +159,13 @@ export default {
   },
   mounted () {
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    // The conflict listener only fires on a rejected save. This one fires the moment
+    // the lock is gone, so the fields stop accepting input before that.
+    window.addEventListener('ref-lock-lost', this.handleRefLockLost)
   },
   beforeDestroy () {
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    window.removeEventListener('ref-lock-lost', this.handleRefLockLost)
   },
   watch: {
     reference: {
@@ -217,12 +226,22 @@ export default {
         }
       }
     },
+    handleRefLockLost (event) {
+      const detail = (event && event.detail) || {}
+      const refId = this.localReference && this.localReference.id
+      if (!detail.refId || detail.refId !== refId) return
+      this.isReadOnly = true
+      // The heartbeat's 409 carries no holder; the banner falls back to a neutral
+      // wording rather than hiding itself.
+      this.lockedByUser = detail.lockedBy || null
+    },
     handleRefLockConflict (event) {
-      const { refId, failedData, lockedBy } = event.detail
+      const { refId, failedData, lockedBy, source } = event.detail
       if (refId !== (this.localReference && this.localReference.id)) return
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy
       this.conflictRefId = refId
+      this.conflictSource = source || 'live'
       this.$nextTick(() => {
         if (this.$refs.conflictModal) this.$refs.conflictModal.show()
       })
@@ -231,6 +250,7 @@ export default {
       this.conflictData = null
       this.conflictLockedBy = ''
       this.conflictRefId = ''
+      this.conflictSource = 'live'
     },
     resetModal () {
       LockService.releaseRef()

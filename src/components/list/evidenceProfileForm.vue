@@ -22,6 +22,10 @@
         </videoHelp>
       </template>
       <b-container fluid>
+        <b-alert v-if="readOnlyNotice" show variant="warning" class="mb-3"
+          data-testid="finding-readonly-notice">
+          <font-awesome-icon icon="lock" class="mr-1"></font-awesome-icon>{{ readOnlyNotice }}
+        </b-alert>
         <b-row>
           <b-col id="left-modal-content" cols="12" sm="3">
             <div class="float-right mb-5">
@@ -521,8 +525,12 @@
                         showEditExtractedDataInPlace.item.index ===
                         data.item.index
                       ">
+                        <b-alert v-if="rowReadOnlyNotice" show variant="warning" class="mb-2"
+                          data-testid="row-readonly-notice">
+                          {{ rowReadOnlyNotice }}
+                        </b-alert>
                         <b-form-group>
-                          <b-form-textarea rows="6" max-rows="100"
+                          <b-form-textarea rows="6" max-rows="100" :disabled="isRowReadOnly"
                             v-model="showEditExtractedDataInPlace.item.column_0"></b-form-textarea>
                         </b-form-group>
                       </template>
@@ -536,7 +544,8 @@
                         showEditExtractedDataInPlace.item.index ===
                         data.item.index
                       ">
-                        <b-button block variant="success" @click="updateContentExtractedDataItem(data.item.ref_id)">
+                        <b-button block variant="success" :disabled="isRowReadOnly"
+                          @click="updateContentExtractedDataItem(data.item.ref_id)">
                           {{ $t('common.save') }}
                         </b-button>
                         <b-button block variant="outline-secondary" @click="cancelExtractedDataInPlace">
@@ -855,6 +864,9 @@ export default {
       // at the same time as this one (multi-slot LockService).
       isFindingReadOnly: false,
       findingLockedBy: null,
+      // True only when the lock was taken away mid-edit. Opening onto an already-locked
+      // finding is a different story: that one is announced by a toast on open.
+      lockLostWhileEditing: false,
       lockedFindingRef: null,
       modalOpen: false,
       // True when a `hidden` from a previous modal session is still on its way.
@@ -970,6 +982,41 @@ export default {
     canEditFinding: function () {
       return this.permission && !this.isFindingReadOnly
     },
+    // Text of the banner shown at the top of the form while it is read-only.
+    // Falsy = no banner. Available keys: 'lock.lost_while_editing' ({user}),
+    // 'lock.lost_while_editing_no_user', 'lock.ref_locked_by' ({user}).
+    // State to read from: isFindingReadOnly, lockLostWhileEditing, findingLockedBy,
+    // permission.
+    readOnlyNotice: function () {
+      // TODO(human)
+      // - El banner aparece en los tres casos de solo-lectura
+      // - Sin permiso de escritura (permission falso) el usuario nunca esperó editar: un aviso de "perdiste el lock" ahí sería ruido.
+      // - Ojo con findingLockedBy nulo: el mensaje no puede terminar diciendo "editado por undefined" — ese fue exactamente el bug que motivó tener la variante _no_user.
+      const user = this.findingLockedBy
+      if (this.lockLostWhileEditing) {
+        if (user) {
+          return this.$t('lock.lost_while_editing', { user })
+        } else {
+          return this.$t('lock.lost_while_editing_no_user')
+        }
+      } else if (this.isFindingReadOnly) {
+        if (user) {
+          return this.$t('lock.ref_locked_by', { user })
+        } else {
+          return this.$t('lock.ref_locked_by_no_user')
+        }
+      }
+      return null
+    },
+    // Same idea as readOnlyNotice, for the inline row editor inside the table. The row
+    // has no "lost while editing" flag of its own: the only way it turns read-only is
+    // by losing or failing to get its lock, and both deserve the banner.
+    rowReadOnlyNotice: function () {
+      if (!this.isRowReadOnly) return null
+      return this.rowLockedBy
+        ? this.$t('lock.lost_while_editing', { user: this.rowLockedBy })
+        : this.$t('lock.ref_locked_by_no_user')
+    },
     clearCerqualWarningMessage: function () {
       if (this.checkIfIsTheOnlyPublished()) {
         return this.$t('worksheet.warnings.clear_cerqual_revert')
@@ -1020,6 +1067,7 @@ export default {
         this.lockedFindingRef = findingId
         this.isFindingReadOnly = false
         this.findingLockedBy = null
+        this.lockLostWhileEditing = false
       } else if (result.permissionDenied) {
         this.isFindingReadOnly = true
         this.findingLockedBy = null
@@ -1040,6 +1088,7 @@ export default {
       if (detail.refId && detail.refId === findingId) {
         this.isFindingReadOnly = true
         this.findingLockedBy = detail.lockedBy || null
+        this.lockLostWhileEditing = true
         return
       }
       if (detail.refId && detail.refId === this.lockedRowRef) {
@@ -1059,6 +1108,7 @@ export default {
       this.releaseRowLock()
       this.isFindingReadOnly = false
       this.findingLockedBy = null
+      this.lockLostWhileEditing = false
     },
     releaseFindingLock: function () {
       if (this.lockedFindingRef) LockService.releaseRef(this.lockedFindingRef)
