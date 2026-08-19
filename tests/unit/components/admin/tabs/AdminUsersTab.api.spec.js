@@ -63,6 +63,25 @@ const makeWrapper = (userState = {}) => {
   })
 }
 
+// Igual que en el resto de los listados: el slot `table-busy` colapsa el `tbody` al
+// recargar, el documento se acorta y el navegador reubica al usuario. loadUsers() es el
+// punto único — lo llaman la paginación, la búsqueda y cada acción sobre un usuario.
+describe('AdminUsersTab.vue — sostener la posición al recargar', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('loadUsers() congela la posición antes de encender el spinner', async () => {
+    const wrapper = makeWrapper()
+    await flushPromises()
+    const hold = jest.spyOn(wrapper.vm, 'holdScrollPosition')
+
+    wrapper.vm.loadUsers(2)
+    await flushPromises()
+
+    expect(hold).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+})
+
 // ─── loadUsers ───────────────────────────────────────────────────────────────
 
 describe('AdminUsersTab.vue — loadUsers()', () => {

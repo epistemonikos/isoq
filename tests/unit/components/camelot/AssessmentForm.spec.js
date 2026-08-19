@@ -506,6 +506,33 @@ describe('AssessmentForm.vue', () => {
     })
   })
 
+  // Medido en navegador: un solo cambio en el formulario producía DOS PATCH idénticos al
+  // mismo endpoint, separados ~700ms — el guardado manual y, detrás, el auto-guardado que
+  // el watcher había agendado y que `save()` nunca cancelaba. Además de escribir dos veces
+  // lo mismo, la segunda recarga vuelve a colapsar la tabla cuando el hold de scroll ya
+  // expiró, así que la página termina en el tope igual.
+  describe('AssessmentForm.vue — guardado manual y auto-guardado pendiente', () => {
+    it('save() cancela el auto-guardado agendado: ya está guardando lo mismo', () => {
+      const cancel = jest.fn()
+      wrapper.vm.autoSaveDebounced = Object.assign(jest.fn(), { cancel })
+      jest.spyOn(wrapper.vm, 'performSave').mockImplementation(() => {})
+
+      wrapper.vm.save()
+
+      expect(cancel).toHaveBeenCalled()
+    })
+
+    it('doItLater() también lo cancela: es la otra puerta al guardado manual', () => {
+      const cancel = jest.fn()
+      wrapper.vm.autoSaveDebounced = Object.assign(jest.fn(), { cancel })
+      jest.spyOn(wrapper.vm, 'performSave').mockImplementation(() => {})
+
+      wrapper.vm.doItLater()
+
+      expect(cancel).toHaveBeenCalled()
+    })
+  })
+
   // Verified in the browser: losing the lock mid-edit raised TWO toasts at once — the
   // conflict message naming who took the entry, and a generic "could not save, please
   // try again" whose advice cannot work while somebody else holds the lock.

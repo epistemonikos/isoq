@@ -136,6 +136,7 @@
 <script>
 import { camelotMixin } from '@/mixins/camelotMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import LockService from '@/services/lockService'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
@@ -150,7 +151,7 @@ export default {
     EditReferenceModal: () => import('./EditReferenceModal.vue'),
     TableColumnFilter: () => import('@/components/common/TableColumnFilter.vue')
   },
-  mixins: [camelotMixin, projectFreshnessMixin],
+  mixins: [camelotMixin, projectFreshnessMixin, preserveScrollMixin],
   props: {
     references: {
       type: Array,
@@ -498,6 +499,10 @@ export default {
      * Loads characteristics data from API
      */
     loadCharacteristicsData () {
+      // Igual que en el Paso 4: `isLoading` reemplaza la tabla entera por una alerta de
+      // una línea, el documento se acorta y el navegador clampea la posición. Sostenerla
+      // antes de encenderlo es lo único que llega a tiempo.
+      this.holdScrollPosition()
       this.isLoading = true
 
       const params = {

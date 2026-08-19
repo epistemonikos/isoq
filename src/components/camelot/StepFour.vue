@@ -290,10 +290,11 @@ import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'StepFour',
-  mixins: [refLockStateMixin, projectFreshnessMixin],
+  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin],
   props: {
     type: {
       type: String,
@@ -683,6 +684,11 @@ export default {
     },
     getAssessments: function () {
       if (!this.references.length) return
+      // `isLoading` esconde la tabla ENTERA detrás de una alerta de una línea: el
+      // documento se acorta y el navegador clampea al usuario al nuevo máximo. Hay que
+      // sostener la posición antes de encenderlo, no después. Punto único: por acá pasan
+      // el guardado de una celda, el cierre del modal y la recarga.
+      this.holdScrollPosition()
       this.isLoading = true
       const params = {
         organization: this.$route.params.org_id,
