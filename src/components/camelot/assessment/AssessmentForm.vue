@@ -98,6 +98,7 @@
 
 <script>
 import Api from '@/utils/Api'
+import { isLockRejection } from '@/utils/lockErrors'
 import _debounce from 'lodash.debounce'
 import {
   canonicalIndex,
@@ -415,6 +416,13 @@ export default {
       const onError = (error) => {
         console.error('Error saving assessment data:', error)
         this.isSaving = false
+        // The lock channel already told the user who took the entry and that their text
+        // was kept locally. Adding "please try again" on top contradicts it: retrying
+        // cannot succeed while somebody else holds the lock.
+        if (isLockRejection(error)) {
+          this.autoSaveStatus = null
+          return
+        }
         if (silent) {
           this.autoSaveStatus = 'error'
         } else {

@@ -244,6 +244,33 @@ describe('EditReferenceModal.vue', () => {
     })
   })
 
+  // Third editor with the same double message: the conflict toast plus a generic
+  // "could not save, please try again" that cannot be acted on.
+  describe('rechazo por lock al guardar', () => {
+    const rejection = (status) => Object.assign(new Error('rejected'), {
+      config: { url: '/isoqf_characteristics/char1/item/ref1' },
+      response: { status, data: {} }
+    })
+
+    it('no agrega el error genérico cuando el guardado se rechaza por el lock', async () => {
+      Api.patch.mockRejectedValue(rejection(409))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+    })
+
+    it('sí avisa cuando el guardado falla por el servidor', async () => {
+      Api.patch.mockRejectedValue(rejection(500))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+  })
+
   // Step 3's editor had the same hole as Step 4's: it listened for the conflict on
   // save but not for the lock going away, so a study taken over mid-edit stayed fully
   // writable on screen.

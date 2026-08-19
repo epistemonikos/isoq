@@ -95,6 +95,7 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import { isLockRejection } from '@/utils/lockErrors'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import _debounce from 'lodash.debounce'
@@ -535,6 +536,12 @@ export default {
         .catch(error => {
           this.isSaving = false
           console.error('Error saving reference characteristics:', error)
+          // The lock channel already explained this one. 'error' on the auto-save
+          // indicator would be just as misleading as the toast: nothing to retry.
+          if (isLockRejection(error)) {
+            this.autoSaveStatus = null
+            return
+          }
           if (closeAfter) {
             this.$notify.error(this.$t('notifications.save_error'))
           } else {

@@ -645,3 +645,48 @@ describe('StepFour.vue — pérdida del lock con el modal abierto', () => {
     removeSpy.mockRestore()
   })
 })
+
+// Same double-message as in AssessmentForm, on the other write path of this modal:
+// the study fields (endpoint B). The conflict toast already names the holder.
+describe('StepFour.vue — rechazo por lock al guardar un campo del estudio', () => {
+  const Api = require('@/utils/Api')
+  const flush = () => new Promise(resolve => process.nextTick(resolve))
+
+  const rejection = (status) => Object.assign(new Error('rejected'), {
+    config: { url: '/isoqf_characteristics/char1/item/ref1' },
+    response: { status, data: {} }
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.refLocks.clear()
+  })
+
+  async function saveWith (error) {
+    const wrapper = createWrapper()
+    await wrapper.setData({
+      refId: 'ref1',
+      characteristics: { id: 'char1', items: [{ ref_id: 'ref1' }], organization: 'org1', project_id: 'proj1' },
+      // meta comes from the component's own defaults: metaIndex 0 / itemIndex 0 is the
+      // 'research_' prefix, so the field written is research_extractedData.
+      editingField: { metaIndex: 0, itemIndex: 0, type: 'extractedData' }
+    })
+    Api.patch.mockRejectedValue(error)
+    wrapper.vm.saveField('texto nuevo')
+    await flush()
+    await flush()
+    return wrapper
+  }
+
+  it('no agrega el error genérico cuando el campo se rechaza por el lock', async () => {
+    const wrapper = await saveWith(rejection(409))
+    expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('sí avisa cuando el guardado del campo falla por el servidor', async () => {
+    const wrapper = await saveWith(rejection(500))
+    expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
+    wrapper.destroy()
+  })
+})

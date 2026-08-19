@@ -506,6 +506,49 @@ describe('AssessmentForm.vue', () => {
     })
   })
 
+  // Verified in the browser: losing the lock mid-edit raised TWO toasts at once — the
+  // conflict message naming who took the entry, and a generic "could not save, please
+  // try again" whose advice cannot work while somebody else holds the lock.
+  describe('AssessmentForm.vue — rechazo por lock al guardar', () => {
+    const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+    const lockRejection = (status) => Object.assign(new Error('rejected'), {
+      config: { url: '/isoqf_assessments/assess1/item/ref1/stage/0/option/0' },
+      response: { status, data: {} }
+    })
+
+    it('no agrega el error genérico cuando el guardado se rechaza por el lock', async () => {
+      Api.patch.mockRejectedValue(lockRejection(409))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    it('tampoco lo agrega cuando el rechazo es por permiso revocado', async () => {
+      Api.patch.mockRejectedValue(lockRejection(403))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    // A real failure still deserves it: there the advice to retry is sound.
+    it('sí avisa cuando el guardado falla por el servidor', async () => {
+      Api.patch.mockRejectedValue(lockRejection(500))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+  })
+
   // Endpoint D writes ONE leaf. Saving the whole study through B would wipe the
   // other nine cells, which is the data loss D exists to prevent.
   describe('AssessmentForm.vue — endpoint D (one leaf per save)', () => {

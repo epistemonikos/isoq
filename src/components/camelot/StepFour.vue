@@ -273,6 +273,7 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import { isLockRejection } from '@/utils/lockErrors'
 import {
   ASSESSMENT_CELLS,
   baseRefOf,
@@ -1132,7 +1133,11 @@ export default {
         })
         .catch(error => {
           console.error('Error saving characteristic field:', error)
-          this.$notify.error(this.$t('notifications.save_error'))
+          // Already announced by the lock channel, with the holder's name and the text
+          // kept locally. The generic "try again" would contradict it.
+          if (!isLockRejection(error)) {
+            this.$notify.error(this.$t('notifications.save_error'))
+          }
           this.isSavingField = false
           this.getCharacteristics()
         })
