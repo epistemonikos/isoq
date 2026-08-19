@@ -161,8 +161,10 @@ import EditUserModal from '../modals/EditUserModal'
 import ManageFlagsModal from '../modals/ManageFlagsModal'
 import ForceLogoutModal from '../modals/ForceLogoutModal'
 import DeleteUserModal from '../modals/DeleteUserModal'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
+  mixins: [preserveScrollMixin],
   components: {
     ActivateUserModal,
     DeactivateUserModal,
@@ -232,6 +234,10 @@ export default {
   },
   methods: {
     async loadUsers (page) {
+      // El slot `table-busy` colapsa el `tbody`: el documento se acorta y el navegador
+      // clampea la posición. Acá pasan la paginación, la búsqueda y cada acción sobre
+      // un usuario, así que basta con sostenerla una vez.
+      this.holdScrollPosition()
       this.isBusy = true
       this.loadError = ''
       const offset = (page - 1) * this.perPage

@@ -459,6 +459,7 @@ import LockService from '@/services/lockService'
 import draggable from 'vuedraggable'
 import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
@@ -470,6 +471,7 @@ const InclusionExclusioCriteria = () => import(/* webpackChunkName: "inclusionEx
 const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './PrintViewTable.vue')
 
 export default {
+  mixins: [preserveScrollMixin],
   components: {
     draggable,
     'content-guidance': contentGuidance,
@@ -972,6 +974,10 @@ export default {
       return refs
     },
     getLists: function () {
+      // El slot `table-busy` reemplaza el `tbody` entero: el documento se acorta y el
+      // navegador clampea la posición. Acá porque es el punto único por donde pasan
+      // todas las mutaciones de la tabla — crear, borrar y reordenar findings.
+      this.holdScrollPosition()
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id

@@ -373,13 +373,24 @@ export default {
     },
     doItLater () {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
-      this.performSave()
+      this.saveNow()
     },
     save () {
       if (this.selected && (!this.text1 || this.text1.trim() === '')) {
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return
       }
+      this.saveNow()
+    },
+    /**
+     * Guardado manual. Descarta el auto-guardado que el watcher dejó agendado: iba a
+     * escribir exactamente lo mismo, y llegaba ~700ms después como un segundo PATCH
+     * idéntico. Medido en navegador — además de la escritura de más, esa segunda
+     * recarga vuelve a colapsar la tabla cuando el hold de scroll ya expiró, y la
+     * página termina en el tope igual.
+     */
+    saveNow () {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.performSave()
     },
     clearSelection () {

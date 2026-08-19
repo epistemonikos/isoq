@@ -155,9 +155,11 @@ import RemoveProjectModal from './modals/RemoveProjectModal'
 import ShareProjectModal from './modals/ShareProjectModal'
 import CloneProjectModal from './modals/CloneProjectModal'
 import LeaveProjectModal from './modals/LeaveProjectModal'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'viewOrganization',
+  mixins: [preserveScrollMixin],
   components: {
     ProjectFormModal,
     RemoveProjectModal,
@@ -260,6 +262,9 @@ export default {
   },
   methods: {
     getProjects: function () {
+      // El slot `table-busy` colapsa el `tbody` y el navegador clampea la posición.
+      // Punto único: acá pasan crear, editar, borrar, duplicar y dejar un proyecto.
+      this.holdScrollPosition()
       this.ui.projectTable.isBusy = true
       Api.get('/getProjects')
         .then((response) => {
