@@ -1,4 +1,5 @@
 import LockService, { studyLockState } from '@/services/lockService'
+import { userDisplayName } from '@/utils/userDisplayName'
 
 /**
  * Reads the ref-lock listing from the point of view of one study.
@@ -14,9 +15,7 @@ import LockService, { studyLockState } from '@/services/lockService'
 export default {
   computed: {
     currentUserName () {
-      const user = (this.$store && this.$store.state && this.$store.state.user) || {}
-      return [user.first_name, user.last_name].filter(Boolean).join(' ') ||
-        user.username || null
+      return userDisplayName((this.$store && this.$store.state && this.$store.state.user))
     },
     // Locks held by someone else. Filtering by our own registry as well as by
     // name covers the same person in a second tab, where the name on the lock
