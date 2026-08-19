@@ -98,13 +98,26 @@ export default {
     handleRefLockConflict (event) {
       const detail = event.detail || {}
       const lockedBy = detail.lockedBy
+      // Two failures that look identical in the payload and read as opposites to the
+      // user: a replay of something written offline, versus a request that just lost
+      // the lock while they sat in the editor. Only the queue knows which, so it says
+      // so in `source`; defaulting to the offline wording is what made a live conflict
+      // report as a sync problem.
+      const live = detail.source !== 'replay'
       // `lock_not_held` carries no holder: the write simply had no lock, so there is
       // no name to blame and the message must not say "edited by undefined".
-      const message = lockedBy
-        ? this.$t('offline.syncConflict', { user: lockedBy })
-        : this.$t('offline.syncConflictNoUser')
+      let message
+      if (live) {
+        message = lockedBy
+          ? this.$t('lock.live_conflict', { user: lockedBy })
+          : this.$t('lock.live_conflict_no_user')
+      } else {
+        message = lockedBy
+          ? this.$t('offline.syncConflict', { user: lockedBy })
+          : this.$t('offline.syncConflictNoUser')
+      }
       this.$bvToast.toast(message, {
-        title: this.$t('offline.syncConflictTitle'),
+        title: this.$t(live ? 'lock.live_conflict_title' : 'offline.syncConflictTitle'),
         variant: 'warning',
         solid: true,
         noAutoHide: true

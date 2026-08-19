@@ -32,7 +32,7 @@ describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', ()
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
-      detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: 'Ana Pérez' }
+      detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: 'Ana Pérez', source: 'replay' }
     }))
 
     expect(toast).toHaveBeenCalledWith(
@@ -46,12 +46,43 @@ describe('OfflineIndicator.vue — aviso global de conflicto al sincronizar', ()
     const { wrapper, toast } = createWrapper()
 
     window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
-      detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: '' }
+      detail: { refId: 'ref1', failedData: { column_0: 'texto' }, lockedBy: '', source: 'replay' }
     }))
 
     expect(toast).toHaveBeenCalledWith(
       'offline.syncConflictNoUser',
       expect.objectContaining({ title: 'offline.syncConflictTitle' })
+    )
+    wrapper.destroy()
+  })
+
+  // The offline wording ("a change you made offline") is a lie for a request that
+  // failed live: the user was online, somebody simply took the entity first. Reported
+  // from the field as "I don't think I was working offline".
+  it('usa el texto de conflicto en vivo cuando el 409 no vino de la cola offline', () => {
+    const { wrapper, toast } = createWrapper()
+
+    window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+      detail: { refId: 'ref1', failedData: {}, lockedBy: 'Ana Pérez', source: 'live' }
+    }))
+
+    expect(toast).toHaveBeenCalledWith(
+      'lock.live_conflict',
+      expect.objectContaining({ title: 'lock.live_conflict_title', noAutoHide: true })
+    )
+    wrapper.destroy()
+  })
+
+  it('usa el texto en vivo sin usuario cuando el 409 no trae quién lo tomó', () => {
+    const { wrapper, toast } = createWrapper()
+
+    window.dispatchEvent(new CustomEvent('ref-lock-conflict', {
+      detail: { refId: 'ref1', failedData: {}, lockedBy: '', source: 'live' }
+    }))
+
+    expect(toast).toHaveBeenCalledWith(
+      'lock.live_conflict_no_user',
+      expect.objectContaining({ title: 'lock.live_conflict_title' })
     )
     wrapper.destroy()
   })

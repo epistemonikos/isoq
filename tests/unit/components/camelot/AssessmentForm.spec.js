@@ -454,6 +454,29 @@ describe('AssessmentForm.vue', () => {
       expect(LockService.releaseRef).not.toHaveBeenCalled()
     })
 
+    // The banner used to require a holder name, but the loss that matters arrives from
+    // the heartbeat's 409, and that response carries no holder at all — so the one case
+    // the user most needs explained was the one that rendered nothing.
+    it('avisa que está en solo lectura aunque no se sepa quién tomó el lock', async () => {
+      const roWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: true, lockedByUser: null },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(roWrapper.find('[data-testid="assessment-readonly-notice"]').exists()).toBe(true)
+      roWrapper.destroy()
+    })
+
+    it('no avisa nada mientras la celda se puede editar', async () => {
+      const rwWrapper = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...propsData, isReadOnly: false, lockedByUser: null },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(rwWrapper.find('[data-testid="assessment-readonly-notice"]').exists()).toBe(false)
+      rwWrapper.destroy()
+    })
+
     it('no guarda (no llama Api.patch) cuando el prop isReadOnly es true', async () => {
       Api.patch.mockClear()
       const roWrapper = mount(AssessmentForm, {
@@ -480,6 +503,49 @@ describe('AssessmentForm.vue', () => {
       await flushPromises()
       expect(Api.patch).not.toHaveBeenCalled()
       noRefWrapper.destroy()
+    })
+  })
+
+  // Verified in the browser: losing the lock mid-edit raised TWO toasts at once — the
+  // conflict message naming who took the entry, and a generic "could not save, please
+  // try again" whose advice cannot work while somebody else holds the lock.
+  describe('AssessmentForm.vue — rechazo por lock al guardar', () => {
+    const flushPromises = () => new Promise(resolve => process.nextTick(resolve))
+
+    const lockRejection = (status) => Object.assign(new Error('rejected'), {
+      config: { url: '/isoqf_assessments/assess1/item/ref1/stage/0/option/0' },
+      response: { status, data: {} }
+    })
+
+    it('no agrega el error genérico cuando el guardado se rechaza por el lock', async () => {
+      Api.patch.mockRejectedValue(lockRejection(409))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    it('tampoco lo agrega cuando el rechazo es por permiso revocado', async () => {
+      Api.patch.mockRejectedValue(lockRejection(403))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    // A real failure still deserves it: there the advice to retry is sound.
+    it('sí avisa cuando el guardado falla por el servidor', async () => {
+      Api.patch.mockRejectedValue(lockRejection(500))
+      await wrapper.setData({ selected: 'A', text1: 'texto' })
+
+      await wrapper.vm.performSave(false)
+      await flushPromises()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
     })
   })
 

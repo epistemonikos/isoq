@@ -243,6 +243,76 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
     })
   })
 
+  // Read-only alone is silent: the fields simply stop responding and the user keeps
+  // typing into a form that will never save. Reported from the field as "user 1 was
+  // still looking at the modal". The banner is the only thing that tells them.
+  describe('aviso visible cuando el finding queda en solo lectura', () => {
+    it('no muestra aviso mientras el finding se puede editar', async () => {
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+
+      expect(wrapper.vm.readOnlyNotice).toBeFalsy()
+      wrapper.destroy()
+    })
+
+    it('muestra un aviso cuando el lock se pierde con el modal abierto', async () => {
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'finding1', lockedBy: 'Ana Pérez' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.vm.readOnlyNotice).toBeTruthy()
+      wrapper.destroy()
+    })
+
+    it('renderiza el aviso en el formulario, no sólo en el estado', async () => {
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'finding1', lockedBy: 'Ana Pérez' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="finding-readonly-notice"]').exists()).toBe(true)
+      wrapper.destroy()
+    })
+  })
+
+  // The inline row editor was the quietest of all: read-only did not disable its
+  // textarea or its Save button, and updateContentExtractedDataItem returns early, so
+  // the user typed, pressed Save, and nothing happened — no error, no explanation.
+  describe('aviso visible cuando la fila inline queda en solo lectura', () => {
+    it('no muestra aviso de fila mientras la fila se puede editar', async () => {
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+      wrapper.vm.editExtractedDataInPlace(0)
+      await flushPromises()
+
+      expect(wrapper.vm.rowReadOnlyNotice).toBeFalsy()
+      wrapper.destroy()
+    })
+
+    it('muestra aviso de fila cuando se pierde el lock de la fila abierta', async () => {
+      const { wrapper } = createWrapper()
+      await openModal(wrapper)
+      wrapper.vm.editExtractedDataInPlace(0)
+      await flushPromises()
+
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.vm.isRowReadOnly).toBe(true)
+      expect(wrapper.vm.rowReadOnlyNotice).toBeTruthy()
+      wrapper.destroy()
+    })
+  })
+
   describe('ciclo de vida del lock frente a los eventos del modal', () => {
     it('libera el lock del finding al destruirse el componente', async () => {
       const { wrapper } = createWrapper()

@@ -265,17 +265,24 @@
     "lock_lost_message": "Se perdió la conexión con el servidor o otro usuario ha tomado el control de edición. Para evitar pérdida de datos, por favor recarga la página.",
     "idle_message": "Has estado inactivo por un tiempo. Para permitir que otros editen, se ha liberado tu acceso de escritura. Por favor recarga para resumir la edición.",
     "ref_locked_by": "Siendo editado por {user}",
+    "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
     "ref_lock_offline": "Sin conexión — edición no disponible",
     "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
     "ref_conflict_title": "Cambios no guardados",
     "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
+    "ref_conflict_message_live": "{user} tomó este estudio mientras lo tenías abierto. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
     "ref_conflict_copy_field": "Copiar",
     "ref_conflict_close": "Cerrar",
     "permissions_revoked": "Tu acceso a este proyecto cambió a solo lectura.",
     "permissions_granted": "Ahora tienes acceso de edición a este proyecto.",
     "connection_lost": "Conexión perdida",
     "session_timeout": "Sesión expirada",
-    "reload": "Recargar"
+    "reload": "Recargar",
+    "live_conflict_title": "Cambio no guardado",
+    "live_conflict": "{user} está editando esta entrada ahora, así que tu cambio no se guardó. Tu texto quedó guardado localmente para que puedas copiarlo.",
+    "live_conflict_no_user": "Tu cambio no se guardó porque ya no tienes el bloqueo de edición de esta entrada. Tu texto quedó guardado localmente para que puedas copiarlo.",
+    "lost_while_editing": "Este hallazgo pasó a solo lectura: {user} lo está editando ahora. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar.",
+    "lost_while_editing_no_user": "Este hallazgo pasó a solo lectura: tu bloqueo de edición expiró. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar."
   },
   "project": {
     "notifications": {

@@ -8,7 +8,7 @@
     @ok="onClose"
     @hidden="onClose"
   >
-    <p>{{ $t('lock.ref_conflict_message', { user: lockedBy }) }}</p>
+    <p>{{ $t(conflictMessageKey, { user: lockedBy }) }}</p>
     <div v-for="(value, key) in conflictFields" :key="key" class="mb-3">
       <div class="d-flex justify-content-between align-items-center mb-1">
         <strong class="text-muted small text-uppercase">{{ key }}</strong>
@@ -30,9 +30,18 @@ export default {
   props: {
     lockedBy: { type: String, default: '' },
     failedData: { type: Object, default: () => ({}) },
-    refId: { type: String, default: '' }
+    refId: { type: String, default: '' },
+    // 'live' = the write failed just now; 'replay' = the offline queue tried it later.
+    source: { type: String, default: 'live' }
   },
   computed: {
+    // Same lost payload, opposite stories. Announcing "while you were offline" to
+    // somebody who never lost connection sends them debugging the wrong thing.
+    conflictMessageKey () {
+      return this.source === 'replay'
+        ? 'lock.ref_conflict_message'
+        : 'lock.ref_conflict_message_live'
+    },
     conflictFields () {
       return Object.fromEntries(
         Object.entries(this.failedData || {}).filter(([k]) => !SYSTEM_KEYS.has(k))

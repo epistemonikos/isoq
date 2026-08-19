@@ -243,4 +243,62 @@ describe('EditReferenceModal.vue', () => {
       expect(Api.patch).not.toHaveBeenCalled()
     })
   })
+
+  // Third editor with the same double message: the conflict toast plus a generic
+  // "could not save, please try again" that cannot be acted on.
+  describe('rechazo por lock al guardar', () => {
+    const rejection = (status) => Object.assign(new Error('rejected'), {
+      config: { url: '/isoqf_characteristics/char1/item/ref1' },
+      response: { status, data: {} }
+    })
+
+    it('no agrega el error genérico cuando el guardado se rechaza por el lock', async () => {
+      Api.patch.mockRejectedValue(rejection(409))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).not.toHaveBeenCalled()
+    })
+
+    it('sí avisa cuando el guardado falla por el servidor', async () => {
+      Api.patch.mockRejectedValue(rejection(500))
+
+      await wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+  })
+
+  // Step 3's editor had the same hole as Step 4's: it listened for the conflict on
+  // save but not for the lock going away, so a study taken over mid-edit stayed fully
+  // writable on screen.
+  describe('pérdida del lock con el editor abierto', () => {
+    it('pasa a solo lectura cuando pierde el lock del estudio abierto', async () => {
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ref1', lockedBy: 'Ana Pérez' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.vm.isReadOnly).toBe(true)
+      expect(wrapper.vm.lockedByUser).toBe('Ana Pérez')
+    })
+
+    it('ignora la pérdida del lock de otro estudio', async () => {
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'ref9', lockedBy: 'Ana Pérez' }
+      }))
+      await flushPromises()
+
+      expect(wrapper.vm.isReadOnly).toBe(false)
+    })
+
+    it('deja de escuchar el aviso al destruirse', () => {
+      const removeSpy = jest.spyOn(window, 'removeEventListener')
+      wrapper.destroy()
+      expect(removeSpy).toHaveBeenCalledWith('ref-lock-lost', expect.any(Function))
+      removeSpy.mockRestore()
+    })
+  })
 })

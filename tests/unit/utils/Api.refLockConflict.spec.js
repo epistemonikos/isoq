@@ -42,7 +42,10 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     expect(event.detail).toEqual({
       refId: 'ref1',
       failedData: { ref_id: 'ref1', campo1: 'v' },
-      lockedBy: 'Ana'
+      lockedBy: 'Ana',
+      // A 409 on a live request is not an offline replay: the wording the listener
+      // picks depends on telling them apart.
+      source: 'live'
     })
     expect(setItemSpy).toHaveBeenCalledWith(
       'conflict_ref_ref1',

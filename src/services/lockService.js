@@ -32,6 +32,7 @@ class LockService {
 
     // Bind idle handlers
     this.resetIdleTimer = this.resetIdleTimer.bind(this)
+    this.revalidateLocks = this.revalidateLocks.bind(this)
 
     // Listen for logout in other tabs
     if (typeof window !== 'undefined') {
@@ -56,7 +57,27 @@ class LockService {
       // Offline grants are promises, not locks: turn them into real ones as soon as
       // there is a network again, while the editor is still open.
       window.addEventListener('online', () => { this.retryOfflineRefs() })
+
+      // Chrome throttles setInterval in hidden tabs and, after ~5 minutes, drops it to
+      // once a minute — slower than the server's 60s TTL. The lock lapses, somebody
+      // else takes the study, and the editor comes back to a form that still looks
+      // writable. Beating on the way back in collapses that window: the 409 arrives
+      // now, not at the next scheduled tick.
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', this.revalidateLocks)
+      }
     }
+  }
+
+  /**
+   * Re-checks every held lock the moment the tab becomes visible again.
+   * Only beats what we actually hold: a tab with no editor open must not talk to
+   * the server every time the user tabs back to it.
+   */
+  revalidateLocks () {
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+    if (this.refLocks.size) this.refHeartbeat()
+    if (this.isLocked && this.projectId) this.heartbeat()
   }
 
   get refLocked () {

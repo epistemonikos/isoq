@@ -265,17 +265,24 @@
     "lock_lost_message": "A conexão com o servidor foi perdida ou outro usuário assumiu o controle da edição. Para evitar perda de dados, recarregue a página.",
     "idle_message": "Você esteve inativo por um tempo. Para permitir que outros editem, seu acesso de escrita foi liberado. Por favor, recarregue para retomar a edição.",
     "ref_locked_by": "Sendo editado por {user}",
+    "ref_locked_by_no_user": "Somente leitura: este achado não está disponível para edição neste momento.",
     "ref_lock_offline": "Sem conexão — edição indisponível",
     "ref_lock_reconnected": "Reconectado — iniciar edição?",
     "ref_conflict_title": "Alterações não salvas",
     "ref_conflict_message": "Enquanto você estava desconectado, {user} editou este estudo. Suas alterações não foram salvas. Você pode copiá-las e aplicá-las manualmente.",
+    "ref_conflict_message_live": "{user} assumiu este estudo enquanto você o mantinha aberto. Suas alterações não foram salvas. Você pode copiá-las e aplicá-las manualmente.",
     "ref_conflict_copy_field": "Copiar",
     "ref_conflict_close": "Fechar",
     "permissions_revoked": "Seu acesso a este projeto mudou para somente leitura.",
     "permissions_granted": "Agora você tem acesso de edição a este projeto.",
     "connection_lost": "Conexão perdida",
     "session_timeout": "Sessão expirada",
-    "reload": "Recarregar"
+    "reload": "Recarregar",
+    "live_conflict_title": "Alteração não salva",
+    "live_conflict": "{user} está editando esta entrada agora, portanto sua alteração não foi salva. Seu texto foi mantido localmente para que você possa copiá-lo.",
+    "live_conflict_no_user": "Sua alteração não foi salva porque você não detém mais o bloqueio de edição desta entrada. Seu texto foi mantido localmente para que você possa copiá-lo.",
+    "lost_while_editing": "Este achado passou a somente leitura: {user} está editando agora. O que você digitou desde então não foi salvo; copie antes de fechar.",
+    "lost_while_editing_no_user": "Este achado passou a somente leitura: seu bloqueio de edição expirou. O que você digitou desde então não foi salvo; copie antes de fechar."
   },
   "project": {
     "notifications": {

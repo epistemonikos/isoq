@@ -87,7 +87,9 @@ describe('Api.syncPendingOperations() — locks al reproducir la cola', () => {
     expect(event.detail).toEqual({
       refId: 'ref1',
       failedData: { ref_id: 'ref1', column_0: 'escrito sin conexión' },
-      lockedBy: 'Ana Pérez'
+      lockedBy: 'Ana Pérez',
+      // This one really did happen offline, so the offline wording is the honest one.
+      source: 'replay'
     })
     expect(Storage.prototype.setItem).toHaveBeenCalledWith(
       'conflict_ref_ref1', expect.stringContaining('Ana Pérez')

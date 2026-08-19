@@ -33,6 +33,28 @@ describe('RefLockConflictModal.vue', () => {
     wrapper.destroy()
   })
 
+  // The modal's default copy opens with "While you were offline". Shown after a live
+  // 409 it contradicts what the user just experienced, so the source decides the text.
+  it('usa el mensaje de conflicto en vivo cuando el rechazo no vino de la cola offline', () => {
+    const wrapper = shallowMount(RefLockConflictModal, {
+      localVue,
+      propsData: { ...mockConflictData, source: 'live' },
+      mocks: { $t: (key) => key }
+    })
+    expect(wrapper.vm.conflictMessageKey).toBe('lock.ref_conflict_message_live')
+    wrapper.destroy()
+  })
+
+  it('conserva el mensaje offline cuando el rechazo vino de la cola', () => {
+    const wrapper = shallowMount(RefLockConflictModal, {
+      localVue,
+      propsData: { ...mockConflictData, source: 'replay' },
+      mocks: { $t: (key) => key }
+    })
+    expect(wrapper.vm.conflictMessageKey).toBe('lock.ref_conflict_message')
+    wrapper.destroy()
+  })
+
   it('emite "closed" al cerrar', () => {
     const wrapper = shallowMount(RefLockConflictModal, {
       localVue,
