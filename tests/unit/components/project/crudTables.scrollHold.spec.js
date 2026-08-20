@@ -39,6 +39,7 @@ jest.mock('@/services/columnService', () => ({
 }))
 
 jest.mock('@/services/lockService', () => ({
+  fetchRefLocks: jest.fn().mockResolvedValue([]),
   acquireRef: jest.fn(() => Promise.resolve({ success: true })),
   releaseRef: jest.fn(() => Promise.resolve())
 }))

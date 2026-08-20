@@ -78,66 +78,131 @@ describe('ViewTable.vue', () => {
     })
   })
 
-  describe('updateFinding', () => {
-    it('shows success toast after a successful patch', async () => {
+  // updateFinding/processDataList desaparecieron: eran dos PATCH de documento completo.
+  describe('updateListName — endpoint de identidad', () => {
+    it('manda un único PATCH con sólo los campos del modal', async () => {
       Api.patch.mockResolvedValue({ data: {} })
       const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'Nombre nuevo', category: 'cat1', notes: 'una nota' }
+      })
 
-      await wrapper.vm.updateFinding({ finding_id: 'find1', name: 'Updated name', notes: '' })
+      await wrapper.vm.updateListName()
       await wrapper.vm.$nextTick()
 
-      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1', expect.any(Object))
+      expect(Api.patch).toHaveBeenCalledTimes(1)
+      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1/identity', {
+        name: 'Nombre nuevo', category: 'cat1', notes: 'una nota'
+      })
       expect($notify.success).toHaveBeenCalledWith('notifications.saved')
     })
 
-    it('shows error toast when patch fails', async () => {
-      Api.patch.mockRejectedValue(new Error('network error'))
-      const { wrapper, $notify } = createWrapper()
-
-      await wrapper.vm.updateFinding({ finding_id: 'find1', name: 'Updated name', notes: '' })
-      await wrapper.vm.$nextTick()
-
-      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
-    })
-
-    it('emits get-lists on success', async () => {
+    // La whitelist del servidor devuelve 400 ante estas claves, que es justo lo que impide
+    // que los campos derivados de processLists vuelvan a la base.
+    it('no manda los campos que processLists inyecta para pintar la tabla', async () => {
       Api.patch.mockResolvedValue({ data: {} })
       const { wrapper } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', category: null, notes: '' }
+      })
 
-      await wrapper.vm.updateFinding({ finding_id: 'find1', name: 'Name', notes: '' })
+      await wrapper.vm.updateListName()
+
+      const body = Api.patch.mock.calls[0][1]
+      expect(Object.keys(body).sort()).toEqual(['category', 'name', 'notes'])
+      ;['raw_ref', 'ref_list', 'displayNumber', 'cerqual_option', 'status', 'is_public', 'sort']
+        .forEach(k => expect(body).not.toHaveProperty(k))
+    })
+
+    // notes ausente en 3074 de 6897 listas; processLists lo normaliza a '' antes del modal,
+    // pero el servidor devuelve 400 ante null, así que el guard vale igual.
+    it('nunca manda notes null', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({
+        editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', category: null, notes: null }
+      })
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch.mock.calls[0][1].notes).toBe('')
+    })
+
+    it('emite get-lists al guardar bien', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
+
+      await wrapper.vm.updateListName()
       await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('get-lists')).toBeTruthy()
     })
-  })
 
-  describe('updateFindingReferences', () => {
-    it('shows success toast after a successful patch', async () => {
-      Api.patch.mockResolvedValue({ data: {} })
-      const { wrapper, $notify } = createWrapper()
-      await wrapper.setData({ finding: { id: 'find1' } })
-
-      await wrapper.vm.updateFindingReferences(['ref1', 'ref2'])
-      await wrapper.vm.$nextTick()
-
-      // References persist to the top-level finding field (source of truth), not the
-      // broken dot-notation evidence_profile.references key.
-      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1', { references: ['ref1', 'ref2'] })
-      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
-    })
-
-    it('shows error toast when patch fails', async () => {
+    it('avisa del fallo cuando no es un rechazo de lock', async () => {
       Api.patch.mockRejectedValue(new Error('network error'))
       const { wrapper, $notify } = createWrapper()
-      await wrapper.setData({ finding: { id: 'find1' } })
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
 
-      await wrapper.vm.updateFindingReferences(['ref1'])
+      await wrapper.vm.updateListName()
       await wrapper.vm.$nextTick()
 
       expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
     })
 
-    it('cleans references list on success', async () => {
+    // El conflicto ya se le anunció por el canal de locks; "intente nuevamente" es un
+    // consejo falso mientras el lock sea de otra persona.
+    it('NO encima el error genérico sobre un 409 de lock', async () => {
+      Api.patch.mockRejectedValue({
+        response: { status: 409, data: { reason: 'locked_by_other_user', locked_by: 'Ana' } },
+        config: { url: '/api/isoqf_findings/find1/identity' }
+      })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: 'find1', name: 'N', notes: '' } })
+
+      await wrapper.vm.updateListName()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).not.toHaveBeenCalled()
+    })
+
+    it('no escribe sin el id del finding', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ editFindingName: { id: 'list1', finding_id: null, name: 'N', notes: '' } })
+      Api.patch.mockClear()
+
+      await wrapper.vm.updateListName()
+
+      expect(Api.patch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('saveReferencesList — endpoint de identidad', () => {
+    it('manda sólo references, en un único PATCH', async () => {
+      Api.patch.mockResolvedValue({ data: {} })
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1', 'ref2'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect(Api.patch).toHaveBeenCalledTimes(1)
+      expect(Api.patch).toHaveBeenCalledWith('/isoqf_findings/find1/identity', { references: ['ref1', 'ref2'] })
+      expect($notify.success).toHaveBeenCalledWith('notifications.saved')
+    })
+
+    it('avisa del fallo cuando no es un rechazo de lock', async () => {
+      Api.patch.mockRejectedValue(new Error('network error'))
+      const { wrapper, $notify } = createWrapper()
+      await wrapper.setData({ finding: { id: 'find1' }, selected_references: ['ref1'] })
+
+      await wrapper.vm.saveReferencesList()
+      await wrapper.vm.$nextTick()
+
+      expect($notify.error).toHaveBeenCalledWith('notifications.save_error')
+    })
+
+    it('limpia la selección al guardar bien', async () => {
       Api.patch.mockResolvedValue({ data: {} })
       const { wrapper } = createWrapper()
       await wrapper.setData({
@@ -146,11 +211,21 @@ describe('ViewTable.vue', () => {
         original_references: ['ref1']
       })
 
-      await wrapper.vm.updateFindingReferences(['ref1'])
+      await wrapper.vm.saveReferencesList()
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.selected_references).toEqual([])
       expect(wrapper.vm.original_references).toEqual([])
+    })
+
+    it('no escribe sin el id del finding', async () => {
+      const { wrapper } = createWrapper()
+      await wrapper.setData({ finding: {}, selected_references: ['ref1'] })
+      Api.patch.mockClear()
+
+      await wrapper.vm.saveReferencesList()
+
+      expect(Api.patch).not.toHaveBeenCalled()
     })
   })
 
@@ -358,5 +433,70 @@ describe('ViewTable.vue', () => {
       const { wrapper } = createWrapper({ canEdit: true })
       expect(wrapper.find('#remove-finding').attributes('ok-disabled')).toBeUndefined()
     })
+  })
+})
+
+// El padre corre un sondeo que recarga `lists` cuando otra persona cambia algo. Repintar
+// la tabla debajo de un modal abierto descartaría el borrador de quien esté escribiendo,
+// así que ViewTable tiene que decir cuándo hay uno abierto. Los modales viven acá y el
+// mixin de frescura vive en el padre: la señal va por evento.
+describe('ViewTable.vue — aviso de editor abierto', () => {
+  it('avisa al abrirse y al cerrarse el modal de nombre/categoría', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('edit-finding-name')
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+
+    wrapper.vm.onEditFindingNameHidden()
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  it('el modal de referencias avisa por su handler de cierre', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('modal-references-list')
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+
+    wrapper.vm.handleReferencesModalHidden()
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  // El de borrado abre encima del de referencias en algunos flujos de advertencia: si
+  // cerrar uno bastara para decir "no hay editores", el refresco entraría con el otro
+  // todavía abierto.
+  it('sólo avisa que no hay editores cuando se cerraron todos', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('modal-references-list')
+    wrapper.vm.noteModalShown('remove-finding')
+    wrapper.vm.noteModalHidden('remove-finding')
+
+    expect(wrapper.emitted('editor-open').pop()).toEqual([true])
+    wrapper.destroy()
+  })
+
+  it('abrir dos veces el mismo modal no lo cuenta dos veces', () => {
+    const { wrapper } = createWrapper()
+
+    wrapper.vm.noteModalShown('edit-finding-name')
+    wrapper.vm.noteModalShown('edit-finding-name')
+    wrapper.vm.noteModalHidden('edit-finding-name')
+
+    expect(wrapper.emitted('editor-open').pop()).toEqual([false])
+    wrapper.destroy()
+  })
+
+  // El modal de referencias queda abierto a propósito mientras se muestra una advertencia
+  // (pendingSaveReferences); el aviso de cierre no debe adelantarse a eso.
+  it('el cierre del modal de referencias no limpia la selección si hay un guardado pendiente', () => {
+    const { wrapper } = createWrapper()
+    wrapper.setData({ pendingSaveReferences: true, selected_references: ['ref1'] })
+
+    wrapper.vm.handleReferencesModalHidden()
+
+    expect(wrapper.vm.selected_references).toEqual(['ref1'])
+    wrapper.destroy()
   })
 })

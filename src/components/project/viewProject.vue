@@ -246,7 +246,8 @@
                   $t('common.reorder_findings') || 'Re-order your review findings' }}</b-button>
 
                 <b-modal ref="modal-sort-findings" id="modal-sort-findings" size="xl" :ok-title="$t('common.save')"
-                  ok-variant="outline-success" cancel-variant="outline-danger" scrollable @ok="saveSortedLists">
+                  ok-variant="outline-success" cancel-variant="outline-danger" scrollable @ok="saveSortedLists"
+                  @show="onProjectEditorOpen(true)" @hidden="onProjectEditorOpen(false)">
                   <template v-slot:modal-title>
                     <videoHelp :txt="$t('modals.reorder_findings_title')" tag="none" urlId="462176102"></videoHelp>
                   </template>
@@ -311,8 +312,9 @@
               <ViewTable :class="{ 'd-none': effectiveMode === 'view', 'd-print-none': true }" :lists="lists"
                 :list_categories="list_categories" :fields="translatedTableFields" :project="project"
                 :mode="effectiveMode" :canEdit="isEditing" :isBusy="table_settings.isBusy" :references="references"
-                :refs="refs" :filter="table_settings.filter"
+                :refs="refs" :filter="table_settings.filter" :findings="findings" :refLocks="activeRefLocks"
                 @get-lists="getLists" @get-project="getProject" @add-list="modalAddList" @set-busy="setBusy"
+                @editor-open="onIsoqEditorOpen" @lock-denied="fetchAndUpdateRefLocks"
                 @set-load-references="statusLoadReferences" @get-references="getReferences"
                 @update-project-status="getProject" />
             </template>
@@ -325,7 +327,8 @@
             <b-modal size="xl" centered id="add-summarized" ref="add-summarized"
               :title="$t('common.add_summarized_finding') || 'Add Summarised review finding'"
               :ok-disabled="(summarized_review) ? false : true" @ok="createList" :ok-title="$t('common.save')"
-              ok-variant="outline-success" cancel-variant="outline-secondary">
+              ok-variant="outline-success" cancel-variant="outline-secondary"
+              @show="onProjectEditorOpen(true)" @hidden="onProjectEditorOpen(false)">
               <b-form-group :label="$t('soqf_table.summarised_finding')" label-for="summarized-review">
                 <template slot="description">
                   {{ $t('common.click') || 'Click' }}
@@ -345,7 +348,8 @@
               </b-form-group>
             </b-modal>
 
-            <b-modal size="xl" id="modalEditListCategories" ref="modalEditListCategories" scrollable>
+            <b-modal size="xl" id="modalEditListCategories" ref="modalEditListCategories" scrollable
+              @show="onProjectEditorOpen(true)" @hidden="onProjectEditorOpen(false)">
               <template v-slot:modal-title>
                 <videoHelp :txt="$t('modals.review_finding_groups')" tag="none" urlId="451100564"></videoHelp>
               </template>
@@ -457,9 +461,9 @@
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import draggable from 'vuedraggable'
-import { Paragraph, TextRun, AlignmentType, TableCell, TableRow } from 'docx'
 import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
@@ -470,8 +474,12 @@ const UploadReferences = () => import(/* webpackChunkName: "uploadReferences" */
 const InclusionExclusioCriteria = () => import(/* webpackChunkName: "inclusionExclusionCriteria" */ './InclusionExclusionCriteria.vue')
 const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './PrintViewTable.vue')
 
+// Mismo tick que usan los Pasos 3 y 4. Es el techo de cuánto puede tardar en verse un
+// finding creado por otra persona, y de cuánto tarda una fila en aparecer bloqueada.
+const PROJECT_POLL_INTERVAL = 15000
+
 export default {
-  mixins: [preserveScrollMixin],
+  mixins: [preserveScrollMixin, projectFreshnessMixin],
   components: {
     draggable,
     'content-guidance': contentGuidance,
@@ -489,6 +497,15 @@ export default {
   },
   data () {
     return {
+      // Locks vigentes del proyecto, sondeados junto con la frescura (ver
+      // startProjectPolling). Se los pasamos a ViewTable para que grisée los botones de
+      // un finding que otro está editando antes de que alguien lo intente.
+      activeRefLocks: [],
+      // Un refresco automático repinta `lists` debajo de quien esté escribiendo. Estos
+      // dos dicen si hay un editor abierto: uno para los modales de ViewTable (llegan por
+      // el evento `editor-open`) y otro para los de esta misma vista.
+      isoqEditorOpen: false,
+      projectEditorOpen: false,
       stepStage: 0,
       camelotLogo: require('@/assets/camelot-logo.svg'),
       project: {
@@ -558,10 +575,6 @@ export default {
         text: '',
         extra_info: '',
         index: null
-      },
-      list_category: {
-        name: '',
-        extra_info: ''
       },
       fields: {
         with_categories: [
@@ -688,6 +701,8 @@ export default {
     // a finding save, a ref-lock attempt, etc.) — re-check this user's permission
     // right away instead of waiting for them to navigate to a different tab/step.
     window.addEventListener('permission-denied', this.refreshPermissions)
+    // Un lock tomado o soltado en esta misma pestaña no espera al próximo tick.
+    window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
 
     // Categories and references are independent of each other, so load them
     // concurrently. Both must finish before getProject() (its getLists() → processLists()
@@ -700,6 +715,10 @@ export default {
     // Other parallel data loads
     this.getCharacteristicsData()
     this.getAssessmentsData()
+    // Después de la carga inicial: el primer tick sólo ceba `knownLastUpdate`, así que
+    // arrancarlo acá y no al entrar al tab iSoQ es lo que hace que un cambio ajeno se vea
+    // sin recargar. Ver startProjectPolling.
+    this.startProjectPolling()
   },
   beforeDestroy () {
     LockService.release()
@@ -711,17 +730,62 @@ export default {
     window.removeEventListener('lock-idle', this.handleIdle)
     window.removeEventListener('axios-refresh-lock', this.handleLockLost)
     window.removeEventListener('permission-denied', this.refreshPermissions)
+    window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
+    this.stopProjectPolling()
   },
   methods: {
+    /** Lo que significa recargar acá: releer el listado de findings del tab iSoQ. */
+    applyProjectRefresh: function () {
+      this.getLists()
+    },
+    /**
+     * Repintar la tabla debajo de alguien que escribe le descarta el borrador, y además
+     * dejaría colgados los índices que los modales capturaron al abrir.
+     */
+    hasOpenEditor: function () {
+      return this.isoqEditorOpen || this.projectEditorOpen
+    },
+    /** ViewTable avisa por evento porque los modales del listado viven en el hijo. */
+    onIsoqEditorOpen: function (open) {
+      this.isoqEditorOpen = open
+      if (!open) this.flushPendingRefresh()
+    },
+    /** Ídem para los modales propios de esta vista (alta, reordenar, categorías). */
+    onProjectEditorOpen: function (open) {
+      this.projectEditorOpen = open
+      if (!open) this.flushPendingRefresh()
+    },
+    fetchAndUpdateRefLocks: async function () {
+      this.activeRefLocks = await LockService.fetchRefLocks(this.$route.params.id)
+    },
+    /**
+     * Un solo timer para las dos preguntas que se le hacen al servidor cada 15 s: quién
+     * tiene tomado qué, y si alguien cambió algo. Mismo piggyback que StepThree/StepFour.
+     *
+     * Va en esta vista y no en ViewTable porque `getLists()` vive acá, y sobre todo
+     * porque viewProject no se desmonta mientras se esté en el proyecto: los cuatro tabs
+     * se ocultan con `d-none`, no con `v-if`. Ese detalle ES el bug reportado — quien
+     * estaba en "My data" mientras otro creaba findings no los veía al volver a iSoQ,
+     * porque nada re-pedía la lista. Con el sondeo corriendo desde `mounted`, el tab
+     * oculto ya llega actualizado.
+     */
+    startProjectPolling: function () {
+      this.fetchAndUpdateRefLocks()
+      this.checkProjectFreshness()
+      this.projectPollTimer = setInterval(() => {
+        this.fetchAndUpdateRefLocks()
+        this.checkProjectFreshness()
+      }, PROJECT_POLL_INTERVAL)
+    },
+    stopProjectPolling: function () {
+      if (this.projectPollTimer) clearInterval(this.projectPollTimer)
+      this.projectPollTimer = null
+    },
     setBusy: function (value) {
       this.table_settings.isBusy = value
     },
     updateDataProject: function (data) {
       this.getProject()
-    },
-    isActiveStepTwo: function () {
-      if (this.references.length === 0) { return false }
-      if (this.project.inclusion === '' || this.project.exclusion === '') { this.stepStage = 1; return true }
     },
     getListCategories: async function () {
       const params = {
@@ -1066,22 +1130,6 @@ export default {
       this.table_settings.perPage = params.perPage
       this.table_settings.currentPage = params.currentPage
     },
-    returnRefWithNames: function (array) {
-      let authorsList = []
-      for (const i in array) {
-        for (const r of this.references) {
-          if (r.id === array[i]) {
-            authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
-          }
-        }
-      }
-      authorsList.sort()
-      let authors = ''
-      for (let x in authorsList) {
-        authors = authors + authorsList[x] + '; '
-      }
-      return authors
-    },
     displaySelectedOption: function (option, type) {
       return Commons.displaySelectedOption(option, type)
     },
@@ -1335,160 +1383,8 @@ export default {
           this.$notify.error(this.$t('notifications.create_error'))
         })
     },
-    generateEvidenceProfileTableWithCategories: function (findings) {
-      let content = []
-      for (const position in findings) {
-        let rowTitle = this.$t('categories.uncategorised_findings')
-        for (const category of this.list_categories.options) {
-          if (findings[position].length) {
-            if (findings[position][0].category === null) {
-              break
-            }
-            if (findings[position][0].category === category.id) {
-              rowTitle = category.text
-            }
-          }
-        }
-        if (findings[position].length) {
-          content.push(
-            new TableRow({
-              children: [
-                new TableCell({
-                  columnSpan: 5,
-                  children: [
-                    new Paragraph({
-                      alignment: AlignmentType.CENTER,
-                      children: [
-                        new TextRun({
-                          text: rowTitle.toUpperCase(),
-                          bold: true,
-                          size: 22
-                        })
-                      ]
-                    })
-                  ]
-                })
-              ]
-            })
-          )
-          content.push(...this.generateEvidenceProfileTableWithoutCategories(findings[position]))
-        }
-      }
-      return content
-    },
-    generateEvidenceProfileTable: function (findings) {
-      let categories = JSON.parse(JSON.stringify(this.list_categories.options)).filter((category) => { return category.id !== null })
-      categories.sort(function (a, b) {
-        if (a.text < b.text) { return -1 }
-        if (a.text > b.text) { return 1 }
-        return 0
-      })
-
-      let _findings = {}
-      for (let category of categories) {
-        _findings[category.id] = []
-      }
-      if (categories.length) {
-        _findings['uncategorised'] = []
-        for (let finding of findings) {
-          if (Object.prototype.hasOwnProperty.call(finding, 'category')) {
-            if (finding.category !== null) {
-              if (Object.prototype.hasOwnProperty.call(_findings, finding.category.toString())) {
-                _findings[finding.category].push(finding)
-              } else {
-                _findings[finding.category] = []
-                _findings[finding.category].push(finding)
-              }
-            } else {
-              _findings['uncategorised'].push(finding)
-            }
-          }
-        }
-        return this.generateEvidenceProfileTableWithCategories(_findings)
-      } else {
-        return this.generateEvidenceProfileTableWithoutCategories(findings)
-      }
-    },
-    generateEvidenceProfileTableWithoutCategories: function (findings) {
-      return findings.map((finding) => {
-        if (Object.prototype.hasOwnProperty.call(finding, 'evidence_profile')) {
-          return new TableRow({
-            tableHeader: true,
-            children: [
-              this.generateTableCell({
-                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.CENTER
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.methodological_limitations.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.coherence.option), font_size: 22, align: AlignmentType.CENTER
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.adequacy.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(finding.evidence_profile.relevance.option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.displaySelectedOption(Commons.resolveCerqual(finding).option), font_size: 22, align: AlignmentType.LEFT
-              }),
-              this.generateTableCell({
-                width_size: '10%', text: this.returnRefWithNames(finding.references), font_size: 16, align: AlignmentType.LEFT
-              })
-            ]
-          })
-        } else {
-          return new TableRow({
-            children: [
-              this.generateTableCell({
-                width_size: '40%', text: finding.name, font_size: 22, align: AlignmentType.LEFT
-              }),
-              new TableCell({
-                columnSpan: 5,
-                width_size: '40%',
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new TextRun({
-                        text: '',
-                        size: 22
-                      })
-                    ]
-                  })
-                ]
-              }),
-              this.generateTableCell({
-                width_size: '10%',
-                text: this.returnRefWithNames(finding.references),
-                font_size: 16,
-                align: AlignmentType.LEFT
-              })
-            ]
-          })
-        }
-      })
-    },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       return Commons.getAuthorsFormat(authors, pubYear)
-    },
-    saveListCategoryName: function () {
-      const params = {
-        text: this.list_category.name,
-        extra_info: this.list_category.extra_info,
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-      Api.post('/isoqf_list_categories', params)
-        .then((response) => {
-          this.list_categories.options = response.data
-          this.list_categories.selected = null
-          this.list_categories.skip = false
-        })
-        .catch((error) => {
-          Commons.printErrors(error)
-        })
     },
     modalListCategories: async function () {
       await this.getListCategories()
@@ -1676,17 +1572,6 @@ export default {
           Commons.printErrors(error)
         })
     },
-    countDownChanged (dismissCountDown) {
-      if (this.ui.project.type === 'inclusion') {
-        this.ui.project.inclusion.success.dismissCountDown = dismissCountDown
-      }
-      if (this.ui.project.type === 'exclusion') {
-        this.ui.project.exclusion.success.dismissCountDown = dismissCountDown
-      }
-    },
-    nextTab () {
-      window.scrollTo({ 'top': 0, 'behavior': 'smooth' })
-    },
     toggleSearch (show) {
       if (show) {
         this.ui.project.displaySearch = false
@@ -1770,6 +1655,9 @@ export default {
         this.mode = 'view'
       }
       this.refreshPermissions()
+      // Al entrar al tab es cuando la persona mira la tabla: no la hagamos esperar hasta
+      // el próximo tick. `knownLastUpdate` ya está cebado por el sondeo de mounted.
+      this.checkProjectFreshness()
     },
     '$route.query.step': function (val) {
       if (val) {
