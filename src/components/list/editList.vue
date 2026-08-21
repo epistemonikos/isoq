@@ -493,9 +493,6 @@ export default {
 
       return { filteredItems, haveContent }
     },
-    isExtractedDataContext: function (keys) {
-      return keys.includes('column_0') && !keys.includes('research_extractedData')
-    },
     checkPermissions: function (organizationId, type = 'can_write') {
       if (this.$store.state.user.personal_organization === organizationId) {
         return true

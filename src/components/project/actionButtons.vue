@@ -151,14 +151,6 @@ export default {
 
       return data
     },
-    filteredPrintedData: function () {
-      const items = this.listsPrintVersion
-      return items.filter((item) => {
-        if (this.printableItems.includes(item.id)) {
-          return item
-        }
-      })
-    },
     displaySelectedOption: function (option, type = '') {
       if (option === null) {
         return ''
@@ -172,32 +164,8 @@ export default {
         return ''
       }
     },
-    returnRefWithNames: function (array) {
-      let authorsList = []
-      for (const i in array) {
-        for (const r of this.references) {
-          if (r.id === array[i]) {
-            authorsList.push(this.getAuthorsFormat(r.authors, r.publication_year))
-          }
-        }
-      }
-      authorsList.sort()
-      let authors = ''
-      for (let x in authorsList) {
-        authors = authors + authorsList[x] + '; '
-      }
-      return authors
-    },
     getAuthorsFormat: function (authors = [], pubYear = '') {
       return Commons.getAuthorsFormat(authors, pubYear)
-    },
-    getExplanation: function (type, option, explanation) {
-      return displayExplanation(type, option, explanation)
-    },
-    handleErrorClick: function (event) {
-      if (event.target.tagName === 'A') {
-        this.$refs['modal-change-status'].hide()
-      }
     }
   },
   computed: {

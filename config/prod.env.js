@@ -4,7 +4,19 @@ module.exports = {
   BASE_URL: '"/"',
   API_URL: '"/api"',
   PUBLIC_PATH: '"/"',
-  ENABLE_CONCURRENCY_CONTROL: '"off"',
+  // Locking granular de toda la app: cajas de criterios del Paso 2, identidad del
+  // finding en el tab iSoQ, estudios y columnas de los Pasos 3/4, y hojas de
+  // evaluación del Paso 4. Encendido junto con el bloqueo de la identidad del
+  // finding (rama feature/isoq-tab-freshness-and-finding-locks).
+  //
+  // OJO con lo que este flag NO cubre: los PATCH de documento completo a
+  // isoqf_lists/isoqf_findings no pasan por @verify_ref_lock en el backend, así
+  // que ahí el lock coordina la UI pero no impide la escritura. Deja de ser
+  // advisory cuando exista el endpoint de docs/spec-backend-endpoint-identidad-finding.md.
+  //
+  // El refresco automático entre usuarios (projectFreshnessMixin) es
+  // independiente de este flag y funciona con él apagado.
+  ENABLE_CONCURRENCY_CONTROL: '"on"',
   ENABLE_REGISTRATION: '"true"',
   // Toda la superficie GDPR: obligación de aceptar los términos, página de
   // Privacidad y Términos, preferencias de consentimiento y gestión de datos
