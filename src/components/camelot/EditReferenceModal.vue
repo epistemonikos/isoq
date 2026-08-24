@@ -13,6 +13,14 @@
       <b-alert v-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
         {{ $t('lock.ref_lock_offline') }}
       </b-alert>
+      <!--
+        Fuera del fieldset a propósito: adentro, el botón "Sigo trabajando" quedaría
+        deshabilitado exactamente cuando el editor está en solo lectura.
+      -->
+      <InactivityWarning
+        :visible="inactivityWarning"
+        :seconds-left="inactivitySecondsLeft"
+        @keep-working="keepWorkingOnInactivity" />
       <fieldset :disabled="isReadOnly" class="border-0 p-0 m-0">
       <b-row>
         <!-- Menú flotante a la izquierda -->
@@ -99,13 +107,16 @@ import { isLockRejection } from '@/utils/lockErrors'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import _debounce from 'lodash.debounce'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 
 export default {
   name: 'EditReferenceModal',
   components: {
     CustomFieldsManager: () => import('./CustomFieldsManager.vue'),
-    RefLockConflictModal: () => import('./RefLockConflictModal.vue')
+    RefLockConflictModal: () => import('./RefLockConflictModal.vue'),
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
+  mixins: [editorInactivityMixin],
   props: {
     reference: {
       type: Object,
@@ -219,6 +230,10 @@ export default {
       if (result.success) {
         this.isReadOnly = false
         this.lockedByUser = null
+        // Sólo con el lock en la mano: sin él no hay nada que liberar y la cuenta
+        // regresiva sería una amenaza vacía. No hace falta consultar un `canEdit` —
+        // acá no existe como prop, y el permiso ya está resuelto en este resultado.
+        if (LockService.isEnabled) this.startInactivityWatch()
       } else if (result.permissionDenied) {
         // Nobody else is editing this study — this user's own can_write was
         // revoked. Don't reuse the "locked by X" message, there is no X.
@@ -243,6 +258,25 @@ export default {
       // The heartbeat's 409 carries no holder; the banner falls back to a neutral
       // wording rather than hiding itself.
       this.lockedByUser = detail.lockedBy || null
+      // Sin lock no queda nada que soltar: el reloj perdió su razón de ser.
+      this.stopInactivityWatch()
+    },
+    /**
+     * Thirty minutes with nobody typing. Persist first, close second: the modal's
+     * `@hidden` releases the lock, so a save fired after it would travel with no lock
+     * behind it and come back 409. Same ordering as Criteria.flushAndRelease.
+     */
+    onInactivityExpired () {
+      try {
+        // A lost lock has nothing to save — performSave would bail on isReadOnly anyway,
+        // but saying it here is what makes the intent testable.
+        if (!this.isReadOnly && this.autoSaveDebounced) this.autoSaveDebounced.flush()
+      } finally {
+        // A throwing flush must not keep the modal open holding the lock: that is the
+        // worst possible ending for a mechanism whose only purpose is to release it.
+        if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+        this.hide()
+      }
     },
     /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
     retainConflictTarget () {
@@ -271,6 +305,7 @@ export default {
       this.conflictSource = 'live'
     },
     resetModal () {
+      this.stopInactivityWatch()
       // Antes de perder localReference, que es contra lo que compara el guard.
       this.retainConflictTarget()
       LockService.releaseRef()
