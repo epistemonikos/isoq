@@ -268,6 +268,8 @@
     "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
     "ref_lock_offline": "No connection — editing unavailable",
     "ref_lock_reconnected": "Reconnected — start editing?",
+    "study_fields_locked_by": "Study fields are read-only: {user} is working on this study.",
+    "study_fields_locked_no_user": "Study fields are read-only: someone else is working on this study.",
     "ref_conflict_title": "Unsaved changes",
     "ref_conflict_message": "While you were offline, {user} edited this study. Your changes were not saved. You can copy them and apply them manually.",
     "ref_conflict_message_live": "{user} took over this study while you had it open. Your changes were not saved. You can copy them and apply them manually.",

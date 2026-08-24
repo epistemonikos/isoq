@@ -655,6 +655,46 @@ describe('StepFour.vue — pérdida del lock con el modal abierto', () => {
     wrapper.destroy()
   })
 
+  // El sondeo sólo ve locks AJENOS. Un lock propio que caducó sin que nadie lo tomara
+  // deja el listado vacío, así que recalcular el flag desde ahí devolvía los campos como
+  // editables — y el backend responde 409 `lock_not_held`, porque exige tenencia, no
+  // ausencia de otro.
+  it('no devuelve los campos al recalcular si el lock propio se perdió y nadie lo tomó', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1', holdsStudyLock: true })
+
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: 'ref1', lockedBy: null } }))
+    await flushPromises()
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+
+    // Llega el sondeo: nadie más tiene nada.
+    LockService.fetchRefLocks.mockResolvedValue([])
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+    expect(wrapper.vm.studyFieldsBlocked).toBe(true)
+    wrapper.destroy()
+  })
+
+  // El caso dominante: el modal ya estaba abierto cuando el otro tomó la celda.
+  it('cierra los campos del estudio cuando el sondeo trae una celda ajena posterior', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1' })
+    expect(wrapper.vm.studyFieldsBlocked).toBe(false)
+
+    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: 'ref1::s0::o2', user_name: 'Ana López' }])
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.studyFieldsBlocked).toBe(true)
+    expect(wrapper.vm.studyFieldsBlockedBy).toBe('Ana López')
+    // Pero las OTRAS celdas siguen editables: es la granularidad que endpoint D habilita.
+    expect(wrapper.vm.isCellReadOnly(0, 1)).toBe(false)
+    expect(wrapper.vm.isCellReadOnly(0, 2)).toBe(true)
+    wrapper.destroy()
+  })
+
   it('marca solo la celda cuando lo perdido es la hoja abierta, no el estudio', async () => {
     const wrapper = createWrapper()
     await wrapper.setData({

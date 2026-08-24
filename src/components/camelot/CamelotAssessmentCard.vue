@@ -113,7 +113,10 @@ export default {
     isExclamationActive: { type: Boolean, default: false },
     editingField: { type: Object, default: () => ({ metaIndex: null, itemIndex: null, type: null }) },
     isSaving: { type: Boolean, default: false },
-    isReadOnly: { type: Boolean, default: false }
+    isReadOnly: { type: Boolean, default: false },
+    // Sin default `required`: StepFour.refId es null hasta que se abre el modal.
+    // La usa el flush por lotes para ignorar un broadcast de otro editor.
+    refId: { type: String, default: '' }
   },
   data () {
     return {

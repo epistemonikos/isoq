@@ -30,6 +30,19 @@
 
       <b-row>
         <b-col cols="12" class="camelot-modal-body">
+          <!--
+            Un solo aviso para los campos del estudio, y no uno por tarjeta: son ocho y
+            dirían todos lo mismo. Sin esto los campos se cerraban en silencio — la
+            tarjeta sólo esconde su botón Edit, así que la persona no tenía forma de
+            saber que había alguien del otro lado.
+          -->
+          <b-alert v-if="studyFieldsBlocked" show variant="warning" class="mb-3"
+            data-testid="study-fields-readonly-notice">
+            <font-awesome-icon icon="lock" class="mr-1" />
+            {{ studyFieldsBlockedBy
+              ? $t('lock.study_fields_locked_by', { user: studyFieldsBlockedBy })
+              : $t('lock.study_fields_locked_no_user') }}
+          </b-alert>
           <template v-if="modal.stage < 2">
             <b-row>
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
@@ -45,7 +58,7 @@
                     :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
                     :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
-                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="isRefReadOnly"
+                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId"
                     @start-editing="onStartEditing"
                     @cancel-editing="onCancelEditing" @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                 </div>
@@ -89,7 +102,7 @@
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
                             :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
-                            :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                            :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                             @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                         </b-col>
 
@@ -123,7 +136,7 @@
                       :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
                       :concerns="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -139,7 +152,7 @@
                       :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
                       :concerns="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -382,6 +395,12 @@ export default {
       // sirve a nadie para coordinarse. Se reemplaza entero en cada cambio (Vue 2 no
       // observa el interior de un Map).
       deniedCellHolders: new Map(),
+      // "Lo tuve y lo perdí" no es lo mismo que "nunca lo tomé". El sondeo sólo ve los
+      // locks AJENOS, así que un lock propio que caducó (pestaña throttleada, sin que
+      // nadie lo tomara) deja el listado vacío y devolvería los campos como editables —
+      // hasta que el 409 `lock_not_held` lo desmienta, porque el backend exige tenencia,
+      // no sólo ausencia de otro. Este flag sobrevive al recálculo del sondeo.
+      studyLockLost: false,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -567,6 +586,20 @@ export default {
     activeLeafRef () {
       return leafLockKey(this.refId, this.modal.stage, this.selectedMeta)
     },
+    /**
+     * Los campos del estudio (endpoint B, que reescribe el ítem COMPLETO) están cerrados
+     * si el estudio entero es de solo lectura O si alguien tiene una de sus celdas.
+     * Deliberadamente NO se toca `isCellReadOnly`: una celda ajena cierra estos campos
+     * pero deja las otras nueve celdas editables, que es la granularidad que el endpoint
+     * D vino a habilitar. Fusionar los dos conceptos reintroduce el bloqueo que se sacó.
+     */
+    studyFieldsBlocked () {
+      return this.isRefReadOnly || this.studyFieldsReadOnly
+    },
+    /** Quién cierra los campos del estudio, para poder nombrarlo en el aviso. */
+    studyFieldsBlockedBy () {
+      return this.studyFieldsLockedBy || this.refLockedBy || null
+    },
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
@@ -669,6 +702,10 @@ export default {
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
+      // El caso real es que alguien tome una celda DESPUÉS de que abrimos: sin esto,
+      // studyFieldsReadOnly conserva la foto del instante de apertura y los campos del
+      // estudio se siguen ofreciendo editables hasta que un 409 lo desmienta.
+      if (this.isModalOpen) this.refreshStudyFieldsLockState(this.refId)
       // Same 15s tick, one more question: did anybody else change this project?
       this.checkProjectFreshness()
     },
@@ -863,6 +900,7 @@ export default {
       this.ui.authors = data.item.authors
       this.isModalOpen = true
       this.deniedCellHolders = new Map()
+      this.studyLockLost = false
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).
@@ -895,7 +933,7 @@ export default {
         return
       }
       const state = this.studyLockStateOf(refId)
-      this.studyFieldsReadOnly = state.saveWholeStudyBlocked
+      this.studyFieldsReadOnly = state.saveWholeStudyBlocked || this.studyLockLost
       this.studyFieldsLockedBy = state.wholeStudyBlockedBy ||
         (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
       // Somebody holding the WHOLE study blocks every cell too (the backend rejects
@@ -915,6 +953,7 @@ export default {
         this.holdsStudyLock = true
         this.studyFieldsReadOnly = false
         this.studyFieldsLockedBy = null
+        this.studyLockLost = false
         return true
       }
       this.studyFieldsReadOnly = true
@@ -964,6 +1003,7 @@ export default {
       // No argument: releases the bare study lock AND every leaf lock still held.
       LockService.releaseRef()
       this.holdsStudyLock = false
+      this.studyLockLost = false
       this.isRefReadOnly = false
       this.refLockedBy = null
       this.studyFieldsReadOnly = false
@@ -991,6 +1031,7 @@ export default {
         // skipping the acquire, so leaving it true would silently authorize a write
         // we can no longer make.
         this.holdsStudyLock = false
+        this.studyLockLost = true
         this.studyFieldsReadOnly = true
         this.studyFieldsLockedBy = detail.lockedBy || null
         return

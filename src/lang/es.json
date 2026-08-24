@@ -268,6 +268,8 @@
     "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
     "ref_lock_offline": "Sin conexión — edición no disponible",
     "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
+    "study_fields_locked_by": "Los campos del estudio están en solo lectura: {user} está trabajando en este estudio.",
+    "study_fields_locked_no_user": "Los campos del estudio están en solo lectura: otra persona está trabajando en este estudio.",
     "ref_conflict_title": "Cambios no guardados",
     "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
     "ref_conflict_message_live": "{user} tomó este estudio mientras lo tenías abierto. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
