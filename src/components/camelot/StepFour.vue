@@ -308,6 +308,7 @@ import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { requestPendingEditsFlush } from '@/mixins/pendingEditsMixin'
+import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
@@ -720,9 +721,41 @@ export default {
       // El caso real es que alguien tome una celda DESPUÉS de que abrimos: sin esto,
       // studyFieldsReadOnly conserva la foto del instante de apertura y los campos del
       // estudio se siguen ofreciendo editables hasta que un 409 lo desmienta.
-      if (this.isModalOpen) this.refreshStudyFieldsLockState(this.refId)
+      if (this.isModalOpen) {
+        this.refreshStudyFieldsLockState(this.refId)
+        this.detectImpossibleLockState()
+      }
       // Same 15s tick, one more question: did anybody else change this project?
       this.checkProjectFreshness()
+    },
+    /**
+     * Detecta un estado que el backend no debería permitir: que otra persona tenga este
+     * estudio al mismo tiempo que nosotros.
+     *
+     * Es alcanzable y está medido: `find_conflicting_holder` corre ANTES del upsert
+     * atómico y fuera de él, así que dos usuarios que piden granularidades distintas del
+     * mismo estudio a la vez —`R1` y `R1::s1::o2`— pasan los dos, porque el índice único
+     * es `(project_id, ref_id)` y esas claves son distintas. Probado insertando ambos en
+     * Mongo: entran.
+     *
+     * No se puede cerrar desde acá; el arreglo real es del backend (meter la detección
+     * dentro de la operación atómica). Lo que sí se puede es no dejar que las dos personas
+     * sigan escribiendo: el sondeo lo descubre en ≤15 s y ahí degradamos a solo lectura.
+     */
+    detectImpossibleLockState () {
+      if (!this.refId || !LockService.refLocked) return
+      const state = this.studyLockStateOf(this.refId)
+      const holder = state.wholeStudyBlockedBy ||
+        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      if (!holder) return
+      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio.
+      this.isRefReadOnly = true
+      this.refLockedBy = holder
+      this.studyFieldsReadOnly = true
+      this.studyFieldsLockedBy = holder
+      if (this.$notify) {
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
+      }
     },
     /** What a refresh means here: the grid plus the study fields it shows. */
     applyProjectRefresh: function () {
@@ -1022,10 +1055,24 @@ export default {
      * close second: `@hidden` releases the bare study lock AND every leaf lock, so a
      * PATCH fired after it would arrive unauthorized.
      */
+    /** Publica que esta pestaña sigue con el estudio abierto, y desde cuándo. */
+    onInactivityHeartbeat (lastActivityAt) {
+      announcePresence(this.refId, lastActivityAt)
+    },
     onInactivityExpired () {
       // The children own the pending text: every AssessmentForm and every
       // CamelotAssessmentCard has its own 1.5s debounce, and they live behind
       // b-tabs + v-for + a per-stage v-if, where $refs cannot reach them.
+      // Otra pestaña de la MISMA persona puede tener este estudio abierto y activo: el
+      // backend refresca el lock cuando el user_id coincide, así que las dos creen
+      // tenerlo. Liberarlo acá se lo sacaría a quien está escribiendo, y guardar nuestra
+      // copia vieja pisaría lo suyo. Cerramos el modal y nos hacemos a un lado.
+      if (otherTabActiveOn(this.refId, this.lastInactivityActivityAt())) {
+        this.stopInactivityWatch()
+        this.isModalOpen = false
+        this.$bvModal.hide('modal-1')
+        return
+      }
       if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
       if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
       this.$bvModal.hide('modal-1')
@@ -1038,6 +1085,7 @@ export default {
       this.onAssessmentModalClosed()
     },
     onAssessmentModalClosed () {
+      clearPresence(this.refId)
       this.stopInactivityWatch()
       // Antes de soltar los locks: el 409 en vuelo llega después.
       this.retainConflictTarget()

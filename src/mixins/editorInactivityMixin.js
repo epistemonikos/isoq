@@ -10,8 +10,11 @@
  * cualquier editor que venga después.
  *
  * Contrato con el anfitrión:
- *   onInactivityExpired()  — obligatorio. Persistir, cerrar, soltar; en ese orden.
- *   onInactivityWarning()  — opcional. Se llama una vez, al aparecer el aviso.
+ *   onInactivityExpired()   — obligatorio. Persistir, cerrar, soltar; en ese orden.
+ *   onInactivityWarning()   — opcional. Se llama una vez, al aparecer el aviso.
+ *   onInactivityHeartbeat(lastActivityAt) — opcional. Un latido por tick de vigilancia,
+ *     para que el anfitrión publique su presencia sin que este mixin sepa de qué estudio
+ *     se trata. Ver `editorPresence`.
  *
  * El reloj resta timestamps, no acumula ticks. Chrome baja setInterval/setTimeout a ~1
  * disparo por minuto en pestañas ocultas después de ~5 min — el mismo throttling que ya
@@ -111,6 +114,11 @@ export default {
       }
     },
 
+    /** Última actividad registrada, o null sin reloj armado. Lo usa el anfitrión para
+     *  comparar su antigüedad contra la de las otras pestañas. */
+    lastInactivityActivityAt () {
+      return this.$_inactivity ? this.$_inactivity.lastActivityAt : null
+    },
     /** Botón "Sigo trabajando": vuelve a la vigilancia con los 25 min completos. */
     keepWorkingOnInactivity () {
       const state = this.$_inactivity
@@ -148,6 +156,11 @@ export default {
       const now = Date.now()
 
       if (!this.inactivityWarning) {
+        // Un latido por tick: barato y con la granularidad justa. Publicarlo en cada
+        // evento de actividad significaría escribir en localStorage con cada mousemove.
+        if (typeof this.onInactivityHeartbeat === 'function') {
+          this.onInactivityHeartbeat(state.lastActivityAt)
+        }
         if (now - state.lastActivityAt < WARN_AFTER_MS) return
         // El plazo se cuenta desde AHORA, no desde el instante teórico de los 25 min: en
         // una pestaña throttleada el tick puede llegar un minuto tarde, y descontar ese
