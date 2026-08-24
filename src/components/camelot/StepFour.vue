@@ -401,6 +401,9 @@ export default {
       // hasta que el 409 `lock_not_held` lo desmienta, porque el backend exige tenencia,
       // no sólo ausencia de otro. Este flag sobrevive al recálculo del sondeo.
       studyLockLost: false,
+      // Ver el comentario gemelo en EditReferenceModal: el 409 de un guardado en vuelo
+      // llega después del cierre, cuando refId ya no sirve para reconocerlo.
+      pendingConflictRefId: '',
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -901,6 +904,7 @@ export default {
       this.isModalOpen = true
       this.deniedCellHolders = new Map()
       this.studyLockLost = false
+      this.pendingConflictRefId = ''
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).
@@ -999,6 +1003,8 @@ export default {
       }
     },
     onAssessmentModalClosed () {
+      // Antes de soltar los locks: el 409 en vuelo llega después.
+      this.retainConflictTarget()
       this.isModalOpen = false
       // No argument: releases the bare study lock AND every leaf lock still held.
       LockService.releaseRef()
@@ -1043,9 +1049,22 @@ export default {
       const [stage, option] = position.split('-').map(Number)
       this.markCellDenied(stage, option, true, detail.lockedBy || null)
     },
+    /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
+    retainConflictTarget () {
+      if (!this.isSavingField) return
+      this.pendingConflictRefId = this.refId || ''
+    },
     handleRefLockConflict (event) {
       const { refId, failedData, lockedBy, source } = event.detail
-      if (refId !== this.refId) return
+      // Los conflictos del endpoint D llegan con la clave compuesta `ref::sK::oI`, que
+      // nunca iba a coincidir con refId pelado. `baseRefOf` devuelve null cuando NO hay
+      // sufijo de hoja, así que el `|| refId` no es defensivo: sin él se rompe el camino
+      // del endpoint B, que es el que hoy funciona.
+      const base = baseRefOf(refId) || refId
+      const expected = base === this.refId ||
+        (this.pendingConflictRefId && base === this.pendingConflictRefId)
+      if (!expected) return
+      this.pendingConflictRefId = ''
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy
       this.conflictRefId = refId

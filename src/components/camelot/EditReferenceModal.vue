@@ -133,6 +133,12 @@ export default {
       activeSection: null,
       observer: null,
       isSaving: false,
+      // El 409 de un guardado en vuelo llega DESPUÉS de que el modal se cerró, y para
+      // entonces `localReference` ya es null: sin esto el guard descarta el conflicto y
+      // el texto rechazado se pierde de vista (queda en localStorage y nadie lo lee).
+      // Se consume una sola vez porque `ref-lock-conflict` también se emite por 403 y
+      // por el replay de la cola: dejarlo vivo abriría el modal sobre un editor cerrado.
+      pendingConflictRefId: '',
       autoSaveStatus: null,
       isReadOnly: false,
       lockedByUser: null,
@@ -204,6 +210,8 @@ export default {
     },
     async onModalShown () {
       if (!this.localReference) return
+      // Nueva sesión de edición: el conflicto que quedó esperando ya no aplica.
+      this.pendingConflictRefId = ''
       const result = await LockService.acquireRef(
         this.$route.params.id,
         this.localReference.id
@@ -236,9 +244,18 @@ export default {
       // wording rather than hiding itself.
       this.lockedByUser = detail.lockedBy || null
     },
+    /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
+    retainConflictTarget () {
+      if (!this.isSaving) return
+      this.pendingConflictRefId = (this.localReference && this.localReference.id) || ''
+    },
     handleRefLockConflict (event) {
       const { refId, failedData, lockedBy, source } = event.detail
-      if (refId !== (this.localReference && this.localReference.id)) return
+      const open = this.localReference && this.localReference.id
+      const expected = refId === open || (refId && refId === this.pendingConflictRefId)
+      if (!expected) return
+      // Consumido: un segundo conflicto sobre el mismo estudio ya no nos incumbe.
+      this.pendingConflictRefId = ''
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy
       this.conflictRefId = refId
@@ -254,6 +271,8 @@ export default {
       this.conflictSource = 'live'
     },
     resetModal () {
+      // Antes de perder localReference, que es contra lo que compara el guard.
+      this.retainConflictTarget()
       LockService.releaseRef()
       this.destroyScrollSpy()
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
