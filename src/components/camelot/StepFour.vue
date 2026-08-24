@@ -30,6 +30,10 @@
 
       <b-row>
         <b-col cols="12" class="camelot-modal-body">
+          <InactivityWarning
+            :visible="inactivityWarning"
+            :seconds-left="inactivitySecondsLeft"
+            @keep-working="keepWorkingOnInactivity" />
           <!--
             Un solo aviso para los campos del estudio, y no uno por tarjeta: son ocho y
             dirían todos lo mismo. Sin esto los campos se cerraban en silencio — la
@@ -302,12 +306,14 @@ import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import { requestPendingEditsFlush } from '@/mixins/pendingEditsMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'StepFour',
-  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin],
+  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin],
   props: {
     type: {
       type: String,
@@ -323,7 +329,13 @@ export default {
     }
   },
   components: {
-    AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader, RefLockConflictModal
+    AssessmentForm,
+    Responses,
+    CamelotAssessmentCard,
+    CamelotStepFourTable,
+    CamelotStepFourHeader,
+    RefLockConflictModal,
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
   data () {
     const headerClass = 'header-second-row'
@@ -912,6 +924,9 @@ export default {
       // The refId/stage/tab assignments above may leave activeLeafRef unchanged
       // (reopening the same cell), so the watcher cannot be relied on here.
       this.syncLeafLock(this.activeLeafRef, null)
+      // Acá sí `canEdit`: a diferencia del Paso 3, este modal se abre sin haber tomado el
+      // lock del estudio, así que no hay resultado de acquire que consultar.
+      if (this.canEdit && LockService.isEnabled) this.startInactivityWatch()
       this.$bvModal.show('modal-1')
     },
     onOpenModal ({ stage, data, tab, faLabel = null }) {
@@ -1002,7 +1017,21 @@ export default {
         }
       }
     },
+    /**
+     * Thirty minutes with the assessment modal open and nobody typing. Persist first,
+     * close second: `@hidden` releases the bare study lock AND every leaf lock, so a
+     * PATCH fired after it would arrive unauthorized.
+     */
+    onInactivityExpired () {
+      // The children own the pending text: every AssessmentForm and every
+      // CamelotAssessmentCard has its own 1.5s debounce, and they live behind
+      // b-tabs + v-for + a per-stage v-if, where $refs cannot reach them.
+      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+      this.$bvModal.hide('modal-1')
+    },
     onAssessmentModalClosed () {
+      this.stopInactivityWatch()
       // Antes de soltar los locks: el 409 en vuelo llega después.
       this.retainConflictTarget()
       this.isModalOpen = false
@@ -1048,6 +1077,9 @@ export default {
       if (!position) return
       const [stage, option] = position.split('-').map(Number)
       this.markCellDenied(stage, option, true, detail.lockedBy || null)
+      // Sólo cuando ya no queda NINGÚN lock: perder una hoja no libera el estudio ni las
+      // otras nueve celdas, y ésas siguen mereciendo el temporizador.
+      if (!LockService.refLocked) this.stopInactivityWatch()
     },
     /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
     retainConflictTarget () {

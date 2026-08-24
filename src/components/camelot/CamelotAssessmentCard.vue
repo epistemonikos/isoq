@@ -101,8 +101,10 @@
 
 <script>
 import _debounce from 'lodash.debounce'
+import pendingEditsMixin from '@/mixins/pendingEditsMixin'
 
 export default {
+  mixins: [pendingEditsMixin],
   name: 'CamelotAssessmentCard',
   props: {
     metaIndex: { type: Number, required: true },
@@ -171,6 +173,24 @@ export default {
     onInput () {
       this.autoSaveStatus = 'saving'
       this.autoSaveDebounced()
+    },
+    /**
+     * El temporizador está por cerrar el modal: persistir lo que el debounce dejó
+     * agendado, o se pierde.
+     *
+     * El gate `isEditing` NO es opcional. `StepFour.saveField` saca el destino de la
+     * escritura de SU propio `editingField`, no de quien emite: esta tarjeta manda
+     * únicamente su `editValue`. Como el debounce sobrevive al cambio de tarjeta —sólo lo
+     * cancelan los botones de acá—, flushear una tarjeta que ya no es la que está en
+     * edición escribe su texto en el campo de otra. Y el endpoint B reescribe el ítem
+     * completo, así que no es un guardado perdido: es uno corrupto. Con `editingField` en
+     * nulls (el usuario apretó Cancel) además revienta en `meta[null]`.
+     */
+    flushPendingEdits (scope) {
+      if (this.isReadOnly) return
+      if (scope && scope !== this.refId) return
+      if (!this.isEditing('extractedData') && !this.isEditing('concerns')) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.flush()
     }
   }
 }
