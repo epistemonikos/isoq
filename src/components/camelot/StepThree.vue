@@ -137,6 +137,7 @@
 import { camelotMixin } from '@/mixins/camelotMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 import LockService from '@/services/lockService'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
@@ -151,7 +152,7 @@ export default {
     EditReferenceModal: () => import('./EditReferenceModal.vue'),
     TableColumnFilter: () => import('@/components/common/TableColumnFilter.vue')
   },
-  mixins: [camelotMixin, projectFreshnessMixin, preserveScrollMixin],
+  mixins: [camelotMixin, projectFreshnessMixin, preserveScrollMixin, refLockStateMixin],
   props: {
     references: {
       type: Array,
@@ -426,13 +427,6 @@ export default {
           this.$refs.editReferenceModal.show()
         }
       })
-    },
-    isRefLocked (refId) {
-      return this.activeRefLocks.some(l => l.ref_id === refId)
-    },
-    refLockedByName (refId) {
-      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
-      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
     },
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
