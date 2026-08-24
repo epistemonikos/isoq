@@ -42,6 +42,52 @@ async function typing (wrapper, texto = 'texto sin guardar') {
   wrapper.vm.onInput()
 }
 
+/**
+ * El mismo desajuste emisor/destino por el camino NATURAL del debounce, que es el que la
+ * gente recorre a diario: escribir en un campo y pasar a otro antes de 1,5 s.
+ *
+ * Medido en navegador contra el servidor real antes del arreglo: el texto de
+ * "Research strategy / Extracted data" aterrizaba en `ethical_comments`.
+ */
+describe('CamelotAssessmentCard — el debounce que sobrevive al cambio de tarjeta', () => {
+  // Los fake timers se encienden ANTES de agendar: si se encendieran después, el debounce
+  // habría quedado en un timer real y `advanceTimersByTime` no lo alcanzaría — los casos
+  // negativos pasarían por la razón equivocada.
+  //
+  // El `editingField` se fija al montar, sin setProps: setProps es asíncrono y su await
+  // depende de nextTick, que los fake timers modernos también falsean.
+  function agendado (editingField) {
+    const wrapper = createWrapper({ editingField })
+    jest.useFakeTimers()
+    wrapper.vm.editValue = 'texto sin guardar'
+    wrapper.vm.onInput()
+    return wrapper
+  }
+
+  afterEach(() => { jest.useRealTimers() })
+
+  it('sí emite al vencer el debounce si sigue siendo la tarjeta en edición', () => {
+    const wrapper = agendado(ESTA_TARJETA)
+    jest.advanceTimersByTime(2000)
+    expect(wrapper.emitted('auto-save-field')[0]).toEqual(['texto sin guardar'])
+    wrapper.destroy()
+  })
+
+  it('NO emite al vencer el debounce si el foco ya se movió a otra tarjeta', () => {
+    const wrapper = agendado(OTRA_TARJETA)
+    jest.advanceTimersByTime(2000)
+    expect(wrapper.emitted('auto-save-field')).toBeUndefined()
+    wrapper.destroy()
+  })
+
+  it('NO emite al vencer el debounce si el usuario canceló', () => {
+    const wrapper = agendado(NADIE)
+    jest.advanceTimersByTime(2000)
+    expect(wrapper.emitted('auto-save-field')).toBeUndefined()
+    wrapper.destroy()
+  })
+})
+
 describe('CamelotAssessmentCard — flush por lotes', () => {
   it('persiste lo pendiente sin esperar el debounce de 1,5 s', async () => {
     const wrapper = createWrapper()

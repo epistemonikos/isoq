@@ -276,6 +276,10 @@ export default {
         // worst possible ending for a mechanism whose only purpose is to release it.
         if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
         this.hide()
+        // Igual que en StepFour: el `@hidden` puede no llegar (depende de
+        // `transitionend`, que no corre con la pestaña oculta) y ahí es donde vive el
+        // releaseRef. `resetModal` es idempotente, así que llamarlo de más no molesta.
+        this.resetModal()
       }
     },
     /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */

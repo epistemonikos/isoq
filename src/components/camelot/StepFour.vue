@@ -1029,6 +1029,13 @@ export default {
       if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
       if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
       this.$bvModal.hide('modal-1')
+      // No se delega la liberación al `@hidden`. Medido en navegador: con la pestaña de
+      // fondo el modal se cierra visualmente pero `hidden` no llega —depende de
+      // `transitionend`, y las transiciones no corren ocultas—, así que los locks quedaban
+      // vivos en el servidor. Apostar la única razón de ser de este mecanismo a un evento
+      // que esta base de código ya tiene documentado como poco confiable no se sostiene.
+      // `onAssessmentModalClosed` es idempotente: si el `hidden` llega después, no molesta.
+      this.onAssessmentModalClosed()
     },
     onAssessmentModalClosed () {
       this.stopInactivityWatch()

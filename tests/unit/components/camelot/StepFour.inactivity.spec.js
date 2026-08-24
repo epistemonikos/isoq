@@ -181,6 +181,20 @@ describe('StepFour — expiración', () => {
     wrapper.destroy()
   })
 
+  // Medido en navegador: con la pestaña de fondo el modal se cierra visualmente pero
+  // `hidden` no llega (depende de `transitionend`, que no corre oculta), así que los locks
+  // quedaban vivos. La liberación no puede depender de ese evento.
+  it('libera los locks sin esperar el @hidden', async () => {
+    const wrapper = await opened(createWrapper())
+    expect(wrapper.vm.isModalOpen).toBe(true)
+
+    wrapper.vm.onInactivityExpired()
+
+    expect(LockService.releaseRef).toHaveBeenCalled()
+    expect(wrapper.vm.isModalOpen).toBe(false)
+    wrapper.destroy()
+  })
+
   it('avisa que se guardó y se liberó', async () => {
     const wrapper = createWrapper()
     await flushPromises()

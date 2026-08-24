@@ -151,10 +151,13 @@ describe('EditReferenceModal — expiración', () => {
   // peor final para un mecanismo cuyo único propósito es liberarlo.
   it('cierra igual si el guardado lanza una excepción', async () => {
     const wrapper = await opened()
-    wrapper.vm.autoSaveDebounced = { flush: () => { throw new Error('boom') } }
+    // `cancel` también hace falta: el cierre pasa por resetModal, que lo llama.
+    wrapper.vm.autoSaveDebounced = { flush: () => { throw new Error('boom') }, cancel: jest.fn() }
 
     expect(() => wrapper.vm.onInactivityExpired()).toThrow('boom')
     expect(wrapper.vm.$bvModal.hide).toHaveBeenCalled()
+    // Y lo que de verdad importa: el lock se soltó pese a la excepción.
+    expect(LockService.releaseRef).toHaveBeenCalled()
     wrapper.destroy()
   })
 })
