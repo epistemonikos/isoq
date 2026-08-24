@@ -167,6 +167,37 @@ describe('StepFour — otra pestaña de la misma persona', () => {
     wrapper.destroy()
   })
 
+  // El bug que el mock ocultó: `inactivityTick` desarma el reloj ANTES de llamar al
+  // handler, así que consultar la última actividad ahí devolvía null — y en
+  // `otherTabActiveOn` el `since || 0` convertía ese null en 0, con lo cual CUALQUIER
+  // marca ajena, por vieja que fuera, contaba como "otra pestaña activa". El temporizador
+  // no habría liberado nunca. Verificar el retorno del mock no alcanzaba: hay que mirar
+  // el argumento.
+  it('le pasa a otherTabActiveOn la última actividad real, no null', async () => {
+    const wrapper = await opened(createWrapper())
+    const hace10min = Date.now() - 10 * 60 * 1000
+
+    wrapper.vm.onInactivityExpired(hace10min)
+
+    expect(otherTabActiveOn).toHaveBeenCalledWith('R1', hace10min)
+    wrapper.destroy()
+  })
+
+  it('el mixin captura lastActivityAt antes de desarmar el reloj', async () => {
+    const wrapper = await opened(createWrapper())
+    const recibido = []
+    wrapper.vm.onInactivityExpired = (at) => recibido.push(at)
+    const esperado = wrapper.vm.$_inactivity.lastActivityAt
+
+    wrapper.vm.$_inactivity.deadlineAt = Date.now() - 1
+    wrapper.vm.inactivityWarning = true
+    wrapper.vm.inactivityTick()
+
+    expect(recibido).toEqual([esperado])
+    expect(recibido[0]).not.toBeNull()
+    wrapper.destroy()
+  })
+
   it('al expirar NO libera ni guarda si la otra pestaña está activa', async () => {
     const wrapper = await opened(createWrapper())
     otherTabActiveOn.mockReturnValue(true)

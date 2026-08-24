@@ -417,6 +417,10 @@ export default {
       // Ver el comentario gemelo en EditReferenceModal: el 409 de un guardado en vuelo
       // llega después del cierre, cuando refId ya no sirve para reconocerlo.
       pendingConflictRefId: '',
+      // "Cerrá el modal pero NO sueltes los locks": lo usa el caso de la otra pestaña de
+      // la misma persona. Sin esto, el @hidden llama a onAssessmentModalClosed y le saca
+      // el estudio a quien está escribiendo del otro lado.
+      skipReleaseOnClose: false,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -1059,7 +1063,7 @@ export default {
     onInactivityHeartbeat (lastActivityAt) {
       announcePresence(this.refId, lastActivityAt)
     },
-    onInactivityExpired () {
+    onInactivityExpired (lastActivityAt) {
       // The children own the pending text: every AssessmentForm and every
       // CamelotAssessmentCard has its own 1.5s debounce, and they live behind
       // b-tabs + v-for + a per-stage v-if, where $refs cannot reach them.
@@ -1067,10 +1071,11 @@ export default {
       // backend refresca el lock cuando el user_id coincide, así que las dos creen
       // tenerlo. Liberarlo acá se lo sacaría a quien está escribiendo, y guardar nuestra
       // copia vieja pisaría lo suyo. Cerramos el modal y nos hacemos a un lado.
-      if (otherTabActiveOn(this.refId, this.lastInactivityActivityAt())) {
+      if (otherTabActiveOn(this.refId, lastActivityAt)) {
+        this.skipReleaseOnClose = true
         this.stopInactivityWatch()
-        this.isModalOpen = false
         this.$bvModal.hide('modal-1')
+        this.onAssessmentModalClosed()
         return
       }
       if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
@@ -1090,8 +1095,10 @@ export default {
       // Antes de soltar los locks: el 409 en vuelo llega después.
       this.retainConflictTarget()
       this.isModalOpen = false
+      const suelta = !this.skipReleaseOnClose
+      this.skipReleaseOnClose = false
       // No argument: releases the bare study lock AND every leaf lock still held.
-      LockService.releaseRef()
+      if (suelta) LockService.releaseRef()
       this.holdsStudyLock = false
       this.studyLockLost = false
       this.isRefReadOnly = false

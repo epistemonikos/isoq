@@ -108,6 +108,7 @@ import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 
 export default {
   name: 'EditReferenceModal',
@@ -150,6 +151,10 @@ export default {
       // Se consume una sola vez porque `ref-lock-conflict` también se emite por 403 y
       // por el replay de la cola: dejarlo vivo abriría el modal sobre un editor cerrado.
       pendingConflictRefId: '',
+      // "Cerrá el editor pero NO sueltes el lock": lo usa el caso de la otra pestaña de
+      // la misma persona. Sin esto, cerrar por cualquier vía llama a releaseRef y le saca
+      // el estudio a quien está escribiendo del otro lado.
+      skipReleaseOnClose: false,
       autoSaveStatus: null,
       isReadOnly: false,
       lockedByUser: null,
@@ -266,7 +271,23 @@ export default {
      * `@hidden` releases the lock, so a save fired after it would travel with no lock
      * behind it and come back 409. Same ordering as Criteria.flushAndRelease.
      */
-    onInactivityExpired () {
+    /** Publica que esta pestaña sigue con el estudio abierto, y desde cuándo. */
+    onInactivityHeartbeat (lastActivityAt) {
+      announcePresence(this.localReference && this.localReference.id, lastActivityAt)
+    },
+    onInactivityExpired (lastActivityAt) {
+      // Otra pestaña de la MISMA persona puede tener este estudio abierto y activo: el
+      // backend refresca el lock cuando el user_id coincide, así que las dos creen
+      // tenerlo, y /refs no expone con qué sesión distinguirlas. Liberarlo acá se lo
+      // sacaría a quien está escribiendo, y guardar nuestra copia vieja pisaría lo suyo.
+      const refId = this.localReference && this.localReference.id
+      if (otherTabActiveOn(refId, lastActivityAt)) {
+        this.skipReleaseOnClose = true
+        this.stopInactivityWatch()
+        this.hide()
+        this.resetModal()
+        return
+      }
       try {
         // A lost lock has nothing to save — performSave would bail on isReadOnly anyway,
         // but saying it here is what makes the intent testable.
@@ -309,10 +330,13 @@ export default {
       this.conflictSource = 'live'
     },
     resetModal () {
+      clearPresence(this.localReference && this.localReference.id)
       this.stopInactivityWatch()
+      const suelta = !this.skipReleaseOnClose
+      this.skipReleaseOnClose = false
       // Antes de perder localReference, que es contra lo que compara el guard.
       this.retainConflictTarget()
-      LockService.releaseRef()
+      if (suelta) LockService.releaseRef()
       this.destroyScrollSpy()
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.editForm = {}

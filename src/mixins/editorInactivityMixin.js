@@ -10,7 +10,9 @@
  * cualquier editor que venga después.
  *
  * Contrato con el anfitrión:
- *   onInactivityExpired()   — obligatorio. Persistir, cerrar, soltar; en ese orden.
+ *   onInactivityExpired(lastActivityAt) — obligatorio. Persistir, cerrar, soltar; en ese
+ *     orden. Recibe la última actividad COMO ARGUMENTO porque el reloj ya se desarmó para
+ *     cuando corre: consultarla después devolvería null.
  *   onInactivityWarning()   — opcional. Se llama una vez, al aparecer el aviso.
  *   onInactivityHeartbeat(lastActivityAt) — opcional. Un latido por tick de vigilancia,
  *     para que el anfitrión publique su presencia sin que este mixin sepa de qué estudio
@@ -178,9 +180,12 @@ export default {
       if (remaining > 0) return
 
       // El reloj se apaga ANTES de avisar: `onInactivityExpired` cierra el modal, y un
-      // intervalo que sobreviviera volvería a disparar sobre un editor ya cerrado.
+      // intervalo que sobreviviera volvería a disparar sobre un editor ya cerrado. Por eso
+      // `lastActivityAt` se captura acá y viaja como argumento: después de apagar el reloj
+      // ya no hay de dónde leerlo.
+      const lastActivityAt = state.lastActivityAt
       this.stopInactivityWatch()
-      if (typeof this.onInactivityExpired === 'function') this.onInactivityExpired()
+      if (typeof this.onInactivityExpired === 'function') this.onInactivityExpired(lastActivityAt)
     }
   }
 }
