@@ -98,7 +98,7 @@
                           <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
                             :refId="refId" :modalIndex="modal.index"
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
-                            :locked-by-user="refLockedBy"
+                            :locked-by-user="cellLockedBy(modal.stage, dIndex)"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
@@ -148,7 +148,7 @@
                 <b-col cols="4">
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
-                    :locked-by-user="refLockedBy"
+                    :locked-by-user="cellLockedBy(2, 0)"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -228,7 +228,7 @@
                 <b-col cols="3" class="">
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
-                    :locked-by-user="refLockedBy"
+                    :locked-by-user="cellLockedBy(3, 0)"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -376,8 +376,12 @@ export default {
       // Cells whose lock we asked for and did not get, as 'stage-option' keys.
       // Kept apart from the ones the /refs poll reports so a poll never erases
       // a refusal we just received.
-      deniedCells: [],
-      leafLockedBy: null,
+      // Posición 'stage-option' -> quién la tiene. Es un Map y no un array de
+      // posiciones porque el nombre del titular es justamente lo que hay que mostrar:
+      // un cartel que dice "solo lectura" sin decir quién está del otro lado no le
+      // sirve a nadie para coordinarse. Se reemplaza entero en cada cambio (Vue 2 no
+      // observa el interior de un Map).
+      deniedCellHolders: new Map(),
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -566,10 +570,16 @@ export default {
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
-    pollBlockedCells () {
-      if (!this.isModalOpen || !this.refId) return []
+    pollBlockedCellHolders () {
+      if (!this.isModalOpen || !this.refId) return new Map()
       const { lockedLeaves } = this.studyLockStateOf(this.refId)
-      return [...lockedLeaves.keys()].map(leafPositionOf).filter(Boolean)
+      // lockedLeaves ya viene como clave-de-hoja -> titular; sólo hay que traducir la
+      // clave a la posición con la que el template indexa las celdas.
+      return new Map(
+        [...lockedLeaves.entries()]
+          .map(([key, holder]) => [leafPositionOf(key), holder])
+          .filter(([position]) => position)
+      )
     }
   },
   watch: {
@@ -592,8 +602,21 @@ export default {
     isCellReadOnly (stage, option) {
       if (this.isRefReadOnly) return true
       const position = `${stage}-${option}`
-      return this.pollBlockedCells.includes(position) ||
-        this.deniedCells.includes(position)
+      return this.pollBlockedCellHolders.has(position) ||
+        this.deniedCellHolders.has(position)
+    },
+    /**
+     * Quién tiene ESTA celda. El rechazo en vivo va primero: el sondeo tarda hasta 15 s,
+     * así que el camino real —hacer clic en una celda y recibir el 409— tendría que
+     * esperar ese ciclo entero para poder nombrar a nadie. El titular del estudio queda
+     * de último recurso: sólo aplica si nadie tiene la celda en particular.
+     */
+    cellLockedBy (stage, option) {
+      const position = `${stage}-${option}`
+      return this.deniedCellHolders.get(position) ||
+        this.pollBlockedCellHolders.get(position) ||
+        this.refLockedBy ||
+        null
     },
     /**
      * Moves the leaf lock as the modal walks from cell to cell. The bare study
@@ -601,7 +624,6 @@ export default {
      */
     async syncLeafLock (newKey, oldKey) {
       if (oldKey) await LockService.releaseRef(oldKey)
-      this.leafLockedBy = null
       if (!newKey || !this.isModalOpen || !this.canEdit) return
 
       const result = await LockService.acquireRef(this.$route.params.id, newKey)
@@ -611,11 +633,13 @@ export default {
       }
       this.onLeafLockDenied(result)
     },
-    /** Adds or clears the read-only mark on one cell. */
-    markCellDenied (stage, option, denied = true) {
+    /** Adds or clears the read-only mark on one cell, remembering who holds it. */
+    markCellDenied (stage, option, denied = true, holder = null) {
       const position = `${stage}-${option}`
-      const without = this.deniedCells.filter(c => c !== position)
-      this.deniedCells = denied ? [...without, position] : without
+      const next = new Map(this.deniedCellHolders)
+      if (denied) next.set(position, holder)
+      else next.delete(position)
+      this.deniedCellHolders = next
     },
     /**
      * The cell the user just moved to could not be locked. Note that a 409 here
@@ -630,17 +654,16 @@ export default {
         // Not a conflict: this user's can_write was revoked, so nothing in the
         // study is editable — the same conclusion acquireStudyLock reaches.
         this.isRefReadOnly = true
-        this.leafLockedBy = null
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.permissions_revoked'))
         }
         return
       }
 
-      this.markCellDenied(this.modal.stage, this.selectedMeta)
-      this.leafLockedBy = result.lockedBy || null
+      const holder = result.lockedBy || null
+      this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder)
       if (this.$notify) {
-        this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.leafLockedBy }))
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
       }
     },
     async fetchAndUpdateRefLocks () {
@@ -839,7 +862,7 @@ export default {
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
       this.isModalOpen = true
-      this.deniedCells = []
+      this.deniedCellHolders = new Map()
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).
@@ -943,10 +966,9 @@ export default {
       this.holdsStudyLock = false
       this.isRefReadOnly = false
       this.refLockedBy = null
-      this.leafLockedBy = null
       this.studyFieldsReadOnly = false
       this.studyFieldsLockedBy = null
-      this.deniedCells = []
+      this.deniedCellHolders = new Map()
       this.fetchAndUpdateRefLocks()
       // Nothing is being typed any more, so a reload held back while the modal was
       // open can be applied now.
@@ -978,8 +1000,7 @@ export default {
       const position = leafPositionOf(lostRef)
       if (!position) return
       const [stage, option] = position.split('-').map(Number)
-      this.markCellDenied(stage, option)
-      this.leafLockedBy = detail.lockedBy || null
+      this.markCellDenied(stage, option, true, detail.lockedBy || null)
     },
     handleRefLockConflict (event) {
       const { refId, failedData, lockedBy, source } = event.detail
