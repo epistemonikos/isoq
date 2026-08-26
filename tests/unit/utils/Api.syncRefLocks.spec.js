@@ -64,6 +64,49 @@ describe('Api.syncPendingOperations() — locks al reproducir la cola', () => {
     expect(removePendingOperation).toHaveBeenCalledWith(7)
   })
 
+  // Un rechazo por versión no se arregla reintentando: el payload encolado lleva, por
+  // definición, la versión de antes de desconectarse. Dejarlo en la cola es un 409 en
+  // cada sincronización, para siempre, y con la cola trabada detrás. Mismo trato que le
+  // damos al lock que otra persona tomó mientras no estábamos: se saca y se avisa.
+  it('saca de la cola la operación que el servidor rechaza por versión', async () => {
+    getPendingOperations.mockResolvedValue([granularOp()])
+    axios.patch.mockRejectedValue({
+      config: { url: '/api/isoqf_extracted_data/ed1/item/ref1', method: 'patch' },
+      response: {
+        status: 409,
+        data: { reason: 'version_conflict', current_version: 4, item: { ref_id: 'ref1' } }
+      }
+    })
+
+    await Api.syncPendingOperations()
+
+    expect(removePendingOperation).toHaveBeenCalledWith(7)
+  })
+
+  it('mantiene en la cola lo que sí puede reintentarse', async () => {
+    getPendingOperations.mockResolvedValue([granularOp()])
+    axios.patch.mockRejectedValue({
+      config: { url: '/api/isoqf_extracted_data/ed1/item/ref1', method: 'patch' },
+      response: { status: 500, data: {} }
+    })
+
+    await Api.syncPendingOperations()
+
+    expect(removePendingOperation).not.toHaveBeenCalled()
+  })
+
+  it('marca la operación reproducida para que el aviso no hable de una desconexión ajena', async () => {
+    getPendingOperations.mockResolvedValue([granularOp()])
+
+    await Api.syncPendingOperations()
+
+    expect(axios.patch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Object),
+      expect.objectContaining({ isOfflineReplay: true })
+    )
+  })
+
   it('libera el lock después de reproducir', async () => {
     getPendingOperations.mockResolvedValue([granularOp()])
 
@@ -166,4 +209,5 @@ describe('Api.patch() — guarda el contexto de lock al encolar', () => {
     expect(call.lockRef).toBeUndefined()
     expect(call.lockProjectId).toBeUndefined()
   })
+
 })

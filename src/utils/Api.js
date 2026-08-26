@@ -9,6 +9,7 @@ import { i18n } from '@/plugins/i18n'
 import { strategies } from '@/utils/OfflineStrategies'
 // Re-exported so the modules that already import it from here keep working.
 import { refLockKeyFromUrl } from '@/utils/refLockUrls'
+import { isVersionRejection } from '@/utils/lockErrors'
 export { refLockKeyFromUrl }
 
 // Estado de conexión
@@ -68,6 +69,34 @@ function reportRefLockConflict (refId, failedData, lockedBy, source = 'live') {
   }))
 }
 
+/**
+ * Anuncia que el servidor rechazó la escritura porque la fila cambió desde que se leyó.
+ *
+ * Canal propio y no el de locks: son ejes distintos y las salidas también. Ante un lock
+ * ajeno no hay nada que hacer más que copiar el texto y esperar; acá la persona sí tiene
+ * el permiso, y lo que necesita para decidir es ver el valor de la otra persona al lado
+ * del suyo. Por eso el `item` al día viaja en el evento — el servidor ya lo manda en el
+ * cuerpo del 409, y pedirlo de nuevo sería una segunda vuelta al mismo estado.
+ */
+function reportVersionConflict (refId, error, source) {
+  if (typeof window === 'undefined') return
+  const data = (error.response && error.response.data) || {}
+  let failedData = {}
+  if (error.config && error.config.data) {
+    try { failedData = JSON.parse(error.config.data) } catch (e) { failedData = {} }
+  }
+  window.dispatchEvent(new CustomEvent('item-version-conflict', {
+    detail: {
+      refId,
+      expectedVersion: data.expected_version,
+      currentVersion: data.current_version,
+      item: data.item,
+      failedData,
+      source
+    }
+  }))
+}
+
 // Crear error compatible con estructura de Axios
 function createOfflineError (message) {
   const msg = message || i18n.t('offline.noConnection')
@@ -103,6 +132,20 @@ axios.interceptors.response.use(
       // non-blocking event so the open editor can show copyable fields. Covers
       // endpoint A (/section/) as well as B/C/D (/item/), which is why the key comes
       // from refLockKeyFromUrl and not from the raw path split.
+      // …but not a rejection over the item's version. Same status and same URL, other
+      // axis entirely: the lock says who may write, the version says whether what is
+      // about to be written was read before somebody else changed it. Announcing it here
+      // names a holder that does not exist and tells the user they lost a lock they still
+      // have. It gets its own channel, right below.
+      if (isVersionRejection(error)) {
+        const versionRef = refLockKeyFromUrl(url)
+        if (versionRef) {
+          const source = (error.config && error.config.isOfflineReplay) ? 'replay' : 'live'
+          reportVersionConflict(versionRef, error, source)
+        }
+        return Promise.reject(error)
+      }
+
       const refId = refLockKeyFromUrl(url)
       if (refId && typeof window !== 'undefined') {
         let failedData = {}
@@ -535,19 +578,24 @@ export default class Api {
           heldLock = op.lockRef
         }
 
+        // `isOfflineReplay` no lo entiende axios, pero viaja en `error.config` y es lo
+        // único que distingue este envío de uno en vivo cuando el interceptor tiene que
+        // redactar el aviso: decirle «mientras estabas desconectado» a quien nunca perdió
+        // la red manda a la persona a investigar el problema equivocado.
+        const replayConfig = { headers: this.getHeaders(), isOfflineReplay: true }
         try {
           switch (op.method) {
             case 'POST':
-              await axios.post(op.endpoint, op.payload, { headers: this.getHeaders() })
+              await axios.post(op.endpoint, op.payload, replayConfig)
               break
             case 'PUT':
-              await axios.put(op.endpoint, op.payload, { headers: this.getHeaders() })
+              await axios.put(op.endpoint, op.payload, replayConfig)
               break
             case 'PATCH':
-              await axios.patch(op.endpoint, op.payload, { headers: this.getHeaders() })
+              await axios.patch(op.endpoint, op.payload, replayConfig)
               break
             case 'DELETE':
-              await axios.delete(op.endpoint, { data: op.payload, headers: this.getHeaders() })
+              await axios.delete(op.endpoint, { data: op.payload, ...replayConfig })
               break
           }
           // Operación exitosa, remover de la cola
@@ -555,7 +603,15 @@ export default class Api {
           // console.log('Synced operation:', op.method, op.endpoint)
         } catch (error) {
           console.error('Failed to sync operation:', op.method, op.endpoint, error)
-          // Mantener en la cola para reintentar después
+          if (isVersionRejection(error)) {
+            // Reintentar no puede funcionar: el payload encolado lleva por definición la
+            // versión de antes de desconectarse, así que cada sincronización repetiría el
+            // mismo 409 y trabaría la cola detrás. El interceptor ya le entregó el texto
+            // a la persona por el canal de conflicto de versión; acá sólo hay que dejar
+            // de intentarlo. Mismo trato que el lock tomado por otra persona, arriba.
+            await removePendingOperation(op.id)
+          }
+          // Cualquier otro fallo sí se mantiene en la cola para reintentar después.
         } finally {
           if (heldLock) {
             const LockService = await getLockService()
