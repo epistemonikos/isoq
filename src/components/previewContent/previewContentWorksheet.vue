@@ -87,6 +87,7 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 
 const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
 const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
@@ -594,7 +595,10 @@ export default {
             }
           }
           const fieldKeys = data.fields.map(f => f.key)
-          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          // El contador de versión entra por la exclusión, no por la preservación: estas
+          // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
+          // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields', ...ITEM_METADATA_KEYS]
           const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
           if (this.project.use_camelot) {
             this.camelot.fields.forEach(f => allowedKeys.add(f.key))
@@ -728,7 +732,10 @@ export default {
             }
           }
           const fieldKeys = data.fields.map(f => f.key)
-          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          // El contador de versión entra por la exclusión, no por la preservación: estas
+          // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
+          // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields', ...ITEM_METADATA_KEYS]
           const allowedKeys = new Set([...excluded, ...fieldKeys])
           if (this.project.use_camelot) {
             this.camelot.fields.forEach(f => allowedKeys.add(f.key))

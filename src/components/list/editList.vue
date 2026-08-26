@@ -127,6 +127,7 @@ import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -311,7 +312,6 @@ export default {
       tmpExtractedDataFields: [
         { key: 'column_0', label: '' }
       ],
-      importUrl: '',
       references: [],
       refsWithTitle: [],
       mode: 'edit',
@@ -377,7 +377,16 @@ export default {
         itemsMap.set(item.ref_id, item)
       }
 
-      const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields'])
+      // Doble papel, y por eso el contador de versión entra acá: esta lista decide qué
+      // claves NO cuentan como contenido del usuario, y más abajo alimenta `allowedKeys`,
+      // que decide qué se copia del ítem del servidor a la fila reconstruida.
+      //
+      // De las dos mitades, la que importa acá es la exclusión: estas filas van a las
+      // tablas de la vista, no a una escritura, así que preservar `_v` no salva ningún
+      // guardado — es sólo la consecuencia de que las dos listas se derivan de la misma.
+      // Lo que sí evita el daño es que no cuente como contenido: es un número, y sin esto
+      // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+      const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields', ...ITEM_METADATA_KEYS])
       let haveContent = 0
       const filteredItems = []
 

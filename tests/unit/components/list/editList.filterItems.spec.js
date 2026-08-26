@@ -138,6 +138,25 @@ describe('editList.vue — filterItemsByReferences() · non-Camelot', () => {
     expect(parseRef).toHaveBeenCalled()
     expect(filteredItems[0].authors).toBe('Smith, Jones')
   })
+
+  // Red para una regresión concreta: que alguien agregue el contador de versión a las
+  // claves que se copian sin agregarlo también a las excluidas. Ahí la pregunta "¿hay
+  // alguna clave con valor?" lo contaría —es un número— y el aviso de datos incompletos
+  // dejaría de aparecer para una fila vacía. Las dos listas se derivan una de la otra, así
+  // que hoy no se pueden desincronizar por accidente; este test es lo que lo mantiene.
+  it('sigue viendo vacía una fila cuya única clave con valor es el contador de versión', () => {
+    const items = [{ ref_id: 'r1', _v: 4 }]
+    const { haveContent } = wrapper.vm.filterItemsByReferences(items, ['r1'], [{ key: 'ref_id' }])
+    expect(haveContent).toBe(1)
+  })
+
+  // La misma lista gobierna qué claves se copian del ítem del servidor al reconstruido:
+  // si el contador no está, se pierde y el servidor deja de comprobar la frescura.
+  it('conserva el contador de versión en la fila reconstruida', () => {
+    const items = [{ ref_id: 'r1', col_0: 'x', col_1: 'y', _v: 4 }]
+    const { filteredItems } = wrapper.vm.filterItemsByReferences(items, ['r1'], fields3)
+    expect(filteredItems[0]._v).toBe(4)
+  })
 })
 
 // ─── Camelot ─────────────────────────────────────────────────────────────────

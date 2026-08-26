@@ -23,7 +23,11 @@
 </template>
 
 <script>
-const SYSTEM_KEYS = new Set(['ref_id', 'authors', '_id', 'id'])
+import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
+
+// Lo que no es texto que el usuario escribió y por tanto no tiene sentido ofrecerle para
+// copiar: los identificadores de la fila, más lo que el servidor guarda dentro de ella.
+const SYSTEM_KEYS = new Set(['ref_id', 'authors', '_id', 'id', ...ITEM_METADATA_KEYS])
 
 export default {
   name: 'RefLockConflictModal',
