@@ -288,7 +288,16 @@
     "live_conflict": "{user} is editing this entry now, so your change was not saved. Your text was kept locally so you can copy it.",
     "live_conflict_no_user": "Your change was not saved because you no longer hold the edit lock on this entry. Your text was kept locally so you can copy it.",
     "lost_while_editing": "This finding switched to read-only: {user} is editing it now. Anything you typed since then was not saved — copy it before closing.",
-    "lost_while_editing_no_user": "This finding switched to read-only: your edit lock expired. Anything you typed since then was not saved — copy it before closing."
+    "lost_while_editing_no_user": "This finding switched to read-only: your edit lock expired. Anything you typed since then was not saved — copy it before closing.",
+    "evicted_granularity": "{user} is editing another part of this study, so this is read-only for now. You can continue as soon as they finish, or in a few minutes if their page closed unexpectedly.",
+    "lock_expired": "Your editing lock expired, so this is read-only. Open it again to keep editing.",
+    "locked_at_another_granularity": "{user} is editing another part of this study, so you cannot open it yet. You will be able to as soon as they finish, or in a few minutes if their page closed unexpectedly."
+  },
+  "version_conflict": {
+    "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",
+    "theirs": "What is stored now",
+    "mine": "What you tried to save",
+    "reload": "Load the current version"
   },
   "project": {
     "notifications": {

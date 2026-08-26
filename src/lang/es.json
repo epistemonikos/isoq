@@ -288,7 +288,16 @@
     "live_conflict": "{user} está editando esta entrada ahora, así que tu cambio no se guardó. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "live_conflict_no_user": "Tu cambio no se guardó porque ya no tienes el bloqueo de edición de esta entrada. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "lost_while_editing": "Este hallazgo pasó a solo lectura: {user} lo está editando ahora. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar.",
-    "lost_while_editing_no_user": "Este hallazgo pasó a solo lectura: tu bloqueo de edición expiró. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar."
+    "lost_while_editing_no_user": "Este hallazgo pasó a solo lectura: tu bloqueo de edición expiró. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar.",
+    "evicted_granularity": "{user} está editando otra parte de este estudio, así que esto quedó en solo lectura. Podrás seguir en cuanto termine, o en unos minutos si cerró la página de golpe.",
+    "lock_expired": "Tu bloqueo de edición caducó, así que esto quedó en solo lectura. Vuelve a abrirlo para seguir editando.",
+    "locked_at_another_granularity": "{user} está editando otra parte de este estudio, así que todavía no puedes abrirlo. Podrás hacerlo en cuanto termine, o en unos minutos si cerró la página de golpe."
+  },
+  "version_conflict": {
+    "message": "Otra persona guardó cambios en este estudio mientras lo editabas. Tu texto no se guardó. Abajo está lo que quedó guardado y lo que intentaste guardar, para que puedas rehacer tu cambio sin perder el de la otra persona.",
+    "theirs": "Lo que quedó guardado",
+    "mine": "Lo que intentaste guardar",
+    "reload": "Traer la versión al día"
   },
   "project": {
     "notifications": {
