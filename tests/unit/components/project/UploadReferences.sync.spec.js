@@ -31,12 +31,74 @@ function createWrapper (propsOverrides = {}) {
 
 // ─── syncAssessments ──────────────────────────────────────────────────────────
 
+// El árbol `stages` —4 etapas, 10 hojas— es la forma CAMELOT del Paso 4. Sembrarlo en
+// proyectos que no usan esa metodología crea estructura que nadie lee y que las escrituras
+// de documento completo después destruyen, lo que llenó de ruido los logs del servidor.
+// Su gemela `syncCharacteristics` ya tenía esta guarda.
+describe('UploadReferences.vue — la forma del ítem de assessments', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('siembra el árbol de evaluaciones en un proyecto CAMELOT', async () => {
+    const wrapper = createWrapper({ useCamelot: true })
+    Api.get.mockResolvedValue({ data: [] })
+
+    await wrapper.vm.syncAssessments([{ id: 'r1', authors: ['Smith'] }])
+
+    const item = Api.post.mock.calls[0][1].items[0]
+    expect(item.stages).toHaveLength(4)
+    wrapper.destroy()
+  })
+
+  it('no lo siembra en un proyecto que no usa CAMELOT', async () => {
+    const wrapper = createWrapper({ useCamelot: false })
+    Api.get.mockResolvedValue({ data: [] })
+
+    await wrapper.vm.syncAssessments([{ id: 'r1', authors: ['Smith'] }])
+
+    const item = Api.post.mock.calls[0][1].items[0]
+    expect('stages' in item).toBe(false)
+    expect(item.ref_id).toBe('r1')
+    wrapper.destroy()
+  })
+
+  // El esqueleto canónico vive en `camelotAssessmentKeys.emptyAssessmentItem`, que ya
+  // espeja el `empty_item()` del servidor. Tener una segunda copia acá las dejó divergir:
+  // la de esta función omitía `notes` y derivaba las cuentas de opciones a mano.
+  it('usa el esqueleto canónico, con las cuentas y los campos que espera el Paso 4', async () => {
+    const wrapper = createWrapper({ useCamelot: true })
+    Api.get.mockResolvedValue({ data: [] })
+
+    await wrapper.vm.syncAssessments([{ id: 'r1', authors: ['Smith'] }])
+
+    const stages = Api.post.mock.calls[0][1].items[0].stages
+    expect(stages.map(s => s.options.length)).toEqual([4, 4, 1, 1])
+    expect(stages[0].options[0]).toEqual({ option: null, text: '', notes: '' })
+    wrapper.destroy()
+  })
+
+  // `Array(n).fill(obj)` reparte LA MISMA referencia n veces, así que escribir en una
+  // opción escribiría en las cuatro. Hoy no se manifiesta porque el objeto se serializa
+  // antes de que nadie lo toque, pero es una mina puesta.
+  it('da a cada opción su propio objeto, no la misma referencia cuatro veces', async () => {
+    const wrapper = createWrapper({ useCamelot: true })
+    Api.get.mockResolvedValue({ data: [] })
+
+    await wrapper.vm.syncAssessments([{ id: 'r1', authors: ['Smith'] }])
+
+    const options = Api.post.mock.calls[0][1].items[0].stages[0].options
+    expect(options[0]).not.toBe(options[1])
+    options[0].text = 'escrito sólo en la primera'
+    expect(options[1].text).toBe('')
+    wrapper.destroy()
+  })
+})
+
 describe('UploadReferences.vue — syncAssessments()', () => {
   let wrapper
 
   beforeEach(() => {
     jest.clearAllMocks()
-    wrapper = createWrapper()
+    wrapper = createWrapper({ useCamelot: true })
   })
 
   afterEach(() => wrapper.destroy())
@@ -111,18 +173,9 @@ describe('UploadReferences.vue — syncAssessments()', () => {
     expect(patchCall.items[0].ref_id).toBe('r1')
   })
 
-  it('new assessment item includes 4 stages with correct structure', async () => {
-    Api.get.mockResolvedValue({ data: [] })
-
-    await wrapper.vm.syncAssessments([{ id: 'r1', authors: ['Smith'] }])
-
-    const postCall = Api.post.mock.calls[0][1]
-    const item = postCall.items[0]
-    expect(item.stages).toHaveLength(4)
-    expect(item.stages[0].options).toHaveLength(4)
-    expect(item.stages[2].options).toHaveLength(1)
-    expect(item.stages[0].options[0]).toEqual({ option: null, text: '' })
-  })
+  // El shape del ítem ya no se fija acá: lo cubre «usa el esqueleto canónico», arriba, que
+  // compara contra `emptyAssessmentItem` en vez de repetir la forma a mano. Este test
+  // esperaba una hoja sin `notes`, que era la divergencia entre las dos copias.
 
   it('does not throw when GET rejects (error caught internally)', async () => {
     Api.get.mockRejectedValue(new Error('Network error'))

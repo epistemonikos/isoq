@@ -218,6 +218,7 @@
 <script>
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
+import { emptyAssessmentItem } from '@/utils/camelotAssessmentKeys'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
@@ -820,29 +821,21 @@ export default {
       try {
         const response = await Api.get('/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
 
-        // Create the assessment object structure
-        const createAssessmentItem = (reference) => ({
-          ref_id: reference.id,
-          authors: this.parseReference(reference, true),
-          stages: [
-            {
-              key: 0,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 1,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 2,
-              options: [{ option: null, text: '' }]
-            },
-            {
-              key: 3,
-              options: [{ option: null, text: '' }]
-            }
-          ]
-        })
+        // El árbol `stages` es la forma CAMELOT del Paso 4. Fuera de CAMELOT nadie lo lee
+        // —esas tablas son columnas— y sembrarlo dejaba estructura que las escrituras de
+        // documento completo después destruían. La gemela `syncCharacteristics` ya tenía
+        // esta guarda.
+        //
+        // El esqueleto sale de `emptyAssessmentItem`, que espeja el `empty_item()` del
+        // servidor. Acá había una segunda copia, y las dos habían divergido: le faltaba
+        // `notes` en cada hoja y repartía la misma referencia de objeto a las cuatro
+        // opciones de un stage, porque usaba `Array(n).fill(obj)`.
+        const createAssessmentItem = (reference) => {
+          const authors = this.parseReference(reference, true)
+          return this.useCamelot
+            ? emptyAssessmentItem(reference.id, authors)
+            : { ref_id: reference.id, authors }
+        }
 
         if (response.data.length) {
           // Update existing assessment

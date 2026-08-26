@@ -171,8 +171,24 @@
       <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
         @ok="saveContentDataTable" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
         cancel-variant="outline-secondary" :ok-disabled="isRowReadOnly">
-        <b-alert v-if="isRowReadOnly" show variant="warning" class="mb-2">
-          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        <!-- El conflicto de versión va primero y aparte del de lock: acá la persona sí
+             tiene permiso de escribir, y lo que necesita para decidir es ver el valor que
+             quedó guardado al lado del que intentó guardar. -->
+        <b-alert v-if="versionConflict" show variant="warning" class="mb-2">
+          <p class="mb-2">{{ $t('version_conflict.message') }}</p>
+          <div v-for="(value, key) in conflictComparison" :key="key" class="mb-2">
+            <strong class="text-muted small text-uppercase">{{ key }}</strong>
+            <b-form-textarea :value="value.theirs" readonly rows="2" class="bg-light mb-1"
+              :placeholder="$t('version_conflict.theirs')"></b-form-textarea>
+            <b-form-textarea :value="value.mine" readonly rows="2" class="bg-light"
+              :placeholder="$t('version_conflict.mine')"></b-form-textarea>
+          </div>
+          <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
+            {{ $t('version_conflict.reload') }}
+          </b-button>
+        </b-alert>
+        <b-alert v-else-if="isRowReadOnly" show variant="warning" class="mb-2">
+          {{ $t(rowLockMessageKey, { user: rowLockedBy }) }}
         </b-alert>
         <div v-if="autoSaveStatus" class="mb-2 small">
           <span v-if="autoSaveStatus === 'saving'" class="text-muted">
@@ -202,7 +218,11 @@
 
       <b-modal size="xl" id="removeContentModalDataTable" ref="removeContentModalDataTable"
         :title="$t('characteristics.remove_content')" :ok-title="$t('common.confirm')" ok-variant="outline-danger"
-        cancel-variant="outline-success" @cancel="cleanRemoveContentCharsOfStudies" @ok="removeDataFromLists">
+        cancel-variant="outline-success" @cancel="cleanRemoveContentCharsOfStudies"
+        @ok="removeDataFromLists" @hidden="onRemoveModalHidden" :ok-disabled="removeReadOnly">
+        <b-alert v-if="removeReadOnly" show variant="warning" class="mb-2">
+          {{ removeLockedBy ? $t('lock.ref_locked_by', { user: removeLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
         <p>{{ $t('characteristics.confirm_delete_row') }}</p>
         <p v-if="removeReferenceDataTable.findings.length === 0">
           <b>{{ $t('characteristics.no_findings_affected') }}</b>
@@ -275,6 +295,10 @@ import _debounce from 'lodash.debounce'
 import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
+import { copyItemMetadata, itemsFingerprint, isItemMetadata, withoutItemMetadata } from '@/utils/itemMetadata'
+import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
+import { isLockRejection } from '@/utils/lockErrors'
+import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
@@ -325,10 +349,12 @@ export default {
     this.updateMyDataTables()
     this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
     window.addEventListener('ref-lock-lost', this.onRefLockLost)
+    window.addEventListener('item-version-conflict', this.onVersionConflict)
     this.startFreshnessPolling()
   },
   beforeDestroy () {
     window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    window.removeEventListener('item-version-conflict', this.onVersionConflict)
     // SPA navigation destroys this view with the editor still open: without this the
     // row stays locked for everybody else until the server TTL expires it.
     this.releaseRowLock()
@@ -351,6 +377,24 @@ export default {
       // the caller holds the lock, so a row we could not lock must stay read-only.
       isRowReadOnly: false,
       rowLockedBy: null,
+      // Por qué se perdió el lock, cuando el latido lo dice. Decide si el cartel promete
+      // que se destraba solo o no; `null` para un servidor sin ese despliegue.
+      rowLockLostReason: null,
+      // Y por qué el acquire lo negó, que tiene su propio motivo y su propio texto.
+      rowLockDeniedReason: null,
+      // El lock de la confirmación de «quitar los datos» va aparte del del editor de fila,
+      // aunque los dos pidan lo mismo al mismo servicio. Compartirlos hacía que cerrar la
+      // confirmación soltara el lock del editor abierto y lo devolviera a escribible: la
+      // persona seguía tecleando mientras cada guardado recibía 409, y el canal de
+      // conflicto lo tapaba por ser de lock. Dos features, dos estados.
+      removeLockRef: null,
+      removeLockedBy: null,
+      removeReadOnly: false,
+      // El rechazo por versión de la fila que se está editando: `{ item, failedData }`,
+      // el valor que quedó guardado y el que se intentó escribir. Nulo mientras no haya
+      // conflicto. No se resuelve solo —reintentar pisaría lo ajeno— así que sostiene el
+      // cartel hasta que la persona decida.
+      versionConflict: null,
       // The lock we actually hold, tracked apart from editingRefId: the modal's
       // events cannot be trusted to tell us when it is safe to let it go.
       lockedRowRef: null,
@@ -423,6 +467,39 @@ export default {
     }
   },
   computed: {
+    /**
+     * Qué cartel corresponde. La regla vive en `lockLostMessage`, compartida con el resto.
+     *
+     * Un lock perdido gana sobre uno negado: si las dos cosas pasaron, la última es la que
+     * describe el estado actual del editor.
+     */
+    rowLockMessageKey () {
+      if (this.rowLockLostReason) return lockLostMessageKey(this.rowLockLostReason, this.rowLockedBy)
+      if (this.rowLockDeniedReason) return lockDeniedMessageKey(this.rowLockDeniedReason, this.rowLockedBy)
+      return lockLostMessageKey(null, this.rowLockedBy)
+    },
+    /**
+     * Los campos donde el valor guardado y el que se intentó guardar no coinciden.
+     *
+     * Sólo esos: mostrar la fila entera obligaría a la persona a buscar la diferencia, que
+     * es precisamente lo que tiene que ver para decidir. La metadata queda afuera —el
+     * contador de versión no es algo que nadie escribió— y también las claves que sólo
+     * existen en uno de los dos lados sin contenido.
+     */
+    conflictComparison () {
+      if (!this.versionConflict) return {}
+      const theirs = this.versionConflict.item || {}
+      const mine = this.versionConflict.failedData || {}
+      const keys = new Set([...Object.keys(theirs), ...Object.keys(mine)])
+      const diff = {}
+      keys.forEach(key => {
+        if (isItemMetadata(key) || key === 'ref_id' || key === 'authors') return
+        const a = theirs[key] === undefined ? '' : theirs[key]
+        const b = mine[key] === undefined ? '' : mine[key]
+        if (a !== b) diff[key] = { theirs: a, mine: b }
+      })
+      return diff
+    },
     isDataTableFieldsModalInvalid () {
       const nro = parseInt(this.dataTableFieldsModal.nroColumns)
       if (!nro || nro === 0) return true
@@ -842,20 +919,37 @@ export default {
         solid: true
       })
     },
+    /**
+     * Quita de cada fila las claves de columnas que ya no existen, y completa con vacío
+     * las que `fields` declara y la fila no trae.
+     *
+     * Antes reconstruía la fila desde cero con las claves de `fields`, y eso borraba todo
+     * lo que el servidor guarda DENTRO del ítem sin ser una columna: el contador de
+     * versión `_v` y el árbol `stages` de las 10 evaluaciones de ajuste. Como el resultado
+     * se compara con lo que vino del servidor para decidir si hay que reescribir el
+     * documento (`updateMyDataTables`), la comparación difería SIEMPRE y salía un PATCH de
+     * documento completo —sin lock y sin versión— en cada montaje de la vista.
+     *
+     * La regla de qué es huérfano vive en `cleanOrphanedCustomFieldKeys`: sólo las claves
+     * `column_*` se descartan, y sólo si no están en `fields`. Se usa esa y no una copia
+     * local porque la copia local es justamente lo que causó el problema.
+     */
     getCleanedItems: function (items, fields) {
       if (!items) return []
       if (!fields || !fields.length) return items
-      const allowedKeys = fields.map(f => f.key)
 
-      return items
-        .filter(item => item.ref_id && item.authors)
-        .map(item => {
-          const cleanedItem = {}
-          for (const key of allowedKeys) {
-            cleanedItem[key] = Object.prototype.hasOwnProperty.call(item, key) ? item[key] : ''
-          }
-          return cleanedItem
+      const declaredKeys = fields.map(f => f.key)
+      const withoutOrphans = cleanOrphanedCustomFieldKeys(
+        items.filter(item => item.ref_id && item.authors),
+        fields
+      )
+
+      return withoutOrphans.map(item => {
+        declaredKeys.forEach(key => {
+          if (!Object.prototype.hasOwnProperty.call(item, key)) item[key] = ''
         })
+        return item
+      })
     },
     /**
      * Una columna nueva entra sin clave: la genera el alta cuando el usuario escribe el
@@ -882,6 +976,36 @@ export default {
       if (detail.refId !== this.dataTableFieldsModal.editingRefId) return
       this.isRowReadOnly = true
       this.rowLockedBy = detail.lockedBy || null
+      this.rowLockLostReason = detail.reason || null
+    },
+    /**
+     * La fila cambió entre que se leyó y que se intentó guardar.
+     *
+     * No se puede resolver reintentando —el guardado pisaría lo que la otra persona
+     * escribió— ni absorbiendo la versión nueva a la callada, que es lo mismo con un paso
+     * de más. Y no se puede dejar pasar: el `_v` local quedó viejo, así que cada tecleo
+     * siguiente vuelve a chocar y la persona escribiría contra un guardado imposible.
+     *
+     * Así que se corta la escritura y se retiene el valor ajeno junto al propio, para que
+     * la decisión de qué conservar la tome quien escribió.
+     */
+    onVersionConflict: function (event) {
+      const detail = (event && event.detail) || {}
+      if (detail.refId !== this.dataTableFieldsModal.editingRefId) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.isRowReadOnly = true
+      this.versionConflict = {
+        item: detail.item || {},
+        failedData: detail.failedData || {},
+        currentVersion: detail.currentVersion
+      }
+    },
+    /** Trae la fila al día y devuelve el editor a un estado escribible. */
+    reloadAfterVersionConflict: function () {
+      this.versionConflict = null
+      this.isRowReadOnly = false
+      this.getData()
     },
     onEditModalHidden: function () {
       // BootstrapVue emits `hidden` asynchronously (~300ms of animation). If the editor
@@ -900,10 +1024,19 @@ export default {
       this.dataTableFieldsModal.editingRefId = null
       this.isRowReadOnly = false
       this.rowLockedBy = null
+      this.rowLockLostReason = null
+      this.rowLockDeniedReason = null
       // Ya no hay nada abierto: aplicar la recarga postergada mientras se escribía.
       this.flushPendingRefresh()
     },
     addContentDataTable: function (index = 0) {
+      // El auto-guardado lee la fila seleccionada cuando le toca correr, no cuando se
+      // programó. Si el índice ya cambió, escribiría una fila que nadie editó, y con el
+      // lock de la anterior recién liberado más abajo.
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.versionConflict = null
+
       const items = Commmons.deepClone(this.dataTable.items)
 
       let fields = Commmons.deepClone(this.dataTable.fields)
@@ -951,8 +1084,10 @@ export default {
       } else {
         this.isRowReadOnly = true
         this.rowLockedBy = result.lockedBy || null
+        // El motivo del acquire, no el del latido: acá no perdió nada, nunca lo tuvo.
+        this.rowLockDeniedReason = result.reason || null
         if (this.$notify) {
-          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
+          this.$notify.warning(this.$t(this.rowLockMessageKey, { user: this.rowLockedBy }))
         }
       }
     },
@@ -970,6 +1105,27 @@ export default {
       // rows are no longer overwritten (no more client-side refetch + merge needed).
       return Api.patch(`/${this.type}/${id}/item/${editedItem.ref_id}`, editedItem)
     },
+    /**
+     * Trae al ítem local la versión que el servidor acaba de estampar.
+     *
+     * El guardado granular responde con el DOCUMENTO completo recargado, no con la fila,
+     * así que hay que buscarla por `ref_id`. Sin esto el ítem del modal —que es el mismo
+     * objeto que se vuelve a enviar en el próximo guardado— conserva la versión anterior
+     * y el segundo PATCH recibe `409 version_conflict`. Con el auto-guardado por tecleo
+     * eso no es un caso raro: es el segundo tecleo.
+     *
+     * Se copia sólo la metadata, nunca los valores: lo que el usuario está escribiendo en
+     * ese momento no puede ser pisado por la respuesta de su propio guardado anterior.
+     */
+    absorbItemVersion: function (response, localItem) {
+      const items = (response && response.data && response.data.items) || []
+      const saved = items.find(item => item && item.ref_id === localItem.ref_id)
+      if (!saved) return
+      // `$set` y no asignación directa: la primera vez la clave no existe en el objeto
+      // local, y Vue 2 no observa propiedades agregadas después.
+      const fresh = copyItemMetadata({}, saved)
+      Object.keys(fresh).forEach(key => this.$set(localItem, key, fresh[key]))
+    },
     performAutoSave: function () {
       const id = this.dataTable.id
       if (!id || this.isRowReadOnly) return
@@ -977,7 +1133,8 @@ export default {
       if (!editedItem) return
       this.autoSaveStatus = 'saving'
       return this._patchContentItem(id, editedItem)
-        .then(() => {
+        .then((response) => {
+          this.absorbItemVersion(response, editedItem)
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
         })
@@ -988,6 +1145,12 @@ export default {
       const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
       // Writing without the row's lock is a guaranteed 409 (endpoint B).
       if (!id || this.isRowReadOnly) return Promise.resolve()
+
+      // El guardado explícito manda lo mismo que el auto-guardado pendiente, así que
+      // dejarlo correr era un PATCH de más. Con el contador de versión por ítem deja de
+      // ser inocuo: este PATCH avanza `_v` en el servidor y el pendiente llegaría con la
+      // versión anterior, o sea un 409 en cada guardado con click.
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
 
       return this._patchContentItem(id, editedItem)
         .then(() => {
@@ -1019,7 +1182,48 @@ export default {
           }
         }
       }
+      // Mismo criterio que el editor de fila: el lock se pide al abrir, así que el «lo
+      // tiene otra persona» llega antes de que alguien confirme un borrado que va a fallar.
+      this.acquireRemoveLock(id)
       this.$refs['removeContentModalDataTable'].show()
+    },
+    /** Toma el lock de la fila que se va a vaciar, en su propio estado. */
+    async acquireRemoveLock (refId) {
+      if (!refId) return
+      // Abrir otra confirmación sin soltar la anterior dejaba esa fila bloqueada para
+      // todos hasta que el TTL del servidor la barriera.
+      if (this.removeLockRef && this.removeLockRef !== refId) this.releaseRemoveLock()
+      if (!this.canEdit) {
+        this.removeReadOnly = true
+        return
+      }
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.removeLockRef = refId
+        this.removeReadOnly = false
+        this.removeLockedBy = null
+        return
+      }
+      this.removeReadOnly = true
+      this.removeLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
+    },
+    releaseRemoveLock: function () {
+      if (this.removeLockRef) LockService.releaseRef(this.removeLockRef)
+      this.removeLockRef = null
+    },
+    /**
+     * `hidden` y no `cancel`: BootstrapVue sólo emite `cancel` en el botón de cancelar, y
+     * no cuando se cierra con ESC, con la X o clickeando el fondo. Colgado de `cancel`, el
+     * lock quedaba tomado en esas tres rutas.
+     */
+    onRemoveModalHidden: function () {
+      this.releaseRemoveLock()
+      this.removeReadOnly = false
+      this.removeLockedBy = null
+      this.removeReferenceDataTable = {
+        id: null,
+        findings: []
+      }
     },
     cleanRemoveContentCharsOfStudies: function () {
       this.removeReferenceDataTable = {
@@ -1027,46 +1231,44 @@ export default {
         findings: []
       }
     },
+    /**
+     * Vacía las columnas de una fila, dejando la fila en la tabla.
+     *
+     * Escribe SÓLO esa fila, por el sub-recurso `/item/<ref_id>`. Antes reescribía el
+     * array `items` completo por la ruta genérica, y eso tenía dos problemas: se llevaba
+     * por delante lo que otra persona estuviera escribiendo en cualquier otra fila, y no
+     * pasaba por ningún lock —la ruta genérica no lo exige—, así que el bloqueo de fila
+     * coordinaba la interfaz sin impedir la escritura.
+     *
+     * Se parte del ítem y se vacían las columnas, en vez de construir la fila desde cero:
+     * el `$set` del servidor reemplaza el ítem completo, así que lo que no viaje se pierde
+     * —el contador `_v`, el árbol `stages` de las evaluaciones de ajuste— y vaciar las
+     * columnas no es motivo para tirar nada de eso.
+     */
     removeDataFromLists: function () {
       const removedId = this.removeReferenceDataTable.id
-      const _items = Commmons.deepClone(this.dataTable.items)
-      let items = []
-      let _keys = Commmons.deepClone(this.dataTable.fields)
-      let keys = []
-      for (const k of _keys) {
-        keys.push(k.key)
-      }
+      const original = (this.dataTable.items || []).find(item => item.ref_id === removedId)
+      if (!removedId || !original) return Promise.resolve()
+      // Escribir sin el lock de la fila es un 409 garantizado (endpoint B).
+      if (this.removeReadOnly || this.removeLockRef !== removedId) return Promise.resolve()
 
-      for (const item of _items) {
-        if (item.ref_id === removedId) {
-          let obj = {}
-          for (const k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-      }
+      const row = Commmons.deepClone(original)
+      this.dataTable.fields.forEach(field => {
+        if (field.key === 'ref_id' || field.key === 'authors') return
+        row[field.key] = ''
+      })
 
-      const params = {
-        items: items
-      }
-
-      Api.patch(`/${this.type}/${this.dataTable.id}`, params)
+      return this._patchContentItem(this.dataTable.id, row)
         .then(() => {
           this.getData()
         })
         .catch((error) => {
-          this.$emit('print-errors', error)
+          if (!isLockRejection(error)) this.$emit('print-errors', error)
+        })
+        .finally(() => {
+          // La fila ya está vaciada: retener el lock la dejaría bloqueada para todos hasta
+          // que el TTL del servidor lo barriera.
+          this.releaseRemoveLock()
         })
     },
     generateTemplate: async function () {
@@ -1196,16 +1398,29 @@ export default {
           let items = this.processItems(responseData.items || [])
           items = this.getCleanedItems(items, responseData.fields)
 
-          // Only patch if items changed (addition or removal)
-          if (items.length !== originalItemsCount || JSON.stringify(items) !== JSON.stringify(responseData.items || [])) {
+          // Only patch if items changed (addition or removal). La huella ignora el orden
+          // de las claves y la metadata: sin eso, el contador de versión —que se mueve
+          // solo con cada guardado ajeno— haría que la comparación difiera siempre y
+          // reescribiríamos el documento entero, sin lock, en cada montaje de la vista.
+          if (items.length !== originalItemsCount ||
+              itemsFingerprint(items) !== itemsFingerprint(responseData.items || [])) {
             // Fix: Do not patch (auto-save) if user does not have write permissions (e.g. project locked)
             if (this.canEdit) {
               const params = {
-                items: items
+                // Sin metadata: esta ruta no comprueba la versión y persistiría el
+                // contador tal cual, haciéndolo retroceder en todas las filas.
+                items: withoutItemMetadata(items)
               }
               Api.patch(`/${this.type}/${charId}`, params)
                 .then(() => {
                   this.getData()
+                })
+                .catch(() => {
+                  // La siembra es una conveniencia; la tabla no. Con el `getData()` sólo
+                  // en el camino feliz, un fallo acá dejaba la pantalla vacía y un rechazo
+                  // sin manejar en la consola. Importa cuando esta ruta responda 405:
+                  // mostramos lo que el servidor ya tiene, sin las filas que faltan.
+                  this.getData(response.data)
                 })
             } else {
               // If read-only, just update the local data without saving to DB
