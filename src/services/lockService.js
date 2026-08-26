@@ -261,13 +261,18 @@ class LockService {
         return { success: true }
       }
     } catch (error) {
-      // A 409 here can mean the exact ref is taken, or that someone holds the
-      // same study at the other granularity (a leaf when we ask for the bare
-      // study, or vice versa). The body is identical either way, so `locked_by`
-      // is all the caller needs.
+      // A 409 here can mean the exact ref is taken, or that someone holds the same study at
+      // the other granularity (a leaf when we ask for the bare study, or vice versa).
+      // Since 2026-08-26 `reason` tells them apart: `locked_at_another_granularity` for the
+      // second, `locked_by_other_user` for the first.
+      //
+      // It is deliberately NOT the heartbeat's `evicted_granularity_conflict`, and the
+      // difference matters for the wording: there the person had the lock and lost it, here
+      // they never got it. Same underlying clash, two different things to tell them.
       if (error.response && error.response.status === 409) {
-        this.refLockedBy = error.response.data.locked_by
-        return { success: false, lockedBy: this.refLockedBy }
+        const data = error.response.data || {}
+        this.refLockedBy = data.locked_by
+        return { success: false, lockedBy: this.refLockedBy, reason: data.reason || null }
       }
       if (error.response && error.response.status === 403) {
         // Different from a 409: nobody else holds the lock, this user simply no
@@ -293,8 +298,11 @@ class LockService {
     await Promise.all(pending.map(async ([refId, projectId]) => {
       const result = await this.requestRefLock(projectId, refId)
       if (result.success) return
+      // El motivo viaja también acá: el editor sigue abierto, así que su cartel merece poder
+      // decir si esto se destraba solo. El acquire ya lo trae; perderlo en el camino dejaba
+      // este aviso —el de reconectar— peor informado que el del latido.
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId, lockedBy: result.lockedBy || null }
+        detail: { refId, lockedBy: result.lockedBy || null, reason: result.reason || null }
       }))
     }))
   }
@@ -355,12 +363,23 @@ class LockService {
       } catch (error) {
         if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
           this.refLocks.delete(refId)
-          // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`
-          // (reason 'locked_by_other_user'). Passing it through is what lets the
-          // read-only banner name the person instead of falling back to its
-          // anonymous wording. A 401/403 has nobody to blame, hence the null.
-          const lockedBy = (error.response.data && error.response.data.locked_by) || null
-          window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId, lockedBy } }))
+          // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`.
+          // Passing it through is what lets the read-only banner name the person instead
+          // of falling back to its anonymous wording. A 401/403 has nobody to blame,
+          // hence the null.
+          //
+          // And since 2026-08-26 it also carries `reason`, which splits three situations
+          // that used to arrive identical and do not read the same to the person:
+          // `evicted_granularity_conflict` (somebody holds another granularity of this
+          // study — retryable as soon as they let go), `locked_by_other_user` (they took
+          // it, not retryable) and `lock_expired` (nobody to name). A server without that
+          // deploy, or a 401/403, sends none: the banner falls back to its old wording.
+          const data = error.response.data || {}
+          const lockedBy = data.locked_by || null
+          const reason = data.reason || null
+          window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+            detail: { refId, lockedBy, reason }
+          }))
         }
       }
     }))

@@ -46,7 +46,7 @@ describe('LockService.acquireRef()', () => {
 
     const result = await LockService.acquireRef('proj1', 'ref1')
 
-    expect(result).toEqual({ success: false, lockedBy: 'Ana López' })
+    expect(result).toEqual({ success: false, lockedBy: 'Ana López', reason: null })
     expect(LockService.refLocked).toBe(false)
   })
 
@@ -147,14 +147,23 @@ describe('LockService — reintento de los permisos offline al volver la red', (
   })
 
   it('avisa con ref-lock-lost cuando otro usuario tomó la entidad mientras no había red', async () => {
-    axios.post.mockRejectedValue({ response: { status: 409, data: { locked_by: 'Ana Pérez' } } })
+    axios.post.mockRejectedValue({
+      response: {
+        status: 409,
+        data: { reason: 'locked_at_another_granularity', locked_by: 'Ana Pérez' }
+      }
+    })
     const spy = jest.spyOn(window, 'dispatchEvent')
 
     await LockService.retryOfflineRefs()
 
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
     expect(lost).toBeDefined()
-    expect(lost.detail).toEqual({ refId: 'ref1', lockedBy: 'Ana Pérez' })
+    // El motivo también acá: el editor sigue abierto y su cartel merece decir si esto se
+    // destraba solo. Antes se perdía en el camino, aunque el acquire ya lo traía.
+    expect(lost.detail).toEqual({
+      refId: 'ref1', lockedBy: 'Ana Pérez', reason: 'locked_at_another_granularity'
+    })
     expect(LockService.heldRefs()).toEqual([])
     expect(LockService.offlineRefs.size).toBe(0)
     spy.mockRestore()
@@ -292,12 +301,50 @@ describe('LockService — holding several locks at once', () => {
   it('lets a later acquire retry after a failed one', async () => {
     axios.post.mockRejectedValueOnce({ response: { status: 409, data: { locked_by: 'Ana' } } })
     const first = await LockService.acquireRef('proj1', 'R1::s0::o2')
-    expect(first).toEqual({ success: false, lockedBy: 'Ana' })
+    expect(first).toEqual({ success: false, lockedBy: 'Ana', reason: null })
 
     axios.post.mockResolvedValue({ data: { status: true } })
     const second = await LockService.acquireRef('proj1', 'R1::s0::o2')
 
     expect(second).toEqual({ success: true })
+  })
+})
+
+// El acquire también distingue por qué fue rechazado, desde 2026-08-26. Y no reusa el motivo
+// del latido a propósito: acá la persona todavía no tenía el lock, así que el cartel no
+// explica una pérdida — le dice si vale esperar.
+describe('LockService.acquireRef() — el motivo del rechazo', () => {
+  it.each([
+    ['locked_at_another_granularity', 'Ana'],
+    ['locked_by_other_user', 'Ana']
+  ])('devuelve el motivo %s del 409', async (reason, lockedBy) => {
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: { reason, locked_by: lockedBy } }
+    })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, lockedBy, reason })
+  })
+
+  // Un servidor sin ese despliegue no lo manda: el resultado sigue teniendo la forma que
+  // los llamadores ya leen, con el motivo en null.
+  it('deja el motivo en null cuando el 409 no lo trae', async () => {
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: { locked_by: 'Ana' } }
+    })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, lockedBy: 'Ana', reason: null })
+  })
+
+  it('no le pone motivo al 403, que no es un conflicto', async () => {
+    axios.post.mockRejectedValue({ response: { status: 403, data: {} } })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, permissionDenied: true })
   })
 })
 
@@ -331,7 +378,7 @@ describe('LockService.refHeartbeat() — several locks', () => {
 
     expect(LockService.heldRefs()).toEqual(['R1'])
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
-    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: null })
+    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: null, reason: null })
     spy.mockRestore()
   })
 
@@ -348,7 +395,43 @@ describe('LockService.refHeartbeat() — several locks', () => {
     await LockService.refHeartbeat()
 
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
-    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: 'Ana Pérez' })
+    expect(lost.detail).toMatchObject({ refId: 'R1::s0::o0', lockedBy: 'Ana Pérez' })
+    spy.mockRestore()
+  })
+
+  // Desde 2026-08-26 el latido distingue tres situaciones que antes salían todas iguales, y
+  // no se explican igual: un desalojo por granularidad es reintentable en cuanto la otra
+  // persona suelte la hoja; un lock que alguien más tomó, no; y uno que caducó no tiene a
+  // quién nombrar. El motivo viaja para que el cartel pueda decir cuál de las tres es.
+  it.each([
+    ['evicted_granularity_conflict', 'Ana Pérez'],
+    ['locked_by_other_user', 'Ana Pérez'],
+    ['lock_expired', null]
+  ])('pasa el motivo %s del 409 del latido', async (reason, lockedBy) => {
+    LockService.refLocks.set('R1', 'proj1')
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: lockedBy ? { reason, locked_by: lockedBy } : { reason } }
+    })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.refHeartbeat()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost.detail).toEqual({ refId: 'R1', lockedBy, reason })
+    spy.mockRestore()
+  })
+
+  // Un 401 o 403 no trae motivo, y un servidor sin desplegar tampoco: el evento sigue
+  // saliendo, con el motivo en `null`, y el cartel cae a su texto de siempre.
+  it('deja el motivo en null cuando el 409 no lo trae', async () => {
+    LockService.refLocks.set('R1', 'proj1')
+    axios.post.mockRejectedValue({ response: { status: 403, data: {} } })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.refHeartbeat()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost.detail).toEqual({ refId: 'R1', lockedBy: null, reason: null })
     spy.mockRestore()
   })
 
