@@ -46,9 +46,11 @@ function isValidVersion (value) {
  */
 export function copyItemMetadata (target, source) {
   if (!target || !source) return target
-  for (const key of ITEM_METADATA_KEYS) {
+  // `forEach` y no `for...of`: el linter del repo no entiende el segundo y lo reporta como
+  // variable sin usar.
+  ITEM_METADATA_KEYS.forEach((key) => {
     if (isValidVersion(source[key])) target[key] = source[key]
-  }
+  })
   return target
 }
 

@@ -65,9 +65,14 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
     }
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
     wrapper = mount()
+    // `mounted` dispara `updateMyDataTables`, que ahora siempre termina en `getData` y
+    // reconstruye el estado de la tabla. Sin dejarlo asentar, sobrescribe lo que cada test
+    // siembra después.
+    await flush()
+    jest.clearAllMocks()
   })
 
   afterEach(() => wrapper && wrapper.destroy())
@@ -114,7 +119,7 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
     // La misma comparación que ya no se rompe con `_v` sí se rompía con `stages`: los
     // ítems limpiados perdían el árbol, así que difería siempre y el PATCH del documento
     // completo salía en cada montaje de la vista.
-    Api.get.mockResolvedValueOnce({
+    Api.get.mockResolvedValue({
       data: [{
         id: 'doc1',
         fields,
@@ -126,7 +131,7 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
         }]
       }]
     })
-    wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020' }] })
+    await wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020', authors: ['A'] }] })
 
     wrapper.vm.updateMyDataTables()
     await flush()
@@ -134,53 +139,10 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
     expect(Api.patch).not.toHaveBeenCalled()
   })
 
-  // La ruta genérica de documento completo NO comprueba versión: persiste los ítems tal
-  // como llegan. Mandarle el contador que teníamos en memoria lo haría RETROCEDER en todas
-  // las filas, y quien estuviera editando con la versión siguiente pasaría a chocar 409 en
-  // cada tecleo sin más salida que recargar. El contador sólo tiene sentido en los PATCH
-  // por fila, que son los que lo comprueban.
-  it('no manda el contador de versión en el PATCH del documento completo', async () => {
-    // Una columna declarada que la fila no trae fuerza la escritura: el relleno con vacío
-    // cambia la huella, que es exactamente para lo que esa comparación existe.
-    Api.get.mockResolvedValueOnce({
-      data: [{
-        id: 'doc1',
-        fields: [...fields, { key: 'column_1' }],
-        items: [{ ref_id: 'r1', authors: 'A 2020', column_0: 'x', _v: 7 }]
-      }]
-    })
-    wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020' }] })
-
-    wrapper.vm.updateMyDataTables()
-    await flush()
-
-    expect(Api.patch).toHaveBeenCalled()
-    const sent = Api.patch.mock.calls[0][1].items
-    sent.forEach(item => expect('_v' in item).toBe(false))
-  })
-
-  // La siembra automática al montar tiene su `getData()` dentro del `.then`, así que si el
-  // PATCH falla la tabla nunca se puebla: pantalla vacía y un rechazo sin manejar en la
-  // consola. Importa ahora porque el backend va a cerrar esa ruta con un 405, y esta
-  // colección es la primera de su lista.
-  it('muestra la tabla aunque la siembra automática falle', async () => {
-    Api.get.mockResolvedValueOnce({
-      data: [{
-        id: 'doc1',
-        fields: [...fields, { key: 'column_1' }],
-        items: [{ ref_id: 'r1', authors: 'A 2020', column_0: 'x' }]
-      }]
-    })
-    Api.patch.mockRejectedValueOnce({ response: { status: 405, data: {} } })
-    wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020' }] })
-
-    wrapper.vm.updateMyDataTables()
-    await flush()
-
-    expect(Api.patch).toHaveBeenCalled()
-    expect(wrapper.vm.dataTable.id).toBe('doc1')
-    expect(wrapper.vm.dataTableSettings.isBusy).toBe(false)
-  })
+  // Se fueron con la escritura que verificaban: «no manda el contador en el PATCH del
+  // documento completo» y «muestra la tabla aunque la siembra falle» describían un PATCH que
+  // ya no existe. Lo que queda de esa historia lo cubre «la siembra de filas dejó de
+  // escribir», arriba.
 
   it('no inventa un `_v` vacío en la fila que no lo tiene', () => {
     // Un `_v` no entero se rechaza con `400 invalid_version`: el servidor lo trata como
@@ -194,6 +156,7 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
   })
 
   it('el auto-guardado se queda con la versión nueva que devuelve el servidor', async () => {
+    Api.get.mockResolvedValue({ data: [] })
     // La fila que se envía es la misma que sigue en el modal, así que si el `_v` local no
     // avanza, el próximo guardado va con la versión anterior y recibe 409. Y el
     // auto-guardado es un debounce por tecleo: el segundo tecleo pausado ya choca.
@@ -219,6 +182,7 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
   })
 
   it('no toca la fila local si el servidor no devuelve esa fila', async () => {
+    Api.get.mockResolvedValue({ data: [] })
     wrapper.setData({
       dataTable: { id: 'doc1', fields, items: [] },
       dataTableFieldsModal: {
@@ -274,6 +238,7 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
     // dos indicadores del mismo evento, y el genérico —«no se pudo guardar»— es el que menos
     // dice y el que sugiere reintentar, que acá no sirve.
     it('no deja el ícono de error del auto-guardado encima del cartel', async () => {
+      Api.get.mockResolvedValue({ data: [] })
       await openEditorOn('r1')
       // El orden importa y es el del interceptor: el evento sale mientras la promesa se
       // rechaza, o sea ANTES de que el `.catch` del componente corra. Al revés el test pasa
@@ -393,14 +358,14 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
     // El `_v` va PRIMERO a propósito: nada garantiza en qué posición del documento lo
     // deja Mongo, y una comparación por `JSON.stringify` es sensible al orden de las
     // claves. Con el contador al final el test pasaría sin probar nada.
-    Api.get.mockResolvedValueOnce({
+    Api.get.mockResolvedValue({
       data: [{
         id: 'doc1',
         fields,
         items: [{ _v: 3, ref_id: 'r1', authors: 'A 2020', column_0: 'x' }]
       }]
     })
-    wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020' }] })
+    await wrapper.setProps({ references: [{ id: 'r1', content: 'A 2020', authors: ['A'] }] })
 
     wrapper.vm.updateMyDataTables()
     await flush()

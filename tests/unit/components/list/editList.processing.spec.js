@@ -1,6 +1,7 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import editList from '@/components/list/editList.vue'
 import BootstrapVue from 'bootstrap-vue'
+import Api from '@/utils/Api'
 
 jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [] }),
@@ -270,7 +271,8 @@ describe('editList.vue — getFinding()', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     wrapper = createWrapper()
-    jest.spyOn(wrapper.vm, 'updateMyData').mockImplementation(() => {})
+    // Ya no hay `updateMyData` que silenciar: la siembra por PATCH de documento completo se
+    // eliminó y las filas faltantes se derivan al mostrar.
     jest.spyOn(wrapper.vm, 'getStatus').mockImplementation(() => {})
   })
 
@@ -502,5 +504,43 @@ describe('editList.vue — getMethAssessments()', () => {
     const keys = wrapper.vm.meth_assessments.fieldsObj.map(f => f.key)
     expect(keys).not.toContain('ref_id')
     expect(keys).toContain('question_1')
+  })
+})
+// `updateMyData` sembraba las filas faltantes de datos extraídos con un PATCH del documento
+// completo: la ruta que pisa la edición ajena y que el servidor va a cerrar. Ahora
+// `processExtractedData` las deriva al mostrar, así que no hay nada que escribir — y de paso
+// se corrige que aquella siembra guardaba la cita completa en `authors` en vez del autor-año.
+describe('editList.vue — la siembra de datos extraídos dejó de escribir', () => {
+  let wrapper
+
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    wrapper = createWrapper()
+    await wrapper.setData({
+      list: { references: ['r1', 'r2'], fullreferences: [] },
+      findings: { id: 'f1' },
+      references: [{ id: 'r1', content: 'Uno' }, { id: 'r2', content: 'Dos' }]
+    })
+  })
+
+  afterEach(() => wrapper.destroy())
+
+  it('completar la tabla no escribe el documento', async () => {
+    Api.patch.mockClear()
+
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'Uno', column_0: 'x' }]
+    }])
+    await new Promise(resolve => process.nextTick(resolve))
+
+    // La fila de r2 aparece derivada, y ninguna escritura salió para que exista.
+    expect(wrapper.vm.extracted_data.items.map(i => i.ref_id)).toContain('r2')
+    expect(Api.patch).not.toHaveBeenCalled()
+  })
+
+  it('ya no existe la función que sembraba por documento completo', () => {
+    expect(wrapper.vm.updateMyData).toBeUndefined()
   })
 })

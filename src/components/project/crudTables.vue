@@ -1390,6 +1390,17 @@ export default {
           this.$emit('print-errors', error)
         })
     },
+    /**
+     * Muestra la tabla con una fila por estudio, derivando las que el documento no tiene.
+     *
+     * Antes las escribía: un PATCH del documento completo por la ruta genérica, sin lock y
+     * sin comprobación de versión, que se llevaba por delante lo que otra persona estuviera
+     * editando en cualquier otra fila. La rama de sólo lectura ya hacía lo correcto
+     * —derivar y mostrar— y ahora es el único camino.
+     *
+     * La fila se persiste sola en cuanto alguien escribe en ella: el endpoint por ítem es
+     * un upsert, así que nadie necesita que exista antes.
+     */
     updateMyDataTables: function () {
       const params = {
         organization: this.$route.params.org_id,
@@ -1403,45 +1414,16 @@ export default {
             return
           }
           const responseData = Commmons.deepClone(response.data[0])
-          const charId = responseData.id
-
-          const originalItemsCount = (responseData.items || []).length
           let items = this.processItems(responseData.items || [])
           items = this.getCleanedItems(items, responseData.fields)
 
-          // Only patch if items changed (addition or removal). La huella ignora el orden
-          // de las claves y la metadata: sin eso, el contador de versión —que se mueve
-          // solo con cada guardado ajeno— haría que la comparación difiera siempre y
-          // reescribiríamos el documento entero, sin lock, en cada montaje de la vista.
-          if (items.length !== originalItemsCount ||
-              itemsFingerprint(items) !== itemsFingerprint(responseData.items || [])) {
-            // Fix: Do not patch (auto-save) if user does not have write permissions (e.g. project locked)
-            if (this.canEdit) {
-              const params = {
-                // Sin metadata: esta ruta no comprueba la versión y persistiría el
-                // contador tal cual, haciéndolo retroceder en todas las filas.
-                items: withoutItemMetadata(items)
-              }
-              Api.patch(`/${this.type}/${charId}`, params)
-                .then(() => {
-                  this.getData()
-                })
-                .catch(() => {
-                  // La siembra es una conveniencia; la tabla no. Con el `getData()` sólo
-                  // en el camino feliz, un fallo acá dejaba la pantalla vacía y un rechazo
-                  // sin manejar en la consola. Importa cuando esta ruta responda 405:
-                  // mostramos lo que el servidor ya tiene, sin las filas que faltan.
-                  this.getData(response.data)
-                })
-            } else {
-              // If read-only, just update the local data without saving to DB
-              const optimizedData = Commmons.deepClone(response.data)
-              optimizedData[0].items = items
-              this.getData(optimizedData)
-            }
-          } else {
-            this.getData(response.data)
-          }
+          const derivedData = Commmons.deepClone(response.data)
+          derivedData[0].items = items
+          this.getData(derivedData)
+        })
+        .catch((error) => {
+          this.dataTableSettings.isBusy = false
+          this.$emit('print-errors', error)
         })
     },
     processItems: function (dataItems) {

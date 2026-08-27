@@ -146,37 +146,35 @@ describe('crudTables.vue', () => {
     expect(newRef).toBeDefined()
   })
 
-  it('should patch with newly added references in updateMyDataTables if permissions exist', async () => {
+  // Estos dos verificaban que `updateMyDataTables` ESCRIBIERA el documento completo para
+  // sincronizar la tabla con las referencias. Esa escritura se eliminó: era la ruta que
+  // pisaba la edición ajena y la que el servidor va a cerrar. La intención sigue siendo la
+  // misma —que la tabla refleje las referencias— pero ahora se cumple derivando al mostrar.
+  it('muestra una fila por referencia, incluida la que el documento no tiene', async () => {
     const mockData = [{
       id: 'table-1',
       fields: [{ key: 'ref_id', label: 'ID' }, { key: 'authors', label: 'Authors' }],
       items: [{ ref_id: 'ref1', authors: 'Auth 1 (2021)' }]
     }]
     Api.get.mockResolvedValue({ data: mockData })
-    
-    // Ensure parseReference returns something valid
     jest.spyOn(wrapper.vm, 'parseReference').mockReturnValue('Formatted Author')
-    
+
     await wrapper.setProps({
       references: [
         { id: 'ref1', authors: ['Auth 1'], publication_year: '2021' },
         { id: 'ref2', authors: ['Auth 2'], publication_year: '2022' }
       ]
     })
-    
-    // Clear previous calls from watch/mounted
     Api.patch.mockClear()
 
     await wrapper.vm.updateMyDataTables()
+    await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(Api.patch).toHaveBeenCalled()
-    const patchCall = Api.patch.mock.calls.find(call => call[0].includes('table-1'))
-    expect(patchCall).toBeDefined()
-    // It patched with the new items
-    expect(patchCall[1].items).toHaveLength(2)
+    expect(wrapper.vm.dataTable.items).toHaveLength(2)
+    expect(Api.patch).not.toHaveBeenCalled()
   })
 
-  it('should sync existing table down to empty items when all references are removed', async () => {
+  it('deja la tabla vacía cuando ya no hay referencias, sin escribir', async () => {
     const mockData = [{
       id: 'table-1',
       fields: [{ key: 'ref_id', label: 'ID' }, { key: 'authors', label: 'Authors' }],
@@ -185,13 +183,12 @@ describe('crudTables.vue', () => {
     Api.get.mockResolvedValue({ data: mockData })
     Api.patch.mockClear()
 
-    // references prop is already [] from the default propsData in beforeEach
+    // `references` ya viene en [] del propsData por defecto.
     await wrapper.vm.updateMyDataTables()
+    await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(Api.get).toHaveBeenCalled()
-    const patchCall = Api.patch.mock.calls.find(call => call[0].includes('table-1'))
-    expect(patchCall).toBeDefined()
-    expect(patchCall[1].items).toHaveLength(0)
+    expect(wrapper.vm.dataTable.items).toHaveLength(0)
+    expect(Api.patch).not.toHaveBeenCalled()
   })
 
   it('should remove items if references are deleted in processItems', () => {

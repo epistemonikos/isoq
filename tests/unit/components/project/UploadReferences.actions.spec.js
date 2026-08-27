@@ -108,18 +108,21 @@ describe('UploadReferences.vue — removeAllReferences()', () => {
     jest.clearAllMocks()
     _lsStore = {}
     wrapper = createWrapper()
-    jest.spyOn(wrapper.vm, 'syncAllSteps').mockResolvedValue()
   })
 
   afterEach(() => wrapper.destroy())
 
-  it('calls syncAllSteps([]) and emits CallGetReferences on success', async () => {
+  it('no escribe las tablas al borrar todas las referencias', async () => {
     Api.post.mockResolvedValue({})
 
     wrapper.vm.removeAllReferences()
     await flushPromises()
 
-    expect(wrapper.vm.syncAllSteps).toHaveBeenCalledWith([])
+    // El servidor quita las filas con su `$pull` al borrar la referencia; hacerlo también
+    // desde acá reescribía el documento entero y pisaba la edición ajena.
+    const escrituras = Api.patch.mock.calls.filter(c =>
+      /isoqf_(characteristics|assessments|extracted_data)\/[^/]+$/.test(c[0]))
+    expect(escrituras).toEqual([])
     expect(wrapper.emitted('CallGetReferences')).toBeTruthy()
   })
 
@@ -178,7 +181,6 @@ describe('UploadReferences.vue — confirmRemoveReferenceById()', () => {
     jest.clearAllMocks()
     _lsStore = {}
     wrapper = createWrapper({ references: [] })
-    jest.spyOn(wrapper.vm, 'syncAllSteps').mockResolvedValue()
   })
 
   afterEach(() => wrapper.destroy())
@@ -202,18 +204,16 @@ describe('UploadReferences.vue — confirmRemoveReferenceById()', () => {
     )
   })
 
-  it('calls syncAllSteps with remaining references after deletion', async () => {
+  it('no escribe las tablas al borrar una referencia', async () => {
     jest.spyOn(wrapper.vm, 'references', 'get').mockReturnValue([{ id: 'r1' }, { id: 'r2' }])
     Api.post.mockResolvedValue({})
 
     wrapper.vm.confirmRemoveReferenceById('r1')
     await flushPromises()
 
-    expect(wrapper.vm.syncAllSteps).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ id: 'r2' })])
-    )
-    const syncArg = wrapper.vm.syncAllSteps.mock.calls[0][0]
-    expect(syncArg.find(r => r.id === 'r1')).toBeUndefined()
+    const escrituras = Api.patch.mock.calls.filter(c =>
+      /isoqf_(characteristics|assessments|extracted_data)\/[^/]+$/.test(c[0]))
+    expect(escrituras).toEqual([])
   })
 
   it('emits CallGetReferences on success', async () => {
@@ -235,7 +235,6 @@ describe('UploadReferences.vue — importReferences()', () => {
     jest.clearAllMocks()
     _lsStore = {}
     wrapper = createWrapper()
-    jest.spyOn(wrapper.vm, 'syncAllSteps').mockResolvedValue()
   })
 
   afterEach(() => wrapper.destroy())
@@ -292,7 +291,7 @@ describe('UploadReferences.vue — importReferences()', () => {
     expect(wrapper.emitted('CallGetReferences')).toBeTruthy()
   })
 
-  it('calls syncAllSteps even when response has no references property', async () => {
+  it('no falla cuando la respuesta del import no trae `references`', async () => {
     await wrapper.setData({
       pubmed_requested: [{ title: 'Study A', uid: '111' }],
       pubmed_selected: [0]
@@ -301,7 +300,7 @@ describe('UploadReferences.vue — importReferences()', () => {
 
     await wrapper.vm.importReferences()
 
-    expect(wrapper.vm.syncAllSteps).toHaveBeenCalled()
+    expect(wrapper.emitted('CallGetReferences')).toBeTruthy()
   })
 })
 
@@ -314,7 +313,6 @@ describe('UploadReferences.vue — saveReferences() batch import', () => {
     jest.clearAllMocks()
     _lsStore = {}
     wrapper = createWrapper({ references: [{ id: 'existing1', title: 'Existing' }] })
-    jest.spyOn(wrapper.vm, 'syncAllSteps').mockResolvedValue()
   })
 
   // A non-empty fileReferences enables the tooltip'd upload button, which trips a known
@@ -342,15 +340,19 @@ describe('UploadReferences.vue — saveReferences() batch import', () => {
     }))
   })
 
-  it('syncs existing references together with the imported ones', async () => {
+  // Antes el import sembraba las filas de las tablas de los Pasos 3 y 4 con viejas + nuevas,
+  // reescribiendo el documento completo. Ahora las filas se derivan al mostrar, así que
+  // importar referencias no escribe esas tablas.
+  it('no escribe las tablas al importar referencias', async () => {
     await wrapper.setData({ fileReferences: [{ title: 'A' }] })
     Api.post.mockResolvedValue({ data: { references: [{ id: 'new1', title: 'A' }] } })
 
     await wrapper.vm.saveReferences()
 
-    expect(wrapper.vm.syncAllSteps).toHaveBeenCalledTimes(1)
-    const syncArg = wrapper.vm.syncAllSteps.mock.calls[0][0]
-    expect(syncArg.map(r => r.id)).toEqual(['existing1', 'new1'])
+    const escrituras = Api.patch.mock.calls.filter(c =>
+      /isoqf_(characteristics|assessments|extracted_data)\/[^/]+$/.test(c[0]))
+    expect(escrituras).toEqual([])
+    expect(wrapper.emitted('CallGetReferences')).toBeTruthy()
   })
 
   it('clears fileReferences and emits CallGetReferences on success', async () => {

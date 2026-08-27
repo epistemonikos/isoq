@@ -612,35 +612,6 @@ export default {
             })
         })
     },
-    updateMyData: function () {
-      let _extractedData = []
-      const params = {
-        finding_id: this.findings.id
-      }
-      Api.get(`/isoqf_extracted_data`, params)
-        .then((response) => {
-          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-            let _items = response.data[0].items
-            let _itemsChecks = []
-            for (let item of _items) {
-              _itemsChecks.push(item.ref_id)
-            }
-            for (let reference of this.references) {
-              if (!_itemsChecks.includes(reference.id)) {
-                _extractedData.push({ ref_id: reference.id, authors: reference.content })
-              }
-            }
-            _items.push(..._extractedData)
-            let params = {
-              items: _items
-            }
-            Api.patch(`/isoqf_extracted_data/${response.data[0].id}`, params)
-              .then(() => {
-                this.getExtractedData()
-              })
-          }
-        })
-    },
     getProject: function () {
       this.project = JSON.parse(JSON.stringify(this.list.project))
       if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
@@ -727,7 +698,9 @@ export default {
           this.buffer_modal_stage_two.title = title
           this.buffer_modal_stage_two.type = type
         }
-        this.updateMyData()
+        // Antes acá se sembraban las filas faltantes de datos extraídos con un PATCH del
+        // documento completo. `processExtractedData` las deriva al mostrar, así que no hay
+        // nada que escribir para que la tabla esté completa.
       }
       this.getStatus()
       // this.getExtractedData()
