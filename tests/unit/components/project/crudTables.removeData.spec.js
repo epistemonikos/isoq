@@ -96,8 +96,14 @@ describe('crudTables.vue — quitar los datos de un estudio', () => {
       removeReferenceDataTable: { id: 'r1', findings: [] },
       isRowReadOnly: false
     })
-    // `shallowMount` no instancia el `b-modal`, así que su ref no trae `show`.
-    wrapper.vm.$refs['removeContentModalDataTable'] = { show: jest.fn(), hide: jest.fn() }
+    // `shallowMount` deja el `b-modal` como stub, y el stub no trae `show`/`hide`. Se los
+    // agrega AL STUB en vez de reemplazar el ref: reemplazarlo rompe `find({ref})`, y con
+    // eso se pierde la única forma de comprobar que el template cableó los eventos.
+    const modalStub = wrapper.vm.$refs['removeContentModalDataTable']
+    if (modalStub) {
+      modalStub.show = jest.fn()
+      modalStub.hide = jest.fn()
+    }
   })
 
   afterEach(() => wrapper && wrapper.destroy())
@@ -186,6 +192,23 @@ describe('crudTables.vue — quitar los datos de un estudio', () => {
   // BootstrapVue no emite `cancel` cuando se cierra con ESC, con la X o clickeando el
   // fondo. Colgado sólo de `cancel`, el lock quedaba tomado hasta que el TTL lo barriera y
   // nadie más podía editar esa fila.
+  // Los tests de arriba llaman al handler a mano, así que verifican el método y NO el
+  // cableado del template. En el navegador el lock quedó colgado justamente ahí: el modal
+  // se cerraba y el handler no corría. Este emite el evento desde el propio b-modal.
+  it('el modal tiene el `hidden` cableado, no sólo el método definido', async () => {
+    wrapper.vm.openModalRemoveContentDataTable('r1')
+    await flush()
+    LockService.releaseRef.mockClear()
+
+    const modal = wrapper.find({ ref: 'removeContentModalDataTable' })
+    expect(modal.exists()).toBe(true)
+    modal.vm.$emit('hidden')
+    await flush()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('r1')
+    expect(wrapper.vm.removeLockRef).toBe(null)
+  })
+
   it('suelta el lock también cuando se cierra sin cancelar', async () => {
     wrapper.vm.openModalRemoveContentDataTable('r1')
     await flush()
@@ -205,6 +228,24 @@ describe('crudTables.vue — quitar los datos de un estudio', () => {
     await flush()
 
     expect(LockService.releaseRef).toHaveBeenCalledWith('r1')
+  })
+
+  // BootstrapVue no emite `hidden` si el modal nunca terminó de abrirse — la animación dura
+  // ~300 ms y cerrar dentro de esa ventana deja el evento sin disparar. Medido en el
+  // navegador: el modal se cerró y el lock quedó tomado hasta que el TTL lo barriera.
+  //
+  // El editor de fila y el de columnas ya tenían esta red en `beforeDestroy`; la
+  // confirmación no. Es la misma lección, aprendida por tercera vez.
+  it('suelta el lock al destruirse la vista, aunque el modal nunca emita hidden', async () => {
+    wrapper.vm.openModalRemoveContentDataTable('r1')
+    await flush()
+    LockService.releaseRef.mockClear()
+
+    wrapper.destroy()
+    await flush()
+
+    expect(LockService.releaseRef).toHaveBeenCalledWith('r1')
+    wrapper = null
   })
 
   describe('sin pisarse con el editor de fila, que usa el mismo servicio', () => {

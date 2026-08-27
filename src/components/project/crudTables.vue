@@ -362,6 +362,11 @@ export default {
     // Same for the columns lock: leaving the project with the modal open used to leave it
     // held until the TTL, measured in the browser.
     this.releaseColumnsLock()
+    // Y el de la confirmación de «quitar los datos», por la misma razón y una más: si el
+    // modal se cierra antes de terminar de abrirse —la animación dura ~300 ms—
+    // BootstrapVue no emite `hidden`, así que su handler no corre. Medido en el navegador:
+    // la fila quedaba bloqueada para todos hasta que el TTL la barriera.
+    this.releaseRemoveLock()
   },
   data () {
     return {
