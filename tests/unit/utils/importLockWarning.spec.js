@@ -10,11 +10,12 @@
 // Esta función es la regla de lectura del listado, aparte del componente y sin i18n: qué
 // cuenta como estudio, quién queda nombrado, y cuándo un lock de columnas es nuestro.
 //
-// LÍMITE MEDIDO: la clave del ref lock NO codifica la colección (`refLockUrls.js`), así
-// que una fila de isoqf_characteristics y una de isoqf_assessments para el mismo estudio
-// dan la misma clave. No podemos saber en qué tabla está esa persona, y por eso el texto
-// dice «de este proyecto» y no «de esta tabla». Las claves `<doc_id>::fields` son la
-// excepción: ésas sí traen el id del documento, así que son atribuibles.
+// LA CLAVE NO LLEVA COLECCIÓN, Y ESO ES LA GRANULARIDAD, NO UNA FALTA. El ref lock es
+// `(project_id, ref_id)`: la unidad de bloqueo es el estudio, no su fila en una tabla.
+// Quien edita `R1` en isoqf_characteristics bloquea `R1` en isoqf_assessments y en
+// isoqf_extracted_data, y el servidor verifica lo mismo para las tres. Por eso el texto
+// dice «de este proyecto»: es exacto, y no hay falsos positivos que disculpar.
+// Las claves `<doc_id>::fields` son la excepción —identifican un documento— y van aparte.
 import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 const TABLA = 'tabla-1'
@@ -82,8 +83,8 @@ describe('summarizeImportLocks()', () => {
   })
 
   it('ignora el lock de columnas de OTRA tabla', () => {
-    // Es el único caso que la clave nos deja atribuir con certeza, así que es el único en
-    // el que podemos callarnos con fundamento.
+    // El único lock que NO afecta a este import: las columnas de otro documento. Los de
+    // fila afectan siempre, porque el lock es del estudio y no de la tabla.
     const locks = [{ ref_id: 'otra-tabla::fields', user_name: 'Ana López' }]
 
     expect(summarizeImportLocks(locks, TABLA)).toEqual({

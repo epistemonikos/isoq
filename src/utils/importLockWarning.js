@@ -12,13 +12,26 @@
  * regla de qué se avisa es una, y en este mismo hilo ya nos costó dos veces tenerla en dos
  * copias.
  *
- * LÍMITE, y es el que define el texto: la clave del ref lock NO codifica la colección
- * (ver `refLockUrls.js`), así que una fila de `isoqf_characteristics` y una de
- * `isoqf_assessments` para el mismo estudio dan exactamente la misma clave. No podemos
- * saber en qué tabla está la persona, y por eso el cartel dice «de este proyecto» y no
- * «de esta tabla»: prometer precisión que no tenemos produce un aviso que grita de más, y
- * un aviso que grita de más se aprende a ignorar. Las claves `<doc_id>::fields` son la
- * única excepción —traen el id del documento— así que son las únicas atribuibles.
+ * POR QUÉ EL CARTEL DICE «DE ESTE PROYECTO» Y NO «DE ESTA TABLA». No es un hedge por falta
+ * de dato: es lo exacto. La clave del ref lock es `(project_id, ref_id)` sin colección, y
+ * eso no es una omisión del esquema sino LA GRANULARIDAD — la unidad de bloqueo es el
+ * estudio, no su fila en una tabla. Quien edita `R1` en `isoqf_characteristics` bloquea
+ * también `R1` en `isoqf_assessments` y en `isoqf_extracted_data`; el servidor verifica
+ * `(project_id, <ref>)` para las tres (`verify_ref_lock`, `libs/decorators.py`).
+ *
+ * Así que cada lock que contamos SÍ afecta a este import, esté la persona en la tabla que
+ * esté: no hay falsos positivos que disculpar. Y «de esta tabla» habría sido falso en el
+ * otro sentido —habría implicado que las otras tablas están a salvo, y callado que quien
+ * está bloqueado en otra también se ve afectado—.
+ *
+ * NO agregar la colección a este cartel. Backend confirmó (2026-08-27) que el dato no
+ * existe en ninguna parte y que inventarlo empeoraría el mensaje. Si alguna vez hubiera
+ * locks por tabla, es un cambio de esquema con una decisión de producto atrás (dos
+ * personas editando `R1` en dos tablas a la vez), no un ajuste de este archivo.
+ *
+ * Las claves `<doc_id>::fields` son la excepción y van aparte: ésas sí identifican un
+ * documento, así que se pueden atribuir a una tabla — y el import reemplaza `fields`, así
+ * que corresponde nombrarlas.
  */
 
 // El formato de `<doc_id>::fields` vive en `refLockUrls` y no acá: es la misma clave que
@@ -57,7 +70,9 @@ export function summarizeImportLocks (locks = [], tableId = '') {
     // Una clave de forma desconocida cae del lado que avisa. Es la decisión inversa a la
     // allowlist de `lockErrors.js`, y a propósito: allá un motivo nuevo debe caer en el
     // comportamiento anterior; acá callarnos sobre un lock que existe es el único error
-    // que le cuesta trabajo a alguien.
+    // que le cuesta trabajo a alguien. Y como el lock es por estudio y no por tabla,
+    // cualquier clave de fila que no reconozcamos igual apunta a algo que este import
+    // se va a llevar.
     const leaf = LEAF_KEY_RE.exec(key)
     studies.add(leaf ? leaf[1] : key)
 

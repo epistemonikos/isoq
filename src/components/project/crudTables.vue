@@ -495,11 +495,11 @@ export default {
      * El aviso de que el import va a pisar trabajo ajeno. Cadena vacía = no hay nada que
      * avisar, y así lo consumen el `b-alert` del modal y la confirmación del guardado.
      *
-     * Dice «de este proyecto» y no «de esta tabla» porque no podemos saber la tabla: la
-     * clave del ref lock no codifica la colección (`refLockUrls.js`), así que una fila del
-     * Paso 3 y una del Paso 4 para el mismo estudio son la misma clave. Prometer una
-     * precisión que no tenemos produce un aviso que grita de más, y ésos se aprenden a
-     * ignorar. Las claves `<doc_id>::fields` son la excepción y por eso van aparte.
+     * Dice «de este proyecto» y no «de esta tabla» porque eso es lo exacto: el ref lock es
+     * `(project_id, ref_id)` sin colección, y la unidad de bloqueo es el ESTUDIO — quien
+     * edita `R1` en el Paso 3 bloquea `R1` en el Paso 4 y en los datos extraídos. Así que
+     * todo lock contado afecta a este import. El razonamiento completo, y por qué no hay
+     * que agregarle la colección, está en `importLockWarning.js`.
      *
      * La incertidumbre (`reachable:false`) NO entra acá a propósito: al abrir el modal
      * todavía no pasa nada destructivo, y un «no pudimos comprobar» por cada hipo de red
