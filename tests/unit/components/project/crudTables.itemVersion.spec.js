@@ -269,6 +269,33 @@ describe('crudTables.vue — el contador de versión por ítem', () => {
       expect(wrapper.vm.isRowReadOnly).toBe(true)
     })
 
+    // Encontrado en la puerta de navegador, no por los tests: el `.catch` del auto-guardado
+    // corre DESPUÉS del handler del conflicto y volvía a poner el ícono de error. Quedaban
+    // dos indicadores del mismo evento, y el genérico —«no se pudo guardar»— es el que menos
+    // dice y el que sugiere reintentar, que acá no sirve.
+    it('no deja el ícono de error del auto-guardado encima del cartel', async () => {
+      await openEditorOn('r1')
+      // El orden importa y es el del interceptor: el evento sale mientras la promesa se
+      // rechaza, o sea ANTES de que el `.catch` del componente corra. Al revés el test pasa
+      // sin probar nada.
+      Api.patch.mockImplementation(() => {
+        conflictOn('r1')
+        return Promise.reject({
+          config: { url: '/isoqf_characteristics/doc1/item/r1', method: 'patch' },
+          response: {
+            status: 409,
+            data: { reason: 'version_conflict', current_version: 5, item: { ref_id: 'r1' } }
+          }
+        })
+      })
+
+      await wrapper.vm.performAutoSave()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.vm.versionConflict).not.toBe(null)
+      expect(wrapper.vm.autoSaveStatus).toBe(null)
+    })
+
     it('guarda el valor ajeno para poder mostrarlo al lado del propio', async () => {
       await openEditorOn('r1')
 

@@ -1138,7 +1138,13 @@ export default {
           this.autoSaveStatus = 'saved'
           setTimeout(() => { this.autoSaveStatus = null }, 2000)
         })
-        .catch(() => { this.autoSaveStatus = 'error' })
+        .catch(() => {
+          // Salvo que el conflicto de versión ya haya puesto su cartel: ahí este ícono
+          // sería un segundo indicador del mismo evento, y el que menos dice de los dos —
+          // «no se pudo guardar» sugiere reintentar, y reintentar es justo lo que no
+          // corresponde mientras la fila esté desactualizada.
+          if (!this.versionConflict) this.autoSaveStatus = 'error'
+        })
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
