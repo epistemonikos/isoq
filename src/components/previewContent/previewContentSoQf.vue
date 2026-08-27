@@ -97,12 +97,12 @@
           <div>
             <camelot-characteristics-table-preview
               v-if="project.use_camelot && charsOfStudies.fields && charsOfStudies.fields.length"
-              :charsOfStudies="charsOfStudies"
+              :charsOfStudies="charsOfStudiesRows"
               :references="references">
             </camelot-characteristics-table-preview>
             <chars-of-studies-table
               v-else-if="!project.use_camelot && charsOfStudies.fields && charsOfStudies.fields.length"
-              :tableData="charsOfStudies"
+              :tableData="charsOfStudiesRows"
               :tableSettings="charsOfStudiesTableSettings">
             </chars-of-studies-table>
           </div>
@@ -110,12 +110,12 @@
           <div>
             <camelot-assessments-table-preview
               v-if="project.use_camelot && methodologicalTableRefs.items && methodologicalTableRefs.items.length"
-              :methodologicalTableRefs="methodologicalTableRefs"
+              :methodologicalTableRefs="methodologicalRows"
               :references="references">
             </camelot-assessments-table-preview>
             <meth-assessments-table
               v-else-if="!project.use_camelot && methodologicalTableRefs.fieldsObj && methodologicalTableRefs.fieldsObj.length > 1"
-              :tableData="methodologicalTableRefs"
+              :tableData="methodologicalRows"
               :tableSettings="methodologicalTableRefsTableSettings"></meth-assessments-table>
           </div>
           <back-to-top></back-to-top>
@@ -212,6 +212,7 @@
 <script>
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
+import { withDerivedRows } from '@/utils/derivedRows'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */'../contentGuidance')
 const organizationForm = () => import(/* webpackChunkName: "organizationForm" */'../organization/organizationForm')
@@ -320,6 +321,24 @@ export default {
     }
   },
   computed: {
+    /**
+     * Las dos tablas del proyecto, completadas con los estudios que no tienen fila.
+     *
+     * Van como computed y no dentro del `.then` del documento porque las referencias llegan
+     * por un request aparte: derivar al recibir el documento haría que el resultado
+     * dependiera de cuál respondiera primero. Así se recalcula cuando llegan.
+     *
+     * Esta vista es de sólo lectura —preview e impresión, también pública— así que nadie
+     * puede sembrar desde acá. Antes la única siembra venía de un PATCH de documento
+     * completo en los Pasos 3 y 4, que además nunca corría para un proyecto que nadie
+     * editó en esos pasos.
+     */
+    charsOfStudiesRows () {
+      return this.withStudyRows(this.charsOfStudies)
+    },
+    methodologicalRows () {
+      return this.withStudyRows(this.methodologicalTableRefs)
+    },
     select_options: function () {
       return [
         { value: 0, text: this.$t('cerqual_options.no_very_minor_concerns') },
@@ -576,6 +595,24 @@ export default {
     },
     parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
       return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
+    },
+    /** Un clon de la tabla con una fila por estudio, derivando las que falten. */
+    withStudyRows: function (table) {
+      const base = table || { fields: [], items: [] }
+      // `references` arranca vacío y el endpoint puede devolver algo que no sea un array;
+      // sin la guarda, el computed rompe el render de la preview entera.
+      const refs = Array.isArray(this.references) ? this.references : []
+      const refIds = refs.map(r => r.id)
+      return {
+        ...base,
+        items: withDerivedRows(base.items, refIds, (refId) => {
+          const ref = refs.find(r => String(r.id) === String(refId))
+          return {
+            ref_id: refId,
+            authors: ref ? Commons.parseReference(ref, true, false) : ''
+          }
+        })
+      }
     },
     getCharacteristics: function () {
       this.charsOfStudiesTableSettings.isBusy = true

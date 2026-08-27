@@ -261,13 +261,18 @@ class LockService {
         return { success: true }
       }
     } catch (error) {
-      // A 409 here can mean the exact ref is taken, or that someone holds the
-      // same study at the other granularity (a leaf when we ask for the bare
-      // study, or vice versa). The body is identical either way, so `locked_by`
-      // is all the caller needs.
+      // A 409 here can mean the exact ref is taken, or that someone holds the same study at
+      // the other granularity (a leaf when we ask for the bare study, or vice versa).
+      // Since 2026-08-26 `reason` tells them apart: `locked_at_another_granularity` for the
+      // second, `locked_by_other_user` for the first.
+      //
+      // It is deliberately NOT the heartbeat's `evicted_granularity_conflict`, and the
+      // difference matters for the wording: there the person had the lock and lost it, here
+      // they never got it. Same underlying clash, two different things to tell them.
       if (error.response && error.response.status === 409) {
-        this.refLockedBy = error.response.data.locked_by
-        return { success: false, lockedBy: this.refLockedBy }
+        const data = error.response.data || {}
+        this.refLockedBy = data.locked_by
+        return { success: false, lockedBy: this.refLockedBy, reason: data.reason || null }
       }
       if (error.response && error.response.status === 403) {
         // Different from a 409: nobody else holds the lock, this user simply no
@@ -293,8 +298,11 @@ class LockService {
     await Promise.all(pending.map(async ([refId, projectId]) => {
       const result = await this.requestRefLock(projectId, refId)
       if (result.success) return
+      // El motivo viaja también acá: el editor sigue abierto, así que su cartel merece poder
+      // decir si esto se destraba solo. El acquire ya lo trae; perderlo en el camino dejaba
+      // este aviso —el de reconectar— peor informado que el del latido.
       window.dispatchEvent(new CustomEvent('ref-lock-lost', {
-        detail: { refId, lockedBy: result.lockedBy || null }
+        detail: { refId, lockedBy: result.lockedBy || null, reason: result.reason || null }
       }))
     }))
   }
@@ -355,12 +363,23 @@ class LockService {
       } catch (error) {
         if (error.response && (error.response.status === 409 || error.response.status === 403 || error.response.status === 401)) {
           this.refLocks.delete(refId)
-          // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`
-          // (reason 'locked_by_other_user'). Passing it through is what lets the
-          // read-only banner name the person instead of falling back to its
-          // anonymous wording. A 401/403 has nobody to blame, hence the null.
-          const lockedBy = (error.response.data && error.response.data.locked_by) || null
-          window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId, lockedBy } }))
+          // Since 2026-08-19 a 409 on an expired-and-taken lock carries `locked_by`.
+          // Passing it through is what lets the read-only banner name the person instead
+          // of falling back to its anonymous wording. A 401/403 has nobody to blame,
+          // hence the null.
+          //
+          // And since 2026-08-26 it also carries `reason`, which splits three situations
+          // that used to arrive identical and do not read the same to the person:
+          // `evicted_granularity_conflict` (somebody holds another granularity of this
+          // study — retryable as soon as they let go), `locked_by_other_user` (they took
+          // it, not retryable) and `lock_expired` (nobody to name). A server without that
+          // deploy, or a 401/403, sends none: the banner falls back to its old wording.
+          const data = error.response.data || {}
+          const lockedBy = data.locked_by || null
+          const reason = data.reason || null
+          window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+            detail: { refId, lockedBy, reason }
+          }))
         }
       }
     }))
@@ -378,16 +397,58 @@ class LockService {
     this.refHeartbeatTimer = null
   }
 
-  async fetchRefLocks (projectId) {
-    if (!this.isEnabled) return []
+  /**
+   * El listado de ref locks del proyecto, distinguiendo los tres estados que hay.
+   *
+   * `fetchRefLocks` devuelve `[]` tanto cuando el proyecto está libre como cuando la
+   * llamada falló, y eso alcanza para pintar candados —si no sé, no pinto ninguno— pero
+   * no para el diálogo de import, que con ese `[]` afirmaría «nadie está editando»
+   * cuando en realidad no lo sabe. Un import es destructivo: ahí la diferencia entre
+   * «cero» y «no averigüé» es la diferencia entre informar y mentir.
+   *
+   * `enabled: false` no es incertidumbre: con la concurrencia apagada no hay locks
+   * posibles, así que no hay nada que avisar y no vale la pena molestar.
+   */
+  async probeRefLocks (projectId) {
+    if (!this.isEnabled) return { locks: [], reachable: true, enabled: false }
     try {
-      const response = await axios.get(`/api/lock/${projectId}/refs`, {
+      // `?verbose=1` devuelve `{enabled, locks}` en vez del array plano, y ese `enabled`
+      // es del SERVIDOR. Hace falta porque el flag vive en las dos capas: con el cliente
+      // encendido y el servidor apagado, el listado contesta `[]` y ese `[]` no se
+      // distingue de «nadie está editando». Nos costó un falso verde entero — la
+      // verificación del aviso de import pasó sin que el aviso pudiera salir nunca.
+      const response = await axios.get(`/api/lock/${projectId}/refs?verbose=1`, {
         headers: Api.getHeaders()
       })
-      return response.data || []
+      return { ...this.readRefLockListing(response.data), reachable: true }
     } catch (e) {
-      return []
+      return { locks: [], reachable: false, enabled: true }
     }
+  }
+
+  /**
+   * Las dos formas del listado, y cualquier tercera que venga.
+   *
+   * El parámetro es opt-in del lado servidor, así que el array plano sigue siendo la
+   * respuesta de los servidores que no lo tienen —y de los que lo tengan, si algún día se
+   * llama sin él—. Una forma desconocida cae en la conducta anterior por la misma razón
+   * que la allowlist de `lockErrors.js`: lo que este cliente no entiende no puede
+   * cambiarle de rama, porque el servidor no tiene forma de instrumentar lo que
+   * descartamos de su respuesta.
+   */
+  readRefLockListing (data) {
+    if (Array.isArray(data)) return { locks: data, enabled: true }
+    if (data && Array.isArray(data.locks)) {
+      return { locks: data.locks, enabled: data.enabled !== false }
+    }
+    return { locks: [], enabled: true }
+  }
+
+  // Contrato plano para los cuatro componentes que pintan candados: les basta la lista y
+  // un fallo silencioso es la conducta correcta ahí. Delega para no tener dos copias de
+  // la misma llamada.
+  async fetchRefLocks (projectId) {
+    return (await this.probeRefLocks(projectId)).locks
   }
 }
 

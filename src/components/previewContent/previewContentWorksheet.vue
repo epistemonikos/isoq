@@ -87,6 +87,8 @@ import extractedData from '../list/editListExtractedData.vue'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import PublicPreviewAccess from '@/utils/publicPreviewAccess'
+import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
+import { withDerivedRows } from '@/utils/derivedRows'
 
 const camelotCharacteristicsTablePreview = () => import(/* webpackChunkName: "camelotcharacteristicstablepreview" */'../camelot/preview/CamelotCharacteristicsTablePreview.vue')
 const camelotAssessmentsTablePreview = () => import(/* webpackChunkName: "camelotassessmentstablepreview" */'../camelot/preview/CamelotAssessmentsTablePreview.vue')
@@ -521,22 +523,40 @@ export default {
             })
             this.extracted_data.original_items = extractedDataItems
             let haveContent = 0
-            for (let reference of _references) {
-              let index = 0
-              for (let item of extractedDataItems) {
-                if (String(item.ref_id) === String(reference)) {
-                  _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index: index })
-                  for (let i in item) {
-                    if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
-                      if (item[i] === '') {
-                        haveContent++
-                      }
-                    }
+            // Left-join sobre las referencias del finding, no sobre los ítems: un estudio
+            // sin fila en el documento tiene que aparecer igual. Esta vista es de sólo
+            // lectura —shared link, impresión— así que nadie puede sembrarla desde acá, y
+            // sin esto el estudio faltaba tanto en la pantalla como en el export Word, que
+            // sale de estos mismos datos.
+            const bibRefs = Array.isArray(this.list.fullreferences) ? this.list.fullreferences : []
+            const conDerivadas = withDerivedRows(extractedDataItems, _references, (refId) => {
+              const bibRef = bibRefs.find(r => String(r.id) === String(refId))
+              return {
+                ref_id: refId,
+                authors: bibRef ? Commons.parseReference(bibRef, true, false) : '',
+                column_0: '',
+                derivada: true
+              }
+            })
+            _references.forEach((reference) => {
+              const index = conDerivadas.findIndex(i => String(i.ref_id) === String(reference))
+              const item = index === -1 ? null : conDerivadas[index]
+              if (!item) return
+              if (item.derivada) {
+                _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: '', index })
+                // Una fila sin datos es un dato faltante, igual que una columna vacía.
+                haveContent++
+                return
+              }
+              _items.push({ ref_id: item.ref_id, authors: item.authors, column_0: item.column_0, index })
+              for (let i in item) {
+                if (i !== 'ref_id' && i !== 'authors' && i !== 'stages' && i !== 'mainFields' && !i.endsWith('_concerns')) {
+                  if (item[i] === '') {
+                    haveContent++
                   }
                 }
-                index++
               }
-            }
+            })
 
             this.ui.coherence.display_warning = true
             this.ui.adequacy.extracted_data.display_warning = true
@@ -594,7 +614,10 @@ export default {
             }
           }
           const fieldKeys = data.fields.map(f => f.key)
-          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          // El contador de versión entra por la exclusión, no por la preservación: estas
+          // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
+          // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields', ...ITEM_METADATA_KEYS]
           const allowedKeys = new Set([...excluded, ...fieldKeys, ...camelotCharKeys])
           if (this.project.use_camelot) {
             this.camelot.fields.forEach(f => allowedKeys.add(f.key))
@@ -728,7 +751,10 @@ export default {
             }
           }
           const fieldKeys = data.fields.map(f => f.key)
-          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields']
+          // El contador de versión entra por la exclusión, no por la preservación: estas
+          // filas alimentan la vista, no una escritura. Es un número, así que sin excluirlo
+          // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+          const excluded = ['ref_id', 'authors', 'author', 'stages', 'mainFields', ...ITEM_METADATA_KEYS]
           const allowedKeys = new Set([...excluded, ...fieldKeys])
           if (this.project.use_camelot) {
             this.camelot.fields.forEach(f => allowedKeys.add(f.key))

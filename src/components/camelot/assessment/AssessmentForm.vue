@@ -100,6 +100,7 @@
 import Api from '@/utils/Api'
 import { isLockRejection } from '@/utils/lockErrors'
 import _debounce from 'lodash.debounce'
+import pendingEditsMixin from '@/mixins/pendingEditsMixin'
 import {
   canonicalIndex,
   canonicalStageKey,
@@ -107,6 +108,7 @@ import {
 } from '@/utils/camelotAssessmentKeys'
 
 export default {
+  mixins: [pendingEditsMixin],
   name: 'AssessmentForm',
   data () {
     return {
@@ -392,6 +394,23 @@ export default {
     saveNow () {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.performSave()
+    },
+    /**
+     * El temporizador de inactividad está por cerrar el modal. Lo que `checkChanges` dejó
+     * agendado a 1,5 s no sobrevive al cierre, y el `@hidden` de StepFour suelta el lock:
+     * hay que escribirlo ahora o no se escribe nunca.
+     *
+     * No se consulta si esta instancia todavía tiene su leaf lock. Sería tentador —las
+     * otras tres de la etapa ya lo soltaron— pero `flush()` de lodash es no-op cuando no
+     * hay nada agendado, así que las que nadie tocó no emiten igual; el guard sólo se
+     * activaría en el único caso donde SÍ hay texto pendiente, y ahí un 409 abre el
+     * rescate con los campos copiables en vez de descartarlo en silencio. Además rompería
+     * el flush offline, donde el permiso vive en `offlineRefs` y no en `refLocks`.
+     */
+    flushPendingEdits (scope) {
+      if (this.isReadOnly) return
+      if (scope && scope !== this.refId) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.flush()
     },
     clearSelection () {
       this.selected = null

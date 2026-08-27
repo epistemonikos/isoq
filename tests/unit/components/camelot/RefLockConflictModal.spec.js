@@ -79,4 +79,21 @@ describe('RefLockConflictModal.vue', () => {
     expect(wrapper.vm.conflictFields).toEqual({ campo1: 'v' })
     wrapper.destroy()
   })
+
+  // El payload que falló es la fila entera, así que arrastra el contador de versión que
+  // el servidor guarda dentro de ella. Ofrecerlo como campo copiable le presenta al
+  // usuario un número interno como si fuera algo que escribió.
+  it('excluye el contador de versión de los campos copiables', () => {
+    const wrapper = shallowMount(RefLockConflictModal, {
+      localVue,
+      propsData: {
+        lockedBy: 'Ana',
+        refId: 'ref1',
+        failedData: { ref_id: 'ref1', _v: 4, campo1: 'v' }
+      },
+      mocks: { $t: (key) => key }
+    })
+    expect(wrapper.vm.conflictFields).toEqual({ campo1: 'v' })
+    wrapper.destroy()
+  })
 })

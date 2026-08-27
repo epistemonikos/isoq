@@ -53,6 +53,79 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     )
   })
 
+  // El control de versión por ítem contesta con el mismo 409 y por la misma URL granular,
+  // pero es otro eje: el lock decide QUIÉN escribe, la versión decide si lo que se va a
+  // escribir se leyó antes de que otro lo cambiara. Mandarlo al canal de locks produce un
+  // cartel que nombra a nadie y que además es falso — el usuario sí tiene su lock.
+  it('no manda un 409 de conflicto de versión al canal de locks', async () => {
+    const err = {
+      config: { url: '/isoqf_characteristics/char1/item/ref1', method: 'patch', data: '{}' },
+      response: {
+        status: 409,
+        data: {
+          reason: 'version_conflict',
+          expected_version: 2,
+          current_version: 5,
+          item: { ref_id: 'ref1', column_0: 'lo que escribió el otro' }
+        }
+      }
+    }
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    expect(dispatched.some(e => e.type === 'ref-lock-conflict')).toBe(false)
+    expect(setItemSpy).not.toHaveBeenCalled()
+  })
+
+  // Cerrar el canal de locks no alcanza: sin uno propio, el rechazo por versión queda sin
+  // ninguna señal. El editor no puede reintentar solo —la fila cambió y reintentar la
+  // pisaría— así que la persona tiene que enterarse, y para eso necesita el valor ajeno.
+  it('anuncia el conflicto de versión por su propio canal, con el ítem al día', async () => {
+    const err = {
+      config: {
+        url: '/isoqf_characteristics/char1/item/ref1',
+        method: 'patch',
+        data: JSON.stringify({ ref_id: 'ref1', column_0: 'lo mío', _v: 2 })
+      },
+      response: {
+        status: 409,
+        data: {
+          reason: 'version_conflict',
+          expected_version: 2,
+          current_version: 5,
+          item: { ref_id: 'ref1', column_0: 'lo del otro', _v: 5 }
+        }
+      }
+    }
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    const event = dispatched.find(e => e.type === 'item-version-conflict')
+    expect(event).toBeTruthy()
+    expect(event.detail).toEqual({
+      refId: 'ref1',
+      expectedVersion: 2,
+      currentVersion: 5,
+      item: { ref_id: 'ref1', column_0: 'lo del otro', _v: 5 },
+      failedData: { ref_id: 'ref1', column_0: 'lo mío', _v: 2 },
+      source: 'live'
+    })
+  })
+
+  it('marca como replay el conflicto de versión que llega desde la cola offline', async () => {
+    const err = {
+      config: {
+        url: '/isoqf_characteristics/char1/item/ref1',
+        method: 'patch',
+        data: '{}',
+        isOfflineReplay: true
+      },
+      response: { status: 409, data: { reason: 'version_conflict', current_version: 5 } }
+    }
+    await expect(errorHandler(err)).rejects.toBe(err)
+
+    const event = dispatched.find(e => e.type === 'item-version-conflict')
+    expect(event.detail.source).toBe('replay')
+  })
+
   it('dispara ref-lock-conflict en un 409 de PATCH parcial de assessments', async () => {
     const err = makeError('/isoqf_assessments/assess1/item/ref2', { ref_id: 'ref2' }, 'Bob')
     await expect(errorHandler(err)).rejects.toBe(err)

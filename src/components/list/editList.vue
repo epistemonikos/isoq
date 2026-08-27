@@ -127,6 +127,8 @@ import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
+import { withDerivedRows } from '@/utils/derivedRows'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -311,7 +313,6 @@ export default {
       tmpExtractedDataFields: [
         { key: 'column_0', label: '' }
       ],
-      importUrl: '',
       references: [],
       refsWithTitle: [],
       mode: 'edit',
@@ -377,7 +378,16 @@ export default {
         itemsMap.set(item.ref_id, item)
       }
 
-      const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields'])
+      // Doble papel, y por eso el contador de versión entra acá: esta lista decide qué
+      // claves NO cuentan como contenido del usuario, y más abajo alimenta `allowedKeys`,
+      // que decide qué se copia del ítem del servidor a la fila reconstruida.
+      //
+      // De las dos mitades, la que importa acá es la exclusión: estas filas van a las
+      // tablas de la vista, no a una escritura, así que preservar `_v` no salva ningún
+      // guardado — es sólo la consecuencia de que las dos listas se derivan de la misma.
+      // Lo que sí evita el daño es que no cuente como contenido: es un número, y sin esto
+      // una fila vacía parecería llena y el aviso de datos incompletos callaría.
+      const excludedKeys = new Set(['authors', 'ref_id', 'stages', 'mainFields', ...ITEM_METADATA_KEYS])
       let haveContent = 0
       const filteredItems = []
 
@@ -602,35 +612,6 @@ export default {
             })
         })
     },
-    updateMyData: function () {
-      let _extractedData = []
-      const params = {
-        finding_id: this.findings.id
-      }
-      Api.get(`/isoqf_extracted_data`, params)
-        .then((response) => {
-          if (response.data.length && response.data[0].items.length && this.references.length > response.data[0].items.length) {
-            let _items = response.data[0].items
-            let _itemsChecks = []
-            for (let item of _items) {
-              _itemsChecks.push(item.ref_id)
-            }
-            for (let reference of this.references) {
-              if (!_itemsChecks.includes(reference.id)) {
-                _extractedData.push({ ref_id: reference.id, authors: reference.content })
-              }
-            }
-            _items.push(..._extractedData)
-            let params = {
-              items: _items
-            }
-            Api.patch(`/isoqf_extracted_data/${response.data[0].id}`, params)
-              .then(() => {
-                this.getExtractedData()
-              })
-          }
-        })
-    },
     getProject: function () {
       this.project = JSON.parse(JSON.stringify(this.list.project))
       if (!Object.prototype.hasOwnProperty.call(this.project, 'inclusion')) {
@@ -717,7 +698,9 @@ export default {
           this.buffer_modal_stage_two.title = title
           this.buffer_modal_stage_two.type = type
         }
-        this.updateMyData()
+        // Antes acá se sembraban las filas faltantes de datos extraídos con un PATCH del
+        // documento completo. `processExtractedData` las deriva al mostrar, así que no hay
+        // nada que escribir para que la tabla esté completa.
       }
       this.getStatus()
       // this.getExtractedData()
@@ -886,7 +869,26 @@ export default {
           }
           return 0
         })
-        localData.original_items = JSON.parse(JSON.stringify(localData.items))
+        // Un estudio incluido en el finding puede no tener fila en el documento: el finding
+        // se creó sin referencias, o la referencia se agregó después. La fila se deriva de
+        // las referencias, que es el patrón que ya usan `filterItemsByReferences` y el
+        // worksheet, en vez de persistirla con un PATCH del documento completo.
+        //
+        // Se agrega a ESTE array y no sólo a la lista de la vista porque el editor de datos
+        // extraídos trabaja por índice sobre lo que se le pasa: una fila que no esté acá no
+        // se puede abrir, y el estudio queda sin forma de capturar datos. El guardado la
+        // persiste sola — el endpoint por ítem es un upsert.
+        const bibRefs = Array.isArray(this.list.fullreferences) ? this.list.fullreferences : []
+        extractedDataItems = withDerivedRows(extractedDataItems, _references, (refId) => {
+          const bibRef = bibRefs.find(r => String(r.id) === String(refId))
+          return {
+            ref_id: refId,
+            authors: bibRef ? this.parseReference(bibRef, true) : '',
+            column_0: ''
+          }
+        })
+
+        localData.original_items = JSON.parse(JSON.stringify(extractedDataItems))
         let haveContent = 0
         const referencesSet = new Set(_references)
 

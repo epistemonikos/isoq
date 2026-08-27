@@ -29,6 +29,19 @@ const CLAVE_ALEATORIA = /^column_[0-9a-f]{24}$/
 describe('columnService — addColumn', () => {
   beforeEach(() => jest.clearAllMocks())
 
+  it('usa la clave que le pasa el llamador, si le pasa una', async () => {
+    // `EditReferenceModal` acuña la clave antes de armar la fila: necesita escribir
+    // `item[clave] = valor` en el mismo objeto que va a mandar, así que no puede esperar a
+    // que el alta le devuelva la clave. Es el motivo por el que el alta usa una clave del
+    // cliente y no del servidor, sólo que hasta ahora nadie de afuera la elegía.
+    const { key } = await addColumn('isoqf_characteristics', 'doc1', 'Contexto', 'column_abc')
+
+    expect(key).toBe('column_abc')
+    expect(Api.patch).toHaveBeenCalledWith(
+      '/isoqf_characteristics/doc1/field/column_abc', { label: 'Contexto' }
+    )
+  })
+
   it('crea la columna con un PATCH sobre una clave que genera el cliente', async () => {
     await addColumn('isoqf_characteristics', 'doc1', 'Contexto')
 

@@ -290,6 +290,45 @@ describe('crudTables.vue — ref-lock de la fila (endpoint B)', () => {
       wrapper.destroy()
     })
 
+    // Los tres motivos del latido no se explican igual, y la diferencia que le importa a la
+    // persona es si va a poder seguir: el desalojo por granularidad se destraba en cuanto la
+    // otra suelte la hoja, los otros dos no.
+    it.each([
+      ['evicted_granularity_conflict', 'Ana', 'lock.evicted_granularity'],
+      ['locked_by_other_user', 'Ana', 'lock.ref_locked_by'],
+      ['lock_expired', null, 'lock.lock_expired'],
+      [null, 'Ana', 'lock.ref_locked_by'],
+      [null, null, 'lock.permissions_revoked']
+    ])('con motivo %s elige el cartel %s', async (reason, lockedBy, expected) => {
+      const { wrapper } = createWrapper()
+      await openRow(wrapper)
+
+      window.dispatchEvent(new CustomEvent('ref-lock-lost', {
+        detail: { refId: 'R1', lockedBy, reason }
+      }))
+      await flushPromises()
+
+      expect(wrapper.vm.rowLockMessageKey).toBe(expected)
+      wrapper.destroy()
+    })
+
+    // El acquire tiene su propio motivo, y su propio texto: acá la persona todavía no tenía
+    // el lock, así que el cartel no explica una pérdida — le dice si vale esperar.
+    it.each([
+      ['locked_at_another_granularity', 'lock.locked_at_another_granularity'],
+      ['locked_by_other_user', 'lock.ref_locked_by'],
+      [null, 'lock.ref_locked_by']
+    ])('al abrir con el lock negado por %s elige el cartel %s', async (reason, expected) => {
+      LockService.acquireRef.mockResolvedValue({ success: false, lockedBy: 'Ana', reason })
+      const { wrapper } = createWrapper()
+
+      await openRow(wrapper)
+
+      expect(wrapper.vm.isRowReadOnly).toBe(true)
+      expect(wrapper.vm.rowLockMessageKey).toBe(expected)
+      wrapper.destroy()
+    })
+
     it('ignora el aviso de otra fila', async () => {
       const { wrapper } = createWrapper()
       await openRow(wrapper)

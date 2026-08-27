@@ -382,7 +382,6 @@ export default {
           this.localReferences = response.data.references
           const _references = JSON.parse(JSON.stringify(this.localReferences))
 
-          await this.syncAllSteps([...this.references, ..._references])
         }
 
         const { parsed = 0, saved = 0, duplicates = 0, duplicate_list = [] } = response.data || {}
@@ -444,7 +443,6 @@ export default {
         this.localReferences = importedRefs
 
         if (importedRefs.length) {
-          await this.syncAllSteps([...this.references, ...importedRefs])
         }
 
         this.msgUploadReferences = `${importedRefs.length} referencias añadidas. ${failedCount > 0 ? `${failedCount} fallaron.` : ''}`
@@ -628,7 +626,6 @@ export default {
         })
 
         const importedRefs = (response.data && response.data.references) ? response.data.references : []
-        await this.syncAllSteps([...this.references, ...importedRefs])
 
         this.pubmed_request = ''
         this.pubmed_requested = []
@@ -641,91 +638,6 @@ export default {
         console.error('Error importing references', error)
       } finally {
         this.$emit('statusLoadReferences', false)
-      }
-    },
-    syncAllSteps: async function (allReferences = []) {
-      await this.syncAssessments(allReferences)
-      await this.syncCharacteristics(allReferences)
-      await this.prefetchDataForExtractedDataUpdate(allReferences)
-    },
-    axiosGetFindings: async function (listId) {
-      return Api.get(`/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
-    },
-    axiosGetExtractedData: async function (organization, findingId) {
-      return Api.get(`/isoqf_extracted_data?organization=${organization}&finding_id=${findingId}`)
-    },
-    axiosPatchExtractedData: async function (id, params) {
-      return Api.patch(`/isoqf_extracted_data/${id}`, params)
-    },
-    prefetchDataForExtractedDataUpdate: async function (references) {
-      try {
-        const _lists = JSON.parse(JSON.stringify(this.lists))
-        if (!_lists || _lists.length === 0) {
-          console.log('No lists available to update')
-          return
-        }
-
-        const findingPromises = _lists.map(list => this.axiosGetFindings(list.id))
-        const findResponses = await Promise.all(findingPromises)
-
-        const extractPromises = findResponses.map(response => {
-          if (response.data && response.data[0]) {
-            return this.axiosGetExtractedData(
-              response.data[0].organization,
-              response.data[0].id
-            )
-          }
-          return Promise.resolve(null)
-        }).filter(promise => promise !== null)
-
-        const extractedResponses = await Promise.all(extractPromises)
-
-        await this.updateExtractedDataReferences(extractedResponses, references)
-      } catch (error) {
-        console.error('Error in prefetchDataForExtractedDataUpdate:', error)
-      }
-    },
-    updateExtractedDataReferences: async function (extractedDataQuerys = [], references = []) {
-      if (!extractedDataQuerys.length) return
-
-      try {
-        const allCurrentRefIds = references.map(r => r.id)
-
-        const patchPromises = []
-
-        for (const response of extractedDataQuerys) {
-          if (!response || !response.data || !response.data[0]) continue
-
-          const responseData = response.data[0]
-          const responseItems = Array.isArray(responseData.items) ? responseData.items : []
-
-          // 1. Keep only items whose reference still exists
-          let updatedItems = responseItems.filter(item => allCurrentRefIds.includes(item.ref_id))
-
-          // 2. Add new items for references that don't have one yet
-          const existingRefIds = updatedItems.map(item => item.ref_id)
-          const newItems = references
-            .filter(ref => !existingRefIds.includes(ref.id))
-            .map(reference => ({
-              'ref_id': reference.id,
-              'authors': this.parseReference(reference, true),
-              'column_0': ''
-            }))
-
-          if (newItems.length > 0 || updatedItems.length !== responseItems.length) {
-            updatedItems.push(...newItems)
-            const params = {
-              items: updatedItems
-            }
-            patchPromises.push(this.axiosPatchExtractedData(responseData.id, params))
-          }
-        }
-
-        if (patchPromises.length > 0) {
-          await Promise.all(patchPromises)
-        }
-      } catch (error) {
-        console.error('Error updating extracted data references:', error)
       }
     },
     openModalReferencesSingle: function (showModal) {
@@ -766,7 +678,6 @@ export default {
         confirmation: `DELETE_ALL_REFERENCES_${this.$route.params.id}`
       })
         .then(async () => {
-          await this.syncAllSteps([])
           this.$emit('loadReferences', true)
           this.$emit('CallGetReferences')
           this.$emit('CallGetProject')
@@ -786,8 +697,6 @@ export default {
         organization: this.$route.params.org_id
       })
         .then(async () => {
-          const updatedRefs = this.references.filter(r => r.id !== refId)
-          await this.syncAllSteps(updatedRefs)
           this.$emit('CallGetReferences', false)
           this.openModalReferencesSingle(false)
           this.$emit('CallGetProject')
@@ -815,120 +724,8 @@ export default {
       }
 
       return result
-    },
-    syncAssessments: async function (allReferences = []) {
-      try {
-        const response = await Api.get('/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
-
-        // Create the assessment object structure
-        const createAssessmentItem = (reference) => ({
-          ref_id: reference.id,
-          authors: this.parseReference(reference, true),
-          stages: [
-            {
-              key: 0,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 1,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 2,
-              options: [{ option: null, text: '' }]
-            },
-            {
-              key: 3,
-              options: [{ option: null, text: '' }]
-            }
-          ]
-        })
-
-        if (response.data.length) {
-          // Update existing assessment
-          const _assessments = response.data[0]
-          const assessmentId = _assessments.id
-          const allCurrentRefIds = allReferences.map(r => r.id)
-
-          // INTERSECTION LOGIC:
-          // 1. Keep only items whose reference still exists
-          let updatedItems = _assessments.items.filter(item => allCurrentRefIds.includes(item.ref_id))
-
-          // 2. Add new items for references that don't have one yet
-          const existingRefIds = updatedItems.map(item => item.ref_id)
-          const newReferences = allReferences.filter(ref => !existingRefIds.includes(ref.id))
-
-          if (newReferences.length > 0 || updatedItems.length !== _assessments.items.length) {
-            const newItems = newReferences.map(ref => createAssessmentItem(ref))
-            updatedItems.push(...newItems)
-            _assessments.items = updatedItems
-            await Api.patch(`/isoqf_assessments/${assessmentId}`, _assessments)
-          }
-        } else if (allReferences.length > 0) {
-          // Create new assessments table
-          const items = allReferences.map(ref => createAssessmentItem(ref))
-
-          // Post new assessments table
-          await Api.post('/isoqf_assessments', {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            items: items
-          })
-        }
-      } catch (error) {
-        console.error('Error en la actualización de calificaciones:', error)
-      }
-    },
-
-    syncCharacteristics: async function (allReferences = []) {
-      try {
-        const response = await Api.get('/isoqf_characteristics?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
-
-        // Create the characteristics object structure
-        const createCharacteristicItem = (reference) => ({
-          ref_id: reference.id,
-          authors: this.parseReference(reference, true)
-        })
-
-        if (response.data.length) {
-          // Update existing characteristics
-          const _characteristics = response.data[0]
-          const charId = _characteristics.id
-          const allCurrentRefIds = allReferences.map(r => r.id)
-
-          // INTERSECTION LOGIC:
-          // 1. Keep only items whose reference still exists
-          let updatedItems = _characteristics.items.filter(item => allCurrentRefIds.includes(item.ref_id))
-
-          // 2. Add new items for references that don't have one yet
-          const existingRefIds = updatedItems.map(item => item.ref_id)
-          const newReferences = allReferences.filter(ref => !existingRefIds.includes(ref.id))
-
-          if (newReferences.length > 0 || updatedItems.length !== _characteristics.items.length) {
-            const newItems = newReferences.map(ref => createCharacteristicItem(ref))
-            updatedItems.push(...newItems)
-            _characteristics.items = updatedItems
-            await Api.patch(`/isoqf_characteristics/${charId}`, _characteristics)
-          }
-        } else if (allReferences.length > 0 && this.useCamelot) {
-          // Create new characteristics table
-          const items = allReferences.map(ref => createCharacteristicItem(ref))
-
-          // Post new characteristics table
-          await Api.post('/isoqf_characteristics/', {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            fields: [
-              { key: 'ref_id', label: this.$t('table_headers.reference_id') },
-              { key: 'authors', label: this.$t('table_headers.author_year') }
-            ],
-            items: items
-          })
-        }
-      } catch (error) {
-        console.error('Error en la actualización de características:', error)
-      }
     }
+
   },
   watch: {
     pre_references: function (data) {

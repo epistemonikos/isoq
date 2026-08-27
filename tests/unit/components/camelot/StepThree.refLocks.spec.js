@@ -9,9 +9,20 @@ jest.mock('@/utils/Api', () => ({
   get: jest.fn().mockResolvedValue({ data: [] }),
   patch: jest.fn().mockResolvedValue({ data: {} })
 }))
-jest.mock('@/services/lockService', () => ({
-  fetchRefLocks: jest.fn().mockResolvedValue([])
-}))
+// refLockStateMixin usa el default export (LockService.refLocks) y studyLockState, no
+// sólo fetchRefLocks: con el mock plano anterior, foreignRefLocks explotaba en
+// `.refLocks.has` y studyLockStateOf llamaba undefined().
+jest.mock('@/services/lockService', () => {
+  const actual = jest.requireActual('@/services/lockService')
+  return {
+    __esModule: true,
+    studyLockState: actual.studyLockState,
+    default: {
+      fetchRefLocks: jest.fn().mockResolvedValue([]),
+      refLocks: new Map()
+    }
+  }
+})
 jest.mock('@/mixins/camelotMixin', () => ({ camelotMixin: { computed: {}, methods: {}, data: () => ({}) } }))
 
 const localVue = createLocalVue()
@@ -39,6 +50,34 @@ describe('StepThree.vue — isRefLocked()', () => {
     await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1', user_name: 'Ana' }] })
     expect(wrapper.vm.isRefLocked('ref1')).toBe(true)
     expect(wrapper.vm.isRefLocked('ref2')).toBe(false)
+    wrapper.destroy()
+  })
+
+  // El botón Edit se derivaba de una comparación plana `l.ref_id === refId`, que ni veía
+  // un estudio bloqueado a través de una de sus celdas (endpoint D) ni distinguía los
+  // locks propios de los ajenos — y `/refs` devuelve también los propios.
+  it('un lock PROPIO no deshabilita el estudio', async () => {
+    const wrapper = createWrapper()
+    LockService.refLocks.set('ref1', 'proj1')
+    await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1', user_name: 'Yo Mismo' }] })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(false)
+    expect(wrapper.vm.refLockedByName('ref1')).toBe('')
+    LockService.refLocks.clear()
+    wrapper.destroy()
+  })
+
+  it('una CELDA ajena del estudio sí lo deshabilita, y lo nombra', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1::s0::o2', user_name: 'Ana' }] })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(true)
+    expect(wrapper.vm.refLockedByName('ref1')).toContain('Ana')
+    wrapper.destroy()
+  })
+
+  it('no confunde un estudio cuyo id empieza igual que otro', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ activeRefLocks: [{ ref_id: 'ref1X::s0::o0', user_name: 'Ana' }] })
+    expect(wrapper.vm.isRefLocked('ref1')).toBe(false)
     wrapper.destroy()
   })
 

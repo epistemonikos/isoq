@@ -262,7 +262,7 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
       activeRefLocks: [{ ref_id: 'ref1::s0::o2', user_name: 'Ana' }]
     })
 
-    expect(wrapper.vm.pollBlockedCells).toEqual([])
+    expect([...wrapper.vm.pollBlockedCellHolders.keys()]).toEqual([])
     wrapper.destroy()
   })
 
@@ -297,7 +297,9 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
 
       await openModalOn(wrapper, 0, 0)
 
-      expect(wrapper.vm.leafLockedBy).toBe('Ana López')
+      // El nombre queda indexado POR CELDA: un escalar se sobreescribía al recorrer
+      // varias celdas denegadas, y es el que alimenta el cartel de AssessmentForm.
+      expect(wrapper.vm.cellLockedBy(0, 0)).toBe('Ana López')
       expect(wrapper.vm.$notify.warning)
         .toHaveBeenCalledWith('lock.ref_locked_by {"user":"Ana López"}')
       wrapper.destroy()
@@ -315,8 +317,58 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
       await openModalOn(wrapper, 0, 0)
 
       expect(wrapper.vm.isRefReadOnly).toBe(true)
-      expect(wrapper.vm.leafLockedBy).toBeNull()
+      expect(wrapper.vm.cellLockedBy(0, 0)).toBeNull()
       expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.permissions_revoked')
+      wrapper.destroy()
+    })
+
+    // Lo que el escalar leafLockedBy no podía hacer: recorrer dos celdas tomadas por
+    // personas distintas dejaba sólo el último nombre, así que la primera celda pasaba
+    // a atribuirse a quien tiene la otra.
+    it('recuerda un titular DISTINTO por cada celda denegada', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      const holders = { 'ref1::s0::o0': 'Ana López', 'ref1::s0::o1': 'Beto Ruiz' }
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        holders[ref] ? { success: false, lockedBy: holders[ref] } : { success: true }
+      ))
+
+      await openModalOn(wrapper, 0, 0)
+      wrapper.vm.selectedMeta = 1
+      await flushPromises()
+
+      expect(wrapper.vm.cellLockedBy(0, 0)).toBe('Ana López')
+      expect(wrapper.vm.cellLockedBy(0, 1)).toBe('Beto Ruiz')
+      wrapper.destroy()
+    })
+
+    // El sondeo tarda hasta 15 s: si el nombre saliera sólo de ahí, el 409 en vivo
+    // mostraría el cartel anónimo hasta el siguiente ciclo.
+    it('el rechazo en vivo tiene precedencia sobre lo que dice el sondeo', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      LockService.acquireRef.mockImplementation((_p, ref) => Promise.resolve(
+        ref === 'ref1::s0::o0' ? { success: false, lockedBy: 'Ana López' } : { success: true }
+      ))
+      await openModalOn(wrapper, 0, 0)
+
+      // El sondeo llega tarde y con otro nombre para la misma celda.
+      await wrapper.setData({
+        activeRefLocks: [{ ref_id: 'ref1::s0::o0', user_name: 'Nombre Viejo' }]
+      })
+
+      expect(wrapper.vm.cellLockedBy(0, 0)).toBe('Ana López')
+      wrapper.destroy()
+    })
+
+    // Nadie tiene la celda en particular, pero sí el estudio entero: el cartel de la
+    // celda tiene que nombrar a esa persona en vez de quedarse mudo.
+    it('cae al titular del estudio cuando la celda puntual está libre', async () => {
+      const wrapper = createWrapper()
+      await flushPromises()
+      await wrapper.setData({ refId: 'ref1', isModalOpen: true, refLockedBy: 'Ana López' })
+
+      expect(wrapper.vm.cellLockedBy(0, 3)).toBe('Ana López')
       wrapper.destroy()
     })
 
@@ -338,7 +390,7 @@ describe('StepFour.vue — lock a nivel modal (una adquisición por estudio)', (
       await flushPromises()
 
       expect(wrapper.vm.isCellReadOnly(0, 0)).toBe(false)
-      expect(wrapper.vm.leafLockedBy).toBeNull()
+      expect(wrapper.vm.cellLockedBy(0, 0)).toBeNull()
       wrapper.destroy()
     })
   })
@@ -600,6 +652,46 @@ describe('StepFour.vue — pérdida del lock con el modal abierto', () => {
     // The study lock is gone: believing we still hold it would skip re-acquiring it.
     expect(wrapper.vm.holdsStudyLock).toBe(false)
     expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+    wrapper.destroy()
+  })
+
+  // El sondeo sólo ve locks AJENOS. Un lock propio que caducó sin que nadie lo tomara
+  // deja el listado vacío, así que recalcular el flag desde ahí devolvía los campos como
+  // editables — y el backend responde 409 `lock_not_held`, porque exige tenencia, no
+  // ausencia de otro.
+  it('no devuelve los campos al recalcular si el lock propio se perdió y nadie lo tomó', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1', holdsStudyLock: true })
+
+    window.dispatchEvent(new CustomEvent('ref-lock-lost', { detail: { refId: 'ref1', lockedBy: null } }))
+    await flushPromises()
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+
+    // Llega el sondeo: nadie más tiene nada.
+    LockService.fetchRefLocks.mockResolvedValue([])
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.studyFieldsReadOnly).toBe(true)
+    expect(wrapper.vm.studyFieldsBlocked).toBe(true)
+    wrapper.destroy()
+  })
+
+  // El caso dominante: el modal ya estaba abierto cuando el otro tomó la celda.
+  it('cierra los campos del estudio cuando el sondeo trae una celda ajena posterior', async () => {
+    const wrapper = createWrapper()
+    await wrapper.setData({ isModalOpen: true, refId: 'ref1' })
+    expect(wrapper.vm.studyFieldsBlocked).toBe(false)
+
+    LockService.fetchRefLocks.mockResolvedValue([{ ref_id: 'ref1::s0::o2', user_name: 'Ana López' }])
+    await wrapper.vm.fetchAndUpdateRefLocks()
+    await flushPromises()
+
+    expect(wrapper.vm.studyFieldsBlocked).toBe(true)
+    expect(wrapper.vm.studyFieldsBlockedBy).toBe('Ana López')
+    // Pero las OTRAS celdas siguen editables: es la granularidad que endpoint D habilita.
+    expect(wrapper.vm.isCellReadOnly(0, 1)).toBe(false)
+    expect(wrapper.vm.isCellReadOnly(0, 2)).toBe(true)
     wrapper.destroy()
   })
 

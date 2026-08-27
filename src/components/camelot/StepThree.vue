@@ -119,9 +119,6 @@
             <font-awesome-icon v-if="isRefLocked(data.item.id)" icon="user" class="ml-1" />
             <font-awesome-icon v-else icon="edit" class="ml-1" />
           </b-button>
-          <b-button v-if="canEdit" size="sm" variant="danger" @click="deleteReference(data.item)">
-            {{ $t('camelot.step_three.delete_button') }}
-          </b-button>
         </template>
 
       </b-table>
@@ -137,6 +134,7 @@
 import { camelotMixin } from '@/mixins/camelotMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
 import LockService from '@/services/lockService'
 import Api from '@/utils/Api'
 import Commons from '@/utils/commons'
@@ -151,7 +149,7 @@ export default {
     EditReferenceModal: () => import('./EditReferenceModal.vue'),
     TableColumnFilter: () => import('@/components/common/TableColumnFilter.vue')
   },
-  mixins: [camelotMixin, projectFreshnessMixin, preserveScrollMixin],
+  mixins: [camelotMixin, projectFreshnessMixin, preserveScrollMixin, refLockStateMixin],
   props: {
     references: {
       type: Array,
@@ -427,13 +425,6 @@ export default {
         }
       })
     },
-    isRefLocked (refId) {
-      return this.activeRefLocks.some(l => l.ref_id === refId)
-    },
-    refLockedByName (refId) {
-      const lock = this.activeRefLocks.find(l => l.ref_id === refId)
-      return lock ? this.$t('lock.ref_locked_by', { user: lock.user_name }) : ''
-    },
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
@@ -474,13 +465,6 @@ export default {
       }
       this.$forceUpdate()
     },
-    deleteReference (item) {
-      if (!this.canEdit) {
-        return
-      }
-      this.$emit('delete-reference', item)
-    },
-
     /**
      * Gets custom fields from loaded data
      * @returns {Array} Array of objects with key and label for custom fields

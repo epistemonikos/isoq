@@ -268,6 +268,12 @@
     "ref_locked_by_no_user": "Read-only: this finding is not available for editing right now.",
     "ref_lock_offline": "No connection — editing unavailable",
     "ref_lock_reconnected": "Reconnected — start editing?",
+    "study_fields_locked_by": "Study fields are read-only: {user} is working on this study.",
+    "study_fields_locked_no_user": "Study fields are read-only: someone else is working on this study.",
+    "inactivity_title": "Are you still there?",
+    "inactivity_message": "Nobody else can edit this entry while you have it open. In {countdown} your changes will be saved and it will be released.",
+    "inactivity_keep_working": "I'm still working",
+    "inactivity_released": "You were inactive, so your changes were saved and the entry was released so others can edit it.",
     "ref_conflict_title": "Unsaved changes",
     "ref_conflict_message": "While you were offline, {user} edited this study. Your changes were not saved. You can copy them and apply them manually.",
     "ref_conflict_message_live": "{user} took over this study while you had it open. Your changes were not saved. You can copy them and apply them manually.",
@@ -282,7 +288,16 @@
     "live_conflict": "{user} is editing this entry now, so your change was not saved. Your text was kept locally so you can copy it.",
     "live_conflict_no_user": "Your change was not saved because you no longer hold the edit lock on this entry. Your text was kept locally so you can copy it.",
     "lost_while_editing": "This finding switched to read-only: {user} is editing it now. Anything you typed since then was not saved — copy it before closing.",
-    "lost_while_editing_no_user": "This finding switched to read-only: your edit lock expired. Anything you typed since then was not saved — copy it before closing."
+    "lost_while_editing_no_user": "This finding switched to read-only: your edit lock expired. Anything you typed since then was not saved — copy it before closing.",
+    "evicted_granularity": "{user} is editing another part of this study, so this is read-only for now. You can continue as soon as they finish, or in a few minutes if their page closed unexpectedly.",
+    "lock_expired": "Your editing lock expired, so this is read-only. Open it again to keep editing.",
+    "locked_at_another_granularity": "{user} is editing another part of this study, so you cannot open it yet. You will be able to as soon as they finish, or in a few minutes if their page closed unexpectedly."
+  },
+  "version_conflict": {
+    "message": "Someone else saved changes to this study while you were editing it. Your text was not saved. Below is what is stored now and what you tried to save, so you can redo your change without losing theirs.",
+    "theirs": "What is stored now",
+    "mine": "What you tried to save",
+    "reload": "Load the current version"
   },
   "project": {
     "notifications": {
@@ -474,7 +489,12 @@
     "accept_info": "If it looks right, accept the import by clicking the \"Save\" button at the bottom of the page.",
     "reject_info": "If something doesn't look right, remove it by clicking the \"Reject\" button at the bottom of the page and return to Step 2.",
     "see_help": "See help video",
-    "format_error": "Your data may be incorrectly formatted and therefore will not be displayed. Please verify your file is a valid .xlsx or .csv file and that your table has at least one column beyond the first two."
+    "format_error": "Your data may be incorrectly formatted and therefore will not be displayed. Please verify your file is a valid .xlsx or .csv file and that your table has at least one column beyond the first two.",
+    "ref_locks_title": "Someone else is editing",
+    "ref_locks_confirm": "Studies in this project open for editing right now: {count}, by {names}. Importing replaces the whole table, so anything they have written will be lost.",
+    "ref_locks_columns": "{name} is editing this table's columns right now; the import replaces those too.",
+    "ref_locks_unknown": "We could not check whether anyone is editing right now. Importing replaces the whole table, so any unsaved work will be lost.",
+    "ref_locks_ok": "Import anyway"
   },
   "meth_assessments": {
     "table_title": "Methodological Assessments Table",

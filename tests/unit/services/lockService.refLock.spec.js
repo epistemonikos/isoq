@@ -46,7 +46,7 @@ describe('LockService.acquireRef()', () => {
 
     const result = await LockService.acquireRef('proj1', 'ref1')
 
-    expect(result).toEqual({ success: false, lockedBy: 'Ana López' })
+    expect(result).toEqual({ success: false, lockedBy: 'Ana López', reason: null })
     expect(LockService.refLocked).toBe(false)
   })
 
@@ -147,14 +147,23 @@ describe('LockService — reintento de los permisos offline al volver la red', (
   })
 
   it('avisa con ref-lock-lost cuando otro usuario tomó la entidad mientras no había red', async () => {
-    axios.post.mockRejectedValue({ response: { status: 409, data: { locked_by: 'Ana Pérez' } } })
+    axios.post.mockRejectedValue({
+      response: {
+        status: 409,
+        data: { reason: 'locked_at_another_granularity', locked_by: 'Ana Pérez' }
+      }
+    })
     const spy = jest.spyOn(window, 'dispatchEvent')
 
     await LockService.retryOfflineRefs()
 
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
     expect(lost).toBeDefined()
-    expect(lost.detail).toEqual({ refId: 'ref1', lockedBy: 'Ana Pérez' })
+    // El motivo también acá: el editor sigue abierto y su cartel merece decir si esto se
+    // destraba solo. Antes se perdía en el camino, aunque el acquire ya lo traía.
+    expect(lost.detail).toEqual({
+      refId: 'ref1', lockedBy: 'Ana Pérez', reason: 'locked_at_another_granularity'
+    })
     expect(LockService.heldRefs()).toEqual([])
     expect(LockService.offlineRefs.size).toBe(0)
     spy.mockRestore()
@@ -292,12 +301,50 @@ describe('LockService — holding several locks at once', () => {
   it('lets a later acquire retry after a failed one', async () => {
     axios.post.mockRejectedValueOnce({ response: { status: 409, data: { locked_by: 'Ana' } } })
     const first = await LockService.acquireRef('proj1', 'R1::s0::o2')
-    expect(first).toEqual({ success: false, lockedBy: 'Ana' })
+    expect(first).toEqual({ success: false, lockedBy: 'Ana', reason: null })
 
     axios.post.mockResolvedValue({ data: { status: true } })
     const second = await LockService.acquireRef('proj1', 'R1::s0::o2')
 
     expect(second).toEqual({ success: true })
+  })
+})
+
+// El acquire también distingue por qué fue rechazado, desde 2026-08-26. Y no reusa el motivo
+// del latido a propósito: acá la persona todavía no tenía el lock, así que el cartel no
+// explica una pérdida — le dice si vale esperar.
+describe('LockService.acquireRef() — el motivo del rechazo', () => {
+  it.each([
+    ['locked_at_another_granularity', 'Ana'],
+    ['locked_by_other_user', 'Ana']
+  ])('devuelve el motivo %s del 409', async (reason, lockedBy) => {
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: { reason, locked_by: lockedBy } }
+    })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, lockedBy, reason })
+  })
+
+  // Un servidor sin ese despliegue no lo manda: el resultado sigue teniendo la forma que
+  // los llamadores ya leen, con el motivo en null.
+  it('deja el motivo en null cuando el 409 no lo trae', async () => {
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: { locked_by: 'Ana' } }
+    })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, lockedBy: 'Ana', reason: null })
+  })
+
+  it('no le pone motivo al 403, que no es un conflicto', async () => {
+    axios.post.mockRejectedValue({ response: { status: 403, data: {} } })
+
+    const result = await LockService.acquireRef('proj1', 'R1')
+
+    expect(result).toEqual({ success: false, permissionDenied: true })
   })
 })
 
@@ -331,7 +378,7 @@ describe('LockService.refHeartbeat() — several locks', () => {
 
     expect(LockService.heldRefs()).toEqual(['R1'])
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
-    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: null })
+    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: null, reason: null })
     spy.mockRestore()
   })
 
@@ -348,7 +395,43 @@ describe('LockService.refHeartbeat() — several locks', () => {
     await LockService.refHeartbeat()
 
     const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
-    expect(lost.detail).toEqual({ refId: 'R1::s0::o0', lockedBy: 'Ana Pérez' })
+    expect(lost.detail).toMatchObject({ refId: 'R1::s0::o0', lockedBy: 'Ana Pérez' })
+    spy.mockRestore()
+  })
+
+  // Desde 2026-08-26 el latido distingue tres situaciones que antes salían todas iguales, y
+  // no se explican igual: un desalojo por granularidad es reintentable en cuanto la otra
+  // persona suelte la hoja; un lock que alguien más tomó, no; y uno que caducó no tiene a
+  // quién nombrar. El motivo viaja para que el cartel pueda decir cuál de las tres es.
+  it.each([
+    ['evicted_granularity_conflict', 'Ana Pérez'],
+    ['locked_by_other_user', 'Ana Pérez'],
+    ['lock_expired', null]
+  ])('pasa el motivo %s del 409 del latido', async (reason, lockedBy) => {
+    LockService.refLocks.set('R1', 'proj1')
+    axios.post.mockRejectedValue({
+      response: { status: 409, data: lockedBy ? { reason, locked_by: lockedBy } : { reason } }
+    })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.refHeartbeat()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost.detail).toEqual({ refId: 'R1', lockedBy, reason })
+    spy.mockRestore()
+  })
+
+  // Un 401 o 403 no trae motivo, y un servidor sin desplegar tampoco: el evento sigue
+  // saliendo, con el motivo en `null`, y el cartel cae a su texto de siempre.
+  it('deja el motivo en null cuando el 409 no lo trae', async () => {
+    LockService.refLocks.set('R1', 'proj1')
+    axios.post.mockRejectedValue({ response: { status: 403, data: {} } })
+    const spy = jest.spyOn(window, 'dispatchEvent')
+
+    await LockService.refHeartbeat()
+
+    const lost = spy.mock.calls.map(([e]) => e).find(e => e.type === 'ref-lock-lost')
+    expect(lost.detail).toEqual({ refId: 'R1', lockedBy: null, reason: null })
     spy.mockRestore()
   })
 
@@ -440,5 +523,135 @@ describe('LockService.fetchRefLocks()', () => {
     axios.get.mockRejectedValue(new Error('Network error'))
     const result = await LockService.fetchRefLocks('proj1')
     expect(result).toEqual([])
+  })
+})
+
+describe('LockService.probeRefLocks()', () => {
+  // El aviso del import necesita distinguir tres estados, no dos: nadie edita, alguien
+  // edita, y NO PUDE AVERIGUARLO. `fetchRefLocks` colapsa el tercero en el primero —
+  // devuelve [] tanto si el proyecto está libre como si la llamada falló— y con eso el
+  // diálogo de import diría "nadie está editando" cuando en realidad no sabe.
+  //
+  // Estos tests fijan el CAMINO del dato, no un valor: que el fallo llegue a quien decide.
+  it('marca reachable cuando el servidor contesta', async () => {
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('marca reachable false cuando la llamada falla, en vez de aparentar cero locks', async () => {
+    axios.get.mockRejectedValue(new Error('Network error'))
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: false, enabled: true })
+  })
+
+  it('marca enabled false con la concurrencia apagada, y no consulta al servidor', async () => {
+    jest.spyOn(LockService, 'isEnabled', 'get').mockReturnValue(false)
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    // enabled:false NO es incertidumbre: sin locks posibles no hay nada que avisar.
+    expect(result).toEqual({ locks: [], reachable: true, enabled: false })
+    expect(axios.get).not.toHaveBeenCalled()
+  })
+
+  it('fetchRefLocks sigue devolviendo un array plano', async () => {
+    // Sus cuatro consumidores hacen `activeRefLocks = await fetchRefLocks(...)` y lo
+    // recorren como array. Este test es lo que impide que probeRefLocks les cambie el
+    // contrato por debajo.
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.fetchRefLocks('proj1')
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result).toEqual([{ ref_id: 'ref1', user_name: 'Ana López' }])
+  })
+})
+
+describe('LockService.probeRefLocks() — el `enabled` del SERVIDOR', () => {
+  // El `enabled` que teníamos era espejo del flag del cliente y nada más. Eso alcanzaba
+  // para no molestar donde la concurrencia está apagada de este lado, pero no para el caso
+  // que nos mordió de verdad: cliente encendido y servidor apagado. Ahí `GET /refs`
+  // devuelve `[]`, y ese `[]` era indistinguible de «nadie está editando» — así que el
+  // aviso del import no salía nunca y la verificación pasaba en verde sin probar nada.
+  //
+  // Backend agregó `?verbose=1`, que devuelve `{enabled, locks}` en vez del array plano.
+  // Es opt-in: sin el parámetro la forma no cambia, para no romper a los cuatro
+  // componentes que ya lo consumen.
+  it('lee el enabled del servidor cuando viene la forma nueva', async () => {
+    axios.get.mockResolvedValue({
+      data: { enabled: true, locks: [{ ref_id: 'ref1', user_name: 'Ana López' }] }
+    })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('con el control apagado en el servidor, enabled false aunque el cliente esté encendido', async () => {
+    // Éste es el caso entero. Sin él, un entorno con las dos capas desalineadas afirma
+    // «nadie está editando» y el aviso del import calla justo antes de un borrado.
+    axios.get.mockResolvedValue({ data: { enabled: false, locks: [] } })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: true, enabled: false })
+  })
+
+  it('pide la forma verbosa', async () => {
+    axios.get.mockResolvedValue({ data: { enabled: true, locks: [] } })
+
+    await LockService.probeRefLocks('proj1')
+
+    expect(axios.get.mock.calls[0][0]).toContain('verbose=1')
+  })
+
+  it('con el array plano de siempre, se comporta como antes', async () => {
+    // El endpoint verboso todavía no está desplegado, y cuando lo esté seguirá habiendo
+    // servidores viejos. Un campo de respuesta que no llega tiene que caer en la conducta
+    // anterior, no en una rama nueva.
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('una forma que este cliente no conoce cae en la conducta anterior', async () => {
+    // Mismo patrón que `un_motivo_que_todavia_no_existe` en lockErrors.spec.js: no
+    // verifica ningún valor real, verifica que lo desconocido no cambie de rama. Es la
+    // única red posible para un campo de respuesta — el servidor no puede instrumentar lo
+    // que nosotros descartamos.
+    axios.get.mockResolvedValue({ data: { una_forma_que_todavia_no_existe: true } })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: true, enabled: true })
+  })
+
+  it('fetchRefLocks sigue devolviendo un array con la forma nueva', async () => {
+    axios.get.mockResolvedValue({
+      data: { enabled: true, locks: [{ ref_id: 'ref1', user_name: 'Ana López' }] }
+    })
+
+    const result = await LockService.fetchRefLocks('proj1')
+
+    expect(result).toEqual([{ ref_id: 'ref1', user_name: 'Ana López' }])
   })
 })

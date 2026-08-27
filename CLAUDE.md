@@ -129,9 +129,58 @@ No hay liberación por inactividad para los ref-locks. El `IDLE_TIMEOUT` de 15 m
 que la persona va a escribir, y sin eso el aviso de pérdida podía tardar hasta un ciclo entero.
 
 Un heartbeat sobre un lock **vencido** lo revive a propósito — es lo que salva a quien estuvo
-throttleado — salvo que otro tenga el mismo estudio en otra granularidad, y ahí devuelve 409 con
-`reason: 'locked_by_other_user'` y `locked_by`. Ese nombre viaja en el `detail` de `ref-lock-lost`
-para que el cartel de solo lectura diga quién está editando en vez de su texto anónimo.
+throttleado — salvo que otro tenga el mismo estudio en otra granularidad, y ahí devuelve 409.
+
+Ese 409 trae **tres `reason` distintos** (desde 2026-08-26), y la diferencia que le importa a la
+persona no es quién tiene el lock: es **si va a poder seguir**.
+
+| `reason` | qué pasó | `locked_by` | ¿se destraba solo? |
+|---|---|---|---|
+| `evicted_granularity_conflict` | otro tiene otra granularidad del mismo estudio y el desempate por antigüedad nos desalojó | sí | **sí**, cuando suelte |
+| `locked_by_other_user` | lo tomaron | sí | no |
+| `lock_expired` | caducó, o nunca se tomó | no | no |
+
+`reason` y `locked_by` viajan en el `detail` de `ref-lock-lost`. **La regla de qué cartel corresponde
+vive en `src/utils/lockLostMessage.js`** y no en cada handler: son siete los que lo muestran.
+
+El **acquire** tiene sus propios dos motivos, y el de granularidad es un valor **distinto** a
+propósito: ahí la persona nunca tuvo el lock, así que el cartel no explica una pérdida sino si vale
+esperar. `lockDeniedMessageKey()` los mapea.
+
+| `reason` del acquire | qué pasó | `locked_by` |
+|---|---|---|
+| `locked_at_another_granularity` | otro tiene otra granularidad del mismo estudio | sí |
+| `locked_by_other_user` | la misma clave, tomada por otra persona | sí |
+
+Dos cosas que no hay que romper. El chequeo es una **allowlist** (`VERSION_REASONS` en
+`lockErrors.js`, y las comparaciones de `lockLostMessage.js`): un `reason` que este cliente no
+conozca cae por default en el comportamiento anterior. Escrito al revés —una denylist— cualquier
+motivo nuevo del servidor caería en la rama equivocada, y ya hubo tres altas de motivos en una
+semana. Y **la cadencia del latido sostiene una promesa de interfaz**: el texto de
+`evicted_granularity_conflict` dice «podrás seguir en cuanto termine», así que un ciclo más largo que
+el desalojo convertiría ese cartel en mentira. Son dos razones independientes para no subir
+`HEARBEAT_INTERVAL`; la otra es el bloqueo mutuo.
+
+### Lo que el servidor puede atrapar, y lo que no
+
+Backend instrumenta con warnings los datos que **le mandamos** y que dejamos caer: el contador `_v`
+ausente en una escritura por ítem, las filas que pierden `stages` en una escritura genérica. Si un
+camino nuestro los pierde, aparece en sus logs.
+
+**Los campos de respuesta no tienen esa red.** Lo que hagamos con un `reason`, un `_v` devuelto o un
+`item` fresco del 409 les es invisible: sale del servidor y ahí termina lo que pueden ver.
+
+> El servidor puede instrumentar lo que el cliente le manda, nunca lo que el cliente descarta.
+
+Ya pasó tres veces en el mismo tramo, y las tres fueron la misma cosa —un dato que llegaba y se perdía
+en el camino—: el cuerpo de la respuesta con el `_v` nuevo, `stages` en la reconstrucción de la fila, y
+el `reason` en el reintento de la cola offline. Las dos primeras las habría atrapado un warning suyo.
+La tercera, ninguno.
+
+Así que para todo campo de respuesta la única red es un test de este lado, y tiene que comprobar **que
+el camino no se pierda**, no que un valor esté bien. El patrón está en `lockErrors.spec.js`: entre los
+casos hay un `un_motivo_que_todavia_no_existe`, que no verifica ningún valor real — verifica que un
+motivo desconocido siga cayendo en la rama correcta.
 
 ### Perder el lock tiene que ser visible
 

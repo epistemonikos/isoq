@@ -268,6 +268,12 @@
     "ref_locked_by_no_user": "Solo lectura: este hallazgo no está disponible para editar en este momento.",
     "ref_lock_offline": "Sin conexión — edición no disponible",
     "ref_lock_reconnected": "Reconectado — ¿iniciar edición?",
+    "study_fields_locked_by": "Los campos del estudio están en solo lectura: {user} está trabajando en este estudio.",
+    "study_fields_locked_no_user": "Los campos del estudio están en solo lectura: otra persona está trabajando en este estudio.",
+    "inactivity_title": "¿Sigues ahí?",
+    "inactivity_message": "Nadie más puede editar esta entrada mientras la tienes abierta. En {countdown} se guardarán tus cambios y quedará liberada.",
+    "inactivity_keep_working": "Sigo trabajando",
+    "inactivity_released": "Estuviste inactivo, así que tus cambios se guardaron y la entrada quedó liberada para que otros puedan editarla.",
     "ref_conflict_title": "Cambios no guardados",
     "ref_conflict_message": "Mientras estabas desconectado, {user} editó este estudio. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
     "ref_conflict_message_live": "{user} tomó este estudio mientras lo tenías abierto. Tus cambios no se guardaron. Puedes copiarlos y aplicarlos manualmente.",
@@ -282,7 +288,16 @@
     "live_conflict": "{user} está editando esta entrada ahora, así que tu cambio no se guardó. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "live_conflict_no_user": "Tu cambio no se guardó porque ya no tienes el bloqueo de edición de esta entrada. Tu texto quedó guardado localmente para que puedas copiarlo.",
     "lost_while_editing": "Este hallazgo pasó a solo lectura: {user} lo está editando ahora. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar.",
-    "lost_while_editing_no_user": "Este hallazgo pasó a solo lectura: tu bloqueo de edición expiró. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar."
+    "lost_while_editing_no_user": "Este hallazgo pasó a solo lectura: tu bloqueo de edición expiró. Lo que escribiste desde entonces no se guardó; cópialo antes de cerrar.",
+    "evicted_granularity": "{user} está editando otra parte de este estudio, así que esto quedó en solo lectura. Podrás seguir en cuanto termine, o en unos minutos si cerró la página de golpe.",
+    "lock_expired": "Tu bloqueo de edición caducó, así que esto quedó en solo lectura. Vuelve a abrirlo para seguir editando.",
+    "locked_at_another_granularity": "{user} está editando otra parte de este estudio, así que todavía no puedes abrirlo. Podrás hacerlo en cuanto termine, o en unos minutos si cerró la página de golpe."
+  },
+  "version_conflict": {
+    "message": "Otra persona guardó cambios en este estudio mientras lo editabas. Tu texto no se guardó. Abajo está lo que quedó guardado y lo que intentaste guardar, para que puedas rehacer tu cambio sin perder el de la otra persona.",
+    "theirs": "Lo que quedó guardado",
+    "mine": "Lo que intentaste guardar",
+    "reload": "Traer la versión al día"
   },
   "project": {
     "notifications": {
@@ -474,7 +489,12 @@
     "accept_info": "Si se ve bien, acepte la importación haciendo clic en el botón \"Guardar\" en la parte inferior de la página.",
     "reject_info": "Si algo no se ve bien, elimínela haciendo clic en el botón \"Rechazar\" en la parte inferior de la página y vuelva al Paso 2.",
     "see_help": "Ver video de ayuda",
-    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que su archivo sea un .xlsx o .csv válido y que su tabla tenga al menos una columna más allá de las dos primeras."
+    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que su archivo sea un .xlsx o .csv válido y que su tabla tenga al menos una columna más allá de las dos primeras.",
+    "ref_locks_title": "Hay alguien editando",
+    "ref_locks_confirm": "Estudios de este proyecto abiertos para edición en este momento: {count}, por {names}. Al importar se reemplaza la tabla completa, así que se perderá lo que hayan escrito.",
+    "ref_locks_columns": "{name} está editando las columnas de esta tabla en este momento; el import también las reemplaza.",
+    "ref_locks_unknown": "No pudimos comprobar si alguien está editando en este momento. Al importar se reemplaza la tabla completa, así que se perderá el trabajo sin guardar.",
+    "ref_locks_ok": "Importar de todos modos"
   },
   "meth_assessments": {
     "table_title": "Tabla de Evaluaciones Metodológicas",

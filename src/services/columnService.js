@@ -29,12 +29,17 @@ function fieldPath (collection, docId, key) {
  * idempotente: se puede encolar sin conexión, reproducir sin duplicar, y la columna se
  * puede renderizar antes de que llegue la respuesta.
  *
+ * `key` es opcional para quien ya la acuñó. `EditReferenceModal` la necesita antes del
+ * alta porque escribe `item[key] = valor` en la misma fila que va a mandar, así que no
+ * puede esperar a que el alta se la devuelva. Es exactamente para eso que la clave es del
+ * cliente; hasta ahora nadie de afuera la elegía.
+ *
  * @returns {Promise<{key: string, response: Object}>}
  */
-export async function addColumn (collection, docId, label) {
-  const key = newCustomFieldKey()
-  const response = await Api.patch(fieldPath(collection, docId, key), { label })
-  return { key, response }
+export async function addColumn (collection, docId, label, key = null) {
+  const fieldKey = key || newCustomFieldKey()
+  const response = await Api.patch(fieldPath(collection, docId, fieldKey), { label })
+  return { key: fieldKey, response }
 }
 
 /** Renombra una columna. Sólo viaja `label`: el backend rechaza `key` en el body. */

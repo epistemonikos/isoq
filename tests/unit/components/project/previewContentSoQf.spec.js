@@ -175,4 +175,93 @@ describe('previewContentSoQf.vue — bundle mode (/shared/:token)', () => {
       wrapper.destroy()
     })
   })
+
+  // La preview y la impresión del proyecto usaban `items` verbatim, así que un estudio sin
+  // fila en el documento no aparecía. Su única siembra venía de un PATCH de documento
+  // completo en el Paso 3/4, que es la ruta que el servidor va a cerrar — y que además
+  // nunca corría para un proyecto que nadie editó en esos pasos.
+  describe('estudios sin fila en el documento', () => {
+    const refs = [
+      { id: 'r1', content: 'Smith, J. (2020). Uno.' },
+      { id: 'r2', content: 'Garcia, M. (2021). Dos.' }
+    ]
+
+    it('los deriva en la tabla de características', () => {
+      const wrapper = shallowMount(previewContentSoQf, {
+        localVue,
+        mocks: publicMocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false },
+            references: refs,
+            charsOfStudies: {
+              fields: [{ key: 'ref_id' }, { key: 'authors' }, { key: 'column_0' }],
+              items: [{ ref_id: 'r1', authors: 'Smith 2020', column_0: 'algo' }]
+            }
+          }
+        }
+      })
+
+      const ids = wrapper.vm.charsOfStudiesRows.items.map(i => i.ref_id)
+      expect(ids).toEqual(expect.arrayContaining(['r1', 'r2']))
+      wrapper.destroy()
+    })
+
+    it('los deriva en la tabla de evaluaciones metodológicas', () => {
+      const wrapper = shallowMount(previewContentSoQf, {
+        localVue,
+        mocks: publicMocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false },
+            references: refs,
+            methodologicalTableRefs: {
+              fields: [{ key: 'ref_id' }, { key: 'authors' }],
+              fieldsObj: [{ key: 'authors' }, { key: 'column_0' }],
+              items: [{ ref_id: 'r2', authors: 'Garcia 2021' }]
+            }
+          }
+        }
+      })
+
+      const ids = wrapper.vm.methodologicalRows.items.map(i => i.ref_id)
+      expect(ids).toEqual(expect.arrayContaining(['r1', 'r2']))
+      wrapper.destroy()
+    })
+
+    // Las referencias llegan por un request aparte: si se derivara al recibir el documento,
+    // el resultado dependería de cuál respondiera primero.
+    it('no depende de que las referencias hayan llegado antes que el documento', async () => {
+      const wrapper = shallowMount(previewContentSoQf, {
+        localVue,
+        mocks: publicMocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false },
+            references: [],
+            charsOfStudies: {
+              fields: [{ key: 'ref_id' }, { key: 'authors' }],
+              items: [{ ref_id: 'r1', authors: 'Smith 2020' }]
+            }
+          }
+        }
+      })
+      // `mounted` puebla `references` con la respuesta del mock de forma asíncrona: sin
+      // dejarla asentar, sobrescribe lo que este test siembra después.
+      await flushPromises()
+      await wrapper.setData({
+        references: [],
+        charsOfStudies: {
+          fields: [{ key: 'ref_id' }, { key: 'authors' }],
+          items: [{ ref_id: 'r1', authors: 'Smith 2020' }]
+        }
+      })
+      expect(wrapper.vm.charsOfStudiesRows.items).toHaveLength(1)
+
+      await wrapper.setData({ references: refs })
+
+      expect(wrapper.vm.charsOfStudiesRows.items).toHaveLength(2)
+      wrapper.destroy()
+    })
+  })
 })

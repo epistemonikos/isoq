@@ -30,6 +30,23 @@
 
       <b-row>
         <b-col cols="12" class="camelot-modal-body">
+          <InactivityWarning
+            :visible="inactivityWarning"
+            :seconds-left="inactivitySecondsLeft"
+            @keep-working="keepWorkingOnInactivity" />
+          <!--
+            Un solo aviso para los campos del estudio, y no uno por tarjeta: son ocho y
+            dirían todos lo mismo. Sin esto los campos se cerraban en silencio — la
+            tarjeta sólo esconde su botón Edit, así que la persona no tenía forma de
+            saber que había alguien del otro lado.
+          -->
+          <b-alert v-if="studyFieldsBlocked" show variant="warning" class="mb-3"
+            data-testid="study-fields-readonly-notice">
+            <font-awesome-icon icon="lock" class="mr-1" />
+            {{ studyFieldsBlockedBy
+              ? $t('lock.study_fields_locked_by', { user: studyFieldsBlockedBy })
+              : $t('lock.study_fields_locked_no_user') }}
+          </b-alert>
           <template v-if="modal.stage < 2">
             <b-row>
               <!-- Columna 1: Design or Conduct Domain values (all items) - STATIC -->
@@ -45,7 +62,7 @@
                     :extracted-data="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'extractedData']"
                     :concerns="(modal.stage === 0 ? meta[1] : meta[2]).values[iIndex][item + 'comments']"
                     :is-exclamation-active="displayExclamationAlert(modal.stage === 0 ? 1 : 2, iIndex)"
-                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="isRefReadOnly"
+                    :editing-field="editingField" :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId"
                     @start-editing="onStartEditing"
                     @cancel-editing="onCancelEditing" @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                 </div>
@@ -89,7 +106,7 @@
                             :extracted-data="meta[0].values[dIndex][meta[0].items[dIndex] + 'extractedData']"
                             :concerns="meta[0].values[dIndex][meta[0].items[dIndex] + 'comments']"
                             :is-exclamation-active="displayExclamationAlert(0, dIndex)" :editing-field="editingField"
-                            :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                            :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                             @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                         </b-col>
 
@@ -98,7 +115,7 @@
                           <assessmentForm :assessments="assessments" :modalStage="modal.stage" :selectedMeta="dIndex"
                             :refId="refId" :modalIndex="modal.index"
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
-                            :locked-by-user="refLockedBy"
+                            :locked-by-user="cellLockedBy(modal.stage, dIndex)"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
@@ -123,7 +140,7 @@
                       :extracted-data="meta[1].values[iIndex][item + 'extractedData']"
                       :concerns="meta[1].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(1, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -139,7 +156,7 @@
                       :extracted-data="meta[2].values[iIndex][item + 'extractedData']"
                       :concerns="meta[2].values[iIndex][item + 'comments']"
                       :is-exclamation-active="displayExclamationAlert(2, iIndex)" :editing-field="editingField"
-                      :is-saving="isSavingField" :is-read-only="isRefReadOnly" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
+                      :is-saving="isSavingField" :is-read-only="studyFieldsBlocked" :ref-id="refId" @start-editing="onStartEditing" @cancel-editing="onCancelEditing"
                       @save-field="onSaveField" @auto-save-field="onAutoSaveField" />
                   </div>
                 </b-col>
@@ -148,7 +165,7 @@
                 <b-col cols="4">
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
-                    :locked-by-user="refLockedBy"
+                    :locked-by-user="cellLockedBy(2, 0)"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -228,7 +245,7 @@
                 <b-col cols="3" class="">
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
-                    :locked-by-user="refLockedBy"
+                    :locked-by-user="cellLockedBy(3, 0)"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -289,12 +306,15 @@ import CamelotStepFourTable from './CamelotStepFourTable.vue'
 import CamelotStepFourHeader from './CamelotStepFourHeader.vue'
 import RefLockConflictModal from './RefLockConflictModal.vue'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
+import editorInactivityMixin from '@/mixins/editorInactivityMixin'
+import { requestPendingEditsFlush } from '@/mixins/pendingEditsMixin'
+import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 
 export default {
   name: 'StepFour',
-  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin],
+  mixins: [refLockStateMixin, projectFreshnessMixin, preserveScrollMixin, editorInactivityMixin],
   props: {
     type: {
       type: String,
@@ -310,7 +330,13 @@ export default {
     }
   },
   components: {
-    AssessmentForm, Responses, CamelotAssessmentCard, CamelotStepFourTable, CamelotStepFourHeader, RefLockConflictModal
+    AssessmentForm,
+    Responses,
+    CamelotAssessmentCard,
+    CamelotStepFourTable,
+    CamelotStepFourHeader,
+    RefLockConflictModal,
+    InactivityWarning: () => import('@/components/common/InactivityWarning.vue')
   },
   data () {
     const headerClass = 'header-second-row'
@@ -376,8 +402,25 @@ export default {
       // Cells whose lock we asked for and did not get, as 'stage-option' keys.
       // Kept apart from the ones the /refs poll reports so a poll never erases
       // a refusal we just received.
-      deniedCells: [],
-      leafLockedBy: null,
+      // Posición 'stage-option' -> quién la tiene. Es un Map y no un array de
+      // posiciones porque el nombre del titular es justamente lo que hay que mostrar:
+      // un cartel que dice "solo lectura" sin decir quién está del otro lado no le
+      // sirve a nadie para coordinarse. Se reemplaza entero en cada cambio (Vue 2 no
+      // observa el interior de un Map).
+      deniedCellHolders: new Map(),
+      // "Lo tuve y lo perdí" no es lo mismo que "nunca lo tomé". El sondeo sólo ve los
+      // locks AJENOS, así que un lock propio que caducó (pestaña throttleada, sin que
+      // nadie lo tomara) deja el listado vacío y devolvería los campos como editables —
+      // hasta que el 409 `lock_not_held` lo desmienta, porque el backend exige tenencia,
+      // no sólo ausencia de otro. Este flag sobrevive al recálculo del sondeo.
+      studyLockLost: false,
+      // Ver el comentario gemelo en EditReferenceModal: el 409 de un guardado en vuelo
+      // llega después del cierre, cuando refId ya no sirve para reconocerlo.
+      pendingConflictRefId: '',
+      // "Cerrá el modal pero NO sueltes los locks": lo usa el caso de la otra pestaña de
+      // la misma persona. Sin esto, el @hidden llama a onAssessmentModalClosed y le saca
+      // el estudio a quien está escribiendo del otro lado.
+      skipReleaseOnClose: false,
       conflictData: null,
       conflictLockedBy: '',
       conflictRefId: '',
@@ -563,13 +606,33 @@ export default {
     activeLeafRef () {
       return leafLockKey(this.refId, this.modal.stage, this.selectedMeta)
     },
+    /**
+     * Los campos del estudio (endpoint B, que reescribe el ítem COMPLETO) están cerrados
+     * si el estudio entero es de solo lectura O si alguien tiene una de sus celdas.
+     * Deliberadamente NO se toca `isCellReadOnly`: una celda ajena cierra estos campos
+     * pero deja las otras nueve celdas editables, que es la granularidad que el endpoint
+     * D vino a habilitar. Fusionar los dos conceptos reintroduce el bloqueo que se sacó.
+     */
+    studyFieldsBlocked () {
+      return this.isRefReadOnly || this.studyFieldsReadOnly
+    },
+    /** Quién cierra los campos del estudio, para poder nombrarlo en el aviso. */
+    studyFieldsBlockedBy () {
+      return this.studyFieldsLockedBy || this.refLockedBy || null
+    },
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
-    pollBlockedCells () {
-      if (!this.isModalOpen || !this.refId) return []
+    pollBlockedCellHolders () {
+      if (!this.isModalOpen || !this.refId) return new Map()
       const { lockedLeaves } = this.studyLockStateOf(this.refId)
-      return [...lockedLeaves.keys()].map(leafPositionOf).filter(Boolean)
+      // lockedLeaves ya viene como clave-de-hoja -> titular; sólo hay que traducir la
+      // clave a la posición con la que el template indexa las celdas.
+      return new Map(
+        [...lockedLeaves.entries()]
+          .map(([key, holder]) => [leafPositionOf(key), holder])
+          .filter(([position]) => position)
+      )
     }
   },
   watch: {
@@ -592,8 +655,21 @@ export default {
     isCellReadOnly (stage, option) {
       if (this.isRefReadOnly) return true
       const position = `${stage}-${option}`
-      return this.pollBlockedCells.includes(position) ||
-        this.deniedCells.includes(position)
+      return this.pollBlockedCellHolders.has(position) ||
+        this.deniedCellHolders.has(position)
+    },
+    /**
+     * Quién tiene ESTA celda. El rechazo en vivo va primero: el sondeo tarda hasta 15 s,
+     * así que el camino real —hacer clic en una celda y recibir el 409— tendría que
+     * esperar ese ciclo entero para poder nombrar a nadie. El titular del estudio queda
+     * de último recurso: sólo aplica si nadie tiene la celda en particular.
+     */
+    cellLockedBy (stage, option) {
+      const position = `${stage}-${option}`
+      return this.deniedCellHolders.get(position) ||
+        this.pollBlockedCellHolders.get(position) ||
+        this.refLockedBy ||
+        null
     },
     /**
      * Moves the leaf lock as the modal walks from cell to cell. The bare study
@@ -601,7 +677,6 @@ export default {
      */
     async syncLeafLock (newKey, oldKey) {
       if (oldKey) await LockService.releaseRef(oldKey)
-      this.leafLockedBy = null
       if (!newKey || !this.isModalOpen || !this.canEdit) return
 
       const result = await LockService.acquireRef(this.$route.params.id, newKey)
@@ -611,11 +686,13 @@ export default {
       }
       this.onLeafLockDenied(result)
     },
-    /** Adds or clears the read-only mark on one cell. */
-    markCellDenied (stage, option, denied = true) {
+    /** Adds or clears the read-only mark on one cell, remembering who holds it. */
+    markCellDenied (stage, option, denied = true, holder = null) {
       const position = `${stage}-${option}`
-      const without = this.deniedCells.filter(c => c !== position)
-      this.deniedCells = denied ? [...without, position] : without
+      const next = new Map(this.deniedCellHolders)
+      if (denied) next.set(position, holder)
+      else next.delete(position)
+      this.deniedCellHolders = next
     },
     /**
      * The cell the user just moved to could not be locked. Note that a 409 here
@@ -630,24 +707,59 @@ export default {
         // Not a conflict: this user's can_write was revoked, so nothing in the
         // study is editable — the same conclusion acquireStudyLock reaches.
         this.isRefReadOnly = true
-        this.leafLockedBy = null
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.permissions_revoked'))
         }
         return
       }
 
-      this.markCellDenied(this.modal.stage, this.selectedMeta)
-      this.leafLockedBy = result.lockedBy || null
+      const holder = result.lockedBy || null
+      this.markCellDenied(this.modal.stage, this.selectedMeta, true, holder)
       if (this.$notify) {
-        this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.leafLockedBy }))
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
       }
     },
     async fetchAndUpdateRefLocks () {
       const locks = await LockService.fetchRefLocks(this.$route.params.id)
       this.activeRefLocks = locks
+      // El caso real es que alguien tome una celda DESPUÉS de que abrimos: sin esto,
+      // studyFieldsReadOnly conserva la foto del instante de apertura y los campos del
+      // estudio se siguen ofreciendo editables hasta que un 409 lo desmienta.
+      if (this.isModalOpen) {
+        this.refreshStudyFieldsLockState(this.refId)
+        this.detectImpossibleLockState()
+      }
       // Same 15s tick, one more question: did anybody else change this project?
       this.checkProjectFreshness()
+    },
+    /**
+     * Detecta un estado que el backend no debería permitir: que otra persona tenga este
+     * estudio al mismo tiempo que nosotros.
+     *
+     * Es alcanzable y está medido: `find_conflicting_holder` corre ANTES del upsert
+     * atómico y fuera de él, así que dos usuarios que piden granularidades distintas del
+     * mismo estudio a la vez —`R1` y `R1::s1::o2`— pasan los dos, porque el índice único
+     * es `(project_id, ref_id)` y esas claves son distintas. Probado insertando ambos en
+     * Mongo: entran.
+     *
+     * No se puede cerrar desde acá; el arreglo real es del backend (meter la detección
+     * dentro de la operación atómica). Lo que sí se puede es no dejar que las dos personas
+     * sigan escribiendo: el sondeo lo descubre en ≤15 s y ahí degradamos a solo lectura.
+     */
+    detectImpossibleLockState () {
+      if (!this.refId || !LockService.refLocked) return
+      const state = this.studyLockStateOf(this.refId)
+      const holder = state.wholeStudyBlockedBy ||
+        (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
+      if (!holder) return
+      // Tenemos lock propio Y el listado muestra a otro sobre el mismo estudio.
+      this.isRefReadOnly = true
+      this.refLockedBy = holder
+      this.studyFieldsReadOnly = true
+      this.studyFieldsLockedBy = holder
+      if (this.$notify) {
+        this.$notify.warning(this.$t('lock.ref_locked_by', { user: holder }))
+      }
     },
     /** What a refresh means here: the grid plus the study fields it shows. */
     applyProjectRefresh: function () {
@@ -839,7 +951,9 @@ export default {
       this.refId = data.item.ref_id
       this.ui.authors = data.item.authors
       this.isModalOpen = true
-      this.deniedCells = []
+      this.deniedCellHolders = new Map()
+      this.studyLockLost = false
+      this.pendingConflictRefId = ''
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).
@@ -847,6 +961,9 @@ export default {
       // The refId/stage/tab assignments above may leave activeLeafRef unchanged
       // (reopening the same cell), so the watcher cannot be relied on here.
       this.syncLeafLock(this.activeLeafRef, null)
+      // Acá sí `canEdit`: a diferencia del Paso 3, este modal se abre sin haber tomado el
+      // lock del estudio, así que no hay resultado de acquire que consultar.
+      if (this.canEdit && LockService.isEnabled) this.startInactivityWatch()
       this.$bvModal.show('modal-1')
     },
     onOpenModal ({ stage, data, tab, faLabel = null }) {
@@ -872,7 +989,7 @@ export default {
         return
       }
       const state = this.studyLockStateOf(refId)
-      this.studyFieldsReadOnly = state.saveWholeStudyBlocked
+      this.studyFieldsReadOnly = state.saveWholeStudyBlocked || this.studyLockLost
       this.studyFieldsLockedBy = state.wholeStudyBlockedBy ||
         (state.lockedLeaves.size ? [...state.lockedLeaves.values()][0] : null)
       // Somebody holding the WHOLE study blocks every cell too (the backend rejects
@@ -892,6 +1009,7 @@ export default {
         this.holdsStudyLock = true
         this.studyFieldsReadOnly = false
         this.studyFieldsLockedBy = null
+        this.studyLockLost = false
         return true
       }
       this.studyFieldsReadOnly = true
@@ -936,17 +1054,58 @@ export default {
         }
       }
     },
+    /**
+     * Thirty minutes with the assessment modal open and nobody typing. Persist first,
+     * close second: `@hidden` releases the bare study lock AND every leaf lock, so a
+     * PATCH fired after it would arrive unauthorized.
+     */
+    /** Publica que esta pestaña sigue con el estudio abierto, y desde cuándo. */
+    onInactivityHeartbeat (lastActivityAt) {
+      announcePresence(this.refId, lastActivityAt)
+    },
+    onInactivityExpired (lastActivityAt) {
+      // The children own the pending text: every AssessmentForm and every
+      // CamelotAssessmentCard has its own 1.5s debounce, and they live behind
+      // b-tabs + v-for + a per-stage v-if, where $refs cannot reach them.
+      // Otra pestaña de la MISMA persona puede tener este estudio abierto y activo: el
+      // backend refresca el lock cuando el user_id coincide, así que las dos creen
+      // tenerlo. Liberarlo acá se lo sacaría a quien está escribiendo, y guardar nuestra
+      // copia vieja pisaría lo suyo. Cerramos el modal y nos hacemos a un lado.
+      if (otherTabActiveOn(this.refId, lastActivityAt)) {
+        this.skipReleaseOnClose = true
+        this.stopInactivityWatch()
+        this.$bvModal.hide('modal-1')
+        this.onAssessmentModalClosed()
+        return
+      }
+      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      if (this.$notify) this.$notify.warning(this.$t('lock.inactivity_released'))
+      this.$bvModal.hide('modal-1')
+      // No se delega la liberación al `@hidden`. Medido en navegador: con la pestaña de
+      // fondo el modal se cierra visualmente pero `hidden` no llega —depende de
+      // `transitionend`, y las transiciones no corren ocultas—, así que los locks quedaban
+      // vivos en el servidor. Apostar la única razón de ser de este mecanismo a un evento
+      // que esta base de código ya tiene documentado como poco confiable no se sostiene.
+      // `onAssessmentModalClosed` es idempotente: si el `hidden` llega después, no molesta.
+      this.onAssessmentModalClosed()
+    },
     onAssessmentModalClosed () {
+      clearPresence(this.refId)
+      this.stopInactivityWatch()
+      // Antes de soltar los locks: el 409 en vuelo llega después.
+      this.retainConflictTarget()
       this.isModalOpen = false
+      const suelta = !this.skipReleaseOnClose
+      this.skipReleaseOnClose = false
       // No argument: releases the bare study lock AND every leaf lock still held.
-      LockService.releaseRef()
+      if (suelta) LockService.releaseRef()
       this.holdsStudyLock = false
+      this.studyLockLost = false
       this.isRefReadOnly = false
       this.refLockedBy = null
-      this.leafLockedBy = null
       this.studyFieldsReadOnly = false
       this.studyFieldsLockedBy = null
-      this.deniedCells = []
+      this.deniedCellHolders = new Map()
       this.fetchAndUpdateRefLocks()
       // Nothing is being typed any more, so a reload held back while the modal was
       // open can be applied now.
@@ -969,6 +1128,7 @@ export default {
         // skipping the acquire, so leaving it true would silently authorize a write
         // we can no longer make.
         this.holdsStudyLock = false
+        this.studyLockLost = true
         this.studyFieldsReadOnly = true
         this.studyFieldsLockedBy = detail.lockedBy || null
         return
@@ -978,12 +1138,27 @@ export default {
       const position = leafPositionOf(lostRef)
       if (!position) return
       const [stage, option] = position.split('-').map(Number)
-      this.markCellDenied(stage, option)
-      this.leafLockedBy = detail.lockedBy || null
+      this.markCellDenied(stage, option, true, detail.lockedBy || null)
+      // Sólo cuando ya no queda NINGÚN lock: perder una hoja no libera el estudio ni las
+      // otras nueve celdas, y ésas siguen mereciendo el temporizador.
+      if (!LockService.refLocked) this.stopInactivityWatch()
+    },
+    /** Recuerda a quién esperar un 409 que va a llegar después del cierre. */
+    retainConflictTarget () {
+      if (!this.isSavingField) return
+      this.pendingConflictRefId = this.refId || ''
     },
     handleRefLockConflict (event) {
       const { refId, failedData, lockedBy, source } = event.detail
-      if (refId !== this.refId) return
+      // Los conflictos del endpoint D llegan con la clave compuesta `ref::sK::oI`, que
+      // nunca iba a coincidir con refId pelado. `baseRefOf` devuelve null cuando NO hay
+      // sufijo de hoja, así que el `|| refId` no es defensivo: sin él se rompe el camino
+      // del endpoint B, que es el que hoy funciona.
+      const base = baseRefOf(refId) || refId
+      const expected = base === this.refId ||
+        (this.pendingConflictRefId && base === this.pendingConflictRefId)
+      if (!expected) return
+      this.pendingConflictRefId = ''
       this.conflictData = failedData
       this.conflictLockedBy = lockedBy
       this.conflictRefId = refId
