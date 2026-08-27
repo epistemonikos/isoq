@@ -171,16 +171,5 @@ describe('StepThree.vue', () => {
       expect(wrapper.vm.currentItem).toEqual(mockReferences[0])
     })
 
-    it('deleteReference does not emit delete-reference when canEdit is false', async () => {
-      await wrapper.setProps({ canEdit: false })
-      wrapper.vm.deleteReference(mockReferences[0])
-      expect(wrapper.emitted('delete-reference')).toBeFalsy()
-    })
-
-    it('deleteReference emits delete-reference when canEdit is true (regression)', async () => {
-      await wrapper.setProps({ canEdit: true })
-      wrapper.vm.deleteReference(mockReferences[0])
-      expect(wrapper.emitted('delete-reference')).toBeTruthy()
-    })
   })
 })

@@ -119,9 +119,6 @@
             <font-awesome-icon v-if="isRefLocked(data.item.id)" icon="user" class="ml-1" />
             <font-awesome-icon v-else icon="edit" class="ml-1" />
           </b-button>
-          <b-button v-if="canEdit" size="sm" variant="danger" @click="deleteReference(data.item)">
-            {{ $t('camelot.step_three.delete_button') }}
-          </b-button>
         </template>
 
       </b-table>
@@ -468,13 +465,6 @@ export default {
       }
       this.$forceUpdate()
     },
-    deleteReference (item) {
-      if (!this.canEdit) {
-        return
-      }
-      this.$emit('delete-reference', item)
-    },
-
     /**
      * Gets custom fields from loaded data
      * @returns {Array} Array of objects with key and label for custom fields
