@@ -397,16 +397,35 @@ class LockService {
     this.refHeartbeatTimer = null
   }
 
-  async fetchRefLocks (projectId) {
-    if (!this.isEnabled) return []
+  /**
+   * El listado de ref locks del proyecto, distinguiendo los tres estados que hay.
+   *
+   * `fetchRefLocks` devuelve `[]` tanto cuando el proyecto está libre como cuando la
+   * llamada falló, y eso alcanza para pintar candados —si no sé, no pinto ninguno— pero
+   * no para el diálogo de import, que con ese `[]` afirmaría «nadie está editando»
+   * cuando en realidad no lo sabe. Un import es destructivo: ahí la diferencia entre
+   * «cero» y «no averigüé» es la diferencia entre informar y mentir.
+   *
+   * `enabled: false` no es incertidumbre: con la concurrencia apagada no hay locks
+   * posibles, así que no hay nada que avisar y no vale la pena molestar.
+   */
+  async probeRefLocks (projectId) {
+    if (!this.isEnabled) return { locks: [], reachable: true, enabled: false }
     try {
       const response = await axios.get(`/api/lock/${projectId}/refs`, {
         headers: Api.getHeaders()
       })
-      return response.data || []
+      return { locks: response.data || [], reachable: true, enabled: true }
     } catch (e) {
-      return []
+      return { locks: [], reachable: false, enabled: true }
     }
+  }
+
+  // Contrato plano para los cuatro componentes que pintan candados: les basta la lista y
+  // un fallo silencioso es la conducta correcta ahí. Delega para no tener dos copias de
+  // la misma llamada.
+  async fetchRefLocks (projectId) {
+    return (await this.probeRefLocks(projectId)).locks
   }
 }
 

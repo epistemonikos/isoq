@@ -525,3 +525,53 @@ describe('LockService.fetchRefLocks()', () => {
     expect(result).toEqual([])
   })
 })
+
+describe('LockService.probeRefLocks()', () => {
+  // El aviso del import necesita distinguir tres estados, no dos: nadie edita, alguien
+  // edita, y NO PUDE AVERIGUARLO. `fetchRefLocks` colapsa el tercero en el primero —
+  // devuelve [] tanto si el proyecto está libre como si la llamada falló— y con eso el
+  // diálogo de import diría "nadie está editando" cuando en realidad no sabe.
+  //
+  // Estos tests fijan el CAMINO del dato, no un valor: que el fallo llegue a quien decide.
+  it('marca reachable cuando el servidor contesta', async () => {
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('marca reachable false cuando la llamada falla, en vez de aparentar cero locks', async () => {
+    axios.get.mockRejectedValue(new Error('Network error'))
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: false, enabled: true })
+  })
+
+  it('marca enabled false con la concurrencia apagada, y no consulta al servidor', async () => {
+    jest.spyOn(LockService, 'isEnabled', 'get').mockReturnValue(false)
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    // enabled:false NO es incertidumbre: sin locks posibles no hay nada que avisar.
+    expect(result).toEqual({ locks: [], reachable: true, enabled: false })
+    expect(axios.get).not.toHaveBeenCalled()
+  })
+
+  it('fetchRefLocks sigue devolviendo un array plano', async () => {
+    // Sus cuatro consumidores hacen `activeRefLocks = await fetchRefLocks(...)` y lo
+    // recorren como array. Este test es lo que impide que probeRefLocks les cambie el
+    // contrato por debajo.
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.fetchRefLocks('proj1')
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result).toEqual([{ ref_id: 'ref1', user_name: 'Ana López' }])
+  })
+})
