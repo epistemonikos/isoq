@@ -246,6 +246,9 @@
         <b-alert show variant="danger">
           <b>{{ $t('import_modal.beware') }}</b> {{ $t('import_modal.overwrite_warning') }}
         </b-alert>
+        <b-alert variant="warning" :show="Boolean(importLockNotice)">
+          <font-awesome-icon icon="lock" /> {{ importLockNotice }}
+        </b-alert>
         <p class="font-weight-light">
           {{ $t('import_modal.steps_title') }}
         </p>
@@ -298,9 +301,12 @@ import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tabl
 import { copyItemMetadata, itemsFingerprint, isItemMetadata, withoutItemMetadata } from '@/utils/itemMetadata'
 import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 import { isLockRejection } from '@/utils/lockErrors'
+import { fieldsLockKey } from '@/utils/refLockUrls'
 import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 export default {
   name: 'crudTables',
@@ -338,7 +344,7 @@ export default {
       default: () => []
     }
   },
-  mixins: [projectFreshnessMixin, preserveScrollMixin],
+  mixins: [projectFreshnessMixin, preserveScrollMixin, refLockStateMixin],
   components: {
     BackToTop: () => import('@/components/backToTop.vue'),
     draggable: () => import('vuedraggable'),
@@ -462,6 +468,9 @@ export default {
           { key: 'authors', label: 'Author(s), Year' }
         ]
       },
+      // Quién está editando estudios cuando se abre el diálogo de import. `enabled:false`
+      // por defecto para que, hasta que el probe conteste, no se afirme nada.
+      importLockProbe: { locks: [], reachable: true, enabled: false },
       expandedCells: {},
       autoSaveStatus: null
     }
@@ -472,6 +481,45 @@ export default {
     }
   },
   computed: {
+    // `refLockStateMixin` lee el listado de acá para descontar lo que sostiene esta misma
+    // pestaña. Reusar el mixin en vez de repetir el filtro es deliberado: la regla de qué
+    // lock es ajeno ya estuvo en dos copias en este mismo tramo y dieron resultados
+    // distintos.
+    activeRefLocks () {
+      return this.importLockProbe.locks
+    },
+    importLockSummary () {
+      return summarizeImportLocks(this.foreignRefLocks, this.dataTable.id)
+    },
+    /**
+     * El aviso de que el import va a pisar trabajo ajeno. Cadena vacía = no hay nada que
+     * avisar, y así lo consumen el `b-alert` del modal y la confirmación del guardado.
+     *
+     * Dice «de este proyecto» y no «de esta tabla» porque no podemos saber la tabla: la
+     * clave del ref lock no codifica la colección (`refLockUrls.js`), así que una fila del
+     * Paso 3 y una del Paso 4 para el mismo estudio son la misma clave. Prometer una
+     * precisión que no tenemos produce un aviso que grita de más, y ésos se aprenden a
+     * ignorar. Las claves `<doc_id>::fields` son la excepción y por eso van aparte.
+     *
+     * La incertidumbre (`reachable:false`) NO entra acá a propósito: al abrir el modal
+     * todavía no pasa nada destructivo, y un «no pudimos comprobar» por cada hipo de red
+     * sería ruido. Esa rama aparece sólo en el momento de decidir.
+     */
+    importLockNotice () {
+      if (!this.importLockProbe.enabled) return ''
+      const summary = this.importLockSummary
+      const parts = []
+      if (summary.studyCount) {
+        parts.push(this.$t('import_modal.ref_locks_confirm', {
+          names: summary.names.join(', '),
+          count: summary.studyCount
+        }))
+      }
+      if (summary.columnsLockedBy) {
+        parts.push(this.$t('import_modal.ref_locks_columns', { name: summary.columnsLockedBy }))
+      }
+      return parts.join(' ')
+    },
     /**
      * Qué cartel corresponde. La regla vive en `lockLostMessage`, compartida con el resto.
      *
@@ -775,7 +823,7 @@ export default {
       const docId = this.dataTable.id || this.resolvedTableId
       if (!docId) return false
 
-      const lockRef = `${docId}::fields`
+      const lockRef = fieldsLockKey(docId)
       const result = await LockService.acquireRef(this.$route.params.id, lockRef)
       if (!result || !result.success) {
         this.notifyColumnsError(
@@ -1335,8 +1383,49 @@ export default {
         this.$refs[`import-table-${this.type}`].hide()
       }
     },
-    openModalImportTable: function () {
+    openModalImportTable: async function () {
+      // El modal se muestra primero: hacerlo esperar el listado convertiría un hipo de red
+      // en un botón que no responde.
       this.$refs[`import-table-${this.type}`].show()
+      this.importLockProbe = await LockService.probeRefLocks(this.$route.params.id)
+    },
+    /**
+     * Pregunta antes de arrasar, y devuelve si hay que seguir.
+     *
+     * El import es `DELETE` + `POST` del documento completo. Exige el lock de PROYECTO,
+     * así que si otra persona lo tiene el servidor rechaza — pero **no mira los ref
+     * locks**: quien esté editando un estudio del Paso 3 o 4 sostiene un lock por `ref_id`
+     * y el import le pasa por encima sin conflicto, sin aviso y con las filas ya borradas.
+     * Backend decidió no cerrarlo del lado servidor (un import destructivo que falla
+     * porque alguien tiene una fila abierta convierte una operación legítima en una
+     * lotería); la mitad nuestra es que la persona lo sepa antes de decidir.
+     *
+     * Consulta de nuevo en vez de reusar lo del `openModalImportTable`: entre abrir el
+     * modal y apretar Guardar se elige el archivo y se revisan las columnas, y un listado
+     * de hace cinco minutos avisaría de quien ya salió y callaría a quien acaba de entrar.
+     */
+    confirmImportOverRefLocks: async function () {
+      this.importLockProbe = await LockService.probeRefLocks(this.$route.params.id)
+
+      // Sin concurrencia no hay locks posibles: nada que avisar, y un clic extra donde la
+      // pregunta no aplica es lo que hace que se dejen de leer los carteles.
+      if (!this.importLockProbe.enabled) return true
+
+      // `reachable:false` es la razón de ser de `probeRefLocks`. Sin ese campo un error de
+      // red se leería igual que «nadie está editando», y le diríamos lo contrario de la
+      // verdad justo antes de una operación que no se deshace.
+      const message = this.importLockProbe.reachable
+        ? this.importLockNotice
+        : this.$t('import_modal.ref_locks_unknown')
+      if (!message) return true
+
+      return this.$bvModal.msgBoxConfirm(message, {
+        title: this.$t('import_modal.ref_locks_title'),
+        okVariant: 'danger',
+        okTitle: this.$t('import_modal.ref_locks_ok'),
+        cancelTitle: this.$t('common.cancel'),
+        centered: true
+      })
     },
     exportTableToXLSX: async function () {
       await exportTableToXLSX({
@@ -1345,20 +1434,27 @@ export default {
         filename: 'exportable_table'
       })
     },
-    saveImportedData: function () {
+    saveImportedData: async function () {
+      if (!this.importDataTable.fields.length || !this.importDataTable.items.length) return
+
       const params = {
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
         fields: this.importDataTable.fields,
         items: this.importDataTable.items
       }
-      if (this.importDataTable.fields.length && this.importDataTable.items.length) {
-        if (this.dataTable.items.length) {
-          this.cleanImportedData(this.dataTable.id, params)
-        } else {
-          this.insertImportedData(params)
-        }
+
+      // El limpiado se movió DEBAJO de la confirmación a propósito: antes corría siempre,
+      // así que cancelar le costaba volver a elegir el archivo y revisar las columnas de
+      // nuevo — un castigo por haber dudado.
+      if (!(await this.confirmImportOverRefLocks())) return
+
+      if (this.dataTable.items.length) {
+        this.cleanImportedData(this.dataTable.id, params)
+      } else {
+        this.insertImportedData(params)
       }
+
       this.importDataTable = {
         error: null,
         fields: [],

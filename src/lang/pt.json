@@ -489,7 +489,12 @@
     "accept_info": "Se parecer correto, aceite a importação clicando no botão \"Salvar\" na parte inferior da página.",
     "reject_info": "Se algo não parecer correto, remova clicando no botão \"Rejeitar\" na parte inferior da página e volte à Etapa 2.",
     "see_help": "Ver vídeo de ajuda",
-    "format_error": "Seus dados podem estar formatados incorretamente e, portanto, não serão exibidos. Verifique se o arquivo é um .xlsx ou .csv válido e se sua tabela tem pelo menos uma coluna além das duas primeiras."
+    "format_error": "Seus dados podem estar formatados incorretamente e, portanto, não serão exibidos. Verifique se o arquivo é um .xlsx ou .csv válido e se sua tabela tem pelo menos uma coluna além das duas primeiras.",
+    "ref_locks_title": "Há alguém editando",
+    "ref_locks_confirm": "Estudos deste projeto abertos para edição neste momento: {count}, por {names}. Ao importar, a tabela inteira é substituída, portanto o que tiverem escrito será perdido.",
+    "ref_locks_columns": "{name} está editando as colunas desta tabela neste momento; a importação também as substitui.",
+    "ref_locks_unknown": "Não foi possível verificar se alguém está editando neste momento. Ao importar, a tabela inteira é substituída, portanto o trabalho não salvo será perdido.",
+    "ref_locks_ok": "Importar mesmo assim"
   },
   "meth_assessments": {
     "table_title": "Tabela de Avaliações Metodológicas",

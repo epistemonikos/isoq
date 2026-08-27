@@ -489,7 +489,12 @@
     "accept_info": "Si se ve bien, acepte la importación haciendo clic en el botón \"Guardar\" en la parte inferior de la página.",
     "reject_info": "Si algo no se ve bien, elimínela haciendo clic en el botón \"Rechazar\" en la parte inferior de la página y vuelva al Paso 2.",
     "see_help": "Ver video de ayuda",
-    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que su archivo sea un .xlsx o .csv válido y que su tabla tenga al menos una columna más allá de las dos primeras."
+    "format_error": "Sus datos podrían estar mal formateados y por lo tanto no se mostrarán. Verifique que su archivo sea un .xlsx o .csv válido y que su tabla tenga al menos una columna más allá de las dos primeras.",
+    "ref_locks_title": "Hay alguien editando",
+    "ref_locks_confirm": "Estudios de este proyecto abiertos para edición en este momento: {count}, por {names}. Al importar se reemplaza la tabla completa, así que se perderá lo que hayan escrito.",
+    "ref_locks_columns": "{name} está editando las columnas de esta tabla en este momento; el import también las reemplaza.",
+    "ref_locks_unknown": "No pudimos comprobar si alguien está editando en este momento. Al importar se reemplaza la tabla completa, así que se perderá el trabajo sin guardar.",
+    "ref_locks_ok": "Importar de todos modos"
   },
   "meth_assessments": {
     "table_title": "Tabla de Evaluaciones Metodológicas",

@@ -489,7 +489,12 @@
     "accept_info": "If it looks right, accept the import by clicking the \"Save\" button at the bottom of the page.",
     "reject_info": "If something doesn't look right, remove it by clicking the \"Reject\" button at the bottom of the page and return to Step 2.",
     "see_help": "See help video",
-    "format_error": "Your data may be incorrectly formatted and therefore will not be displayed. Please verify your file is a valid .xlsx or .csv file and that your table has at least one column beyond the first two."
+    "format_error": "Your data may be incorrectly formatted and therefore will not be displayed. Please verify your file is a valid .xlsx or .csv file and that your table has at least one column beyond the first two.",
+    "ref_locks_title": "Someone else is editing",
+    "ref_locks_confirm": "Studies in this project open for editing right now: {count}, by {names}. Importing replaces the whole table, so anything they have written will be lost.",
+    "ref_locks_columns": "{name} is editing this table's columns right now; the import replaces those too.",
+    "ref_locks_unknown": "We could not check whether anyone is editing right now. Importing replaces the whole table, so any unsaved work will be lost.",
+    "ref_locks_ok": "Import anyway"
   },
   "meth_assessments": {
     "table_title": "Methodological Assessments Table",
