@@ -575,3 +575,83 @@ describe('LockService.probeRefLocks()', () => {
     expect(result).toEqual([{ ref_id: 'ref1', user_name: 'Ana López' }])
   })
 })
+
+describe('LockService.probeRefLocks() — el `enabled` del SERVIDOR', () => {
+  // El `enabled` que teníamos era espejo del flag del cliente y nada más. Eso alcanzaba
+  // para no molestar donde la concurrencia está apagada de este lado, pero no para el caso
+  // que nos mordió de verdad: cliente encendido y servidor apagado. Ahí `GET /refs`
+  // devuelve `[]`, y ese `[]` era indistinguible de «nadie está editando» — así que el
+  // aviso del import no salía nunca y la verificación pasaba en verde sin probar nada.
+  //
+  // Backend agregó `?verbose=1`, que devuelve `{enabled, locks}` en vez del array plano.
+  // Es opt-in: sin el parámetro la forma no cambia, para no romper a los cuatro
+  // componentes que ya lo consumen.
+  it('lee el enabled del servidor cuando viene la forma nueva', async () => {
+    axios.get.mockResolvedValue({
+      data: { enabled: true, locks: [{ ref_id: 'ref1', user_name: 'Ana López' }] }
+    })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('con el control apagado en el servidor, enabled false aunque el cliente esté encendido', async () => {
+    // Éste es el caso entero. Sin él, un entorno con las dos capas desalineadas afirma
+    // «nadie está editando» y el aviso del import calla justo antes de un borrado.
+    axios.get.mockResolvedValue({ data: { enabled: false, locks: [] } })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: true, enabled: false })
+  })
+
+  it('pide la forma verbosa', async () => {
+    axios.get.mockResolvedValue({ data: { enabled: true, locks: [] } })
+
+    await LockService.probeRefLocks('proj1')
+
+    expect(axios.get.mock.calls[0][0]).toContain('verbose=1')
+  })
+
+  it('con el array plano de siempre, se comporta como antes', async () => {
+    // El endpoint verboso todavía no está desplegado, y cuando lo esté seguirá habiendo
+    // servidores viejos. Un campo de respuesta que no llega tiene que caer en la conducta
+    // anterior, no en una rama nueva.
+    axios.get.mockResolvedValue({ data: [{ ref_id: 'ref1', user_name: 'Ana López' }] })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({
+      locks: [{ ref_id: 'ref1', user_name: 'Ana López' }],
+      reachable: true,
+      enabled: true
+    })
+  })
+
+  it('una forma que este cliente no conoce cae en la conducta anterior', async () => {
+    // Mismo patrón que `un_motivo_que_todavia_no_existe` en lockErrors.spec.js: no
+    // verifica ningún valor real, verifica que lo desconocido no cambie de rama. Es la
+    // única red posible para un campo de respuesta — el servidor no puede instrumentar lo
+    // que nosotros descartamos.
+    axios.get.mockResolvedValue({ data: { una_forma_que_todavia_no_existe: true } })
+
+    const result = await LockService.probeRefLocks('proj1')
+
+    expect(result).toEqual({ locks: [], reachable: true, enabled: true })
+  })
+
+  it('fetchRefLocks sigue devolviendo un array con la forma nueva', async () => {
+    axios.get.mockResolvedValue({
+      data: { enabled: true, locks: [{ ref_id: 'ref1', user_name: 'Ana López' }] }
+    })
+
+    const result = await LockService.fetchRefLocks('proj1')
+
+    expect(result).toEqual([{ ref_id: 'ref1', user_name: 'Ana López' }])
+  })
+})

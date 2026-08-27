@@ -412,13 +412,36 @@ class LockService {
   async probeRefLocks (projectId) {
     if (!this.isEnabled) return { locks: [], reachable: true, enabled: false }
     try {
-      const response = await axios.get(`/api/lock/${projectId}/refs`, {
+      // `?verbose=1` devuelve `{enabled, locks}` en vez del array plano, y ese `enabled`
+      // es del SERVIDOR. Hace falta porque el flag vive en las dos capas: con el cliente
+      // encendido y el servidor apagado, el listado contesta `[]` y ese `[]` no se
+      // distingue de «nadie está editando». Nos costó un falso verde entero — la
+      // verificación del aviso de import pasó sin que el aviso pudiera salir nunca.
+      const response = await axios.get(`/api/lock/${projectId}/refs?verbose=1`, {
         headers: Api.getHeaders()
       })
-      return { locks: response.data || [], reachable: true, enabled: true }
+      return { ...this.readRefLockListing(response.data), reachable: true }
     } catch (e) {
       return { locks: [], reachable: false, enabled: true }
     }
+  }
+
+  /**
+   * Las dos formas del listado, y cualquier tercera que venga.
+   *
+   * El parámetro es opt-in del lado servidor, así que el array plano sigue siendo la
+   * respuesta de los servidores que no lo tienen —y de los que lo tengan, si algún día se
+   * llama sin él—. Una forma desconocida cae en la conducta anterior por la misma razón
+   * que la allowlist de `lockErrors.js`: lo que este cliente no entiende no puede
+   * cambiarle de rama, porque el servidor no tiene forma de instrumentar lo que
+   * descartamos de su respuesta.
+   */
+  readRefLockListing (data) {
+    if (Array.isArray(data)) return { locks: data, enabled: true }
+    if (data && Array.isArray(data.locks)) {
+      return { locks: data.locks, enabled: data.enabled !== false }
+    }
+    return { locks: [], enabled: true }
   }
 
   // Contrato plano para los cuatro componentes que pintan candados: les basta la lista y
