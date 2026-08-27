@@ -22,6 +22,27 @@ const ITEM_URL_RE = /\/(?:isoqf_characteristics|isoqf_assessments|isoqf_extracte
 // `<doc_id>::fields`. Keeping it apart from the row key is the point: whoever edits
 // columns must not block whoever edits a study.
 const FIELD_URL_RE = /\/(?:isoqf_characteristics|isoqf_assessments)\/([^/]+)\/(?:field\/[^/?]+|fields\/order)/
+const FIELDS_KEY_SUFFIX = '::fields'
+const FIELDS_KEY_RE = /^(.+)::fields$/
+
+/**
+ * Clave de lock del documento de una tabla: la unidad que toman los cuatro endpoints de
+ * columna. Se mantiene aparte de la clave de fila a propósito, para que quien edita
+ * columnas no bloquee a quien edita un estudio.
+ *
+ * Devuelve `null` sin documento en vez de `undefined::fields`: esa clave se tomaría sobre
+ * nada y no se soltaría nunca, porque `releaseRef` la busca por igualdad de string y el
+ * release iría con otro valor. La falla no sería un error sino un lock colgado.
+ */
+export function fieldsLockKey (docId) {
+  return docId ? `${docId}${FIELDS_KEY_SUFFIX}` : null
+}
+
+/** `'doc123::fields'` -> `'doc123'` | `'R1'` -> `null` (no es clave de columnas). */
+export function docIdFromFieldsLockKey (lockKey) {
+  const match = FIELDS_KEY_RE.exec(lockKey || '')
+  return match ? match[1] : null
+}
 
 function refLockKeyFromItemUrl (url) {
   const leaf = ITEM_LEAF_URL_RE.exec(url)
@@ -44,7 +65,7 @@ export function refLockKeyFromUrl (url = '') {
   const identity = IDENTITY_URL_RE.exec(url)
   if (identity) return identity[1]
   const field = FIELD_URL_RE.exec(url)
-  if (field) return `${field[1]}::fields`
+  if (field) return fieldsLockKey(field[1])
   if (ITEM_URL_RE.test(url)) return refLockKeyFromItemUrl(url) || null
   return null
 }

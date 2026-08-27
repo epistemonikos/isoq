@@ -43,6 +43,7 @@
 <script>
 import columnService from '@/services/columnService'
 import LockService from '@/services/lockService'
+import { fieldsLockKey } from '@/utils/refLockUrls'
 
 const COLLECTION = 'isoqf_characteristics'
 
@@ -90,7 +91,7 @@ export default {
     // La navegación SPA puede destruir el componente sin que el modal emita `hidden`, y el
     // lock quedaría tomado hasta que el TTL del servidor lo expire.
     if (this.columnsLockHeld && this.documentId) {
-      LockService.releaseRef(`${this.documentId}::fields`)
+      LockService.releaseRef(fieldsLockKey(this.documentId))
       this.columnsLockHeld = false
     }
   },
@@ -125,7 +126,7 @@ export default {
       const docId = await this.resolveDocumentId()
       if (!docId) return false
 
-      const result = await LockService.acquireRef(this.$route.params.id, `${docId}::fields`)
+      const result = await LockService.acquireRef(this.$route.params.id, fieldsLockKey(docId))
       if (!result || !result.success) {
         // Con el nombre de quien lo tiene, el usuario sabe que hay que esperar y a quién
         // preguntarle. "Error al actualizar" no dice ni qué pasó ni qué hacer.
@@ -261,7 +262,7 @@ export default {
       await this.flushPendingOrder()
 
       if (this.columnsLockHeld) {
-        await LockService.releaseRef(`${this.documentId}::fields`)
+        await LockService.releaseRef(fieldsLockKey(this.documentId))
         this.columnsLockHeld = false
       }
       this.resetColumnsModal()
