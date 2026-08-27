@@ -128,6 +128,7 @@ import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
+import { withDerivedRows } from '@/utils/derivedRows'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -895,7 +896,26 @@ export default {
           }
           return 0
         })
-        localData.original_items = JSON.parse(JSON.stringify(localData.items))
+        // Un estudio incluido en el finding puede no tener fila en el documento: el finding
+        // se creó sin referencias, o la referencia se agregó después. La fila se deriva de
+        // las referencias, que es el patrón que ya usan `filterItemsByReferences` y el
+        // worksheet, en vez de persistirla con un PATCH del documento completo.
+        //
+        // Se agrega a ESTE array y no sólo a la lista de la vista porque el editor de datos
+        // extraídos trabaja por índice sobre lo que se le pasa: una fila que no esté acá no
+        // se puede abrir, y el estudio queda sin forma de capturar datos. El guardado la
+        // persiste sola — el endpoint por ítem es un upsert.
+        const bibRefs = Array.isArray(this.list.fullreferences) ? this.list.fullreferences : []
+        extractedDataItems = withDerivedRows(extractedDataItems, _references, (refId) => {
+          const bibRef = bibRefs.find(r => String(r.id) === String(refId))
+          return {
+            ref_id: refId,
+            authors: bibRef ? this.parseReference(bibRef, true) : '',
+            column_0: ''
+          }
+        })
+
+        localData.original_items = JSON.parse(JSON.stringify(extractedDataItems))
         let haveContent = 0
         const referencesSet = new Set(_references)
 

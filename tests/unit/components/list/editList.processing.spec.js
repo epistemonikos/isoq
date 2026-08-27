@@ -86,6 +86,46 @@ describe('editList.vue — processExtractedData()', () => {
     expect(ids).not.toContain('r3')
   })
 
+  // Un estudio sin fila en el documento no aparecía en la tabla, y como el editor de datos
+  // extraídos trabaja por índice sobre esa lista y no tiene «agregar fila», el estudio
+  // quedaba sin ninguna forma de capturar datos. La fila se deriva de las referencias, que
+  // es el patrón que el resto de las tablas ya usa.
+  it('deriva la fila de un estudio que no la tiene en el documento', () => {
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'data' }]
+    }])
+
+    const ids = wrapper.vm.extracted_data.items.map(i => i.ref_id)
+    expect(ids).toEqual(expect.arrayContaining(['r1', 'r2']))
+    const derivada = wrapper.vm.extracted_data.items.find(i => i.ref_id === 'r2')
+    expect(derivada.column_0).toBe('')
+  })
+
+  // Y tiene que quedar en el array que el editor indexa, o abrirla escribiría en otra fila.
+  it('la fila derivada es direccionable por su índice', () => {
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'data' }]
+    }])
+
+    const derivada = wrapper.vm.extracted_data.items.find(i => i.ref_id === 'r2')
+    expect(wrapper.vm.extracted_data.items[derivada.index].ref_id).toBe('r2')
+  })
+
+  // El aviso de datos incompletos tiene que contarla: es una fila sin datos.
+  it('la fila derivada cuenta para el aviso de datos incompletos', () => {
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'A', column_0: 'filled' }]
+    }])
+
+    expect(wrapper.vm.ui.coherence.display_warning).toBe(true)
+  })
+
   it('sets all display_warning to false when all column_0 are filled', () => {
     wrapper.vm.processExtractedData([{
       id: 'ed1',

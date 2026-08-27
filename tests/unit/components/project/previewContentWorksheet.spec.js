@@ -269,6 +269,66 @@ describe('previewContentWorksheet.vue', () => {
   // El servidor guarda un contador de versión DENTRO de cada fila. La copia por claves
   // permitidas lo dejaría afuera, y entonces la escritura siguiente iría sin versión: el
   // servidor la acepta por compatibilidad pero deja de comprobar la frescura.
+  // La worksheet compartida es de sólo lectura: si un estudio no tiene fila en el documento,
+  // nadie puede sembrarla desde acá. Antes simplemente no aparecía — ni en la vista ni en el
+  // export Word que sale de estos mismos datos.
+  describe('estudios sin fila en datos extraídos', () => {
+    it('los deriva de las referencias del finding', async () => {
+      Api.get.mockResolvedValue({
+        data: [{
+          id: 'ed1',
+          fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+          items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'lo que se extrajo' }]
+        }]
+      })
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false, public_type: 'fully', sharedToken: 'token' },
+            list: { project_id: 'p1', references: ['r1', 'r2'], fullreferences: [{ id: 'r2', authors: 'Garcia' }] },
+            findings: { id: 'f1' }
+          }
+        }
+      })
+
+      wrapper.vm.getExtractedData()
+      await new Promise(process.nextTick)
+
+      const ids = wrapper.vm.extracted_data.items.map(i => i.ref_id)
+      expect(ids).toEqual(expect.arrayContaining(['r1', 'r2']))
+      wrapper.destroy()
+    })
+
+    it('cuenta la fila derivada como dato faltante', async () => {
+      Api.get.mockResolvedValue({
+        data: [{
+          id: 'ed1',
+          fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+          items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'completo' }]
+        }]
+      })
+      const wrapper = shallowMount(previewContentWorksheet, {
+        localVue,
+        mocks,
+        data () {
+          return {
+            project: { id: 'p1', use_camelot: false, public_type: 'fully', sharedToken: 'token' },
+            list: { project_id: 'p1', references: ['r1', 'r2'], fullreferences: [] },
+            findings: { id: 'f1' }
+          }
+        }
+      })
+
+      wrapper.vm.getExtractedData()
+      await new Promise(process.nextTick)
+
+      expect(wrapper.vm.ui.adequacy.extracted_data.display_warning).toBe(true)
+      wrapper.destroy()
+    })
+  })
+
   describe('el contador de versión de la fila', () => {
     const plainList = {
       project_id: 'p1',
