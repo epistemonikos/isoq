@@ -103,6 +103,8 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import * as columnService from '@/services/columnService'
+import { fieldsLockKey } from '@/utils/refLockUrls'
 import { isLockRejection } from '@/utils/lockErrors'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
@@ -178,7 +180,9 @@ export default {
     }
   },
   created () {
-    this.autoSaveDebounced = _debounce(function () { this.performSave(false) }.bind(this), 1500)
+    // Devuelve la promesa: `flush()` la propaga, y de eso depende que el guardado por
+    // inactividad pueda esperar a que la escritura termine antes de soltar el lock.
+    this.autoSaveDebounced = _debounce(function () { return this.performSave(false) }.bind(this), 1500)
   },
   mounted () {
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
@@ -275,7 +279,7 @@ export default {
     onInactivityHeartbeat (lastActivityAt) {
       announcePresence(this.localReference && this.localReference.id, lastActivityAt)
     },
-    onInactivityExpired (lastActivityAt) {
+    async onInactivityExpired (lastActivityAt) {
       // Otra pestaña de la MISMA persona puede tener este estudio abierto y activo: el
       // backend refresca el lock cuando el user_id coincide, así que las dos creen
       // tenerlo, y /refs no expone con qué sesión distinguirlas. Liberarlo acá se lo
@@ -291,7 +295,13 @@ export default {
       try {
         // A lost lock has nothing to save — performSave would bail on isReadOnly anyway,
         // but saying it here is what makes the intent testable.
-        if (!this.isReadOnly && this.autoSaveDebounced) this.autoSaveDebounced.flush()
+        //
+        // Se ESPERA el guardado, y eso no es un detalle: este mecanismo existe para
+        // persistir y después soltar el lock, en ese orden. Desde que el alta de columna
+        // se fue a su propio endpoint el guardado tiene un `await` adentro, así que sin
+        // este `await` el `hide()` y el `resetModal()` del `finally` corrían primero — el
+        // PATCH del ítem salía después de liberar el lock, daba 409, y el texto se perdía.
+        if (!this.isReadOnly && this.autoSaveDebounced) await this.autoSaveDebounced.flush()
       } finally {
         // A throwing flush must not keep the modal open holding the lock: that is the
         // worst possible ending for a mechanism whose only purpose is to release it.
@@ -510,6 +520,66 @@ export default {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.performSave(true)
     },
+    /**
+     * Crea las columnas nuevas por su propio endpoint y sólo entonces manda la fila.
+     *
+     * El alta viajaba dentro del PATCH del ítem, en `fields`. Backend va a ignorar ese
+     * campo ahí (warning primero, 400 después), y el día que lo despliegue este camino
+     * dejaría de crear columnas EN SILENCIO: el ítem entra, `fields` se descarta, y el
+     * valor queda bajo una clave que no está en `fields`, invisible en la tabla.
+     *
+     * Primero las columnas y después la fila, no al revés: al revés el ítem quedaría un
+     * instante con un valor bajo una columna inexistente y cualquier lector concurrente lo
+     * vería vacío.
+     *
+     * Si algo del alta se rechaza, ABORTA TODO — no manda la fila. Antes de partir el
+     * request esto no podía pasar (o entraba todo o nada) y esa es la semántica que se
+     * conserva. No cuesta trabajo: el texto sigue en el formulario y el modal queda
+     * abierto, así que el costo es un reintento. Y `addColumn` es idempotente —clave del
+     * cliente, PATCH-upsert— así que si el alta falló a mitad de camino, reintentar no
+     * duplica lo que ya se creó.
+     */
+    async patchItemAfterColumns (item, generatedKeys) {
+      const nuevas = Object.entries(generatedKeys)
+
+      if (nuevas.length) {
+        // El lock se toma sólo si hay algo que crear, y se suelta enseguida. Sostenerlo
+        // mientras alguien tiene un estudio abierto —que puede ser un rato largo—
+        // bloquearía a cualquiera que quisiera renombrar una columna, y la unidad de este
+        // lock es el documento justamente para no acoplar esas dos cosas.
+        const lockKey = fieldsLockKey(this.charsData.id)
+        const lock = await LockService.acquireRef(this.$route.params.id, lockKey)
+
+        if (!lock || !lock.success) {
+          // El cartel lo ponemos acá porque somos los únicos que sabemos qué se intentaba
+          // hacer. Y nombra a quien tiene las columnas en vez de decir «intente
+          // nuevamente», que es un consejo falso mientras el lock sea de otra persona.
+          this.$notify.warning(
+            lock && lock.lockedBy
+              ? this.$t('camelot.step_three.columns_modal.locked_by', { name: lock.lockedBy })
+              : this.$t('notifications.error')
+          )
+          const error = new Error('columns lock not acquired')
+          error.announced = true
+          throw error
+        }
+
+        try {
+          for (const [index, key] of nuevas) {
+            const field = this.customFields[index]
+            await columnService.addColumn(
+              'isoqf_characteristics', this.charsData.id, (field && field.label) || '', key
+            )
+          }
+        } finally {
+          // En el `finally` a propósito: un alta rechazada aborta el guardado, pero dejar
+          // el lock del documento colgado castigaría a todos los demás por ese rechazo.
+          await LockService.releaseRef(lockKey)
+        }
+      }
+
+      return Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, item)
+    },
     performSave (closeAfter) {
       if (this.isSaving || this.isReadOnly) return
       this.isSaving = true
@@ -558,15 +628,16 @@ export default {
         ...serverFields.filter(sf => !customKeys.has(sf.key))
       ]
 
-      // Include `fields` in the body only when new columns were generated — the
-      // backend PATCH-parcial endpoint updates just this item, and optionally the
-      // shared `fields` list when present.
-      const payload = Object.keys(generatedKeys).length > 0
-        ? { ...item, fields: mergedFields }
-        : item
-
+      // `fields` ya NO viaja en el PATCH del ítem. Antes sí, y no era un colado: era el
+      // camino de creación de columnas de este modal. El endpoint por ítem va a empezar a
+      // ignorar ese campo (warning primero, 400 después), así que el día que eso se
+      // despliegue el valor quedaría guardado bajo una clave que no está en `fields` —
+      // invisible en la tabla, y sin error. El alta se fue a su propio endpoint.
+      //
+      // `mergedFields` sigue siendo el contenido de la rama POST, que manda el documento
+      // completo: ahí `fields` no es un colado sino el cuerpo.
       const apiCall = this.charsData.id
-        ? Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, payload)
+        ? this.patchItemAfterColumns(item, generatedKeys)
         : Api.post('/isoqf_characteristics/', {
           organization: this.$route.params.org_id || '',
           project_id: this.$route.params.id || '',
@@ -574,7 +645,7 @@ export default {
           fields: mergedFields
         })
 
-      apiCall
+      return apiCall
         .then(response => {
           this.isSaving = false
 
@@ -620,7 +691,10 @@ export default {
           console.error('Error saving reference characteristics:', error)
           // The lock channel already explained this one. 'error' on the auto-save
           // indicator would be just as misleading as the toast: nothing to retry.
-          if (isLockRejection(error)) {
+          // `announced` cubre el mismo caso un paso antes: el acquire del lock de columnas
+          // no llega a mandar request, así que no tiene ni status ni URL que
+          // `isLockRejection` pueda leer, y el cartel ya lo puso quien lo rechazó.
+          if (error.announced || isLockRejection(error)) {
             this.autoSaveStatus = null
             return
           }

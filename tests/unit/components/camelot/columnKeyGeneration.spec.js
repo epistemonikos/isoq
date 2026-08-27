@@ -21,6 +21,8 @@ jest.mock('@/utils/Api', () => ({
 }))
 
 const CLAVE_ALEATORIA = /^column_[0-9a-f]{24}$/
+// `/isoqf_characteristics/<doc>/field/<clave>` — el endpoint de alta de columna.
+const CLAVE_EN_URL = /\/field\/(column_[0-9a-f]+)$/
 
 const MOCKS = {
   $t: key => key,
@@ -67,6 +69,16 @@ describe('EditReferenceModal — clave de una columna nueva', () => {
     if (wrapper) wrapper.destroy()
   })
 
+  // La clave ya no viaja en el `fields` del PATCH del ítem: viaja en la URL del endpoint
+  // de columna, que es por donde el alta pasa desde que salió de ahí. Es la misma
+  // migración que le tocó a ManageColumnsButton (ver la nota de arriba), un componente
+  // después. La garantía verificada no cambió — sólo el lugar donde se lee.
+  function clavesCreadas () {
+    return Api.patch.mock.calls
+      .map(([url]) => (CLAVE_EN_URL.exec(url) || [])[1])
+      .filter(Boolean)
+  }
+
   it('genera una clave aleatoria de 24 hex, no `column_<timestamp>_<index>`', async () => {
     await wrapper.setData({
       customFields: [{ label: 'Contexto', value: 'texto' }]
@@ -74,10 +86,9 @@ describe('EditReferenceModal — clave de una columna nueva', () => {
 
     await wrapper.vm.performSave(false)
 
-    const enviados = (Api.patch.mock.calls[0] || Api.post.mock.calls[0])[1]
-    const fields = enviados.fields || []
-    const nueva = fields.find(f => f.label === 'Contexto')
-    expect(nueva.key).toMatch(CLAVE_ALEATORIA)
+    const claves = clavesCreadas()
+    expect(claves).toHaveLength(1)
+    expect(claves[0]).toMatch(CLAVE_ALEATORIA)
   })
 
   // El caso que colisionaba de verdad: el índice hacía la clave predecible, así que dos
@@ -92,10 +103,7 @@ describe('EditReferenceModal — clave de una columna nueva', () => {
 
     await wrapper.vm.performSave(false)
 
-    const enviados = (Api.patch.mock.calls[0] || Api.post.mock.calls[0])[1]
-    const fields = enviados.fields || []
-    const a = fields.find(f => f.label === 'Contexto').key
-    const b = fields.find(f => f.label === 'Método').key
+    const [a, b] = clavesCreadas()
     expect(a).not.toBe(b)
     expect(a).toMatch(CLAVE_ALEATORIA)
     expect(b).toMatch(CLAVE_ALEATORIA)

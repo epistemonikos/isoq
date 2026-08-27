@@ -142,7 +142,10 @@ describe('EditReferenceModal — expiración', () => {
 
   it('avisa a la persona de que se guardó y se liberó', async () => {
     const wrapper = await opened()
-    wrapper.vm.onInactivityExpired()
+    // Se espera porque el aviso vive en el `finally`, y el guardado que lo precede pasó a
+    // ser asíncrono cuando el alta de columna se fue a su propio endpoint. Lo que se
+    // verifica es lo mismo: que a la persona se le diga.
+    await wrapper.vm.onInactivityExpired()
     expect(wrapper.vm.$notify.warning).toHaveBeenCalledWith('lock.inactivity_released')
     wrapper.destroy()
   })
@@ -154,7 +157,10 @@ describe('EditReferenceModal — expiración', () => {
     // `cancel` también hace falta: el cierre pasa por resetModal, que lo llama.
     wrapper.vm.autoSaveDebounced = { flush: () => { throw new Error('boom') }, cancel: jest.fn() }
 
-    expect(() => wrapper.vm.onInactivityExpired()).toThrow('boom')
+    // El guardado es asíncrono desde que el alta de columna salió del PATCH del ítem, así
+    // que la excepción llega como rechazo. La garantía es la misma —y ahora importa más,
+    // porque hay una forma nueva de lanzar: el lock de columnas tomado por otra persona.
+    await expect(wrapper.vm.onInactivityExpired()).rejects.toThrow('boom')
     expect(wrapper.vm.$bvModal.hide).toHaveBeenCalled()
     // Y lo que de verdad importa: el lock se soltó pese a la excepción.
     expect(LockService.releaseRef).toHaveBeenCalled()
