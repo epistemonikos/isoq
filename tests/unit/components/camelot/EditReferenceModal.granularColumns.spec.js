@@ -328,3 +328,189 @@ describe('EditReferenceModal — el alta de columna sale del PATCH del ítem', (
     expect(body).toHaveProperty('fields')
   })
 })
+
+// El otro campo que el PATCH por ítem tiene que llevar, y por el motivo contrario a `fields`:
+// `fields` no debía viajar y viajaba; el `_v` debía viajar y no viajaba. El modal arma el
+// ítem desde cero —`ref_id` + `authors` + las celdas— y nunca miraba `charsData.items`, así
+// que el contador de la fila existente se quedaba afuera. Con él afuera el servidor acepta
+// la escritura por compatibilidad y deja de comprobar la frescura: dos personas sobre el
+// mismo estudio se pisan sin 409 y sin cartel.
+describe('EditReferenceModal — el contador de versión de la fila', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  const conFilaExistente = (_v) => ({
+    ...CHARS_DATA,
+    items: [{ ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'ya existía', _v }]
+  })
+
+  it('reenvía el `_v` de la fila que el documento ya tiene', async () => {
+    wrapper = createWrapper(conFilaExistente(4))
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'editado', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect(patchItem[1]._v).toBe(4)
+  })
+
+  it('no le inventa un contador al estudio que todavía no tiene fila', async () => {
+    // El endpoint por ítem es un upsert, así que la primera escritura de un estudio no
+    // tiene versión previa. Rellenarla con un 0 afirmaría una frescura que nadie midió, y
+    // el servidor rechaza con 400 cualquier `_v` que no sea un entero válido.
+    wrapper = createWrapper()
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'primera vez', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect('_v' in patchItem[1]).toBe(false)
+  })
+
+  it('ignora un contador corrupto en vez de reenviarlo', async () => {
+    // Un `_v` que no es entero (un documento viejo, un roundtrip por XLSX que lo devuelve
+    // como texto) haría que el servidor rechace con 400 en cada intento: el guardado no se
+    // podría completar nunca. Sin la clave, en cambio, la escritura pasa por el camino
+    // tolerado. Perder una comprobación es peor que perder el guardado, pero recuperable.
+    wrapper = createWrapper(conFilaExistente('4'))
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'editado', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect('_v' in patchItem[1]).toBe(false)
+  })
+})
+
+// El segundo guardado seguido, que con auto-guardado por tecleo es el segundo tecleo.
+//
+// El `_v` del primer PATCH sale de `charsData.items`, que es un prop. Refrescarlo depende
+// de una vuelta larga: este modal emite `saved`, `StepThree.handleReferenceSaved` reemplaza
+// `charsData` **sólo si el cuerpo trae `items`**, y recién ahí el prop vuelve con el
+// contador nuevo. Si esa vuelta no llega —o el cuerpo viene sin `items`— el segundo PATCH
+// sale con el contador viejo y el servidor responde 409 sobre la edición de la propia
+// persona: el peor 409 posible, porque no hay nadie con quien coordinar.
+//
+// Se resuelve como en `crudTables.absorbItemVersion`: el modal se queda con la metadata que
+// el servidor acaba de estampar, en vez de esperar a que el prop vuelva.
+describe('EditReferenceModal — el contador del segundo guardado seguido', () => {
+  let wrapper
+
+  const CHARS_CON_FILA = {
+    ...CHARS_DATA,
+    items: [{ ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'ya existía', _v: 4 }]
+  }
+
+  // Lo que el endpoint por ítem devuelve: el documento recargado, con la fila ya estampada.
+  const respuestaConVersion = (_v) => ({
+    data: { ...CHARS_CON_FILA, items: [{ ...CHARS_CON_FILA.items[0], _v }] }
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  const editar = (valor) => wrapper.setData({
+    isReadOnly: false,
+    customFields: [
+      { label: 'Contexto', value: valor, key: 'column_vieja', locked: false, hasComments: false }
+    ]
+  })
+
+  it('el segundo PATCH lleva la versión que el primero devolvió, no la del prop', async () => {
+    Api.patch.mockResolvedValue(respuestaConVersion(5))
+    wrapper = createWrapper(CHARS_CON_FILA)
+
+    await editar('primer cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await editar('segundo cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    expect(patches).toHaveLength(2)
+    expect(patches[0][1]._v).toBe(4)
+    expect(patches[1][1]._v).toBe(5)
+  })
+
+  it('no se queda con la versión de otra fila cuando el modal pasa a otro estudio', async () => {
+    // El prop `reference` cambia sin destruir el componente: la metadata absorbida es de la
+    // fila anterior y aplicarla a otra sería afirmar una frescura que nadie midió sobre ella.
+    Api.patch.mockResolvedValue(respuestaConVersion(5))
+    const charsDosFilas = {
+      ...CHARS_DATA,
+      items: [
+        { ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'a', _v: 4 },
+        { ref_id: 'ref2', authors: 'Jones, K 2021', column_vieja: 'b', _v: 9 }
+      ]
+    }
+    wrapper = createWrapper(charsDosFilas)
+
+    await editar('cambio en ref1')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setProps({ reference: { id: 'ref2', authors: ['Jones, K'], publication_year: '2021' } })
+    await editar('cambio en ref2')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    const ultimo = patches[patches.length - 1]
+    expect(ultimo[0]).toContain('/item/ref2')
+    expect(ultimo[1]._v).toBe(9)
+  })
+
+  it('si la respuesta viene sin `items`, no reenvía una versión que no se confirmó', async () => {
+    // Éste es el caso que hace que delegar en el prop no alcance: sin `items` en el cuerpo,
+    // `handleReferenceSaved` hace un merge superficial y `charsData.items` queda con el
+    // contador viejo. Reenviarlo daría 409 en cada tecleo, sin más salida que recargar;
+    // omitirlo cae en el camino tolerado, que se pierde la comprobación pero guarda.
+    Api.patch.mockResolvedValue({ data: {} })
+    wrapper = createWrapper(CHARS_CON_FILA)
+
+    await editar('primer cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await editar('segundo cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    expect(patches).toHaveLength(2)
+    expect('_v' in patches[1][1]).toBe(false)
+  })
+})

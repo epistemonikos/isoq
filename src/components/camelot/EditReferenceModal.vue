@@ -108,6 +108,7 @@ import { fieldsLockKey } from '@/utils/refLockUrls'
 import { isLockRejection } from '@/utils/lockErrors'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
+import { copyItemMetadata } from '@/utils/itemMetadata'
 import _debounce from 'lodash.debounce'
 import editorInactivityMixin from '@/mixins/editorInactivityMixin'
 import { announcePresence, clearPresence, otherTabActiveOn } from '@/utils/editorPresence'
@@ -158,6 +159,16 @@ export default {
       // el estudio a quien está escribiendo del otro lado.
       skipReleaseOnClose: false,
       autoSaveStatus: null,
+      // La metadata que el servidor estampó en el ÚLTIMO guardado de esta fila, o `null`
+      // si todavía no se guardó nada en esta sesión de edición. Los tres estados son
+      // distintos a propósito:
+      //   null  → nadie escribió todavía: la versión buena es la del prop `charsData`
+      //   {_v}  → el servidor confirmó ésta, y es más nueva que la del prop
+      //   {}    → se escribió pero el servidor no dijo con qué versión quedó
+      // El tercero es el que obliga a que esto sea un objeto y no un número: sabemos que
+      // la del prop ya caducó, así que reenviarla sería un 409 garantizado en cada tecleo.
+      // Sin la clave, en cambio, la escritura pasa por el camino tolerado.
+      confirmedRowMetadata: null,
       isReadOnly: false,
       lockedByUser: null,
       isOffline: false,
@@ -198,6 +209,9 @@ export default {
     reference: {
       immediate: true,
       handler (newVal) {
+        // Otra fila, otra versión: la metadata absorbida es del estudio anterior y
+        // aplicarla acá afirmaría una frescura que nadie midió sobre éste.
+        this.confirmedRowMetadata = null
         if (newVal) {
           this.localReference = { ...newVal }
           this.editForm = { ...newVal }
@@ -353,6 +367,7 @@ export default {
       this.customFields = []
       this.activeSection = null
       this.localReference = null
+      this.confirmedRowMetadata = null
       this.isSaving = false
       this.autoSaveStatus = null
       this.isReadOnly = false
@@ -580,15 +595,56 @@ export default {
 
       return Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, item)
     },
+    /**
+     * Se queda con la versión que el servidor acaba de estampar en esta fila.
+     *
+     * Sin esto el contador sale del prop `charsData`, que tarda una vuelta entera en
+     * volver: emitimos `saved`, `StepThree.handleReferenceSaved` reemplaza `charsData`, y
+     * recién ahí el prop baja con la versión nueva. Con auto-guardado por tecleo el segundo
+     * guardado no espera esa vuelta, y saldría con el contador viejo: 409 sobre la edición
+     * de la propia persona, que es el peor de los 409 porque no hay nadie con quien
+     * coordinar. Mismo problema y misma solución que `crudTables.absorbItemVersion`.
+     *
+     * Se copia SÓLO la metadata, nunca los valores: lo que la persona está escribiendo en
+     * este momento no puede ser pisado por la respuesta de su propio guardado anterior.
+     *
+     * Que el resultado sea `{}` cuando el cuerpo no trae la fila es deliberado y no un
+     * fallo: significa «se escribió, pero no sabemos con qué versión quedó». Volver a
+     * `charsData` ahí sería peor que no mandar nada — esa versión ya caducó con esta misma
+     * escritura, y reenviarla daría 409 en cada tecleo sin más salida que recargar.
+     */
+    absorbRowVersion (response, refId) {
+      const items = (response && response.data && response.data.items) || []
+      const saved = items.find(row => row && row.ref_id === refId)
+      this.confirmedRowMetadata = copyItemMetadata({}, saved)
+    },
     performSave (closeAfter) {
       if (this.isSaving || this.isReadOnly) return
       this.isSaving = true
       if (!closeAfter) this.autoSaveStatus = 'saving'
 
-      const item = {
-        ref_id: this.localReference.id || '',
+      // El ítem se arma desde cero —`ref_id`, `authors` y las celdas del formulario—, así
+      // que hay que traerle el `_v` de la fila que el documento ya tiene. Es el gemelo de
+      // `fields` y por el motivo contrario: `fields` no debía viajar en este PATCH y
+      // viajaba, el `_v` debía viajar y no viajaba. Sin él el servidor acepta la escritura
+      // por compatibilidad y deja de comprobar la frescura — sin 409 y sin cartel, que es
+      // el único caso en que dos personas sobre el mismo estudio se pisan sin enterarse.
+      //
+      // Para un estudio sin fila (`find` devuelve `undefined`) no hay contador y
+      // `copyItemMetadata` omite la clave: el endpoint por ítem es un upsert, y un 0 de
+      // relleno afirmaría una frescura que nadie midió.
+      //
+      // A partir del segundo guardado la fuente ya no es el prop sino lo que el servidor
+      // confirmó (ver `confirmedRowMetadata`): el prop tarda una vuelta entera en volver
+      // —emitimos `saved`, el padre reemplaza `charsData`, el prop baja— y con el
+      // auto-guardado por tecleo esa vuelta no llega a tiempo.
+      const refId = this.localReference.id || ''
+      const versionSource = this.confirmedRowMetadata ||
+        (this.charsData.items || []).find(row => row && row.ref_id === refId)
+      const item = copyItemMetadata({
+        ref_id: refId,
         authors: Commons.parseReference(this.localReference, true, false)
-      }
+      }, versionSource)
 
       const newFieldsArray = []
       const generatedKeys = {}
@@ -648,6 +704,8 @@ export default {
       return apiCall
         .then(response => {
           this.isSaving = false
+
+          this.absorbRowVersion(response, item.ref_id)
 
           Object.entries(generatedKeys).forEach(([index, key]) => {
             if (this.customFields[index]) {
