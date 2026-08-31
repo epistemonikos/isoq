@@ -299,6 +299,7 @@ import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
 import { parseXLSXData } from '@/utils/xlsxImporter'
 import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
 import { copyItemMetadata, itemsFingerprint, isItemMetadata, withoutItemMetadata } from '@/utils/itemMetadata'
+import { conflictComparison } from '@/utils/versionConflict'
 import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
 import { isLockRejection } from '@/utils/lockErrors'
 import { fieldsLockKey } from '@/utils/refLockUrls'
@@ -541,17 +542,7 @@ export default {
      */
     conflictComparison () {
       if (!this.versionConflict) return {}
-      const theirs = this.versionConflict.item || {}
-      const mine = this.versionConflict.failedData || {}
-      const keys = new Set([...Object.keys(theirs), ...Object.keys(mine)])
-      const diff = {}
-      keys.forEach(key => {
-        if (isItemMetadata(key) || key === 'ref_id' || key === 'authors') return
-        const a = theirs[key] === undefined ? '' : theirs[key]
-        const b = mine[key] === undefined ? '' : mine[key]
-        if (a !== b) diff[key] = { theirs: a, mine: b }
-      })
-      return diff
+      return conflictComparison(this.versionConflict.item, this.versionConflict.failedData)
     },
     isDataTableFieldsModalInvalid () {
       const nro = parseInt(this.dataTableFieldsModal.nroColumns)
