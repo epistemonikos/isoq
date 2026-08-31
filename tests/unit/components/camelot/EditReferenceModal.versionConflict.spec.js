@@ -224,3 +224,33 @@ describe('EditReferenceModal — el cartel del conflicto se ve', () => {
     expect(wrapper.vm.labelForKey('column_borrada')).toBe('column_borrada')
   })
 })
+
+// Las etiquetas de las dos cajas tienen que VERSE.
+//
+// Visto en navegador el 2026-08-31, ya con el cartel funcionando: los textos «Lo que quedó
+// guardado» y «Lo que intentaste guardar» estaban puestos como `placeholder`, y un
+// placeholder es invisible en cuanto la caja tiene valor — que es siempre, porque el panel
+// existe justamente para mostrar dos valores. Se veían dos textos sin decir cuál era cuál,
+// o sea faltaba lo único que el panel tiene que responder.
+//
+// Heredado de `crudTables`, que trae el mismo markup. Se arregla en los dos.
+describe('EditReferenceModal — se sabe cuál texto es de quién', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  it('rotula las dos cajas con texto visible, no con placeholder', async () => {
+    wrapper = createWrapper()
+    emitirConflicto(CONFLICTO)
+    await wrapper.vm.$nextTick()
+
+    const texto = wrapper.find('[data-testid="reference-version-conflict"]').text()
+    expect(texto).toContain('version_conflict.theirs')
+    expect(texto).toContain('version_conflict.mine')
+  })
+})

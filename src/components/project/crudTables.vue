@@ -176,12 +176,17 @@
              quedó guardado al lado del que intentó guardar. -->
         <b-alert v-if="versionConflict" show variant="warning" class="mb-2">
           <p class="mb-2">{{ $t('version_conflict.message') }}</p>
+          <!--
+            Los rótulos van como texto y NO como `placeholder`: un placeholder desaparece en
+            cuanto la caja tiene valor, y acá siempre lo tiene, así que se veían dos textos
+            sin decir cuál era de quién.
+          -->
           <div v-for="(value, key) in conflictComparison" :key="key" class="mb-2">
             <strong class="text-muted small text-uppercase">{{ key }}</strong>
-            <b-form-textarea :value="value.theirs" readonly rows="2" class="bg-light mb-1"
-              :placeholder="$t('version_conflict.theirs')"></b-form-textarea>
-            <b-form-textarea :value="value.mine" readonly rows="2" class="bg-light"
-              :placeholder="$t('version_conflict.mine')"></b-form-textarea>
+            <label class="d-block small mb-0">{{ $t('version_conflict.theirs') }}</label>
+            <b-form-textarea :value="value.theirs" readonly rows="2" class="bg-light mb-1"></b-form-textarea>
+            <label class="d-block small mb-0">{{ $t('version_conflict.mine') }}</label>
+            <b-form-textarea :value="value.mine" readonly rows="2" class="bg-light"></b-form-textarea>
           </div>
           <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
             {{ $t('version_conflict.reload') }}
