@@ -109,6 +109,7 @@
 <script>
 import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
+import { copyItemMetadata } from '@/utils/itemMetadata'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -260,7 +261,12 @@ export default {
       const item = this.localExtractedData.items[this.buffer_extracted_data.remove_index_item]
       // Writing without this row's lock is a guaranteed 409.
       if (this.isRowReadOnly) return Promise.resolve()
-      const row = { ref_id: item.ref_id, authors: item.authors, column_0: '' }
+      // La fila se arma con las claves que el reset escribe, no con un spread del ítem: lo
+      // que se borra son las columnas de datos. Pero el `_v` no es una columna de datos —
+      // es la metadata con la que el servidor comprueba que nadie escribió mientras tanto—,
+      // así que se copia aparte. Sin él este PATCH pasa por el camino tolerado: entra igual
+      // y la comprobación se pierde en silencio.
+      const row = copyItemMetadata({ ref_id: item.ref_id, authors: item.authors, column_0: '' }, item)
 
       return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${item.ref_id}`, row)
         .then(() => {
@@ -277,11 +283,14 @@ export default {
       const _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
       // Writing without this row's lock is a guaranteed 409.
       if (this.isRowReadOnly) return Promise.resolve()
-      const row = {
+      // Mismo motivo que en el reset: el `_v` viaja aparte porque no es un campo del
+      // usuario. `_item` es el buffer del editor, clonado de la fila del servidor, así que
+      // trae el contador que corresponde a lo que la persona abrió.
+      const row = copyItemMetadata({
         ref_id: _item.ref_id,
         authors: _item.authors,
         column_0: _item.column_0
-      }
+      }, _item)
 
       return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${_item.ref_id}`, row)
         .then(() => {

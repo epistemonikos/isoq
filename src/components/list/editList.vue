@@ -127,7 +127,7 @@ import LockService from '@/services/lockService'
 import Commons from '../../utils/commons'
 import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
-import { ITEM_METADATA_KEYS } from '@/utils/itemMetadata'
+import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
@@ -894,12 +894,20 @@ export default {
 
         extractedDataItems.forEach((item, index) => {
           if (referencesSet.has(item.ref_id)) {
-            _items.push({
+            // `copyItemMetadata` y no un spread del ítem entero: la fila que va a la tabla
+            // se arma con las cuatro claves que la vista usa, a propósito. Lo que se suma es
+            // sólo la metadata del servidor, porque **de acá bajan por prop los tres sitios
+            // que escriben esta tabla** (`editListExtractedData` y el editor en sitio del
+            // perfil de evidencia). Sin el `_v`, sus PATCH pasan por el camino tolerado: el
+            // servidor los acepta y deja de comprobar la frescura, sin 409 y sin cartel.
+            // Las filas derivadas —las de un estudio que el documento no tiene— siguen sin
+            // contador, que es lo correcto: nunca se escribieron.
+            _items.push(copyItemMetadata({
               ref_id: item.ref_id,
               authors: item.authors,
               column_0: item.column_0,
               index: index
-            })
+            }, item))
 
             const hasEmptyOrMissingColumn = !item.column_0
             if (hasEmptyOrMissingColumn) {

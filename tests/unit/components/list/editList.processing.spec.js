@@ -104,6 +104,35 @@ describe('editList.vue — processExtractedData()', () => {
     expect(derivada.column_0).toBe('')
   })
 
+  // Acá muere o sobrevive el `_v` de TODA la tabla de datos extraídos: los tres sitios que
+  // la escriben reciben estas filas por prop. Si la reconstrucción las deja sin contador, el
+  // servidor acepta sus PATCH por compatibilidad y deja de comprobar la frescura — sin 409 y
+  // sin cartel. Lo que se comprueba es que el camino no lo descarte.
+  it('conserva el contador de versión de la fila que el documento sí tiene', () => {
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'data', _v: 5 }]
+    }])
+
+    const guardada = wrapper.vm.extracted_data.items.find(i => i.ref_id === 'r1')
+    expect(guardada._v).toBe(5)
+  })
+
+  // La derivada nunca se escribió, así que no tiene versión que conservar — y no hay que
+  // inventarle una: el servidor rechaza con 400 un `_v` que no sea entero, y un 0 de relleno
+  // sería una versión falsa sobre una fila que el documento no tiene.
+  it('no le inventa un contador a la fila derivada', () => {
+    wrapper.vm.processExtractedData([{
+      id: 'ed1',
+      fields: [{ key: 'ref_id' }, { key: 'column_0' }],
+      items: [{ ref_id: 'r1', authors: 'Smith', column_0: 'data', _v: 5 }]
+    }])
+
+    const derivada = wrapper.vm.extracted_data.items.find(i => i.ref_id === 'r2')
+    expect('_v' in derivada).toBe(false)
+  })
+
   // Y tiene que quedar en el array que el editor indexa, o abrirla escribiría en otra fila.
   it('la fila derivada es direccionable por su índice', () => {
     wrapper.vm.processExtractedData([{

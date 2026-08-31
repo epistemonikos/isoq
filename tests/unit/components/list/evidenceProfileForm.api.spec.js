@@ -273,6 +273,23 @@ describe('evidenceProfileForm.vue — updateContentExtractedDataItem()', () => {
     wrapper.destroy()
   })
 
+  // Este componente clona la fila entera y no la reconstruye, así que conserva el `_v` solo.
+  // El test no cubre este archivo: cubre que quien le pasa las filas siga mandándolas
+  // completas. El eslabón que las despoja está tres componentes más arriba
+  // (`editList.processExtractedData`), y desde acá no se ve.
+  it('reenvía el `_v` que la fila trae, sin tocarlo', async () => {
+    const item = { ref_id: 'ref1', column_0: 'nuevo', index: 0, _v: 11 }
+    const wrapper = makeWrapper({
+      extractedData: { id: 'ed1', items: [item], fieldsObj: [] },
+      showEditExtractedDataInPlace: { display: true, item },
+      findings: { id: 'finding1' }
+    })
+    await wrapper.vm.updateContentExtractedDataItem('ref1')
+    await flushPromises()
+    expect(Api.patch.mock.calls[0][1]._v).toBe(11)
+    wrapper.destroy()
+  })
+
   it('calls printErrors on Api.patch failure', async () => {
     Api.patch.mockRejectedValueOnce({ message: 'error' })
     const wrapper = makeWrapper({
