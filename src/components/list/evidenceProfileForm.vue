@@ -988,7 +988,6 @@ export default {
     // State to read from: isFindingReadOnly, lockLostWhileEditing, findingLockedBy,
     // permission.
     readOnlyNotice: function () {
-      // TODO(human)
       // - El banner aparece en los tres casos de solo-lectura
       // - Sin permiso de escritura (permission falso) el usuario nunca esperó editar: un aviso de "perdiste el lock" ahí sería ruido.
       // - Ojo con findingLockedBy nulo: el mensaje no puede terminar diciendo "editado por undefined" — ese fue exactamente el bug que motivó tener la variante _no_user.
