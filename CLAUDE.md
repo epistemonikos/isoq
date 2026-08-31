@@ -172,15 +172,23 @@ camino nuestro los pierde, aparece en sus logs.
 
 > El servidor puede instrumentar lo que el cliente le manda, nunca lo que el cliente descarta.
 
-Ya pasó tres veces en el mismo tramo, y las tres fueron la misma cosa —un dato que llegaba y se perdía
-en el camino—: el cuerpo de la respuesta con el `_v` nuevo, `stages` en la reconstrucción de la fila, y
-el `reason` en el reintento de la cola offline. Las dos primeras las habría atrapado un warning suyo.
-La tercera, ninguno.
+Ya pasó **cinco** veces en el mismo tramo, y las cinco fueron la misma cosa —un dato que llegaba y se
+perdía en el camino—: el cuerpo de la respuesta con el `_v` nuevo, `stages` en la reconstrucción de la
+fila, el `reason` en el reintento de la cola offline, otra vez el `_v` de la respuesta (el del segundo
+guardado seguido, que `EditReferenceModal` no absorbía) y el `409 version_conflict` entero, que llegaba
+con el `item` fresco y moría en un `console.error`. Sólo la primera y la segunda las habría atrapado un
+warning del servidor.
 
 Así que para todo campo de respuesta la única red es un test de este lado, y tiene que comprobar **que
 el camino no se pierda**, no que un valor esté bien. El patrón está en `lockErrors.spec.js`: entre los
 casos hay un `un_motivo_que_todavia_no_existe`, que no verifica ningún valor real — verifica que un
 motivo desconocido siga cayendo en la rama correcta.
+
+Las dos últimas agregan un corolario que los tests no daban: **un test verde sobre el estado no prueba
+que se vea**. El 409 seteaba un estado que la plantilla no dibujaba en ninguna rama, y las dos cajas del
+cartel estaban rotuladas con `placeholder` —invisible en cuanto hay valor, que es siempre—. Las dos
+pasaron revisión de código y suite. Si el dato termina en pantalla, la afirmación va sobre el DOM
+renderizado, y la puerta final es el navegador.
 
 ### Perder el lock tiene que ser visible
 
