@@ -1,6 +1,7 @@
 'use strict'
 const path = require('path')
 const utils = require('./utils')
+const { buildInfo } = require('./buildInfo')
 const webpack = require('webpack')
 const config = require('../config')
 const merge = require('webpack-merge')
@@ -102,6 +103,10 @@ const webpackConfig = merge(baseWebpackConfig, {
       filename: config.build.index,
       template: 'index.html',
       inject: true,
+      // El sello va en el HTML y no en el bundle a propósito: la pregunta «¿qué código está
+      // sirviendo este host?» se contesta con un GET a la raíz, sin descargar 550 KB de JS ni
+      // saber cómo se llama el chunk de esta compilación.
+      buildInfo: buildInfo(),
       minify: {
         removeComments: true,
         collapseWhitespace: true,

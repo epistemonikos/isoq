@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Interactive SoQ - GRADE CERQual</title>
 
+    <!-- De qué commit salió este build. `dist/` sólo dice cuándo corrió webpack, que es otra
+         cosa: un build de hoy sobre un checkout viejo deja todos los archivos con fecha de
+         hoy. Ver build/buildInfo.js. -->
+    <meta name="build-commit" content="<%= htmlWebpackPlugin.options.buildInfo.commit %>">
+    <meta name="build-date" content="<%= htmlWebpackPlugin.options.buildInfo.builtAt %>">
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#007bff">
     <meta name="description" content="Interactive Summary of Qualitative Findings using the GRADE-CERQual approach">

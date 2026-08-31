@@ -222,6 +222,13 @@ No se puede testear en jsdom que la posición aterrice (no hay layout, `scrollTo
 ---
 
 ## GOTCHAS
+- **Qué código sirve un host**: `curl -s <host>/ | grep build-commit`. El `<meta>` lo estampa
+  `build/buildInfo.js` desde los tres configs de webpack. Existe porque `dist/` NO lo dice: sus
+  timestamps cuentan cuándo corrió webpack, y un build de hoy sobre un checkout viejo los deja todos
+  con la fecha de hoy — pasó en `isoqf-test` el 2026-08-31 y hubo que datar las claves i18n del bundle
+  contra el `git log` para descubrirlo. Un `-dirty` en el sello significa que el SHA no describe lo
+  compilado. El template `index.html` lee `buildInfo` sin condicionales: si agregás un config nuevo de
+  webpack, tenés que pasárselo o el build del HTML falla.
 - webpack.config.js at root = compat wrapper only (real config in build/)
 - Bootstrap 4.6.2 — use `<b-table>` `<b-modal>` `<b-form-*>`
 - Translation.js has legacy :lang URL logic — ignore it, no lang prefixes in routes
