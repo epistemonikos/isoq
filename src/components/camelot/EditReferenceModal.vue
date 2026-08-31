@@ -3,14 +3,34 @@
     @hidden="resetModal" @shown="onModalShownAll" header-bg-variant="custom-blue" no-close-on-esc
     no-close-on-backdrop>
     <template v-if="localReference">
-      <b-alert v-if="isReadOnly && !isOffline" show variant="warning" class="mb-3"
+      <!--
+        Va ANTES que los carteles de lock, y ellos pasan a `v-else-if`, porque el conflicto
+        de versión también deja el editor en solo lectura: sin esto se vería encima el
+        «alguien tiene este estudio», que acá es falso — el lock es de esta persona, lo que
+        cambió es la fila. Dos carteles diciendo cosas distintas del mismo rechazo.
+      -->
+      <b-alert v-if="versionConflict" show variant="warning" class="mb-3"
+        data-testid="reference-version-conflict">
+        <p class="mb-2">{{ $t('version_conflict.message') }}</p>
+        <div v-for="(value, key) in conflictComparison" :key="key" class="mb-2">
+          <strong class="text-muted small text-uppercase">{{ labelForKey(key) }}</strong>
+          <b-form-textarea :value="value.theirs" readonly rows="2" class="bg-light mb-1"
+            :placeholder="$t('version_conflict.theirs')"></b-form-textarea>
+          <b-form-textarea :value="value.mine" readonly rows="2" class="bg-light"
+            :placeholder="$t('version_conflict.mine')"></b-form-textarea>
+        </div>
+        <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
+          {{ $t('version_conflict.reload') }}
+        </b-button>
+      </b-alert>
+      <b-alert v-else-if="isReadOnly && !isOffline" show variant="warning" class="mb-3"
         data-testid="reference-readonly-notice">
         <font-awesome-icon icon="lock" class="mr-1" />
         {{ lockedByUser
           ? $t('lock.ref_locked_by', { user: lockedByUser })
           : $t('lock.ref_locked_by_no_user') }}
       </b-alert>
-      <b-alert v-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
+      <b-alert v-else-if="isReadOnly && isOffline" show variant="secondary" class="mb-3">
         {{ $t('lock.ref_lock_offline') }}
       </b-alert>
       <!--
@@ -105,7 +125,8 @@ import Api from '@/utils/Api'
 import LockService from '@/services/lockService'
 import * as columnService from '@/services/columnService'
 import { fieldsLockKey } from '@/utils/refLockUrls'
-import { isLockRejection } from '@/utils/lockErrors'
+import { isLockRejection, isVersionRejection } from '@/utils/lockErrors'
+import { conflictComparison } from '@/utils/versionConflict'
 import Commons from '@/utils/commons'
 import { isCustomField, newCustomFieldKey } from '@/utils/customFieldsHelper'
 import { copyItemMetadata } from '@/utils/itemMetadata'
@@ -169,6 +190,25 @@ export default {
       // la del prop ya caducó, así que reenviarla sería un 409 garantizado en cada tecleo.
       // Sin la clave, en cambio, la escritura pasa por el camino tolerado.
       confirmedRowMetadata: null,
+      // Las claves acuñadas para campos que todavía no existen como columna, indexadas por
+      // el `id` estable del campo.
+      //
+      // Vive FUERA de `customFields` por la misma razón que `committedLabels` vive fuera de
+      // `localFields` en `CustomFieldsManager`, y su comentario lo explica mejor que este:
+      // el hijo tiene una copia profunda de la lista y la reemite por `v-model` en cada
+      // tecla, así que cualquier cosa que el padre escriba DENTRO de un campo se pierde en
+      // la próxima pulsación. Escribir la clave de vuelta en `customFields[index].key` es
+      // exactamente eso, y por eso un solo campo dejaba una columna por auto-guardado
+      // (cuatro, medidas en navegador el 2026-08-31).
+      //
+      // Por `id` y no por índice: `addField` inserta al principio con `unshift`, así que el
+      // índice de un campo cambia en cuanto se agrega otro.
+      mintedFieldKeys: {},
+      // El conflicto de versión en curso, o `null`. Es un eje distinto del lock: acá la
+      // persona SÍ tiene el lock, y el guardado se rechazó porque la fila cambió desde que
+      // la leyó. Por eso no puede colgarse del canal de conflicto de locks — nombraría a un
+      // dueño que no existe y le diría que perdió algo que todavía tiene.
+      versionConflict: null,
       isReadOnly: false,
       lockedByUser: null,
       isOffline: false,
@@ -186,6 +226,11 @@ export default {
       }
       return this.$t('camelot.step_three.modal.title')
     },
+    /** Lo guardado contra lo que se intentó guardar. La regla es compartida con `crudTables`. */
+    conflictComparison () {
+      if (!this.versionConflict) return {}
+      return conflictComparison(this.versionConflict.item, this.versionConflict.failedData)
+    },
     hasInvalidCustomFields () {
       return this.customFields.some(f => !f.isCamelot && !f.locked && (!f.label || !f.label.trim()))
     }
@@ -196,12 +241,14 @@ export default {
     this.autoSaveDebounced = _debounce(function () { return this.performSave(false) }.bind(this), 1500)
   },
   mounted () {
+    window.addEventListener('item-version-conflict', this.onVersionConflict)
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
     // The conflict listener only fires on a rejected save. This one fires the moment
     // the lock is gone, so the fields stop accepting input before that.
     window.addEventListener('ref-lock-lost', this.handleRefLockLost)
   },
   beforeDestroy () {
+    window.removeEventListener('item-version-conflict', this.onVersionConflict)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
     window.removeEventListener('ref-lock-lost', this.handleRefLockLost)
   },
@@ -210,8 +257,11 @@ export default {
       immediate: true,
       handler (newVal) {
         // Otra fila, otra versión: la metadata absorbida es del estudio anterior y
-        // aplicarla acá afirmaría una frescura que nadie midió sobre éste.
+        // aplicarla acá afirmaría una frescura que nadie midió sobre éste. Y las claves
+        // acuñadas son de la sesión de edición del estudio anterior: arrastrarlas haría que
+        // el campo nuevo de éste escriba bajo una columna creada para aquél.
         this.confirmedRowMetadata = null
+        this.mintedFieldKeys = {}
         if (newVal) {
           this.localReference = { ...newVal }
           this.editForm = { ...newVal }
@@ -368,6 +418,8 @@ export default {
       this.activeSection = null
       this.localReference = null
       this.confirmedRowMetadata = null
+      this.mintedFieldKeys = {}
+      this.versionConflict = null
       this.isSaving = false
       this.autoSaveStatus = null
       this.isReadOnly = false
@@ -596,6 +648,58 @@ export default {
       return Api.patch(`/isoqf_characteristics/${this.charsData.id}/item/${item.ref_id}`, item)
     },
     /**
+     * El servidor rechazó el guardado porque la fila cambió desde que se leyó.
+     *
+     * `Api.js` ya emitía este evento con todo lo necesario; hasta ahora sólo lo escuchaba
+     * `crudTables`, así que acá el 409 no producía NADA en pantalla: el `.catch` ponía
+     * `autoSaveStatus = 'error'`, un estado que este template no renderiza en ninguna rama.
+     * La persona seguía escribiendo sobre algo que ya no se guardaba. Medido en navegador
+     * el 2026-08-31.
+     *
+     * Se apaga el auto-guardado, y no por prolijidad: cada tecla volvería a mandar la misma
+     * versión vieja: un 409 por pulsación, y ninguno puede salir bien hasta recargar.
+     *
+     * El evento es de `window` y llega a todos los editores abiertos, así que el filtro por
+     * estudio no es opcional: sin él, el conflicto de uno bloquearía a los otros.
+     */
+    /**
+     * El nombre de la columna tal como la persona la ve.
+     *
+     * La comparación viene indexada por la clave interna (`column_1aeaea2d…`), que no le
+     * dice nada a nadie. Si la columna ya no está en `fields` —la otra persona pudo
+     * borrarla en el mismo movimiento— se muestra la clave, que es fea pero cierta.
+     */
+    labelForKey (key) {
+      const field = (this.charsData.fields || []).find(f => f && f.key === key)
+      return (field && field.label) || key
+    },
+    onVersionConflict (event) {
+      const detail = (event && event.detail) || {}
+      const refId = this.localReference && this.localReference.id
+      if (!refId || detail.refId !== refId) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.isReadOnly = true
+      this.versionConflict = {
+        item: detail.item || {},
+        failedData: detail.failedData || {},
+        currentVersion: detail.currentVersion
+      }
+    },
+    /**
+     * Trae la fila al día y devuelve el editor a un estado escribible.
+     *
+     * El editor no puede recargarse solo: `charsData` es un prop y la fila fresca la tiene
+     * el padre, que es quien habla con el servidor. También se limpia la versión absorbida:
+     * la que teníamos es la que el servidor acaba de rechazar.
+     */
+    reloadAfterVersionConflict () {
+      this.versionConflict = null
+      this.isReadOnly = false
+      this.confirmedRowMetadata = null
+      this.$emit('reload-chars-data')
+    },
+    /**
      * Se queda con la versión que el servidor acaba de estampar en esta fila.
      *
      * Sin esto el contador sale del prop `charsData`, que tarda una vuelta entera en
@@ -655,10 +759,13 @@ export default {
 
       this.customFields.forEach((field, index) => {
         if (field.label && field.label.trim() !== '') {
-          let fieldKey = field.key
+          // El registro se consulta ANTES de acuñar: si este campo ya tiene una clave de un
+          // guardado anterior, la columna ya existe y volver a acuñar crearía otra.
+          let fieldKey = field.key || this.mintedFieldKeys[field.id]
           if (!field.locked && (!fieldKey || !fieldKey.startsWith('column_'))) {
             fieldKey = newCustomFieldKey()
             generatedKeys[index] = fieldKey
+            if (field.id) this.mintedFieldKeys[field.id] = fieldKey
           }
 
           item[fieldKey] = field.value || ''
@@ -752,7 +859,12 @@ export default {
           // `announced` cubre el mismo caso un paso antes: el acquire del lock de columnas
           // no llega a mandar request, así que no tiene ni status ni URL que
           // `isLockRejection` pueda leer, y el cartel ya lo puso quien lo rechazó.
-          if (error.announced || isLockRejection(error)) {
+          // `isVersionRejection` va junto a los otros dos y por el mismo motivo: el
+          // conflicto de versión tiene su propio cartel, con el texto de la otra persona al
+          // lado del propio. «No se pudo guardar, intente nuevamente» encima de eso diría
+          // dos cosas distintas del mismo evento, y la segunda es un consejo falso:
+          // reintentar manda otra vez la misma versión vieja.
+          if (error.announced || isLockRejection(error) || isVersionRejection(error)) {
             this.autoSaveStatus = null
             return
           }

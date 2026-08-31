@@ -514,3 +514,111 @@ describe('EditReferenceModal — el contador del segundo guardado seguido', () =
     expect('_v' in patches[1][1]).toBe(false)
   })
 })
+
+// Una columna por campo, aunque el campo se guarde muchas veces.
+//
+// Medido en navegador el 2026-08-31 contra isoqf-test: un solo «Add new field» dejó CUATRO
+// columnas con la misma etiqueta. Una por auto-guardado.
+//
+// El acuñado escribe la clave de vuelta en `customFields[index].key` dentro del `.then`.
+// Eso no sobrevive: `CustomFieldsManager` tiene su propia copia profunda de la lista
+// (`JSON.parse(JSON.stringify)` en un watcher `deep`) y la reemite por `v-model` en cada
+// tecla, pisando el array del padre con una versión anterior — sin la clave. El siguiente
+// guardado ve un campo sin clave y acuña otra. Como `addColumn` es idempotente POR CLAVE,
+// una clave nueva no deduplica: crea.
+//
+// El hijo ya documenta este mismo mecanismo sobre sí mismo, y lo resuelve igual: guarda
+// `committedLabels` FUERA de la lista, «porque este watcher vuelve a copiar la lista, así
+// que cualquier cosa guardada dentro del objeto se sobrescribiría».
+describe('EditReferenceModal — una columna por campo, no una por guardado', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+    columnService.addColumn.mockImplementation((collection, docId, label, key) =>
+      Promise.resolve({ key, response: { data: {} } }))
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  // Lo que el hijo reemite al teclear: la misma entrada, con su `id` estable, sin la clave
+  // que el padre había escrito. Es la copia stale, no un campo nuevo.
+  const reemisionStale = (label, value) => ([
+    { id: 'field_1788202295101', label, value, locked: false, hasComments: false }
+  ])
+
+  it('no acuña una segunda clave cuando el hijo reemite el campo sin ella', async () => {
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(columnService.addColumn).toHaveBeenCalledTimes(1)
+
+    // El hijo pisa el array del padre en la próxima tecla: la clave se fue.
+    await wrapper.setData({ customFields: reemisionStale('Columna nueva', 'texto mas largo') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(1)
+  })
+
+  it('el segundo PATCH escribe bajo la MISMA clave que el primero creó', async () => {
+    // Sin esto el valor quedaría repartido entre dos columnas: la vieja con el texto a
+    // medias y la nueva con el resto, y ninguna de las dos completa.
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setData({ customFields: reemisionStale('Columna nueva', 'texto mas largo') })
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    const claveDe = (body) => Object.keys(body).find(k => /^column_[0-9a-f]{24}$/.test(k))
+    expect(patches).toHaveLength(2)
+    expect(claveDe(patches[1][1])).toBe(claveDe(patches[0][1]))
+  })
+
+  it('dos campos nuevos distintos siguen recibiendo claves distintas', async () => {
+    // El registro es por `id` del campo, no por etiqueta: dos columnas pueden llamarse
+    // igual a propósito, y compartir clave las fusionaría en una sola.
+    wrapper = createWrapper()
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { id: 'field_a', label: 'Misma etiqueta', value: 'uno', locked: false, hasComments: false },
+        { id: 'field_b', label: 'Misma etiqueta', value: 'dos', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(2)
+    const claves = columnService.addColumn.mock.calls.map(c => c[3])
+    expect(new Set(claves).size).toBe(2)
+  })
+
+  it('el registro no sobrevive al cambio de estudio', async () => {
+    // Las claves acuñadas son de la sesión de edición de ESTE estudio. Arrastrarlas a otro
+    // haría que su campo nuevo escriba bajo una columna que se creó para el anterior.
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setProps({ reference: { id: 'ref2', authors: ['Jones, K'], publication_year: '2021' } })
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'otro estudio') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(2)
+  })
+})

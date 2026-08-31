@@ -125,7 +125,8 @@
 
       <!-- Modal para editar referencias -->
       <EditReferenceModal ref="editReferenceModal" :reference="currentItem" :chars-data="charsData" :camelot="camelot"
-        :visible-column-keys.sync="visibleColumnKeys" @saved="handleReferenceSaved" @close="onReferenceModalClosed" />
+        :visible-column-keys.sync="visibleColumnKeys" @saved="handleReferenceSaved" @close="onReferenceModalClosed"
+        @reload-chars-data="loadCharacteristicsData" />
     </div>
   </div>
 </template>
