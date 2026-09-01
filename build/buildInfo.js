@@ -45,7 +45,18 @@ function commitId () {
     // vacía) se descarta: un valor con espacios rompería el `<meta>` en silencio, y el sello
     // quedaría ilegible justo cuando hiciera falta leerlo.
     if (!/^[0-9a-f]{7,40}$/.test(sha)) return 'unknown'
-    const dirty = git(['status', '--porcelain']) !== ''
+    // `--untracked-files=no` no es un detalle: sin él, `--porcelain` cuenta también los
+    // archivos sin trackear, y entonces un apunte, un log o un script de al lado dejan el
+    // sello en `-dirty` para siempre. Medido el 2026-09-01 en el host del backend, que
+    // informaba `-dirty` con el checkout intacto y sólo archivos ajenos sin trackear — y
+    // nuestro sello tenía el mismo defecto sin que se notara, porque acá la suciedad
+    // resultó ser un archivo trackeado de verdad.
+    //
+    // Un indicador que nunca se apaga deja de informar, y ése es el modo de falla que
+    // importa: el falso negativo que esto abre —un archivo sin trackear que el build sí
+    // importe— exige que la línea del `import` ya existiera trackeada y sin cambios. Es
+    // rebuscado; el falso positivo es cotidiano.
+    const dirty = git(['status', '--porcelain', '--untracked-files=no']) !== ''
     return dirty ? `${sha}-dirty` : sha
   } catch (e) {
     return 'unknown'

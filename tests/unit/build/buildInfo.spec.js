@@ -28,6 +28,28 @@ describe('buildInfo', () => {
     expect(buildInfo().commit).toBe('59e20a6a')
   })
 
+  it('no cuenta los archivos sin trackear como suciedad', () => {
+    // `git status --porcelain` los incluye por defecto, y eso arruina el indicador: un
+    // apunte, un log, un script de al lado alcanzan para encenderlo. Medido el 2026-09-01
+    // en el host del backend, que informaba `-dirty` con el checkout intacto y sólo
+    // archivos ajenos a la plataforma sin trackear. Un indicador que nunca se apaga deja de
+    // informar, y éste ya estaba en ese estado sin que nos diéramos cuenta.
+    //
+    // El falso negativo que esto abre —un archivo sin trackear que el build sí importe—
+    // exige que la línea del `import` esté trackeada y sin cambios, o sea que ya existiera:
+    // es rebuscado. El falso positivo es cotidiano.
+    let argsDeStatus = null;
+    jest.doMock('child_process', () => ({
+      execFileSync: jest.fn((_bin, args) => {
+        if (args.includes('status')) { argsDeStatus = args; return Buffer.from('\n'); }
+        return Buffer.from('59e20a6a\n');
+      })
+    }));
+    const { buildInfo } = require(buildInfoPath)
+    expect(buildInfo().commit).toBe('59e20a6a')
+    expect(argsDeStatus).toContain('--untracked-files=no')
+  })
+
   it('marca el checkout sucio, porque entonces el commit no describe lo compilado', () => {
     // Un build con cambios sin commitear no es reproducible desde su SHA. Decir el SHA a
     // secas afirmaría que sí, y esa afirmación falsa es peor que no tener el dato: manda a
