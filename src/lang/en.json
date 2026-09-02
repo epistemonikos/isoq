@@ -1097,7 +1097,8 @@
   },
   "categories": {
     "no_group": "No group",
-    "uncategorised_findings": "Uncategorised findings"
+    "uncategorised_findings": "Uncategorised findings",
+    "duplicate_name": "A group with this name already exists in this project. Pick a different name, or use the existing group."
   },
   "yes_no": {
     "yes": "yes",

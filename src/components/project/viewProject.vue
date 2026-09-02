@@ -379,7 +379,11 @@
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group class="mt-3" :label="$t('common.add_group_name') || 'Add group name'">
-                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.text"
+                    :state="categoryNameIsDuplicate ? false : null"></b-form-input>
+                  <p v-if="categoryNameIsDuplicate" class="text-danger mt-1 mb-0">
+                    {{ $t('categories.duplicate_name') }}
+                  </p>
                 </b-form-group>
                 <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
@@ -391,7 +395,11 @@
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group :label="$t('common.edit_group_name') || 'Edit group name'">
-                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.text"
+                    :state="categoryNameIsDuplicate ? false : null"></b-form-input>
+                  <p v-if="categoryNameIsDuplicate" class="text-danger mt-1 mb-0">
+                    {{ $t('categories.duplicate_name') }}
+                  </p>
                 </b-form-group>
                 <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
@@ -413,7 +421,8 @@
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
-                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
+                  <b-button variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
                 <div v-if="!modal_edit_list_categories.new">
@@ -426,7 +435,8 @@
                 <div v-if="modal_edit_list_categories.edit">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
-                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
+                  <b-button variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
               </template>
@@ -478,6 +488,23 @@ const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './
 // finding creado por otra persona, y de cuánto tarda una fila en aparecer bloqueada.
 const PROJECT_POLL_INTERVAL = 15000
 
+// Un nombre de categoría comparable. Tolera `text` ausente o null a propósito: medido,
+// hay 11 categorías en la base sin ese campo, y `String(undefined)` daría 'undefined'.
+function normalizeCategoryName (text) {
+  return String(text === null || text === undefined ? '' : text).trim().toLowerCase()
+}
+
+// Identidad del catálogo de categorías por CONTENIDO, no por referencia.
+// `processGetListCategories` reasigna `list_categories.options` a un array nuevo en cada
+// getListCategories(), así que un watcher sobre el array se dispara aunque nada haya
+// cambiado. Los tres campos son los que `processLists()` lee para pintar la fila.
+function categoryCatalogSignature (options) {
+  if (!Array.isArray(options)) return ''
+  return options
+    .map(o => [o && o.id, (o && o.text) || '', (o && o.extra_info) || ''].join('\u0000'))
+    .join('\u0001')
+}
+
 export default {
   mixins: [preserveScrollMixin, projectFreshnessMixin],
   components: {
@@ -504,6 +531,9 @@ export default {
       // Un refresco automático repinta `lists` debajo de quien esté escribiendo. Estos
       // dos dicen si hay un editor abierto: uno para los modales de ViewTable (llegan por
       // el evento `editor-open`) y otro para los de esta misma vista.
+      // El refresco automático se declara dueño de la recarga del listado mientras corre,
+      // para que el watcher del catálogo no la duplique.
+      suppressCategoryReload: false,
       isoqEditorOpen: false,
       projectEditorOpen: false,
       stepStage: 0,
@@ -689,6 +719,8 @@ export default {
     }
   },
   created () {
+    // Ver applyProjectRefresh: el refresco tiene awaits y puede sobrevivir a la vista.
+    this.$_alive = true
     // Un solo uso: el deep-link a un finding debe centrarlo al entrar, no en cada
     // recarga posterior. En `$_` porque nada lo renderiza. Ver routeAnchorHash().
     this.$_pendingAnchorScroll = true
@@ -725,6 +757,7 @@ export default {
     // Same net as editList.vue: SPA navigation fires no pagehide, so a ref lock held by
     // a child (a crudTables row, a camelot study) would survive leaving the project and
     // stay held until the server TTL. Verified live before this was added.
+    this.$_alive = false
     LockService.releaseRef()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -734,8 +767,44 @@ export default {
     this.stopProjectPolling()
   },
   methods: {
-    /** Lo que significa recargar acá: releer el listado de findings del tab iSoQ. */
-    applyProjectRefresh: function () {
+    /**
+     * Lo que significa recargar acá: releer el listado de findings del tab iSoQ.
+     *
+     * Las tres cosas, y en este orden. El catálogo de categorías y las referencias no son
+     * decoración de la fila: `processLists()` deriva de ellos el nombre del grupo, y vía
+     * `Commons.sortFindings` el agrupamiento del que sale el NÚMERO del finding. Con el
+     * catálogo viejo, una categoría que otra persona acaba de crear llega sin nombre y su
+     * finding se ordena como si no tuviera grupo.
+     *
+     * Medido en navegador antes de arreglarlo: con la categoría nueva asignada por otra
+     * persona, esta pantalla mostraba `4 = Feeling extreme…` y `5 = Example one`, y la de
+     * al lado los mostraba al revés. Es justo lo que el número del finding no puede hacer,
+     * porque es con lo que dos personas se reparten el trabajo.
+     *
+     * `getReferences(false)`: con su default `true` reposiciona el tab y el step, o sea que
+     * un refresco de fondo te sacaría del tab que estás mirando.
+     */
+    applyProjectRefresh: async function () {
+      // El watcher de `list_categories.options` también recarga el listado cuando el
+      // catálogo cambia, así que sin coordinarlos un cambio ajeno de categoría pedía
+      // isoqf_lists + findings DOS veces (medido en navegador). Acá el refresco se declara
+      // dueño de esa recarga y el watcher se abstiene: un solo par de GETs.
+      //
+      // El `$nextTick` no es decorativo — los watchers de Vue 2 corren en la cola del
+      // scheduler, o sea después del `await`. Sin esperar ese flush, el flag bajaría antes
+      // de que el watcher haya tenido su turno y volvería a haber dos recargas.
+      this.suppressCategoryReload = true
+      try {
+        await Promise.all([this.getListCategories(), this.getReferences(false)])
+        await this.$nextTick()
+      } finally {
+        this.suppressCategoryReload = false
+      }
+      // Salir del proyecto a mitad de un refresco dejaba este getLists() corriendo sobre
+      // una vista ya destruida: dos awaits más arriba abrieron esa ventana, que cuando
+      // applyProjectRefresh era síncrono no existía. Pedía datos que nadie iba a mirar y
+      // los escribía en un componente muerto.
+      if (!this.$_alive) return
       this.getLists()
     },
     /**
@@ -1390,7 +1459,43 @@ export default {
       await this.getListCategories()
       this.$refs['modalEditListCategories'].show()
     },
-    saveNewCategory: function () {
+    /**
+     * La categoría del proyecto que choca con el nombre que hay en el formulario, o null.
+     *
+     * Es un invariante de TRANSICIÓN, no de estado: sólo impide INTRODUCIR una colisión.
+     * Al renombrar, un texto igual al que la categoría ya tenía pasa igual, aunque tenga
+     * una homónima. Sin esa excepción, en los proyectos que ya arrastran duplicados
+     * (medido: 21 grupos en 5 proyectos, 16 con findings en las dos copias) nadie podría
+     * tocarle el `extra_info` a una de ellas — y sería justo quien intenta desenredarlas.
+     *
+     * Compara contra `modal_edit_list_categories.options`, que es el catálogo puro; el otro
+     * lleva prependido el `{id: null, text: no_group}` y bloquearía ese nombre de regalo.
+     * El ámbito es el proyecto: `getListCategories()` filtra por `project_id`, y así tiene
+     * que quedar — hay 238 nombres que se repiten legítimamente entre proyectos distintos.
+     */
+    findCollidingCategory: function () {
+      const options = this.modal_edit_list_categories.options || []
+      const wanted = normalizeCategoryName(this.modal_edit_list_categories.text)
+      if (!wanted) return null
+      const ownId = this.modal_edit_list_categories.edit ? this.modal_edit_list_categories.id : null
+      const own = ownId ? options.find(o => o && o.id === ownId) : null
+      if (own && normalizeCategoryName(own.text) === wanted) return null
+      return options.find(o => o && o.id !== ownId && normalizeCategoryName(o.text) === wanted) || null
+    },
+    /**
+     * Relee el catálogo del servidor y responde si el nombre choca.
+     *
+     * El catálogo local puede tener minutos —el gestor se abre y la persona se queda
+     * pensando el nombre mientras otro crea el mismo—, así que la única comparación que
+     * vale es contra el servidor y en el mismo gesto que la escritura. Al volver, el
+     * computed `categoryNameIsDuplicate` ya ve la categoría ajena y pinta el aviso solo.
+     */
+    hasFreshCategoryNameCollision: async function () {
+      await this.getListCategories()
+      return this.findCollidingCategory() !== null
+    },
+    saveNewCategory: async function () {
+      if (await this.hasFreshCategoryNameCollision()) return
       const params = {
         text: this.modal_edit_list_categories.text,
         extra_info: this.modal_edit_list_categories.extra_info,
@@ -1419,10 +1524,11 @@ export default {
       this.modal_edit_list_categories.index = index
       this.modal_edit_list_categories.id = _options[index].id
     },
-    updateCategoryName: function () {
+    updateCategoryName: async function () {
       const objID = this.modal_edit_list_categories.id
 
       if (objID) {
+        if (await this.hasFreshCategoryNameCollision()) return
         const params = {
           text: this.modal_edit_list_categories.text,
           extra_info: this.modal_edit_list_categories.extra_info
@@ -1632,12 +1738,19 @@ export default {
     }
   },
   watch: {
-    'list_categories.options': function (newVal) {
+    'list_categories.options': function (newVal, oldVal) {
       // NOTE: getProject() already calls getLists() on the initial mount, so firing here too
       // duplicates GET /isoqf_lists + GET /findings (and, before the reset fix, duplicated
       // findings in memory). Guard against the initial load using this.initialLoad, while
       // still reloading when categories genuinely change afterwards (and not on empty).
       if (!newVal || newVal.length === 0 || this.initialLoad) return
+      // applyProjectRefresh() ya se hizo cargo de la recarga; ver el comentario de allá.
+      if (this.suppressCategoryReload) return
+      // Y comparar el CONTENIDO, no la referencia: `processGetListCategories` reasigna el
+      // array en cada getListCategories(), así que sin esto el watcher se dispara siempre.
+      // Costaba dos cosas: abrir el gestor de categorías pedía isoqf_lists + findings de
+      // gusto, y el refresco automático los pedía dos veces (acá y en applyProjectRefresh).
+      if (categoryCatalogSignature(newVal) === categoryCatalogSignature(oldVal)) return
       this.getLists()
     },
     '$route.query.tab': function (val) {
@@ -1674,6 +1787,10 @@ export default {
     }
   },
   computed: {
+    /** Aviso en vivo mientras se escribe. El chequeo que manda es el del submit. */
+    categoryNameIsDuplicate: function () {
+      return this.findCollidingCategory() !== null
+    },
     formattedCamelotDescription: function () {
       const desc = this.$t('camelot.step_three.description')
       const iconHtml = `<img src="${this.camelotLogo}" width="16" height="16" class="align-middle mx-1" />`

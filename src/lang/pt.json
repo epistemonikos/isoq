@@ -1097,7 +1097,8 @@
   },
   "categories": {
     "no_group": "Sem grupo",
-    "uncategorised_findings": "Descobertas não categorizadas"
+    "uncategorised_findings": "Descobertas não categorizadas",
+    "duplicate_name": "Já existe um grupo com esse nome neste projeto. Escolha outro nome ou use o grupo existente."
   },
   "yes_no": {
     "yes": "sim",
