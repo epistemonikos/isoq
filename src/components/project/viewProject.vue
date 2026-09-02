@@ -478,6 +478,17 @@ const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './
 // finding creado por otra persona, y de cuánto tarda una fila en aparecer bloqueada.
 const PROJECT_POLL_INTERVAL = 15000
 
+// Identidad del catálogo de categorías por CONTENIDO, no por referencia.
+// `processGetListCategories` reasigna `list_categories.options` a un array nuevo en cada
+// getListCategories(), así que un watcher sobre el array se dispara aunque nada haya
+// cambiado. Los tres campos son los que `processLists()` lee para pintar la fila.
+function categoryCatalogSignature (options) {
+  if (!Array.isArray(options)) return ''
+  return options
+    .map(o => [o && o.id, (o && o.text) || '', (o && o.extra_info) || ''].join('\u0000'))
+    .join('\u0001')
+}
+
 export default {
   mixins: [preserveScrollMixin, projectFreshnessMixin],
   components: {
@@ -504,6 +515,9 @@ export default {
       // Un refresco automático repinta `lists` debajo de quien esté escribiendo. Estos
       // dos dicen si hay un editor abierto: uno para los modales de ViewTable (llegan por
       // el evento `editor-open`) y otro para los de esta misma vista.
+      // El refresco automático se declara dueño de la recarga del listado mientras corre,
+      // para que el watcher del catálogo no la duplique.
+      suppressCategoryReload: false,
       isoqEditorOpen: false,
       projectEditorOpen: false,
       stepStage: 0,
@@ -734,8 +748,39 @@ export default {
     this.stopProjectPolling()
   },
   methods: {
-    /** Lo que significa recargar acá: releer el listado de findings del tab iSoQ. */
-    applyProjectRefresh: function () {
+    /**
+     * Lo que significa recargar acá: releer el listado de findings del tab iSoQ.
+     *
+     * Las tres cosas, y en este orden. El catálogo de categorías y las referencias no son
+     * decoración de la fila: `processLists()` deriva de ellos el nombre del grupo, y vía
+     * `Commons.sortFindings` el agrupamiento del que sale el NÚMERO del finding. Con el
+     * catálogo viejo, una categoría que otra persona acaba de crear llega sin nombre y su
+     * finding se ordena como si no tuviera grupo.
+     *
+     * Medido en navegador antes de arreglarlo: con la categoría nueva asignada por otra
+     * persona, esta pantalla mostraba `4 = Feeling extreme…` y `5 = Example one`, y la de
+     * al lado los mostraba al revés. Es justo lo que el número del finding no puede hacer,
+     * porque es con lo que dos personas se reparten el trabajo.
+     *
+     * `getReferences(false)`: con su default `true` reposiciona el tab y el step, o sea que
+     * un refresco de fondo te sacaría del tab que estás mirando.
+     */
+    applyProjectRefresh: async function () {
+      // El watcher de `list_categories.options` también recarga el listado cuando el
+      // catálogo cambia, así que sin coordinarlos un cambio ajeno de categoría pedía
+      // isoqf_lists + findings DOS veces (medido en navegador). Acá el refresco se declara
+      // dueño de esa recarga y el watcher se abstiene: un solo par de GETs.
+      //
+      // El `$nextTick` no es decorativo — los watchers de Vue 2 corren en la cola del
+      // scheduler, o sea después del `await`. Sin esperar ese flush, el flag bajaría antes
+      // de que el watcher haya tenido su turno y volvería a haber dos recargas.
+      this.suppressCategoryReload = true
+      try {
+        await Promise.all([this.getListCategories(), this.getReferences(false)])
+        await this.$nextTick()
+      } finally {
+        this.suppressCategoryReload = false
+      }
       this.getLists()
     },
     /**
@@ -1632,12 +1677,19 @@ export default {
     }
   },
   watch: {
-    'list_categories.options': function (newVal) {
+    'list_categories.options': function (newVal, oldVal) {
       // NOTE: getProject() already calls getLists() on the initial mount, so firing here too
       // duplicates GET /isoqf_lists + GET /findings (and, before the reset fix, duplicated
       // findings in memory). Guard against the initial load using this.initialLoad, while
       // still reloading when categories genuinely change afterwards (and not on empty).
       if (!newVal || newVal.length === 0 || this.initialLoad) return
+      // applyProjectRefresh() ya se hizo cargo de la recarga; ver el comentario de allá.
+      if (this.suppressCategoryReload) return
+      // Y comparar el CONTENIDO, no la referencia: `processGetListCategories` reasigna el
+      // array en cada getListCategories(), así que sin esto el watcher se dispara siempre.
+      // Costaba dos cosas: abrir el gestor de categorías pedía isoqf_lists + findings de
+      // gusto, y el refresco automático los pedía dos veces (acá y en applyProjectRefresh).
+      if (categoryCatalogSignature(newVal) === categoryCatalogSignature(oldVal)) return
       this.getLists()
     },
     '$route.query.tab': function (val) {

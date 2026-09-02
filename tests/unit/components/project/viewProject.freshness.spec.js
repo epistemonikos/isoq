@@ -74,12 +74,68 @@ describe('viewProject — las dos mitades que pide el mixin de frescura', () => 
 
   afterEach(() => { if (wrapper) wrapper.destroy() })
 
-  it('recargar significa releer el listado de findings', () => {
+  // Las tres, no sólo el listado: `processLists()` deriva el nombre del grupo del catálogo
+  // de categorías y, vía Commons.sortFindings, el agrupamiento del que sale el NÚMERO del
+  // finding. Con el catálogo viejo, una categoría recién creada por otra persona llega sin
+  // nombre y su finding se ordena como si no tuviera grupo — medido en navegador: las dos
+  // pantallas del mismo proyecto mostraban los findings 4 y 5 intercambiados.
+  it('recargar significa releer el catálogo, las referencias y el listado', async () => {
     const getLists = jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    const getListCategories = jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    const getReferences = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
 
-    wrapper.vm.applyProjectRefresh()
+    await wrapper.vm.applyProjectRefresh()
 
+    expect(getListCategories).toHaveBeenCalled()
+    expect(getReferences).toHaveBeenCalled()
     expect(getLists).toHaveBeenCalled()
+  })
+
+  // El watcher de `list_categories.options` también recarga el listado cuando el catálogo
+  // cambia. Sin coordinarlos, un cambio ajeno de categoría pedía isoqf_lists + findings dos
+  // veces — medido en navegador antes de arreglarlo.
+  it('pide el listado una sola vez, aunque el catálogo haya cambiado de verdad', async () => {
+    const getLists = jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+    jest.spyOn(wrapper.vm, 'getListCategories').mockImplementation(async () => {
+      wrapper.vm.list_categories.options = [{ id: 'c1', text: 'renombrada' }]
+    })
+    await wrapper.setData({ initialLoad: false })
+    wrapper.vm.list_categories.options = [{ id: 'c1', text: 'original' }]
+    await flushPromises()
+    getLists.mockClear()
+
+    await wrapper.vm.applyProjectRefresh()
+    await flushPromises()
+
+    expect(getLists).toHaveBeenCalledTimes(1)
+  })
+
+  // Con su default `true`, getReferences reposiciona tabOpened y stepStage: un refresco de
+  // fondo te sacaría del tab que estás mirando.
+  it('el refresco no reposiciona el tab', async () => {
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    const getReferences = jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+
+    await wrapper.vm.applyProjectRefresh()
+
+    expect(getReferences).toHaveBeenCalledWith(false)
+  })
+
+  // El listado se cruza con las dos dependencias, así que pedirlo antes de que resuelvan
+  // lo pintaría con el catálogo viejo — el bug, otra vez, pero con más pasos.
+  it('pide el listado después de que resuelvan sus dos dependencias', async () => {
+    const orden = []
+    jest.spyOn(wrapper.vm, 'getListCategories').mockImplementation(async () => { orden.push('cats') })
+    jest.spyOn(wrapper.vm, 'getReferences').mockImplementation(async () => { orden.push('refs') })
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => { orden.push('lists') })
+
+    await wrapper.vm.applyProjectRefresh()
+
+    expect(orden[orden.length - 1]).toBe('lists')
+    expect(orden).toContain('cats')
+    expect(orden).toContain('refs')
   })
 
   it('sin nada abierto, la recarga puede aplicarse', () => {
@@ -131,6 +187,7 @@ describe('viewProject — el refresco espera a que se cierre el editor', () => {
     await wrapper.setData({ pendingRefresh: true })
 
     wrapper.vm.onIsoqEditorOpen(false)
+    await flushPromises()
 
     expect(getLists).toHaveBeenCalledTimes(1)
     expect(wrapper.vm.pendingRefresh).toBe(false)
@@ -141,6 +198,7 @@ describe('viewProject — el refresco espera a que se cierre el editor', () => {
     await wrapper.setData({ pendingRefresh: true })
 
     wrapper.vm.onProjectEditorOpen(false)
+    await flushPromises()
 
     expect(getLists).toHaveBeenCalledTimes(1)
   })
@@ -152,6 +210,7 @@ describe('viewProject — el refresco espera a que se cierre el editor', () => {
     axios.get.mockResolvedValue({ data: { id: 'proj1', last_update: 2000 } })
 
     await wrapper.vm.checkProjectFreshness()
+    await flushPromises()
 
     expect(getLists).toHaveBeenCalled()
   })

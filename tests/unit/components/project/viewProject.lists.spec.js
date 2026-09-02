@@ -397,6 +397,45 @@ describe('viewProject.vue — list_categories.options watcher (no duplicate getL
     wrapper.destroy()
   })
 
+  // `processGetListCategories` reasigna `list_categories.options` a un array NUEVO en cada
+  // getListCategories(), así que un watcher que mire la referencia se dispara aunque nada
+  // haya cambiado. Costaba dos cosas: abrir el gestor de categorías pedía isoqf_lists +
+  // findings de gusto, y el refresco automático los pedía dos veces.
+  it('does NOT call getLists when the catalog is reassigned with identical content', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    const antes = [{ id: 'c1', text: 'A', extra_info: 'x' }]
+    const despues = [{ id: 'c1', text: 'A', extra_info: 'x' }]
+    wrapper.vm.$options.watch['list_categories.options'].call(wrapper.vm, despues, antes)
+    expect(getListsSpy).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('DOES call getLists when a category is renamed', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(
+      wrapper.vm, [{ id: 'c1', text: 'A renombrada' }], [{ id: 'c1', text: 'A' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // processLists() lee category_extra_info para pintar la fila, así que también cuenta.
+  it('DOES call getLists when only extra_info changes', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    await wrapper.setData({ initialLoad: false })
+    const getListsSpy = jest.spyOn(wrapper.vm, 'getLists').mockResolvedValue()
+    wrapper.vm.$options.watch['list_categories.options'].call(
+      wrapper.vm, [{ id: 'c1', text: 'A', extra_info: 'nuevo' }], [{ id: 'c1', text: 'A', extra_info: 'viejo' }])
+    expect(getListsSpy).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
   it('does NOT call getLists when categories become empty', async () => {
     const { wrapper } = createWrapper()
     await flushPromises()
