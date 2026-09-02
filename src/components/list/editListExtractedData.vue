@@ -4,13 +4,13 @@
     v-if="show.selected.includes('ed')">
     <a name="extracted-data"></a>
     <template v-if="showParagraph">
-      <videoHelp txt="Extracted data" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
+      <videoHelp :txt="$t('worksheet.extracted_data')" tag="h3-extracted-data" urlId="450836795" :warning="ui.adequacy.extracted_data.display_warning"></videoHelp>
     </template>
     <template v-else>
-      <h3 v-if="showTitle">Extracted data</h3>
+      <h3 v-if="showTitle">{{ $t('worksheet.extracted_data') }}</h3>
     </template>
     <p v-if="showParagraph" class="d-print-none font-weight-light">
-      It is here that you enter the data extracted from included studies that support this review finding. This data is needed to make a GRADE-CERQual assessment.
+      {{ $t('worksheet.extracted_data_intro') }}
     </p>
     <template v-if="localExtractedData.fields.length">
       <bc-filters
@@ -45,7 +45,7 @@
             variant="outline-success">
             <font-awesome-icon
               icon="edit"
-              :title="$t('Edit')" />
+              :title="$t('common.edit')" />
           </b-button>
           <b-button
             class="d-print-none"
@@ -53,40 +53,51 @@
             variant="outline-danger">
             <font-awesome-icon
               icon="trash"
-              :title="$t('Remove')" />
+              :title="$t('common.remove')" />
           </b-button>
         </template>
       </b-table>
       <b-modal
         id="modal-extracted-data-remove-data-item"
         ref="modal-extracted-data-remove-data-item"
-        title="Remove data content"
+        :title="$t('characteristics.remove_content')"
         @ok="extractedDataRemoveDataItem"
+        @hidden="onRowEditorHidden"
+        :ok-disabled="isRowReadOnly"
         ok-variant="outline-success"
         cancel-variant="outline-secondary">
-        <p>Are you sure you want to delete all the content for this row?</p>
+        <b-alert v-if="isRowReadOnly" show variant="warning">
+          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
+        <p>{{ $t('characteristics.confirm_delete_row') }}</p>
       </b-modal>
       <b-modal
         size="xl"
-        title="Edit data"
+        :title="$t('characteristics.edit_data')"
         id="modal-extracted-data-data"
         ref="modal-extracted-data-data"
         @ok="saveDataExtractedData"
+        @hidden="onRowEditorHidden"
+        :ok-disabled="isRowReadOnly"
         cancel-variant="outline-secondary"
         ok-variant="outline-success"
-        ok-title="Save">
+        :ok-title="$t('common.save')">
+        <b-alert v-if="isRowReadOnly" show variant="warning">
+          {{ rowLockedBy ? $t('lock.ref_locked_by', { user: rowLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
         <b-form-group
           v-for="(field, index) in buffer_extracted_data.fields"
           :key="index"
           :id="`label-field-${index}`"
-          :label="(field.key === 'column_0') ? 'Add the extracted data from this study that supports the review finding' : ''"
+          :label="(field.key === 'column_0') ? $t('worksheet.add_extracted_data_label') : ''"
           :label-for="`input-field-${index}`">
           <b-form-textarea
             :id="`input-field-${index}`"
             v-if="field.key !== 'ref_id' && field.key !== 'authors'"
             v-model="buffer_extracted_data_items[field.key]"
             rows="6"
-            max-rows="100"></b-form-textarea>
+            max-rows="100"
+            :disabled="isRowReadOnly"></b-form-textarea>
         </b-form-group>
       </b-modal>
 
@@ -96,7 +107,9 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
+import { copyItemMetadata } from '@/utils/itemMetadata'
 const videoHelp = () => import(/* webpackChunkName: "videohelp" */'../videoHelp')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 const bCardFilters = () => import(/* webpackChunkName: "backtotop" */'../tableActions/Filters')
@@ -129,6 +142,14 @@ export default {
   },
   data () {
     return {
+      // Ref-lock state of the row being edited/removed. Endpoint C demands the
+      // caller holds the lock of that row's ref_id.
+      isRowReadOnly: false,
+      rowLockedBy: null,
+      lockedRowRef: null,
+      rowEditorOpen: false,
+      // True when a `hidden` from a previous editor session is still on its way.
+      staleHiddenPending: false,
       buffer_extracted_data_items: {},
       buffer_extracted_data: {
         fields: [],
@@ -161,19 +182,93 @@ export default {
       this.buffer_extracted_data.fields = JSON.parse(JSON.stringify(this.localExtractedData.fields))
       this.buffer_extracted_data.fields.splice(this.buffer_extracted_data.fields.length - 1, 1)
       this.buffer_extracted_data_items = JSON.parse(JSON.stringify(this.localExtractedData.items[data.index]))
+      this.beginRowEditor(this.rowRefAt(data.index))
       this.$refs['modal-extracted-data-data'].show()
     },
     openModalExtractedDataRemoveDataItem: function (data) {
       this.buffer_extracted_data.remove_index_item = data.index
+      // Clearing a row is a write through endpoint C too, so it needs the same lock.
+      this.beginRowEditor(this.rowRefAt(data.index))
       this.$refs['modal-extracted-data-remove-data-item'].show()
     },
+    beginRowEditor: function (refId) {
+      // A lock the modal never released (its `hidden` never arrived, or it never
+      // finished opening) would stay held while we move to another row.
+      if (this.lockedRowRef && this.lockedRowRef !== refId) this.releaseRowLock()
+      // Opening while another session is still closing means its `hidden` is still in
+      // flight and must not be mistaken for the closing of this one.
+      this.staleHiddenPending = this.rowEditorOpen
+      this.rowEditorOpen = true
+      this.acquireRowLock(refId)
+    },
+    releaseRowLock: function () {
+      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
+      this.lockedRowRef = null
+    },
+    rowRefAt: function (index) {
+      const item = this.localExtractedData.items[index]
+      return item ? item.ref_id : null
+    },
+    // Mirrors StepFour.vue's acquireStudyLock: ask on open so the rejection lands
+    // before the user types. The project id comes from the list prop — the route
+    // param of this view is the list id.
+    async acquireRowLock (refId) {
+      if (!refId) return
+      if (!this.permission) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        return
+      }
+      const result = await LockService.acquireRef(this.list.project_id, refId)
+      if (result.success) {
+        this.lockedRowRef = refId
+        this.isRowReadOnly = false
+        this.rowLockedBy = null
+      } else if (result.permissionDenied) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+      } else {
+        this.isRowReadOnly = true
+        this.rowLockedBy = result.lockedBy || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.rowLockedBy }))
+        }
+      }
+    },
+    // See crudTables.onRefLockLost: the lock can be lost while the editor is open.
+    onRefLockLost: function (event) {
+      const detail = event.detail || {}
+      if (detail.refId !== this.lockedRowRef) return
+      this.isRowReadOnly = true
+      this.rowLockedBy = detail.lockedBy || null
+    },
+    onRowEditorHidden: function () {
+      // BootstrapVue emits `hidden` asynchronously: a late one belongs to the previous
+      // session, and releasing now would leave the open editor without its lock.
+      if (this.staleHiddenPending) {
+        this.staleHiddenPending = false
+        return
+      }
+      this.rowEditorOpen = false
+      this.releaseRowLock()
+      this.isRowReadOnly = false
+      this.rowLockedBy = null
+    },
     extractedDataRemoveDataItem: function () {
-      let items = JSON.parse(JSON.stringify(this.localExtractedData.items))
-      const item = items[this.buffer_extracted_data.remove_index_item]
-      let newItem = { 'ref_id': item.ref_id, 'authors': item.authors, 'column_0': '' }
-      items[this.buffer_extracted_data.remove_index_item] = newItem
+      // Granular reset: blank this row's data columns (keep ref_id + authors) via the
+      // /item/<ref_id> sub-resource. No $pull, no whole-array rewrite (endpoint C).
+      const item = this.localExtractedData.items[this.buffer_extracted_data.remove_index_item]
+      // Writing without this row's lock is a guaranteed 409.
+      if (this.isRowReadOnly) return Promise.resolve()
+      // La fila se arma con las claves que el reset escribe, no con un spread del ítem: lo
+      // que se borra son las columnas de datos. Pero el `_v` no es una columna de datos —
+      // es la metadata con la que el servidor comprueba que nadie escribió mientras tanto—,
+      // así que se copia aparte. Sin él este PATCH pasa por el camino tolerado: entra igual
+      // y la comprobación se pierde en silencio.
+      const row = copyItemMetadata({ ref_id: item.ref_id, authors: item.authors, column_0: '' }, item)
 
-      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, {items: items})
+      return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           delete this.buffer_extracted_data.remove_index_item
@@ -183,25 +278,21 @@ export default {
         })
     },
     saveDataExtractedData: function () {
-      let _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
-      let _originalItems = JSON.parse(JSON.stringify(this.localExtractedData.original_items))
+      // Granular save: PATCH only the edited row via the /item/<ref_id> sub-resource,
+      // so concurrent edits to other rows are not overwritten (endpoint C).
+      const _item = JSON.parse(JSON.stringify(this.buffer_extracted_data_items))
+      // Writing without this row's lock is a guaranteed 409.
+      if (this.isRowReadOnly) return Promise.resolve()
+      // Mismo motivo que en el reset: el `_v` viaja aparte porque no es un campo del
+      // usuario. `_item` es el buffer del editor, clonado de la fila del servidor, así que
+      // trae el contador que corresponde a lo que la persona abrió.
+      const row = copyItemMetadata({
+        ref_id: _item.ref_id,
+        authors: _item.authors,
+        column_0: _item.column_0
+      }, _item)
 
-      for (let index in _originalItems) {
-        if (_item.ref_id === _originalItems[index].ref_id) {
-          _originalItems[index] = {
-            'authors': _item.authors,
-            'column_0': _item.column_0,
-            'ref_id': _item.ref_id
-          }
-        }
-      }
-
-      let params = {
-        organization: this.list.organization,
-        list_id: this.$route.params.id,
-        items: _originalItems
-      }
-      axios.patch(`/api/isoqf_extracted_data/${this.localExtractedData.id}`, params)
+      return Api.patch(`/isoqf_extracted_data/${this.localExtractedData.id}/item/${_item.ref_id}`, row)
         .then(() => {
           this.$emit('getExtractedData', true)
           this.buffer_extracted_data = {fields: [], items: [], id: null}
@@ -214,6 +305,12 @@ export default {
   },
   mounted () {
     this.localExtractedData = this.extractedData
+    window.addEventListener('ref-lock-lost', this.onRefLockLost)
+  },
+  beforeDestroy () {
+    window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    // The modal events cannot be trusted to have released it (see onRowEditorHidden).
+    this.releaseRowLock()
   },
   watch: {
     extractedData: {

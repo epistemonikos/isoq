@@ -1,5 +1,6 @@
 'use strict'
 const utils = require('./utils')
+const { buildInfo } = require('./buildInfo')
 const webpack = require('webpack')
 const config = require('../config')
 const merge = require('webpack-merge')
@@ -39,7 +40,8 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         warnings: false,
         errors: true
       },
-      logging: 'warn'
+      logging: 'warn',
+      webSocketURL: 'ws://episte.lo:8090/ws'
     },
     webSocketServer: 'ws'
   },
@@ -53,6 +55,12 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       filename: 'index.html',
       template: 'index.html',
       inject: true,
+      // El template es el mismo de prod y test, y lee `buildInfo` sin condicionales: si acá
+      // no se pasara, `npm run dev` reventaría al compilar el HTML. En dev el dato no sirve
+      // para nada —el commit es el del working copy, que cambia mientras se trabaja— pero la
+      // alternativa era un `<% if %>` en el template, que es justo donde un error se
+      // descubre tarde.
+      buildInfo: buildInfo(),
       minify: {
         removeComments: true,
         collapseWhitespace: false,

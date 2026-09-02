@@ -1,93 +1,111 @@
 <template>
   <div>
-    <h4>STEP 1: Upload the <b>references</b> for your included studies (required)</h4>
+    <h4 v-html="$t('references.step_title')"></h4>
     <p class="font-weight-light">
-      You must import only the references for your final list of included studies
+      {{ $t('references.must_import') }}
     </p>
 
     <!-- Incomplete operation recovery message -->
-    <b-alert
-      v-if="showRestorePrompt"
-      show
-      variant="info"
-      dismissible>
-      <h5>Incomplete upload detected</h5>
-      <p>We found a previous upload that didn't complete. Would you like to restore it?</p>
-      <b-button
-        variant="outline-primary"
-        class="mr-2"
-        @click="restoreSavedProgress">
-        Yes, restore my upload
+    <b-alert v-if="showRestorePrompt" show variant="info" dismissible>
+      <h5>{{ $t('references.incomplete_upload') }}</h5>
+      <p>{{ $t('references.restore_upload') }}</p>
+      <b-button variant="outline-primary" class="mr-2" @click="restoreSavedProgress">
+        {{ $t('references.restore_yes') }}
       </b-button>
-      <b-button
-        variant="outline-secondary"
-        @click="clearSavedProgress">
-        No, start new
+      <b-button variant="outline-secondary" @click="clearSavedProgress">
+        {{ $t('references.start_new') }}
       </b-button>
     </b-alert>
 
     <b-card no-body>
       <b-tabs id="import-data" card>
-        <b-tab title="File upload" active>
+        <b-tab :title="$t('references.file_upload')" active>
           <b-row>
             <b-col cols="12">
-              <videoHelp txt="File upload" tag="h4" urlId="449247762"></videoHelp>
+              <videoHelp :txt="$t('references.file_upload')" tag="h4" urlId="449247762"></videoHelp>
             </b-col>
           </b-row>
           <p class="font-weight-light">
-            <b>STEP 1:</b> Export the references for your included studies from your reference management software (e.g.
-            Endnote). You must select RIS as the output style.
+            {{ $t('references.export_step') }}
           </p>
           <p class="font-weight-light">
-            <b>STEP 2:</b> Import the .ris/.txt file into iSoQ.
+            {{ $t('references.import_step') }}
           </p>
-          <b-form-file id="input-ris-file-key" ref="file-input" plain :disabled="!checkPermissions"
+          <b-form-file id="input-ris-file-key" ref="file-input" plain :disabled="!canEdit || !isOnline"
+            v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
             @change="loadRefs($event)"></b-form-file>
-          <b-button block :disabled="(fileReferences.length >= 1) ? false : true" class="mt-2" variant="success"
+          <b-button block :disabled="((fileReferences.length >= 1) ? false : true) || !isOnline" v-b-tooltip.hover
+            :title="isOnline ? '' : $t('offline.action_disabled')" class="mt-2" variant="success"
             @click="saveReferences()">
-            Upload
+            {{ $t('common.upload') }}
           </b-button>
           <p>
-            Reminder: If you later add studies to your review, you can do a second import of these and they will be
-            added to your existing list.
+            {{ $t('references.reminder') }}
           </p>
+          <b-alert
+            v-if="uploadResult"
+            :variant="uploadResult.saved === 0 && uploadResult.duplicates > 0 ? 'warning' : 'success'"
+            dismissible
+            show
+            @dismissed="uploadResult = null"
+          >
+            {{ $t('references.upload_result', { saved: uploadResult.saved, duplicates: uploadResult.duplicates }) }}
+            <span
+              v-if="uploadResult.duplicates > 0"
+              class="ml-2"
+              style="cursor:pointer; text-decoration:underline"
+              @click="showDuplicates = !showDuplicates"
+            >
+              {{ showDuplicates ? $t('common.hide') : $t('common.show') }}
+            </span>
+            <ul v-if="uploadResult.duplicates > 0 && showDuplicates" class="mt-2 mb-0">
+              <li v-for="(dup, i) in uploadResult.duplicate_list" :key="i">
+                <strong>{{ dup.title }}</strong>
+                <br><small>{{ dup.authors }} ({{ dup.year }})</small>
+              </li>
+            </ul>
+          </b-alert>
         </b-tab>
-        <b-tab title="Import from PubMed">
+        <b-tab :title="$t('references.import_pubmed')">
           <b-row>
             <b-col cols="12">
-              <videoHelp txt="Import from PubMed" tag="h4" urlId="449248998"></videoHelp>
+              <videoHelp :txt="$t('references.import_pubmed')" tag="h4" urlId="449248998"></videoHelp>
             </b-col>
           </b-row>
           <b-row>
             <b-col sm="6">
               <p class="font-weight-light">
-                You can import individual references from PubMed by pasting the references PMID below. The PMID is the
-                8-digit identification number appearing at the end of the web address for the article on PubMed. Add one
-                PMID per line or separate multiple PMIDs with commas below and click Find.
+                {{ $t('references.pubmed_instructions') }}
               </p>
-              <b-form-textarea v-model="pubmed_request" placeholder="Ej: 17253524" rows="6"
+              <b-form-textarea v-model="pubmed_request" :placeholder="$t('references.pmid_example')" rows="6"
                 max-rows="100"></b-form-textarea>
-              <b-button v-if="checkPermissions && !btnSearchPubMed && pubmed_request.length" id="btnEpisteRequest"
-                class="mt-2" block variant="outline-primary" @click="PubmedRequest">Find</b-button>
-              <b-button v-if="checkPermissions && (pubmed_requested.length || pubmedErrorImported.length)"
+              <b-button v-if="canEdit && !btnSearchPubMed && pubmed_request.length" id="btnEpisteRequest" class="mt-2"
+                block variant="outline-primary" :disabled="!isOnline" v-b-tooltip.hover
+                :title="isOnline ? '' : $t('offline.action_disabled')" @click="PubmedRequest">{{ $t('common.find')
+                }}</b-button>
+              <b-button v-if="canEdit && (pubmed_requested.length || pubmedErrorImported.length)"
                 :disabled="btnCleanDisabled" class="mt-1" block variant="outline-secondary"
-                @click="PubmedRequestClean">Clean</b-button>
+                @click="PubmedRequestClean">{{ $t('common.clean') }}</b-button>
             </b-col>
             <b-col sm="6">
               <template v-if="pubmed_loading">
                 <div class="text-center text-danger my-2">
                   <b-spinner class="align-middle"></b-spinner>
-                  <strong>Loading...</strong>
+                  <strong>{{ $t('common.loading') }}</strong>
                 </div>
               </template>
               <template v-else-if="pubmed_error">
                 <p class="font-weight-light">
-                  The reference could not be reached, try again or using other ID
+                  {{ $t('references.ref_not_found') }}
                 </p>
               </template>
               <template v-else>
+                <b-alert class="mt-2" variant="info" :show="pubmed_batch_feedback !== null" dismissible
+                  @dismissed="pubmed_batch_feedback = null">
+                  {{ pubmed_batch_feedback }}
+                </b-alert>
                 <template v-if="pubmed_requested.length">
-                  <p>Select the references to import</p>
+                  <p>{{ $t('references.select_to_import') }}</p>
                   <ul class="list-unstyled">
                     <li v-for="(r, index) in pubmed_requested" :key="index">
                       <b-form-checkbox :id="`checkbox-${index}`" v-model="pubmed_selected" :name="`checkbox-${index}`"
@@ -98,13 +116,14 @@
                   </ul>
                 </template>
                 <template v-if="pubmedErrorImported.length">
-                  <p>The following PubMed IDs are invalid</p>
+                  <p>{{ $t('references.invalid_pmids') }}</p>
                   <ul v-for="(id, index) in pubmedErrorImported" :key="index">
                     <li>{{ id }}</li>
                   </ul>
                 </template>
-                <b-button v-if="pubmed_selected.length && checkPermissions" variant="outline-success" block
-                  @click="importReferences()">Import references</b-button>
+                <b-button v-if="pubmed_selected.length && canEdit" variant="outline-success" block :disabled="!isOnline"
+                  v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')" @click="importReferences">{{
+                    $t('references.import_references') }}</b-button>
               </template>
             </b-col>
           </b-row>
@@ -117,18 +136,19 @@
           <template v-if="loadReferences">
             <div class="text-center text-danger my-2">
               <b-spinner class="align-middle"></b-spinner>
-              <strong>Loading...</strong>
+              <strong>{{ $t('common.loading') }}</strong>
             </div>
           </template>
           <template v-else>
             <b-row v-if="!references.length">
               <b-col cols="12">
-                <p class="text-center my-0">No references have been uploaded</p>
+                <p class="text-center my-0">{{ $t('references.no_references') }}</p>
               </b-col>
             </b-row>
             <b-row v-else>
               <b-col cols="12">
-                <p class="text-center my-0">You have <b>{{ references.length }}</b> references loaded listed below</p>
+                <p class="text-center my-0" v-html="$t('references.references_loaded', { count: references.length })">
+                </p>
               </b-col>
             </b-row>
           </template>
@@ -141,56 +161,52 @@
           <template v-if="appearMsgRemoveReferences">
             <b-row>
               <b-col cols="12">
-                <p class="alert text-danger">This action will delete all the references and all the data linked to them,
-                  including Characteristics of Studies Table, Methodological Limitations Table, Extracted Data tables,
-                  and all the GRADE-CERQual assessments in the Evidence Profile and Summary of Qualitative Findings
-                  Table.<br><b>Are you sure you want to delete all the references?</b></p>
+                <p class="alert text-danger" v-html="$t('references.delete_all_warning')"></p>
               </b-col>
             </b-row>
             <b-row align-h="center">
               <b-col cols="3">
                 <b-button block @click="removeAllReferences" variant="outline-danger">
-                  Yes
+                  {{ $t('common.yes') }}
                 </b-button>
               </b-col>
               <b-col cols="3">
                 <b-button block @click="appearMsgRemoveReferences = false" variant="outline-success">
-                  No
+                  {{ $t('common.no') }}
                 </b-button>
               </b-col>
             </b-row>
           </template>
           <template v-else>
-            <b-table sort-by="authors" responsive hover bordered borderless striped :fields="fields_references_table"
-              :items="references" head-variant="light" outlined>
+            <b-table sort-by="authors" responsive hover bordered borderless striped
+              :fields="translatedReferencesTableFields" :items="references" head-variant="light" outlined>
               <template v-slot:cell(action)="data">
-                <b-button v-if="checkPermissions" variant="outline-danger" @click="data.toggleDetails">
+                <b-button v-if="canEdit" variant="outline-danger" @click="data.toggleDetails">
                   <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </template>
               <template v-slot:row-details="data">
                 <b-card>
-                  <p>You are about to exclude a study from your review. This will delete it, and all associated
-                    information, from all tables in iSoQ. If you exclude this study please remember to redo your
-                    GRADE-CERQual assessments for all review findings that it supported.</p>
+                  <p>{{ $t('references.exclude_study_warning') }}</p>
                   <p>{{ findRelatedFindings(data.item.id) }}</p>
-                  <p>Are you sure you want to delete this reference?</p>
+                  <p>{{ $t('references.confirm_delete') }}</p>
                   <div>
                     <b-row align-h="center">
                       <b-col cols="3">
-                        <b-button block variant="outline-success" @click="data.toggleDetails">No</b-button>
+                        <b-button block variant="outline-success" @click="data.toggleDetails">{{ $t('common.no')
+                        }}</b-button>
                       </b-col>
                       <b-col cols="3">
-                        <b-button block variant="outline-danger"
-                          @click="confirmRemoveReferenceById(data.item.id)">Yes</b-button>
+                        <b-button block variant="outline-danger" @click="confirmRemoveReferenceById(data.item.id)">{{
+                          $t('common.yes') }}</b-button>
                       </b-col>
                     </b-row>
                   </div>
                 </b-card>
               </template>
             </b-table>
-            <div v-if="checkPermissions" class="mt-2">
-              <b-button @click="confirmRemoveAllReferences($event)">Delete all references</b-button>
+            <div v-if="canEdit" class="mt-2">
+              <b-button @click="confirmRemoveAllReferences($event)">{{ $t('references.delete_all') }}</b-button>
             </div>
           </template>
         </b-card>
@@ -200,16 +216,14 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import Commons from '@/utils/commons'
 const videoHelp = () => import('@/components/videoHelp.vue')
 
 export default {
   name: 'UploadReferences',
-  components: {
-    videoHelp
-  },
   props: {
-    checkPermissions: Boolean,
+    canEdit: Boolean,
     loadReferences: Boolean,
     references: Array,
     episteResponse: Array,
@@ -221,14 +235,13 @@ export default {
       default: false
     }
   },
+  components: {
+    videoHelp
+  },
   data () {
     return {
-      // Estado para carga de archivos
       pre_references: '',
       fileReferences: [],
-      episte_selected: [],
-
-      // Estado para PubMed
       pubmed_request: '',
       pubmed_requested: [],
       pubmed_selected: [],
@@ -237,72 +250,55 @@ export default {
       pubmedErrorImported: [],
       pubmed_response: [],
       btnSearchPubMed: false,
-      btnCleanDisabled: true,
-
-      // Estado para referencias locales
       localReferences: [],
-
-      // Estado para eliminación
+      btnCleanDisabled: true,
+      pubmed_batch_feedback: null,
+      uploadResult: null,
+      showDuplicates: false,
       disableBtnRemoveAllRefs: false,
       appearMsgRemoveReferences: false,
-
-      // Campos para persistencia y recuperación
       operationId: null,
       uploadProgress: '',
       showRestorePrompt: false,
-      savedProgress: null,
-
-      // Configuración de la tabla
-      fields_references_table: [
+      savedProgress: null
+    }
+  },
+  created () {
+    this.checkIncompleteOperations()
+  },
+  computed: {
+    translatedReferencesTableFields: function () {
+      return [
         {
           key: 'authors',
-          label: 'Author(s)',
+          label: this.$t('table_headers.authors'),
           formatter: (value, key, item) => this.formatAuthors(item.authors)
         },
-        { key: 'title', label: 'Title' },
-        { key: 'publication_year', label: 'Year' },
+        { key: 'title', label: this.$t('table_headers.title') },
+        { key: 'publication_year', label: this.$t('table_headers.year') },
         {
           key: 'id',
-          label: 'Related to review finding(s)',
+          label: this.$t('table_headers.related_to_findings'),
           formatter: value => {
             let findings = []
             for (let list of this.lists) {
               for (let ref of list.raw_ref) {
                 if (ref.id === value) {
-                  if (Object.prototype.hasOwnProperty.call(list, 'cnt')) {
-                    findings.push(`#${list.cnt}`)
-                  } else {
-                    findings.push(`#${list.sort}`)
-                  }
+                  findings.push(`#${list.displayNumber}`)
                 }
               }
             }
             return findings.join(', ')
           }
         },
-        { key: 'action', label: '' }
+        { key: 'action', label: this.$t('table_headers.action') }
       ]
     }
   },
-  created () {
-    // Verificar si hay operaciones incompletas al cargar el componente
-    this.checkIncompleteOperations()
-  },
   methods: {
-    // Método auxiliar para formatear autores (reutilizable)
     formatAuthors (authors) {
-      if (!authors || !authors.length) return 'author(s) not found'
-
-      if (authors.length === 1) {
-        return authors[0].split(',')[0]
-      } else if (authors.length === 2) {
-        return authors[0].split(',')[0] + ' & ' + authors[1].split(',')[0]
-      } else {
-        return authors[0].split(',')[0] + ' et al.'
-      }
+      return Commons.getAuthorsFormat(authors)
     },
-
-    // Métodos de persistencia local
     storeProgress () {
       const progress = {
         fileReferences: this.fileReferences,
@@ -310,18 +306,15 @@ export default {
       }
       localStorage.setItem('reference-upload-progress', JSON.stringify(progress))
     },
-
     checkIncompleteOperations () {
       const saved = localStorage.getItem('reference-upload-progress')
       if (saved) {
         try {
           const progress = JSON.parse(saved)
-          // Ofrecer restaurar si no han pasado más de 24 horas
           if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
             this.showRestorePrompt = true
             this.savedProgress = progress
           } else {
-            // Eliminar datos antiguos
             localStorage.removeItem('reference-upload-progress')
           }
         } catch (e) {
@@ -330,40 +323,26 @@ export default {
         }
       }
     },
-
     restoreSavedProgress () {
       if (this.savedProgress && this.savedProgress.fileReferences) {
         this.fileReferences = this.savedProgress.fileReferences
         this.showRestorePrompt = false
       }
     },
-
     clearSavedProgress () {
       localStorage.removeItem('reference-upload-progress')
       this.showRestorePrompt = false
     },
-
-    // Método para generar ID de operación para idempotencia
     generateOperationId () {
       return Date.now() + '-' + Math.random().toString(36).substring(2)
     },
-
-    saveCheckpoint (data) {
-      localStorage.setItem('reference-upload-checkpoint', JSON.stringify({
-        timestamp: Date.now(),
-        ...data
-      }))
-    },
-
     getProject: function () {
       this.$emit('CallGetProject')
     },
-
     loadRefs: function (event) {
       if (!event.target.files || !event.target.files[0]) return
 
       const file = event.target.files[0]
-      // Mostrar feedback visual al usuario
       this.uploadProgress = 'Leyendo archivo...'
 
       const reader = new FileReader()
@@ -372,8 +351,6 @@ export default {
         try {
           this.uploadProgress = 'Procesando referencias...'
           this.pre_references = e.target.result
-
-          // El watcher se activará automáticamente aquí
           const lineCount = this.pre_references.split(/\r\n|\n/).length
           console.log(`Archivo cargado: ${lineCount} líneas para procesar`)
         } catch (error) {
@@ -389,228 +366,210 @@ export default {
 
       reader.readAsText(file)
     },
+    uploadRisFile: async function (file) {
+      if (!file) return
 
-    processReferenceLine (key, content, base, titleTags, authorTags, userDefinable) {
-      if (key === 'TY') {
-        base['type'] = content
-      }
-      if (titleTags.includes(key)) {
-        switch (key) {
-          case 'TI':
-            base['title'] = content
-            break
-          case 'T1':
-            if (base['title'].length) {
-              base['title_1'] = content
-            } else {
-              base['title'] = content
-            }
-            break
-          case 'T2':
-            if (base['title'].length) {
-              base['title_2'] = content
-            } else {
-              base['title'] = content
-            }
-            break
-          case 'T3':
-            if (base['title'].length) {
-              base['title_3'] = content
-            } else {
-              base['title'] = content
-            }
-            break
-        }
-      }
-      if (authorTags.includes(key)) {
-        if (!base['authors']) {
-          base['authors'] = []
-        }
-        base['authors'].push(content)
-      }
-      if (key === 'AB') {
-        base['abstract'] = content
-      }
-      if (key === 'VL') {
-        base['volume_number'] = content
-      }
-      if (key === 'SP') {
-        base['start_page'] = content
-      }
-      if (key === 'EP') {
-        base['end_page'] = content
-      }
-      if (key === 'IN') {
-        base['issue_number'] = content
-      }
-      if (key === 'SN') {
-        base['isbn_issn'] = content
-      }
-      if (['PY', 'Y1'].includes(key)) {
-        base['publication_year'] = content.split('/')[0]
-        base['real_date'] = content
-      }
-      if (key === 'DA') {
-        base['date'] = content
-      }
-      if (key === 'DB') {
-        base['database'] = content
-      }
-      if (key === 'UR') {
-        base['url'] = content
-      }
-      if (key === 'DO') {
-        base['doi'] = content
-      }
-      if (userDefinable.includes(key)) {
-        if (!base['user_definable']) {
-          base['user_definable'] = []
-        }
-        base['user_definable'].push(content)
-      }
-    },
-
-    requestsImportReferences: function (ref) {
-      return axios({
-        method: 'POST',
-        url: `/api/isoqf_references?organization=${this.$route.params.org_id}&project_id=${this.$route.params.id}`,
-        data: ref
-      })
-    },
-
-    // Métodos para guardar referencias
-    async saveReferences (from = '') {
       this.$emit('statusLoadReferences', true)
-      let references = from === '' ? this.fileReferences : this.processEpisteResponse()
-
-      // Guardar progreso actual por si ocurre desconexión
-      if (from === '') {
-        this.storeProgress()
-      }
+      const formData = new FormData()
+      formData.append('risFile', file)
+      formData.append('projectId', this.$route.params.id)
+      formData.append('organization', this.$route.params.org_id)
 
       try {
-        const responses = await Promise.all(
-          references.map(ref => {
-            ref.organization = this.$route.params.org_id
-            ref.project_id = this.$route.params.id
-            return this.requestsImportReferences(ref)
-          })
-        )
+        const response = await Api.post('/isoqf_references/process-ris', formData)
 
-        this.localReferences = responses.map(response => response.data)
-        const _references = JSON.parse(JSON.stringify(this.localReferences))
+        if (response.data && response.data.references) {
+          this.localReferences = response.data.references
+          const _references = JSON.parse(JSON.stringify(this.localReferences))
 
-        if (this.useCamelot) {
-          await this.handleCamelotAssessments(_references)
-          await this.handleCamelotCharacteristics(_references)
         }
 
-        await this.prefetchDataForExtractedDataUpdate(_references)
+        const { parsed = 0, saved = 0, duplicates = 0, duplicate_list = [] } = response.data || {}
+        this.uploadResult = { parsed, saved, duplicates, duplicate_list }
+        this.showDuplicates = false
 
-        this.msgUploadReferences = `${this.localReferences.length} references have been added.`
-        this.resetFileUpload()
+        this.pre_references = ''
+        this.fileReferences = []
+        this.$refs['file-input'].reset()
+        localStorage.removeItem('reference-upload-progress')
+        this.$emit('CallGetReferences', false)
+      } catch (error) {
+        console.error('Error uploading RIS file', error)
+        this.$emit('statusLoadReferences', false)
+      }
+    },
+    saveReferences: async function (from = '') {
+      this.$emit('statusLoadReferences', true)
+      try {
+        if (this.$refs['file-input'] && this.$refs['file-input'].$el &&
+          this.$refs['file-input'].$el.files && this.$refs['file-input'].$el.files[0]) {
+          return this.uploadRisFile(this.$refs['file-input'].$el.files[0])
+        }
 
-        // Limpiar checkpoint cuando completamos
+        let references = []
+        if (from === '') {
+          references = this.fileReferences
+          this.storeProgress()
+        } else {
+          const _r = []
+          for (const index of this.episte_selected) {
+            const content = JSON.parse(JSON.stringify(this.episteResponse[index].content))
+            content.publication_year = content.year
+            delete content.year
+            content.isbn_issn = content.publication.ISSN
+            if (content.publication.type === 'journal') {
+              content.type = 'JOUR'
+            }
+            _r.push(content)
+          }
+          references = _r
+        }
+
+        this.operationId = this.generateOperationId()
+        this.uploadProgress = `Procesando ${references.length} referencias...`
+
+        // Single bulk insert instead of one POST per reference: the backend already
+        // exposes /isoqf_references/batch-import (used by the PubMed path) and returns
+        // the created references (with ids) under data.references.
+        const response = await Api.post('/isoqf_references/batch-import', {
+          references,
+          operation_id: this.operationId,
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+
+        const importedRefs = (response.data && response.data.references) ? response.data.references : []
+        const failedCount = references.length - importedRefs.length
+        this.localReferences = importedRefs
+
+        if (importedRefs.length) {
+        }
+
+        this.msgUploadReferences = `${importedRefs.length} referencias añadidas. ${failedCount > 0 ? `${failedCount} fallaron.` : ''}`
+        this.pre_references = ''
+        this.fileReferences = []
+        if (this.$refs['file-input'] && typeof this.$refs['file-input'].reset === 'function') {
+          this.$refs['file-input'].reset()
+        }
+
         localStorage.removeItem('reference-upload-checkpoint')
         localStorage.removeItem('reference-upload-progress')
 
         this.$emit('CallGetReferences', false)
       } catch (error) {
-        console.error('Error guardando referencias:', error)
+        console.error('saveReferences error', error)
         this.$emit('statusLoadReferences', false)
       }
     },
-
-    // Métodos para PubMed
-    async PubmedRequest () {
+    PubmedRequest: function () {
       this.btnSearchPubMed = true
       this.pubmed_loading = true
       this.pubmed_error = false
       this.pubmed_response = []
       this.pubmedErrorImported = []
-
-      // Dividir por líneas y comas, y limpiar espacios
-      const allLines = this.pubmed_request
-        .split(/[\n,]+/)
-        .map(line => line.trim())
-        .filter(id => id !== '')
-
-      await this.processPubMedRequest(allLines)
+      const allLines = this.pubmed_request.split(/\r\n|\n/)
+      this.processPubMedRequest(allLines)
     },
+    processPubMedRequest: async function (allLines = []) {
+      try {
+        const validLines = allLines
+          .map(line => line.trim())
+          .filter(line => line && !isNaN(line) && line.length >= 7)
 
-    async processPubMedRequest (allLines = []) {
-      // Limpiar IDs duplicados antes de procesar
-      const uniqueIds = [...new Set(allLines.map(line => line.trim()).filter(id => id !== ''))]
-      console.log('IDs únicos a procesar:', uniqueIds)
-
-      for (const pubMedId of uniqueIds) {
-        try {
-          console.log(`Procesando PubMed ID: ${pubMedId}`)
-          const response = await this.apiPubMed(pubMedId)
-
-          if (response.status === 200) {
-            if (Object.prototype.hasOwnProperty.call(response.data, 'error') ||
-                Object.prototype.hasOwnProperty.call(response.data, 'esummaryresult')) {
-              console.log(`Error en PubMed ID ${pubMedId}: Referencia no encontrada`)
-              this.pubmedErrorImported.push(pubMedId)
-            } else {
-              if (Object.prototype.hasOwnProperty.call(response.data.result, 'uids')) {
-                if (response.data.result.uids.length) {
-                  const uid = response.data.result.uids[0]
-                  const data = response.data.result[uid]
-
-                  if (Object.prototype.hasOwnProperty.call(data, 'error')) {
-                    console.log(`Error en PubMed ID ${pubMedId}: ${data.error}`)
-                    this.pubmedErrorImported.push(pubMedId)
-                  } else {
-                    // Verificar duplicados en referencias existentes
-                    const isDuplicateInReferences = this.references.some(ref =>
-                      (ref.uid && ref.uid === data.uid) ||
-                      (ref.title === data.title && ref.publication_year === data.pubdate.split(' ')[0])
-                    )
-
-                    // Verificar duplicados en referencias solicitadas
-                    const isDuplicateInRequested = this.pubmed_requested.some(ref =>
-                      (ref.uid && ref.uid === data.uid) ||
-                      (ref.title === data.title && ref.publication_year === data.pubdate.split(' ')[0])
-                    )
-
-                    if (!isDuplicateInReferences && !isDuplicateInRequested) {
-                      this.processPubmedData(data)
-                    } else {
-                      console.log(`Referencia duplicada encontrada: ${data.title}`)
-                      // Marcar como deshabilitada en la lista de referencias solicitadas
-                      const reference = {
-                        title: data.title,
-                        database: 'PubMed',
-                        authors: data.authors.map(a => a.name),
-                        publication_year: data.pubdate.split(' ')[0],
-                        isbn_issn: data.issn,
-                        organization: this.$route.params.org_id,
-                        project_id: this.$route.params.id,
-                        disabled: true,
-                        uid: data.uid
-                      }
-                      this.pubmed_requested.push(reference)
-                    }
-                  }
-                } else {
-                  console.log(`Error en PubMed ID ${pubMedId}: No se encontraron UIDs`)
-                  this.pubmedErrorImported.push(pubMedId)
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`Error procesando PubMed ID ${pubMedId}:`, error)
-          this.pubmedErrorImported.push(pubMedId)
+        if (validLines.length === 0) {
+          console.log('No valid PubMed IDs found')
+          this.pubmed_loading = false
+          this.btnSearchPubMed = false
+          this.btnCleanDisabled = false
+          return
         }
-      }
-      this.pubmed_loading = false
-      this.btnCleanDisabled = false
-    },
 
-    processPubmedData (data) {
+        const totalRequested = validLines.length
+        this.pubmed_batch_feedback = null
+
+        const batchSize = 5
+        for (let i = 0; i < validLines.length; i += batchSize) {
+          const batch = validLines.slice(i, i + batchSize)
+          const promises = batch.map(pubMedId => this.apiPubMed(pubMedId))
+
+          try {
+            // Use allSettled to ensure one error doesn't break the whole batch
+            const results = await Promise.allSettled(promises)
+
+            results.forEach((result, index) => {
+              const pubMedId = batch[index]
+
+              if (result.status === 'rejected' || !result.value || result.value.status !== 200) {
+                this.pubmedErrorImported.push(pubMedId)
+                return
+              }
+
+              const data = result.value.data
+
+              if (Object.prototype.hasOwnProperty.call(data, 'error') ||
+                Object.prototype.hasOwnProperty.call(data, 'esummaryresult')) {
+                this.pubmedErrorImported.push(pubMedId)
+                return
+              }
+
+              if (!Object.prototype.hasOwnProperty.call(data.result, 'uids') ||
+                !data.result.uids.length) {
+                this.pubmedErrorImported.push(pubMedId)
+                return
+              }
+
+              const uid = data.result.uids[0]
+              const pubmedData = data.result[uid]
+
+              if (Object.prototype.hasOwnProperty.call(pubmedData, 'error')) {
+                this.pubmedErrorImported.push(pubMedId)
+                return
+              }
+
+              this.processPubmedData(pubmedData)
+            })
+          } catch (error) {
+            // This catch is mostly for safety as allSettled handles inner rejections
+            console.error(`Error processing batch ${i / batchSize + 1}:`, error)
+            this.pubmedErrorImported.push(...batch)
+          }
+        }
+
+        // Final feedback message
+        if (totalRequested > 0) {
+          const successCount = this.pubmed_requested.length
+          const failedIds = this.pubmedErrorImported.join(', ')
+          this.pubmed_batch_feedback = this.$t('references.pubmed_feedback', {
+            success: successCount,
+            total: totalRequested,
+            ids: failedIds || '-'
+          })
+        }
+      } catch (error) {
+        console.error('Error in processPubMedRequest:', error)
+      } finally {
+        this.pubmed_loading = false
+        this.btnCleanDisabled = false
+      }
+    },
+    PubmedRequestClean: function () {
+      this.btnSearchPubMed = false
+      this.pubmed_request = ''
+      this.pubmed_requested = []
+      this.pubmed_selected = []
+      this.pubmedErrorImported = []
+      this.pubmed_loading = false
+      this.pubmed_error = false
+    },
+    apiPubMed: async function (id) {
+      try {
+        return await Api.get(`/pubmed/fetch?id=${id}`)
+      } catch (error) {
+        console.error('Error fetching PubMed data', error)
+        throw error
+      }
+    },
+    processPubmedData: function (data) {
       const refTitle = data.title
       const refDatabase = 'PubMed'
       let authors = []
@@ -621,6 +580,15 @@ export default {
       const refPublicatonYear = data.pubdate.split(' ')[0]
       const refIssn = data.issn
       const refUid = data.uid
+      let refDisabled = false
+
+      for (let _reference of this.references) {
+        if (Object.prototype.hasOwnProperty.call(_reference, 'uid') && Object.prototype.hasOwnProperty.call(data, 'uid')) {
+          if (_reference.uid === data.uid) {
+            refDisabled = true
+          }
+        }
+      }
 
       const reference = {
         title: refTitle,
@@ -630,260 +598,48 @@ export default {
         isbn_issn: refIssn,
         organization: this.$route.params.org_id,
         project_id: this.$route.params.id,
-        disabled: false,
+        disabled: refDisabled,
         uid: refUid
       }
 
       this.pubmed_requested.push(reference)
     },
-
-    PubmedRequestClean () {
-      this.btnSearchPubMed = false
-      this.pubmed_request = ''
-      this.pubmed_requested = []
-      this.pubmed_selected = []
-      this.pubmedErrorImported = []
-      this.pubmed_loading = false
-      this.pubmed_error = false
-    },
-
-    // Métodos para API - usar endpoint proxy del backend para mayor seguridad
-    async apiPubMed (id) {
-      try {
-        // Usar el endpoint proxy en el backend para ocultar la API key
-        return await axios.get(`/api/pubmed/fetch?id=${id}`)
-      } catch (error) {
-        console.error('Error fetching PubMed data', error)
-        throw error
-      }
-    },
-
-
-    // Métodos para eliminación
-    confirmRemoveAllReferences (event) {
-      event.preventDefault()
-      this.appearMsgRemoveReferences = true
-      this.disableBtnRemoveAllRefs = true
-    },
-
-    async removeAllReferences () {
-      try {
-        // Ensure tables are properly cleared before removing references
-        const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-        const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-        let requests = []
-
-        // Clear characteristics of studies table but keep structure
-        if (Object.prototype.hasOwnProperty.call(charsOfStudies, 'id')) {
-          if (charsOfStudies.items && charsOfStudies.items.length) {
-            // Reset all items' data fields except ref_id and authors
-            for (let item of charsOfStudies.items) {
-              for (let key in item) {
-                if (key !== 'ref_id' && key !== 'authors') {
-                  item[key] = ''
-                }
-              }
-            }
-            requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
-          }
-        }
-
-        // Clear methodological assessments table but keep structure
-        if (Object.prototype.hasOwnProperty.call(_assessments, 'id')) {
-          if (_assessments.items && _assessments.items.length) {
-            // Reset all items' data fields except ref_id and authors
-            for (let item of _assessments.items) {
-              for (let key in item) {
-                if (key !== 'ref_id' && key !== 'authors') {
-                  item[key] = ''
-                }
-              }
-            }
-            requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
-          }
-        }
-
-        // Wait for table updates to complete before removing references
-        if (requests.length) {
-          await Promise.all(requests)
-        }
-
-        await axios.post(`/api/remove/references/all?project_id=${this.$route.params.id}`)
-        this.$emit('loadReferences', true)
-        this.$emit('CallGetReferences')
-        this.$emit('CallGetProject')
-        this.appearMsgRemoveReferences = false
-      } catch (error) {
-        console.error('Error eliminando todas las referencias:', error)
-      }
-    },
-
-    // Utilidades
-    parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
-      let result = ''
-      const semicolon = hasSemicolon ? '; ' : ''
-
-      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
-        if (reference.authors.length) {
-          if (reference.authors.length === 1) {
-            result = reference.authors[0].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else if (reference.authors.length === 2) {
-            result = reference.authors[0].split(',')[0] + ' & ' + reference.authors[1].split(',')[0] + ' ' + reference.publication_year + semicolon
-          } else {
-            result = reference.authors[0].split(',')[0] + ' et al. ' + reference.publication_year + semicolon
-          }
-          if (!onlyAuthors) {
-            result = result + reference.title
-          }
-        } else {
-          return 'author(s) not found'
-        }
-      }
-      return result
-    },
-
-    processEpisteResponse: function () {
-      let _r = []
-      for (let index of this.episte_selected) {
-        let content = JSON.parse(JSON.stringify(this.episteResponse[index].content))
-        content.publication_year = content.year
-        delete (content.year)
-        content.isbn_issn = content.publication.ISSN
-        if (content.publication.type === 'journal') {
-          content.type = 'JOUR'
-        }
-        _r.push(content)
-      }
-      return _r
-    },
-
     importReferences: async function () {
       if (!this.pubmed_selected.length) return
 
       this.$emit('statusLoadReferences', true)
-      let axiosRequests = []
-
-      for (const index of this.pubmed_selected) {
-        axiosRequests.push(this.requestsImportReferences(this.pubmed_requested[index]))
-      }
 
       try {
-        const responses = await Promise.all(axiosRequests)
+        const operationId = this.generateOperationId()
 
-        // Si es un proyecto CAMELOT, manejar las estructuras automáticamente
-        if (this.useCamelot && responses.length > 0) {
-          const _references = responses.map(response => response.data)
-          try {
-            await this.handleCamelotAssessments(_references)
-            await this.handleCamelotCharacteristics(_references)
-          } catch (error) {
-            console.error('Error manejando estructuras CAMELOT:', error)
-          }
-        }
+        const refsToImport = this.pubmed_selected.map(index => {
+          const ref = { ...this.pubmed_requested[index] }
+          delete ref.disabled
+          return ref
+        })
+
+        const response = await Api.post('/isoqf_references/batch-import', {
+          references: refsToImport,
+          operation_id: operationId,
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        })
+
+        const importedRefs = (response.data && response.data.references) ? response.data.references : []
 
         this.pubmed_request = ''
         this.pubmed_requested = []
         this.pubmed_selected = []
         this.pubmedErrorImported = []
         this.btnSearchPubMed = false
+
         this.$emit('CallGetReferences', false)
       } catch (error) {
+        console.error('Error importing references', error)
+      } finally {
         this.$emit('statusLoadReferences', false)
-        console.log('error', error)
-      }
-
-    },
-
-    axiosGetFindings: async function (listId) {
-      return axios.get(`/api/isoqf_findings?organization=${this.$route.params.org_id}&list_id=${listId}`)
-    },
-
-    axiosGetExtractedData: async function (organization, findingId) {
-      return axios.get(`/api/isoqf_extracted_data?organization=${organization}&finding_id=${findingId}`)
-    },
-
-    axiosPatchExtractedData: async function (id, params) {
-      return axios.patch(`/api/isoqf_extracted_data/${id}`, params)
-    },
-
-    prefetchDataForExtractedDataUpdate: async function (references) {
-      try {
-        // Crear una copia profunda de las listas
-        const _lists = JSON.parse(JSON.stringify(this.lists))
-        if (!_lists || _lists.length === 0) {
-          console.log('No lists available to update')
-          return
-        }
-
-        // Obtener findings en paralelo
-        const findingPromises = _lists.map(list => this.axiosGetFindings(list.id))
-        const findResponses = await Promise.all(findingPromises)
-
-        // Preparar promesas para extractedData
-        const extractPromises = findResponses.map(response => {
-          if (response.data && response.data[0]) {
-            return this.axiosGetExtractedData(
-              response.data[0].organization,
-              response.data[0].id
-            )
-          }
-          return Promise.resolve(null)
-        }).filter(promise => promise !== null)
-
-        // Obtener extractedData en paralelo
-        const extractedResponses = await Promise.all(extractPromises)
-
-        // Actualizar referencias
-        await this.updateExtractedDataReferences(extractedResponses, references)
-      } catch (error) {
-        console.error('Error in prefetchDataForExtractedDataUpdate:', error)
       }
     },
-
-    updateExtractedDataReferences: async function (extractedDataQuerys = [], references = []) {
-      if (!references.length || !extractedDataQuerys.length) return
-
-      try {
-        // Preparar referencias formateadas para actualización
-        const itemsReferences = references.map(reference => {
-          return {
-            'ref_id': reference.id,
-            'authors': this.parseReference(reference, true),
-            'column_0': ''
-          }
-        }).filter(item => item.ref_id) // Filtrar elementos sin ID
-
-        if (!itemsReferences.length) return
-
-        // Preparar las promesas de actualización sin await en el bucle
-        const patchPromises = []
-
-        for (const response of extractedDataQuerys) {
-          if (!response || !response.data || !response.data[0]) continue
-
-          const responseData = response.data[0]
-          const responseItems = Array.isArray(responseData.items) ? responseData.items : []
-
-          // Añadir nuevas referencias a items existentes
-          responseItems.push(...itemsReferences)
-
-          const params = {
-            items: responseItems
-          }
-
-          // Agregar la promesa sin await
-          patchPromises.push(this.axiosPatchExtractedData(responseData.id, params))
-        }
-
-        // Ejecutar todas las actualizaciones en paralelo
-        if (patchPromises.length > 0) {
-          await Promise.all(patchPromises)
-        }
-      } catch (error) {
-        console.error('Error updating extracted data references:', error)
-      }
-    },
-
     openModalReferencesSingle: function (showModal) {
       if (showModal) {
         this.msgUploadReferences = ''
@@ -892,7 +648,6 @@ export default {
         this.$refs['modal-references'].show()
       }
     },
-
     findRelatedFindings: function (refId = null) {
       if (!refId) return
 
@@ -900,302 +655,185 @@ export default {
       for (const list of this.lists) {
         for (const ref of list.raw_ref) {
           if (ref.id === refId) {
-            findings.push(`#${list.cnt || list.sort}`)
+            findings.push(`#${list.displayNumber}`)
           }
         }
       }
       if (findings.length) {
-        return 'The findings affected are: ' + findings.join(', ')
+        return this.$t('references.findings_affected', { findings: findings.join(', ') })
       } else {
-        return 'No review findings will be affected.'
+        return this.$t('references.no_findings_affected')
       }
     },
-
-    confirmRemoveReferenceById: async function (refId) {
+    confirmRemoveAllReferences: function (event) {
+      event.preventDefault()
+      this.appearMsgRemoveReferences = true
+      this.disableBtnRemoveAllRefs = true
+    },
+    removeAllReferences: function () {
+      Api.post('/isoqf_references/batch-delete', {
+        delete_all: true,
+        project_id: this.$route.params.id,
+        organization: this.$route.params.org_id,
+        confirmation: `DELETE_ALL_REFERENCES_${this.$route.params.id}`
+      })
+        .then(async () => {
+          this.$emit('loadReferences', true)
+          this.$emit('CallGetReferences')
+          this.$emit('CallGetProject')
+          this.appearMsgRemoveReferences = false
+        })
+        .catch(error => {
+          console.error('Error deleting all references:', error)
+          this.disableBtnRemoveAllRefs = false
+        })
+    },
+    confirmRemoveReferenceById: function (refId) {
       if (!refId) return
 
-      console.log('=== ELIMINANDO REFERENCIA ===')
-      console.log('Referencia ID a eliminar:', refId)
-
-      const lists = JSON.parse(JSON.stringify(this.lists))
-      const charsOfStudies = JSON.parse(JSON.stringify(this.charsOfStudies))
-      const _assessments = JSON.parse(JSON.stringify(this.methodologicalTableRefs))
-      let requests = []
-
-
-      // Manejar listas
-      for (const list of lists) {
-        let obj = { id: null, references: [] }
-        for (const rr of list.raw_ref) {
-          if (rr.id !== refId) {
-            obj.references.push(rr.id)
-          }
-          if (rr.id === refId) {
-            obj.id = list.id
-            console.log('Eliminando referencia de lista:', list.id)
-            requests.push(axios.patch(`/api/isoqf_lists/${list.id}`, { references: obj.references }))
-          }
-        }
-      }
-
-      // Eliminar entrada de isoqf_characteristics
-      if (charsOfStudies && Object.prototype.hasOwnProperty.call(charsOfStudies, 'id') && charsOfStudies.id) {
-        console.log('=== PROCESANDO CHARACTERISTICS ===')
-        console.log('ID de characteristics:', charsOfStudies.id)
-
-        if (charsOfStudies.items && charsOfStudies.items.length) {
-          let items = JSON.parse(JSON.stringify(charsOfStudies.items))
-          const originalLength = items.length
-
-          // Filtrar para eliminar completamente el item con el refId
-          items = items.filter(item => item.ref_id !== refId)
-          charsOfStudies.items = items
-
-          console.log(`Characteristics: Items antes: ${originalLength}, después: ${items.length}`)
-
-          requests.push(axios.patch(`/api/isoqf_characteristics/${charsOfStudies.id}`, charsOfStudies))
-        } else {
-          console.log('No hay items en characteristics o está vacío')
-        }
-      } else {
-        console.log('No se encontró ID en charsOfStudies o charsOfStudies es null')
-      }
-
-      // Eliminar entrada de isoqf_assessments
-      if (_assessments && Object.prototype.hasOwnProperty.call(_assessments, 'id') && _assessments.id) {
-        console.log('=== PROCESANDO ASSESSMENTS ===')
-        console.log('ID de assessments:', _assessments.id)
-
-        if (_assessments.items && _assessments.items.length) {
-          let items = JSON.parse(JSON.stringify(_assessments.items))
-          const originalLength = items.length
-
-          // Filtrar para eliminar completamente el item con el refId
-          items = items.filter(item => item.ref_id !== refId)
-          _assessments.items = items
-
-          console.log(`Assessments: Items antes: ${originalLength}, después: ${items.length}`)
-
-          requests.push(axios.patch(`/api/isoqf_assessments/${_assessments.id}`, _assessments))
-        } else {
-          console.log('No hay items en assessments o está vacío')
-        }
-      } else {
-        console.log('No se encontró ID en _assessments o _assessments es null')
-      }
-
-      console.log('Total de requests a ejecutar:', requests.length)
-
-      try {
-        // Esperar a que todas las requests de actualización se completen
-        if (requests.length > 0) {
-          console.log('Ejecutando requests de actualización...')
-          await Promise.all(requests)
-          console.log('Todas las requests de actualización completadas')
-        }
-
-        // Ahora eliminar la referencia principal
-        console.log('Eliminando referencia principal...')
-        await axios.delete(`/api/isoqf_references/${refId}`)
-
-        // Actualizar la UI
-        this.$emit('CallGetReferences', false)
-        this.openModalReferencesSingle(false)
-        this.$emit('CallGetProject')
-
-        console.log('=== ELIMINACIÓN COMPLETADA ===')
-      } catch (error) {
-        console.error('Error durante la eliminación:', error)
-        console.error('Detalles del error:', error.response?.data)
-      }
-    },
-
-    resetFileUpload: function () {
-      this.pre_references = ''
-      this.fileReferences = []
-      this.$refs['file-input'].reset()
-    },
-
-    printErrors: function (error) {
-      console.error('Error en la actualización de datos:', error)
-    },
-
-    handleCamelotAssessments: async function (references) {
-      try {
-        const response = await axios.get('/api/isoqf_assessments?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
-
-        // Create the assessment object structure
-        const createAssessmentItem = (reference) => ({
-          ref_id: reference.id,
-          authors: this.parseReference(reference, true),
-          stages: [
-            {
-              key: 0,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 1,
-              options: Array(4).fill({ option: null, text: '' })
-            },
-            {
-              key: 2,
-              options: [{ option: null, text: '' }]
-            },
-            {
-              key: 3,
-              options: [{ option: null, text: '' }]
-            }
-          ]
+      Api.post('/isoqf_references/batch-delete', {
+        reference_ids: [refId],
+        project_id: this.$route.params.id,
+        organization: this.$route.params.org_id
+      })
+        .then(async () => {
+          this.$emit('CallGetReferences', false)
+          this.openModalReferencesSingle(false)
+          this.$emit('CallGetProject')
         })
-
-        if (response.data.length) {
-          // Update existing assessment
-          const _assessments = response.data[0]
-          const assessmentId = _assessments.id
-
-          // Get existing reference IDs
-          const existingRefIds = _assessments.items.map(item => item.ref_id)
-
-          // Only add references that don't already exist
-          const newReferences = references.filter(ref => !existingRefIds.includes(ref.id))
-
-          if (newReferences.length > 0) {
-            // Create new assessment items for the new references
-            const newItems = newReferences.map(ref => createAssessmentItem(ref))
-
-            // Add new items to the assessments
-            _assessments.items.push(...newItems)
-
-            // Update the assessments table
-            await axios.patch(`/api/isoqf_assessments/${assessmentId}`, _assessments)
-          }
-        } else {
-          // Create new assessments table
-          const items = references.map(ref => createAssessmentItem(ref))
-
-          // Post new assessments table
-          await axios.post('/api/isoqf_assessments', {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            items: items
-          })
-        }
-      } catch (error) {
-        console.error('Error en la actualización de calificaciones:', error)
-      }
-    },
-
-    handleCamelotCharacteristics: async function (references) {
-      try {
-        const response = await axios.get('/api/isoqf_characteristics?organization=' + this.$route.params.org_id + '&project_id=' + this.$route.params.id)
-
-        // Create the characteristics object structure
-        const createCharacteristicItem = (reference) => ({
-          ref_id: reference.id,
-          authors: this.parseReference(reference, true)
+        .catch(error => {
+          console.error('Error deleting reference:', error)
         })
+    },
+    parseReference: function (reference, onlyAuthors = false, hasSemicolon = true) {
+      let result = ''
+      const semicolon = hasSemicolon ? '; ' : ''
 
-        if (response.data.length) {
-          // Update existing characteristics
-          const _characteristics = response.data[0]
-          const charId = _characteristics.id
+      if (Object.prototype.hasOwnProperty.call(reference, 'authors')) {
+        const authorPart = this.formatAuthors(reference.authors)
 
-          // Get existing reference IDs
-          const existingRefIds = _characteristics.items.map(item => item.ref_id)
-
-          // Only add references that don't already exist
-          const newReferences = references.filter(ref => !existingRefIds.includes(ref.id))
-
-          if (newReferences.length > 0) {
-            // Create new characteristic items for the new references
-            const newItems = newReferences.map(ref => createCharacteristicItem(ref))
-
-            // Add new items to the characteristics
-            _characteristics.items.push(...newItems)
-
-            // Update the characteristics table
-            await axios.patch(`/api/isoqf_characteristics/${charId}`, _characteristics)
-          }
-        } else {
-          // Create new characteristics table
-          const items = references.map(ref => createCharacteristicItem(ref))
-
-          // Post new characteristics table
-          await axios.post('/api/isoqf_characteristics/', {
-            organization: this.$route.params.org_id,
-            project_id: this.$route.params.id,
-            fields: [
-              { key: 'ref_id', label: 'Reference ID' },
-              { key: 'authors', label: 'Author(s), Year' }
-            ],
-            items: items
-          })
+        if (authorPart === this.$t('references.author_not_found')) {
+          return authorPart
         }
-      } catch (error) {
-        console.error('Error en la actualización de características:', error)
+
+        result = authorPart + ' ' + reference.publication_year + semicolon
+
+        if (!onlyAuthors) {
+          result = result + reference.title
+        }
       }
+
+      return result
     }
+
   },
   watch: {
-    pre_references: {
-      handler (data) {
-        try {
-          if (!data || data.trim() === '') {
-            console.log('Contenido de archivo vacío')
-            this.uploadProgress = ''
-            return
-          }
-
-          console.log('Iniciando procesamiento de referencias...')
+    pre_references: function (data) {
+      try {
+        if (!data || data.trim() === '') {
           this.fileReferences = []
-          this.uploadProgress = 'Procesando referencias...'
+          this.uploadProgress = ''
+          return
+        }
 
-          const file = data
-          const allLines = file.split(/\r\n|\n/)
+        this.fileReferences = []
+        this.uploadProgress = 'Procesando referencias...'
 
-          const titleTags = ['TI', 'T1', 'T2', 'T3']
-          const authorTags = ['AU', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10']
-          const userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
-          let base = { title: '', authors: [], user_definable: [] }
-          let currentReference = 0
+        const file = data
+        const allLines = file.split(/\r\n|\n/)
+        const titleTags = ['TI', 'T1', 'T2', 'T3']
+        const authorTags = ['AU', 'A1', 'A2', 'A3', 'A4']
+        const userDefinable = ['U1', 'U2', 'U3', 'U4', 'U5']
+        let base = { title: '', authors: [], user_definable: [] }
 
-          allLines.forEach((line) => {
-            const _line = line.split('  -')
-            if (_line.length > 1) {
-              const key = _line[0]
-              const content = _line[1].trimStart()
+        allLines.forEach((line) => {
+          const _line = line.split('  -')
+          if (_line.length > 1) {
+            const key = _line[0]
+            const content = _line[1].trimStart()
 
-              if (key === 'ER') {
-                currentReference++
-                const isDuplicate = this.fileReferences.some(ref =>
-                  ref.title === base.title &&
-                  ref.publication_year === base.publication_year
-                )
-
-                if (!isDuplicate) {
-                  console.log(`Procesando referencia ${currentReference}:`, {
-                    title: base.title,
-                    authors: base.authors.length,
-                    year: base.publication_year
-                  })
-                  const referenceCopy = JSON.parse(JSON.stringify(base))
-                  this.fileReferences.push(referenceCopy)
-                } else {
-                  console.log(`Referencia duplicada encontrada: ${base.title}`)
-                }
-                base = { title: '', authors: [], user_definable: [] }
-              } else {
-                this.processReferenceLine(key, content, base, titleTags, authorTags, userDefinable)
+            if (key === 'TY') {
+              base['type'] = content
+            }
+            if (titleTags.includes(key)) {
+              switch (key) {
+                case 'TI':
+                  base['title'] = content
+                  break
+                case 'T1':
+                  if (base['title'].length) {
+                    base['title_1'] = content
+                  } else {
+                    base['title'] = content
+                  }
+                  break
+                case 'T2':
+                  if (base['title'].length) {
+                    base['title_2'] = content
+                  } else {
+                    base['title'] = content
+                  }
+                  break
+                case 'T3':
+                  if (base['title'].length) {
+                    base['title_3'] = content
+                  } else {
+                    base['title'] = content
+                  }
+                  break
               }
             }
-          })
-
-          this.uploadProgress = `${this.fileReferences.length} referencias procesadas localmente`
-          console.log(`Total de referencias procesadas: ${this.fileReferences.length}`)
-        } catch (error) {
-          console.error('Error en watcher pre_references:', error)
-          this.uploadProgress = `Error: ${error.message}`
-        }
+            if (authorTags.includes(key)) {
+              base['authors'].push(content)
+            }
+            if (key === 'AB') {
+              base['abstract'] = content
+            }
+            if (key === 'VL') {
+              base['volume_number'] = content
+            }
+            if (key === 'SP') {
+              base['start_page'] = content
+            }
+            if (key === 'EP') {
+              base['end_page'] = content
+            }
+            if (key === 'IN') {
+              base['issue_number'] = content
+            }
+            if (key === 'SN') {
+              base['isbn_issn'] = content
+            }
+            if (['PY', 'Y1'].includes(key)) {
+              base['publication_year'] = content.split('/')[0]
+              base['real_date'] = content
+            }
+            if (key === 'DA') {
+              base['date'] = content
+            }
+            if (key === 'DB') {
+              base['database'] = content
+            }
+            if (key === 'UR') {
+              base['url'] = content
+            }
+            if (key === 'DO') {
+              base['doi'] = content
+            }
+            if (userDefinable.includes(key)) {
+              base['user_definable'].push(content)
+            }
+            if (key === 'ER') {
+              this.fileReferences.push(base)
+              base = { title: '', authors: [], user_definable: [] }
+            }
+          }
+        })
+        this.uploadProgress = `${this.fileReferences.length} referencias procesadas localmente`
+        console.log('Referencias procesadas:', this.fileReferences.length)
+      } catch (error) {
+        console.error('Error en watcher pre_references:', error)
+        this.uploadProgress = `Error: ${error.message}`
       }
     }
   }
@@ -1213,7 +851,7 @@ export default {
 }
 
 .warning-text {
-  color: #dc3545;
+  color: var(--red-primary);
   font-weight: 500;
 }
 </style>

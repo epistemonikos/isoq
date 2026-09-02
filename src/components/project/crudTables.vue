@@ -1,96 +1,76 @@
 <template>
   <div>
-    <b-row
-      v-if="checkPermissions && !useCamelot">
-      <b-col
-        sm="4">
-        <b-button
-          block
-          variant="outline-primary"
-          :disabled="(references.length) ? false : true"
-          v-if="!useCamelot && dataTable.fields.length <= 2"
-          @click="openModalDataTable()">
-          Create Table
+    <b-row v-if="canEdit">
+      <b-col sm="4">
+        <b-button block variant="outline-primary" v-b-tooltip.hover
+          :title="isOnline ? '' : $t('offline.action_disabled')"
+          :disabled="(references.length > 0 && isOnline) ? false : true"
+          v-if="dataTable.fields && dataTable.fields.length <= 2" @click="openModalDataTable()">
+          {{ $t('characteristics.create_table') }}
         </b-button>
-        <b-button
-          block
-          variant="outline-primary"
-          v-if="!useCamelot && dataTable.fields.length > 2"
+        <b-button block variant="outline-primary" v-if="dataTable.fields && dataTable.fields.length > 2"
           @click="openModalDataTableEdit">
-          Add or Edit column headings
+          {{ $t('characteristics.edit_columns') }}
         </b-button>
       </b-col>
-      <b-col
-        sm="1">
-        <p class="text-center pt-1">OR</p>
+      <b-col sm="1">
+        <p class="text-center pt-1">{{ $t('common.or') }}</p>
       </b-col>
-      <b-col
-        sm="4">
-        <b-button
-          block
-          variant="outline-info"
-          :disabled="(references.length) ? false : true"
-          @click="openModalImportTable()">
-          Import table
+      <b-col sm="4">
+        <b-button block variant="outline-info" v-b-tooltip.hover :title="isOnline ? '' : $t('offline.action_disabled')"
+          :disabled="!references.length || !isOnline" @click="openModalImportTable()">
+          {{ $t('characteristics.import_table') }}
         </b-button>
       </b-col>
-      <b-col
-        sm="3"
-        v-if="dataTable.fields.length > 2">
-        <b-button
-          variant="outline-secondary"
-          block
-          @click="exportTableToCSV()">
-          Export to XLS file
+      <b-col sm="3" v-if="dataTable.fields && dataTable.fields.length > 2">
+        <b-button variant="outline-secondary" block @click="exportTableToXLSX()">
+          {{ $t('characteristics.export_xls') }}
         </b-button>
       </b-col>
     </b-row>
     <b-row>
-      <b-col
-        cols="12">
-        <b-form-checkbox
-          v-if="useCamelot"
-          v-model="showConcerns"
-          :value="true"
-          :unchecked-value="false">Show concerns</b-form-checkbox>
-        <b-table
-          sort-by="authors"
-          :id="`${prefix}-table`"
-          class="table-content-refs mt-3"
-          v-if="dataTable.fieldsObj.length > 1"
-          :fields="dataTable.fieldsObj"
-          :items="dataTable.items"
-          :current-page="dataTableSettings.currentPage"
-          :per-page="dataTableSettings.perPage"
-          :busy="dataTableSettings.isBusy"
-          :responsive="true">
-          <template
-            v-slot:cell(authors)="data">
+      <b-col cols="12">
+        <b-table sort-by="authors" :id="`${prefix}-table`" class="table-content-refs mt-3"
+          v-if="dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)" :fields="dataTable.fieldsObj"
+          :items="dataTable.items" :current-page="dataTableSettings.currentPage" :per-page="dataTableSettings.perPage"
+          :busy="dataTableSettings.isBusy" :responsive="true">
+          <template v-slot:cell(authors)="data">
             <a :id="`${prefix}-${data.item.ref_id}`"></a>
-            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{data.item.authors}}</span>
+            <span v-b-tooltip.hover :title="getReferenceInfo(data.item.ref_id)">{{ data.item.authors }}</span>
           </template>
-          <template
-            v-slot:cell(actions)="data"
-            v-if="dataTable.fields.length > 2 && checkPermissions">
+          <template v-slot:cell()="data">
+            <div v-if="shouldTruncate(data.value) && !isExpanded(data.item.ref_id, data.field.key)">
+              {{ truncate(data.value) }}...
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_more') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else-if="shouldTruncate(data.value) && isExpanded(data.item.ref_id, data.field.key)">
+              {{ data.value }}
+              <p>
+                <b-link @click="toggleExpand(data.item.ref_id, data.field.key)" style="font-size: 12px;">
+                  {{ $t('common.read_less') }}
+                </b-link>
+              </p>
+            </div>
+            <div v-else>
+              {{ data.value }}
+            </div>
+          </template>
+          <template v-slot:cell(actions)="data" v-if="dataTable.fields && dataTable.fields.length > 2 && canEdit">
             <b-row>
               <b-col>
-                <b-button
-                  v-if="checkPermissions"
-                  block
-                  variant="outline-success"
+                <b-button v-if="canEdit" block variant="outline-success"
                   @click="addContentDataTable((dataTableSettings.currentPage > 1) ? (dataTableSettings.perPage * (dataTableSettings.currentPage - 1)) + data.index : data.index)">
-                  <font-awesome-icon
-                    icon="edit"></font-awesome-icon>
+                  <font-awesome-icon icon="edit"></font-awesome-icon>
                 </b-button>
               </b-col>
-              <b-col class="pt-2">
-                <b-button
-                  v-if="checkPermissions"
-                  block
-                  variant="outline-danger"
+              <b-col>
+                <b-button v-if="canEdit" block variant="outline-danger"
                   @click="openModalRemoveContentDataTable(data.item.ref_id)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
+                  <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </b-col>
             </b-row>
@@ -98,345 +78,212 @@
           <template v-slot:table-busy>
             <div class="text-center text-danger my-2">
               <b-spinner class="align-middle"></b-spinner>
-              <strong>Loading...</strong>
+              <strong>{{ $t('common.loading') }}</strong>
             </div>
           </template>
         </b-table>
       </b-col>
 
-      <b-col
-        cols="12">
+      <b-col cols="12">
         <b-pagination
-          v-if="dataTable.items.length && dataTable.items.length > dataTableSettings.perPage"
-          align="center"
-          v-model="dataTableSettings.currentPage"
-          :total-rows="dataTable.items.length"
-          :per-page="dataTableSettings.perPage"
-          :aria-controls="`${prefix}-table`">
+          v-if="dataTable.items && dataTable.items.length && dataTable.items.length > dataTableSettings.perPage && dataTable.fieldsObj && dataTable.fieldsObj.length > (canEdit ? 2 : 1)"
+          align="center" v-model="dataTableSettings.currentPage" :total-rows="dataTable.items && dataTable.items.length"
+          :per-page="dataTableSettings.perPage" :aria-controls="`${prefix}-table`">
         </b-pagination>
       </b-col>
 
-      <b-col
-        cols="12">
-        <BackToTop/>
+      <b-col cols="12">
+        <BackToTop />
       </b-col>
 
-      <b-modal
-        size="xl"
-        id="open-dataTable-modal"
-        ref="open-dataTable-modal"
-        scrollable
-        :ok-disabled="(dataTableFieldsModal.fields[0])?false:true"
-        @ok="saveDataTableFields"
-        ok-title="Save"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
+      <b-modal size="xl" id="open-dataTable-modal" ref="open-dataTable-modal" scrollable
+        :ok-disabled="isDataTableFieldsModalInvalid" @ok.prevent="saveDataTableFields" :ok-title="$t('common.save')"
+        ok-variant="outline-success" cancel-variant="outline-secondary" @hidden="onColumnsCreateModalHidden">
         <template v-slot:modal-title>
-          <videoHelp txt="Column Headers" tag="none" urlId="449742512"></videoHelp>
+          <videoHelp :txt="$t('characteristics.column_headers')" tag="none" urlId="449742512"></videoHelp>
         </template>
         <p class="font-weight-light">
-          Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+          {{ $t('characteristics.column_help') }}
         </p>
         <ul class="font-weight-light text-danger">
-          <li>Do not add columns for author or year (these will be added automatically)</li>
-          <li v-if="type !== 'isoqf_assessments'">Do not add methodological assessments (critical/quality appraisal). These go in a separate table.</li>
+          <li>{{ $t('characteristics.no_author_year') }}</li>
+          <li v-if="type !== 'isoqf_assessments'">{{ $t('characteristics.no_meth_here') }}</li>
         </ul>
-        <b-form-group
-          label="Number of columns">
-          <b-form-input
-            id="nro-columns"
-            v-model="dataTableFieldsModal.nroColumns"
-            type="number" min="1"></b-form-input>
+        <b-form-group :label="$t('characteristics.num_columns')">
+          <b-form-input id="nro-columns" v-model="dataTableFieldsModal.nroColumns" type="number" min="1"></b-form-input>
         </b-form-group>
-        <b-form-group
-          v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)"
-          :key="cnt"
-          :label="`Column #${cnt}`">
+        <b-form-group v-for="cnt in parseInt(dataTableFieldsModal.nroColumns)" :key="cnt"
+          :label="$t('characteristics.column_n', { n: cnt })" :state="fieldState('create', cnt - 1)"
+          :invalid-feedback="$t('common.field_required')">
           <b-input-group>
-            <b-form-input
-              :id="`column_${cnt}`"
-              v-model="dataTableFieldsModal.fields[cnt - 1]"
-              type="text"></b-form-input>
-            <b-input-group-append
-              v-if="dataTable.id">
-              <b-button
-                variant="outline-danger"
-                @click="deleteFieldFromCharsSudies(cnt - 1)">
-                <font-awesome-icon
-                  icon="trash"></font-awesome-icon>
+            <b-form-input :id="`column_${cnt}`" v-model="dataTableFieldsModal.fields[cnt - 1]" type="text"
+              :state="fieldState('create', cnt - 1)"
+              @blur="$set(dataTableFieldsModal.touched, cnt - 1, true)"></b-form-input>
+            <b-input-group-append v-if="dataTable.id">
+              <b-button variant="outline-danger" @click="confirmDeleteColumnCreate(cnt - 1)">
+                <font-awesome-icon icon="trash"></font-awesome-icon>
               </b-button>
             </b-input-group-append>
           </b-input-group>
         </b-form-group>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        id="open-dataTable-modal-edit"
-        ref="open-dataTable-modal-edit"
-        scrollable
-        :ok-disabled="(dataTableFieldsModalEdit.fields.length)?((dataTableFieldsModalEdit.fields[0].label)?false:true):false"
-        @ok="updateDataTableFields"
-        ok-variant="outline-success"
-        ok-title="Save"
-        cancel-variant="outline-secondary">
+      <b-modal size="xl" id="open-dataTable-modal-edit" ref="open-dataTable-modal-edit" scrollable
+        ok-only :ok-title="$t('common.close')" ok-variant="secondary" @hidden="onColumnsEditModalHidden">
         <template v-slot:modal-title>
-          <videoHelp txt="Edit column headers" tag="none" urlId="449742512"></videoHelp>
+          <videoHelp :txt="$t('characteristics.edit_columns')" tag="none" urlId="449742512"></videoHelp>
         </template>
         <p class="font-weight-light">
-          Column headings describe the categories of the descriptive information extracted – e.g. setting, country, perspectives, methods, etc.
+          {{ $t('characteristics.column_help') }}
         </p>
-        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag=true" @end="drag=false">
-          <b-form-group
-            v-for="(field, index) in dataTableFieldsModalEdit.fields"
-            :key="index"
-            :label="`Column #${index}`">
+        <!-- Sin botón de guardar: cada cambio se aplica solo, así que hay que decirlo o el
+             usuario no sabe cuándo quedó guardado lo que hizo. -->
+        <p class="text-muted small">
+          <font-awesome-icon icon="info-circle" class="mr-1"></font-awesome-icon>
+          {{ $t('characteristics.columns_autosave_hint') }}
+          <b-spinner small v-if="dataTableSettings.isBusy" class="ml-1"></b-spinner>
+        </p>
+        <draggable v-model="dataTableFieldsModalEdit.fields" group="columns" @start="drag = true"
+          @end="onColumnsOrderChanged">
+          <b-form-group v-for="(field, index) in dataTableFieldsModalEdit.fields" :key="index"
+            :label="$t('characteristics.column_n', { n: index })" :state="fieldState('edit', index)"
+            :invalid-feedback="$t('common.field_required')">
             <b-input-group>
-              <b-form-input
-                :id="`column_${index}`"
-                v-model="field.label"
-                type="text"></b-form-input>
+              <b-form-input :id="`column_${index}`" v-model="field.label" type="text" :state="fieldState('edit', index)"
+                @blur="onEditFieldBlur(index)"></b-form-input>
               <b-input-group-append>
-                <b-button
-                  v-if="dataTableFieldsModalEdit.fields.length > 1"
-                  :id="`drag-button-chars-${index}`"
-                  variant="outline-secondary"
-                  v-b-tooltip
-                  title="Drag to sort">
-                  <font-awesome-icon
-                    icon="arrows-alt"></font-awesome-icon>
+                <b-button v-if="dataTableFieldsModalEdit.fields.length > 1" :id="`drag-button-chars-${index}`"
+                  variant="outline-secondary" v-b-tooltip :title="$t('characteristics.drag_sort')">
+                  <font-awesome-icon icon="arrows-alt"></font-awesome-icon>
                 </b-button>
-                <b-button
-                  variant="outline-danger"
-                  @click="deleteFieldFromCharsSudiesEdit(index)">
-                  <font-awesome-icon
-                    icon="trash"></font-awesome-icon>
+                <b-button variant="outline-danger" @click="confirmDeleteColumnEdit(index)">
+                  <font-awesome-icon icon="trash"></font-awesome-icon>
                 </b-button>
               </b-input-group-append>
             </b-input-group>
           </b-form-group>
         </draggable>
-        <b-button
-          class="mb-2"
-          @click="dataTableNewColumn"
-          variant="outline-success">
-          Add new column
+        <b-button class="mb-2" @click="dataTableNewColumn" variant="outline-success">
+          {{ $t('characteristics.add_new_column') }}
         </b-button>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        id="open-modal-content-camelot-data"
-        ref="open-modal-content-camelot-data"
-        title="Edit Camelot data"
-        @ok="saveContentDataTable"
-        ok-title="Save"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <b-row>
-          <b-col cols="3">
-            <b-list-group class="h-100 overflow-auto" style="max-height: 70vh;">
-              <b-list-group-item
-                v-for="field of camelot.categories"
-                :active="modal.selectedOption === field.key"
-                :key="field.key"
-                :href="`#${field.key}`"
-                @click="scrollToSection(field.key)">
-                {{ field.label }}
-              </b-list-group-item>
-            </b-list-group>
-          </b-col>
-          <b-col cols="9">
-            <div id="camelot" class="h-100 overflow-auto" style="max-height: 70vh; position:relative;">
-              <!-- Botón para agregar nuevo campo -->
-              <div class="mb-3">
-                <b-button
-                  variant="outline-success"
-                  size="sm"
-                  @click="agregarCampoCamelot">
-                  <font-awesome-icon icon="plus"></font-awesome-icon> Añadir nuevo campo
-                </b-button>
-              </div>
-
-              <template v-for="(field, fieldIndex) of dataTableFieldsModal.fields">
-                <div
-                  v-if="!camelot.excluded.includes(field.key)"
-                  :key="field.id"
-                  class="mb-3 pb-3 border-bottom">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <b-form-group class="mb-0 flex-grow-1">
-                      <b-form-input
-                        v-model="field.label"
-                        :disabled="['ref_id', 'authors'].includes(field.key)"
-                        class="font-weight-bold"
-                        placeholder="Nombre del campo">
-                      </b-form-input>
-                    </b-form-group>
-                    <b-button
-                      v-if="!['ref_id', 'authors'].includes(field.key)"
-                      variant="outline-danger"
-                      size="sm"
-                      class="ml-2"
-                      @click="eliminarCampoCamelot(fieldIndex, field)">
-                      <font-awesome-icon icon="trash"></font-awesome-icon>
-                    </b-button>
-                  </div>
-                  <b-form-textarea
-                      v-if="!camelot.excluded.includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                      v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                      rows="2"
-                      max-rows="100"></b-form-textarea>
-                </div>
-              </template>
-              <div v-for="field of camelot.categories" :id="field.key" :key="field.key" class="mb-2 border border-light">
-                <div>
-                  <div class="bg-light text-dark p-2">
-                    <p class="font-weight-bold mb-0">{{ field.label }}</p>
-                  </div>
-                  <b-row class="p-2">
-                    <b-col v-for="option in field.options" :key="option.key" :id="option.key">
-                      <p>{{ option.label }}</p>
-                      <b-form-textarea
-                        v-if="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
-                        v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][option.key]"
-                        rows="2"
-                        max-rows="100"></b-form-textarea>
-                    </b-col>
-                  </b-row>
-                </div>
-              </div>
-            </div>
-          </b-col>
-        </b-row>
-      </b-modal>
-
-      <b-modal
-        size="lg"
-        ref="edit-content-dataTable"
-        title="Edit data"
-        @ok="saveContentDataTable"
-        ok-title="Save"
-        ok-variant="outline-success"
-        cancel-variant="outline-secondary">
-        <template
-          v-if="dataTableFieldsModal.items.length && dataTableFieldsModal.selected_item_index < dataTableFieldsModal.items.length">
-          <template v-for="field of dataTableFieldsModal.fields">
-            <b-form-group
-              v-if="field.key !== 'ref_id'"
-              :key="field.id"
-              :label="field.label"
+      <b-modal size="xl" ref="edit-content-dataTable" :title="$t('characteristics.edit_data')" scrollable
+        @ok="saveContentDataTable" @hidden="onEditModalHidden" :ok-title="$t('common.save')" ok-variant="outline-success"
+        cancel-variant="outline-secondary" :ok-disabled="isRowReadOnly">
+        <!-- El conflicto de versión va primero y aparte del de lock: acá la persona sí
+             tiene permiso de escribir, y lo que necesita para decidir es ver el valor que
+             quedó guardado al lado del que intentó guardar. -->
+        <b-alert v-if="versionConflict" show variant="warning" class="mb-2">
+          <p class="mb-2">{{ $t('version_conflict.message') }}</p>
+          <!--
+            Los rótulos van como texto y NO como `placeholder`: un placeholder desaparece en
+            cuanto la caja tiene valor, y acá siempre lo tiene, así que se veían dos textos
+            sin decir cuál era de quién.
+          -->
+          <div v-for="(value, key) in conflictComparison" :key="key" class="mb-2">
+            <strong class="text-muted small text-uppercase">{{ key }}</strong>
+            <label class="d-block small mb-0">{{ $t('version_conflict.theirs') }}</label>
+            <b-form-textarea :value="value.theirs" readonly rows="2" class="bg-light mb-1"></b-form-textarea>
+            <label class="d-block small mb-0">{{ $t('version_conflict.mine') }}</label>
+            <b-form-textarea :value="value.mine" readonly rows="2" class="bg-light"></b-form-textarea>
+          </div>
+          <b-button size="sm" variant="outline-primary" @click="reloadAfterVersionConflict">
+            {{ $t('version_conflict.reload') }}
+          </b-button>
+        </b-alert>
+        <b-alert v-else-if="isRowReadOnly" show variant="warning" class="mb-2">
+          {{ $t(rowLockMessageKey, { user: rowLockedBy }) }}
+        </b-alert>
+        <div v-if="autoSaveStatus" class="mb-2 small">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+        </div>
+        <template v-if="dataTableFieldsModal.items.length">
+          <template v-for="field of dataTable.fields">
+            <b-form-group v-if="field.key !== 'ref_id'" :key="field.id" :label="field.label"
               label-class="font-weight-bold">
-              <template v-if="['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]">
+              <template v-if="['ref_id', 'authors'].includes(field.key)">
                 <p>{{ dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key] }}</p>
               </template>
               <template v-else>
-                <b-form-textarea
-                  v-if="!['ref_id', 'authors'].includes(field.key) && dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index]"
+                <b-form-textarea v-if="!['ref_id', 'authors'].includes(field.key)"
                   v-model="dataTableFieldsModal.items[dataTableFieldsModal.selected_item_index][field.key]"
-                  rows="2"
-                  max-rows="100"></b-form-textarea>
+                  :placeholder="(type === 'isoqf_assessments') ? $t('meth_assessments.enter_assessment') : ''" rows="2"
+                  max-rows="100" :disabled="isRowReadOnly" @input="onFieldInput"></b-form-textarea>
               </template>
             </b-form-group>
           </template>
         </template>
-        <template v-else>
-          <p class="text-center">No items available for editing.</p>
-        </template>
       </b-modal>
 
-      <b-modal
-        size="xl"
-        id="removeContentModalDataTable"
-        ref="removeContentModalDataTable"
-        title="Remove content"
-        ok-title="Confirm"
-        ok-variant="outline-danger"
-        cancel-variant="outline-success"
-        @cancel="cleanRemoveContentCharsOfStudies"
-        @ok="removeDataFromLists">
-        <p>Are you sure you want to delete all the content for this row?</p>
-        <p
-          v-if="removeReferenceDataTable.findings.length === 0">
-          <b>No findings will be affected</b>
+      <b-modal size="xl" id="removeContentModalDataTable" ref="removeContentModalDataTable"
+        :title="$t('characteristics.remove_content')" :ok-title="$t('common.confirm')" ok-variant="outline-danger"
+        cancel-variant="outline-success" @cancel="cleanRemoveContentCharsOfStudies"
+        @ok="removeDataFromLists" @hidden="onRemoveModalHidden" :ok-disabled="removeReadOnly">
+        <b-alert v-if="removeReadOnly" show variant="warning" class="mb-2">
+          {{ removeLockedBy ? $t('lock.ref_locked_by', { user: removeLockedBy }) : $t('lock.permissions_revoked') }}
+        </b-alert>
+        <p>{{ $t('characteristics.confirm_delete_row') }}</p>
+        <p v-if="removeReferenceDataTable.findings.length === 0">
+          <b>{{ $t('characteristics.no_findings_affected') }}</b>
         </p>
-        <p
-          v-if="removeReferenceDataTable.findings.length">
-          <b>Findings that will be affected</b>
-          <ul>
-            <li v-for="(finding, index) in removeReferenceDataTable.findings" :key="index">
-              {{ `finding # ${finding}`}}
-            </li>
-          </ul>
+        <p v-if="removeReferenceDataTable.findings.length">
+          <b>{{ $t('characteristics.findings_affected') }}</b>
+        <ul>
+          <li v-for="(finding, index) in removeReferenceDataTable.findings" :key="index">
+            {{ $t('characteristics.finding_n', { n: finding }) }}
+          </li>
+        </ul>
         </p>
       </b-modal>
 
-      <b-modal
-        :no-close-on-backdrop="true"
-        :no-close-on-esc="true"
-        ok-title="Save"
-        cancel-title="Close"
-        size="xl"
-        id="`import-table-${this.type}`"
+      <b-modal :no-close-on-backdrop="true" :no-close-on-esc="true" :ok-title="$t('common.save')"
+        :cancel-title="$t('common.close')" size="xl" id="`import-table-${this.type}`"
         :ref="`import-table-${this.type}`">
         <template v-slot:modal-title>
-          <videoHelp txt="Import table" tag="none" urlId="450046545"></videoHelp>
+          <videoHelp :txt="$t('characteristics.import_table')" tag="none" urlId="450046545"></videoHelp>
         </template>
         <b-alert show variant="danger">
-          <b>Beware:</b> The newly imported and saved data will delete and replace any previous data entered manually or through import.
+          <b>{{ $t('import_modal.beware') }}</b> {{ $t('import_modal.overwrite_warning') }}
         </b-alert>
-        <p
-        class="font-weight-light">
-          To upload a table, follow these steps:
+        <b-alert variant="warning" :show="Boolean(importLockNotice)">
+          <font-awesome-icon icon="lock" /> {{ importLockNotice }}
+        </b-alert>
+        <p class="font-weight-light">
+          {{ $t('import_modal.steps_title') }}
         </p>
-        <h4>STEP 1: Download the template (excel file), save it to your computer, and populate it with your information.</h4>
-        <p
-          class="text-danger">
-          <b>When you save the file, choose 'CSV-UTF-8 (Comma delimited) (*.csv)' as the "Save as type"</b>
-        </p>
+        <h4>{{ $t('import_modal.step1') }}</h4>
         <p class="text-danger">
-          <b>If you have problems with the template this may be due to the version of Excel you are using or your settings. We recommend you work on the table in Google Sheets (Gdrive)</b>
+          <b>{{ $t('import_modal.columns_warning') }}</b>
         </p>
-        <p
-          class="text-danger">
-          <b>The first two columns «Reference ID» and «Author(s), Year» must not be altered in any way.</b>
-        </p>
-        <b-button
-          variant="info"
-          @click="generateTemplate">
-          Download template
+        <b-button variant="info" @click="generateTemplate">
+          {{ $t('import_modal.download_template') }}
         </b-button>
-        <h4 class="mt-5">STEP 2: Import the populated template to iSoQ</h4>
-        <b-form-file
-          ref="import-file"
-          id="input-template-chars-file"
-          plain
+        <h4 class="mt-5">{{ $t('import_modal.step2') }}</h4>
+        <b-form-file ref="import-file" id="input-template-chars-file" plain
+          accept=".xlsx,.csv"
           @change="loadTableImportData($event)"></b-form-file>
-        <h4 class="mt-5">STEP 3: Look at the preview of the table below and accept or reject it</h4>
-        <p>If it looks right, accept the import by clicking the "Save" button at the bottom of the page.</p>
-        <p>If something doesn't look right, remove it by clicking the "Reject" button at the bottom of the page and return to Step 2. <a href="#" v-b-modal='`videoHelp-450046545`'>See help video</a> for support.</p>
-        <b-alert
-          variant="info"
-          :show="importDataTable.error !== null">
+        <h4 class="mt-5">{{ $t('import_modal.step3') }}</h4>
+        <p>{{ $t('import_modal.accept_info') }}</p>
+        <p>{{ $t('import_modal.reject_info') }} <a href="#" v-b-modal='`videoHelp-450046545`'>{{
+          $t('import_modal.see_help')
+            }}</a></p>
+        <b-alert variant="info" :show="importDataTable.error !== null">
           {{ importDataTable.error }}
         </b-alert>
-        <b-table
-          v-if="importDataTable.items.length"
-          sticky-header
-          responsive
-          :fields="importDataTable.fieldsObj"
+        <b-table v-if="importDataTable.items.length" sticky-header responsive :fields="importDataTable.fieldsObj"
           :items="importDataTable.items"></b-table>
         <template v-slot:modal-footer>
-          <b-button
-            variant="outline-secondary"
-            @click="cleanVars(true)">Close</b-button>
-          <b-button
-            variant="outline-info"
-            :disabled="!importDataTable.items.length"
-            @click="cleanVars()">Reject</b-button>
-          <b-button
-            variant="outline-success"
-            :disabled="!importDataTable.items.length"
-            @click="saveImportedData()">Save</b-button>
+          <b-button variant="outline-secondary" @click="cleanVars(true)">{{ $t('common.close') }}</b-button>
+          <b-button variant="outline-info" :disabled="!importDataTable.items.length" @click="cleanVars()">{{
+            $t('common.reject') }}</b-button>
+          <b-button variant="outline-success" :disabled="!importDataTable.items.length" @click="saveImportedData()">{{
+            $t('common.save') }}</b-button>
         </template>
       </b-modal>
 
@@ -445,16 +292,30 @@
 </template>
 
 <script>
-import { dataTableMixin } from '@/mixins/dataTableMixin'
-import { tableImportExportMixin } from '@/mixins/tableImportExportMixin'
-import { camelotMixin } from '@/mixins/camelotMixin'
-import axios from 'axios'
-import Papa from 'papaparse'
-import Commons from '@/utils/commons.js'
+/* eslint-disable no-unused-vars */
+import Api from '@/utils/Api'
+import Commmons from '@/utils/commons.js'
+import LockService from '@/services/lockService'
+import columnService from '@/services/columnService'
+import { parseCSVData } from '@/utils/csvImporter'
+import _debounce from 'lodash.debounce'
+
+import { exportTableToXLSX, exportAOAToXLSX } from '@/utils/xlsxExporter'
+import { parseXLSXData } from '@/utils/xlsxImporter'
+import { sortByAuthors, filterDisplayFields, loadFileAsText } from '@/utils/tableDataUtils'
+import { copyItemMetadata, itemsFingerprint, isItemMetadata, withoutItemMetadata } from '@/utils/itemMetadata'
+import { conflictComparison } from '@/utils/versionConflict'
+import { cleanOrphanedCustomFieldKeys } from '@/utils/customFieldsHelper'
+import { isLockRejection } from '@/utils/lockErrors'
+import { fieldsLockKey } from '@/utils/refLockUrls'
+import { lockLostMessageKey, lockDeniedMessageKey } from '@/utils/lockLostMessage'
+import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import preserveScrollMixin from '@/mixins/preserveScrollMixin'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { summarizeImportLocks } from '@/utils/importLockWarning'
 
 export default {
   name: 'crudTables',
-  mixins: [dataTableMixin, tableImportExportMixin, camelotMixin],
   props: {
     type: {
       type: String,
@@ -464,17 +325,17 @@ export default {
       type: String,
       default: ''
     },
-    checkPermissions: {
+    canEdit: {
       type: Boolean,
       default: false
     },
     project: {
       type: Object,
-      default: () => ({})
+      default: () => { }
     },
     ui: {
       type: Object,
-      default: () => ({})
+      default: () => { }
     },
     references: {
       type: Array,
@@ -487,369 +348,392 @@ export default {
     lists: {
       type: Array,
       default: () => []
-    },
-    useCamelot: {
-      type: Boolean,
-      default: false
     }
   },
+  mixins: [projectFreshnessMixin, preserveScrollMixin, refLockStateMixin],
   components: {
     BackToTop: () => import('@/components/backToTop.vue'),
     draggable: () => import('vuedraggable'),
     videoHelp: () => import('@/components/videoHelp.vue')
   },
+  mounted () {
+    this.importDataTable.fieldsObj[0].label = this.$t('table_headers.author_year')
+    this.updateMyDataTables()
+    this.autoSaveDebounced = _debounce(function () { this.performAutoSave() }.bind(this), 1500)
+    window.addEventListener('ref-lock-lost', this.onRefLockLost)
+    window.addEventListener('item-version-conflict', this.onVersionConflict)
+    this.startFreshnessPolling()
+  },
+  beforeDestroy () {
+    window.removeEventListener('ref-lock-lost', this.onRefLockLost)
+    window.removeEventListener('item-version-conflict', this.onVersionConflict)
+    // SPA navigation destroys this view with the editor still open: without this the
+    // row stays locked for everybody else until the server TTL expires it.
+    this.releaseRowLock()
+    this.stopFreshnessPolling()
+    // Same for the columns lock: leaving the project with the modal open used to leave it
+    // held until the TTL, measured in the browser.
+    this.releaseColumnsLock()
+    // Y el de la confirmación de «quitar los datos», por la misma razón y una más: si el
+    // modal se cierra antes de terminar de abrirse —la animación dura ~300 ms—
+    // BootstrapVue no emite `hidden`, así que su handler no corre. Medido en el navegador:
+    // la fila quedaba bloqueada para todos hasta que el TTL la barriera.
+    this.releaseRemoveLock()
+  },
   data () {
     return {
-      modal: {
-        selectedOption: 'research'
-      },
       dataTable: {
-        id: null,
         fields: [],
         items: [],
         authors: '',
         fieldsObj: [
-          {
-            key: 'authors',
-            label: 'Author(s), Year'
-          }
-        ],
-        fieldsObjOriginal: []
+          { key: 'authors', label: this.$t('table_headers.author_year') }
+        ]
       },
-      dataTableSettings: {
-        isBusy: false,
-        currentPage: 1,
-        perPage: 10,
-        totalRows: 0
-      },
+      // Ref-lock state of the row open in the content modal. Endpoint B demands
+      // the caller holds the lock, so a row we could not lock must stay read-only.
+      isRowReadOnly: false,
+      rowLockedBy: null,
+      // Por qué se perdió el lock, cuando el latido lo dice. Decide si el cartel promete
+      // que se destraba solo o no; `null` para un servidor sin ese despliegue.
+      rowLockLostReason: null,
+      // Y por qué el acquire lo negó, que tiene su propio motivo y su propio texto.
+      rowLockDeniedReason: null,
+      // El lock de la confirmación de «quitar los datos» va aparte del del editor de fila,
+      // aunque los dos pidan lo mismo al mismo servicio. Compartirlos hacía que cerrar la
+      // confirmación soltara el lock del editor abierto y lo devolviera a escribible: la
+      // persona seguía tecleando mientras cada guardado recibía 409, y el canal de
+      // conflicto lo tapaba por ser de lock. Dos features, dos estados.
+      removeLockRef: null,
+      removeLockedBy: null,
+      removeReadOnly: false,
+      // El rechazo por versión de la fila que se está editando: `{ item, failedData }`,
+      // el valor que quedó guardado y el que se intentó escribir. Nulo mientras no haya
+      // conflicto. No se resuelve solo —reintentar pisaría lo ajeno— así que sostiene el
+      // cartel hasta que la persona decida.
+      versionConflict: null,
+      // The lock we actually hold, tracked apart from editingRefId: the modal's
+      // events cannot be trusted to tell us when it is safe to let it go.
+      lockedRowRef: null,
+      rowEditorOpen: false,
+      // True when a `hidden` from a previous editor session is still on its way.
+      staleHiddenPending: false,
       dataTableFieldsModal: {
         nroColumns: 1,
         fields: [],
         items: [],
-        selected_item_index: 0
+        selected_item_index: 0,
+        editingRefId: null,
+        touched: []
       },
+      // Lock del documento de la tabla mientras se editan columnas, y orden acumulado
+      // hasta el cierre. `committedColumnLabels` evita reenviar un título que no cambió
+      // cuando el usuario sólo pasa por el campo.
+      // Un flag por modal. Se probó atarlos por `v-model` al `b-modal` para que Vue los
+      // bajara solo, y se descartó: compartir uno abría los dos modales superpuestos, y con
+      // uno por modal el `b-modal` dejaba de abrirse (el `v-model` y el `show()` del ref se
+      // pisan). Lo que sí resuelve el estado pegado es el orden dentro de los handlers de
+      // `hidden`, que bajan el flag antes de cualquier `await`.
+      // Van aparte de `columnsLockHeld` porque un modal puede estar abierto antes de tomar
+      // el lock, y un refresco en esa ventana descartaría igual lo que se escribió.
+      columnsCreateModalOpen: false,
+      columnsEditModalOpen: false,
+      freshnessTimer: null,
+      columnsLockHeld: false,
+      // Ref exacto que se bloqueó. No se recalcula al liberar: `getData()` reasigna
+      // `dataTable`, así que al cerrar el id puede no estar y el lock quedaría colgado
+      // hasta expirar.
+      columnsLockRef: null,
+      // Id del documento resuelto al abrir el modal de creación. Se guarda aparte porque
+      // `getData()` reasigna `dataTable`, y un reintento del guardado necesita el id para
+      // renombrar lo ya creado en vez de duplicarlo.
+      resolvedTableId: null,
+      pendingColumnsOrder: false,
+      committedColumnLabels: {},
       dataTableFieldsModalEdit: {
         nroColumns: 1,
         fields: [],
         items: [],
-        selected_item_index: 0
+        selected_item_index: 0,
+        touched: []
+      },
+      dataTableSettings: {
+        currentPage: 1,
+        perPage: 10,
+        isBusy: false
       },
       removeReferenceDataTable: {
         id: null,
         findings: []
       },
-      showConcerns: false
+      importDataTable: {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: 'Author(s), Year' }
+        ]
+      },
+      // Quién está editando estudios cuando se abre el diálogo de import. `enabled:false`
+      // por defecto para que, hasta que el probe conteste, no se afirme nada.
+      importLockProbe: { locks: [], reachable: true, enabled: false },
+      expandedCells: {},
+      autoSaveStatus: null
     }
   },
-  mounted () {
-    this.getData()
-  },
   watch: {
-    pre_ImportDataTable: {
-      handler (data) {
-        if (!data) return
-
-        const csvData = Papa.parse(data, { skipEmptyLines: true })
-        this.importDataTable.error = null
-
-        if (!csvData.data.length) return
-
-        if (csvData.data[0].length < 3) {
-          this.importDataTable.error = 'Your data might be wrongly formatted and therefore will not display. Check that you saved your file as the following file type: CSV-UTF-8 (Comma delimited) (*.csv). Also check that your table has at least one column.'
-          return
-        }
-
-        this.processImportData(csvData.data)
-      }
-    },
     references () {
       this.updateMyDataTables()
+    }
+  },
+  computed: {
+    // `refLockStateMixin` lee el listado de acá para descontar lo que sostiene esta misma
+    // pestaña. Reusar el mixin en vez de repetir el filtro es deliberado: la regla de qué
+    // lock es ajeno ya estuvo en dos copias en este mismo tramo y dieron resultados
+    // distintos.
+    activeRefLocks () {
+      return this.importLockProbe.locks
     },
-    showConcerns () {
-      if (this.showConcerns) {
-        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal
-      } else {
-        this.dataTable.fieldsObj = this.dataTable.fieldsObjOriginal.filter(item => !item.key.match(/_concerns$/))
+    importLockSummary () {
+      return summarizeImportLocks(this.foreignRefLocks, this.dataTable.id)
+    },
+    /**
+     * El aviso de que el import va a pisar trabajo ajeno. Cadena vacía = no hay nada que
+     * avisar, y así lo consumen el `b-alert` del modal y la confirmación del guardado.
+     *
+     * Dice «de este proyecto» y no «de esta tabla» porque eso es lo exacto: el ref lock es
+     * `(project_id, ref_id)` sin colección, y la unidad de bloqueo es el ESTUDIO — quien
+     * edita `R1` en el Paso 3 bloquea `R1` en el Paso 4 y en los datos extraídos. Así que
+     * todo lock contado afecta a este import. El razonamiento completo, y por qué no hay
+     * que agregarle la colección, está en `importLockWarning.js`.
+     *
+     * La incertidumbre (`reachable:false`) NO entra acá a propósito: al abrir el modal
+     * todavía no pasa nada destructivo, y un «no pudimos comprobar» por cada hipo de red
+     * sería ruido. Esa rama aparece sólo en el momento de decidir.
+     */
+    importLockNotice () {
+      if (!this.importLockProbe.enabled) return ''
+      const summary = this.importLockSummary
+      const parts = []
+      if (summary.studyCount) {
+        parts.push(this.$t('import_modal.ref_locks_confirm', {
+          names: summary.names.join(', '),
+          count: summary.studyCount
+        }))
       }
+      if (summary.columnsLockedBy) {
+        parts.push(this.$t('import_modal.ref_locks_columns', { name: summary.columnsLockedBy }))
+      }
+      return parts.join(' ')
+    },
+    /**
+     * Qué cartel corresponde. La regla vive en `lockLostMessage`, compartida con el resto.
+     *
+     * Un lock perdido gana sobre uno negado: si las dos cosas pasaron, la última es la que
+     * describe el estado actual del editor.
+     */
+    rowLockMessageKey () {
+      if (this.rowLockLostReason) return lockLostMessageKey(this.rowLockLostReason, this.rowLockedBy)
+      if (this.rowLockDeniedReason) return lockDeniedMessageKey(this.rowLockDeniedReason, this.rowLockedBy)
+      return lockLostMessageKey(null, this.rowLockedBy)
+    },
+    /**
+     * Los campos donde el valor guardado y el que se intentó guardar no coinciden.
+     *
+     * Sólo esos: mostrar la fila entera obligaría a la persona a buscar la diferencia, que
+     * es precisamente lo que tiene que ver para decidir. La metadata queda afuera —el
+     * contador de versión no es algo que nadie escribió— y también las claves que sólo
+     * existen en uno de los dos lados sin contenido.
+     */
+    conflictComparison () {
+      if (!this.versionConflict) return {}
+      return conflictComparison(this.versionConflict.item, this.versionConflict.failedData)
+    },
+    isDataTableFieldsModalInvalid () {
+      const nro = parseInt(this.dataTableFieldsModal.nroColumns)
+      if (!nro || nro === 0) return true
+      for (let i = 0; i < nro; i++) {
+        const field = this.dataTableFieldsModal.fields[i]
+        const label = typeof field === 'object' ? field.label : field
+        if (!label || (typeof label === 'string' && label.trim().length === 0)) return true
+      }
+      return false
+    },
+    isDataTableFieldsModalEditInvalid () {
+      if (!this.dataTableFieldsModalEdit.fields || !this.dataTableFieldsModalEdit.fields.length) return false
+      return this.dataTableFieldsModalEdit.fields.some(field => !field.label || (typeof field.label === 'string' && field.label.trim().length === 0))
     }
   },
   methods: {
-    processImportData (data) {
-      const fields = []
-      const items = []
-
-      for (let cnt in data) {
-        if (parseInt(cnt) === 0) {
-          let cntI = 0
-          for (let i in data[cnt]) {
-            let obj = {}
-            if (parseInt(i) === 0) {
-              obj.key = 'ref_id'
-            }
-            if (parseInt(i) === 1) {
-              obj.key = 'authors'
-            }
-            if (parseInt(i) > 1) {
-              this.importDataTable.fieldsObj.push({ 'key': 'column_' + cntI, 'label': data[cnt][i] })
-              obj.key = 'column_' + cntI
-              cntI++
-            }
-            obj.label = data[cnt][i]
-            fields.push(obj)
-          }
-        } else {
-          let cntI = 0
-          let obj = {}
-          for (let i in data[cnt]) {
-            if (parseInt(i) === 0) {
-              obj.ref_id = data[cnt][i]
-            }
-            if (parseInt(i) === 1) {
-              obj.authors = data[cnt][i]
-            }
-            if (parseInt(i) > 1) {
-              obj[`column_${cntI}`] = data[cnt][i]
-              cntI++
-            }
-          }
-          items.push(obj)
-        }
-      }
-
-      this.importDataTable.fields = fields
-      this.importDataTable.items = items
+    shouldTruncate (text) {
+      return Commmons.shouldTruncate(text)
     },
-    updateMyDataTables () {
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
-      }
-
-      // Handle case when there are no references
-      if (!this.references || this.references.length === 0) {
-        this.getData()
-        return
-      }
-
-      axios.get(`/api/${this.type}`, { params })
-        .then((response) => {
-          if (!response.data.length) {
-            this.getData()
-            return
-          }
-          const responseData = JSON.parse(JSON.stringify(response.data[0]))
-          const tableId = responseData.id
-
-          // Process items regardless of whether there are existing items or not
-          // This ensures we handle both new uploads and deleted references properly
-          const activeReferenceIds = this.references.map(ref => ref.id)
-          let currentItems = responseData.items || []
-
-          // Special handling for methodological assessments
-          if (this.type === 'isoqf_assessments') {
-            // For assessments, make sure we keep all items but update them with current reference data
-            // First, remove items that don't have corresponding active references
-            currentItems = currentItems.filter(item => activeReferenceIds.includes(item.ref_id))
-
-            // Then add any new references that aren't in the items
-            const existingRefIds = currentItems.map(item => item.ref_id)
-            const newItems = this.references
-              .filter(ref => !existingRefIds.includes(ref.id))
-              .map(ref => ({
-                ref_id: ref.id,
-                authors: this.parseReference(ref, true, false)
-              }))
-
-            // Combine existing and new items
-            currentItems.push(...newItems)
-
-            // Sort items by authors for consistency
-            currentItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
-          } else {
-            // For other table types, use the standard processItems method
-            currentItems = this.processItems(currentItems)
-          }
-
-          const patchParams = {
-            items: currentItems
-          }
-
-          axios.patch(`/api/${this.type}/${tableId}`, patchParams)
-            .then(() => {
-              this.getData()
-            })
-            .catch((error) => {
-              console.error('Error updating tables:', error)
-              this.$emit('print-errors', error)
-            })
-        })
-        .catch((error) => {
-          console.error('Error fetching tables data:', error)
-          this.getData()
-        })
+    truncate (text) {
+      return Commmons.truncate(text)
     },
-
-    processItems (dataItems) {
-      let items = JSON.parse(JSON.stringify(dataItems))
-      let existingRefIds = []
-      let activeRefIds = this.references.map(ref => ref.id)
-      let newItems = []
-
-      // Create a list of existing reference IDs
-      for (const item of items) {
-        existingRefIds.push(item.ref_id)
-      }
-
-      // Filter out items that don't have a corresponding active reference
-      items = items.filter(item => activeRefIds.includes(item.ref_id))
-
-      // Add any new references that aren't already in the items list
-      for (const reference of this.references) {
-        if (!existingRefIds.includes(reference.id)) {
-          newItems.push({
-            ref_id: reference.id,
-            authors: this.parseReference(reference, true, false)
-          })
-        }
-      }
-
-      items.push(...newItems)
-      return items
+    toggleExpand (refId, fieldKey) {
+      const key = `${refId}-${fieldKey}`
+      this.$set(this.expandedCells, key, !this.expandedCells[key])
     },
-
-    parseReference (reference, onlyAuthors = false, hasSemicolon = true) {
-      return Commons.parseReference(reference, onlyAuthors, hasSemicolon)
+    isExpanded (refId, fieldKey) {
+      return !!this.expandedCells[`${refId}-${fieldKey}`]
     },
-
-    getAuthorsFormat (authors = [], pubYear = '') {
-      return Commons.getAuthorsFormat(authors, pubYear)
-    },
-
-    addFieldsObjects: function (fieldsObj) {
-      for (let field of this.camelot.fields) {
-        fieldsObj.push(field)
-      }
-    },
-
-    getData: function () {
+    /** Devuelve la promesa a propósito: abrir un modal espera la recarga antes de copiar. */
+    getData: function (prefetchedData = null) {
+      // El slot `table-busy` reemplaza el `tbody` entero: el documento se acorta y
+      // el navegador clampea la posición del usuario. Congelarla acá cubre las tres
+      // rutas que recargan la tabla — guardar una fila, guardar columnas y el
+      // refresco de 15s. Desde `mounted` es no-op, `scrollY` vale 0.
+      this.holdScrollPosition()
       this.dataTableSettings.isBusy = true
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id
+
+      if (prefetchedData) {
+        this.handleResponseData(prefetchedData)
+      } else {
+        const params = {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id
+        }
+        return Api.get(`/${this.type}`, params)
+          .then((response) => {
+            this.handleResponseData(response.data)
+          })
+          .catch((error) => {
+            this.dataTableSettings.isBusy = false
+            this.$emit('print-errors', error)
+          })
       }
-      axios.get(`/api/${this.type}`, { params })
-        .then((response) => {
-          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-            const dataTable = JSON.parse(JSON.stringify(response.data[0]))
-            this.dataTable = {
-              ...this.dataTable,
-              ...dataTable
-            }
-
-            if (this.dataTable && this.dataTable.fields && Array.isArray(this.dataTable.fields)) {
-              this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': 'Author(s), Year' }]
-              let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
-              const items = Array.isArray(this.dataTable.items) ? JSON.parse(JSON.stringify(this.dataTable.items)) : []
-
-              // Filter items to include only those with references that currently exist in the references array
-              const activeReferenceIds = this.references.map(ref => ref.id)
-              const filteredItems = items.filter(item => activeReferenceIds.includes(item.ref_id))
-
-              // Special handling for assessments to ensure we don't lose data
-              let _items
-              if (this.type === 'isoqf_assessments') {
-                // Make sure we're not removing any special assessment data
-                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
-
-                // Check if any references are missing from the assessment items
-                const existingRefIds = _items.map(item => item.ref_id)
-                const missingRefs = this.references.filter(ref => !existingRefIds.includes(ref.id))
-
-                // Add any missing references with empty data
-                if (missingRefs.length > 0) {
-                  const newItems = missingRefs.map(ref => ({
-                    ref_id: ref.id,
-                    authors: this.parseReference(ref, true, false)
-                  }))
-                  _items.push(...newItems)
-                  _items.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
-                }
-              } else {
-                _items = filteredItems.sort((a, b) => (a.authors || '').localeCompare(b.authors || ''))
-              }
-
-              this.dataTable.items = _items
-
-              this.dataTableFieldsModal.fields = []
-              for (let f of fields) {
-                if (f && f.key && !['ref_id', 'authors', 'actions'].includes(f.key)) {
-                  this.dataTableFieldsModal.fields.push(f.label || '')
-                  this.dataTable.fieldsObj.push({ key: f.key, label: f.label || '' })
-                }
-              }
-
-              if (this.useCamelot) {
-                this.addFieldsObjects(this.dataTable.fieldsObj)
-              }
-
-              if (this.checkPermissions) {
-                this.dataTable.fieldsObj.push({'key': 'actions', 'label': '', stickyColumn: true})
-              }
-
-              const original = JSON.parse(JSON.stringify(this.dataTable.fieldsObj))
-              this.dataTable.fieldsObjOriginal = original
-
-              if (this.useCamelot && !this.showConcerns) {
-                this.dataTable.fieldsObj = this.dataTable.fieldsObj.filter(item => !item.key.match(/_concerns$/))
-              }
-
-              this.dataTableFieldsModal.items = _items
-            }
-          } else {
-            this.dataTable = {
-              id: null,
-              fields: [],
-              items: [],
-              authors: '',
-              fieldsObj: [
-                {
-                  key: 'authors',
-                  label: 'Author(s), Year'
-                }
-              ],
-              fieldsObjOriginal: []
-            }
-            console.log('No data found for', this.type, this.dataTable)
-          }
-          this.$emit('updateDataTable', this.dataTable, this.type)
-        })
-        .catch((error) => {
-          console.error('Error fetching data:', error)
-          this.$emit('print-errors', error.response.data.message || 'An error occurred')
-        })
-        .finally(() => {
-          this.dataTableSettings.isBusy = false
-        })
     },
-    openModalDataTable: function () {
-      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+    handleResponseData: function (data) {
+      if (data.length) {
+        const dataTable = Commmons.deepClone(data[0])
+        this.dataTable = dataTable
+        if (Object.prototype.hasOwnProperty.call(this.dataTable, 'fields')) {
+          this.dataTable.fieldsObj = [{ 'key': 'authors', 'label': this.$t('table_headers.author_year') }]
+          if (this.canEdit) {
+            this.dataTable.fieldsObj.push({ 'key': 'actions', 'label': '', stickyColumn: true })
+          }
+
+          const fields = Commmons.deepClone(this.dataTable.fields)
+          const items = Commmons.deepClone(this.dataTable.items)
+
+          const _items = sortByAuthors(items.filter(item => item.ref_id && item.authors))
+          this.dataTable.items = _items
+
+          this.dataTableFieldsModal.fields = []
+          for (const f of filterDisplayFields(fields)) {
+            this.dataTableFieldsModal.fields.push(f.label)
+            this.dataTable.fieldsObj.push({ key: f.key, label: f.label })
+          }
+
+          this.dataTableFieldsModal.nroColumns = (this.dataTable.fieldsObj.length === 2) ? 1 : this.dataTable.fieldsObj.length - 2
+
+          this.dataTableFieldsModal.items = []
+          for (const item of _items) {
+            this.dataTableFieldsModal.items.push(item)
+          }
+
+          if (this.dataTableFieldsModal.editingRefId) {
+            const newIdx = _items.findIndex(it => String(it.ref_id) === String(this.dataTableFieldsModal.editingRefId))
+            if (newIdx !== -1) this.dataTableFieldsModal.selected_item_index = newIdx
+          }
+        }
+      } else {
+        this.dataTable = {
+          fields: [],
+          items: [],
+          authors: '',
+          fieldsObj: [
+            {
+              key: 'authors',
+              label: this.$t('table_headers.author_year')
+            }
+          ]
+        }
+      }
+      this.$emit('updateDataTable', this.dataTable, this.type)
+      this.dataTableSettings.isBusy = false
+    },
+    fieldState: function (domain, index) {
+      const d = (domain === 'edit') ? this.dataTableFieldsModalEdit : this.dataTableFieldsModal
+      if (!d.touched[index]) return null
+      const val = (domain === 'edit') ? (d.fields[index] ? d.fields[index].label : '') : d.fields[index]
+      return (typeof val === 'string') && (val.trim().length > 0)
+    },
+    /**
+     * A este modal se entra a CREAR, no a mirar, así que toma el lock al abrirse: si otra
+     * persona está creando las columnas, acá no se entra. (El modal de edición es al revés
+     * — ahí el lock espera al primer cambio para no bloquear a quien sólo mira.)
+     *
+     * Y como el lock necesita algo que bloquear, primero se resuelve el documento de la
+     * tabla, creándolo si no existe. Así el segundo que abra encuentra la tabla y queda
+     * bloqueado, en vez de que los dos creen documentos en paralelo.
+     */
+    openModalDataTable: async function () {
+      let fields = Commmons.deepClone(this.dataTable.fields || [])
       let editFields = []
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of fields) {
+      for (const field of fields) {
         if (!excluded.includes(field.key)) {
           editFields.push(field.label)
         }
       }
 
-      this.dataTableFieldsModal.nroColumns = editFields.length + 1
+      await this.getData()
+
+      const docId = await this.resolveTableDocument()
+      if (!docId) return
+      if (!(await this.ensureColumnsLock())) return
+
       this.dataTableFieldsModal.fields = editFields
+      this.dataTableFieldsModal.touched = new Array(editFields.length).fill(false)
+      // Claves de las columnas ya creadas, por índice: hace que un segundo guardado renombre
+      // en vez de duplicar si el primero falló a mitad de camino.
+      this.dataTableFieldsModal.keys = new Array(editFields.length).fill(null)
+      this.columnsCreateModalOpen = true
       this.$refs['open-dataTable-modal'].show()
     },
-    openModalDataTableEdit: function () {
-      let _fields = JSON.parse(JSON.stringify(this.dataTable.fields))
+    /**
+     * Id del documento de la tabla, creándolo si hace falta. En no-CAMELOT las filas viven
+     * en la base, así que nace con una fila por referencia o no hay dónde escribir.
+     */
+    resolveTableDocument: async function () {
+      if (this.dataTable.id) return this.dataTable.id
+      if (this.resolvedTableId) return this.resolvedTableId
+
+      try {
+        const items = this.references.map(ref => ({
+          ref_id: ref.id,
+          authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
+        }))
+        const id = await columnService.ensureTableDocument(
+          this.type, this.$route.params.org_id, this.$route.params.id, { items }
+        )
+        if (id) {
+          this.$set(this.dataTable, 'id', id)
+          this.resolvedTableId = id
+        }
+        return id
+      } catch (error) {
+        this.$emit('print-errors', error)
+        return null
+      }
+    },
+    onColumnsCreateModalHidden: async function () {
+      this.columnsCreateModalOpen = false
+      await this.releaseColumnsLock()
+      this.getData()
+      this.flushPendingRefresh()
+    },
+    openModalDataTableEdit: async function () {
+      // Primero el estado fresco: si otra persona agregó una columna, el modal tiene que
+      // armarse con ella y no con la copia vieja.
+      await this.getData()
+
+      let _fields = Commmons.deepClone(this.dataTable.fields)
       let fields = []
       const excluded = ['ref_id', 'authors', 'actions']
-      for (let field of _fields) {
+      for (const field of _fields) {
         if (!excluded.includes(field.key)) {
           fields.push(field)
         }
@@ -857,187 +741,480 @@ export default {
 
       this.dataTableFieldsModalEdit.fields = fields
       this.dataTableFieldsModalEdit.nroColumns = fields.length
+      this.dataTableFieldsModalEdit.touched = new Array(fields.length).fill(false)
+
+      // Títulos con los que se abrió, para no reenviar uno que el usuario no cambió: salir
+      // de un campo sin escribir es lo más común.
+      this.committedColumnLabels = {}
+      for (const field of fields) {
+        if (field.key) this.committedColumnLabels[field.key] = field.label
+      }
+      this.columnsEditModalOpen = true
       this.$refs['open-dataTable-modal-edit'].show()
     },
-    saveDataTableFields: function () {
+    /**
+     * Guarda los títulos escritos en el modal de creación, uno por endpoint.
+     *
+     * Es reintentable: los índices que ya tienen clave se renombran en vez de crearse otra
+     * vez, así que si el guardado falla a mitad de camino, volver a apretar Guardar no
+     * duplica lo que ya existe. El documento y el lock ya están resueltos desde que se abrió
+     * el modal.
+     */
+    saveDataTableFields: async function () {
+      const docId = this.dataTable.id || this.resolvedTableId
+      if (!this.canEdit || !docId) return
+      if (!(await this.ensureColumnsLock())) return
+
       this.dataTableSettings.isBusy = true
-      let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModal.fields))
+      const keys = this.dataTableFieldsModal.keys || []
 
-      // Make sure we're using the latest references
-      let references = JSON.parse(JSON.stringify(this.references))
+      try {
+        for (let index = 0; index < this.dataTableFieldsModal.fields.length; index++) {
+          const raw = this.dataTableFieldsModal.fields[index]
+          const label = (typeof raw === 'object' ? raw.label : raw || '').trim()
+          if (!label) continue
 
-      let params = {
-        fields: [
-          {'key': 'ref_id', 'label': 'Reference ID'},
-          {'key': 'authors', 'label': 'Author(s), Year'}
-        ],
-        items: [],
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        nro_of_fields: fields.length,
-        is_public: false
-      }
-
-      const createFields = (fields) => {
-        return fields.map((field, index) => ({
-          key: `column_${index}`,
-          label: field
-        }))
-      }
-
-      const createItems = (references, fields) => {
-        // Make sure we only include active references
-        return references.map((ref) => {
-          const item = {
-            ref_id: ref.id,
-            authors: this.getAuthorsFormat(ref.authors, ref.publication_year)
-          }
-          fields.forEach((_, index) => {
-            item[`column_${index}`] = ''
-          })
-          return item
-        })
-      }
-
-      params.fields.push(...createFields(fields))
-      params.items = createItems(references, fields)
-
-      if (this.project.is_public) {
-        params.is_public = true
-      }
-
-      const request = this.dataTable.id
-        ? axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
-        : axios.post(`/api/${this.type}`, params)
-
-      request
-        .then(() => {
-          this.$emit('get-project')
-          this.getData()
-          this.dataTableSettings.isBusy = false
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
-    },
-    updateDataTableFields: function () {
-      this.dataTableSettings.isBusy = true
-      let params = {
-        is_public: false
-      }
-      let fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
-
-      fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
-
-      params.fields = fields
-
-      let _items = JSON.parse(JSON.stringify(this.dataTable.items))
-
-      for (let item of _items) {
-        for (let field of fields) {
-          if (!Object.prototype.hasOwnProperty.call(item, field.key)) {
-            item[field.key] = ''
+          if (keys[index]) {
+            await columnService.renameColumn(this.type, docId, keys[index], label)
+          } else {
+            const { key } = await columnService.addColumn(this.type, docId, label)
+            this.$set(keys, index, key)
           }
         }
+        this.$set(this.dataTableFieldsModal, 'keys', keys)
+        this.$emit('get-project')
+        this.getData()
+        this.$refs['open-dataTable-modal'].hide()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
       }
-
-      params.items = _items
-
-      if (this.project.is_public) {
-        params.is_public = true
-      }
-
-      axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
-        .then(() => {
-          this.getData()
-          this.dataTableSettings.isBusy = false
-        })
-        .catch((error) => {
-          this.$emit('print-errors', error)
-        })
     },
-    dataTableNewColumn: function () {
-      let _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
-      let fields = []
-      let column = '0'
-      const excluded = ['ref_id', 'authors', 'actions']
-      if (_fields.length) {
-        for (const field of _fields) {
-          if (!excluded.includes(field.key)) {
-            fields.push(field)
-          }
-        }
-        fields.sort((a, b) => {
-          if (a.key.match(/\d+/g) && b.key.match(/\d+/g)) {
-            return parseInt(a.key.match(/\d+/g)[0]) - parseInt(b.key.match(/\d+/g)[0])
-          }
-          return 0
-        })
-        this.dataTableFieldsModalEdit.nroColumns = fields.length + 1
-        column = parseInt(fields[ fields.length - 1 ].key.split('_')[1]) + 1
+    /** Lo que significa recargar acá: releer la tabla. */
+    applyProjectRefresh: function () {
+      this.getData()
+    },
+    /** Repintar la tabla debajo de alguien que escribe le descarta el borrador. */
+    hasOpenEditor: function () {
+      return this.rowEditorOpen || this.columnsCreateModalOpen || this.columnsEditModalOpen
+    },
+    startFreshnessPolling: function () {
+      this.checkProjectFreshness()
+      this.freshnessTimer = setInterval(() => this.checkProjectFreshness(), 15000)
+    },
+    stopFreshnessPolling: function () {
+      if (this.freshnessTimer) clearInterval(this.freshnessTimer)
+      this.freshnessTimer = null
+    },
+    /**
+     * The four column endpoints require the table document's lock when concurrency is on.
+     * Taken on the first real change rather than on open: whoever came to look at the
+     * columns should not block anybody. (The CREATE modal is the other way round — you go
+     * in there to create, so it locks on open.)
+     */
+    ensureColumnsLock: async function () {
+      if (this.columnsLockHeld) return true
+
+      const docId = this.dataTable.id || this.resolvedTableId
+      if (!docId) return false
+
+      const lockRef = fieldsLockKey(docId)
+      const result = await LockService.acquireRef(this.$route.params.id, lockRef)
+      if (!result || !result.success) {
+        this.notifyColumnsError(
+          result && result.lockedBy
+            ? this.$t('characteristics.columns_locked_by', { name: result.lockedBy })
+            : this.$t('notifications.error')
+        )
+        return false
       }
 
-      this.dataTableFieldsModalEdit.fields.push(
+      this.columnsLockHeld = true
+      this.columnsLockRef = lockRef
+      return true
+    },
+    /**
+     * A column is saved when its input loses focus: that is when the title is written.
+     * Doing it as the row appears would bring a column into existence untitled.
+     */
+    onEditFieldBlur: async function (index) {
+      this.$set(this.dataTableFieldsModalEdit.touched, index, true)
+
+      const field = this.dataTableFieldsModalEdit.fields[index]
+      if (!field || !this.canEdit) return
+
+      const label = (field.label || '').trim()
+      if (!label || label === this.committedColumnLabels[field.key || `idx_${index}`]) return
+      if (!(await this.ensureColumnsLock())) return
+
+      this.dataTableSettings.isBusy = true
+      try {
+        if (field.key) {
+          await columnService.renameColumn(this.type, this.dataTable.id, field.key, label)
+          this.committedColumnLabels[field.key] = label
+        } else {
+          const { key } = await columnService.addColumn(this.type, this.dataTable.id, label)
+          // The key has to land in local state: without it the reorder cannot name the
+          // column and a second blur would create it all over again.
+          this.$set(field, 'key', key)
+          this.committedColumnLabels[key] = label
+        }
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
+      }
+    },
+    /**
+     * The DELETE clears that column's content in every stored row, and there is no save
+     * button in between any more: the click is destructive on the spot.
+     */
+    confirmDeleteColumnEdit: async function (index) {
+      const field = this.dataTableFieldsModalEdit.fields[index]
+      if (!field || !this.canEdit) return
+
+      // A column that never reached the server has nothing to delete there.
+      if (!field.key) {
+        this.dataTableFieldsModalEdit.fields.splice(index, 1)
+        this.dataTableFieldsModalEdit.touched.splice(index, 1)
+        return
+      }
+
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('characteristics.confirm_delete_column', { name: field.label }),
         {
-          'key': `column_${column.toString()}`,
-          'label': ''
+          title: this.$t('characteristics.confirm_delete_column_title'),
+          okVariant: 'danger',
+          okTitle: this.$t('common.delete'),
+          cancelTitle: this.$t('common.cancel'),
+          centered: true
         }
       )
+      if (!confirmed) return
+      if (!(await this.ensureColumnsLock())) return
+
+      this.dataTableSettings.isBusy = true
+      try {
+        await columnService.deleteColumn(this.type, this.dataTable.id, field.key)
+        this.dataTableFieldsModalEdit.fields.splice(index, 1)
+        this.dataTableFieldsModalEdit.touched.splice(index, 1)
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
+      }
+    },
+    onColumnsOrderChanged: function () {
+      this.drag = false
+      // Only flagged: the reorder is the one commutative operation of the set now that
+      // `order` accepts a subset, so sending it once on close matches sending it on every
+      // drag and costs one request instead of one per drag.
+      this.pendingColumnsOrder = true
+    },
+    onColumnsEditModalHidden: async function () {
+      // El estado local se baja PRIMERO, antes de cualquier await: si uno falla, dejar el
+      // flag en true hace que `hasOpenEditor()` mienta para siempre y el refresco periódico
+      // no vuelva a aplicarse nunca. Es lo que pasaba cuando `releaseRef` rechazaba porque la
+      // app había quedado sin conexión — medido en el navegador.
+      this.columnsEditModalOpen = false
+      this.committedColumnLabels = {}
+
+      const pendiente = this.pendingColumnsOrder
+      this.pendingColumnsOrder = false
+
+      try {
+        if (pendiente && this.dataTable.id) {
+          const order = this.dataTableFieldsModalEdit.fields
+            .filter(field => field.key)
+            .map(field => field.key)
+
+          if (order.length && await this.ensureColumnsLock()) {
+            await columnService.reorderColumns(this.type, this.dataTable.id, order)
+            this.getData()
+          }
+        }
+      } catch (error) {
+        this.$emit('print-errors', error)
+      }
+
+      await this.releaseColumnsLock()
+      // Nada más abierto: aplicar la recarga que se postergó mientras se editaba.
+      this.flushPendingRefresh()
+    },
+    /**
+     * Suelta el lock de columnas. Un fallo al soltarlo no puede dejarlo marcado como
+     * tomado: el servidor lo expira por TTL, y creerlo vigente sólo bloquearía las
+     * operaciones siguientes de este mismo usuario.
+     */
+    releaseColumnsLock: async function () {
+      if (!this.columnsLockHeld) return
+
+      const ref = this.columnsLockRef
+      this.columnsLockHeld = false
+      this.columnsLockRef = null
+      try {
+        await LockService.releaseRef(ref)
+      } catch (error) {
+        console.warn('No se pudo liberar el lock de columnas:', error)
+      }
+    },
+    notifyColumnsError: function (message) {
+      this.$bvToast.toast(message, {
+        title: this.$t('notifications.error'),
+        variant: 'danger',
+        solid: true
+      })
+    },
+    /**
+     * Quita de cada fila las claves de columnas que ya no existen, y completa con vacío
+     * las que `fields` declara y la fila no trae.
+     *
+     * Antes reconstruía la fila desde cero con las claves de `fields`, y eso borraba todo
+     * lo que el servidor guarda DENTRO del ítem sin ser una columna: el contador de
+     * versión `_v` y el árbol `stages` de las 10 evaluaciones de ajuste. Como el resultado
+     * se compara con lo que vino del servidor para decidir si hay que reescribir el
+     * documento (`updateMyDataTables`), la comparación difería SIEMPRE y salía un PATCH de
+     * documento completo —sin lock y sin versión— en cada montaje de la vista.
+     *
+     * La regla de qué es huérfano vive en `cleanOrphanedCustomFieldKeys`: sólo las claves
+     * `column_*` se descartan, y sólo si no están en `fields`. Se usa esa y no una copia
+     * local porque la copia local es justamente lo que causó el problema.
+     */
+    getCleanedItems: function (items, fields) {
+      if (!items) return []
+      if (!fields || !fields.length) return items
+
+      const declaredKeys = fields.map(f => f.key)
+      const withoutOrphans = cleanOrphanedCustomFieldKeys(
+        items.filter(item => item.ref_id && item.authors),
+        fields
+      )
+
+      return withoutOrphans.map(item => {
+        declaredKeys.forEach(key => {
+          if (!Object.prototype.hasOwnProperty.call(item, key)) item[key] = ''
+        })
+        return item
+      })
+    },
+    /**
+     * Una columna nueva entra sin clave: la genera el alta cuando el usuario escribe el
+     * título. Derivarla de la posición (`column_${N+1}`) era lo que hacía colisionar a dos
+     * personas agregando a la vez, porque las dos leían el mismo máximo.
+     */
+    dataTableNewColumn: function () {
+      this.dataTableFieldsModalEdit.fields.push({ label: '' })
+      this.dataTableFieldsModalEdit.nroColumns = this.dataTableFieldsModalEdit.fields.length
+      this.dataTableFieldsModalEdit.touched.push(false)
     },
     getReferenceInfo: function (refId) {
-      for (let ref of this.refs) {
+      for (const ref of this.refs) {
         if (ref.id === refId) {
           return ref.content
         }
       }
     },
-    addContentDataTable: function (index = 0) {
-      const items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let fields = JSON.parse(JSON.stringify(this.dataTable.fields))
-
-      if (this.useCamelot) {
-        fields = JSON.parse(JSON.stringify(this.dataTable.fieldsObjOriginal))
+    // The lock can vanish mid-edit: a failed heartbeat, or an offline grant that lost
+    // the race when the network came back. Keeping the row editable would only lead
+    // to a 409 on save.
+    onRefLockLost: function (event) {
+      const detail = event.detail || {}
+      if (detail.refId !== this.dataTableFieldsModal.editingRefId) return
+      this.isRowReadOnly = true
+      this.rowLockedBy = detail.lockedBy || null
+      this.rowLockLostReason = detail.reason || null
+    },
+    /**
+     * La fila cambió entre que se leyó y que se intentó guardar.
+     *
+     * No se puede resolver reintentando —el guardado pisaría lo que la otra persona
+     * escribió— ni absorbiendo la versión nueva a la callada, que es lo mismo con un paso
+     * de más. Y no se puede dejar pasar: el `_v` local quedó viejo, así que cada tecleo
+     * siguiente vuelve a chocar y la persona escribiría contra un guardado imposible.
+     *
+     * Así que se corta la escritura y se retiene el valor ajeno junto al propio, para que
+     * la decisión de qué conservar la tome quien escribió.
+     */
+    onVersionConflict: function (event) {
+      const detail = (event && event.detail) || {}
+      if (detail.refId !== this.dataTableFieldsModal.editingRefId) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.isRowReadOnly = true
+      this.versionConflict = {
+        item: detail.item || {},
+        failedData: detail.failedData || {},
+        currentVersion: detail.currentVersion
       }
+    },
+    /** Trae la fila al día y devuelve el editor a un estado escribible. */
+    reloadAfterVersionConflict: function () {
+      this.versionConflict = null
+      this.isRowReadOnly = false
+      this.getData()
+    },
+    onEditModalHidden: function () {
+      // BootstrapVue emits `hidden` asynchronously (~300ms of animation). If the editor
+      // was reopened in the meantime, this event belongs to the previous session and
+      // releasing now would leave the open editor without a lock — every save would 409.
+      if (this.staleHiddenPending) {
+        this.staleHiddenPending = false
+        return
+      }
+      this.rowEditorOpen = false
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      // Release only this row: the tab may legitimately hold other ref locks
+      // (a finding's evidence profile, another table's row).
+      this.releaseRowLock()
+      this.dataTableFieldsModal.editingRefId = null
+      this.isRowReadOnly = false
+      this.rowLockedBy = null
+      this.rowLockLostReason = null
+      this.rowLockDeniedReason = null
+      // Ya no hay nada abierto: aplicar la recarga postergada mientras se escribía.
+      this.flushPendingRefresh()
+    },
+    addContentDataTable: function (index = 0) {
+      // El auto-guardado lee la fila seleccionada cuando le toca correr, no cuando se
+      // programó. Si el índice ya cambió, escribiría una fila que nadie editó, y con el
+      // lock de la anterior recién liberado más abajo.
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      this.versionConflict = null
 
+      const items = Commmons.deepClone(this.dataTable.items)
+
+      let fields = Commmons.deepClone(this.dataTable.fields)
       this.dataTableFieldsModal.fields = fields
       this.dataTableFieldsModal.items = items
+      this.dataTableFieldsModal.selected_item_index = index
+      const nextRef = items[index] ? items[index].ref_id : null
 
-      // Ensure the index is valid by checking it against the actual items array length
-      this.dataTableFieldsModal.selected_item_index = index < items.length ? index : 0
+      // A lock the modal never released (its `hidden` never arrived, or it never
+      // finished opening) would stay held while we move to another row.
+      if (this.lockedRowRef && this.lockedRowRef !== nextRef) this.releaseRowLock()
+      // Opening while another session is still closing means its `hidden` is still
+      // in flight and must not be mistaken for the closing of this one.
+      this.staleHiddenPending = this.rowEditorOpen
+      this.rowEditorOpen = true
 
-      if (this.useCamelot) {
-        this.$refs['open-modal-content-camelot-data'].show()
-      } else {
-        this.$refs['edit-content-dataTable'].show()
+      this.dataTableFieldsModal.editingRefId = nextRef
+      this.acquireRowLock(nextRef)
+      this.$refs['edit-content-dataTable'].show()
+    },
+    releaseRowLock: function () {
+      if (this.lockedRowRef) LockService.releaseRef(this.lockedRowRef)
+      this.lockedRowRef = null
+    },
+    // Mirrors StepFour.vue's acquireStudyLock: the lock is asked for when the
+    // editor opens, so the rejection reaches the user before they type, not on save.
+    async acquireRowLock (refId) {
+      if (!refId) return
+      if (!this.canEdit) {
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        return
       }
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.lockedRowRef = refId
+        this.isRowReadOnly = false
+        this.rowLockedBy = null
+      } else if (result.permissionDenied) {
+        // Nobody else holds it — this user's own can_write was revoked. There is
+        // no "locked by X" to report.
+        this.isRowReadOnly = true
+        this.rowLockedBy = null
+        if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+      } else {
+        this.isRowReadOnly = true
+        this.rowLockedBy = result.lockedBy || null
+        // El motivo del acquire, no el del latido: acá no perdió nada, nunca lo tuvo.
+        this.rowLockDeniedReason = result.reason || null
+        if (this.$notify) {
+          this.$notify.warning(this.$t(this.rowLockMessageKey, { user: this.rowLockedBy }))
+        }
+      }
+    },
+    onFieldInput: function () {
+      this.autoSaveDebounced()
+    },
+    _patchContentItem: function (id, editedItem) {
+      // Granular save of a single content row: persists ONLY this row via the
+      // per-item sub-resource, instead of rewriting the whole `items` array.
+      // Pattern reference: EditReferenceModal.vue:466
+      //   Api.patch(`/isoqf_characteristics/${id}/item/${ref_id}`, item)
+      // Here `this.type` is the collection (isoqf_characteristics | isoqf_assessments)
+      // and `editedItem` is the full edited row (it already carries ref_id + columns).
+      // Because the backend replaces only the matched row, concurrent edits to other
+      // rows are no longer overwritten (no more client-side refetch + merge needed).
+      return Api.patch(`/${this.type}/${id}/item/${editedItem.ref_id}`, editedItem)
+    },
+    /**
+     * Trae al ítem local la versión que el servidor acaba de estampar.
+     *
+     * El guardado granular responde con el DOCUMENTO completo recargado, no con la fila,
+     * así que hay que buscarla por `ref_id`. Sin esto el ítem del modal —que es el mismo
+     * objeto que se vuelve a enviar en el próximo guardado— conserva la versión anterior
+     * y el segundo PATCH recibe `409 version_conflict`. Con el auto-guardado por tecleo
+     * eso no es un caso raro: es el segundo tecleo.
+     *
+     * Se copia sólo la metadata, nunca los valores: lo que el usuario está escribiendo en
+     * ese momento no puede ser pisado por la respuesta de su propio guardado anterior.
+     */
+    absorbItemVersion: function (response, localItem) {
+      const items = (response && response.data && response.data.items) || []
+      const saved = items.find(item => item && item.ref_id === localItem.ref_id)
+      if (!saved) return
+      // `$set` y no asignación directa: la primera vez la clave no existe en el objeto
+      // local, y Vue 2 no observa propiedades agregadas después.
+      const fresh = copyItemMetadata({}, saved)
+      Object.keys(fresh).forEach(key => this.$set(localItem, key, fresh[key]))
+    },
+    performAutoSave: function () {
+      const id = this.dataTable.id
+      if (!id || this.isRowReadOnly) return
+      const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
+      if (!editedItem) return
+      this.autoSaveStatus = 'saving'
+      return this._patchContentItem(id, editedItem)
+        .then((response) => {
+          this.absorbItemVersion(response, editedItem)
+          this.autoSaveStatus = 'saved'
+          setTimeout(() => { this.autoSaveStatus = null }, 2000)
+        })
+        .catch(() => {
+          // Salvo que el conflicto de versión ya haya puesto su cartel: ahí este ícono
+          // sería un segundo indicador del mismo evento, y el que menos dice de los dos —
+          // «no se pudo guardar» sugiere reintentar, y reintentar es justo lo que no
+          // corresponde mientras la fila esté desactualizada.
+          if (!this.versionConflict) this.autoSaveStatus = 'error'
+        })
     },
     saveContentDataTable: function () {
       const id = this.dataTable.id
+      const editedItem = this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]
+      // Writing without the row's lock is a guaranteed 409 (endpoint B).
+      if (!id || this.isRowReadOnly) return Promise.resolve()
 
-      // Additional validation to ensure we have a valid selected_item_index
-      if (this.dataTableFieldsModal.selected_item_index < 0 ||
-          this.dataTableFieldsModal.selected_item_index >= this.dataTableFieldsModal.items.length) {
-        this.dataTableFieldsModal.selected_item_index = 0
-      }
+      // El guardado explícito manda lo mismo que el auto-guardado pendiente, así que
+      // dejarlo correr era un PATCH de más. Con el contador de versión por ítem deja de
+      // ser inocuo: este PATCH avanza `_v` en el servidor y el pendiente llegaría con la
+      // versión anterior, o sea un 409 en cada guardado con click.
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
 
-      const params = {
-        items: this.dataTableFieldsModal.items
-      }
-
-      axios.patch(`/api/${this.type}/${id}`, params)
+      return this._patchContentItem(id, editedItem)
         .then(() => {
-          // Only try to emit set-item-data if we have a valid selected item
-          if (this.dataTableFieldsModal.items.length &&
-              this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index]) {
-            this.$emit('set-item-data', `${this.prefix}-${this.dataTableFieldsModal.items[this.dataTableFieldsModal.selected_item_index].ref_id}`)
-          }
+          // Antes se emitía `set-item-data` para que viewProject navegara a un
+          // ancla y scrolleara hasta la fila. Esa navegación era justamente lo que
+          // tiraba la página al tope: el `scrollBehavior` global la manda a y=0.
+          // La posición ahora se sostiene desde `getData`, sin tocar la URL.
           this.$emit('get-project')
-          const currentShowConcerns = this.showConcerns
           this.getData()
-          if (currentShowConcerns !== this.showConcerns) {
-            this.showConcerns = currentShowConcerns
-          }
           this.$refs['edit-content-dataTable'].hide()
         })
         .catch((error) => {
@@ -1047,7 +1224,7 @@ export default {
     openModalRemoveContentDataTable: function (id) {
       if (!id) return
 
-      const lists = JSON.parse(JSON.stringify(this.lists))
+      const lists = Commmons.deepClone(this.lists)
       this.removeReferenceDataTable = {
         id: id,
         findings: []
@@ -1056,11 +1233,52 @@ export default {
       for (const list of lists) {
         for (const ref of list.references) {
           if (id === ref) {
-            this.removeReferenceDataTable.findings.push(list.isoqf_id)
+            this.removeReferenceDataTable.findings.push(list.displayNumber)
           }
         }
       }
+      // Mismo criterio que el editor de fila: el lock se pide al abrir, así que el «lo
+      // tiene otra persona» llega antes de que alguien confirme un borrado que va a fallar.
+      this.acquireRemoveLock(id)
       this.$refs['removeContentModalDataTable'].show()
+    },
+    /** Toma el lock de la fila que se va a vaciar, en su propio estado. */
+    async acquireRemoveLock (refId) {
+      if (!refId) return
+      // Abrir otra confirmación sin soltar la anterior dejaba esa fila bloqueada para
+      // todos hasta que el TTL del servidor la barriera.
+      if (this.removeLockRef && this.removeLockRef !== refId) this.releaseRemoveLock()
+      if (!this.canEdit) {
+        this.removeReadOnly = true
+        return
+      }
+      const result = await LockService.acquireRef(this.$route.params.id, refId)
+      if (result.success) {
+        this.removeLockRef = refId
+        this.removeReadOnly = false
+        this.removeLockedBy = null
+        return
+      }
+      this.removeReadOnly = true
+      this.removeLockedBy = result.permissionDenied ? null : (result.lockedBy || null)
+    },
+    releaseRemoveLock: function () {
+      if (this.removeLockRef) LockService.releaseRef(this.removeLockRef)
+      this.removeLockRef = null
+    },
+    /**
+     * `hidden` y no `cancel`: BootstrapVue sólo emite `cancel` en el botón de cancelar, y
+     * no cuando se cierra con ESC, con la X o clickeando el fondo. Colgado de `cancel`, el
+     * lock quedaba tomado en esas tres rutas.
+     */
+    onRemoveModalHidden: function () {
+      this.releaseRemoveLock()
+      this.removeReadOnly = false
+      this.removeLockedBy = null
+      this.removeReferenceDataTable = {
+        id: null,
+        findings: []
+      }
     },
     cleanRemoveContentCharsOfStudies: function () {
       this.removeReferenceDataTable = {
@@ -1068,188 +1286,321 @@ export default {
         findings: []
       }
     },
+    /**
+     * Vacía las columnas de una fila, dejando la fila en la tabla.
+     *
+     * Escribe SÓLO esa fila, por el sub-recurso `/item/<ref_id>`. Antes reescribía el
+     * array `items` completo por la ruta genérica, y eso tenía dos problemas: se llevaba
+     * por delante lo que otra persona estuviera escribiendo en cualquier otra fila, y no
+     * pasaba por ningún lock —la ruta genérica no lo exige—, así que el bloqueo de fila
+     * coordinaba la interfaz sin impedir la escritura.
+     *
+     * Se parte del ítem y se vacían las columnas, en vez de construir la fila desde cero:
+     * el `$set` del servidor reemplaza el ítem completo, así que lo que no viaje se pierde
+     * —el contador `_v`, el árbol `stages` de las evaluaciones de ajuste— y vaciar las
+     * columnas no es motivo para tirar nada de eso.
+     */
     removeDataFromLists: function () {
       const removedId = this.removeReferenceDataTable.id
-      const _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      let items = []
-      let _keys = JSON.parse(JSON.stringify(this.dataTable.fields))
-      let keys = []
-      for (const k of _keys) {
-        keys.push(k.key)
-      }
+      const original = (this.dataTable.items || []).find(item => item.ref_id === removedId)
+      if (!removedId || !original) return Promise.resolve()
+      // Escribir sin el lock de la fila es un 409 garantizado (endpoint B).
+      if (this.removeReadOnly || this.removeLockRef !== removedId) return Promise.resolve()
 
-      for (let item of _items) {
-        if (item.ref_id === removedId) {
-          let obj = {}
+      const row = Commmons.deepClone(original)
+      this.dataTable.fields.forEach(field => {
+        if (field.key === 'ref_id' || field.key === 'authors') return
+        row[field.key] = ''
+      })
 
-          // Create a copy of the object with basic properties
-          for (let k in keys) {
-            if (Object.prototype.hasOwnProperty.call(item, keys[k])) {
-              if (keys[k] === 'ref_id' || keys[k] === 'authors') {
-                obj[keys[k]] = item[keys[k]]
-              } else {
-                obj[keys[k]] = ''
-              }
-            } else {
-              obj[keys[k]] = ''
-            }
-          }
-
-          // Special handling for assessments to preserve any complex structure
-          if (this.type === 'isoqf_assessments') {
-            // Preserve any special properties that might be needed for assessments
-            for (const key in item) {
-              if (!keys.includes(key) && key !== 'ref_id' && key !== 'authors') {
-                if (typeof item[key] === 'object' && item[key] !== null) {
-                  // For complex objects like stages, preserve structure but clear content
-                  if (key === 'stages' && Array.isArray(item[key])) {
-                    obj[key] = item[key].map(stage => ({
-                      key: stage.key,
-                      options: stage.options.map(() => ({ option: null, text: '' }))
-                    }))
-                  } else {
-                    // For other objects, copy the structure
-                    obj[key] = JSON.parse(JSON.stringify(item[key]))
-                  }
-                } else {
-                  obj[key] = item[key]
-                }
-              }
-            }
-          }
-
-          items.push(obj)
-        } else {
-          items.push(item)
-        }
-      }
-
-      const params = {
-        items: items
-      }
-
-      axios.patch(`/api/${this.type}/${this.dataTable.id}`, params)
+      return this._patchContentItem(this.dataTable.id, row)
         .then(() => {
           this.getData()
         })
         .catch((error) => {
-          this.$emit('print-errors', error)
+          if (!isLockRejection(error)) this.$emit('print-errors', error)
+        })
+        .finally(() => {
+          // La fila ya está vaciada: retener el lock la dejaría bloqueada para todos hasta
+          // que el TTL del servidor lo barriera.
+          this.releaseRemoveLock()
         })
     },
-    deleteFieldFromCharsSudiesEdit: function (index) {
-      let params = {}
-      const _fields = JSON.parse(JSON.stringify(this.dataTableFieldsModalEdit.fields))
-      const _items = JSON.parse(JSON.stringify(this.dataTable.items))
-      const dataTableId = this.dataTable.id
+    generateTemplate: async function () {
+      const _refs = Commmons.deepClone(this.refs)
 
-      let removedField = _fields.splice(index, 1)[0]
+      const rows = [
+        [
+          this.$t('table_headers.reference_id'),
+          this.$t('table_headers.author_year')
+        ],
+        ..._refs.map(ref => [
+          String(ref.id),
+          ref.content.split(';')[0]
+        ])
+      ]
 
-      _fields.splice(0, 0, { 'key': 'ref_id', 'label': 'Reference ID' })
-      _fields.splice(1, 0, { 'key': 'authors', 'label': 'Author(s), Year' })
+      await exportAOAToXLSX(rows, 'my_data')
+    },
+    loadTableImportData: async function (event) {
+      const file = event.target.files[0]
+      if (!file) return
 
-      for (let item of _items) {
-        if (Object.prototype.hasOwnProperty.call(item, removedField.key)) {
-          delete item[removedField.key]
-        }
+      let parsed
+      if (file.name.toLowerCase().endsWith('.xlsx')) {
+        parsed = await parseXLSXData(file, this.$t('import_modal.format_error'))
+      } else {
+        const text = await loadFileAsText(event)
+        if (!text) return
+        parsed = parseCSVData(text, this.$t('import_modal.format_error'))
       }
 
-      params.fields = _fields
-      params.items = _items
+      this.importDataTable.error = parsed.error
+      if (parsed.fieldsObj.length > 0) {
+        this.importDataTable.fieldsObj = [
+          { key: 'authors', label: this.$t('table_headers.author_year') },
+          ...parsed.fieldsObj
+        ]
+      }
+      this.importDataTable.fields = parsed.fields
+      this.importDataTable.items = parsed.items
+    },
+    cleanVars: function (isCancel = false) {
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: this.$t('table_headers.author_year') }
+        ]
+      }
+      this.$refs['import-file'].reset()
+      if (isCancel) {
+        this.$refs[`import-table-${this.type}`].hide()
+      }
+    },
+    openModalImportTable: async function () {
+      // El modal se muestra primero: hacerlo esperar el listado convertiría un hipo de red
+      // en un botón que no responde.
+      this.$refs[`import-table-${this.type}`].show()
+      this.importLockProbe = await LockService.probeRefLocks(this.$route.params.id)
+    },
+    /**
+     * Pregunta antes de arrasar, y devuelve si hay que seguir.
+     *
+     * El import es `DELETE` + `POST` del documento completo. Exige el lock de PROYECTO,
+     * así que si otra persona lo tiene el servidor rechaza — pero **no mira los ref
+     * locks**: quien esté editando un estudio del Paso 3 o 4 sostiene un lock por `ref_id`
+     * y el import le pasa por encima sin conflicto, sin aviso y con las filas ya borradas.
+     * Backend decidió no cerrarlo del lado servidor (un import destructivo que falla
+     * porque alguien tiene una fila abierta convierte una operación legítima en una
+     * lotería); la mitad nuestra es que la persona lo sepa antes de decidir.
+     *
+     * Consulta de nuevo en vez de reusar lo del `openModalImportTable`: entre abrir el
+     * modal y apretar Guardar se elige el archivo y se revisan las columnas, y un listado
+     * de hace cinco minutos avisaría de quien ya salió y callaría a quien acaba de entrar.
+     */
+    confirmImportOverRefLocks: async function () {
+      this.importLockProbe = await LockService.probeRefLocks(this.$route.params.id)
 
-      axios.patch(`/api/${this.type}/${dataTableId}`, params)
-        .then((response) => {
-          let _fields = JSON.parse(JSON.stringify(response.data['$set'].fields))
-          const excluded = ['ref_id', 'authors', 'actions']
-          let editFields = []
-          for (let field of _fields) {
-            if (!excluded.includes(field.key)) {
-              editFields.push(field)
-            }
-          }
+      // Sin concurrencia no hay locks posibles: nada que avisar, y un clic extra donde la
+      // pregunta no aplica es lo que hace que se dejen de leer los carteles.
+      if (!this.importLockProbe.enabled) return true
 
-          this.dataTableFieldsModalEdit.fields = editFields
-          this.dataTableFieldsModalEdit.nroColumns = editFields.length
-          this.$emit('get-project')
+      // `reachable:false` es la razón de ser de `probeRefLocks`. Sin ese campo un error de
+      // red se leería igual que «nadie está editando», y le diríamos lo contrario de la
+      // verdad justo antes de una operación que no se deshace.
+      const message = this.importLockProbe.reachable
+        ? this.importLockNotice
+        : this.$t('import_modal.ref_locks_unknown')
+      if (!message) return true
+
+      return this.$bvModal.msgBoxConfirm(message, {
+        title: this.$t('import_modal.ref_locks_title'),
+        okVariant: 'danger',
+        okTitle: this.$t('import_modal.ref_locks_ok'),
+        cancelTitle: this.$t('common.cancel'),
+        centered: true
+      })
+    },
+    exportTableToXLSX: async function () {
+      await exportTableToXLSX({
+        fields: this.dataTable.fields,
+        items: this.dataTable.items,
+        filename: 'exportable_table'
+      })
+    },
+    saveImportedData: async function () {
+      if (!this.importDataTable.fields.length || !this.importDataTable.items.length) return
+
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id,
+        fields: this.importDataTable.fields,
+        items: this.importDataTable.items
+      }
+
+      // El limpiado se movió DEBAJO de la confirmación a propósito: antes corría siempre,
+      // así que cancelar le costaba volver a elegir el archivo y revisar las columnas de
+      // nuevo — un castigo por haber dudado.
+      if (!(await this.confirmImportOverRefLocks())) return
+
+      if (this.dataTable.items.length) {
+        this.cleanImportedData(this.dataTable.id, params)
+      } else {
+        this.insertImportedData(params)
+      }
+
+      this.importDataTable = {
+        error: null,
+        fields: [],
+        items: [],
+        fieldsObj: [
+          { key: 'authors', label: this.$t('table_headers.author_year') }
+        ]
+      }
+    },
+    cleanImportedData: function (id = '', params = {}) {
+      Api.delete(`/${this.type}/${id}`)
+        .then(() => {
+          this.insertImportedData(params)
         })
         .catch((error) => {
           this.$emit('print-errors', error)
         })
     },
-    scrollToSection (sectionId) {
-      const element = document.getElementById(sectionId)
-      if (element) {
-        this.modal.selectedOption = sectionId
-        const camelotContainer = document.getElementById('camelot')
-        const offset = element.offsetTop - camelotContainer.offsetTop
-        camelotContainer.scrollTo({
-          top: offset,
-          behavior: 'smooth'
+    insertImportedData: function (params = {}) {
+      if (!Object.prototype.hasOwnProperty.call(params, 'organization') || !Object.prototype.hasOwnProperty.call(params, 'project_id') || !Object.prototype.hasOwnProperty.call(params, 'fields') || !Object.prototype.hasOwnProperty.call(params, 'items')) {
+        return
+      }
+      Api.post(`/${this.type}/`, params)
+        .then(() => {
+          this.getData()
+          this.$refs[`import-table-${this.type}`].hide()
         })
-      }
-    },
-    agregarCampoCamelot () {
-      // Generar una clave única para el nuevo campo
-      const newKey = `column_${Date.now()}`
-
-      // Crear el nuevo campo
-      const newField = {
-        key: newKey,
-        label: 'Nuevo campo',
-        id: `field_${Date.now()}`
-      }
-
-      // Añadir el nuevo campo al principio de los campos disponibles
-      this.dataTableFieldsModal.fields.unshift(newField)
-
-      // Inicializar el valor para todos los items
-      if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
-        this.dataTableFieldsModal.items.forEach(item => {
-          this.$set(item, newKey, '')
+        .catch((error) => {
+          this.$emit('print-errors', error)
         })
-      }
     },
+    /**
+     * Muestra la tabla con una fila por estudio, derivando las que el documento no tiene.
+     *
+     * Antes las escribía: un PATCH del documento completo por la ruta genérica, sin lock y
+     * sin comprobación de versión, que se llevaba por delante lo que otra persona estuviera
+     * editando en cualquier otra fila. La rama de sólo lectura ya hacía lo correcto
+     * —derivar y mostrar— y ahora es el único camino.
+     *
+     * La fila se persiste sola en cuanto alguien escribe en ella: el endpoint por ítem es
+     * un upsert, así que nadie necesita que exista antes.
+     */
+    updateMyDataTables: function () {
+      const params = {
+        organization: this.$route.params.org_id,
+        project_id: this.$route.params.id
+      }
 
-    eliminarCampoCamelot (index, field) {
-      // No permitir eliminar campos especiales como ref_id o authors
-      if (['ref_id', 'authors'].includes(field.key)) {
+      Api.get(`/${this.type}`, params)
+        .then((response) => {
+          if (!response.data.length) {
+            this.getData()
+            return
+          }
+          const responseData = Commmons.deepClone(response.data[0])
+          let items = this.processItems(responseData.items || [])
+          items = this.getCleanedItems(items, responseData.fields)
+
+          const derivedData = Commmons.deepClone(response.data)
+          derivedData[0].items = items
+          this.getData(derivedData)
+        })
+        .catch((error) => {
+          this.dataTableSettings.isBusy = false
+          this.$emit('print-errors', error)
+        })
+    },
+    processItems: function (dataItems) {
+      const items = Commmons.deepClone(dataItems)
+      const currentRefIds = this.references.map(r => r.id)
+
+      // 1. Keep only items whose reference still exists
+      const filteredItems = items.filter(item => currentRefIds.includes(item.ref_id))
+
+      // 2. Add new items for references that don't have one yet
+      const existingRefIds = filteredItems.map(item => item.ref_id)
+      const newItems = []
+
+      for (const reference of this.references) {
+        if (!existingRefIds.includes(reference.id)) {
+          newItems.push({
+            ref_id: reference.id,
+            authors: this.parseReference(reference, true, false)
+          })
+        }
+      }
+
+      return [...filteredItems, ...newItems]
+    },
+    parseReference: (reference, onlyAuthors = false, hasSemicolon = true) => {
+      return Commmons.parseReference(reference, onlyAuthors, hasSemicolon)
+    },
+    /**
+     * Borra una columna desde el modal de creación. Los títulos de ese modal son strings,
+     * así que la clave sale del array paralelo `keys` que llena el guardado; sin clave, la
+     * columna nunca llegó al servidor y sólo se descarta local.
+     */
+    confirmDeleteColumnCreate: async function (index) {
+      if (!this.canEdit) return
+
+      const keys = this.dataTableFieldsModal.keys || []
+      const key = keys[index]
+      const raw = this.dataTableFieldsModal.fields[index]
+      const label = typeof raw === 'object' ? raw.label : raw
+
+      const quitarLocal = () => {
+        this.dataTableFieldsModal.fields.splice(index, 1)
+        keys.splice(index, 1)
+        this.dataTableFieldsModal.touched.splice(index, 1)
+        this.dataTableFieldsModal.nroColumns = this.dataTableFieldsModal.fields.length
+      }
+
+      if (!key) {
+        quitarLocal()
         return
       }
 
-      // Confirmar antes de eliminar
-      this.$bvModal.msgBoxConfirm('¿Estás seguro que deseas eliminar este campo?', {
-        title: 'Confirmar eliminación',
-        okVariant: 'danger',
-        okTitle: 'Eliminar',
-        cancelTitle: 'Cancelar',
-        hideHeaderClose: false,
-        centered: true
-      })
-        .then(value => {
-          if (value) {
-            // Obtener la clave del campo que vamos a eliminar
-            const fieldKey = field.key
+      const confirmed = await this.$bvModal.msgBoxConfirm(
+        this.$t('characteristics.confirm_delete_column', { name: label }),
+        {
+          title: this.$t('characteristics.confirm_delete_column_title'),
+          okVariant: 'danger',
+          okTitle: this.$t('common.delete'),
+          cancelTitle: this.$t('common.cancel'),
+          centered: true
+        }
+      )
+      if (!confirmed) return
+      if (!(await this.ensureColumnsLock())) return
 
-            // Eliminar el campo de los campos disponibles
-            this.dataTableFieldsModal.fields.splice(index, 1)
-
-            // Eliminar los datos de este campo en todos los items
-            if (this.dataTableFieldsModal.items && this.dataTableFieldsModal.items.length) {
-              this.dataTableFieldsModal.items.forEach(item => {
-                if (Object.prototype.hasOwnProperty.call(item, fieldKey)) {
-                  this.$delete(item, fieldKey)
-                }
-              })
-            }
-          }
-        })
-        .catch(err => {
-          console.error('Error en la confirmación:', err)
-        })
+      this.dataTableSettings.isBusy = true
+      try {
+        await columnService.deleteColumn(
+          this.type, this.dataTable.id || this.resolvedTableId, key
+        )
+        quitarLocal()
+        this.$emit('get-project')
+        this.getData()
+      } catch (error) {
+        this.$emit('print-errors', error)
+      } finally {
+        this.dataTableSettings.isBusy = false
+      }
+    },
+    getAuthorsFormat: function (authors = [], pubYear = '') {
+      return Commmons.getAuthorsFormat(authors, pubYear)
     }
   }
 }
 
 </script>
 
-<styles lang="scss" scoped>
-</styles>
+<styles lang="scss" scoped></styles>

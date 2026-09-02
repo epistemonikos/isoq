@@ -1,5 +1,5 @@
 <template>
-  <b-nav-item-dropdown v-bind:text="$t('Lang')" right >
+  <b-nav-item-dropdown v-bind:text="$t('common.lang')" right >
     <b-dropdown-item
       v-for="lang in supportedLanguages"
       :key="lang"

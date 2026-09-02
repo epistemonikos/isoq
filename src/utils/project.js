@@ -1,39 +1,49 @@
-import axios from 'axios'
-import Commons from './commons.js'
-async function canPublish(project) {
-  return axios.get('/api/project/can_publish', { params: project })
+import Api from './Api'
+
+function validEmail (email) {
+  var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  return re.test(email)
+}
+function validUrl (url) {
+  var re = /^(http|https):\/\/[^ "]+$/
+  return re.test(url)
+}
+async function canPublish (project) {
+  return Api.get('/api/project/can_publish', project)
 }
 
 export default class Project {
-  static validEmail = Commons.validEmail
-  static validUrl = Commons.validUrl
+  static validEmail = validEmail
+  static validUrl = validUrl
   static canPublish = canPublish
 
-  static async validations(data) {
-    if (data.public_type !== 'private') {
-      let cnt = 0
-      let responses = {
-        state: {
-          id: null,
-          name: null,
-          authors: null,
-          author: null,
-          author_email: null,
-          review_question: null,
-          url_doi: null,
-          complete_by_author: null,
-          lists_authors: null,
-          license: null
-        }
+  static async validations (data) {
+    let cnt = 0
+    let responses = {
+      state: {
+        id: null,
+        name: null,
+        authors: null,
+        author: null,
+        author_email: null,
+        review_question: null,
+        url_doi: null,
+        complete_by_author: null,
+        lists_authors: null,
+        license: null
       }
+    }
+
+    // Basic validation for all projects
+    if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
+      responses.state.name = false
+      cnt++
+    }
+
+    if (data.public_type !== 'private') {
       // check if project has an id
       if (data.id === '' || data.id === null || data.id === undefined || Object.prototype.hasOwnProperty.call(data, 'id') === false) {
         responses.state.id = false
-        cnt++
-      }
-      // check if project has a name with at least 3 characters
-      if (data.name === '' || data.name === null || data.name === undefined || data.name.trim().length < 3) {
-        responses.state.name = false
         cnt++
       }
       // check if project has authors
@@ -72,13 +82,6 @@ export default class Project {
         cnt++
       }
 
-      // const canPublish = await Project.canPublish(data)
-      // if (canPublish.data.status === false) {
-      //   responses.message = canPublish.data.message
-      //   responses.state.can_publish = false
-      //   cnt++
-      // }
-
       if (cnt > 0) {
         return { data: { status: false, message: 'Your request to publish to the iSoQ database has been denied because information is missing. Please complete the fields in red below, or select “Private” under “Visibility on the iSoQ database” to continue.', ...responses } }
       } else {
@@ -91,10 +94,15 @@ export default class Project {
         return { data: { status: true } }
       }
     }
+
+    if (cnt > 0) {
+      return { data: { status: false, message: 'project.notifications.required_fields_error', ...responses } }
+    }
+
     return { data: { status: true } }
   }
 
-  static async create(formData) {
+  static async create (formData) {
     const data = JSON.parse(JSON.stringify(formData))
     let params = {}
     for (let key of Object.keys(data)) {
@@ -113,13 +121,13 @@ export default class Project {
       const creationDate = Date.now()
       params.created_at = creationDate
       params.last_update = creationDate
-      return axios.post('/api/isoqf_projects', params)
+      return Api.post('/isoqf_projects', params)
     } else {
       return { data: { status: false, message: 'When you create a project you couldnt publish without complete at least one finding', ...validation.data } }
     }
   }
 
-  static async update(formData) {
+  static async update (formData) {
     const params = JSON.parse(JSON.stringify(formData))
     const validation = await Project.validations(params)
 
@@ -130,9 +138,8 @@ export default class Project {
         params.private = false
         params.is_public = true
       }
-      params.last_update = Date.now()
-      const data = await axios.patch('/api/publish', { params })
-      return { data: { status: true, ...data } }
+      const data = await Api.patch('/api/publish', { params })
+      return {data: {status: true, ...data}}
     } else {
       return validation
     }

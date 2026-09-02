@@ -1,0 +1,624 @@
+// El alta de columna del modal deja de viajar dentro del PATCH del ítem.
+//
+// `performSave` no llevaba `fields` de paso: ERA el camino de creación de columnas de este
+// modal. El botón «Add field» crea una entrada sin clave, `performSave` la acuñaba con
+// `newCustomFieldKey()`, escribía el valor en el ítem y mandaba `fields: mergedFields` en
+// el mismo PATCH para que la columna existiera.
+//
+// Backend va a empezar a IGNORAR `fields` en el endpoint por ítem (con warning, y un 400
+// más adelante). El día que lo desplieguen, este camino deja de crear columnas en
+// silencio: el ítem entra, `fields` se descarta, y el valor queda guardado bajo una clave
+// que no está en `fields` — invisible en la tabla. Así que el alta se va al endpoint de
+// columna, que es donde vive.
+//
+// Consecuencia que no existía antes: eran un request y ahora son dos, así que el primero
+// puede fallar y el segundo entrar igual. La decisión tomada es ABORTAR TODO: no se
+// guarda nada, el modal queda abierto y el texto sigue en el formulario. No se pierde
+// trabajo — el costo es un reintento.
+//
+// La rama POST (`charsData.id` vacío: la tabla todavía no existe) NO cambia. Ese es el
+// POST genérico, la puerta que backend dejó abierta a propósito, y ahí `fields` es
+// legítimo porque manda el documento completo.
+import { shallowMount } from '@vue/test-utils'
+import EditReferenceModal from '@/components/camelot/EditReferenceModal.vue'
+import Api from '@/utils/Api'
+import LockService from '@/services/lockService'
+import * as columnService from '@/services/columnService'
+
+jest.mock('@/utils/Api', () => ({
+  get: jest.fn(() => Promise.resolve({ data: [] })),
+  patch: jest.fn(() => Promise.resolve({ data: {} })),
+  post: jest.fn(() => Promise.resolve({ data: {} }))
+}))
+
+jest.mock('@/services/lockService', () => ({
+  acquireRef: jest.fn().mockResolvedValue({ success: true }),
+  releaseRef: jest.fn(),
+  isEnabled: true
+}))
+
+jest.mock('@/services/columnService', () => ({
+  addColumn: jest.fn((collection, docId, label, key) =>
+    Promise.resolve({ key, response: { data: {} } }))
+}))
+
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
+
+const CAMELOT = {
+  fields: [],
+  categories: []
+}
+
+const CHARS_DATA = {
+  id: 'doc1',
+  fields: [
+    { key: 'ref_id', label: 'ID' },
+    { key: 'authors', label: 'Authors' },
+    { key: 'column_vieja', label: 'Contexto' }
+  ],
+  items: []
+}
+
+const REFERENCE = { id: 'ref1', authors: ['Smith, J'], publication_year: '2020' }
+
+function createWrapper (charsData = CHARS_DATA) {
+  return shallowMount(EditReferenceModal, {
+    propsData: { reference: REFERENCE, charsData, camelot: CAMELOT },
+    mocks: {
+      $t: (key, params) => params ? `${key} ${JSON.stringify(params)}` : key,
+      $route: { params: { org_id: 'org1', id: 'proj1' } },
+      $bvModal: { show: jest.fn(), hide: jest.fn() },
+      $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+    },
+    stubs: {
+      'b-modal': true,
+      'b-form-group': true,
+      'b-form-input': true,
+      'b-form-textarea': true,
+      'b-button': true,
+      'b-row': true,
+      'b-col': true,
+      'font-awesome-icon': true,
+      CustomFieldsManager: true
+    }
+  })
+}
+
+// Deja el modal como queda tras apretar «Add field» y escribir una etiqueta: una entrada
+// sin clave, que es lo que dispara el alta.
+async function conColumnaNueva (wrapper, extra = []) {
+  await wrapper.setData({
+    isReadOnly: false,
+    customFields: [
+      { label: 'Contexto', value: 'ya existía', key: 'column_vieja', locked: false, hasComments: false },
+      { label: 'Columna nueva', value: 'texto nuevo', key: null, locked: false, hasComments: false },
+      ...extra
+    ]
+  })
+}
+
+describe('EditReferenceModal — el alta de columna sale del PATCH del ítem', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+    columnService.addColumn.mockImplementation((collection, docId, label, key) =>
+      Promise.resolve({ key, response: { data: {} } }))
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  it('crea la columna por el endpoint de columna, no dentro del PATCH', async () => {
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(1)
+    const [collection, docId, label, key] = columnService.addColumn.mock.calls[0]
+    expect(collection).toBe('isoqf_characteristics')
+    expect(docId).toBe('doc1')
+    expect(label).toBe('Columna nueva')
+    expect(key).toMatch(/^column_[0-9a-f]{24}$/)
+  })
+
+  it('el PATCH del ítem ya no lleva `fields`', async () => {
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect(patchItem[1]).not.toHaveProperty('fields')
+  })
+
+  it('el PATCH del ítem sí lleva el valor bajo la clave recién acuñada', async () => {
+    // Es la mitad que hace que el alta sirva de algo: la columna existe y la celda tiene
+    // contenido. Si la clave del alta y la del ítem no coincidieran, la columna saldría
+    // vacía y nadie vería el error.
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const [, key] = [null, columnService.addColumn.mock.calls[0][3]]
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem[1][key]).toBe('texto nuevo')
+  })
+
+  it('las columnas se crean ANTES del PATCH del ítem', async () => {
+    // Al revés, el ítem quedaría un instante con un valor bajo una columna inexistente, y
+    // cualquier lector concurrente lo vería vacío.
+    const orden = []
+    columnService.addColumn.mockImplementation((c, d, l, key) => {
+      orden.push('columna')
+      return Promise.resolve({ key, response: { data: {} } })
+    })
+    Api.patch.mockImplementation((url) => {
+      if (url.includes('/item/')) orden.push('item')
+      return Promise.resolve({ data: {} })
+    })
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    expect(orden).toEqual(['columna', 'item'])
+  })
+
+  it('toma el lock del documento antes de crear, y lo suelta después', async () => {
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'doc1::fields')
+    expect(LockService.releaseRef).toHaveBeenCalledWith('doc1::fields')
+  })
+
+  it('suelta el lock del documento SIN soltar el del estudio', async () => {
+    // `releaseRef()` sin argumento suelta todos los locks de la pestaña. Si lo llamáramos
+    // así, crear una columna le sacaría a esta persona el estudio que tiene abierto.
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    LockService.releaseRef.mock.calls.forEach(([arg]) => {
+      expect(arg).toBe('doc1::fields')
+    })
+  })
+
+  it('sin columna nueva no toca el lock del documento ni el endpoint de columna', async () => {
+    // El lock se toma sólo si hay algo que crear. Sostenerlo en cada guardado bloquearía a
+    // cualquiera que quiera renombrar una columna mientras alguien tiene un estudio
+    // abierto, que puede ser un rato largo.
+    wrapper = createWrapper()
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'texto', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    expect(columnService.addColumn).not.toHaveBeenCalled()
+    expect(LockService.acquireRef).not.toHaveBeenCalledWith('proj1', 'doc1::fields')
+    expect(LockService.releaseRef).not.toHaveBeenCalledWith('doc1::fields')
+  })
+
+  describe('cuando el lock del documento está tomado por otra persona', () => {
+    beforeEach(() => {
+      LockService.acquireRef.mockImplementation((projectId, ref) =>
+        ref === 'doc1::fields'
+          ? Promise.resolve({ success: false, lockedBy: 'Ana López' })
+          : Promise.resolve({ success: true }))
+    })
+
+    it('no crea la columna', async () => {
+      wrapper = createWrapper()
+      await conColumnaNueva(wrapper)
+
+      wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(columnService.addColumn).not.toHaveBeenCalled()
+    })
+
+    it('aborta todo: tampoco manda el PATCH del ítem', async () => {
+      // La decisión: o entra todo o nada, igual que antes de partir el request. El texto
+      // sigue en el formulario, así que no se pierde trabajo — el costo es un reintento.
+      wrapper = createWrapper()
+      await conColumnaNueva(wrapper)
+
+      wrapper.vm.performSave(true)
+      await flushPromises()
+
+      const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+      expect(patchItem).toBeUndefined()
+    })
+
+    it('deja el modal abierto y no dice que guardó', async () => {
+      wrapper = createWrapper()
+      await conColumnaNueva(wrapper)
+
+      wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.$bvModal.hide).not.toHaveBeenCalled()
+      expect(wrapper.vm.$notify.success).not.toHaveBeenCalled()
+    })
+
+    it('dice quién tiene las columnas, no «intente nuevamente»', async () => {
+      // El consejo genérico es falso mientras el lock sea de otra persona: reintentar no
+      // hace nada. Mismo criterio que `isLockRejection` aplica a los rechazos del
+      // servidor, acá para un acquire que ni llegó a mandar el request.
+      wrapper = createWrapper()
+      await conColumnaNueva(wrapper)
+
+      wrapper.vm.performSave(true)
+      await flushPromises()
+
+      const avisos = [
+        ...wrapper.vm.$notify.warning.mock.calls,
+        ...wrapper.vm.$notify.error.mock.calls
+      ].map(([msg]) => msg)
+
+      expect(avisos.join(' ')).toContain('Ana López')
+      expect(avisos.join(' ')).not.toContain('notifications.save_error')
+    })
+
+    it('libera el botón de guardar para que se pueda reintentar', async () => {
+      // `isSaving` en true para siempre dejaría el modal mudo: `performSave` sale por el
+      // guard de la primera línea y el segundo intento no haría nada.
+      wrapper = createWrapper()
+      await conColumnaNueva(wrapper)
+
+      wrapper.vm.performSave(true)
+      await flushPromises()
+
+      expect(wrapper.vm.isSaving).toBe(false)
+    })
+  })
+
+  it('el guardado por inactividad persiste TODO antes de cerrar el modal', async () => {
+    // El temporizador de inactividad existe para persistir y después soltar el lock, en
+    // ese orden. Partir el guardado en dos requests metió un `await` antes del PATCH del
+    // ítem, y con eso `hide()` y `resetModal()` pasaron a correr primero: el PATCH salía
+    // después de liberar el lock, daba 409, y el texto se perdía. Justo lo que este
+    // mecanismo previene.
+    //
+    // Mira el ÚLTIMO patch, no el primero: el primero ahora es el alta de la columna.
+    wrapper = createWrapper()
+    await conColumnaNueva(wrapper)
+    wrapper.vm.onFieldChanged()
+
+    await wrapper.vm.onInactivityExpired()
+    await flushPromises()
+
+    const ordenes = Api.patch.mock.invocationCallOrder
+    const ordenHide = wrapper.vm.$bvModal.hide.mock.invocationCallOrder[0]
+    expect(ordenes.length).toBeGreaterThan(0)
+    expect(ordenHide).toBeDefined()
+    expect(Math.max(...ordenes)).toBeLessThan(ordenHide)
+  })
+
+  it('con la tabla todavía inexistente sigue por el POST, que sí manda fields', async () => {
+    // La puerta que backend dejó abierta a propósito: el POST genérico manda el documento
+    // completo, así que ahí `fields` no es un colado sino el contenido.
+    wrapper = createWrapper({ ...CHARS_DATA, id: null })
+    await conColumnaNueva(wrapper)
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    expect(columnService.addColumn).not.toHaveBeenCalled()
+    expect(Api.post).toHaveBeenCalled()
+    const [, body] = Api.post.mock.calls[0]
+    expect(body).toHaveProperty('fields')
+  })
+})
+
+// El otro campo que el PATCH por ítem tiene que llevar, y por el motivo contrario a `fields`:
+// `fields` no debía viajar y viajaba; el `_v` debía viajar y no viajaba. El modal arma el
+// ítem desde cero —`ref_id` + `authors` + las celdas— y nunca miraba `charsData.items`, así
+// que el contador de la fila existente se quedaba afuera. Con él afuera el servidor acepta
+// la escritura por compatibilidad y deja de comprobar la frescura: dos personas sobre el
+// mismo estudio se pisan sin 409 y sin cartel.
+describe('EditReferenceModal — el contador de versión de la fila', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  const conFilaExistente = (_v) => ({
+    ...CHARS_DATA,
+    items: [{ ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'ya existía', _v }]
+  })
+
+  it('reenvía el `_v` de la fila que el documento ya tiene', async () => {
+    wrapper = createWrapper(conFilaExistente(4))
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'editado', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect(patchItem[1]._v).toBe(4)
+  })
+
+  it('no le inventa un contador al estudio que todavía no tiene fila', async () => {
+    // El endpoint por ítem es un upsert, así que la primera escritura de un estudio no
+    // tiene versión previa. Rellenarla con un 0 afirmaría una frescura que nadie midió, y
+    // el servidor rechaza con 400 cualquier `_v` que no sea un entero válido.
+    wrapper = createWrapper()
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'primera vez', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect('_v' in patchItem[1]).toBe(false)
+  })
+
+  it('ignora un contador corrupto en vez de reenviarlo', async () => {
+    // Un `_v` que no es entero (un documento viejo, un roundtrip por XLSX que lo devuelve
+    // como texto) haría que el servidor rechace con 400 en cada intento: el guardado no se
+    // podría completar nunca. Sin la clave, en cambio, la escritura pasa por el camino
+    // tolerado. Perder una comprobación es peor que perder el guardado, pero recuperable.
+    wrapper = createWrapper(conFilaExistente('4'))
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { label: 'Contexto', value: 'editado', key: 'column_vieja', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(true)
+    await flushPromises()
+
+    const patchItem = Api.patch.mock.calls.find(([url]) => url.includes('/item/'))
+    expect(patchItem).toBeDefined()
+    expect('_v' in patchItem[1]).toBe(false)
+  })
+})
+
+// El segundo guardado seguido, que con auto-guardado por tecleo es el segundo tecleo.
+//
+// El `_v` del primer PATCH sale de `charsData.items`, que es un prop. Refrescarlo depende
+// de una vuelta larga: este modal emite `saved`, `StepThree.handleReferenceSaved` reemplaza
+// `charsData` **sólo si el cuerpo trae `items`**, y recién ahí el prop vuelve con el
+// contador nuevo. Si esa vuelta no llega —o el cuerpo viene sin `items`— el segundo PATCH
+// sale con el contador viejo y el servidor responde 409 sobre la edición de la propia
+// persona: el peor 409 posible, porque no hay nadie con quien coordinar.
+//
+// Se resuelve como en `crudTables.absorbItemVersion`: el modal se queda con la metadata que
+// el servidor acaba de estampar, en vez de esperar a que el prop vuelva.
+describe('EditReferenceModal — el contador del segundo guardado seguido', () => {
+  let wrapper
+
+  const CHARS_CON_FILA = {
+    ...CHARS_DATA,
+    items: [{ ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'ya existía', _v: 4 }]
+  }
+
+  // Lo que el endpoint por ítem devuelve: el documento recargado, con la fila ya estampada.
+  const respuestaConVersion = (_v) => ({
+    data: { ...CHARS_CON_FILA, items: [{ ...CHARS_CON_FILA.items[0], _v }] }
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  const editar = (valor) => wrapper.setData({
+    isReadOnly: false,
+    customFields: [
+      { label: 'Contexto', value: valor, key: 'column_vieja', locked: false, hasComments: false }
+    ]
+  })
+
+  it('el segundo PATCH lleva la versión que el primero devolvió, no la del prop', async () => {
+    Api.patch.mockResolvedValue(respuestaConVersion(5))
+    wrapper = createWrapper(CHARS_CON_FILA)
+
+    await editar('primer cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await editar('segundo cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    expect(patches).toHaveLength(2)
+    expect(patches[0][1]._v).toBe(4)
+    expect(patches[1][1]._v).toBe(5)
+  })
+
+  it('no se queda con la versión de otra fila cuando el modal pasa a otro estudio', async () => {
+    // El prop `reference` cambia sin destruir el componente: la metadata absorbida es de la
+    // fila anterior y aplicarla a otra sería afirmar una frescura que nadie midió sobre ella.
+    Api.patch.mockResolvedValue(respuestaConVersion(5))
+    const charsDosFilas = {
+      ...CHARS_DATA,
+      items: [
+        { ref_id: 'ref1', authors: 'Smith, J 2020', column_vieja: 'a', _v: 4 },
+        { ref_id: 'ref2', authors: 'Jones, K 2021', column_vieja: 'b', _v: 9 }
+      ]
+    }
+    wrapper = createWrapper(charsDosFilas)
+
+    await editar('cambio en ref1')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setProps({ reference: { id: 'ref2', authors: ['Jones, K'], publication_year: '2021' } })
+    await editar('cambio en ref2')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    const ultimo = patches[patches.length - 1]
+    expect(ultimo[0]).toContain('/item/ref2')
+    expect(ultimo[1]._v).toBe(9)
+  })
+
+  it('si la respuesta viene sin `items`, no reenvía una versión que no se confirmó', async () => {
+    // Éste es el caso que hace que delegar en el prop no alcance: sin `items` en el cuerpo,
+    // `handleReferenceSaved` hace un merge superficial y `charsData.items` queda con el
+    // contador viejo. Reenviarlo daría 409 en cada tecleo, sin más salida que recargar;
+    // omitirlo cae en el camino tolerado, que se pierde la comprobación pero guarda.
+    Api.patch.mockResolvedValue({ data: {} })
+    wrapper = createWrapper(CHARS_CON_FILA)
+
+    await editar('primer cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await editar('segundo cambio')
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    expect(patches).toHaveLength(2)
+    expect('_v' in patches[1][1]).toBe(false)
+  })
+})
+
+// Una columna por campo, aunque el campo se guarde muchas veces.
+//
+// Medido en navegador el 2026-08-31 contra isoqf-test: un solo «Add new field» dejó CUATRO
+// columnas con la misma etiqueta. Una por auto-guardado.
+//
+// El acuñado escribe la clave de vuelta en `customFields[index].key` dentro del `.then`.
+// Eso no sobrevive: `CustomFieldsManager` tiene su propia copia profunda de la lista
+// (`JSON.parse(JSON.stringify)` en un watcher `deep`) y la reemite por `v-model` en cada
+// tecla, pisando el array del padre con una versión anterior — sin la clave. El siguiente
+// guardado ve un campo sin clave y acuña otra. Como `addColumn` es idempotente POR CLAVE,
+// una clave nueva no deduplica: crea.
+//
+// El hijo ya documenta este mismo mecanismo sobre sí mismo, y lo resuelve igual: guarda
+// `committedLabels` FUERA de la lista, «porque este watcher vuelve a copiar la lista, así
+// que cualquier cosa guardada dentro del objeto se sobrescribiría».
+describe('EditReferenceModal — una columna por campo, no una por guardado', () => {
+  let wrapper
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    LockService.acquireRef.mockResolvedValue({ success: true })
+    columnService.addColumn.mockImplementation((collection, docId, label, key) =>
+      Promise.resolve({ key, response: { data: {} } }))
+  })
+
+  afterEach(() => { if (wrapper) wrapper.destroy() })
+
+  // Lo que el hijo reemite al teclear: la misma entrada, con su `id` estable, sin la clave
+  // que el padre había escrito. Es la copia stale, no un campo nuevo.
+  const reemisionStale = (label, value) => ([
+    { id: 'field_1788202295101', label, value, locked: false, hasComments: false }
+  ])
+
+  it('no acuña una segunda clave cuando el hijo reemite el campo sin ella', async () => {
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+    expect(columnService.addColumn).toHaveBeenCalledTimes(1)
+
+    // El hijo pisa el array del padre en la próxima tecla: la clave se fue.
+    await wrapper.setData({ customFields: reemisionStale('Columna nueva', 'texto mas largo') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(1)
+  })
+
+  it('el segundo PATCH escribe bajo la MISMA clave que el primero creó', async () => {
+    // Sin esto el valor quedaría repartido entre dos columnas: la vieja con el texto a
+    // medias y la nueva con el resto, y ninguna de las dos completa.
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setData({ customFields: reemisionStale('Columna nueva', 'texto mas largo') })
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    const patches = Api.patch.mock.calls.filter(([url]) => url.includes('/item/'))
+    const claveDe = (body) => Object.keys(body).find(k => /^column_[0-9a-f]{24}$/.test(k))
+    expect(patches).toHaveLength(2)
+    expect(claveDe(patches[1][1])).toBe(claveDe(patches[0][1]))
+  })
+
+  it('dos campos nuevos distintos siguen recibiendo claves distintas', async () => {
+    // El registro es por `id` del campo, no por etiqueta: dos columnas pueden llamarse
+    // igual a propósito, y compartir clave las fusionaría en una sola.
+    wrapper = createWrapper()
+    await wrapper.setData({
+      isReadOnly: false,
+      customFields: [
+        { id: 'field_a', label: 'Misma etiqueta', value: 'uno', locked: false, hasComments: false },
+        { id: 'field_b', label: 'Misma etiqueta', value: 'dos', locked: false, hasComments: false }
+      ]
+    })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(2)
+    const claves = columnService.addColumn.mock.calls.map(c => c[3])
+    expect(new Set(claves).size).toBe(2)
+  })
+
+  it('el registro no sobrevive al cambio de estudio', async () => {
+    // Las claves acuñadas son de la sesión de edición de ESTE estudio. Arrastrarlas a otro
+    // haría que su campo nuevo escriba bajo una columna que se creó para el anterior.
+    wrapper = createWrapper()
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'texto') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    await wrapper.setProps({ reference: { id: 'ref2', authors: ['Jones, K'], publication_year: '2021' } })
+    await wrapper.setData({ isReadOnly: false, customFields: reemisionStale('Columna nueva', 'otro estudio') })
+
+    wrapper.vm.performSave(false)
+    await flushPromises()
+
+    expect(columnService.addColumn).toHaveBeenCalledTimes(2)
+  })
+})

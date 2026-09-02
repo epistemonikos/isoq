@@ -2,15 +2,15 @@
   <b-modal
     id="subscribe"
     ref="subscribe"
-    title="Newsletter"
-    ok-title="Yes"
-    cancel-title="No"
+    :title="$t('subscribe.title')"
+    :ok-title="$t('common.yes')"
+    :cancel-title="$t('common.no')"
     @ok="ok"
     @cancel="cancel">
     <p>
-      Would you like to subscribe to the GRADE-CERQual mailing list?
+      {{ $t('subscribe.question') }}
       <br>
-      You will receive three newsletters a year that include the latest news about iSoQ.
+      {{ $t('subscribe.description') }}
     </p>
   </b-modal>
 </template>

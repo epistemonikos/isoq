@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'
 import en from '@/lang/en.json'
+import es from '@/lang/es.json'
+import pt from '@/lang/pt.json'
 
 Vue.use(VueI18n)
 
@@ -8,5 +10,5 @@ Vue.use(VueI18n)
 export const i18n = new VueI18n({
   locale: 'en', // set locale
   fallbackLocale: 'en',
-  messages: {en} // set locale messages
+  messages: {en, es, pt} // set locale messages
 })

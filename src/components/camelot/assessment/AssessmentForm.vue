@@ -1,163 +1,234 @@
 <template>
-  <div>
-    <div>
-      <h3>Fit assessment</h3>
-    </div>
+  <div class="assessment-form-wrapper">
+    <b-card header-tag="header" footer-tag="footer" class="assessment-card shadow-sm border">
+      <!-- <template #header>
+      <h3 class="mb-0 font-weight-bold">{{ $t('camelot.assessment_form.title') }}</h3>
+    </template> -->
 
-    <p v-html="options[modalStage][selectedMeta].text"></p>
+      <div class="assessment-description mb-2 py-2">
+        <p v-html="options[modalStage][selectedMeta].text" class="mb-0"></p>
+      </div>
 
-    <b-form-group label="" v-slot="{ ariaDescribedby }">
-      <b-form-radio
-        v-for="(value, index) in options[modalStage][selectedMeta].values"
-        v-model="selected"
-        :key="index"
-        :value="value.value">
-        {{ value.text }}
-      </b-form-radio>
-    </b-form-group>
+      <fieldset :disabled="isReadOnly" class="border-0 p-0 m-0">
+        <!-- Shown for every read-only reason, named holder or not: the loss reported by
+             the heartbeat carries no name, and that silence is what left users typing
+             into a form that could no longer save. -->
+        <b-alert v-if="isReadOnly" show variant="warning" class="mb-3"
+          data-testid="assessment-readonly-notice">
+          <font-awesome-icon icon="lock" class="mr-1" />
+          {{ lockedByUser
+            ? $t('lock.ref_locked_by', { user: lockedByUser })
+            : $t('lock.ref_locked_by_no_user') }}
+        </b-alert>
 
-    <b-form-group
-      label="Explain any concerns you have in your own words"
-      label-for="textarea-formatter">
-      <b-form-textarea
-        id="textarea-formatter"
-        v-model="text1"
-        placeholder="Enter your text"></b-form-textarea>
-    </b-form-group>
+        <b-form-group label="" class="mb-4">
+          <b-form-radio v-for="(value, index) in options[modalStage][selectedMeta].values" v-model="selected" :key="index"
+            :value="value.value" :class="['mb-2', 'assessment-radio', 'radio-color-' + value.value]">
+            {{ value.text }}
+          </b-form-radio>
+          <p v-if="selected !== null" class="mt-2 font-weight-light text-danger" style="cursor: pointer">
+            <a @click="clearSelection">
+              <font-awesome-icon icon="trash"></font-awesome-icon>
+              {{ $t('worksheet.actions.clear_selection') }}
+            </a>
+          </p>
+        </b-form-group>
 
-    <div>
-      <!-- <b-button>cancel</b-button> -->
-      <b-button
-        :disabled="button.disabled"
-        :variant="(button.disabled) ? 'outline-primary' : 'primary'"
-        @click="save">
-        save
-      </b-button>
-    </div>
+        <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
+          class="font-weight-bold small" :state="explanationState">
+          <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
+            :placeholder="$t('camelot.assessment_form.text_placeholder')"
+            :state="explanationState"></b-form-textarea>
+          <b-form-invalid-feedback>{{ $t('camelot.assessment_form.explanation_required') }}</b-form-invalid-feedback>
+        </b-form-group>
+
+        <div class="mt-4 pt-3 border-top">
+          <h3 class="notes-title">{{ $t('common.notes') }}</h3>
+          <b-form-group label="" label-for="textarea-notes">
+            <b-form-textarea id="textarea-notes" v-model="notes" rows="3"
+              :placeholder="$t('camelot.assessment_form.text_placeholder')"></b-form-textarea>
+            <p class="small text-muted mt-1 italic">{{ $t('worksheet.labels.notes_description') }}</p>
+          </b-form-group>
+        </div>
+      </fieldset>
+
+      <template #footer>
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <span v-if="autoSaveStatus === 'saving'" class="text-muted small">
+            <b-spinner small></b-spinner> {{ $t('common.auto_saving') }}
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="text-success small">
+            <font-awesome-icon icon="check"></font-awesome-icon> {{ $t('common.auto_saved') }}
+          </span>
+          <span v-else></span>
+          <div>
+            <b-button variant="outline-secondary" class="mr-2" size="sm" @click="cancel">
+              {{ $t('common.cancel') }}
+            </b-button>
+            <b-button :disabled="button.disabled || isReadOnly" size="sm" :variant="(button.disabled || isReadOnly) ? 'outline-primary' : 'primary'"
+              @click="save">
+              <b-spinner small v-if="!button.disabled && isSaving"></b-spinner>
+              {{ $t('camelot.assessment_form.save_button') }}
+            </b-button>
+          </div>
+        </div>
+      </template>
+    </b-card>
+
+    <b-modal :id="'warning-explanation-modal-' + modalStage + '-' + selectedMeta" :title="$t('common.warning')"
+      :hide-footer="true">
+      <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
+      <b-container>
+        <b-row align-h="between">
+          <b-col cols="4">
+            <b-button block @click="doItNow">
+              {{ $t('worksheet.actions.do_it_now') }}
+            </b-button>
+          </b-col>
+          <b-col cols="4">
+            <b-button block @click="doItLater">
+              {{ $t('worksheet.actions.do_it_later') }}
+            </b-button>
+          </b-col>
+        </b-row>
+      </b-container>
+    </b-modal>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import Api from '@/utils/Api'
+import { isLockRejection } from '@/utils/lockErrors'
+import _debounce from 'lodash.debounce'
+import pendingEditsMixin from '@/mixins/pendingEditsMixin'
+import {
+  canonicalIndex,
+  canonicalStageKey,
+  emptyAssessmentItem
+} from '@/utils/camelotAssessmentKeys'
 
 export default {
+  mixins: [pendingEditsMixin],
   name: 'AssessmentForm',
   data () {
     return {
       categories: [
-        'Fit between Meta domains and Research design',
-        'Fit between Meta domains and Research conduct',
-        'Fit between Research design and Research conduct',
-        'Overall assessment'
+        this.$t('camelot.assessment_form.categories.fit_meta_design'),
+        this.$t('camelot.assessment_form.categories.fit_meta_conduct'),
+        this.$t('camelot.assessment_form.categories.fit_design_conduct'),
+        this.$t('camelot.assessment_form.overall_assessment')
       ],
       selected: null,
       text1: '',
+      notes: '',
+      isSaving: false,
+      autoSaveStatus: null,
       options: [
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_research_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_stakeholders_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_researchers_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research design domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_context_vs_design'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Meta domain <b>Research</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_research_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Stakeholders</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_stakeholders_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Researchers</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_researchers_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           },
           {
-            text: 'Meta domain <b>Context</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.meta_context_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: '<b>Research design domains</b> against <b>Research conduct domains</b>',
+            text: this.$t('camelot.assessment_form.prompts.design_vs_conduct'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ],
         [
           {
-            text: 'Overall assessment',
+            text: this.$t('camelot.assessment_form.prompts.overall'),
             values: [
-              { text: 'No or minimal concerns', value: 'A' },
-              { text: 'Minor concerns', value: 'B' },
-              { text: 'Moderate concerns', value: 'C' },
-              { text: 'Serious concerns', value: 'D' },
-              { text: 'Unclear', value: 'E' }
+              { text: this.$t('camelot.responses.no_minimal'), value: 'A' },
+              { text: this.$t('camelot.responses.minor'), value: 'B' },
+              { text: this.$t('camelot.responses.moderate'), value: 'C' },
+              { text: this.$t('camelot.responses.serious'), value: 'D' },
+              { text: this.$t('camelot.responses.unclear'), value: 'E' }
             ]
           }
         ]
@@ -187,19 +258,49 @@ export default {
     modalIndex: {
       type: Number,
       default: 0
+    },
+    // Lock state is owned by StepFour (single acquire per study open) and passed down.
+    isReadOnly: {
+      type: Boolean,
+      default: false
+    },
+    lockedByUser: {
+      type: String,
+      default: null
+    }
+  },
+  computed: {
+    explanationState () {
+      if (this.selected === null) return null
+      return !!(this.text1 && this.text1.trim().length > 0)
     }
   },
   watch: {
     modalStage (newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       if (this.assessments.items.length) {
         this.selected = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].option
         this.text1 = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].text
+        this.notes = this.assessments.items[this.modalIndex].stages[newValue].options[this.selectedMeta].notes || ''
       }
     },
     selectedMeta (newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
       if (this.assessments.items) {
         this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].option
         this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].text
+        this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[newValue].notes || ''
+      }
+    },
+    modalIndex (newValue) {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      if (this.assessments.items && this.assessments.items[newValue]) {
+        this.selected = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].option
+        this.text1 = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].text
+        this.notes = this.assessments.items[newValue].stages[this.modalStage].options[this.selectedMeta].notes || ''
       }
     },
     assessments: {
@@ -207,139 +308,353 @@ export default {
         if (newValue.items.length) {
           this.selected = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
           this.text1 = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+          this.notes = newValue.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
         }
       },
       deep: true
     },
     selected (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
     },
     text1 (newValue) {
-      if (this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text === newValue) {
-        this.button.disabled = true
-      } else {
-        this.button.disabled = false
-      }
+      this.checkChanges()
+    },
+    notes (newValue) {
+      this.checkChanges()
     }
   },
   mounted: function () {
     if (this.assessments.items.length) {
       this.selected = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].option
       this.text1 = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].text
+      this.notes = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta].notes || ''
     }
+    this.autoSaveDebounced = _debounce(function () { this.performSave(true) }.bind(this), 1500)
+  },
+  beforeDestroy () {
+    if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
   },
   methods: {
+    checkChanges () {
+      const item = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+      const hasChanges = item.option !== this.selected || item.text !== this.text1 || (item.notes || '') !== this.notes
+      this.button.disabled = !hasChanges
+      if (hasChanges && this.autoSaveDebounced) {
+        this.autoSaveDebounced()
+      } else if (!hasChanges && this.autoSaveDebounced) {
+        this.autoSaveDebounced.cancel()
+      }
+    },
+    getOptionColor (value) {
+      const colors = {
+        'A': '#1065AB', // No or minimal
+        'B': '#8EC4DE', // Minor
+        'C': '#F6A482', // Moderate
+        'D': '#B31529', // Serious
+        'E': '#B3B3B3' // Unclear
+      }
+      return colors[value] || '#B3B3B3'
+    },
+    cancel () {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.autoSaveStatus = null
+      if (this.assessments.items && this.assessments.items[this.modalIndex]) {
+        const opts = this.assessments.items[this.modalIndex].stages[this.modalStage].options[this.selectedMeta]
+        this.selected = opts.option
+        this.text1 = opts.text
+        this.notes = opts.notes || ''
+      }
+      this.$bvModal.hide('modal-1')
+    },
+    doItNow () {
+      this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+      this.$nextTick(() => {
+        const el = document.getElementById('textarea-formatter')
+        if (el) el.focus()
+      })
+    },
+    doItLater () {
+      this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+      this.saveNow()
+    },
     save () {
-      const stages = [
-        {
-          key: 0,
-          options: [
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            }
-          ]
-        },
-        {
-          key: 1,
-          options: [
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            },
-            {
-              option: null,
-              text: ''
-            }
-          ]
-        },
-        {
-          key: 2,
-          options: [
-            {
-              option: null,
-              text: ''
-            }
-          ]
-        },
-        {
-          key: 3,
-          options: [
-            {
-              option: null,
-              text: ''
-            }
-          ]
-        }
-      ]
-      const params = {
-        organization: this.$route.params.org_id,
-        project_id: this.$route.params.id,
-        items: this.assessments.items || []
+      if (this.selected && (!this.text1 || this.text1.trim() === '')) {
+        this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
+        return
       }
-      if (this.refId) {
-        const data = {
-          ref_id: this.refId,
-          authors: this.assessments.items[this.modalIndex].authors,
-          stages: (this.assessments.items.length) ? this.assessments.items[this.modalIndex].stages : stages || stages
-        }
-        if (params.items.find((el) => el.ref_id === this.refId)) {
-          params.items.forEach((item) => {
-            if (item.ref_id === this.refId) {
-              item.stages[this.modalStage].options[this.selectedMeta].option = this.selected
-              item.stages[this.modalStage].options[this.selectedMeta].text = this.text1
-            }
-          })
-        } else {
-          params.items.push(data)
-        }
-        if (this.assessments.id) {
-          axios.patch(`/api/isoqf_assessments/${this.assessments.id}`, params)
-            .then(response => {
-              console.log('Data updated successfully:', response.data)
-              this.$emit('getAssessments')
-            })
-            .catch(error => {
-              console.error('Error updating data:', error)
-            })
-        } else {
-          axios.post('/api/isoqf_assessments', params)
-            .then(response => {
-              this.$emit('getAssessments')
-              console.log('Data saved successfully:', response.data)
-            })
-            .catch(error => {
-              console.error('Error saving data:', error)
-            })
-        }
-      } else {
-        console.log('no ref id')
+      this.saveNow()
+    },
+    /**
+     * Guardado manual. Descarta el auto-guardado que el watcher dejó agendado: iba a
+     * escribir exactamente lo mismo, y llegaba ~700ms después como un segundo PATCH
+     * idéntico. Medido en navegador — además de la escritura de más, esa segunda
+     * recarga vuelve a colapsar la tabla cuando el hold de scroll ya expiró, y la
+     * página termina en el tope igual.
+     */
+    saveNow () {
+      if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+      this.performSave()
+    },
+    /**
+     * El temporizador de inactividad está por cerrar el modal. Lo que `checkChanges` dejó
+     * agendado a 1,5 s no sobrevive al cierre, y el `@hidden` de StepFour suelta el lock:
+     * hay que escribirlo ahora o no se escribe nunca.
+     *
+     * No se consulta si esta instancia todavía tiene su leaf lock. Sería tentador —las
+     * otras tres de la etapa ya lo soltaron— pero `flush()` de lodash es no-op cuando no
+     * hay nada agendado, así que las que nadie tocó no emiten igual; el guard sólo se
+     * activaría en el único caso donde SÍ hay texto pendiente, y ahí un 409 abre el
+     * rescate con los campos copiables en vez de descartarlo en silencio. Además rompería
+     * el flush offline, donde el permiso vive en `offlineRefs` y no en `refLocks`.
+     */
+    flushPendingEdits (scope) {
+      if (this.isReadOnly) return
+      if (scope && scope !== this.refId) return
+      if (this.autoSaveDebounced) this.autoSaveDebounced.flush()
+    },
+    clearSelection () {
+      this.selected = null
+      this.text1 = ''
+      this.notes = ''
+    },
+    performSave (silent = false) {
+      if (this.isReadOnly) return
+      if (!this.refId) {
+        this.isSaving = false
+        return
       }
+      this.isSaving = true
+      if (silent) this.autoSaveStatus = 'saving'
+
+      // The leaf, with all three keys: the backend resets any key we omit to
+      // its canonical empty value instead of merging it with what is stored.
+      const leaf = { option: this.selected, text: this.text1, notes: this.notes }
+
+      const onSuccess = () => {
+        // Refetch rather than trusting the reloaded document this endpoint
+        // returns: StepFour merges items across SEVERAL isoqf_assessments
+        // documents, and a single doc would not reproduce that merge.
+        this.$emit('getAssessments')
+        this.isSaving = false
+        if (silent) {
+          this.autoSaveStatus = 'saved'
+          setTimeout(() => { this.autoSaveStatus = null }, 2000)
+        } else {
+          this.$notify.success(this.$t('notifications.saved'))
+        }
+      }
+      const onError = (error) => {
+        console.error('Error saving assessment data:', error)
+        this.isSaving = false
+        // The lock channel already told the user who took the entry and that their text
+        // was kept locally. Adding "please try again" on top contradicts it: retrying
+        // cannot succeed while somebody else holds the lock.
+        if (isLockRejection(error)) {
+          this.autoSaveStatus = null
+          return
+        }
+        if (silent) {
+          this.autoSaveStatus = 'error'
+        } else {
+          this.$notify.error(this.$t('notifications.save_error'))
+        }
+      }
+
+      const currentItem = this.assessments.items
+        ? this.assessments.items[this.modalIndex]
+        : null
+
+      // Keep the local copy in step so the grid updates before the refetch lands.
+      const localLeaf = currentItem && currentItem.stages &&
+        currentItem.stages[this.modalStage] &&
+        currentItem.stages[this.modalStage].options
+        ? currentItem.stages[this.modalStage].options[this.selectedMeta]
+        : null
+      if (localLeaf) Object.assign(localLeaf, leaf)
+
+      if (!this.assessments.id) {
+        // No document yet: create it through B with the canonical skeleton, then
+        // every later edit goes through D.
+        const seeded = emptyAssessmentItem(
+          this.refId,
+          currentItem ? currentItem.authors : ''
+        )
+        if (seeded.stages[this.modalStage] &&
+            seeded.stages[this.modalStage].options[this.selectedMeta]) {
+          Object.assign(seeded.stages[this.modalStage].options[this.selectedMeta], leaf)
+        }
+        Api.post('/isoqf_assessments', {
+          organization: this.$route.params.org_id,
+          project_id: this.$route.params.id,
+          items: [seeded]
+        })
+          .then(onSuccess)
+          .catch(onError)
+        return
+      }
+
+      // The backend keys stages by stages[].key, not by array position, and
+      // legacy documents store that key as a string.
+      const stageKey = canonicalStageKey(
+        currentItem && currentItem.stages ? currentItem.stages[this.modalStage] : null,
+        this.modalStage
+      )
+      const optionIndex = canonicalIndex(this.selectedMeta)
+      if (stageKey === null || optionIndex === null) {
+        onError(new Error(`Unaddressable cell: stage ${this.modalStage}, option ${this.selectedMeta}`))
+        return
+      }
+
+      // Endpoint D: writes ONE leaf. Saving the study through B would replace
+      // all ten and wipe whatever anyone else just wrote.
+      Api.patch(
+        `/isoqf_assessments/${this.assessments.id}/item/${this.refId}/stage/${stageKey}/option/${optionIndex}`,
+        leaf
+      )
+        .then(onSuccess)
+        .catch(onError)
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.assessment-card {
+  border-color: #2A70BC !important;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border-top-width: 5px !important;
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+  }
+}
+
+html[data-theme="dark"] {
+  .assessment-card {
+    .card-header {
+      background-color: #2a2a2a;
+      border-bottom-color: #444;
+    }
+
+    .card-footer {
+      background-color: #2a2a2a;
+      border-top-color: #444;
+    }
+  }
+}
+
+.assessment-description {
+  line-height: 1.4;
+}
+
+.notes-title {
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.assessment-radio {
+  display: flex;
+  align-items: center;
+
+  ::v-deep label {
+    cursor: pointer;
+    line-height: 1.5;
+    margin-bottom: 0;
+    padding-top: 2px;
+  }
+
+  // Estilos base para los radios personalizados de Bootstrap-Vue
+  ::v-deep .custom-control-label::before {
+    border-width: 2px;
+  }
+
+  // Definición de colores por nivel
+  &.radio-color-A {
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #1065AB !important;
+      border-color: #1065AB !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%231065AB'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #1065AB !important;
+    }
+  }
+
+  &.radio-color-B {
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #8EC4DE !important;
+      border-color: #8EC4DE !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238EC4DE'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #8EC4DE !important;
+    }
+  }
+
+  &.radio-color-C {
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #F6A482 !important;
+      border-color: #F6A482 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23F6A482'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #F6A482 !important;
+    }
+  }
+
+  &.radio-color-D {
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #B31529 !important;
+      border-color: #B31529 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B31529'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #B31529 !important;
+    }
+  }
+
+  &.radio-color-E {
+    ::v-deep .custom-control-input:checked~.custom-control-label::before {
+      background-color: #B3B3B3 !important;
+      border-color: #B3B3B3 !important;
+    }
+
+    ::v-deep .custom-control-input:checked~.custom-control-label::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23B3B3B3'/%3e%3c/svg%3e") !important;
+    }
+
+    ::v-deep .custom-control-label::before {
+      border-color: #B3B3B3 !important;
+    }
+  }
+}
+</style>

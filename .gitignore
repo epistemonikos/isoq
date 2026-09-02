@@ -1,6 +1,7 @@
 .DS_Store
 node_modules/
 /dist/
+/docs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -18,3 +19,6 @@ config/prod.env.js
 *.njsproj
 *.sln
 src/components/camelot/char_demo.json
+
+# Test coverage
+coverage/
