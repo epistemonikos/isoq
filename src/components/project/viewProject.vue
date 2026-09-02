@@ -719,6 +719,8 @@ export default {
     }
   },
   created () {
+    // Ver applyProjectRefresh: el refresco tiene awaits y puede sobrevivir a la vista.
+    this.$_alive = true
     // Un solo uso: el deep-link a un finding debe centrarlo al entrar, no en cada
     // recarga posterior. En `$_` porque nada lo renderiza. Ver routeAnchorHash().
     this.$_pendingAnchorScroll = true
@@ -755,6 +757,7 @@ export default {
     // Same net as editList.vue: SPA navigation fires no pagehide, so a ref lock held by
     // a child (a crudTables row, a camelot study) would survive leaving the project and
     // stay held until the server TTL. Verified live before this was added.
+    this.$_alive = false
     LockService.releaseRef()
     window.removeEventListener('lock-lost', this.handleLockLost)
     window.removeEventListener('lock-idle', this.handleIdle)
@@ -797,6 +800,11 @@ export default {
       } finally {
         this.suppressCategoryReload = false
       }
+      // Salir del proyecto a mitad de un refresco dejaba este getLists() corriendo sobre
+      // una vista ya destruida: dos awaits más arriba abrieron esa ventana, que cuando
+      // applyProjectRefresh era síncrono no existía. Pedía datos que nadie iba a mirar y
+      // los escribía en un componente muerto.
+      if (!this.$_alive) return
       this.getLists()
     },
     /**

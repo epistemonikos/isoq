@@ -91,6 +91,21 @@ describe('viewProject — las dos mitades que pide el mixin de frescura', () => 
     expect(getLists).toHaveBeenCalled()
   })
 
+  // Con dos awaits de por medio, salir del proyecto a mitad de un refresco dejaba el
+  // getLists() corriendo sobre una vista destruida. No existía cuando applyProjectRefresh
+  // era síncrono.
+  it('no recarga si la vista se destruyó mientras el refresco estaba en vuelo', async () => {
+    const getLists = jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    jest.spyOn(wrapper.vm, 'getReferences').mockResolvedValue()
+    jest.spyOn(wrapper.vm, 'getListCategories').mockImplementation(async () => {
+      wrapper.destroy()
+    })
+
+    await wrapper.vm.applyProjectRefresh()
+
+    expect(getLists).not.toHaveBeenCalled()
+  })
+
   // El watcher de `list_categories.options` también recarga el listado cuando el catálogo
   // cambia. Sin coordinarlos, un cambio ajeno de categoría pedía isoqf_lists + findings dos
   // veces — medido en navegador antes de arreglarlo.
