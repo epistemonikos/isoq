@@ -379,7 +379,11 @@
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group class="mt-3" :label="$t('common.add_group_name') || 'Add group name'">
-                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.text"
+                    :state="categoryNameIsDuplicate ? false : null"></b-form-input>
+                  <p v-if="categoryNameIsDuplicate" class="text-danger mt-1 mb-0">
+                    {{ $t('categories.duplicate_name') }}
+                  </p>
                 </b-form-group>
                 <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
@@ -391,7 +395,11 @@
                   {{ $t('modals.categories_numbering_instruction') }}
                 </p>
                 <b-form-group :label="$t('common.edit_group_name') || 'Edit group name'">
-                  <b-form-input v-model="modal_edit_list_categories.text"></b-form-input>
+                  <b-form-input v-model="modal_edit_list_categories.text"
+                    :state="categoryNameIsDuplicate ? false : null"></b-form-input>
+                  <p v-if="categoryNameIsDuplicate" class="text-danger mt-1 mb-0">
+                    {{ $t('categories.duplicate_name') }}
+                  </p>
                 </b-form-group>
                 <b-form-group class="mt-3"
                   :label="$t('common.describe_group') || 'Describe this group for the user viewing this table'">
@@ -413,7 +421,8 @@
                 <div v-if="modal_edit_list_categories.new">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
-                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
+                  <b-button variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="saveNewCategory">{{ $t('common.save') }}</b-button>
                 </div>
                 <div v-if="!modal_edit_list_categories.new">
@@ -426,7 +435,8 @@
                 <div v-if="modal_edit_list_categories.edit">
                   <b-button variant="outline-primary" @click="modalCancelCategoryButtons">{{ $t('common.cancel')
                     }}</b-button>
-                  <b-button variant="outline-success" :disabled="modal_edit_list_categories.text === ''"
+                  <b-button variant="outline-success"
+                    :disabled="modal_edit_list_categories.text === '' || categoryNameIsDuplicate"
                     @click="updateCategoryName(modal_edit_list_categories.index)">{{ $t('common.update') }}</b-button>
                 </div>
               </template>
@@ -477,6 +487,12 @@ const PrintViewTable = () => import(/* webpackChunkName: "printViewTable" */ './
 // Mismo tick que usan los Pasos 3 y 4. Es el techo de cuánto puede tardar en verse un
 // finding creado por otra persona, y de cuánto tarda una fila en aparecer bloqueada.
 const PROJECT_POLL_INTERVAL = 15000
+
+// Un nombre de categoría comparable. Tolera `text` ausente o null a propósito: medido,
+// hay 11 categorías en la base sin ese campo, y `String(undefined)` daría 'undefined'.
+function normalizeCategoryName (text) {
+  return String(text === null || text === undefined ? '' : text).trim().toLowerCase()
+}
 
 // Identidad del catálogo de categorías por CONTENIDO, no por referencia.
 // `processGetListCategories` reasigna `list_categories.options` a un array nuevo en cada
@@ -1435,7 +1451,43 @@ export default {
       await this.getListCategories()
       this.$refs['modalEditListCategories'].show()
     },
-    saveNewCategory: function () {
+    /**
+     * La categoría del proyecto que choca con el nombre que hay en el formulario, o null.
+     *
+     * Es un invariante de TRANSICIÓN, no de estado: sólo impide INTRODUCIR una colisión.
+     * Al renombrar, un texto igual al que la categoría ya tenía pasa igual, aunque tenga
+     * una homónima. Sin esa excepción, en los proyectos que ya arrastran duplicados
+     * (medido: 21 grupos en 5 proyectos, 16 con findings en las dos copias) nadie podría
+     * tocarle el `extra_info` a una de ellas — y sería justo quien intenta desenredarlas.
+     *
+     * Compara contra `modal_edit_list_categories.options`, que es el catálogo puro; el otro
+     * lleva prependido el `{id: null, text: no_group}` y bloquearía ese nombre de regalo.
+     * El ámbito es el proyecto: `getListCategories()` filtra por `project_id`, y así tiene
+     * que quedar — hay 238 nombres que se repiten legítimamente entre proyectos distintos.
+     */
+    findCollidingCategory: function () {
+      const options = this.modal_edit_list_categories.options || []
+      const wanted = normalizeCategoryName(this.modal_edit_list_categories.text)
+      if (!wanted) return null
+      const ownId = this.modal_edit_list_categories.edit ? this.modal_edit_list_categories.id : null
+      const own = ownId ? options.find(o => o && o.id === ownId) : null
+      if (own && normalizeCategoryName(own.text) === wanted) return null
+      return options.find(o => o && o.id !== ownId && normalizeCategoryName(o.text) === wanted) || null
+    },
+    /**
+     * Relee el catálogo del servidor y responde si el nombre choca.
+     *
+     * El catálogo local puede tener minutos —el gestor se abre y la persona se queda
+     * pensando el nombre mientras otro crea el mismo—, así que la única comparación que
+     * vale es contra el servidor y en el mismo gesto que la escritura. Al volver, el
+     * computed `categoryNameIsDuplicate` ya ve la categoría ajena y pinta el aviso solo.
+     */
+    hasFreshCategoryNameCollision: async function () {
+      await this.getListCategories()
+      return this.findCollidingCategory() !== null
+    },
+    saveNewCategory: async function () {
+      if (await this.hasFreshCategoryNameCollision()) return
       const params = {
         text: this.modal_edit_list_categories.text,
         extra_info: this.modal_edit_list_categories.extra_info,
@@ -1464,10 +1516,11 @@ export default {
       this.modal_edit_list_categories.index = index
       this.modal_edit_list_categories.id = _options[index].id
     },
-    updateCategoryName: function () {
+    updateCategoryName: async function () {
       const objID = this.modal_edit_list_categories.id
 
       if (objID) {
+        if (await this.hasFreshCategoryNameCollision()) return
         const params = {
           text: this.modal_edit_list_categories.text,
           extra_info: this.modal_edit_list_categories.extra_info
@@ -1726,6 +1779,10 @@ export default {
     }
   },
   computed: {
+    /** Aviso en vivo mientras se escribe. El chequeo que manda es el del submit. */
+    categoryNameIsDuplicate: function () {
+      return this.findCollidingCategory() !== null
+    },
     formattedCamelotDescription: function () {
       const desc = this.$t('camelot.step_three.description')
       const iconHtml = `<img src="${this.camelotLogo}" width="16" height="16" class="align-middle mx-1" />`

@@ -154,6 +154,129 @@ describe('viewProject.vue — saveNewCategory()', () => {
   })
 })
 
+// Nada impide en el servidor crear dos categorías con el mismo nombre en un proyecto: no
+// hay índice único ni validación (medido: 21 grupos duplicados sobre 1730 categorías, en 5
+// proyectos, 16 de ellos con findings repartidos entre las dos copias). Con dos homónimas,
+// `Commons.sortFindings` las trata como grupos distintos: la tabla muestra dos secciones con
+// el mismo título y la numeración de los findings se parte entre ambas.
+//
+// La regla es un invariante de TRANSICIÓN, no de estado: prohíbe INTRODUCIR una colisión y
+// tolera las que ya existen. Por eso no hace falta migrar la base antes de publicar esto.
+describe('viewProject.vue — nombre de categoría duplicado', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  async function conCatalogo (options, extra = {}) {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    await wrapper.setData({
+      modal_edit_list_categories: { ...wrapper.vm.modal_edit_list_categories, options, ...extra }
+    })
+    return wrapper
+  }
+
+  it('no crea una categoría cuyo nombre ya existe en el proyecto', async () => {
+    const wrapper = await conCatalogo([{ id: 'c1', text: 'Barreras' }], { new: true, text: 'Barreras' })
+
+    await wrapper.vm.saveNewCategory()
+
+    expect(Api.post).not.toHaveBeenCalled()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+    wrapper.destroy()
+  })
+
+  // Medido en la base: 200 categorías (11,6 %) tienen espacios al borde. Dos strings que la
+  // persona percibe como el mismo nombre tienen que colisionar.
+  it('compara sin distinguir mayúsculas ni espacios al borde', async () => {
+    const wrapper = await conCatalogo([{ id: 'c1', text: 'Barreras ' }], { new: true, text: '  BARRERAS' })
+
+    await wrapper.vm.saveNewCategory()
+
+    expect(Api.post).not.toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  it('sí crea una categoría con un nombre que no existe', async () => {
+    const wrapper = await conCatalogo([{ id: 'c1', text: 'Barreras' }], { new: true, text: 'Facilitadores' })
+
+    await wrapper.vm.saveNewCategory()
+
+    expect(Api.post).toHaveBeenCalled()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    wrapper.destroy()
+  })
+
+  // El caso que hace innecesario limpiar los 5 proyectos que ya arrastran duplicados: quien
+  // abre una categoría homónima para tocarle el extra_info no está introduciendo nada.
+  it('deja guardar una categoría que YA tiene homónima si no le cambia el nombre', async () => {
+    const wrapper = await conCatalogo(
+      [{ id: 'c1', text: '3. Emotion' }, { id: 'c2', text: '3. Emotion' }],
+      { edit: true, id: 'c1', text: '3. Emotion', extra_info: 'descripción nueva' })
+
+    await wrapper.vm.updateCategoryName()
+
+    expect(Api.patch).toHaveBeenCalled()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('no renombra una categoría al nombre de otra que ya existe', async () => {
+    const wrapper = await conCatalogo(
+      [{ id: 'c1', text: 'Barreras' }, { id: 'c2', text: 'Facilitadores' }],
+      { edit: true, id: 'c1', text: 'Facilitadores' })
+
+    await wrapper.vm.updateCategoryName()
+
+    expect(Api.patch).not.toHaveBeenCalled()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+    wrapper.destroy()
+  })
+
+  // El catálogo local puede tener minutos: el gestor se abre y la persona se queda pensando
+  // el nombre mientras otro crea el mismo. Sin releer del servidor, la validación mira justo
+  // el dato que sabemos viejo.
+  it('relee el catálogo del servidor antes de escribir, no confía en el local', async () => {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    const releer = jest.spyOn(wrapper.vm, 'getListCategories').mockImplementation(async () => {
+      wrapper.vm.modal_edit_list_categories.options = [{ id: 'ajena', text: 'Barreras' }]
+    })
+    await wrapper.setData({
+      modal_edit_list_categories: { ...wrapper.vm.modal_edit_list_categories, options: [], new: true, text: 'Barreras' }
+    })
+
+    await wrapper.vm.saveNewCategory()
+
+    expect(releer).toHaveBeenCalled()
+    expect(Api.post).not.toHaveBeenCalled()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+    wrapper.destroy()
+  })
+
+  // Medido: 11 categorías de la base no tienen el campo `text`. String(undefined) daría
+  // 'undefined' y las haría colisionar entre sí.
+  it('tolera categorías sin el campo text sin marcarlas como duplicadas', async () => {
+    const wrapper = await conCatalogo(
+      [{ id: 'c1' }, { id: 'c2', text: null }], { new: true, text: 'Barreras' })
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    await wrapper.vm.saveNewCategory()
+    expect(Api.post).toHaveBeenCalled()
+    wrapper.destroy()
+  })
+
+  // `list_categories.options` lleva prependido el {id: null, text: no_group}; comparar
+  // contra ése bloquearía ese nombre de regalo.
+  it('no bloquea el nombre de la entrada sintética "sin grupo"', async () => {
+    const wrapper = await conCatalogo([], { new: true, text: 'categories.no_group' })
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    wrapper.destroy()
+  })
+})
+
 describe('viewProject.vue — updateCategoryName()', () => {
   beforeEach(() => jest.clearAllMocks())
 
