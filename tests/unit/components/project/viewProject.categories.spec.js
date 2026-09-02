@@ -559,3 +559,108 @@ describe('viewProject.vue — getCategoryName()', () => {
     expect(wrapper.vm.getCategoryName('cat99')).toBe('')
   })
 })
+
+// La validación fresca relee el catálogo y compara justo antes de escribir, así que
+// atrapa casi todo. Lo que no puede atrapar es la ventana entre ese GET y el PATCH: si
+// otra persona crea el nombre ahí en medio —o si el servidor normaliza distinto que
+// nosotros— el 409 llega igual. Hoy ese 409 muere en `Commons.printErrors`, que devuelve
+// un objeto que nadie consume: el modal queda abierto, con el texto escrito, sin decir
+// nada. La persona vuelve a apretar Guardar.
+describe('viewProject.vue — el 409 del servidor por nombre duplicado', () => {
+  const duplicateKeyError = {
+    config: { url: '/isoqf_list_categories/c1', method: 'patch' },
+    response: {
+      status: 409,
+      data: { status: false, reason: 'duplicate_key', message: 'duplicate key on (project_id, text)' }
+    }
+  }
+
+  // Catálogo que NO contiene el nombre en disputa: es lo que hace que la validación de
+  // cliente deje pasar la escritura y el rechazo tenga que venir del servidor.
+  async function conCarreraPerdida (extra) {
+    const { wrapper } = createWrapper()
+    await flushPromises()
+    jest.spyOn(wrapper.vm, 'getLists').mockImplementation(() => {})
+    jest.spyOn(wrapper.vm, 'getListCategories').mockResolvedValue()
+    await wrapper.setData({
+      modal_edit_list_categories: {
+        ...wrapper.vm.modal_edit_list_categories,
+        options: [{ id: 'c9', text: 'Otra cosa' }],
+        ...extra
+      }
+    })
+    return wrapper
+  }
+
+  beforeEach(() => jest.clearAllMocks())
+
+  it('avisa del nombre repetido cuando el servidor rechaza el alta', async () => {
+    Api.post.mockRejectedValueOnce(duplicateKeyError)
+    const wrapper = await conCarreraPerdida({ new: true, text: '7. Skills' })
+
+    await wrapper.vm.saveNewCategory()
+    await flushPromises()
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('avisa del nombre repetido cuando el servidor rechaza el rename', async () => {
+    Api.patch.mockRejectedValueOnce(duplicateKeyError)
+    const wrapper = await conCarreraPerdida({ edit: true, id: 'c1', text: '7. Skills' })
+
+    await wrapper.vm.updateCategoryName()
+    await flushPromises()
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+    wrapper.destroy()
+  })
+
+  // Lo peor que puede hacer un rechazo es cerrar el modal: el nombre que la persona
+  // escribió se pierde y no queda ni dónde corregirlo.
+  it('deja el modal abierto y el texto escrito, que es lo único que hay para corregir', async () => {
+    Api.patch.mockRejectedValueOnce(duplicateKeyError)
+    const wrapper = await conCarreraPerdida({ edit: true, id: 'c1', text: '7. Skills' })
+
+    await wrapper.vm.updateCategoryName()
+    await flushPromises()
+
+    expect(wrapper.vm.modal_edit_list_categories.edit).toBe(true)
+    expect(wrapper.vm.modal_edit_list_categories.text).toBe('7. Skills')
+    wrapper.destroy()
+  })
+
+  // El aviso es específico del nombre repetido y no puede convertirse en el cartel de
+  // todo lo que falle: un 500 no tiene nada que ver con un duplicado.
+  it('no culpa al nombre cuando el fallo es otro', async () => {
+    Api.patch.mockRejectedValueOnce({
+      config: { url: '/isoqf_list_categories/c1', method: 'patch' },
+      response: { status: 500, data: {} }
+    })
+    const wrapper = await conCarreraPerdida({ edit: true, id: 'c1', text: '7. Skills' })
+
+    await wrapper.vm.updateCategoryName()
+    await flushPromises()
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    wrapper.destroy()
+  })
+
+  // Corregido el nombre, el aviso tiene que irse: si se queda pegado, el botón Guardar
+  // queda deshabilitado sobre un nombre que sí es válido y no hay forma de salir.
+  it('se borra en cuanto la persona cambia el texto', async () => {
+    Api.patch.mockRejectedValueOnce(duplicateKeyError)
+    const wrapper = await conCarreraPerdida({ edit: true, id: 'c1', text: '7. Skills' })
+
+    await wrapper.vm.updateCategoryName()
+    await flushPromises()
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(true)
+
+    await wrapper.setData({
+      modal_edit_list_categories: { ...wrapper.vm.modal_edit_list_categories, text: '7. Skills (revisado)' }
+    })
+
+    expect(wrapper.vm.categoryNameIsDuplicate).toBe(false)
+    wrapper.destroy()
+  })
+})

@@ -474,6 +474,7 @@ import draggable from 'vuedraggable'
 import Commons from '../../utils/commons.js'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import projectFreshnessMixin from '@/mixins/projectFreshnessMixin'
+import { isDuplicateKeyRejection } from '@/utils/lockErrors'
 
 const contentGuidance = () => import(/* webpackChunkName: "contentguidance" */ '../contentGuidance.vue')
 const backToTop = () => import(/* webpackChunkName: "backtotop" */ '../backToTop.vue')
@@ -604,6 +605,11 @@ export default {
         remove: false,
         text: '',
         extra_info: '',
+        // El nombre NORMALIZADO que el servidor rechazó por duplicado, o null. Guarda el
+        // nombre y no un booleano a propósito: así el aviso se borra solo en cuanto la
+        // persona escribe otra cosa, sin un watcher que lo limpie. Un booleano se queda
+        // pegado y deja el botón Guardar deshabilitado sobre un nombre que ya es válido.
+        rejected_name: null,
         index: null
       },
       fields: {
@@ -1503,6 +1509,7 @@ export default {
         project_id: this.$route.params.id
       }
 
+      this.modal_edit_list_categories.rejected_name = null
       Api.post('/isoqf_list_categories', params)
         .then(async () => {
           await this.getListCategories()
@@ -1511,9 +1518,41 @@ export default {
           this.modal_edit_list_categories.text = ''
           this.modal_edit_list_categories.extra_info = ''
         })
-        .catch((error) => {
-          Commons.printErrors(error)
-        })
+        .catch(this.handleCategorySaveError)
+    },
+    /**
+     * Qué hacer cuando el servidor rechaza el alta o el rename de una categoría.
+     *
+     * Existe porque hasta acá los dos `.catch` llamaban a `Commons.printErrors(error)`,
+     * que DEVUELVE un objeto y no lo consume nadie: el 409 por nombre duplicado moría en
+     * silencio, con el modal abierto y el nombre escrito, y la persona volvía a apretar
+     * Guardar. Es la sexta vez en este repositorio que un campo de la respuesta llega y se
+     * pierde en el camino (ver CLAUDE.md, «lo que el servidor puede atrapar, y lo que no»).
+     */
+    handleCategorySaveError: function (error) {
+      // Todo lo que no sea un nombre repetido queda exactamente como estaba. No es que
+      // este silencio esté bien —un 500 al guardar tampoco se ve— pero es un camino
+      // aparte y ponerle acá el «no se pudo guardar, intente nuevamente» genérico sería
+      // meterlo donde ya hay dos canales que hablan: el 403 dispara `permission-denied`
+      // y el lock de proyecto tiene su propio modal. Queda anotado como deuda; el test
+      // del 500 fija que este aviso no se lo apropie.
+      if (!isDuplicateKeyRejection(error)) {
+        return Commons.printErrors(error)
+      }
+
+      // Primero el aviso y después el GET: el cartel no puede esperar a la red, y si el
+      // refresco falla la persona igual ve por qué se rechazó su nombre.
+      this.modal_edit_list_categories.rejected_name =
+        normalizeCategoryName(this.modal_edit_list_categories.text)
+
+      // Y de paso releer el catálogo, que no es sólo para la próxima validación: si la
+      // categoría que choca es visible, aparece en la tabla del modal y la persona ve
+      // CONTRA QUÉ choca. Cuando no aparece —el servidor normaliza por su cuenta y no
+      // tiene por qué coincidir con nosotros— el aviso lo sostiene `rejected_name`.
+      //
+      // Un toast encima sería el error que este repositorio ya cometió: dos mensajes
+      // sobre un mismo evento. El aviso va bajo el input, que es donde está el cursor.
+      return this.getListCategories()
     },
     editListCategoryName: function (index) {
       let _options = JSON.parse(JSON.stringify(this.modal_edit_list_categories.options))
@@ -1529,6 +1568,7 @@ export default {
 
       if (objID) {
         if (await this.hasFreshCategoryNameCollision()) return
+        this.modal_edit_list_categories.rejected_name = null
         const params = {
           text: this.modal_edit_list_categories.text,
           extra_info: this.modal_edit_list_categories.extra_info
@@ -1543,9 +1583,7 @@ export default {
             this.modal_edit_list_categories.index = null
             this.modal_edit_list_categories.id = null
           })
-          .catch((error) => {
-            Commons.printErrors(error)
-          })
+          .catch(this.handleCategorySaveError)
       }
     },
     removeListCategory: function (data) {
@@ -1787,9 +1825,18 @@ export default {
     }
   },
   computed: {
-    /** Aviso en vivo mientras se escribe. El chequeo que manda es el del submit. */
+    /**
+     * Aviso en vivo mientras se escribe. El chequeo que manda es el del submit.
+     *
+     * Dos fuentes, y la segunda no es redundante: el catálogo local puede no contener la
+     * categoría que choca —el servidor normaliza y nosotros también, pero no tienen por
+     * qué coincidir carácter por carácter— y entonces la única autoridad es su 409.
+     */
     categoryNameIsDuplicate: function () {
-      return this.findCollidingCategory() !== null
+      if (this.findCollidingCategory() !== null) return true
+      const rejected = this.modal_edit_list_categories.rejected_name
+      return Boolean(rejected) &&
+        normalizeCategoryName(this.modal_edit_list_categories.text) === rejected
     },
     formattedCamelotDescription: function () {
       const desc = this.$t('camelot.step_three.description')

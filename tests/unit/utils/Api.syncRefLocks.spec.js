@@ -22,24 +22,24 @@ jest.mock('@/services/lockService', () => ({
   }
 }))
 
+beforeEach(() => {
+  jest.clearAllMocks()
+  Api.setOnline(true)
+  LockService.acquireRef.mockResolvedValue({ success: true })
+  LockService.refLocks.clear()
+  LockService.offlineRefs.clear()
+  axios.patch.mockResolvedValue({ data: {} })
+  axios.post.mockResolvedValue({ data: {} })
+  jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true)
+  jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {})
+})
+
+afterEach(() => jest.restoreAllMocks())
+
 // A queued granular write replays with no lock, so with the flag on the backend
 // answers 409 `lock_not_held` — the write is lost and (for endpoint A) silently.
 // The replay has to acquire the lock itself, and give up loudly when it cannot.
 describe('Api.syncPendingOperations() — locks al reproducir la cola', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    Api.setOnline(true)
-    LockService.acquireRef.mockResolvedValue({ success: true })
-    LockService.refLocks.clear()
-    LockService.offlineRefs.clear()
-    axios.patch.mockResolvedValue({ data: {} })
-    axios.post.mockResolvedValue({ data: {} })
-    jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true)
-    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {})
-  })
-
-  afterEach(() => jest.restoreAllMocks())
-
   const granularOp = (overrides = {}) => ({
     id: 7,
     method: 'PATCH',
@@ -210,4 +210,67 @@ describe('Api.patch() — guarda el contexto de lock al encolar', () => {
     expect(call.lockProjectId).toBeUndefined()
   })
 
+})
+
+// Un nombre repetido no tiene arreglo por reintento: el payload encolado lleva justo el
+// texto que choca. Reintentarlo es un 409 en cada sincronización, para siempre, con todo
+// lo que quedó detrás en la cola esperando. Mismo trato que el conflicto de versión.
+//
+// La diferencia con aquél está en el aviso. El de versión llega por el interceptor, que
+// tiene un canal propio; éste no pasa por ahí —`refLockKeyFromUrl('/isoqf_list_categories/c1')`
+// es null y el interceptor no dispara nada—, así que si la cola lo descarta en silencio la
+// persona pierde el rename sin una sola señal. Justo el patrón que este repositorio ya
+// repitió cinco veces: un dato que llegaba y se perdía en el camino.
+describe('Api.syncPendingOperations() — nombre duplicado al reproducir', () => {
+  const renameOp = (overrides = {}) => ({
+    id: 11,
+    method: 'PATCH',
+    endpoint: '/api/isoqf_list_categories/c1',
+    payload: { text: '7. Skills', extra_info: '' },
+    ...overrides
+  })
+
+  const duplicateKeyError = {
+    config: { url: '/api/isoqf_list_categories/c1', method: 'patch' },
+    response: {
+      status: 409,
+      data: { status: false, reason: 'duplicate_key', message: 'duplicate key on (project_id, text)' }
+    }
+  }
+
+  it('saca de la cola el rename que choca con un nombre existente', async () => {
+    getPendingOperations.mockResolvedValue([renameOp()])
+    axios.patch.mockRejectedValue(duplicateKeyError)
+
+    await Api.syncPendingOperations()
+
+    expect(removePendingOperation).toHaveBeenCalledWith(11)
+  })
+
+  it('avisa por su propio canal y nombra el texto que se perdió', async () => {
+    getPendingOperations.mockResolvedValue([renameOp()])
+    axios.patch.mockRejectedValue(duplicateKeyError)
+
+    await Api.syncPendingOperations()
+
+    const events = window.dispatchEvent.mock.calls.map(([e]) => e)
+    const announced = events.find(e => e.type === 'duplicate-key-conflict')
+    expect(announced).toBeDefined()
+    expect(announced.detail).toMatchObject({
+      endpoint: '/api/isoqf_list_categories/c1',
+      text: '7. Skills',
+      source: 'replay'
+    })
+  })
+
+  it('no lo anuncia por el canal de conflicto de lock', async () => {
+    getPendingOperations.mockResolvedValue([renameOp()])
+    axios.patch.mockRejectedValue(duplicateKeyError)
+
+    await Api.syncPendingOperations()
+
+    const types = window.dispatchEvent.mock.calls.map(([e]) => e.type)
+    expect(types).not.toContain('ref-lock-conflict')
+    expect(types).not.toContain('item-version-conflict')
+  })
 })

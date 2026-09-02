@@ -9,7 +9,7 @@ import { i18n } from '@/plugins/i18n'
 import { strategies } from '@/utils/OfflineStrategies'
 // Re-exported so the modules that already import it from here keep working.
 import { refLockKeyFromUrl } from '@/utils/refLockUrls'
-import { isVersionRejection } from '@/utils/lockErrors'
+import { isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 export { refLockKeyFromUrl }
 
 // Estado de conexión
@@ -94,6 +94,23 @@ function reportVersionConflict (refId, error, source) {
       failedData,
       source
     }
+  }))
+}
+
+/**
+ * Anuncia que una escritura encolada se descartó porque el nombre ya existe.
+ *
+ * Canal propio, y hace falta uno: el interceptor no toca este caso —la URL de las
+ * categorías no es granular, así que `refLockKeyFromUrl` da null y no se dispara nada—,
+ * de modo que si la cola descartara la operación en silencio la persona perdería el
+ * rename que escribió sin conexión sin una sola señal. El texto viaja en el evento
+ * porque es lo único que le permite reconocer cuál de sus cambios se cayó.
+ */
+function reportDuplicateKeyConflict (endpoint, payload, source) {
+  if (typeof window === 'undefined') return
+  const data = payload || {}
+  window.dispatchEvent(new CustomEvent('duplicate-key-conflict', {
+    detail: { endpoint, text: data.text || '', payload: data, source }
   }))
 }
 
@@ -603,7 +620,14 @@ export default class Api {
           // console.log('Synced operation:', op.method, op.endpoint)
         } catch (error) {
           console.error('Failed to sync operation:', op.method, op.endpoint, error)
-          if (isVersionRejection(error)) {
+          if (isDuplicateKeyRejection(error)) {
+            // El payload lleva justamente el nombre que choca, así que reintentarlo es el
+            // mismo 409 en cada sincronización, para siempre y con la cola trabada detrás.
+            // Se descarta por el mismo motivo que el conflicto de versión — y se avisa por
+            // el canal propio, porque a diferencia de aquél acá el interceptor no dijo nada.
+            reportDuplicateKeyConflict(op.endpoint, op.payload, 'replay')
+            await removePendingOperation(op.id)
+          } else if (isVersionRejection(error)) {
             // Reintentar no puede funcionar: el payload encolado lleva por definición la
             // versión de antes de desconectarse, así que cada sincronización repetiría el
             // mismo 409 y trabaría la cola detrás. El interceptor ya le entregó el texto

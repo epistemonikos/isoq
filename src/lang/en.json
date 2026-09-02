@@ -1185,6 +1185,9 @@
     "action_disabled": "This action is disabled while offline",
     "projectNotCached": "This project is not available offline. Please connect to the internet to view it.",
     "syncConflictTitle": "Change not synchronised",
+    "duplicateKeyConflictTitle": "Name already in use",
+    "duplicateKeyConflict": "The group name \"{name}\" you saved offline was not synchronised: another group in this project already uses it. Rename the group again, with a different name.",
+    "duplicateKeyConflictNoName": "A group name you saved offline was not synchronised: another group in this project already uses it. Rename the group again, with a different name.",
     "syncConflict": "A change you made offline could not be saved because {user} edited the same data. Your text was kept locally so you can copy it.",
     "syncConflictNoUser": "A change you made offline could not be saved because the data was edited elsewhere. Your text was kept locally so you can copy it."
   },

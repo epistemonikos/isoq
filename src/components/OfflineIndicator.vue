@@ -78,6 +78,8 @@ export default {
     // was closed before the network came back — so the warning has to live in a
     // component that is always mounted.
     window.addEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    // Mismo motivo, otro eje: acá no hay nadie editando, hay un nombre que ya existe.
+    window.addEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
 
     // Verificar estado y operaciones pendientes periódicamente
     this.checkInterval = setInterval(() => {
@@ -90,6 +92,7 @@ export default {
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('offlineSync', this.handleSyncComplete)
     window.removeEventListener('ref-lock-conflict', this.handleRefLockConflict)
+    window.removeEventListener('duplicate-key-conflict', this.handleDuplicateKeyConflict)
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
     }
@@ -118,6 +121,27 @@ export default {
       }
       this.$bvToast.toast(message, {
         title: this.$t(live ? 'lock.live_conflict_title' : 'offline.syncConflictTitle'),
+        variant: 'warning',
+        solid: true,
+        noAutoHide: true
+      })
+    },
+    /**
+     * El rename que la cola descartó porque el nombre ya existía.
+     *
+     * No ofrece reintentar a propósito: el payload lleva justamente el texto que choca,
+     * así que un botón «volver a intentar» prometería algo que no puede pasar. Lo que la
+     * persona necesita es saber CUÁL de sus cambios se cayó, y para eso el nombre tiene
+     * que estar en el texto — de ahí que el evento lo traiga.
+     */
+    handleDuplicateKeyConflict (event) {
+      const name = (event.detail && event.detail.text) || ''
+      // Medido: hay 11 categorías sin campo `text`. «"" ya existe» no explica nada.
+      const message = name
+        ? this.$t('offline.duplicateKeyConflict', { name })
+        : this.$t('offline.duplicateKeyConflictNoName')
+      this.$bvToast.toast(message, {
+        title: this.$t('offline.duplicateKeyConflictTitle'),
         variant: 'warning',
         solid: true,
         noAutoHide: true

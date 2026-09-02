@@ -12,6 +12,11 @@ const ANNOUNCED_STATUSES = [409, 403]
 // does hold theirs. Staying silent would drop a save with no signal at all.
 const VERSION_REASONS = new Set(['version_conflict', 'invalid_version'])
 
+// El nombre ya existe en el proyecto. Tercer eje, y el único de los tres en que no hay
+// nadie del otro lado: no es que otra persona esté editando ni que la fila haya cambiado
+// bajo los pies, es que el texto que se quiere escribir choca con uno que ya está.
+const DUPLICATE_KEY_REASON = 'duplicate_key'
+
 /**
  * True when a failed save has already been reported to the user by the lock channel.
  *
@@ -24,6 +29,7 @@ export function isLockRejection (error) {
   const status = error && error.response && error.response.status
   if (!ANNOUNCED_STATUSES.includes(status)) return false
   if (isVersionRejection(error)) return false
+  if (isDuplicateKeyRejection(error)) return false
   const url = (error.config && error.config.url) || ''
   return Boolean(refLockKeyFromUrl(url))
 }
@@ -39,4 +45,22 @@ export function isVersionRejection (error) {
   const reason = error && error.response && error.response.data &&
     error.response.data.reason
   return VERSION_REASONS.has(reason)
+}
+
+/**
+ * True cuando el servidor rechazó la escritura porque el nombre ya existe.
+ *
+ * Lee `reason` y nada más, igual que el chequeo de versión: el status es el mismo 409 y
+ * el endpoint puede ser cualquiera con un índice único detrás. Hoy son las categorías.
+ *
+ * De acá cuelgan dos decisiones y conviene tenerlas juntas. La primera es qué se ve: el
+ * cartel de lock diría «otra persona tiene el estudio» cuando no hay nadie editando. La
+ * segunda es que **reintentar no puede funcionar**: el payload lleva el nombre que choca,
+ * así que la cola offline tiene que descartar la operación en vez de repetirla para
+ * siempre y trabar todo lo que quedó detrás.
+ */
+export function isDuplicateKeyRejection (error) {
+  const reason = error && error.response && error.response.data &&
+    error.response.data.reason
+  return reason === DUPLICATE_KEY_REASON
 }

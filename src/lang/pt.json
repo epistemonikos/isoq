@@ -1185,6 +1185,9 @@
     "action_disabled": "Esta ação está desativada enquanto estiver offline",
     "projectNotCached": "Este projeto não está disponível offline. Por favor, conecte-se à internet para visualizá-lo.",
     "syncConflictTitle": "Alteração não sincronizada",
+    "duplicateKeyConflictTitle": "Nome já utilizado",
+    "duplicateKeyConflict": "O nome de grupo \"{name}\" que você salvou sem conexão não foi sincronizado: outro grupo deste projeto já o utiliza. Renomeie o grupo novamente, com um nome diferente.",
+    "duplicateKeyConflictNoName": "Um nome de grupo que você salvou sem conexão não foi sincronizado: outro grupo deste projeto já o utiliza. Renomeie o grupo novamente, com um nome diferente.",
     "syncConflict": "Uma alteração feita sem conexão não pôde ser salva porque {user} editou os mesmos dados. Seu texto foi mantido localmente para que você possa copiá-lo.",
     "syncConflictNoUser": "Uma alteração feita sem conexão não pôde ser salva porque os dados foram editados em outro lugar. Seu texto foi mantido localmente para que você possa copiá-lo."
   },

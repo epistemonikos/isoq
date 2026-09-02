@@ -1,4 +1,4 @@
-import { isLockRejection, isVersionRejection } from '@/utils/lockErrors'
+import { isLockRejection, isVersionRejection, isDuplicateKeyRejection } from '@/utils/lockErrors'
 
 const rejection = (status, url, data = {}) => ({
   config: { url },
@@ -100,5 +100,41 @@ describe('isVersionRejection() — el otro eje', () => {
   it('tolera un error sin respuesta y uno nulo', () => {
     expect(isVersionRejection(new Error('Network Error'))).toBe(false)
     expect(isVersionRejection(null)).toBe(false)
+  })
+})
+
+// El nombre repetido es un tercer eje, y el más fácil de confundir con los otros dos: el
+// servidor lo rechaza con el mismo 409. Pero acá no hay nadie editando ni una versión
+// vieja — hay un texto que ya existe en el proyecto—, así que ni el cartel de lock ni el
+// de versión sirven, y sobre todo: reintentar el mismo payload no puede funcionar nunca.
+describe('isDuplicateKeyRejection() — el nombre ya existe', () => {
+  it('reconoce el rechazo por clave duplicada', () => {
+    const err = rejection(409, '/isoqf_list_categories/c1', {
+      status: false,
+      reason: 'duplicate_key',
+      message: 'duplicate key on (project_id, text)'
+    })
+    expect(isDuplicateKeyRejection(err)).toBe(true)
+  })
+
+  it('no reclama un conflicto de lock ni uno de versión', () => {
+    expect(isDuplicateKeyRejection(rejection(409, '/x/1/item/r1', { reason: 'version_conflict' }))).toBe(false)
+    expect(isDuplicateKeyRejection(rejection(409, '/x/1/item/r1', { reason: 'locked_by_other_user' }))).toBe(false)
+    expect(isDuplicateKeyRejection(rejection(409, '/x/1/item/r1'))).toBe(false)
+  })
+
+  it('tolera un error sin respuesta y uno nulo', () => {
+    expect(isDuplicateKeyRejection(new Error('Network Error'))).toBe(false)
+    expect(isDuplicateKeyRejection(null)).toBe(false)
+  })
+
+  // Hoy sólo lo manda un endpoint no granular, así que `isLockRejection` ya devolvía
+  // false por la URL. Esta exclusión es para el día en que el servidor ponga un índice
+  // único detrás de un endpoint granular —las columnas, por ejemplo—: ahí el motivo
+  // llegaría por una URL con lock y el editor lo silenciaría creyendo que el canal de
+  // conflicto ya lo explicó. Nadie lo habría explicado.
+  it('no lo da por anunciado aunque llegue por una URL granular', () => {
+    const err = rejection(409, '/isoqf_characteristics/c1/item/ref1', { reason: 'duplicate_key' })
+    expect(isLockRejection(err)).toBe(false)
   })
 })
