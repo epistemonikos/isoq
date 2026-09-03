@@ -12,7 +12,7 @@
 
     <b-modal id="modal-1" size="xl" dialog-class="camelot-modal-dialog" header-class="camelot-modal-header"
       footer-class="camelot-modal-footer" body-class="camelot-modal-body" no-close-on-backdrop no-close-on-esc
-      @hidden="onAssessmentModalClosed">
+      @hide="onAssessmentModalHide" @hidden="onAssessmentModalClosed">
       <template #modal-title>
         <div class="modal-title-container">
           <div class="modal-breadcrumb">
@@ -74,8 +74,11 @@
                   <div class="column-header mb-3">
                     <h3>{{ $t('camelot.step_four.sections.meta_domains') }}</h3>
                   </div>
+                  <!-- `activate-tab` es cancelable: es el único punto donde se puede frenar
+                       el cambio de pestaña antes de que ocurra. Al cancelarlo, bootstrap-vue
+                       revierte el v-model por su cuenta. -->
                   <b-tabs v-model="modal.tab" nav-class="modal-nav-tabs nav-fill" align="right"
-                    @input="selectedMeta = $event">
+                    @input="selectedMeta = $event" @activate-tab="onActivateTab">
                     <b-tab v-for="(domain, dIndex) in ui.domainTabs" :key="dIndex"
                       :title-link-class="modal.tab === dIndex ? ['modal-active-tab', 'modal-active-tab-text'] : ['modal-normal-tab', 'modal-normal-tab-text']"
                       class="border p-2" style="border-color: #848E98 !important;">
@@ -116,6 +119,7 @@
                             :refId="refId" :modalIndex="modal.index"
                             :is-read-only="isCellReadOnly(modal.stage, dIndex)"
                             :locked-by-user="cellLockedBy(modal.stage, dIndex)"
+                            @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                             @getAssessments="getAssessments"></assessmentForm>
                         </b-col>
                       </b-row>
@@ -166,6 +170,7 @@
                   <assessmentForm :assessments="assessments" :modalStage="2" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(2, 0)"
                     :locked-by-user="cellLockedBy(2, 0)"
+                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -246,6 +251,7 @@
                   <assessmentForm :assessments="assessments" :modalStage="3" :selectedMeta="0" :refId="refId"
                     :modalIndex="modal.index" :is-read-only="isCellReadOnly(3, 0)"
                     :locked-by-user="cellLockedBy(3, 0)"
+                    @incomplete-change="onCellIncompleteChange" @request-close="requestModalClose"
                     @getAssessments="getAssessments"></assessmentForm>
                 </b-col>
               </b-row>
@@ -264,11 +270,36 @@
           <div v-if="modal.stage < 3" @click="goToStage(modal.stage + 1)" class="nav-footer-link">
             {{ getStageTitle(modal.stage + 1) }} &gt;
           </div>
-          <div v-else @click="$bvModal.hide('modal-1')" class="nav-footer-link">
+          <div v-else @click="requestModalClose" class="nav-footer-link">
             {{ $t('common.close') }}
           </div>
         </div>
       </template>
+    </b-modal>
+
+    <!--
+      El mismo cartel que el botón *Save* levanta desde el formulario, pero acá arriba: quien
+      decide si la pestaña cambia, si la etapa cambia o si el modal se cierra es este
+      componente, y las tres salidas esquivaban el aviso. Reusa las claves i18n que ya existen
+      para esa advertencia; el texto tiene que ser el mismo porque la decisión es la misma.
+    -->
+    <b-modal id="explanation-guard-modal" :title="$t('common.warning')" :hide-footer="true"
+      data-testid="explanation-guard-modal" @hidden="onExplanationGuardHidden">
+      <p>{{ $t('worksheet.warnings.incomplete_explanation') }}</p>
+      <b-container>
+        <b-row align-h="between">
+          <b-col cols="4">
+            <b-button block @click="explanationGuardDoItNow">
+              {{ $t('worksheet.actions.do_it_now') }}
+            </b-button>
+          </b-col>
+          <b-col cols="4">
+            <b-button block @click="explanationGuardDoItLater">
+              {{ $t('worksheet.actions.do_it_later') }}
+            </b-button>
+          </b-col>
+        </b-row>
+      </b-container>
     </b-modal>
 
     <b-sidebar id="sidebar-section-help" :title="modalSubtitle" width="400px" shadow right backdrop>
@@ -414,6 +445,20 @@ export default {
       // hasta que el 409 `lock_not_held` lo desmienta, porque el backend exige tenencia,
       // no sólo ausencia de otro. Este flag sobrevive al recálculo del sondeo.
       studyLockLost: false,
+      // Celdas con un juicio elegido y sin explicación, como claves 'stage-meta'. El dato
+      // lo empujan los AssessmentForm por evento: viven detrás de `b-tabs` + `v-for` dentro
+      // de un `v-if` por etapa, donde `$refs` no llega (ver `pendingEditsMixin`).
+      incompleteCells: {},
+      // La salida que el aviso dejó en suspenso, a ejecutar si eligen "más tarde".
+      pendingNavigation: null,
+      // La celda a la que lleva "hacerlo ahora", y el textarea que hay que enfocar una vez
+      // que el aviso terminó de cerrarse.
+      explanationGuardFocusMeta: null,
+      pendingFocusId: null,
+      // Exenciones de un solo uso: la navegación que el propio aviso autoriza vuelve a
+      // disparar el evento que se interceptó, y sin esto el guard se frenaría a sí mismo.
+      bypassTabGuard: false,
+      bypassCloseGuard: false,
       // Ver el comentario gemelo en EditReferenceModal: el 409 de un guardado en vuelo
       // llega después del cierre, cuando refId ya no sirve para reconocerlo.
       pendingConflictRefId: '',
@@ -620,6 +665,22 @@ export default {
     studyFieldsBlockedBy () {
       return this.studyFieldsLockedBy || this.refLockedBy || null
     },
+    /**
+     * Las celdas de la etapa abierta que frenan una salida. Se derivan de las claves que
+     * los formularios montados reportaron —los de otras etapas se dieron de baja al
+     * destruirse—, así que no hay que saber cuántas pestañas tiene cada etapa.
+     *
+     * Las celdas en solo lectura quedan fuera a propósito: exigir una explicación que la
+     * persona no puede escribir sería un callejón sin salida.
+     */
+    incompleteMetasInStage () {
+      const prefix = `${this.modal.stage}-`
+      return Object.keys(this.incompleteCells)
+        .filter(key => key.startsWith(prefix) && this.incompleteCells[key])
+        .map(key => Number(key.slice(prefix.length)))
+        .filter(meta => !this.isCellReadOnly(this.modal.stage, meta))
+        .sort((a, b) => a - b)
+    },
     // Cells of the open study that the /refs poll shows held by someone else.
     // Disabling them up front is the whole point of the listing: the user finds
     // out before typing, not when the save is rejected.
@@ -650,6 +711,138 @@ export default {
     }
   },
   methods: {
+    /** Un AssessmentForm reporta si su celda quedó con un juicio sin explicar. */
+    onCellIncompleteChange ({ stage, meta, incomplete }) {
+      const key = `${stage}-${meta}`
+      if (incomplete) {
+        this.$set(this.incompleteCells, key, true)
+      } else {
+        this.$delete(this.incompleteCells, key)
+      }
+    },
+    /**
+     * Puerta única de las salidas del formulario. Si alguna de las celdas indicadas quedó
+     * incompleta, la acción se guarda y se muestra el aviso en vez de ejecutarla; sólo
+     * "más tarde" la libera.
+     *
+     * `metas` acota la pregunta: al cambiar de pestaña sólo importa la que se abandona,
+     * mientras que al cambiar de etapa o cerrar importan todas las de la etapa.
+     */
+    guardExplanation (action, metas = null) {
+      const blocking = metas === null
+        ? this.incompleteMetasInStage
+        : metas.filter(meta => this.incompleteMetasInStage.includes(meta))
+      if (!blocking.length) {
+        action()
+        return
+      }
+      this.pendingNavigation = action
+      this.explanationGuardFocusMeta = blocking[0]
+      this.$bvModal.show('explanation-guard-modal')
+    },
+    /** Se queda donde está y deja el cursor en la explicación que falta. */
+    explanationGuardDoItNow () {
+      this.pendingNavigation = null
+      const meta = this.explanationGuardFocusMeta
+      this.explanationGuardFocusMeta = null
+      if (meta !== null) {
+        if (this.modal.stage < 2 && this.modal.tab !== meta) {
+          this.bypassTabGuard = true
+          this.modal.tab = meta
+          this.selectedMeta = meta
+        }
+        this.pendingFocusId = `assessment-explanation-${this.modal.stage}-${meta}`
+      }
+      this.$bvModal.hide('explanation-guard-modal')
+      this.scheduleExplanationFocus()
+    },
+    /**
+     * Insiste con el foco durante ~500 ms de frames, y no lo aplica una sola vez.
+     *
+     * Dos motivos independientes. Bootstrap-vue DEVUELVE el foco al cerrar el aviso, así
+     * que un `focus()` temprano queda pisado un instante después —medido en navegador: el
+     * cursor terminaba dentro del cartel ya cerrado, con el test de unidad en verde porque
+     * comprobaba la llamada y no dónde aterrizaba—. Y `hidden`, el evento que sí ocurre
+     * después de esa devolución, cuelga de `transitionend`, que esta base de código ya
+     * tiene documentado como poco confiable (ver `onInactivityExpired`): apostarle el
+     * único intento dejaría a "hacerlo ahora" sin efecto visible.
+     *
+     * Cede en cuanto el cursor llegó. Mismo patrón de reintento que `holdScrollPosition`.
+     */
+    scheduleExplanationFocus () {
+      if (typeof window === 'undefined' || !window.requestAnimationFrame) return
+      const deadline = Date.now() + 500
+      const tick = () => {
+        if (!this.applyPendingExplanationFocus() && Date.now() < deadline) {
+          window.requestAnimationFrame(tick)
+        }
+      }
+      window.requestAnimationFrame(tick)
+    },
+    /** Intenta una vez. Devuelve si ya no queda nada pendiente. */
+    applyPendingExplanationFocus () {
+      const id = this.pendingFocusId
+      if (!id) return true
+      const el = document.getElementById(id)
+      if (!el) return false
+      el.focus()
+      if (document.activeElement !== el) return false
+      this.pendingFocusId = null
+      return true
+    },
+    /** El disparo normal: el aviso terminó de cerrarse y ya devolvió el foco. */
+    onExplanationGuardHidden () {
+      this.applyPendingExplanationFocus()
+    },
+    /**
+     * Libera la salida. El flush no es decorativo: el debounce de 1,5 s del formulario no
+     * sobrevive a un cambio de etapa ni al cierre, así que lo tipeado en el último segundo
+     * y medio se perdería justo en el camino que la persona eligió para irse.
+     */
+    explanationGuardDoItLater () {
+      this.$bvModal.hide('explanation-guard-modal')
+      const action = this.pendingNavigation
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
+      if (!this.isRefReadOnly) requestPendingEditsFlush(this.refId)
+      if (action) action()
+    },
+    /** Salida por pestaña. Sólo pregunta por la pestaña que se abandona. */
+    onActivateTab (newIndex, prevIndex, bvEvt) {
+      if (this.bypassTabGuard) {
+        this.bypassTabGuard = false
+        return
+      }
+      if (!this.incompleteMetasInStage.includes(prevIndex)) return
+      bvEvt.preventDefault()
+      this.guardExplanation(() => {
+        this.bypassTabGuard = true
+        this.modal.tab = newIndex
+        this.selectedMeta = newIndex
+      }, [prevIndex])
+    },
+    /** Salida por cierre pedido explícitamente: el link del pie y el Cancel del formulario. */
+    requestModalClose () {
+      this.guardExplanation(() => {
+        this.bypassCloseGuard = true
+        this.$bvModal.hide('modal-1')
+      })
+    },
+    /**
+     * Salida por la X de la cabecera. El filtro por `trigger` no es cosmético: los cierres
+     * PROGRAMÁTICOS —inactividad, pérdida de lock, la misma persona editando en otra
+     * pestaña— existen para SOLTAR los locks, y frenarlos dejaría el lock vivo del lado del
+     * servidor. Un arreglo de interfaz no puede costar eso, así que sólo se intercepta lo
+     * que inició una persona sobre este modal.
+     */
+    onAssessmentModalHide (bvEvt) {
+      if (this.bypassCloseGuard) return
+      if (!bvEvt || bvEvt.trigger !== 'headerclose') return
+      if (!this.incompleteMetasInStage.length) return
+      bvEvt.preventDefault()
+      this.requestModalClose()
+    },
     // True when THIS cell is off limits: either the whole study is read-only, or
     // another user holds this particular leaf.
     isCellReadOnly (stage, option) {
@@ -954,6 +1147,21 @@ export default {
       this.deniedCellHolders = new Map()
       this.studyLockLost = false
       this.pendingConflictRefId = ''
+      // `incompleteCells` NO se limpia acá, aunque cambie de estudio. Limpiarlo lo dejaba
+      // vacío para siempre: al reabrir el modal los AssessmentForm siguen montados y su
+      // `isIncomplete` no cambió, así que el watcher no vuelve a emitir y nadie repuebla el
+      // mapa — la X del encabezado dejaba de avisar. Medido en navegador; el test que
+      // afirmaba lo contrario estaba fijando el bug.
+      //
+      // Y no hace falta: el mapa siempre describe lo que los formularios MONTADOS muestran.
+      // Si al cambiar de estudio una celda cambia de estado, el watcher emite; si no cambia,
+      // es porque el estado es el mismo y lo que el mapa dice ya es cierto. Las celdas de
+      // etapas que se desmontan se dan de baja en su `beforeDestroy`.
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
+      this.bypassTabGuard = false
+      this.bypassCloseGuard = false
       // The bare study lock is NOT taken here: it would block the ten cells of this
       // study for everybody else for as long as the modal stays open. It is acquired
       // on demand, when a study field is actually edited (see onStartEditing).
@@ -1090,6 +1298,10 @@ export default {
       this.onAssessmentModalClosed()
     },
     onAssessmentModalClosed () {
+      this.bypassCloseGuard = false
+      this.pendingNavigation = null
+      this.explanationGuardFocusMeta = null
+      this.pendingFocusId = null
       clearPresence(this.refId)
       this.stopInactivityWatch()
       // Antes de soltar los locks: el 409 en vuelo llega después.
@@ -1173,10 +1385,14 @@ export default {
       this.conflictRefId = ''
       this.conflictSource = 'live'
     },
+    /** Salida por etapa. Acá importan TODAS las celdas de la etapa, no sólo la visible. */
     goToStage (stage) {
-      this.modal.stage = stage
-      this.modal.tab = 0
-      this.selectedMeta = 0
+      this.guardExplanation(() => {
+        this.bypassTabGuard = false
+        this.modal.stage = stage
+        this.modal.tab = 0
+        this.selectedMeta = 0
+      })
     },
     getStageTitle (stage) {
       const stages = [

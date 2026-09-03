@@ -11,6 +11,25 @@ jest.mock('@/services/lockService', () => ({
   releaseRef: jest.fn()
 }))
 
+/**
+ * El esqueleto real de un estudio: 4/4/1/1 opciones por etapa. Hace falta completo para
+ * montar en una etapa que no sea la 0 — `mounted` lee `stages[modalStage].options` sin red.
+ */
+const fullStages = () => [
+  { key: 0, options: Array.from({ length: 4 }, () => ({ option: null, text: '', notes: '' })) },
+  { key: 1, options: Array.from({ length: 4 }, () => ({ option: null, text: '', notes: '' })) },
+  { key: 2, options: [{ option: null, text: '', notes: '' }] },
+  { key: 3, options: [{ option: null, text: '', notes: '' }] }
+]
+
+const withFullStages = (base) => ({
+  ...base,
+  assessments: {
+    id: 'assess1',
+    items: [{ ref_id: 'ref1', authors: 'Author 2024', stages: fullStages() }]
+  }
+})
+
 describe('AssessmentForm.vue', () => {
   let wrapper
   const propsData = {
@@ -196,6 +215,102 @@ describe('AssessmentForm.vue', () => {
     })
   })
 
+  /**
+   * StepFour decide si la pestaña, la etapa o el modal pueden cerrarse, pero el estado
+   * "opción elegida y explicación vacía" vive acá. `$refs` no lo alcanza —el comentario
+   * de pendingEditsMixin explica por qué—, así que el dato sube por evento.
+   */
+  describe('AssessmentForm.vue — avisa hacia arriba que la celda quedó incompleta', () => {
+    const emissions = (w) => w.emitted('incomplete-change') || []
+    const last = (w) => emissions(w)[emissions(w).length - 1][0]
+
+    it('avisa apenas monta, para que el padre no arranque a ciegas', () => {
+      expect(emissions(wrapper).length).toBeGreaterThan(0)
+      expect(last(wrapper)).toEqual({ stage: 0, meta: 0, incomplete: false })
+    })
+
+    it('avisa que está incompleta al elegir una opción sin explicación', async () => {
+      await wrapper.setData({ selected: 'B', text1: '' })
+      expect(last(wrapper)).toEqual({ stage: 0, meta: 0, incomplete: true })
+    })
+
+    it('avisa que ya está completa cuando se escribe la explicación', async () => {
+      await wrapper.setData({ selected: 'B', text1: '' })
+      await wrapper.setData({ text1: 'Ya la escribí' })
+      expect(last(wrapper)).toEqual({ stage: 0, meta: 0, incomplete: false })
+    })
+
+    it('el espacio en blanco no cuenta como explicación', async () => {
+      await wrapper.setData({ selected: 'C', text1: '   ' })
+      expect(last(wrapper)).toEqual({ stage: 0, meta: 0, incomplete: true })
+    })
+
+    it('sin opción elegida no hay nada que explicar', async () => {
+      await wrapper.setData({ selected: 'B', text1: '' })
+      await wrapper.setData({ selected: null })
+      expect(last(wrapper)).toEqual({ stage: 0, meta: 0, incomplete: false })
+    })
+
+    it('identifica su celda: el par etapa/dominio viaja en el aviso', async () => {
+      const other = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...withFullStages(propsData), modalStage: 1, selectedMeta: 3 },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await other.setData({ selected: 'D', text1: '' })
+      expect(last(other)).toEqual({ stage: 1, meta: 3, incomplete: true })
+      other.destroy()
+    })
+
+    // Las etapas se conmutan con `v-if`. Sin este aviso final el padre seguiría
+    // contando una celda que ya no está en pantalla.
+    it('se da de baja al destruirse', async () => {
+      const doomed = mount(AssessmentForm, {
+        localVue,
+        propsData,
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      await doomed.setData({ selected: 'A', text1: '' })
+      doomed.destroy()
+      expect(last(doomed)).toEqual({ stage: 0, meta: 0, incomplete: false })
+    })
+  })
+
+  /**
+   * El id estaba escrito a mano y repetido en las cuatro instancias que `b-tabs` monta a
+   * la vez, así que `getElementById` devolvía siempre el textarea de la primera pestaña:
+   * "Do it now" enfocaba la caja equivocada desde la pestaña 2 en adelante.
+   */
+  describe('AssessmentForm.vue — el textarea se direcciona por celda', () => {
+    it('el id lleva la etapa y el dominio', async () => {
+      const other = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...withFullStages(propsData), modalStage: 1, selectedMeta: 2 },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+      expect(other.find('#assessment-explanation-1-2').exists()).toBe(true)
+      other.destroy()
+    })
+
+    it('doItNow() enfoca el textarea de SU celda', async () => {
+      const focus = jest.fn()
+      const byId = jest.spyOn(document, 'getElementById').mockReturnValue({ focus })
+      const other = mount(AssessmentForm, {
+        localVue,
+        propsData: { ...withFullStages(propsData), modalStage: 1, selectedMeta: 2 },
+        mocks: { $t, $route: { params: { org_id: 'org1', id: 'proj1' } }, $bvModal, $notify }
+      })
+
+      other.vm.doItNow()
+      await other.vm.$nextTick()
+
+      expect(byId).toHaveBeenCalledWith('assessment-explanation-1-2')
+      expect(focus).toHaveBeenCalled()
+      byId.mockRestore()
+      other.destroy()
+    })
+  })
+
   describe('explanationState computed', () => {
     it('returns null when no option is selected', async () => {
       await wrapper.setData({ selected: null, text1: '' })
@@ -297,12 +412,14 @@ describe('AssessmentForm.vue', () => {
       expect(localWrapper.vm.selected).toBe('B')
       expect(localWrapper.vm.text1).toBe('Original explanation')
       expect(localWrapper.vm.notes).toBe('Original note')
-      expect($bvModal.hide).toHaveBeenCalledWith('modal-1')
+      // Cerrar ya no es decisión de este componente: el padre tiene que poder frenarlo
+      // si alguna celda quedó sin explicación.
+      expect(localWrapper.emitted('request-close')).toBeTruthy()
 
       localWrapper.destroy()
     })
 
-    it('hides the modal even when assessments.items is empty', async () => {
+    it('pide cerrar igual cuando assessments.items está vacío', async () => {
       const emptyProps = {
         ...propsWithData,
         assessments: { id: 'assess1', items: [] }
@@ -323,7 +440,7 @@ describe('AssessmentForm.vue', () => {
       })
 
       await localWrapper.vm.cancel()
-      expect($bvModal.hide).toHaveBeenCalledWith('modal-1')
+      expect(localWrapper.emitted('request-close')).toBeTruthy()
 
       localWrapper.destroy()
     })

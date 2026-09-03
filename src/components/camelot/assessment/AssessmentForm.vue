@@ -34,9 +34,12 @@
           </p>
         </b-form-group>
 
-        <b-form-group :label="$t('camelot.assessment_form.explain_label')" label-for="textarea-formatter"
+        <!-- El id lleva la celda: `b-tabs` monta las cuatro instancias a la vez, así que un
+             id literal las hacía indistinguibles para `getElementById` y el foco de
+             "hacerlo ahora" caía siempre en la primera pestaña. -->
+        <b-form-group :label="$t('camelot.assessment_form.explain_label')" :label-for="textareaId"
           class="font-weight-bold small" :state="explanationState">
-          <b-form-textarea id="textarea-formatter" v-model="text1" rows="3"
+          <b-form-textarea :id="textareaId" v-model="text1" rows="3"
             :placeholder="$t('camelot.assessment_form.text_placeholder')"
             :state="explanationState"></b-form-textarea>
           <b-form-invalid-feedback>{{ $t('camelot.assessment_form.explanation_required') }}</b-form-invalid-feedback>
@@ -273,9 +276,38 @@ export default {
     explanationState () {
       if (this.selected === null) return null
       return !!(this.text1 && this.text1.trim().length > 0)
+    },
+    /**
+     * Hay un juicio elegido y ninguna explicación que lo sostenga. Es la misma condición
+     * que abre el aviso desde el botón *Save*, escrita una sola vez: `save()` la reusa, y
+     * StepFour la recibe por evento para poder frenar las otras salidas del formulario.
+     */
+    isIncomplete () {
+      return this.explanationState === false
+    },
+    textareaId () {
+      return `assessment-explanation-${this.modalStage}-${this.selectedMeta}`
     }
   },
   watch: {
+    /**
+     * El estado sube por evento y no se lee por `$refs`: estas instancias viven detrás de
+     * un `b-tabs` con `v-for` dentro de un `v-if` por etapa, donde el padre no tiene una
+     * referencia estable (mismo motivo que documenta `pendingEditsMixin`).
+     *
+     * `immediate` porque la celda puede llegar YA incompleta desde el servidor: el criterio
+     * acordado mira el estado, no si alguien la tocó en esta sesión.
+     */
+    isIncomplete: {
+      handler (incomplete) {
+        this.$emit('incomplete-change', {
+          stage: this.modalStage,
+          meta: this.selectedMeta,
+          incomplete
+        })
+      },
+      immediate: true
+    },
     modalStage (newValue) {
       if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
       this.autoSaveStatus = null
@@ -333,6 +365,14 @@ export default {
   },
   beforeDestroy () {
     if (this.autoSaveDebounced) this.autoSaveDebounced.cancel()
+    // Baja explícita. Las etapas se conmutan con `v-if`, así que estas instancias mueren
+    // al navegar; sin este aviso el padre seguiría contando una celda que ya no existe y
+    // frenaría salidas por algo que nadie puede ver ni corregir.
+    this.$emit('incomplete-change', {
+      stage: this.modalStage,
+      meta: this.selectedMeta,
+      incomplete: false
+    })
   },
   methods: {
     checkChanges () {
@@ -364,12 +404,14 @@ export default {
         this.text1 = opts.text
         this.notes = opts.notes || ''
       }
-      this.$bvModal.hide('modal-1')
+      // Cerrar deja de ser decisión de este componente: el padre tiene que poder frenarlo
+      // si alguna celda de la etapa quedó con un juicio sin explicar.
+      this.$emit('request-close')
     },
     doItNow () {
       this.$bvModal.hide(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
       this.$nextTick(() => {
-        const el = document.getElementById('textarea-formatter')
+        const el = document.getElementById(this.textareaId)
         if (el) el.focus()
       })
     },
@@ -378,7 +420,7 @@ export default {
       this.saveNow()
     },
     save () {
-      if (this.selected && (!this.text1 || this.text1.trim() === '')) {
+      if (this.isIncomplete) {
         this.$bvModal.show(`warning-explanation-modal-${this.modalStage}-${this.selectedMeta}`)
         return
       }
