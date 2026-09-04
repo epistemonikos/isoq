@@ -339,6 +339,52 @@ describe('ViewTable — grisado de la fila antes del clic', () => {
     wrapper.destroy()
   })
 
+  // ── Claves de sección del evidence profile ──────────────────────────
+  // Renombrar (`/identity`) y borrar (`/finding/remove`) usan el finding PELADO, y
+  // el servidor hace chocar esa clave con cualquier sección suya. Comparar aquí por
+  // igualdad exacta dejaba los botones habilitados mientras otra persona evaluaba
+  // una dimensión: el modal destructivo se abría, la persona confirmaba, y no pasaba
+  // nada — `confirmRemoveList` corta por `isFindingReadOnly` sin toast ni request.
+  // Cero feedback tras confirmar un borrado es peor que un error visible.
+  it('una sección del evidence profile ocupa el finding entero', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(true)
+    expect(wrapper.vm.findingLockedByName('list1')).toContain('Ana')
+    wrapper.destroy()
+  })
+
+  it('también una sección que este cliente todavía no enumera', () => {
+    // Espeja `base_ref_of` del servidor, que usa un tramo genérico: si el servidor
+    // conoce una sexta sección y este bundle no, la clave sigue ocupando el finding.
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::seccion_nueva', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('una sección de OTRO finding no lo ocupa', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'otroFinding::ep::coherence', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('una sección propia dejada en otra pestaña no lo ocupa', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Yo Mismo' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(false)
+    wrapper.destroy()
+  })
+
   it('una fila libre no se bloquea', () => {
     const { wrapper } = createWrapper({ refLocks: [] })
 

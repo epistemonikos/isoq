@@ -77,6 +77,7 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
+              :disabled="isSectionDisabled('methodological_limitations')"
               @click="editStageTwo(data.item, 'methodological-limitations')">
               <template v-if="permission">{{ $t('common.edit') }}</template>
               <template v-else>{{ $t('common.view') }}</template>
@@ -84,6 +85,16 @@
                 v-if="data.item.methodological_limitations.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('methodological_limitations')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-methodological_limitations">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('methodological_limitations') }}
+            </small>
           </template>
           <p><b>{{displaySelectedOption(data.item.methodological_limitations.option)}}</b></p>
           <p v-if="data.item.methodological_limitations.explanation">
@@ -117,12 +128,23 @@
               block
               class="d-print-none"
               variant="info"
+              :disabled="isSectionDisabled('methodological_limitations')"
               @click="editStageTwo(data.item, 'methodological-limitations')">
               {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.methodological_limitations.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('methodological_limitations')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-methodological_limitations">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('methodological_limitations') }}
+            </small>
           </template>
         </div>
       </template>
@@ -133,6 +155,7 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
+              :disabled="isSectionDisabled('coherence')"
               @click="editStageTwo(data.item, 'coherence')">
               <template v-if="permission">{{ $t('common.edit') }}</template>
               <template v-else>{{ $t('common.view') }}</template>
@@ -140,6 +163,16 @@
                 v-if="data.item.coherence.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('coherence')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-coherence">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('coherence') }}
+            </small>
           </template>
           <p><b>{{displaySelectedOption(data.item.coherence.option)}}</b></p>
           <p v-if="data.item.coherence.explanation">
@@ -173,12 +206,23 @@
               block
               class="d-print-none"
               variant="info"
+              :disabled="isSectionDisabled('coherence')"
               @click="editStageTwo(data.item, 'coherence')">
               {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.coherence.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('coherence')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-coherence">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('coherence') }}
+            </small>
           </template>
         </div>
       </template>
@@ -189,6 +233,7 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
+              :disabled="isSectionDisabled('adequacy')"
               @click="editStageTwo(data.item, 'adequacy')">
               <template v-if="permission">{{ $t('common.edit') }}</template>
               <template v-else>{{ $t('common.view') }}</template>
@@ -196,6 +241,16 @@
                 v-if="data.item.adequacy.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('adequacy')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-adequacy">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('adequacy') }}
+            </small>
           </template>
           <p><b>{{displaySelectedOption(data.item.adequacy.option)}}</b></p>
           <p v-if="data.item.adequacy.explanation">
@@ -229,12 +284,23 @@
               block
               class="d-print-none"
               variant="info"
+              :disabled="isSectionDisabled('adequacy')"
               @click="editStageTwo(data.item, 'adequacy')">
               {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.adequacy.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('adequacy')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-adequacy">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('adequacy') }}
+            </small>
           </template>
         </div>
       </template>
@@ -245,6 +311,7 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
+              :disabled="isSectionDisabled('relevance')"
               @click="editStageTwo(data.item, 'relevance')">
               <template v-if="permission">{{ $t('common.edit') }}</template>
               <template v-else>{{ $t('common.view') }}</template>
@@ -252,6 +319,16 @@
                 v-if="data.item.relevance.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('relevance')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-relevance">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('relevance') }}
+            </small>
           </template>
           <p><b>{{displaySelectedOption(data.item.relevance.option)}}</b></p>
           <p v-if="data.item.relevance.explanation">
@@ -285,12 +362,23 @@
               block
               class="d-print-none"
               variant="info"
+              :disabled="isSectionDisabled('relevance')"
               @click="editStageTwo(data.item, 'relevance')">
               {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.relevance.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('relevance')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-relevance">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('relevance') }}
+            </small>
           </template>
         </div>
       </template>
@@ -301,6 +389,7 @@
               block
               class="d-print-none mb-3"
               variant="outline-info"
+              :disabled="isSectionDisabled('cerqual')"
               @click="editStageTwo(data.item, 'cerqual')">
               <template v-if="permission">{{ $t('common.edit') }}</template>
               <template v-else>{{ $t('common.view') }}</template>
@@ -308,6 +397,16 @@
                 v-if="data.item.cerqual.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('cerqual')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-cerqual">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('cerqual') }}
+            </small>
           </template>
           <p><b>{{displayLevelConfidence(data.item.cerqual.option)}}</b></p>
           <p v-if="data.item.cerqual.option && data.item.cerqual.explanation">
@@ -324,12 +423,23 @@
               block
               class="d-print-none"
               variant="info"
+              :disabled="isSectionDisabled('cerqual')"
               @click="editStageTwo(data.item, 'cerqual')">
               {{ $t('soqf_table.assessment_not_completed') }}
               <font-awesome-icon
                 v-if="data.item.cerqual.notes"
                 icon="comments"></font-awesome-icon>
             </b-button>
+            <!-- Texto visible y no tooltip: bootstrap-vue no monta tooltips sobre
+                 botones `disabled` (el navegador no emite eventos de mouse en ellos).
+                 Verificado en navegador; ver ViewTable.vue. -->
+            <small
+              v-if="isSectionDisabled('cerqual')"
+              class="text-warning d-block mb-2"
+              data-testid="ep-locked-cerqual">
+              <font-awesome-icon icon="user"></font-awesome-icon>
+              {{ sectionLockedByName('cerqual') }}
+            </small>
           </template>
         </div>
       </template>
@@ -521,6 +631,7 @@
       :permission="permission"
       :modePrintFieldObject="modePrintFieldObject"
       @update-list-data="getList"
+      @lock-denied="$emit('lock-denied')"
       @busyEvidenceProfileTable="busyEvidenceProfileTable"
       @callGetStageOneData="callGetStageOneData"
       @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
@@ -539,10 +650,18 @@
 <script>
 import Api from '@/utils/Api'
 import { displayExplanation } from '../utils/commons'
+import refLockStateMixin from '@/mixins/refLockStateMixin'
+import { sectionOfType } from '@/utils/evidenceProfileLockKeys'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
   name: 'editListEvidenceProfile',
+  // De acá salen `currentUserName` y `foreignRefLocks`. Lo que importa del mixin es
+  // que descarta el lock propio por DOS caminos —el registro local de esta pestaña
+  // y la comparación por nombre para otra pestaña de la misma persona—; sin el
+  // segundo, abrir la worksheet dos veces te bloquea contra vos mismo, con tu
+  // propio nombre en el cartel. Ese bug ya se derivó mal dos veces en este repo.
+  mixins: [refLockStateMixin],
   props: {
     evidenceProfile: Array,
     ui: Object,
@@ -550,6 +669,13 @@ export default {
     references: Array,
     mode: String,
     list: Object,
+    // El nombre es el que `refLockStateMixin` espera, así no hace falta un computed
+    // puente (mismo criterio que `CamelotStepFourTable`). El default cubre a
+    // `previewContentWorksheet`, que monta esta tabla en modo vista sin sondear.
+    activeRefLocks: {
+      type: Array,
+      default: () => []
+    },
     refsWithTitle: Array,
     project: Object,
     permission: Boolean,
@@ -834,7 +960,44 @@ export default {
       this.localReferences = [...this.list.references]
       this.$refs['modalReferences'].show()
     },
+    // ── Bloqueo visible de los assessments ─────────────────────────────
+    // FASE 1: la unidad de lock sigue siendo el finding COMPLETO —es la que el
+    // modal adquiere y la que el servidor exige en /section/<name>—, así que el
+    // argumento `section` no se usa todavía. El markup ya lo pasa a propósito:
+    // cuando el backend acepte `<fid>::ep::<section>`, la Fase 2 cambia el cuerpo
+    // de este método y de `isSectionDisabled` y NO vuelve a tocar los 10 sitios de
+    // botón de la plantilla.
+    //
+    // El doble descarte del lock propio es el punto: `foreignRefLocks` (del mixin)
+    // saca los que ESTA pestaña sostiene, y la comparación por nombre saca los que
+    // sostiene otra pestaña de la misma persona. Sin el segundo, abrir la worksheet
+    // dos veces se bloquea contra uno mismo.
+    sectionHolderOf: function (section) {
+      const findingId = this.findings && this.findings.id
+      // Normaliza las dos grafías vivas: la plantilla pasa guión bajo, el guard de
+      // `editStageTwo` recibe el `type` con guión. Una sección desconocida devuelve
+      // null y por lo tanto no bloquea; lo que atrapa un typo en la plantilla es el
+      // test que exige los cinco `data-testid` en el DOM.
+      if (!findingId || !sectionOfType(section)) return null
+      const lock = this.foreignRefLocks.find(
+        l => l.ref_id === findingId && l.user_name !== this.currentUserName)
+      return (lock && lock.user_name) || null
+    },
+    // `permission` va en la condición a propósito: en la rama «ya completada» el
+    // botón existe también para quien no puede escribir, donde dice «View». Grisar
+    // el View sería una regresión — leer no molesta a nadie.
+    isSectionDisabled: function (section) {
+      return Boolean(this.permission && this.sectionHolderOf(section))
+    },
+    sectionLockedByName: function (section) {
+      const holder = this.sectionHolderOf(section)
+      return holder ? this.$t('lock.ref_locked_by', { user: holder }) : ''
+    },
     editStageTwo: function (data, type) {
+      // Defensa en profundidad: el botón ya está `disabled`, pero el sondeo puede
+      // tener hasta 15 s de atraso y el grisado es una comodidad, no la garantía
+      // (la garantía es el acquire del modal). Mismo criterio que `StepThree`.
+      if (this.isSectionDisabled(type)) return
       const titles = {
         'methodological-limitations': this.$t('worksheet.methodological_limitations'),
         'coherence': this.$t('worksheet.coherence'),

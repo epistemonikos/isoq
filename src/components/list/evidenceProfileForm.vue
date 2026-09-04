@@ -1071,12 +1071,18 @@ export default {
         this.isFindingReadOnly = true
         this.findingLockedBy = null
         if (this.$notify) this.$notify.warning(this.$t('lock.permissions_revoked'))
+        this.$emit('lock-denied')
       } else {
         this.isFindingReadOnly = true
         this.findingLockedBy = result.lockedBy || null
         if (this.$notify) {
           this.$notify.warning(this.$t('lock.ref_locked_by', { user: this.findingLockedBy }))
         }
+        // Avisa a la tabla para que grise los botones YA. `emitRefLocksChanged` se
+        // dispara sólo en un acquire exitoso y en el release, nunca en un rechazo,
+        // así que sin esto el grisado esperaba el próximo tick del sondeo — hasta
+        // 15 s en los que los demás botones siguen invitando al clic.
+        this.$emit('lock-denied')
       }
     },
     // Two locks live in this modal, so the event has to be routed: the finding's

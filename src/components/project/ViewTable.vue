@@ -283,6 +283,7 @@ import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
+import { lockKeyBelongsTo } from '@/utils/evidenceProfileLockKeys'
 
 export default {
   name: 'ViewTable',
@@ -655,19 +656,26 @@ export default {
       const id = this.findingIdOf(listId)
       if (!id) return null
 
-      // 1) Tuya en esta pestaña:
-      if (LockService.refLocks.has(id)) return null
-
-      // 2) Tuya en otra pestaña:
-      if (this.currentUserName && this.refLocks.some(x => x.ref_id === id && x.user_name === this.currentUserName)) {
-        return null
-      }
-
-      // 3) De otro:
-      const remote = this.refLocks.find(x => x.ref_id === id)
-      // Un lock sin nombre no alcanza para bloquear: sin a quién nombrar, el cartel
-      // quedaría mudo y la fila muerta. `|| null` fija el contrato en un solo tipo.
-      return (remote && remote.user_name) || null
+      // Cuenta CUALQUIER clave que cuelgue de este finding, no sólo el id pelado:
+      // desde que el evidence profile se bloquea por sección, alguien puede
+      // sostener `<fid>::ep::coherence`. Comparar por igualdad exacta dejaba los
+      // botones Renombrar y Borrar habilitados mientras otra persona evaluaba una
+      // dimensión — y el servidor SÍ lo rechaza (`base_ref_of` hace chocar la
+      // sección con el finding pelado, que es la clave de /identity y de
+      // /finding/remove), así que el modal destructivo se abría, la persona
+      // confirmaba y no pasaba nada: cero feedback.
+      //
+      // Los dos descartes del lock propio se conservan, y hacen falta los dos: el
+      // registro de LockService sólo conoce ESTA pestaña, así que sin comparar
+      // además por nombre un lock propio dejado en otra pestaña se lee como ajeno y
+      // la fila queda bloqueada contra uno mismo. Un lock ajeno SIN nombre tampoco
+      // alcanza: sin a quién nombrar el cartel quedaría mudo y la fila muerta.
+      const holder = this.refLocks.find(lock =>
+        lockKeyBelongsTo(lock.ref_id, id) &&
+        !LockService.refLocks.has(lock.ref_id) &&
+        lock.user_name &&
+        lock.user_name !== this.currentUserName)
+      return (holder && holder.user_name) || null
     },
     /** ¿Hay que grisar los botones de esta fila? */
     isFindingLocked: function (listId) {

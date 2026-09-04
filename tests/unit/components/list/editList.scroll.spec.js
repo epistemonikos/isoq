@@ -29,7 +29,11 @@ jest.mock('@/utils/Api', () => ({
 jest.mock('@/services/lockService', () => ({
   acquire: jest.fn().mockResolvedValue({ success: true }),
   release: jest.fn(),
-  releaseRef: jest.fn()
+  releaseRef: jest.fn(),
+  // getList() cierra sondeando los ref-locks. El mock lo declara para que el spec
+  // represente al componente real; que su ausencia ya NO rompa el scroll lo
+  // garantiza el `.catch` de fetchAndUpdateRefLocks, no este mock.
+  fetchRefLocks: jest.fn().mockResolvedValue([])
 }))
 
 jest.mock('@/utils/commons', () => ({
