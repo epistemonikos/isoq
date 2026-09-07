@@ -7,7 +7,7 @@
 // al abrir la hoja de evidence profile. No es casualidad: los dos editores escriben ese
 // documento, y editar las referencias invalida los datos extraídos de la hoja. Que se
 // excluyan mutuamente es el comportamiento buscado.
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, mount, createLocalVue } from '@vue/test-utils'
 import BootstrapVue from 'bootstrap-vue'
 import ViewTable from '@/components/project/ViewTable.vue'
 import Api from '@/utils/Api'
@@ -52,6 +52,36 @@ const LISTS = [
     }
   }
 ]
+
+// Montaje COMPLETO: `shallowMount` stubbea `b-table` y entonces sus
+// `v-slot:cell(...)` no se ejecutan, así que los avisos no existen en el DOM. Para
+// afirmar sobre lo que se ve hay que montar de verdad.
+function mountReal (overrideProps = {}) {
+  return mount(ViewTable, {
+    localVue,
+    propsData: {
+      lists: LISTS,
+      list_categories: { options: [], selected: null },
+      fields: { with_categories: [{ key: 'name', label: 'Finding' }], without_categories: [{ key: 'name', label: 'Finding' }] },
+      project: { id: 'proj1', is_public: false, private: true },
+      references: [],
+      refs: [],
+      isBusy: false,
+      mode: 'edit',
+      canEdit: true,
+      findings: [{ id: 'finding1', list_id: 'list1' }],
+      refLocks: [],
+      ...overrideProps
+    },
+    mocks: {
+      $t: (k, p) => (p ? `${k}:${JSON.stringify(p)}` : k),
+      $route: { params: { org_id: 'org1', id: 'proj1' } },
+      $store: { state: { user: { first_name: 'Yo', last_name: 'Mismo' } } },
+      $notify: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
+    },
+    stubs: { 'font-awesome-icon': true, 'b-modal': true, 'video-help': true }
+  })
+}
 
 function createWrapper (overrideProps = {}) {
   const $notify = { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
@@ -339,6 +369,152 @@ describe('ViewTable — grisado de la fila antes del clic', () => {
     wrapper.destroy()
   })
 
+  // ── Claves de sección del evidence profile ──────────────────────────
+  // Renombrar (`/identity`) y borrar (`/finding/remove`) usan el finding PELADO, y
+  // el servidor hace chocar esa clave con cualquier sección suya. Comparar aquí por
+  // igualdad exacta dejaba los botones habilitados mientras otra persona evaluaba
+  // una dimensión: el modal destructivo se abría, la persona confirmaba, y no pasaba
+  // nada — `confirmRemoveList` corta por `isFindingReadOnly` sin toast ni request.
+  // Cero feedback tras confirmar un borrado es peor que un error visible.
+  it('una sección del evidence profile ocupa el finding entero', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(true)
+    expect(wrapper.vm.findingLockedByName('list1')).toContain('Ana')
+    wrapper.destroy()
+  })
+
+  it('también una sección que este cliente todavía no enumera', () => {
+    // Espeja `base_ref_of` del servidor, que usa un tramo genérico: si el servidor
+    // conoce una sexta sección y este bundle no, la clave sigue ocupando el finding.
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::seccion_nueva', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(true)
+    wrapper.destroy()
+  })
+
+  it('una sección de OTRO finding no lo ocupa', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'otroFinding::ep::coherence', user_name: 'Ana' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('una sección propia dejada en otra pestaña no lo ocupa', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Yo Mismo' }]
+    })
+
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(false)
+    wrapper.destroy()
+  })
+
+  it('el aviso NOMBRA la sección que se está evaluando', () => {
+    // Con el mensaje genérico anterior no se distinguía si alguien estaba renombrando
+    // el hallazgo o evaluando una de sus dimensiones, y son situaciones distintas: la
+    // primera se resuelve esperando a esa persona, la segunda no necesariamente.
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Ana' }]
+    })
+    const avisos = wrapper.vm.findingLockNotices('list1')
+    expect(avisos).toHaveLength(1)
+    expect(avisos[0].text).toContain('lock.evaluating_section')
+    wrapper.destroy()
+  })
+
+  it('un lock del DOCUMENTO usa el mensaje genérico, no el de sección', () => {
+    // Ahí no hay sección que nombrar: es alguien editando el nombre o las referencias.
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1', user_name: 'Ana' }]
+    })
+    const avisos = wrapper.vm.findingLockNotices('list1')
+    expect(avisos).toHaveLength(1)
+    expect(avisos[0].text).toContain('lock.ref_locked_by')
+    wrapper.destroy()
+  })
+
+  it('con varias personas hay un aviso por cada una', () => {
+    const { wrapper } = createWrapper({
+      refLocks: [
+        { ref_id: 'finding1::ep::relevance', user_name: 'Diego' },
+        { ref_id: 'finding1::ep::coherence', user_name: 'Beto' },
+        { ref_id: 'finding1::ep::adequacy', user_name: 'Carla' }
+      ]
+    })
+    expect(wrapper.vm.findingLockNotices('list1')).toHaveLength(3)
+    wrapper.destroy()
+  })
+
+  it('el orden de los avisos NO depende del orden del sondeo', () => {
+    // El bug que esto arregla: `GET /refs` no garantiza orden y la versión anterior
+    // resolvía el titular con un `.find()`, así que el cartel nombraba a una persona
+    // distinta según cómo llegaran los locks — y podía cambiar entre dos sondeos sin
+    // que nada hubiera cambiado.
+    const locks = [
+      { ref_id: 'finding1::ep::methodological_limitations', user_name: 'Ana' },
+      { ref_id: 'finding1::ep::coherence', user_name: 'Beto' },
+      { ref_id: 'finding1::ep::relevance', user_name: 'Diego' }
+    ]
+    const a = createWrapper({ refLocks: locks })
+    const b = createWrapper({ refLocks: [...locks].reverse() })
+    expect(b.wrapper.vm.findingLockNotices('list1'))
+      .toEqual(a.wrapper.vm.findingLockNotices('list1'))
+    expect(b.wrapper.vm.findingLockedByName('list1'))
+      .toBe(a.wrapper.vm.findingLockedByName('list1'))
+    a.wrapper.destroy()
+    b.wrapper.destroy()
+  })
+
+  it('una sección que no enumeramos bloquea Y muestra el aviso genérico', () => {
+    // «¿Está ocupado?» es más amplio que «¿qué puedo decir?». Al reescribir el titular
+    // sobre el listado de detalles —que sólo enumera lo nombrable— se perdió el
+    // bloqueo justo en este caso, que el servidor SÍ rechaza. Y un botón gris sin
+    // ninguna explicación es peor que una explicación imprecisa.
+    const { wrapper } = createWrapper({
+      refLocks: [{ ref_id: 'finding1::ep::seccion_nueva', user_name: 'Ana' }]
+    })
+    expect(wrapper.vm.isFindingLocked('list1')).toBe(true)
+    const avisos = wrapper.vm.findingLockNotices('list1')
+    expect(avisos).toHaveLength(1)
+    expect(avisos[0].text).toContain('lock.ref_locked_by')
+    wrapper.destroy()
+  })
+
+  it('los avisos se dibujan en el DOM, uno por persona', () => {
+    // Sobre el DOM y no sobre el estado: en este repo ya pasó dos veces que un estado
+    // correcto no se dibujara en ninguna rama de la plantilla.
+    const wrapper = mountReal({
+      refLocks: [
+        { ref_id: 'finding1::ep::coherence', user_name: 'Beto' },
+        { ref_id: 'finding1::ep::adequacy', user_name: 'Carla' }
+      ]
+    })
+    const avisos = wrapper.findAll('[data-testid^="finding-locked"]')
+    expect(avisos).toHaveLength(2)
+    expect(wrapper.find('[data-testid="finding-locked-coherence"]').text()).toContain('Beto')
+    expect(wrapper.find('[data-testid="finding-locked-adequacy"]').text()).toContain('Carla')
+    wrapper.destroy()
+  })
+
+  it('los avisos NO usan text-warning: se pierde en el tema claro', () => {
+    // `text-warning` de Bootstrap es #ffc107, ~1.6:1 de contraste sobre fondo claro —
+    // el aviso desaparecía justo cuando importa. La clase `.lock-notice` sale de un
+    // token que se redefine bajo `html[data-theme="dark"]`, así que se lee en los dos.
+    const wrapper = mountReal({
+      refLocks: [{ ref_id: 'finding1::ep::coherence', user_name: 'Beto' }]
+    })
+    const aviso = wrapper.find('[data-testid="finding-locked-coherence"]')
+    expect(aviso.classes()).toContain('lock-notice')
+    expect(aviso.classes()).not.toContain('text-warning')
+    wrapper.destroy()
+  })
+
   it('una fila libre no se bloquea', () => {
     const { wrapper } = createWrapper({ refLocks: [] })
 
@@ -436,7 +612,9 @@ describe('ViewTable — quién edita se ve sin pasar el mouse', () => {
     LockService.refLocks = new Map()
   })
 
-  it('el nombre de quien tiene la fila aparece en el texto renderizado', () => {
+  // OJO: este par afirma sobre el ESTADO (el `title` que alimenta el tooltip nativo),
+  // no sobre el DOM. Lo renderizado lo cubre el bloque de arriba con `mountReal`.
+  it('el nombre de quien tiene la fila llega al título del botón', () => {
     const { wrapper } = createWrapper({ refLocks: [{ ref_id: 'finding1', user_name: 'Ana' }] })
 
     expect(wrapper.vm.findingLockedByName('list1')).toContain('Ana')

@@ -91,7 +91,8 @@
             :levelConfidence="level_confidence" :findings="findings" :methAssessments="meth_assessments"
             :extractedData="extracted_data" :modePrintFieldObject="mode_print_fieldsObj"
             :showEditExtractedDataInPlace="showEditExtractedDataInPlace" :modalData="buffer_modal_stage_two"
-            :charsOfStudies="characteristics_studies" @update-list-data="getList" @printErrors="printErrors"
+            :charsOfStudies="characteristics_studies" :activeRefLocks="activeRefLocks"
+            @lock-denied="fetchAndUpdateRefLocks" @update-list-data="getList" @printErrors="printErrors"
             @modalDataChanged="modalDataChanged" @busyEvidenceProfileTable="busyEvidenceProfileTable"
             @callGetFinding="callGetFinding" @setShowEditExtractedDataInPlace="setShowEditExtractedDataInPlace"
             @getExtractedData="getExtractedData"></evidence-profile-table>
@@ -129,6 +130,9 @@ import { camelotMixin } from '@/mixins/camelotMixin'
 import preserveScrollMixin from '@/mixins/preserveScrollMixin'
 import { ITEM_METADATA_KEYS, copyItemMetadata } from '@/utils/itemMetadata'
 import { withDerivedRows } from '@/utils/derivedRows'
+// Mismo valor y mismo nombre que en las otras superficies que pintan candados
+// (`InclusionExclusionCriteria.vue`, `viewProject.vue`, `StepThree/StepFour`).
+const REF_LOCKS_POLL_INTERVAL = 15000
 const editHeaderList = () => import(/* webpackChunkName: "editHeaderList" */'./editListHeader')
 const editListActionButtons = () => import('./editListActionButtons.vue')
 const editListEvidenceProfile = () => import('./editListEvidenceProfile.vue')
@@ -322,13 +326,20 @@ export default {
       showEditExtractedDataInPlace: {
         display: false,
         item: { authors: '', column_0: '', ref_id: null }
-      }
+      },
+      // Locks vigentes del proyecto, sondeados con GET /api/lock/<pid>/refs. Los
+      // consume `editListEvidenceProfile` para grisar los botones ANTES del clic:
+      // sin esto la persona se enteraba recién al abrir el modal, por un banner.
+      activeRefLocks: []
     }
   },
   created () {
     // Aterrizar en el evidence profile tiene sentido al abrir la worksheet, no cada
     // vez que se recarga. Ver el final de getList().
     this.$_pendingInitialScroll = true
+    // El sondeo de locks es asíncrono: sin esta bandera, una respuesta que llega
+    // después de salir de la vista escribe en un componente ya destruido.
+    this.$_alive = true
   },
   mounted () {
     this.updateTranslations()
@@ -337,8 +348,18 @@ export default {
     window.addEventListener('lock-idle', this.handleIdle)
     window.addEventListener('axios-refresh-lock', this.handleLockLost)
     window.addEventListener('permission-denied', this.refreshPermissions)
+    // El sondeo no arranca acá con un fetch inmediato: en este punto todavía no
+    // conocemos el project_id (ver fetchAndUpdateRefLocks).
+    this.startRefLocksPolling()
+    window.addEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
   },
   beforeDestroy () {
+    this.$_alive = false
+    // Antes del releaseRef de abajo: ese release emite `ref-locks-changed`, y con
+    // el listener todavía puesto dispararía un fetch sobre la vista que se está
+    // destruyendo.
+    this.stopRefLocksPolling()
+    window.removeEventListener('ref-locks-changed', this.fetchAndUpdateRefLocks)
     LockService.release()
     // SPA navigation fires no pagehide, so a modal left open (evidence profile, an
     // extracted_data row) would leak its ref lock until the server TTL. No argument
@@ -539,6 +560,38 @@ export default {
       this.references = _refs.sort((a, b) => a.content.localeCompare(b.content))
       this.refsWithTitle = _refsWithTitles.sort((a, b) => a.content.localeCompare(b.content))
     },
+    // El project_id NO sale de la ruta: en `/worksheet/:id/edit` el `:id` es el de
+    // la LIST (getList lo usa tal cual para /getLists, y la ruta de preview lleva el
+    // projectId como un param aparte). Sólo existe tras getList(), así que hasta
+    // entonces esto es un no-op y getList lo llama una vez al resolver — si no, el
+    // primer pintado esperaría hasta un ciclo entero de sondeo.
+    fetchAndUpdateRefLocks: function () {
+      const projectId = this.list && this.list.project_id
+      if (!projectId) return Promise.resolve()
+      // El `Promise.resolve().then(...)` y el `.catch` no son ceremonia: getList()
+      // llama a esto desde su propio `.then`, y ahí un throw se traga en silencio
+      // todo lo que sigue —incluido el scroll inicial— porque no hay `.catch` en esa
+      // cadena. Es el mismo modo de falla que `editList.scroll.spec.js` documenta
+      // para el `getElementsByName` sin guarda. Saber quién edita es accesorio; el
+      // resto de la carga de la worksheet no lo es.
+      return Promise.resolve()
+        .then(() => LockService.fetchRefLocks(projectId))
+        .then((locks) => {
+          if (!this.$_alive) return
+          this.activeRefLocks = locks || []
+        })
+        .catch(() => {})
+    },
+    startRefLocksPolling: function () {
+      this.stopRefLocksPolling()
+      this.$_refLocksTimer = setInterval(this.fetchAndUpdateRefLocks, REF_LOCKS_POLL_INTERVAL)
+    },
+    stopRefLocksPolling: function () {
+      if (this.$_refLocksTimer) {
+        clearInterval(this.$_refLocksTimer)
+        this.$_refLocksTimer = null
+      }
+    },
     getList: function (fromModal = false) {
       Api.get('/getLists', { id: this.$route.params.id })
         .then((response) => {
@@ -585,6 +638,12 @@ export default {
           } else {
             this.holdScrollPosition()
           }
+
+          // Recién acá hay project_id (la ruta trae el id de la LIST), así que el
+          // primer sondeo de locks va desde acá y no desde mounted: si no, los
+          // botones tardarían un ciclo entero en grisarse. Último de la cadena a
+          // propósito — ver el comentario de fetchAndUpdateRefLocks.
+          this.fetchAndUpdateRefLocks()
         })
     },
     syncOrderWithProject: function () {

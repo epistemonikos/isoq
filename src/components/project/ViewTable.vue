@@ -80,9 +80,10 @@
                su tooltip sobre un botón `disabled` (el navegador no emite eventos de mouse
                ahí), así que sólo quedaba el title nativo — lento y ausente con teclado.
                Verificado en navegador. Mismo tratamiento que Criteria.vue le da a sus cajas. -->
-          <small v-if="isFindingLocked(data.item.id)" class="text-warning d-block mb-2">
+          <small v-for="aviso in findingLockNotices(data.item.id)" :key="aviso.key"
+            class="lock-notice d-block mb-2" :data-testid="aviso.key">
             <font-awesome-icon icon="user"></font-awesome-icon>
-            {{ findingLockedByName(data.item.id) }}
+            {{ aviso.text }}
           </small>
           <b-link class="table-edit-list" v-if="data.item.references.length"
             :to="{ name: 'editList', params: { id: data.item.id } }">{{ data.item.name }}</b-link>
@@ -283,6 +284,7 @@ import Commons from '../../utils/commons.js'
 import LockService from '@/services/lockService'
 import { isLockRejection } from '@/utils/lockErrors'
 import { userDisplayName } from '@/utils/userDisplayName'
+import { lockKeyBelongsTo, findingLockDetailsOf, SECTION_LABEL_KEYS } from '@/utils/evidenceProfileLockKeys'
 
 export default {
   name: 'ViewTable',
@@ -655,28 +657,90 @@ export default {
       const id = this.findingIdOf(listId)
       if (!id) return null
 
-      // 1) Tuya en esta pestaña:
-      if (LockService.refLocks.has(id)) return null
-
-      // 2) Tuya en otra pestaña:
-      if (this.currentUserName && this.refLocks.some(x => x.ref_id === id && x.user_name === this.currentUserName)) {
-        return null
+      // «¿Está ocupado?» es una pregunta MÁS AMPLIA que «¿qué puedo decir?»: cuenta
+      // cualquier clave que cuelgue del hallazgo, incluida una sección que este cliente
+      // no sepa etiquetar. Confundirlas hace perder el bloqueo justo en ese caso —el
+      // servidor sí lo rechaza—, así que acá va `lockKeyBelongsTo` y no el listado de
+      // detalles, que sólo enumera lo nombrable.
+      //
+      // El orden es ESTABLE, no un `.find()` sobre el listado: `GET /refs` no garantiza
+      // orden y un hallazgo puede tener varias secciones tomadas, así que eso nombraba
+      // a una persona distinta según cómo llegaran los locks.
+      const titulares = this.foreignLocks()
+        .filter(lock => lockKeyBelongsTo(lock.ref_id, id) &&
+          lock.user_name && lock.user_name !== this.currentUserName)
+        .map(lock => lock.user_name)
+        .sort((a, b) => a.localeCompare(b))
+      return titulares.length ? titulares[0] : null
+    },
+    /**
+     * Locks ajenos: los que NO sostiene esta pestaña.
+     *
+     * El otro descarte —el del propio nombre, para una segunda pestaña de la misma
+     * persona— lo hace `findingLockDetailsOf`. Hacen falta los dos: el registro de
+     * LockService sólo conoce ESTA pestaña, así que sin comparar además por nombre un
+     * lock propio dejado en otra se lee como ajeno y la fila queda bloqueada contra
+     * uno mismo.
+     */
+    foreignLocks: function () {
+      return (this.refLocks || []).filter(lock => !LockService.refLocks.has(lock.ref_id))
+    },
+    /**
+     * Quién tiene tomado qué de este hallazgo. Cuenta CUALQUIER clave que cuelgue de
+     * él, no sólo el id pelado: el servidor hace chocar `<fid>::ep::<name>` con
+     * `<fid>`, que es la clave de /identity y /finding/remove. Comparar por igualdad
+     * exacta dejaba Renombrar y Borrar habilitados mientras otra persona evaluaba una
+     * dimensión, y el servidor sí lo rechazaba: el modal destructivo se abría, la
+     * persona confirmaba y no pasaba nada.
+     */
+    findingLockDetails: function (listId) {
+      const id = this.findingIdOf(listId)
+      if (!id) return []
+      return findingLockDetailsOf(this.foreignLocks(), id, this.currentUserName)
+    },
+    /**
+     * Un aviso por persona: qué está evaluando cada quien.
+     *
+     * Nombrar la sección en vez de un genérico «siendo editado» viene de una duda real
+     * de uso: con el mensaje viejo no se distinguía si alguien estaba renombrando el
+     * hallazgo o evaluando una de sus dimensiones, y son situaciones distintas. El
+     * `section: null` es justamente el primer caso.
+     */
+    findingLockNotices: function (listId) {
+      const detalles = this.findingLockDetails(listId)
+      if (!detalles.length) {
+        // Ocupado, pero por una clave que no sabemos nombrar (una sección que este
+        // bundle no enumera). Cae al aviso genérico: un botón gris SIN explicación es
+        // peor que una explicación imprecisa.
+        const holder = this.polledHolderOf(listId)
+        return holder
+          ? [{ key: 'finding-locked', text: this.$t('lock.ref_locked_by', { user: holder }) }]
+          : []
       }
-
-      // 3) De otro:
-      const remote = this.refLocks.find(x => x.ref_id === id)
-      // Un lock sin nombre no alcanza para bloquear: sin a quién nombrar, el cartel
-      // quedaría mudo y la fila muerta. `|| null` fija el contrato en un solo tipo.
-      return (remote && remote.user_name) || null
+      return detalles.map(({ section, holder }) => (
+        section
+          ? {
+            key: `finding-locked-${section}`,
+            text: this.$t('lock.evaluating_section', {
+              user: holder, section: this.$t(SECTION_LABEL_KEYS[section])
+            })
+          }
+          : { key: 'finding-locked', text: this.$t('lock.ref_locked_by', { user: holder }) }
+      ))
     },
     /** ¿Hay que grisar los botones de esta fila? */
     isFindingLocked: function (listId) {
       return Boolean(this.polledHolderOf(listId))
     },
-    /** Tooltip de un botón grisado: dice quién lo está editando. */
+    /**
+     * Título de un botón grisado. Con varias personas los junta en una línea.
+     *
+     * Sigue existiendo pese a que bootstrap-vue no monta tooltips sobre botones
+     * `disabled`: alimenta el `title` nativo, que es el único canal que queda ahí. El
+     * aviso que la gente realmente lee es el `<small>` visible de abajo.
+     */
     findingLockedByName: function (listId) {
-      const holder = this.polledHolderOf(listId)
-      return holder ? this.$t('lock.ref_locked_by', { user: holder }) : ''
+      return this.findingLockNotices(listId).map(a => a.text).join(' · ')
     },
     onFiltered: function (filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering

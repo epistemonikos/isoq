@@ -94,6 +94,11 @@ async function openModal (wrapper) {
 // inside this same modal writes through endpoint C, whose lock unit is the row's
 // ref_id — so this modal legitimately holds two locks at once (hence the multi-slot
 // LockService).
+// El `modalData` de estos specs abre el panel de `cerqual`, así que la clave que el
+// modal sostiene es la de ESA sección. Antes era el finding pelado, cuando abrir
+// cualquiera de los cinco assessments se llevaba el documento entero.
+const SECTION_KEY = 'finding1::ep::cerqual'
+
 describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -104,7 +109,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
     it('adquiere el lock del finding_id', async () => {
       const { wrapper } = createWrapper()
       await openModal(wrapper)
-      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', 'finding1')
+      expect(LockService.acquireRef).toHaveBeenCalledWith('proj1', SECTION_KEY)
       wrapper.destroy()
     })
 
@@ -156,7 +161,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
       const { wrapper } = createWrapper()
       await openModal(wrapper)
       wrapper.vm.onModalHidden()
-      expect(LockService.releaseRef).toHaveBeenCalledWith('finding1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith(SECTION_KEY)
       wrapper.destroy()
     })
 
@@ -322,7 +327,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
 
       // Verified live: the POST succeeded, the modal never finished opening, and a later
       // hide() emitted no `hidden` — the lock stayed orphaned.
-      expect(LockService.releaseRef).toHaveBeenCalledWith('finding1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith(SECTION_KEY)
     })
 
     it('un hidden que llega después de reabrir el modal no suelta el lock vigente', async () => {
@@ -345,7 +350,7 @@ describe('evidenceProfileForm.vue — ref-lock del finding (endpoint A)', () => 
 
       wrapper.vm.onModalHidden()
 
-      expect(LockService.releaseRef).toHaveBeenCalledWith('finding1')
+      expect(LockService.releaseRef).toHaveBeenCalledWith(SECTION_KEY)
       wrapper.destroy()
     })
   })
