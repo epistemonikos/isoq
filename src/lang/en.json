@@ -1365,7 +1365,8 @@
         "show": "Show colour legend",
         "hide": "Hide colour legend",
         "title": "Colour legend",
-        "not_completed": "Assessment not completed"
+        "not_completed": "Assessment not completed",
+        "missing_explanation": "Assessment without explanation"
       },
       "assess_button": "Assess",
       "not_assigned": "Not assigned",

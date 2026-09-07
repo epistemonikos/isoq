@@ -1684,6 +1684,23 @@ export default {
   background-color: transparent;
 }
 
+// Assessed, but the explanation is still missing. Used by the legend dropdown;
+// the grid draws it through the AssessmentCircle component.
+.circle-incomplete {
+  // Legend swatch only — the grid draws this through AssessmentCircle, which
+  // takes fill and ink from the assessment colour. #6C757D is a neutral stand-in
+  // for "any colour"; white is what contrastOn() returns for it, so the swatch
+  // matches the real thing and carries its own ground in both themes.
+  border: 2px dashed #FFFFFF;
+  background-color: #6C757D;
+  color: #FFFFFF;
+}
+
+.circle-warning-icon {
+  font-size: 10px;
+  line-height: 1;
+}
+
 .camelot-modal-header {
   background-color: var(--modal-header-bg);
   color: var(--modal-header-color);

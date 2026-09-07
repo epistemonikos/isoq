@@ -51,4 +51,11 @@ describe('CamelotStepFourHeader.vue', () => {
     await dropdown.vm.$emit('hide')
     expect(wrapper.vm.showLegend).toBe(false)
   })
+
+  // A new symbol in the grid that the legend does not explain is just noise.
+  it('explains the missing-explanation circle in the legend', () => {
+    expect(wrapper.find('.legend-dropdown .circle-incomplete').exists()).toBe(true)
+    expect(wrapper.find('.legend-dropdown').text())
+      .toContain('camelot.step_four.legend.missing_explanation')
+  })
 })

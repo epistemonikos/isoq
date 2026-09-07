@@ -1,4 +1,4 @@
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount, mount, createLocalVue } from '@vue/test-utils'
 import CamelotAssessmentSummaryTable from '@/components/camelot/assessment/CamelotAssessmentSummaryTable.vue'
 import BootstrapVue from 'bootstrap-vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -211,6 +211,42 @@ describe('CamelotAssessmentSummaryTable.vue', () => {
         }]
       })
       expect(w.html()).not.toContain('worksheet.labels.explanation_not_added')
+    })
+  })
+
+  describe('missing-explanation circle', () => {
+    function mountWithCell (option, text) {
+      const items = JSON.parse(JSON.stringify(assessments))
+      items.items[0].stages[0].options[0] = { option, text }
+      // mount, not shallowMount: the circle is a child component now, and a
+      // stubbed child renders nothing to assert on.
+      return mount(CamelotAssessmentSummaryTable, {
+        localVue,
+        propsData: { assessments: items },
+        mocks: { $t },
+        stubs: {
+          'b-table': {
+            template: '<div><slot name="cell(fa1)" :item="items[0]" /></div>',
+            props: ['items', 'fields']
+          },
+          'font-awesome-icon': { template: '<i class="fa-stub"></i>' }
+        }
+      })
+    }
+
+    it('flags an assessment without an explanation', () => {
+      const circle = mountWithCell('A', '').find('.assessment-circle.circle-incomplete')
+      expect(circle.exists()).toBe(true)
+      expect(circle.find('.fa-stub').exists()).toBe(true)
+    })
+
+    it('keeps the response text in the tooltip and appends the warning', () => {
+      expect(mountWithCell('A', '').find('.assessment-circle').attributes('title'))
+        .toBe('camelot.responses.no_minimal — camelot.step_four.no_explanation')
+    })
+
+    it('leaves a complete assessment filled', () => {
+      expect(mountWithCell('A', 'why').find('.assessment-circle.circle-incomplete').exists()).toBe(false)
     })
   })
 })

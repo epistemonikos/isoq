@@ -46,19 +46,6 @@ describe('CamelotStepFourTable.vue', () => {
     expect(wrapper.find('b-table-stub').exists()).toBe(true)
   })
 
-  it('calculates circle class correctly', () => {
-    const item = propsData.items[0]
-    expect(wrapper.vm.getCircleClass(0, 0, item)).toBe('circle-filled')
-    expect(wrapper.vm.getCircleClass(0, 1, item)).toBe('circle-not-completed')
-  })
-
-  it('calculates circle style correctly', () => {
-    const item = propsData.items[0]
-    expect(wrapper.vm.getCircleStyle(0, 0, item)).toEqual({
-      backgroundColor: '#1065AB'
-    })
-  })
-
   it('emits open-modal event', () => {
     wrapper.vm.openModal(0, { index: 0, item: propsData.items[0] }, 1)
     expect(wrapper.emitted('open-modal')).toBeTruthy()
@@ -186,6 +173,41 @@ describe('CamelotStepFourTable.vue', () => {
     it('renders the edit button when canEdit is true (regression)', () => {
       const editableWrapper = createWrapperWithEditColumn(true)
       expect(editableWrapper.find('.edit-btn').exists()).toBe(true)
+    })
+  })
+
+  // CLAUDE.md: a green test over state does not prove it is drawn. These assert
+  // the rendered grid, which is what the reviewer actually sees.
+  describe('missing-explanation circle', () => {
+    function mountGrid (items) {
+      return mount(CamelotStepFourTable, {
+        localVue,
+        propsData: { ...propsData, items },
+        mocks: { $t: (msg) => msg },
+        stubs: { 'font-awesome-icon': { template: '<i class="fa-stub"></i>' } }
+      })
+    }
+
+    it('draws an outlined circle with an exclamation mark for an assessment without explanation', () => {
+      const grid = mountGrid([makeItem({ s0: ['A', null, null, null] })])
+      const circle = grid.find('.assessment-circle.circle-incomplete')
+      expect(circle.exists()).toBe(true)
+      expect(circle.find('.fa-stub').exists()).toBe(true)
+      expect(circle.attributes('title')).toBe('camelot.step_four.no_explanation')
+    })
+
+    it('draws a plain filled circle once the explanation is there', () => {
+      const item = makeItem({ s0: ['A', null, null, null] })
+      item.stages[0].options[0].text = 'Because of X'
+      const grid = mountGrid([item])
+      expect(grid.find('.assessment-circle.circle-incomplete').exists()).toBe(false)
+      expect(grid.find('.assessment-circle.circle-filled').exists()).toBe(true)
+    })
+
+    it('still opens the modal when the incomplete circle is clicked', () => {
+      const grid = mountGrid([makeItem({ s0: ['A', null, null, null] })])
+      grid.find('.assessment-circle.circle-incomplete').trigger('click')
+      expect(grid.emitted('open-modal')).toBeTruthy()
     })
   })
 })
