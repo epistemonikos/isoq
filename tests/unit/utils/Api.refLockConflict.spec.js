@@ -153,8 +153,9 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
 
     const event = dispatched.find(e => e.type === 'ref-lock-conflict')
     expect(event).toBeTruthy()
-    // The lock unit of endpoint A is the document id, not a study ref.
-    expect(event.detail.refId).toBe('finding1')
+    // La unidad de lock del endpoint A es la SECCIÓN, no el documento: el aviso tiene
+    // que llegar bajo la misma clave que el modal sostiene, o no lo escucha nadie.
+    expect(event.detail.refId).toBe('finding1::ep::coherence')
     expect(event.detail.failedData).toEqual({ option: 2, explanation: 'texto' })
     expect(event.detail.lockedBy).toBe('Ana')
   })
@@ -164,7 +165,7 @@ describe('Api.js interceptor — ref-lock-conflict', () => {
     await expect(errorHandler(err)).rejects.toBe(err)
     const event = dispatched.find(e => e.type === 'ref-lock-conflict')
     expect(event).toBeTruthy()
-    expect(event.detail.refId).toBe('list1')
+    expect(event.detail.refId).toBe('list1::ep::cerqual')
   })
 
   it('NO dispara ref-lock-conflict en un 409 que no es PATCH parcial', async () => {

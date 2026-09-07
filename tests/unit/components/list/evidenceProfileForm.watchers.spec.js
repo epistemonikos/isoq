@@ -166,24 +166,24 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
         cerqual: { option: '1', explanation: 'some explanation', notes: '' }
       }
     })
-    wrapper.vm.updateOptions('coherence', true)
+    await wrapper.vm.updateOptions('coherence', true)
     expect(wrapper.vm.selectedOptions.cerqual.option).toBeNull()
     expect(wrapper.vm.selectedOptions.cerqual.explanation).toBe('')
     wrapper.destroy()
   })
 
-  it('hides modal-warning-changed-option when status=true and option is not cerqual', () => {
+  it('hides modal-warning-changed-option when status=true and option is not cerqual', async () => {
     const wrapper = makeWrapper()
     setupRefs(wrapper)
-    wrapper.vm.updateOptions('coherence', true)
+    await wrapper.vm.updateOptions('coherence', true)
     expect(wrapper.vm.$refs['modal-warning-changed-option'].hide).toHaveBeenCalled()
     wrapper.destroy()
   })
 
-  it('hides modal-warning-cleaning-cerqual when status=true and option is cerqual', () => {
+  it('hides modal-warning-cleaning-cerqual when status=true and option is cerqual', async () => {
     const wrapper = makeWrapper()
     setupRefs(wrapper)
-    wrapper.vm.updateOptions('cerqual', true)
+    await wrapper.vm.updateOptions('cerqual', true)
     expect(wrapper.vm.$refs['modal-warning-cleaning-cerqual'].hide).toHaveBeenCalled()
     wrapper.destroy()
   })
@@ -199,7 +199,7 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
         coherence: { option: '3', explanation: 'changed', notes: '' }
       }
     })
-    wrapper.vm.updateOptions('coherence', false)
+    await wrapper.vm.updateOptions('coherence', false)
     expect(wrapper.vm.selectedOptions.coherence.option).toBe('1')
     wrapper.destroy()
   })
@@ -215,7 +215,7 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
         methodological_limitations: { option: '3', explanation: 'changed', notes: '' }
       }
     })
-    wrapper.vm.updateOptions('methodological-limitations', false)
+    await wrapper.vm.updateOptions('methodological-limitations', false)
     expect(wrapper.vm.selectedOptions.methodological_limitations.option).toBe('2')
     wrapper.destroy()
   })
@@ -232,7 +232,7 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
       await wrapper.setData({
         selectedOptions: { ...wrapper.vm.selectedOptions, [domain]: { option: '2', explanation: 'old text', notes: '' } }
       })
-      wrapper.vm.updateOptions(domain, true)
+      await wrapper.vm.updateOptions(domain, true)
       expect(wrapper.vm.pendingChangedOptionFocusId).toBe(focusId)
       wrapper.destroy()
     })
@@ -244,15 +244,15 @@ describe('evidenceProfileForm.vue — updateOptions()', () => {
     await wrapper.setData({
       selectedOptions: { ...wrapper.vm.selectedOptions, coherence: { option: '0', explanation: '', notes: '' } }
     })
-    wrapper.vm.updateOptions('coherence', true)
+    await wrapper.vm.updateOptions('coherence', true)
     expect(wrapper.vm.pendingChangedOptionFocusId).toBeNull()
     wrapper.destroy()
   })
 
-  it('does not set pendingChangedOptionFocusId when accepting cerqual option change', () => {
+  it('does not set pendingChangedOptionFocusId when accepting cerqual option change', async () => {
     const wrapper = makeWrapper()
     setupRefs(wrapper)
-    wrapper.vm.updateOptions('cerqual', true)
+    await wrapper.vm.updateOptions('cerqual', true)
     expect(wrapper.vm.pendingChangedOptionFocusId).toBeNull()
     wrapper.destroy()
   })

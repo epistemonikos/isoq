@@ -828,7 +828,10 @@ import { displayExplanation, generateCerqualExplanation } from '../utils/commons
 
 // Whitelisted evidence_profile sub-sections targetable by the granular
 // PATCH /isoqf_findings|isoqf_lists/<id>/section/<name> endpoint.
-const EVIDENCE_PROFILE_SECTIONS = ['methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual']
+// La whitelist y las claves viven en su propio módulo: las comparte con la tabla que
+// pinta los botones y con `refLockUrls`, y el string de la clave tiene que escribirse
+// una sola vez por repo (el servidor compone el mismo en libs/evidence_profile.py).
+import { EVIDENCE_PROFILE_SECTIONS, sectionOfType, sectionLockKey } from '@/utils/evidenceProfileLockKeys'
 
 export default {
   name: 'evidenceProfileForm',
@@ -867,7 +870,10 @@ export default {
       // True only when the lock was taken away mid-edit. Opening onto an already-locked
       // finding is a different story: that one is announced by a toast on open.
       lockLostWhileEditing: false,
-      lockedFindingRef: null,
+      // Claves de sección que este modal sostiene. Es un array y no un valor porque el
+      // guardado de una dimensión puede tener que escribir también `cerqual`, y ahí se
+      // sostienen dos a la vez — el camino feliz, no un accidente.
+      lockedSectionRefs: [],
       modalOpen: false,
       // True when a `hidden` from a previous modal session is still on its way.
       staleHiddenPending: false,
@@ -1048,22 +1054,33 @@ export default {
       // still in flight and must not be taken for the closing of this one.
       this.staleHiddenPending = this.modalOpen
       this.modalOpen = true
-      this.acquireFindingLock()
+      this.acquireSectionLock()
       this.$nextTick(() => {
         if (this.$refs.camelotTable && typeof this.$refs.camelotTable.resetTableState === 'function') {
           this.$refs.camelotTable.resetTableState()
         }
       })
     },
+    /** Clave de la sección que este modal está mostrando, o null. */
+    currentSectionKey: function () {
+      const findingId = this.findings && this.findings.id
+      return sectionLockKey(findingId, this.modalData && this.modalData.type)
+    },
     // Mirrors StepFour.vue's acquireStudyLock: asked for on open, so the rejection
     // reaches the user before they fill the form instead of on save.
-    async acquireFindingLock () {
-      const findingId = this.findings && this.findings.id
-      // A finding with no id yet is created by POST on save — nothing to lock.
-      if (!findingId || !this.permission) return
-      const result = await LockService.acquireRef(this.list.project_id, findingId)
+    //
+    // UNA sola clave al abrir: la de la sección que se está mostrando. Tomar además la
+    // de `cerqual` acá sería volver al comportamiento anterior con más piezas móviles
+    // —quien abre coherence se llevaría cerqual y quien abre adequacy quedaría en solo
+    // lectura—, así que esa se pide recién cuando se sabe que hace falta (ver
+    // `ensureCerqualLock`).
+    async acquireSectionLock () {
+      const key = this.currentSectionKey()
+      // Un finding sin id todavía se crea por POST al guardar: no hay nada que bloquear.
+      if (!key || !this.permission) return
+      const result = await LockService.acquireRef(this.list.project_id, key)
       if (result.success) {
-        this.lockedFindingRef = findingId
+        this.rememberSectionLock(key)
         this.isFindingReadOnly = false
         this.findingLockedBy = null
         this.lockLostWhileEditing = false
@@ -1085,12 +1102,28 @@ export default {
         this.$emit('lock-denied')
       }
     },
-    // Two locks live in this modal, so the event has to be routed: the finding's
-    // lock greys out the whole form, a row's lock only that row.
+    // Varios locks viven en este modal, así que el evento hay que rutearlo: cualquier
+    // clave de sección que sostengamos —o el finding pelado— grisa el formulario
+    // entero; la de una fila, sólo esa fila.
+    //
+    // La prueba de pertenencia va contra NUESTRO registro, sin parsear la clave: un
+    // formato que este cliente no conozca no debe hacer desaparecer un aviso. Y el
+    // finding pelado cuenta por compatibilidad — lo sostiene el editor de identidad y
+    // cualquier pestaña con un bundle previo al despliegue.
+    //
+    // Perder CUALQUIERA de las dos claves es perder el modal: el desalojo del latido
+    // corre por clave, así que perder `::ep::cerqual` deja la de la dimensión viva un
+    // ciclo más, y un handler que sólo escuchara ésa dejaría a la persona 30 s creyendo
+    // que puede guardar.
     onRefLockLost: function (event) {
       const detail = event.detail || {}
       const findingId = this.findings && this.findings.id
-      if (detail.refId && detail.refId === findingId) {
+      const nuestra = detail.refId && (
+        detail.refId === findingId || this.lockedSectionRefs.includes(detail.refId))
+      if (nuestra) {
+        // Se saca del registro: el release posterior no debe pedirle al servidor que
+        // suelte un lock que ahora es de otra persona.
+        this.lockedSectionRefs = this.lockedSectionRefs.filter(k => k !== detail.refId)
         this.isFindingReadOnly = true
         this.findingLockedBy = detail.lockedBy || null
         this.lockLostWhileEditing = true
@@ -1115,9 +1148,48 @@ export default {
       this.findingLockedBy = null
       this.lockLostWhileEditing = false
     },
+    rememberSectionLock: function (key) {
+      if (key && !this.lockedSectionRefs.includes(key)) this.lockedSectionRefs.push(key)
+    },
+    holdsSectionLock: function (section) {
+      const findingId = this.findings && this.findings.id
+      return this.lockedSectionRefs.includes(sectionLockKey(findingId, section))
+    },
     releaseFindingLock: function () {
-      if (this.lockedFindingRef) LockService.releaseRef(this.lockedFindingRef)
-      this.lockedFindingRef = null
+      // Suelta cada clave por separado: `releaseRef` sin argumento soltaría también la
+      // de la fila de extracted data, que es otro eje y la libera su propio camino.
+      this.lockedSectionRefs.forEach(key => LockService.releaseRef(key))
+      this.lockedSectionRefs = []
+    },
+    /**
+     * Toma la clave de `cerqual`, si no la tenemos ya.
+     *
+     * Se llama en el «Sí» del aviso de cambio de opción: el instante exacto en que ya
+     * se sabe que el cambio va a invalidar el juicio de confianza. Ni al abrir (eso
+     * serializa todo y anula la granularidad) ni al guardar (el rechazo llegaría tras
+     * diez minutos de trabajo, en el peor momento). Acá la persona ya está parada
+     * frente a una confirmación, así que es el lugar honesto para negársela.
+     *
+     * `acquireRef` es idempotente, así que el ida y vuelta «Sí → No → Sí» no necesita
+     * lógica alguna; y NO se libera en el «No», porque eso abriría una ventana entre dos
+     * decisiones de la misma persona en la que otro puede quedarse con cerqual.
+     */
+    async ensureCerqualLock () {
+      if (this.holdsSectionLock('cerqual')) return true
+      const key = sectionLockKey(this.findings && this.findings.id, 'cerqual')
+      if (!key || !this.permission) return true
+      const result = await LockService.acquireRef(this.list.project_id, key)
+      if (result.success) {
+        this.rememberSectionLock(key)
+        return true
+      }
+      if (this.$notify) {
+        this.$notify.warning(result.lockedBy
+          ? this.$t('lock.cerqual_locked_by', { user: result.lockedBy })
+          : this.$t('lock.ref_locked_by_no_user'))
+      }
+      this.$emit('lock-denied')
+      return false
     },
     async acquireRowLock (refId) {
       if (!refId || !this.permission) return
@@ -1230,11 +1302,27 @@ export default {
       if (!d || d.option === null || parseInt(d.option) === 0) return false
       return !(d.explanation && d.explanation.trim().length > 0)
     },
-    updateOptions: function (option, status) {
-      if (option === 'methodological-limitations') {
-        option = 'methodological_limitations'
-      }
+    /**
+     * Resolución del aviso de cambio de opción. `status` es el «Sí».
+     *
+     * `async` a propósito, y es seguro: el modal de advertencia tiene `hide-footer` y
+     * botones planos, no un `@ok` con `bvModalEvent`, así que no hay `preventDefault`
+     * que respetar ni carrera con el cierre.
+     */
+    updateOptions: async function (option, status) {
+      option = sectionOfType(option) || option
       if (status) {
+        // Confirmar el cambio implica invalidar `cerqual`, así que hay que poder
+        // escribirlo. Éste es el único camino por el que cerqual entra en el diff desde
+        // el panel de una dimensión, y por eso el acquire va acá y no antes ni después.
+        if (option !== 'cerqual' && !(await this.ensureCerqualLock())) {
+          // Negado: se revierte la opción por el mismo camino que el «No». Es la
+          // respuesta honesta — el cambio de opción es justamente lo que obliga al
+          // reset, así que negarlo es negar el cambio.
+          this.selectedOptions[option].option = this.modalData[option].option
+          this.$refs['modal-warning-changed-option']?.hide()
+          return
+        }
         this.selectedOptions.cerqual.option = null
         this.selectedOptions.cerqual.explanation = ''
         if (option === 'cerqual') {
@@ -1284,8 +1372,28 @@ export default {
         const changed = EVIDENCE_PROFILE_SECTIONS.filter(s =>
           JSON.stringify(this.selectedOptions[s]) !== JSON.stringify(this.modalData[s]))
 
-        Promise.all(changed.map(s =>
-          Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])))
+        // Guard de pertenencia, sin adquirir nada. Con la regla del acquire perezoso
+        // `faltantes` debería ser siempre vacío; el guard existe para que un hook
+        // olvidado en el futuro produzca un aviso en vez de una escritura a medias.
+        // Hoy ese 409 sólo va a `console.log`, con el spinner colgado para siempre.
+        const faltantes = changed.filter(s => !this.holdsSectionLock(s))
+        if (faltantes.length) {
+          if (this.$notify) this.$notify.warning(this.$t('lock.ref_locked_by_no_user'))
+          this.$emit('busyEvidenceProfileTable', false)
+          return
+        }
+
+        // Secuencial y con `cerqual` ÚLTIMO, no en paralelo: escribir cerqual dispara
+        // `unpublish_if_not_publishable` server-side, así que si fuera primero y la
+        // dimensión fallara, el proyecto quedaría despublicado con el dominio viejo.
+        const ordenadas = [
+          ...changed.filter(s => s !== 'cerqual'),
+          ...changed.filter(s => s === 'cerqual')
+        ]
+        ordenadas
+          .reduce((cadena, s) => cadena.then(() =>
+            Api.patch(`/isoqf_findings/${this.findings.id}/section/${s}`, this.selectedOptions[s])),
+          Promise.resolve())
           .then(() => status ? Api.post(`/unpublish/project/${this.list.project_id}`) : null)
           .then(() => {
             this.$emit('callGetStageOneData', false)

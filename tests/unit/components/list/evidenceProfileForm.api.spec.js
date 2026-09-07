@@ -69,6 +69,14 @@ function setupRefs (wrapper) {
   wrapper.vm.$refs['modal-warning-same-txt'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-changed-option'] = { show: jest.fn(), hide: jest.fn() }
   wrapper.vm.$refs['modal-warning-cleaning-cerqual'] = { show: jest.fn(), hide: jest.fn() }
+  // El guardado exige sostener la clave de cada sección que escribe (el lock es por
+  // sección desde `<fid>::ep::<name>`). Estos specs llaman a `continueSavingDataModal`
+  // sin pasar por `onModalShow`, así que el registro se siembra acá: lo que afirman es
+  // el PATCH, no la adquisición del lock — ésa tiene su propio spec.
+  const fid = wrapper.vm.findings && wrapper.vm.findings.id
+  wrapper.vm.lockedSectionRefs = [
+    'methodological_limitations', 'coherence', 'adequacy', 'relevance', 'cerqual'
+  ].map(s => `${fid}::ep::${s}`)
 }
 
 // ─── continueSavingDataModal ──────────────────────────────────────────────────

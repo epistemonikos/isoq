@@ -191,13 +191,18 @@ describe('Api.patch() — guarda el contexto de lock al encolar', () => {
     }))
   })
 
-  it('guarda el contexto de un PATCH por sección con el id del documento', async () => {
-    LockService.offlineRefs.set('finding1', 'proj1')
+  it('guarda el contexto de un PATCH por sección con la clave de la SECCIÓN', async () => {
+    // La clave persistida es la que el replay va a re-adquirir. Con el id pelado,
+    // `queuedLockContext` no encuentra el lock que el modal sostiene, `lockProjectId`
+    // queda null, el replay no adquiere nada y el 409 `lock_not_held` deja la
+    // operación en la cola: la escritura se pierde en silencio y re-falla en cada
+    // reconexión, sin llegar nunca al canal que le devuelve el payload a la persona.
+    LockService.offlineRefs.set('finding1::ep::coherence', 'proj1')
 
     await Api.patch('/isoqf_findings/finding1/section/coherence', { option: 2 })
 
     expect(addPendingOperation).toHaveBeenCalledWith(expect.objectContaining({
-      lockRef: 'finding1',
+      lockRef: 'finding1::ep::coherence',
       lockProjectId: 'proj1'
     }))
   })

@@ -651,7 +651,7 @@
 import Api from '@/utils/Api'
 import { displayExplanation } from '../utils/commons'
 import refLockStateMixin from '@/mixins/refLockStateMixin'
-import { sectionOfType } from '@/utils/evidenceProfileLockKeys'
+import { sectionOfType, blockedSectionsOf } from '@/utils/evidenceProfileLockKeys'
 const backToTop = () => import(/* webpackChunkName: "backtotop" */'../backToTop')
 
 export default {
@@ -716,6 +716,13 @@ export default {
     }
   },
   computed: {
+    // Computed y no método: la plantilla lo consulta dos veces por cada uno de los diez
+    // sitios de botón, y así el Map se arma una vez por cambio de los locks en vez de
+    // veinte veces por render.
+    blockedSections () {
+      const findingId = this.findings && this.findings.id
+      return blockedSectionsOf(this.foreignRefLocks, findingId, this.currentUserName)
+    },
     evidenceProfileFields () {
       return [
         { key: 'displayNumber', label: '#' },
@@ -961,27 +968,23 @@ export default {
       this.$refs['modalReferences'].show()
     },
     // ── Bloqueo visible de los assessments ─────────────────────────────
-    // FASE 1: la unidad de lock sigue siendo el finding COMPLETO —es la que el
-    // modal adquiere y la que el servidor exige en /section/<name>—, así que el
-    // argumento `section` no se usa todavía. El markup ya lo pasa a propósito:
-    // cuando el backend acepte `<fid>::ep::<section>`, la Fase 2 cambia el cuerpo
-    // de este método y de `isSectionDisabled` y NO vuelve a tocar los 10 sitios de
-    // botón de la plantilla.
+    // La unidad de lock es la SECCIÓN (`<fid>::ep::<name>`), pero el lock del
+    // documento pelado sigue bloqueando las cinco: es más amplio y lo sostienen
+    // quien edita la identidad del finding desde `ViewTable` y cualquier pestaña
+    // con un bundle previo al despliegue. Las dos reglas, y la del sufijo que este
+    // cliente no enumera, viven en `blockedSectionsOf` — que espeja `base_ref_of`
+    // del servidor, la función que realmente decide un conflicto.
     //
     // El doble descarte del lock propio es el punto: `foreignRefLocks` (del mixin)
-    // saca los que ESTA pestaña sostiene, y la comparación por nombre saca los que
-    // sostiene otra pestaña de la misma persona. Sin el segundo, abrir la worksheet
-    // dos veces se bloquea contra uno mismo.
+    // saca los que ESTA pestaña sostiene, y `currentUserName` los que sostiene otra
+    // pestaña de la misma persona. Sin el segundo, abrir la worksheet dos veces se
+    // bloquea contra uno mismo.
+    // Normaliza las dos grafías vivas: la plantilla pasa guión bajo, el guard de
+    // `editStageTwo` recibe el `type` con guión.
     sectionHolderOf: function (section) {
-      const findingId = this.findings && this.findings.id
-      // Normaliza las dos grafías vivas: la plantilla pasa guión bajo, el guard de
-      // `editStageTwo` recibe el `type` con guión. Una sección desconocida devuelve
-      // null y por lo tanto no bloquea; lo que atrapa un typo en la plantilla es el
-      // test que exige los cinco `data-testid` en el DOM.
-      if (!findingId || !sectionOfType(section)) return null
-      const lock = this.foreignRefLocks.find(
-        l => l.ref_id === findingId && l.user_name !== this.currentUserName)
-      return (lock && lock.user_name) || null
+      const canonical = sectionOfType(section)
+      if (!canonical) return null
+      return this.blockedSections.get(canonical) || null
     },
     // `permission` va en la condición a propósito: en la rama «ya completada» el
     // botón existe también para quien no puede escribir, donde dice «View». Grisar

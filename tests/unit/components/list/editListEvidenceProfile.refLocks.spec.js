@@ -89,7 +89,13 @@ function createWrapper ({ activeRefLocks = [], permission = true, findings = { i
     stubs: {
       videoHelp: true,
       'back-to-top': true,
-      'evidence-profile-form': true,
+      // Con el método real: `editStageTwo` termina llamándolo por `$refs`, así que un
+      // stub booleano hace fallar el camino feliz por una razón que no es la del test.
+      'evidence-profile-form': {
+        name: 'evidence-profile-form',
+        methods: { openModalEvidenceProfie: jest.fn() },
+        template: '<div class="ep-form-stub"></div>'
+      },
       'font-awesome-icon': true
     }
   })
@@ -208,6 +214,86 @@ describe('editListEvidenceProfile — bloqueo visible de los assessments', () =>
       const emitted = jest.spyOn(wrapper.vm, '$emit')
       wrapper.vm.editStageTwo(fullProfile()[0], 'methodological-limitations')
       expect(emitted).not.toHaveBeenCalledWith('modalDataChanged', expect.anything())
+      wrapper.destroy()
+    })
+  })
+
+  // ── Granularidad por sección (fase 2) ─────────────────────────────────
+  describe('granularidad por sección', () => {
+    const sectionLock = (section, userName = 'Ana Pérez') =>
+      ({ ref_id: `${FINDING_ID}::ep::${section}`, user_name: userName })
+
+    it('un lock de coherence bloquea SÓLO coherence', () => {
+      // LA garantía de la feature: las otras cuatro siguen clickeables.
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('coherence')] })
+      expect(wrapper.vm.isSectionDisabled('coherence')).toBe(true)
+      expect(wrapper.vm.isSectionDisabled('adequacy')).toBe(false)
+      expect(wrapper.vm.isSectionDisabled('relevance')).toBe(false)
+      expect(wrapper.vm.isSectionDisabled('methodological_limitations')).toBe(false)
+      expect(wrapper.vm.isSectionDisabled('cerqual')).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('dos personas en dos secciones distintas se ven mutuamente, cada una con su nombre', () => {
+      const wrapper = createWrapper({
+        activeRefLocks: [sectionLock('coherence', 'Ana Pérez'), sectionLock('adequacy', 'Beto Díaz')]
+      })
+      expect(wrapper.vm.sectionLockedByName('coherence')).toContain('Ana Pérez')
+      expect(wrapper.vm.sectionLockedByName('adequacy')).toContain('Beto Díaz')
+      expect(wrapper.vm.isSectionDisabled('relevance')).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('el lock del FINDING pelado sigue bloqueando las cinco', () => {
+      // Lo sostiene quien edita la identidad desde ViewTable, y un bundle viejo
+      // durante el despliegue. Es estrictamente más amplio.
+      const wrapper = createWrapper({ activeRefLocks: [foreignLock(FINDING_ID)] })
+      EVIDENCE_PROFILE_SECTIONS.forEach(section => {
+        expect(wrapper.vm.isSectionDisabled(section)).toBe(true)
+      })
+      wrapper.destroy()
+    })
+
+    it('una sección que este cliente no enumera no bloquea ninguna', () => {
+      // Espeja al servidor: pedir `<fid>::ep::coherence` contra `<fid>::ep::X` autoriza.
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('seccion_nueva')] })
+      EVIDENCE_PROFILE_SECTIONS.forEach(section => {
+        expect(wrapper.vm.isSectionDisabled(section)).toBe(false)
+      })
+      wrapper.destroy()
+    })
+
+    it('una sección propia dejada en otra pestaña no bloquea', () => {
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('coherence', 'Yo Mismo')] })
+      expect(wrapper.vm.isSectionDisabled('coherence')).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('una sección propia de ESTA pestaña no bloquea', () => {
+      LockService.refLocks.set(`${FINDING_ID}::ep::coherence`, 'proj1')
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('coherence', 'Cualquiera')] })
+      expect(wrapper.vm.isSectionDisabled('coherence')).toBe(false)
+      wrapper.destroy()
+    })
+
+    it('en el DOM se dibuja UN aviso, no cinco', () => {
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('coherence')] })
+      expect(wrapper.find('[data-testid="ep-locked-coherence"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="ep-locked-coherence"]').text()).toContain('Ana Pérez')
+      ;['adequacy', 'relevance', 'cerqual', 'methodological_limitations'].forEach(s => {
+        expect(wrapper.find(`[data-testid="ep-locked-${s}"]`).exists()).toBe(false)
+      })
+      const deshabilitados = wrapper.findAll('#assessments button').wrappers
+        .filter(b => b.attributes('disabled') !== undefined)
+      expect(deshabilitados).toHaveLength(1)
+      wrapper.destroy()
+    })
+
+    it('editStageTwo abre el modal de una sección LIBRE aunque otra esté tomada', () => {
+      const wrapper = createWrapper({ activeRefLocks: [sectionLock('coherence')] })
+      const emitted = jest.spyOn(wrapper.vm, '$emit')
+      wrapper.vm.editStageTwo(fullProfile()[0], 'adequacy')
+      expect(emitted).toHaveBeenCalledWith('modalDataChanged', expect.anything())
       wrapper.destroy()
     })
   })
